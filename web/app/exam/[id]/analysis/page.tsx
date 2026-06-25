@@ -67,10 +67,26 @@ export default function ExamSolutionAnalysisPage() {
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [mounted, setMounted] = useState(false);
+  const [selectedAttemptIdx, setSelectedAttemptIdx] = useState(0);
+
+  // Load completed sessions for this testId
+  const attempts = currentUser
+    ? currentUser.testSessions.filter(
+        s => (s.testId === testId || s.title.toLowerCase().includes(testId.replace(/_/g, ' '))) &&
+             (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED')
+      )
+    : [];
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Initialize to latest attempt index once attempts load
+  useEffect(() => {
+    if (attempts.length > 0) {
+      setSelectedAttemptIdx(attempts.length - 1);
+    }
+  }, [attempts.length]);
 
   if (!mounted) {
     return (
@@ -98,11 +114,7 @@ export default function ExamSolutionAnalysisPage() {
     );
   }
 
-  // Load latest completed session for this testId
-  // Wait, if no direct testId exists, we can also look for title matches as a fallback.
-  const sessionRecord = currentUser.testSessions.find(
-    s => s.testId === testId || s.title.toLowerCase().includes(testId.replace(/_/g, ' '))
-  );
+  const sessionRecord = attempts[selectedAttemptIdx];
 
   if (!sessionRecord) {
     return (
@@ -167,7 +179,27 @@ export default function ExamSolutionAnalysisPage() {
     }
   });
 
+  const hasActualResponses = sessionRecord.responses && Object.keys(sessionRecord.responses).length > 0;
+
   const questionStatuses = questions.map((q, idx) => {
+    if (hasActualResponses && sessionRecord.responses?.[q.id]) {
+      const resp = sessionRecord.responses[q.id];
+      const userSelectedOptionIndex = resp.selectedOptionIndex ?? -1;
+      let status: 'correct' | 'incorrect' | 'skipped' = 'skipped';
+      if (userSelectedOptionIndex === -1 || userSelectedOptionIndex === null) {
+        status = 'skipped';
+      } else if (userSelectedOptionIndex === q.correctOptionIndex) {
+        status = 'correct';
+      } else {
+        status = 'incorrect';
+      }
+      return {
+        questionId: q.id,
+        status,
+        userSelectedOptionIndex
+      };
+    }
+
     const isCorrect = correctIndices.has(idx);
     const isSkipped = skippedIndices.has(idx);
     
@@ -292,7 +324,7 @@ export default function ExamSolutionAnalysisPage() {
           </div>
 
           <div className="flex items-center gap-3 last:border-0">
-            <div className="bg-red-500/10 p-2.5 rounded-xl text-red-650 dark:text-red-400">
+            <div className="bg-red-500/10 p-2.5 rounded-xl text-red-600 dark:text-red-400">
               <ShieldAlert className="h-5 w-5" />
             </div>
             <div>
@@ -303,6 +335,50 @@ export default function ExamSolutionAnalysisPage() {
 
         </div>
       </section>
+
+      {/* Attempt Selector and Comparison Dashboard */}
+      {attempts.length >= 1 && (
+        <section className="max-w-6xl w-full mx-auto px-6 mt-6">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex-1">
+              <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Select Attempt to Analyze</h5>
+              <div className="flex flex-wrap gap-2">
+                {attempts.map((att, idx) => (
+                  <button
+                    key={att.id}
+                    onClick={() => setSelectedAttemptIdx(idx)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition active:scale-95 border ${
+                      selectedAttemptIdx === idx
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20'
+                        : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-350 border-slate-200 dark:border-slate-800'
+                    }`}
+                  >
+                    Attempt {idx + 1} ({att.date})
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-800 pt-4 md:pt-0 md:pl-6 flex-1">
+              <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Attempts Performance & Comparison</h5>
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                {attempts.map((att, idx) => {
+                  const isCurrent = selectedAttemptIdx === idx;
+                  return (
+                    <div key={att.id} className={`flex items-center justify-between text-xs p-2.5 rounded-xl font-bold border transition-colors ${isCurrent ? 'bg-blue-50/50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/80' : 'bg-slate-50 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400 border-slate-100 dark:border-slate-850'}`}>
+                      <span>Attempt {idx + 1} {isCurrent && '(Viewing)'}</span>
+                      <div className="flex items-center gap-4">
+                        <span>Score: <strong className="text-slate-850 dark:text-slate-200">{att.score}/{att.maxScore}</strong></span>
+                        <span>Accuracy: <strong className="text-slate-850 dark:text-slate-200">{att.accuracy}%</strong></span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 3. SPLIT WORKSPACE - QUESTION DETAIL & PALETTE */}
       <section className="max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start">
@@ -325,7 +401,7 @@ export default function ExamSolutionAnalysisPage() {
                     </span>
                   )}
                   {activeStatus.status === 'incorrect' && (
-                    <span className="inline-flex items-center gap-1 bg-red-50 border border-red-200 dark:bg-red-950/20 dark:border-red-900 px-2 py-0.5 rounded text-[10px] font-bold text-red-650 dark:text-red-400 uppercase">
+                    <span className="inline-flex items-center gap-1 bg-red-50 border border-red-200 dark:bg-red-950/20 dark:border-red-900 px-2 py-0.5 rounded text-[10px] font-bold text-red-600 dark:text-red-400 uppercase">
                       <XCircle className="h-3 w-3" /> Incorrect
                     </span>
                   )}
@@ -400,7 +476,7 @@ export default function ExamSolutionAnalysisPage() {
                         isCorrectIndex
                           ? 'bg-green-600 text-white'
                           : isUserSelectedIndex
-                          ? 'bg-red-650 text-white'
+                          ? 'bg-red-600 text-white'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                       }`}>
                         {String.fromCharCode(65 + optIdx)}
@@ -418,7 +494,7 @@ export default function ExamSolutionAnalysisPage() {
                         <CheckCircle2 className="h-4 w-4 text-green-600" />
                       )}
                       {isUserSelectedIndex && !isCorrectIndex && (
-                        <XCircle className="h-4 w-4 text-red-655" />
+                        <XCircle className="h-4 w-4 text-red-600" />
                       )}
                     </div>
                   </div>
@@ -477,7 +553,7 @@ export default function ExamSolutionAnalysisPage() {
               <span>Correct ({totalCorrect})</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-full bg-red-650"></span>
+              <span className="h-3 w-3 rounded-full bg-red-600"></span>
               <span>Incorrect ({totalIncorrect})</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -495,7 +571,7 @@ export default function ExamSolutionAnalysisPage() {
               if (stat.status === 'correct') {
                 statusBg = 'bg-green-600 text-white shadow shadow-green-950/20';
               } else if (stat.status === 'incorrect') {
-                statusBg = 'bg-red-650 text-white shadow shadow-red-950/20';
+                statusBg = 'bg-red-600 text-white shadow shadow-red-950/20';
               } else if (stat.status === 'skipped') {
                 statusBg = 'bg-slate-400 dark:bg-slate-600 text-white';
               }

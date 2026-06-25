@@ -92,6 +92,7 @@ interface AuthContextType {
     currentSectionIndex?: number,
     currentQuestionIndex?: number
   ) => void;
+  clearOngoingSession: (testId: string) => void;
   noticesList: Notice[];
   addNotice: (title: string, type: string, category: 'notice' | 'result' | 'admit_card', date?: string, url?: string, lastDateInput?: string) => void;
   deleteNotice: (id: string) => void;
@@ -535,6 +536,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('tb_users', JSON.stringify(updatedList));
   };
 
+  const clearOngoingSession = (testId: string) => {
+    if (!currentUser) return;
+    const updatedSessions = currentUser.testSessions.filter(
+      s => !(s.testId === testId && s.status === 'ONGOING')
+    );
+    const updatedUser = { ...currentUser, testSessions: updatedSessions };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('tb_session', JSON.stringify(updatedUser));
+
+    const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
+    setUsersList(updatedList);
+    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+  };
+
   const toggleBookmark = (testId: string, questionId: string) => {
     if (!currentUser) return;
     const currentBookmarks = currentUser.bookmarkedQuestions || [];
@@ -635,6 +650,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resetAttempt,
         saveUserProfileByAdmin,
         saveOngoingSession,
+        clearOngoingSession,
         noticesList,
         addNotice,
         deleteNotice

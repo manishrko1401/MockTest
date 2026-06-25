@@ -127,7 +127,7 @@ export default function StudentProfilePage() {
 
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-1 bg-red-100/50 dark:bg-red-950/20 border border-red-300 dark:border-red-900/40 hover:bg-red-200 dark:hover:bg-red-950/40 text-red-650 dark:text-red-400 hover:text-red-650 dark:hover:text-red-300 transition-all px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 cursor-pointer"
+            className="flex items-center gap-1 bg-red-100/50 dark:bg-red-950/20 border border-red-300 dark:border-red-900/40 hover:bg-red-200 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-all px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 cursor-pointer"
           >
             <LogOut className="h-3.5 w-3.5" /> Log Out
           </button>

@@ -77,7 +77,7 @@ const EXAM_CATALOG: TestCategory[] = [
 ];
 
 export default function MockTestsCatalog() {
-  const { currentUser, saveUserProfileByAdmin, theme, toggleTheme, toggleBookmark } = useAuth();
+  const { currentUser, saveUserProfileByAdmin, theme, toggleTheme, toggleBookmark, clearOngoingSession } = useAuth();
   const router = useRouter();
   
   const [selectedCategory, setSelectedCategory] = useState<string>(() => {
@@ -175,6 +175,23 @@ export default function MockTestsCatalog() {
   const isCompleted = (testId: string) => {
     const status = getTestStatus(testId);
     return status === 'COMPLETED' || status === 'AUTO_SUBMITTED';
+  };
+
+  const getTestAttempts = (testId: string) => {
+    if (!currentUser || !currentUser.testSessions) return [];
+    return currentUser.testSessions.filter(
+      s => s.testId === testId && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED')
+    );
+  };
+
+  const handleReattemptExam = (test: MockTestItem) => {
+    if (!currentUser) {
+      router.push('/auth');
+      return;
+    }
+
+    clearOngoingSession(test.id);
+    router.push(`/exam/${test.id}`);
   };
 
   return (
@@ -431,6 +448,7 @@ export default function MockTestsCatalog() {
 
                     const completed = isCompleted(test.id);
                     const ongoing = getTestStatus(test.id) === 'ONGOING';
+                    const attemptsCount = getTestAttempts(test.id).length;
 
                     return (
                       <div
@@ -506,6 +524,16 @@ export default function MockTestsCatalog() {
                         >
                           {completed ? 'View Solution & Analysis' : ongoing ? 'Resume Test' : hasPass ? 'Start Test' : 'Unlock with Pass'}
                         </button>
+
+                        {completed && (
+                          <button
+                            onClick={() => handleReattemptExam(test)}
+                            disabled={attemptsCount >= 5}
+                            className="w-full text-center py-2.5 mt-2 rounded-lg text-xs font-bold transition-all border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/10 active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            {attemptsCount >= 5 ? 'Reattempt Test (5/5 Max)' : `Reattempt Test (${attemptsCount}/5)`}
+                          </button>
+                        )}
                       </div>
                     );
                   })}
