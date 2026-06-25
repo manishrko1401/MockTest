@@ -3,7 +3,35 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import Link from 'next/link';
-import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon } from 'lucide-react';
+import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X } from 'lucide-react';
+
+const EXAMS_BY_CATEGORY: Record<string, { id: string; name: string }[]> = {
+  ssc: [
+    { id: 'ssc_cgl_tier1', name: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam' },
+    { id: 'ssc_chsl_tier1', name: 'SSC CHSL 2026 - Combined Higher Secondary Level Test' },
+    { id: 'ssc_mts_mock', name: 'SSC MTS Full-Length Practice Test Paper' }
+  ],
+  railways: [
+    { id: 'rrb_ntpc_stage1', name: 'RRB NTPC CBT-1 Stage 1 Practice Simulator' },
+    { id: 'rrb_group_d', name: 'RRB Group D Full Length Mock Test' }
+  ],
+  ugc_net: [
+    { id: 'ugc_net_paper1', name: 'UGC NET Paper-1 Teaching & Research Aptitude' },
+    { id: 'ugc_net_cs', name: 'UGC NET Computer Science & Applications Paper-II' }
+  ],
+  teaching: [
+    { id: 'ctet_paper1', name: 'CTET 2026 Paper-I (Primary Class I-V) Mock Paper' },
+    { id: 'ctet_paper2', name: 'CTET 2026 Paper-II (Mathematics & Science)' }
+  ],
+  state_exams: [
+    { id: 'up_psc_prelims', name: 'UPPSC Prelims General Studies (GS Paper 1)' },
+    { id: 'bihar_ssc', name: 'BSSC Inter-Level Full Practice Mock Paper' }
+  ],
+  banking: [
+    { id: 'sbi_po_prelims', name: 'SBI PO Preliminary Exam Full Length Mock Test' },
+    { id: 'ibps_clerk', name: 'IBPS Clerk Preliminary Practice Mock Paper' }
+  ]
+};
 
 const CATEGORIES = [
   { id: 'ssc', name: 'SSC Exams', desc: 'SSC CGL, CHSL, MTS, GD Constable', count: '45+ Tests' },
@@ -12,13 +40,6 @@ const CATEGORIES = [
   { id: 'teaching', name: 'Teaching Exams', desc: 'CTET Paper 1, Paper 2, State TET', count: '20+ Tests' },
   { id: 'state_exams', name: 'All State Exams', desc: 'UPPSC, BSSC, MPSC, RAS', count: '35+ Tests' },
   { id: 'banking', name: 'Banking Exams', desc: 'SBI PO, Clerk, IBPS PO, Clerk', count: '40+ Tests' }
-];
-
-const NOTICES = [
-  { id: 'n1', title: 'SSC CGL 2026 Tier 1 Exam Dates Announced', date: '25 June 2026', type: 'EXAM DATE' },
-  { id: 'n2', title: 'RRB NTPC Application Window Extended to July 10', date: '24 June 2026', type: 'ADMISSION' },
-  { id: 'n3', title: 'CTET 2026 Answer Key & Response Sheet Released', date: '22 June 2026', type: 'RESULT' },
-  { id: 'n4', title: 'UPPSC Prelims 2026 Exam Postponed. New Schedule Soon', date: '20 June 2026', type: 'NOTIFICATION' }
 ];
 
 const SUCCESS_STORIES = [
@@ -48,11 +69,27 @@ const SUCCESS_STORIES = [
   }
 ];
 
+const isNewlyPublished = (publishDateStr?: string) => {
+  if (!publishDateStr) return false;
+  try {
+    const pubDate = new Date(publishDateStr);
+    const now = new Date();
+    pubDate.setHours(0, 0, 0, 0);
+    now.setHours(0, 0, 0, 0);
+    const diffTime = Math.abs(now.getTime() - pubDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 3;
+  } catch (e) {
+    return false;
+  }
+};
+
 export default function HomeLandingPage() {
-  const { currentUser, logout, theme, toggleTheme } = useAuth();
+  const { currentUser, logout, theme, toggleTheme, noticesList } = useAuth();
   
   const [successIndex, setSuccessIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedModalCategory, setSelectedModalCategory] = useState<string | null>(null);
 
   const activeTopper = SUCCESS_STORIES[successIndex];
 
@@ -73,7 +110,7 @@ export default function HomeLandingPage() {
             </div>
             <div>
               <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">TESTBOOK</h1>
-              <p className="text-[9px] text-blue-650 dark:text-blue-400 font-bold tracking-widest uppercase">Exam Preparation</p>
+              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">Exam Preparation</p>
             </div>
           </Link>
 
@@ -113,7 +150,7 @@ export default function HomeLandingPage() {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <Link href="/auth" className="text-slate-500 hover:text-slate-850 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold">
+              <Link href="/auth" className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold">
                 Log In
               </Link>
               <Link href="/auth" className="bg-blue-600 hover:bg-blue-750 text-white font-bold py-2 px-4 rounded-xl text-xs shadow-lg shadow-blue-900/25 transition active:scale-95">
@@ -179,9 +216,9 @@ export default function HomeLandingPage() {
         </div>
 
         {/* Right Side: Showcase Board */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-6 rounded-3xl shadow-md relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md relative overflow-hidden flex flex-col justify-between min-h-[300px]">
           
-          <div className="flex items-center justify-between border-b border-slate-150 dark:border-slate-850 pb-4 mb-4">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-4">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
               <Trophy className="h-4 w-4 text-yellow-500" /> Toppers Testimonials
             </h3>
@@ -219,19 +256,19 @@ export default function HomeLandingPage() {
       <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900">
         <div className="text-center max-w-xl mx-auto mb-12">
           <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">Popular Exam Mock Series</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">We catalog full sectional mock tests, solved papers, and live analytics for all major domains.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">We catalog full sectional mock sittings, solved papers, and live analytics for all major domains.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {CATEGORIES.map(cat => (
-            <Link
-              href={`/mock-tests`}
+            <button
+              onClick={() => setSelectedModalCategory(cat.id)}
               key={cat.id}
-              className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 p-6 rounded-2xl flex flex-col justify-between group transition-all shadow-sm"
+              className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 p-6 rounded-2xl flex flex-col justify-between group transition-all shadow-sm text-left w-full cursor-pointer"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2.5 rounded-xl text-blue-650 dark:text-blue-400">
+                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2.5 rounded-xl text-blue-600 dark:text-blue-400">
                     <GraduationCap className="h-5 w-5" />
                   </div>
                   <span className="text-[10px] text-blue-600 dark:text-blue-400 font-black tracking-wider group-hover:underline">
@@ -242,80 +279,228 @@ export default function HomeLandingPage() {
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
               </div>
               
-              <div className="flex items-center gap-1.5 text-blue-605 dark:text-blue-400 font-bold text-[10px] uppercase tracking-wider mt-6 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold text-[10px] uppercase tracking-wider mt-6 pt-4 border-t border-slate-200 dark:border-slate-880 w-full">
                 Explore Tests <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
               </div>
-            </Link>
+            </button>
           ))}
         </div>
       </section>
 
-      {/* PORTAL NOTICE BOARD */}
-      <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900 grid grid-cols-1 lg:grid-cols-3 gap-12">
-        
-        {/* Left 2 columns: Information Notice board */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-8 rounded-3xl shadow-sm flex flex-col justify-between">
-          <div>
-            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-              <Bell className="h-4.5 w-4.5 text-blue-650 animate-bounce" /> Live Notices & Announcements
-            </h3>
-            
-            <div className="space-y-4">
-              {NOTICES.map(notice => (
-                <div
-                  key={notice.id}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-850 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex justify-between items-start gap-4"
-                >
-                  <div className="space-y-1.5">
-                    <span className="inline-block bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-900 text-blue-700 dark:text-blue-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
-                      {notice.type}
-                    </span>
-                    <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-snug">
-                      {notice.title}
-                    </h5>
-                  </div>
-                  <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold whitespace-nowrap">{notice.date}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-850 flex justify-end">
-            <Link href="/mock-tests" className="text-[10px] uppercase font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-              View All Advisories <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
+      {/* PORTAL UPDATES BOARD */}
+      <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900 space-y-12">
+        <div className="text-center max-w-xl mx-auto">
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">Live Updates & Exam Alerts</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">Stay updated with the latest exam notices, admit cards release, and result declarations in real-time.</p>
         </div>
 
-        {/* Right 1 column: Features Info */}
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-8 rounded-3xl shadow-xl flex flex-col justify-between relative overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Accent decoration */}
-          <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl"></div>
-
-          <div>
-            <h3 className="font-black text-sm uppercase tracking-wider mb-6 flex items-center gap-2 text-white">
-              <Info className="h-4.5 w-4.5 text-blue-200" /> CBT Engine Security
-            </h3>
+          {/* Tile 1: Live Notices & Announcements */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col justify-between min-h-[380px]">
+            <div>
+              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+                <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> Live Notices & Announcements
+              </h3>
+              
+              <div className="space-y-3 overflow-y-auto max-h-[260px] pr-1 scrollbar-thin">
+                {noticesList.filter(n => n.category === 'notice').length > 0 ? (
+                  noticesList.filter(n => n.category === 'notice').map(notice => (
+                    <div
+                      key={notice.id}
+                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-block bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-900 text-blue-700 dark:text-blue-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
+                            {notice.type}
+                          </span>
+                          {isNewlyPublished(notice.publishDate) && (
+                            <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
+                              NEW
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold whitespace-nowrap">{notice.date}</span>
+                      </div>
+                      <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-snug">
+                        {notice.url ? (
+                          <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline flex items-center gap-1">
+                            {notice.title}
+                            <ChevronRight className="h-3 w-3 inline shrink-0 animate-pulse text-blue-500" />
+                          </a>
+                        ) : (
+                          notice.title
+                        )}
+                      </h5>
+                      {notice.lastDate && (
+                        <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
+                          Last Date: {notice.lastDate}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
+                    No active notices at the moment.
+                  </div>
+                )}
+              </div>
+            </div>
             
-            <ul className="space-y-4 text-xs text-blue-100 font-semibold leading-relaxed">
-              <li className="flex gap-2.5 items-start">
-                <CheckCircle className="h-4.5 w-4.5 text-blue-200 shrink-0 mt-0.5" />
-                <span><strong>Anti-Cheat Shield</strong>: Automatic test submission triggers when client browser loses tab focus.</span>
-              </li>
-              <li className="flex gap-2.5 items-start">
-                <CheckCircle className="h-4.5 w-4.5 text-blue-200 shrink-0 mt-0.5" />
-                <span><strong>Bilingual CBT</strong>: Switch languages instantly inside mock sessions (English & Hindi formats).</span>
-              </li>
-              <li className="flex gap-2.5 items-start">
-                <CheckCircle className="h-4.5 w-4.5 text-blue-200 shrink-0 mt-0.5" />
-                <span><strong>Detailed Solutions</strong>: Get immediate correctness feedback and conceptual answers.</span>
-              </li>
-            </ul>
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <Link href="/updates" className="text-[9px] uppercase font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                View All Notices <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
 
-          <div className="mt-8 pt-4 border-t border-white/10 text-[10px] text-blue-200 font-bold leading-normal">
-            For technical assistance or ticket registration, write to support@mocktest.example.com.
+          {/* Tile 2: Live Result Section */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col justify-between min-h-[380px]">
+            <div>
+              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+                <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-pulse" /> Live Result Section
+              </h3>
+              
+              <div className="space-y-3 overflow-y-auto max-h-[260px] pr-1 scrollbar-thin">
+                {noticesList.filter(n => n.category === 'result').length > 0 ? (
+                  noticesList.filter(n => n.category === 'result').map(notice => (
+                    <div
+                      key={notice.id}
+                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-block bg-yellow-100 dark:bg-yellow-950/50 border border-yellow-300 dark:border-yellow-900/50 text-yellow-700 dark:text-yellow-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
+                            {notice.type}
+                          </span>
+                          {isNewlyPublished(notice.publishDate) && (
+                            <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
+                              NEW
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold whitespace-nowrap">{notice.date}</span>
+                      </div>
+                      <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-snug">
+                        {notice.url ? (
+                          <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:text-yellow-600 dark:hover:text-yellow-400 hover:underline flex items-center gap-1">
+                            {notice.title}
+                            <ChevronRight className="h-3 w-3 inline shrink-0 animate-pulse text-yellow-500" />
+                          </a>
+                        ) : (
+                          notice.title
+                        )}
+                      </h5>
+                      {notice.lastDate && (
+                        <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
+                          Last Date: {notice.lastDate}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
+                    No active results at the moment.
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <Link href="/updates" className="text-[9px] uppercase font-black text-yellow-600 dark:text-yellow-400 hover:underline flex items-center gap-1">
+                View All Results <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Tile 3: Live Admit Card Section */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col justify-between min-h-[380px]">
+            <div>
+              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+                <FileText className="h-4.5 w-4.5 text-green-550" /> Live Admit Card Section
+              </h3>
+              
+              <div className="space-y-3 overflow-y-auto max-h-[260px] pr-1 scrollbar-thin">
+                {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
+                  noticesList.filter(n => n.category === 'admit_card').map(notice => (
+                    <div
+                      key={notice.id}
+                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-block bg-green-100 dark:bg-green-950 border border-green-300 dark:border-green-900 text-green-700 dark:text-green-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
+                            {notice.type}
+                          </span>
+                          {isNewlyPublished(notice.publishDate) && (
+                            <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
+                              NEW
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold whitespace-nowrap">{notice.date}</span>
+                      </div>
+                      <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-snug">
+                        {notice.url ? (
+                          <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:text-green-600 dark:hover:text-green-455 hover:underline flex items-center gap-1">
+                            {notice.title}
+                            <ChevronRight className="h-3 w-3 inline shrink-0 animate-pulse text-green-500" />
+                          </a>
+                        ) : (
+                          notice.title
+                        )}
+                      </h5>
+                      {notice.lastDate && (
+                        <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
+                          Last Date: {notice.lastDate}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
+                    No active admit cards at the moment.
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <Link href="/updates" className="text-[9px] uppercase font-black text-green-600 dark:text-green-400 hover:underline flex items-center gap-1">
+                View All Admit Cards <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+
+        </div>
+
+        {/* CBT Engine Security - Full Width Banner */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+            <div className="md:col-span-1 border-b md:border-b-0 md:border-r border-white/10 pb-6 md:pb-0 md:pr-8">
+              <h3 className="font-black text-sm uppercase tracking-wider mb-3 flex items-center gap-2 text-white">
+                <Info className="h-4.5 w-4.5 text-blue-200" /> CBT Engine Security
+              </h3>
+              <p className="text-xs text-blue-100 leading-relaxed font-semibold">
+                Our simulated exam client enforces strict browser state tracking to align with live public service commission examinations.
+              </p>
+            </div>
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="flex gap-2.5 items-start">
+                <CheckCircle className="h-4.5 w-4.5 text-blue-200 shrink-0 mt-0.5" />
+                <span className="text-xs font-semibold"><strong>Anti-Cheat Shield</strong>: Automatic test submission triggers when client browser loses tab focus.</span>
+              </div>
+              <div className="flex gap-2.5 items-start">
+                <CheckCircle className="h-4.5 w-4.5 text-blue-200 shrink-0 mt-0.5" />
+                <span className="text-xs font-semibold"><strong>Bilingual CBT</strong>: Switch languages instantly inside mock sessions (English & Hindi formats).</span>
+              </div>
+              <div className="flex gap-2.5 items-start">
+                <CheckCircle className="h-4.5 w-4.5 text-blue-200 shrink-0 mt-0.5" />
+                <span className="text-xs font-semibold"><strong>Detailed Solutions</strong>: Get immediate correctness feedback, time tracking, and conceptual answers.</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -325,6 +510,55 @@ export default function HomeLandingPage() {
         <p className="font-bold">© 2026 Testbook CBT Mock Portal Simulator. All rights reserved.</p>
         <p className="mt-1">Developed to simulate real-world government selection computer based assessments.</p>
       </footer>
+
+      {/* Category Exams Popup Modal */}
+      {selectedModalCategory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl animate-in fade-in zoom-in duration-200 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+                <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-blue-600" />
+                  {CATEGORIES.find(c => c.id === selectedModalCategory)?.name} Options
+                </h4>
+                <button
+                  onClick={() => setSelectedModalCategory(null)}
+                  className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 font-semibold">
+                Select an exam category option to redirect to its dedicated mock sittings and full solutions:
+              </p>
+
+              <div className="space-y-3">
+                {EXAMS_BY_CATEGORY[selectedModalCategory]?.map((exam) => (
+                  <Link
+                    key={exam.id}
+                    href={`/mock-tests?cat=${selectedModalCategory}`}
+                    onClick={() => setSelectedModalCategory(null)}
+                    className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:border-blue-300 dark:hover:border-blue-900/60 rounded-xl transition group text-xs font-bold text-slate-800 dark:text-slate-200"
+                  >
+                    <span>{exam.name}</span>
+                    <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition group-hover:text-blue-600" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-6 border-t border-slate-200 dark:border-slate-800 pt-4">
+              <button
+                onClick={() => setSelectedModalCategory(null)}
+                className="bg-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer"
+              >
+                Close View
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

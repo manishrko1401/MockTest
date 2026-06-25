@@ -80,7 +80,27 @@ export default function MockTestsCatalog() {
   const { currentUser, saveUserProfileByAdmin, theme, toggleTheme, toggleBookmark } = useAuth();
   const router = useRouter();
   
-  const [selectedCategory, setSelectedCategory] = useState<string>('ssc');
+  const [selectedCategory, setSelectedCategory] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const cat = params.get('cat');
+      if (cat && ['ssc', 'railways', 'ugc_net', 'teaching', 'state_exams', 'banking'].includes(cat)) {
+        return cat;
+      }
+    }
+    return 'ssc';
+  });
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const cat = params.get('cat');
+      if (cat && ['ssc', 'railways', 'ugc_net', 'teaching', 'state_exams', 'banking'].includes(cat)) {
+        setSelectedCategory(cat);
+      }
+    }
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [upgradePopupOpen, setUpgradePopupOpen] = useState(false);
   const [requiredTierInfo, setRequiredTierInfo] = useState<string>('');
@@ -167,7 +187,7 @@ export default function MockTestsCatalog() {
             className={`p-2 rounded-xl flex items-center justify-center gap-1.5 border px-3 py-2 text-xs font-bold transition-all active:scale-95 cursor-pointer select-none h-8.5 ${
               showBookmarks 
                 ? 'bg-yellow-500 border-yellow-500 text-white shadow-md shadow-yellow-500/20'
-                : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-750 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-slate-800'
+                : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
             }`}
             title="Bookmarked Questions"
           >
@@ -197,7 +217,7 @@ export default function MockTestsCatalog() {
           {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-850"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -265,7 +285,7 @@ export default function MockTestsCatalog() {
               {/* Bookmarked List */}
               {(!currentUser || !currentUser.bookmarkedQuestions || currentUser.bookmarkedQuestions.length === 0) ? (
                 <div className="text-center py-16 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
-                  <Bookmark className="h-10 w-10 text-slate-350 dark:text-slate-650 mx-auto mb-3" />
+                  <Bookmark className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                   <p className="text-slate-600 dark:text-slate-400 text-sm font-bold">No bookmarks saved yet</p>
                   <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Bookmark questions during test analysis to view them here.</p>
                 </div>
@@ -314,9 +334,9 @@ export default function MockTestsCatalog() {
                         </div>
 
                         {isExpanded && (
-                          <div className="mt-4 pt-4 border-t border-slate-150 dark:border-slate-850/60 space-y-4">
+                          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800/60 space-y-4">
                             {/* Question Text */}
-                            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 border border-slate-200 dark:border-slate-800 rounded text-xs leading-relaxed text-slate-850 dark:text-slate-200">
+                            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 border border-slate-200 dark:border-slate-800 rounded text-xs leading-relaxed text-slate-800 dark:text-slate-200">
                               <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">Question (English):</p>
                               <p className="font-normal mb-3">{question.content.en.questionText}</p>
                               {question.content.en.mathLatex && (
@@ -346,12 +366,12 @@ export default function MockTestsCatalog() {
                                       className={`p-3 rounded-lg border text-xs flex flex-col gap-1 ${
                                         isCorrect 
                                           ? 'bg-green-50 border-green-300 dark:bg-green-950/20 dark:border-green-900/60 text-green-800 dark:text-green-350 font-semibold' 
-                                          : 'bg-white border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 text-slate-700 dark:text-slate-450'
+                                          : 'bg-white border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 text-slate-700 dark:text-slate-400'
                                       }`}
                                     >
                                       <div className="flex items-center justify-between">
                                         <span>Option {oIdx + 1}: {textEn}</span>
-                                        {isCorrect && <Check className="h-3.5 w-3.5 text-green-650 dark:text-green-400" />}
+                                        {isCorrect && <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />}
                                       </div>
                                       <span className="text-[10px] opacity-80 mt-0.5">हिंदी: {textHi}</span>
                                     </div>
@@ -363,7 +383,7 @@ export default function MockTestsCatalog() {
                             {/* Solution Explanation */}
                             <div className="bg-blue-50/40 dark:bg-blue-950/10 p-4 border border-blue-100 dark:border-blue-900/45 rounded-xl">
                               <p className="text-[11px] font-bold text-blue-850 dark:text-blue-400 mb-3 uppercase tracking-wide">Explanation / व्याख्या</p>
-                              <div className="space-y-4 text-xs text-slate-700 dark:text-slate-350 leading-relaxed font-normal">
+                              <div className="space-y-4 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
                                 <div>
                                   <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">ENGLISH EXPLANATION</p>
                                   <p className="whitespace-pre-line">{EXPLANATIONS[question.id]?.en || "No explanation available."}</p>
@@ -408,7 +428,7 @@ export default function MockTestsCatalog() {
                     return (
                       <div
                         key={test.id}
-                        className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 hover:border-slate-350 dark:hover:border-slate-700 transition flex flex-col justify-between shadow-sm"
+                        className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between shadow-sm"
                       >
                         <div>
                           <div className="flex items-center justify-between mb-4">
@@ -434,7 +454,7 @@ export default function MockTestsCatalog() {
                             )}
                           </div>
 
-                          <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 leading-snug mb-3 hover:text-blue-650 dark:hover:text-blue-400 transition cursor-pointer">
+                          <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 leading-snug mb-3 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer">
                             {test.title}
                           </h4>
 
@@ -490,7 +510,7 @@ export default function MockTestsCatalog() {
               <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white">Unlock Gated Mock Test</h4>
             </div>
             
-            <p className="text-slate-600 dark:text-slate-350 text-xs leading-relaxed mb-6 font-semibold">
+            <p className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed mb-6 font-semibold">
               This is a premium assessment test. To start sitting, you need to upgrade your subscription pass to <strong className="text-yellow-600 dark:text-yellow-400">{requiredTierInfo}</strong> or higher.
             </p>
             

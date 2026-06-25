@@ -215,15 +215,15 @@ export default function ExamSolutionAnalysisPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-850 dark:text-slate-100 transition-colors duration-200 select-none pb-12">
+    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200 select-none pb-12">
       
       {/* 1. NAVIGATION BAR */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-850 bg-white dark:bg-slate-950/80 backdrop-blur-md px-6 md:px-12 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 backdrop-blur-md px-6 md:px-12 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-6">
-          <Link href="/mock-tests" className="flex items-center gap-2 text-slate-650 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors">
+          <Link href="/mock-tests" className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors">
             <ArrowLeft className="h-4 w-4" /> Back to Test Series
           </Link>
-          <span className="h-4 w-[1px] bg-slate-250 dark:bg-slate-800"></span>
+          <span className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
           <div className="flex flex-col">
             <span className="font-extrabold text-sm text-slate-900 dark:text-white leading-tight">{examSession.testTitle}</span>
             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Solution & Analysis Dashboard</span>
@@ -237,7 +237,7 @@ export default function ExamSolutionAnalysisPage() {
             <select
               value={lang}
               onChange={(e) => setLang(e.target.value as 'en' | 'hi')}
-              className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 outline-none text-xs text-slate-805 dark:text-slate-150 cursor-pointer font-bold transition-colors"
+              className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 outline-none text-xs text-slate-800 dark:text-slate-200 cursor-pointer font-bold transition-colors"
             >
               <option value="en">English</option>
               <option value="hi">हिंदी (Hindi)</option>
@@ -247,7 +247,7 @@ export default function ExamSolutionAnalysisPage() {
           {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-850"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -257,9 +257,9 @@ export default function ExamSolutionAnalysisPage() {
 
       {/* 2. STATS OVERVIEW CARDS */}
       <section className="max-w-6xl w-full mx-auto px-6 mt-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-850 p-6 rounded-2xl shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
           
-          <div className="flex items-center gap-3 border-r border-slate-150 dark:border-slate-850/80 pr-4 last:border-0">
+          <div className="flex items-center gap-3 border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
             <div className="bg-blue-500/10 p-2.5 rounded-xl text-blue-600 dark:text-blue-400">
               <Award className="h-5 w-5" />
             </div>
@@ -271,7 +271,7 @@ export default function ExamSolutionAnalysisPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 md:border-r border-slate-150 dark:border-slate-850/80 pr-4 last:border-0">
+          <div className="flex items-center gap-3 md:border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
             <div className="bg-green-500/10 p-2.5 rounded-xl text-green-600 dark:text-green-400">
               <CheckCircle2 className="h-5 w-5" />
             </div>
@@ -281,7 +281,7 @@ export default function ExamSolutionAnalysisPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 border-r border-slate-150 dark:border-slate-850/80 pr-4 last:border-0">
+          <div className="flex items-center gap-3 border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
             <div className="bg-purple-500/10 p-2.5 rounded-xl text-purple-600 dark:text-purple-400">
               <Timer className="h-5 w-5" />
             </div>
@@ -308,11 +308,11 @@ export default function ExamSolutionAnalysisPage() {
       <section className="max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start">
         
         {/* LEFT WORKSPACE PANEL: QUESTION VIEW */}
-        <main className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 rounded-2xl p-6 shadow-sm min-h-[480px] flex flex-col justify-between w-full">
+        <main className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm min-h-[480px] flex flex-col justify-between w-full">
           
           <div>
             {/* Question Header Status */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-850/60 pb-4 mb-5 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4 mb-5 gap-3">
               <div className="flex items-center gap-3">
                 <span className="font-extrabold text-xs text-blue-600 dark:text-blue-400 uppercase tracking-widest">
                   Question {activeQuestionIdx + 1}
@@ -340,11 +340,11 @@ export default function ExamSolutionAnalysisPage() {
               {/* Time stats and Bookmark button */}
               <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                 <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 dark:text-slate-400">
-                  <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 px-2 py-0.5 rounded">
-                    Your Time: <strong className="text-slate-850 dark:text-white font-bold">{userTime}s</strong>
+                  <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded">
+                    Your Time: <strong className="text-slate-800 dark:text-white font-bold">{userTime}s</strong>
                   </span>
-                  <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 px-2 py-0.5 rounded">
-                    Avg Time: <strong className="text-slate-850 dark:text-white font-bold">{avgTime}s</strong>
+                  <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded">
+                    Avg Time: <strong className="text-slate-800 dark:text-white font-bold">{avgTime}s</strong>
                   </span>
                 </div>
 
@@ -353,7 +353,7 @@ export default function ExamSolutionAnalysisPage() {
                   className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all active:scale-95 cursor-pointer ${
                     isBookmarked
                       ? 'bg-yellow-50 border-yellow-300 text-yellow-750 dark:bg-yellow-950/20 dark:border-yellow-900 dark:text-yellow-450'
-                      : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-750 text-slate-650 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   <Bookmark className={`h-3 w-3 ${isBookmarked ? 'fill-yellow-500 text-yellow-500' : ''}`} />
@@ -382,7 +382,7 @@ export default function ExamSolutionAnalysisPage() {
                 const isCorrectIndex = optIdx === activeQuestion.correctOptionIndex;
                 const isUserSelectedIndex = optIdx === activeStatus.userSelectedOptionIndex;
                 
-                let optionStyle = 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-805 dark:text-slate-200';
+                let optionStyle = 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200';
                 
                 if (isCorrectIndex) {
                   optionStyle = 'border-green-500 bg-green-50/40 dark:border-green-800 dark:bg-green-950/20 text-slate-900 dark:text-green-300';
@@ -427,11 +427,11 @@ export default function ExamSolutionAnalysisPage() {
             </div>
 
             {/* Explanation card */}
-            <div className="mt-8 bg-slate-100 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-850 p-5 rounded-2xl">
-              <h5 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-250 dark:border-slate-850 pb-2 mb-3.5 flex items-center gap-1.5">
+            <div className="mt-8 bg-slate-100 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
+              <h5 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-2 mb-3.5 flex items-center gap-1.5">
                 <HelpCircle className="h-4 w-4 text-blue-500" /> Detailed Explanation & Concept
               </h5>
-              <div className="text-xs text-slate-750 dark:text-slate-350 whitespace-pre-line leading-relaxed font-semibold">
+              <div className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed font-semibold">
                 {activeExplanation[lang] || activeExplanation['en']}
               </div>
             </div>
@@ -439,7 +439,7 @@ export default function ExamSolutionAnalysisPage() {
           </div>
 
           {/* Navigation CTAs */}
-          <div className="flex justify-between items-center border-t border-slate-150 dark:border-slate-850 pt-5 mt-8">
+          <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-5 mt-8">
             <button
               onClick={() => setActiveQuestionIdx(prev => Math.max(0, prev - 1))}
               disabled={activeQuestionIdx === 0}
@@ -464,14 +464,14 @@ export default function ExamSolutionAnalysisPage() {
         </main>
 
         {/* RIGHT WORKSPACE SIDEBAR: QUESTION PALETTE */}
-        <aside className="w-full lg:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-6 rounded-2xl shadow-sm">
+        <aside className="w-full lg:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
           
-          <h4 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-slate-850/60 pb-2">
+          <h4 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2">
             Question Palette
           </h4>
 
           {/* Color Code Legend */}
-          <div className="grid grid-cols-3 gap-2 mb-6 text-[9px] font-bold text-slate-650 dark:text-slate-400">
+          <div className="grid grid-cols-3 gap-2 mb-6 text-[9px] font-bold text-slate-600 dark:text-slate-400">
             <div className="flex items-center gap-1.5">
               <span className="h-3 w-3 rounded-full bg-green-500 animate-pulse"></span>
               <span>Correct ({totalCorrect})</span>
@@ -491,7 +491,7 @@ export default function ExamSolutionAnalysisPage() {
             {questionStatuses.map((stat, idx) => {
               const isActive = idx === activeQuestionIdx;
               
-              let statusBg = 'bg-slate-100 text-slate-550 hover:bg-slate-205 dark:bg-slate-800 dark:text-slate-400';
+              let statusBg = 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400';
               if (stat.status === 'correct') {
                 statusBg = 'bg-green-600 text-white shadow shadow-green-950/20';
               } else if (stat.status === 'incorrect') {
@@ -516,7 +516,7 @@ export default function ExamSolutionAnalysisPage() {
             })}
           </div>
 
-          <div className="border-t border-slate-150 dark:border-slate-850 mt-6 pt-5">
+          <div className="border-t border-slate-200 dark:border-slate-800 mt-6 pt-5">
             <Link
               href="/mock-tests"
               className="block w-full text-center py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition active:scale-95"

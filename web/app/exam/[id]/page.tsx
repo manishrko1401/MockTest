@@ -299,10 +299,10 @@ function TcsIonEngine({ testId }: { testId: string }) {
             </div>
 
             <button
-              onClick={() => router.push('/profile')}
+              onClick={() => router.push('/mock-tests')}
               className="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg shadow hover:bg-blue-750 transition"
             >
-              Go to Profile Stats
+              Go to Test Series
             </button>
           </div>
         </div>
@@ -651,7 +651,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
             <select
               value={lang}
               onChange={(e) => setLang(e.target.value as 'en' | 'hi')}
-              className="bg-slate-100 dark:bg-slate-800 border border-slate-350 dark:border-slate-700 rounded px-2 py-1 outline-none text-xs text-slate-850 dark:text-white cursor-pointer font-bold"
+              className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 outline-none text-xs text-slate-800 dark:text-white cursor-pointer font-bold"
             >
               <option value="en">English</option>
               <option value="hi">हिंदी (Hindi)</option>
@@ -661,7 +661,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
           {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
-            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-650 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-700"
+            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-700"
             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -674,7 +674,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
         
         <div className="space-y-6">
           <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
-            <h1 className="text-lg font-black text-slate-850 dark:text-white uppercase tracking-wider">{examName}</h1>
+            <h1 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider">{examName}</h1>
             <div className="flex gap-4 mt-2 text-xs text-slate-500 font-bold">
               <span>Duration: {durationMinutes} Mins</span>
               <span>•</span>
@@ -701,12 +701,12 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
 
         {/* Disclaimer panel and button */}
         <div className="mt-8 border-t border-slate-200 dark:border-slate-800 pt-6">
-          <label className="flex items-start gap-3 cursor-pointer select-none text-xs text-slate-650 dark:text-slate-400 leading-normal mb-6">
+          <label className="flex items-start gap-3 cursor-pointer select-none text-xs text-slate-600 dark:text-slate-400 leading-normal mb-6">
             <input
               type="checkbox"
               checked={agreed}
               onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-slate-350 text-blue-650 focus:ring-blue-500 cursor-pointer"
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
             />
             <span>{t.disclaimer}</span>
           </label>
@@ -714,7 +714,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
           <div className="flex justify-between items-center">
             <Link 
               href="/mock-tests" 
-              className="bg-slate-200 dark:bg-slate-850 hover:bg-slate-300 dark:hover:bg-slate-800 text-slate-750 dark:text-slate-300 font-bold px-6 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all active:scale-95"
+              className="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all active:scale-95"
             >
               Cancel
             </Link>

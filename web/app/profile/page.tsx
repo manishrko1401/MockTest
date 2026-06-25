@@ -91,7 +91,7 @@ export default function StudentProfilePage() {
         <div className="text-center p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl max-w-sm shadow-xl">
           <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
           <h3 className="font-extrabold text-sm uppercase tracking-wider mb-2">Authentication Required</h3>
-          <p className="text-slate-550 dark:text-slate-400 text-xs leading-relaxed mb-6">Please log in to your account to view and manage your profile details.</p>
+          <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed mb-6">Please log in to your account to view and manage your profile details.</p>
           <Link href="/auth" className="inline-block bg-blue-600 hover:bg-blue-750 text-white font-bold py-2.5 px-6 rounded-lg text-xs tracking-wider uppercase transition-all shadow-lg active:scale-95">
             Log In
           </Link>
@@ -101,7 +101,7 @@ export default function StudentProfilePage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-850 dark:text-slate-100 select-none pb-12 transition-colors duration-200">
+    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none pb-12 transition-colors duration-200">
       
       {/* Dynamic Header */}
       <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-8 flex items-center justify-between shadow-sm">
@@ -111,7 +111,7 @@ export default function StudentProfilePage() {
         
         <div className="flex items-center gap-4">
           {currentUser.role === 'ADMIN' && (
-            <Link href="/admin" className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors px-3 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-white">
+            <Link href="/admin" className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors px-3 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-white">
               <LayoutDashboard className="h-3.5 w-3.5 text-blue-500" /> Admin Dashboard
             </Link>
           )}
@@ -119,7 +119,7 @@ export default function StudentProfilePage() {
           {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-850"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -151,18 +151,18 @@ export default function StudentProfilePage() {
             
             <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">{currentUser.name}</h3>
             <p className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-wider mt-1">Candidate Code: {currentUser.candidateCode}</p>
-            <p className="text-xs text-slate-650 dark:text-slate-450 mt-2 truncate">{currentUser.email}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 truncate">{currentUser.email}</p>
 
-            <div className="border-t border-slate-150 dark:border-slate-850 mt-5 pt-5 text-left space-y-3.5">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-650 dark:text-slate-400">
-                <span className="text-slate-550 dark:text-slate-500 font-bold">System Role</span>
+            <div className="border-t border-slate-200 dark:border-slate-800 mt-5 pt-5 text-left space-y-3.5">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+                <span className="text-slate-500 dark:text-slate-500 font-bold">System Role</span>
                 <span className="bg-blue-100 border border-blue-300 text-blue-750 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
                   {currentUser.role}
                 </span>
               </div>
               
-              <div className="flex items-center justify-between text-xs font-bold text-slate-650 dark:text-slate-400">
-                <span className="text-slate-550 dark:text-slate-500 font-bold">Pass Subscription</span>
+              <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+                <span className="text-slate-500 dark:text-slate-500 font-bold">Pass Subscription</span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
                   currentUser.subscriptionTier === 'Testbook Pass Pro'
                     ? 'bg-yellow-105/50 border-yellow-300 text-yellow-750 dark:bg-yellow-950/40 dark:border-yellow-700 dark:text-yellow-400'
@@ -175,21 +175,21 @@ export default function StudentProfilePage() {
               </div>
 
               {currentUser.subscriptionPurchasedAt && (
-                <div className="flex items-center justify-between text-xs font-bold text-slate-655 dark:text-slate-400">
-                  <span className="text-slate-550 dark:text-slate-500 font-bold">Pass Purchased</span>
+                <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+                  <span className="text-slate-500 dark:text-slate-500 font-bold">Pass Purchased</span>
                   <span className="text-slate-800 dark:text-slate-300 font-mono text-[11px]">{currentUser.subscriptionPurchasedAt}</span>
                 </div>
               )}
 
               {currentUser.subscriptionExpiresAt && (
-                <div className="flex items-center justify-between text-xs font-bold text-slate-655 dark:text-slate-400">
-                  <span className="text-slate-550 dark:text-slate-500 font-bold">Pass Expires</span>
+                <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+                  <span className="text-slate-500 dark:text-slate-500 font-bold">Pass Expires</span>
                   <span className="text-slate-800 dark:text-slate-300 font-mono text-[11px]">{currentUser.subscriptionExpiresAt}</span>
                 </div>
               )}
 
-              <div className="flex items-center justify-between text-xs font-bold text-slate-655 dark:text-slate-400">
-                <span className="text-slate-550 dark:text-slate-500 font-bold">Registered On</span>
+              <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+                <span className="text-slate-500 dark:text-slate-500 font-bold">Registered On</span>
                 <span className="text-slate-800 dark:text-slate-300 font-mono text-[11px] flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   {currentUser.registeredDate}
@@ -197,18 +197,18 @@ export default function StudentProfilePage() {
               </div>
 
               {/* Referral Details block */}
-              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-3.5 rounded-xl mt-4">
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl mt-4">
                 <p className="text-[9px] uppercase font-bold text-slate-500 flex items-center gap-1.5">
                   <Gift className="h-3 w-3 text-yellow-600 dark:text-yellow-500" /> Share Referral Code
                 </p>
-                <div className="flex items-center justify-between gap-2 mt-1.5 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded border border-slate-250 dark:border-slate-800 font-mono text-[11px] text-slate-850 dark:text-white">
+                <div className="flex items-center justify-between gap-2 mt-1.5 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800 font-mono text-[11px] text-slate-800 dark:text-white">
                   <span className="font-bold select-all">{currentUser.referralCode}</span>
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(currentUser.referralCode);
                       alert("Referral code copied to clipboard!");
                     }}
-                    className="text-[9px] text-blue-650 dark:text-blue-400 font-bold hover:underline select-none cursor-pointer"
+                    className="text-[9px] text-blue-600 dark:text-blue-400 font-bold hover:underline select-none cursor-pointer"
                   >
                     Copy
                   </button>
@@ -236,7 +236,7 @@ export default function StudentProfilePage() {
             {/* Card 1: Profile Details Form */}
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
               <div>
-                <h3 className="font-extrabold text-xs text-slate-850 dark:text-white uppercase tracking-wider border-b border-slate-150 dark:border-slate-850 pb-4 mb-6 flex items-center gap-2">
+                <h3 className="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 flex items-center gap-2">
                   <User className="h-4 w-4 text-blue-500" /> Manage Profile Details
                 </h3>
                 
@@ -248,7 +248,7 @@ export default function StudentProfilePage() {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-250 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
+                      className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
                     />
                   </div>
 
@@ -259,14 +259,14 @@ export default function StudentProfilePage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-250 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
+                      className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
                     />
                   </div>
 
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Mobile Phone Number</label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                         <Phone className="h-3.5 w-3.5" />
                       </div>
                       <input
@@ -276,12 +276,12 @@ export default function StudentProfilePage() {
                         value={mobile}
                         onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
                         placeholder="10-digit phone"
-                        className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-250 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
+                        className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
                       />
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-slate-150 dark:border-slate-850 flex justify-end">
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
                     <button
                       type="submit"
                       className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg text-xs transition-all shadow-lg shadow-blue-900/20 active:scale-95 cursor-pointer"
@@ -296,7 +296,7 @@ export default function StudentProfilePage() {
             {/* Card 2: Password Update Form */}
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
               <div>
-                <h3 className="font-extrabold text-xs text-slate-850 dark:text-white uppercase tracking-wider border-b border-slate-150 dark:border-slate-850 pb-4 mb-6 flex items-center gap-2">
+                <h3 className="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 flex items-center gap-2">
                   <Lock className="h-4 w-4 text-blue-500" /> Change Security Password
                 </h3>
                 
@@ -309,7 +309,7 @@ export default function StudentProfilePage() {
                       value={oldPassword}
                       onChange={(e) => setOldPassword(e.target.value)}
                       placeholder="Enter current password"
-                      className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-250 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
+                      className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
                     />
                   </div>
 
@@ -321,7 +321,7 @@ export default function StudentProfilePage() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Min 6 characters"
-                      className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-250 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
+                      className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
                     />
                   </div>
 
@@ -333,11 +333,11 @@ export default function StudentProfilePage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-enter new password"
-                      className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-250 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
+                      className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
                     />
                   </div>
 
-                  <div className="pt-4 border-t border-slate-150 dark:border-slate-850 flex justify-end">
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
                     <button
                       type="submit"
                       className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg text-xs transition-all shadow-lg shadow-blue-900/20 active:scale-95 cursor-pointer"

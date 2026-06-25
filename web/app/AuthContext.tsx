@@ -16,6 +16,17 @@ export interface MockTestRecord {
   responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; }>;
 }
 
+export interface Notice {
+  id: string;
+  title: string;
+  date: string;
+  publishDate: string; // YYYY-MM-DD
+  type: string;
+  category: 'notice' | 'result' | 'admit_card';
+  url?: string;
+  lastDate?: string; // e.g. "10 July 2026"
+}
+
 export interface MockUser {
   id: string;
   candidateCode: string;
@@ -69,6 +80,9 @@ interface AuthContextType {
     purchasedAt: string | null,
     expiry: string | null
   ) => void;
+  noticesList: Notice[];
+  addNotice: (title: string, type: string, category: 'notice' | 'result' | 'admit_card', date?: string, url?: string, lastDateInput?: string) => void;
+  deleteNotice: (id: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -147,10 +161,25 @@ const INITIAL_USERS: MockUser[] = [
   }
 ];
 
+const DEFAULT_NOTICES: Notice[] = [
+  { id: 'n1', title: 'SSC CGL 2026 Tier 1 Exam Dates Announced', date: '25 June 2026', publishDate: '2026-06-25', type: 'EXAM DATE', category: 'notice', url: 'https://ssc.gov.in', lastDate: '10 July 2026' },
+  { id: 'n2', title: 'RRB NTPC Application Window Extended to July 10', date: '24 June 2026', publishDate: '2026-06-24', type: 'ADMISSION', category: 'notice', url: 'https://indianrailways.gov.in', lastDate: '10 July 2026' },
+  { id: 'n3', title: 'UPPSC Prelims 2026 Exam Postponed. New Schedule Soon', date: '20 June 2026', publishDate: '2026-06-20', type: 'NOTIFICATION', category: 'notice', url: 'https://uppsc.up.nic.in' },
+  
+  { id: 'r1', title: 'CTET 2026 Answer Key & Response Sheet Released', date: '22 June 2026', publishDate: '2026-06-22', type: 'RESULT', category: 'result', url: 'https://ctet.nic.in' },
+  { id: 'r2', title: 'SSC CHSL 2025 Final Merit List & Cutoff PDF Out', date: '21 June 2026', publishDate: '2026-06-21', type: 'MERIT LIST', category: 'result', url: 'https://ssc.gov.in' },
+  { id: 'r3', title: 'SBI PO 2026 Prelims Scorecard & Cutoff Decided', date: '18 June 2026', publishDate: '2026-06-18', type: 'SCORECARD', category: 'result', url: 'https://sbi.co.in' },
+
+  { id: 'a1', title: 'UGC NET June 2026 Admit Card Download Link Active', date: '23 June 2026', publishDate: '2026-06-23', type: 'ADMIT CARD', category: 'admit_card', url: 'https://ugcnet.nta.ac.in' },
+  { id: 'a2', title: 'RRB ALP 2026 Stage 1 City Intimation Released', date: '22 June 2026', publishDate: '2026-06-22', type: 'CITY INFO', category: 'admit_card', url: 'https://indianrailways.gov.in' },
+  { id: 'a3', title: 'IBPS Clerk 2026 Prelims Call Letter Available', date: '19 June 2026', publishDate: '2026-06-19', type: 'CALL LETTER', category: 'admit_card', url: 'https://ibps.in' }
+];
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [usersList, setUsersList] = useState<MockUser[]>([]);
   const [currentUser, setCurrentUser] = useState<MockUser | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [noticesList, setNoticesList] = useState<Notice[]>([]);
 
   // Load initial data from localStorage with backfill checks
   useEffect(() => {
@@ -233,6 +262,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       setTheme('dark');
     }
+
+    // Load notices setting
+    const savedNotices = localStorage.getItem('tb_notices');
+    let loadedNotices: Notice[] = [];
+    if (savedNotices) {
+      try {
+        loadedNotices = JSON.parse(savedNotices) as Notice[];
+      } catch (e) {
+        loadedNotices = DEFAULT_NOTICES;
+        localStorage.setItem('tb_notices', JSON.stringify(DEFAULT_NOTICES));
+      }
+    } else {
+      loadedNotices = DEFAULT_NOTICES;
+      localStorage.setItem('tb_notices', JSON.stringify(DEFAULT_NOTICES));
+    }
+    setNoticesList(loadedNotices);
   }, []);
 
   // Sync theme changes with DOM node class selectors
@@ -250,6 +295,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const nextTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(nextTheme);
     localStorage.setItem('tb_theme', nextTheme);
+  };
+
+  const addNotice = (title: string, type: string, category: 'notice' | 'result' | 'admit_card', dateInput?: string, url?: string, lastDateInput?: string) => {
+    let dateStr = '';
+    const publishDateRaw = dateInput || new Date().toISOString().split('T')[0];
+
+    if (dateInput) {
+      const d = new Date(dateInput);
+      const day = d.getDate();
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthStr = months[d.getMonth()];
+      const year = d.getFullYear();
+      dateStr = `${day} ${monthStr} ${year}`;
+    } else {
+      const d = new Date();
+      const day = d.getDate();
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthStr = months[d.getMonth()];
+      const year = d.getFullYear();
+      dateStr = `${day} ${monthStr} ${year}`;
+    }
+
+    let lastDateStr = '';
+    if (lastDateInput && lastDateInput.trim() !== '') {
+      const d = new Date(lastDateInput);
+      const day = d.getDate();
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthStr = months[d.getMonth()];
+      const year = d.getFullYear();
+      lastDateStr = `${day} ${monthStr} ${year}`;
+    }
+
+    const newNotice: Notice = {
+      id: 'nt_' + Math.random().toString(36).substring(2, 9),
+      title,
+      type: type.toUpperCase(),
+      category,
+      date: dateStr,
+      publishDate: publishDateRaw,
+      url: url?.trim() || undefined,
+      lastDate: lastDateStr || undefined
+    };
+
+    const updated = [newNotice, ...noticesList];
+    setNoticesList(updated);
+    localStorage.setItem('tb_notices', JSON.stringify(updated));
+  };
+
+  const deleteNotice = (id: string) => {
+    const updated = noticesList.filter(n => n.id !== id);
+    setNoticesList(updated);
+    localStorage.setItem('tb_notices', JSON.stringify(updated));
   };
 
   const login = (email: string): boolean => {
@@ -473,7 +570,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addAttempt,
         toggleBookmark,
         resetAttempt,
-        saveUserProfileByAdmin
+        saveUserProfileByAdmin,
+        noticesList,
+        addNotice,
+        deleteNotice
       }}
     >
       {children}

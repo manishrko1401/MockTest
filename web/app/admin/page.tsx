@@ -17,7 +17,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle } from 'lucide-react';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -55,13 +55,22 @@ const scoreVariance = [
 // CORE ADMIN COMPONENT
 // ============================================================================
 export default function AdminAnalytics() {
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices'>('analytics');
   const [jsonInput, setJsonInput] = useState<string>('');
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [parsedQuestions, setParsedQuestions] = useState<any[]>([]);
 
+  // Notices states
+  const [noticeTitle, setNoticeTitle] = useState('');
+  const [noticeType, setNoticeType] = useState('EXAM DATE');
+  const [noticeCategory, setNoticeCategory] = useState<'notice' | 'result' | 'admit_card'>('notice');
+  const [noticeDate, setNoticeDate] = useState(new Date().toISOString().split('T')[0]);
+  const [noticeSearch, setNoticeSearch] = useState('');
+  const [noticeUrl, setNoticeUrl] = useState('');
+  const [noticeLastDate, setNoticeLastDate] = useState('');
+
   // User Management state from context
-  const { usersList, saveUserProfileByAdmin, resetAttempt, theme, toggleTheme } = useAuth();
+  const { usersList, saveUserProfileByAdmin, resetAttempt, theme, toggleTheme, noticesList, addNotice, deleteNotice } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
@@ -257,11 +266,22 @@ export default function AdminAnalytics() {
               <Users className="h-4 w-4" />
               User Management
             </button>
+            <button
+              onClick={() => setActiveTab('notices')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                activeTab === 'notices'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Bell className="h-4 w-4" />
+              Live Notices & Updates
+            </button>
           </nav>
         </div>
 
         {/* System telemetry */}
-        <div className="border-t border-slate-250 dark:border-slate-800 pt-4 text-[10px] text-slate-500">
+        <div className="border-t border-slate-200 dark:border-slate-800 pt-4 text-[10px] text-slate-500">
           <p>Database: Connected (PostgreSQL)</p>
           <p>Active sessions: 1,429</p>
           <p>System load: Normal</p>
@@ -278,24 +298,26 @@ export default function AdminAnalytics() {
               ? 'Student Analytics & Speed Dashboard' 
               : activeTab === 'upload' 
               ? 'Bulk Question Ingestion Terminal' 
-              : 'User Management & Access Control'}
+              : activeTab === 'users'
+              ? 'User Management & Access Control'
+              : 'Live Updates & Notices Manager'}
           </h2>
           <div className="flex items-center gap-4">
             {/* Back to Home Link */}
-            <Link href="/" className="text-xs font-bold text-slate-550 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors mr-2">
+            <Link href="/" className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors mr-2">
               Back to Home
             </Link>
 
             {/* Theme switcher */}
             <button 
               onClick={toggleTheme}
-              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-850"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
               title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </button>
 
-            <span className="h-4 w-[1px] bg-slate-250 dark:bg-slate-800"></span>
+            <span className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
 
             <div className="flex items-center gap-3">
               <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
@@ -900,6 +922,221 @@ export default function AdminAnalytics() {
 
               </div>
 
+            </div>
+          )}
+
+          {/* TAB 4: NOTICES & ANNOUNCEMENTS MANAGER */}
+          {activeTab === 'notices' && (
+            <div className="space-y-8 animate-in fade-in duration-200">
+              
+              {/* Info alert */}
+              <div className="bg-blue-500/10 border border-blue-500/25 p-4 rounded-xl flex items-start gap-3">
+                <Bell className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Live Updates Manager</p>
+                  <p className="text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
+                    Publish exam alerts, admit card download releases, and result sheets directly to the homepage updates grid. All additions will update client dashboards instantly via context state.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                {/* Form column (1/3) */}
+                <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl h-fit">
+                  <h3 className="font-extrabold text-xs text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+                    <PlusCircle className="h-4.5 w-4.5 text-blue-500" /> Publish New Update
+                  </h3>
+                  
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!noticeTitle.trim()) return;
+                    addNotice(noticeTitle, noticeType, noticeCategory, noticeDate, noticeUrl, noticeLastDate);
+                    setNoticeTitle('');
+                    setNoticeUrl('');
+                    setNoticeLastDate('');
+                    showToast('Notice published successfully!');
+                  }} className="space-y-4 text-xs">
+                    
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Update Category</label>
+                      <select
+                        value={noticeCategory}
+                        onChange={(e) => setNoticeCategory(e.target.value as any)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                      >
+                        <option value="notice">Live Notices & Announcements</option>
+                        <option value="result">Live Result Section</option>
+                        <option value="admit_card">Live Admit Card Section</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Label Tag (e.g. EXAM DATE, MERIT LIST)</label>
+                      <input
+                        type="text"
+                        required
+                        value={noticeType}
+                        onChange={(e) => setNoticeType(e.target.value)}
+                        placeholder="EXAM DATE, RESULT, ADMISSION, etc."
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Publish Date</label>
+                      <input
+                        type="date"
+                        required
+                        value={noticeDate}
+                        onChange={(e) => setNoticeDate(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                      />
+                    </div>
+
+                    {noticeCategory === 'notice' && (
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Application Last Date (Optional)</label>
+                        <input
+                          type="date"
+                          value={noticeLastDate}
+                          onChange={(e) => setNoticeLastDate(e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Attachment URL (Optional)</label>
+                      <input
+                        type="url"
+                        value={noticeUrl}
+                        onChange={(e) => setNoticeUrl(e.target.value)}
+                        placeholder="https://example.com/advisory"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Update Heading Title</label>
+                      <textarea
+                        required
+                        value={noticeTitle}
+                        onChange={(e) => setNoticeTitle(e.target.value)}
+                        placeholder="Type notice title..."
+                        rows={3}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-2.5 rounded-lg text-xs hover:bg-blue-750 active:scale-95 transition-all shadow-md cursor-pointer"
+                    >
+                      Publish Alert
+                    </button>
+                  </form>
+                </div>
+
+                {/* Notices list column (2/3) */}
+                <div className="lg:col-span-2 bg-slate-950 border border-slate-800 p-6 rounded-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <h3 className="font-extrabold text-xs text-white uppercase tracking-wider flex items-center gap-2">
+                      <Bell className="h-4.5 w-4.5 text-blue-500" /> Active Updates Board
+                    </h3>
+                    
+                    {/* Search bar */}
+                    <div className="relative w-full sm:w-64">
+                      <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                      <input
+                        type="text"
+                        value={noticeSearch}
+                        onChange={(e) => setNoticeSearch(e.target.value)}
+                        placeholder="Search updates..."
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-slate-700"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-800 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                          <th className="py-3 px-4">Heading Title</th>
+                          <th className="py-3 px-4">Category</th>
+                          <th className="py-3 px-4">Label Tag</th>
+                          <th className="py-3 px-4">Publish Date</th>
+                          <th className="py-3 px-4 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {noticesList.filter(n => 
+                          n.title.toLowerCase().includes(noticeSearch.toLowerCase()) ||
+                          n.type.toLowerCase().includes(noticeSearch.toLowerCase()) ||
+                          n.category.toLowerCase().includes(noticeSearch.toLowerCase())
+                        ).length > 0 ? (
+                          noticesList.filter(n => 
+                            n.title.toLowerCase().includes(noticeSearch.toLowerCase()) ||
+                            n.type.toLowerCase().includes(noticeSearch.toLowerCase()) ||
+                            n.category.toLowerCase().includes(noticeSearch.toLowerCase())
+                          ).map((notice) => (
+                            <tr key={notice.id} className="border-b border-slate-800 hover:bg-slate-900/30 transition text-slate-300">
+                              <td className="py-3 px-4 font-bold text-slate-100 max-w-xs">
+                                {notice.url ? (
+                                  <a href={notice.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-350 hover:underline flex items-center gap-1 mb-1">
+                                    {notice.title}
+                                    <ChevronRight className="h-3 w-3 inline animate-pulse" />
+                                  </a>
+                                ) : (
+                                  <span className="block mb-1">{notice.title}</span>
+                                )}
+                                {notice.lastDate && (
+                                  <span className="block text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
+                                    Last Date: {notice.lastDate}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4 capitalize">
+                                <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  notice.category === 'notice'
+                                    ? 'bg-blue-950/40 text-blue-400 border border-blue-900'
+                                    : notice.category === 'result'
+                                    ? 'bg-yellow-950/40 text-yellow-400 border border-yellow-900'
+                                    : 'bg-green-950/40 text-green-400 border border-green-900'
+                                }`}>
+                                  {notice.category === 'notice' ? 'Announcement' : notice.category === 'result' ? 'Result' : 'Admit Card'}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4">
+                                <span className="bg-slate-800 text-slate-300 font-bold px-1.5 py-0.5 rounded text-[10px]">{notice.type}</span>
+                              </td>
+                              <td className="py-3 px-4 font-semibold text-[11px] text-slate-400">{notice.date}</td>
+                              <td className="py-3 px-4 text-right">
+                                <button
+                                  onClick={() => {
+                                    deleteNotice(notice.id);
+                                    showToast('Notice deleted successfully.');
+                                  }}
+                                  className="text-red-400 hover:text-red-300 font-bold bg-red-950/20 border border-red-900/30 hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="text-center py-10 text-slate-500 font-semibold">
+                              No updates match the search filters.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div>
             </div>
           )}
 
