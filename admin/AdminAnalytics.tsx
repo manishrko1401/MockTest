@@ -133,7 +133,7 @@ export default function AdminAnalytics() {
               <Database className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="font-extrabold text-sm leading-tight text-white tracking-wider">TESTBOOK ADMIN</h1>
+              <h1 className="font-extrabold text-sm leading-tight text-white tracking-wider">MOCK TEST ADMIN</h1>
               <p className="text-[10px] text-slate-400 font-semibold tracking-widest uppercase">Management Suite</p>
             </div>
           </div>

@@ -39,7 +39,7 @@ export default function UpdatesCenterPage() {
               <ShieldCheck className="h-5 w-5 text-white animate-pulse" />
             </div>
             <div>
-              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">TESTBOOK</h1>
+              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">MOCK TEST</h1>
               <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">Exam Preparation</p>
             </div>
           </Link>
@@ -280,7 +280,7 @@ export default function UpdatesCenterPage() {
 
       {/* FOOTER */}
       <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-12 px-6 md:px-12 mt-auto text-center text-xs text-slate-500 dark:text-slate-500 transition-colors duration-200 font-bold">
-        <p>© 2026 Testbook CBT Mock Portal Simulator. All rights reserved.</p>
+        <p>© 2026 Mock Test CBT Mock Portal Simulator. All rights reserved.</p>
         <p className="mt-1 font-semibold text-slate-400">Developed to simulate real-world government selection computer based assessments.</p>
       </footer>
 

@@ -226,7 +226,7 @@ export default function AdminAnalytics() {
               <Database className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">TESTBOOK ADMIN</h1>
+              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">MOCK TEST ADMIN</h1>
               <p className="text-[10px] text-slate-400 font-semibold tracking-widest uppercase font-sans">Management Suite</p>
             </div>
           </div>
@@ -660,7 +660,7 @@ export default function AdminAnalytics() {
                                     ? 'bg-green-950/40 border border-green-700 text-green-400'
                                     : 'bg-slate-900 border border-slate-800 text-slate-500'
                                 }`}>
-                                  {user.subscriptionTier === 'None' ? 'No Pass' : user.subscriptionTier}
+                                  {user.subscriptionTier === 'None' ? 'No Pass' : user.subscriptionTier.replace('Testbook', 'Mock Test')}
                                 </span>
                               </td>
                               <td className="py-3.5 pl-2 text-right font-mono text-slate-300">
@@ -788,8 +788,8 @@ export default function AdminAnalytics() {
                                   className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                                 >
                                   <option value="None">None (No Pass)</option>
-                                  <option value="Testbook Pass">Testbook Pass (Basic)</option>
-                                  <option value="Testbook Pass Pro">Testbook Pass Pro (Full Gating Access)</option>
+                                  <option value="Testbook Pass">Mock Test Pass (Basic)</option>
+                                  <option value="Testbook Pass Pro">Mock Test Pass Pro (Full Gating Access)</option>
                                 </select>
                               </div>
 

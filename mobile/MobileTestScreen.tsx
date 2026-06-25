@@ -275,7 +275,7 @@ export default function MobileTestScreen() {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
         <View style={styles.dashHeader}>
-          <Text style={styles.dashTitle}>Testbook Pass</Text>
+          <Text style={styles.dashTitle}>Mock Test Pass</Text>
           <Text style={styles.dashSub}>Premium Member • Valid for 365 Days</Text>
         </View>
 

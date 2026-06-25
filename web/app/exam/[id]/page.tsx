@@ -92,7 +92,7 @@ export const generateExamSession = (id: string): ActiveSession => {
       }
     ];
   } else {
-    title = "Testbook Assessment Series - General Mock Test";
+    title = "Mock Test Assessment Series - General Mock Test";
     duration = 3600;
     sections = [
       { id: "sec_paper1", name: "Aptitude & General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 }

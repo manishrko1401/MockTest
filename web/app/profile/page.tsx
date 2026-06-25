@@ -170,7 +170,7 @@ export default function StudentProfilePage() {
                     ? 'bg-green-105/50 border-green-300 text-green-750 dark:bg-green-950/40 dark:border-green-700 dark:text-green-400'
                     : 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-500'
                 }`}>
-                  {currentUser.subscriptionTier === 'None' ? 'No Pass' : currentUser.subscriptionTier}
+                  {currentUser.subscriptionTier === 'None' ? 'No Pass' : currentUser.subscriptionTier.replace('Testbook', 'Mock Test')}
                 </span>
               </div>
 

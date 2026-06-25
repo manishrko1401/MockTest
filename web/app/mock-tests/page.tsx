@@ -164,7 +164,7 @@ export default function MockTestsCatalog() {
     );
     
     setUpgradePopupOpen(false);
-    alert(`Success! You have unlocked ${newTier}. You can now start the mock test.`);
+    alert(`Success! You have unlocked ${newTier.replace('Testbook', 'Mock Test')}. You can now start the mock test.`);
   };
 
   const getTestStatus = (testId: string) => {
@@ -446,7 +446,7 @@ export default function MockTestsCatalog() {
                                 ? 'bg-blue-100 border border-blue-300 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-400'
                                 : 'bg-yellow-100 border border-yellow-300 text-yellow-700 dark:bg-yellow-950/40 dark:border-yellow-800 dark:text-yellow-400'
                             }`}>
-                              {test.requiredTier === 'None' ? 'FREE TEST' : test.requiredTier}
+                              {test.requiredTier === 'None' ? 'FREE TEST' : test.requiredTier.replace('Testbook', 'Mock Test')}
                             </span>
                             
                             {ongoing && (
@@ -525,7 +525,7 @@ export default function MockTestsCatalog() {
             </div>
             
             <p className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed mb-6 font-semibold">
-              This is a premium assessment test. To start sitting, you need to upgrade your subscription pass to <strong className="text-yellow-600 dark:text-yellow-400">{requiredTierInfo}</strong> or higher.
+              This is a premium assessment test. To start sitting, you need to upgrade your subscription pass to <strong className="text-yellow-600 dark:text-yellow-400">{requiredTierInfo.replace('Testbook', 'Mock Test')}</strong> or higher.
             </p>
             
             <div className="flex justify-end gap-3">

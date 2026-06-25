@@ -85,7 +85,7 @@ export default function AuthPage() {
             <div className="inline-flex items-center justify-center bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/20 mb-3">
               <ShieldCheck className="h-6 w-6 text-white" />
             </div>
-            <h2 className="font-extrabold text-xl tracking-wider text-white">TESTBOOK ACCOUNT</h2>
+            <h2 className="font-extrabold text-xl tracking-wider text-white">MOCK TEST ACCOUNT</h2>
             <p className="text-[11px] text-slate-400 font-semibold tracking-widest uppercase mt-1">Single Sign-On Access</p>
           </div>
 
