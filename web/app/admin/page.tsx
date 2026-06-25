@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft } from 'lucide-react';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -75,6 +75,8 @@ export default function AdminAnalytics() {
 
   // User Management state from context
   const { 
+    currentUser,
+    login,
     usersList, 
     saveUserProfileByAdmin, 
     resetAttempt, 
@@ -94,6 +96,28 @@ export default function AdminAnalytics() {
     deleteMockTest
   } = useAuth();
   const t = TRANSLATIONS[language];
+
+  // Admin Authentication State
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminLoginError, setAdminLoginError] = useState<string | null>(null);
+
+  const handleAdminLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminLoginError(null);
+
+    // Hardcoded password verification for the admin panel
+    if (adminEmail.trim().toLowerCase() === 'admin@mocktest.com' && adminPassword === 'test@admin123') {
+      const ok = login('admin@mocktest.com');
+      if (ok) {
+        showToast('Admin access authorized successfully!');
+      } else {
+        setAdminLoginError('Database synchronization error. Admin user account could not be activated.');
+      }
+    } else {
+      setAdminLoginError('Invalid Admin ID or Password.');
+    }
+  };
 
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
@@ -288,6 +312,72 @@ export default function AdminAnalytics() {
     ];
     setJsonInput(JSON.stringify(template, null, 2));
   };
+
+  if (currentUser?.role !== 'ADMIN') {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-950 font-sans text-slate-100 relative overflow-hidden px-4">
+        {/* Ambient background blur circles */}
+        <div className="absolute top-10 left-10 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-10 right-10 w-72 h-72 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="max-w-md w-full bg-slate-900/80 border border-slate-800 p-8 rounded-2xl shadow-2xl backdrop-blur-md relative z-10">
+          <div className="text-center mb-6">
+            <div className="bg-blue-600/10 border border-blue-500/30 p-3.5 rounded-full inline-flex items-center justify-center mb-4">
+              <Database className="h-7 w-7 text-blue-500 animate-pulse" />
+            </div>
+            <h2 className="text-xl font-black uppercase tracking-wider text-white">Admin Authentication</h2>
+            <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mt-1">Management Suite Gating</p>
+          </div>
+
+          {adminLoginError && (
+            <div className="bg-red-950/40 border border-red-900/50 p-3 rounded-lg text-red-400 text-xs font-bold mb-4 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{adminLoginError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Admin ID / Email</label>
+              <input
+                type="email"
+                required
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                placeholder="admin@mocktest.com"
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-bold transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Security Password</label>
+              <input
+                type="password"
+                required
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-bold transition-all"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-blue-900/35 cursor-pointer mt-2"
+            >
+              Sign In to Suite
+            </button>
+          </form>
+
+          <div className="mt-6 border-t border-slate-800/80 pt-4 text-center">
+            <Link href="/" className="text-slate-500 hover:text-slate-350 text-xs font-bold inline-flex items-center gap-1.5 transition-colors">
+              <ArrowLeft className="h-3.5 w-3.5" /> Return to Homepage
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 overflow-hidden transition-colors duration-200">
@@ -814,7 +904,7 @@ export default function AdminAnalytics() {
             <div className="flex flex-col gap-6 lg:flex-row">
               
               {/* Left Pane: Users List & Search */}
-              <div className="flex-1 bg-slate-950 border border-slate-800 p-6 rounded-xl min-w-[350px] lg:max-w-[450px]">
+              <div className="flex-1 bg-slate-950 border border-slate-800 p-6 rounded-xl min-w-0 md:min-w-[350px] lg:max-w-[450px] w-full">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between mb-6">
                   <h3 className="font-bold text-xs text-white uppercase tracking-wider">Registered Users</h3>
                   

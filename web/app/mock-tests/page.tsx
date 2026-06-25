@@ -193,10 +193,10 @@ export default function MockTestsCatalog() {
       </header>
 
       {/* Main split-pane content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
         
         {/* Left Side Navigation (Categories list) */}
-        <aside className="w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between">
+        <aside className="w-full lg:w-64 bg-white dark:bg-slate-950 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-6 lg:gap-0 justify-between shrink-0">
           <div>
             <h3 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-4 font-sans">{t.examCategories}</h3>
             

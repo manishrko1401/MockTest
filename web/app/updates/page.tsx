@@ -52,7 +52,9 @@ export default function UpdatesCenterPage() {
             <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
             <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navUpdates}</Link>
             <Link href="/profile" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navProfile}</Link>
-            <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navAdmin}</Link>
+            {currentUser?.role === 'ADMIN' && (
+              <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navAdmin}</Link>
+            )}
           </nav>
         </div>
 
@@ -134,7 +136,7 @@ export default function UpdatesCenterPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Column 1: Notices & Announcements */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col min-h-[900px]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
               <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> {t.liveNotices}
             </h3>
@@ -185,7 +187,7 @@ export default function UpdatesCenterPage() {
           </div>
 
           {/* Column 2: Live Result Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col min-h-[900px]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
               <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-pulse" /> {t.resultsMerits}
             </h3>
@@ -236,7 +238,7 @@ export default function UpdatesCenterPage() {
           </div>
 
           {/* Column 3: Live Admit Card Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col min-h-[900px]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
               <FileText className="h-4.5 w-4.5 text-green-550" /> {t.admitCards}
             </h3>

@@ -263,6 +263,22 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
 
 const INITIAL_USERS: MockUser[] = [
   {
+    id: 'u_admin',
+    candidateCode: 'ADMIN_001',
+    name: 'Administrator',
+    email: 'admin@mocktest.com',
+    mobile: '9999999999',
+    referralCode: 'TB-ADMIN-1111',
+    referredBy: null,
+    referralsCount: 0,
+    role: 'ADMIN',
+    subscriptionTier: 'None',
+    subscriptionPurchasedAt: null,
+    subscriptionExpiresAt: null,
+    registeredDate: '2026-01-01',
+    testSessions: []
+  },
+  {
     id: 'u1',
     candidateCode: 'CGL_9029',
     name: 'Rahul Sharma',
@@ -407,6 +423,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('tb_users', JSON.stringify(INITIAL_USERS));
     }
     
+    if (!loadedUsers.some(u => u.role === 'ADMIN')) {
+      loadedUsers.push({
+        id: 'u_admin',
+        candidateCode: 'ADMIN_001',
+        name: 'Administrator',
+        email: 'admin@mocktest.com',
+        mobile: '9999999999',
+        referralCode: 'TB-ADMIN-1111',
+        referredBy: null,
+        referralsCount: 0,
+        role: 'ADMIN',
+        subscriptionTier: 'None',
+        subscriptionPurchasedAt: null,
+        subscriptionExpiresAt: null,
+        registeredDate: '2026-01-01',
+        testSessions: []
+      });
+      localStorage.setItem('tb_users', JSON.stringify(loadedUsers));
+    }
     setUsersList(loadedUsers);
 
     const savedSession = localStorage.getItem('tb_session');
@@ -421,14 +456,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setCurrentUser(parsedSession);
         }
       } catch (e) {
-        const defaultUser = loadedUsers.find(u => u.id === 'u1') || loadedUsers[0];
-        setCurrentUser(defaultUser);
-        localStorage.setItem('tb_session', JSON.stringify(defaultUser));
+        setCurrentUser(null);
+        localStorage.removeItem('tb_session');
       }
     } else {
-      const defaultUser = loadedUsers.find(u => u.id === 'u1') || loadedUsers[0];
-      setCurrentUser(defaultUser);
-      localStorage.setItem('tb_session', JSON.stringify(defaultUser));
+      setCurrentUser(null);
     }
 
     // Load theme setting
