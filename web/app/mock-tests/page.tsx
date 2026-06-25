@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { generateExamSession } from '../exam/[id]/page';
 import { EXPLANATIONS } from '../exam/[id]/analysis/page';
+import { TRANSLATIONS } from '../translations';
 
 interface MockTestItem {
   id: string;
@@ -161,8 +162,9 @@ const EXAM_CATALOG: TestCategory[] = [
 ];
 
 export default function MockTestsCatalog() {
-  const { currentUser, saveUserProfileByAdmin, theme, toggleTheme, toggleBookmark, clearOngoingSession } = useAuth();
+  const { currentUser, saveUserProfileByAdmin, theme, toggleTheme, toggleBookmark, clearOngoingSession, language, setLanguage } = useAuth();
   const router = useRouter();
+  const t = TRANSLATIONS[language];
   
   const [selectedCategory, setSelectedCategory] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -174,6 +176,8 @@ export default function MockTestsCatalog() {
     }
     return 'ssc';
   });
+
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -284,10 +288,20 @@ export default function MockTestsCatalog() {
       {/* Navbar header */}
       <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-8 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-slate-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 font-bold text-sm tracking-wide transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back to Home
+          <ArrowLeft className="h-4 w-4" /> {t.backToHome}
         </Link>
 
         <div className="flex items-center gap-3 max-w-md w-full justify-end">
+          {/* Language selector */}
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+            className="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+          >
+            <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
+            <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
+          </select>
+
           {/* Bookmarked Questions Button */}
           <button
             onClick={() => setShowBookmarks(!showBookmarks)}
@@ -296,10 +310,10 @@ export default function MockTestsCatalog() {
                 ? 'bg-yellow-500 border-yellow-500 text-white shadow-md shadow-yellow-500/20'
                 : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
             }`}
-            title="Bookmarked Questions"
+            title={t.bookmarks}
           >
             <Bookmark className={`h-3.5 w-3.5 ${showBookmarks ? 'fill-white' : ''}`} />
-            <span className="hidden sm:inline">Bookmarks</span>
+            <span className="hidden sm:inline">{t.bookmarks}</span>
             {currentUser?.bookmarkedQuestions?.length ? (
               <span className="bg-red-500 text-white rounded-full text-[9px] px-1.5 py-0.5">
                 {currentUser.bookmarkedQuestions.length}
@@ -316,7 +330,7 @@ export default function MockTestsCatalog() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search mock exams..."
+              placeholder={t.searchMocksPlaceholder}
               className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
@@ -325,7 +339,7 @@ export default function MockTestsCatalog() {
           <button 
             onClick={toggleTheme}
             className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
-            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            title={theme === 'light' ? t.themeDark : t.themeLight}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
@@ -338,7 +352,7 @@ export default function MockTestsCatalog() {
         {/* Left Side Navigation (Categories list) */}
         <aside className="w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between">
           <div>
-            <h3 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-4 font-sans">Exam Categories</h3>
+            <h3 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-4 font-sans">{t.examCategories}</h3>
             
             <nav className="space-y-1">
               {EXAM_CATALOG.map((category) => (
@@ -346,6 +360,7 @@ export default function MockTestsCatalog() {
                   key={category.id}
                   onClick={() => {
                     setSelectedCategory(category.id);
+                    setSelectedSubCategory(null);
                     setShowBookmarks(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
@@ -365,18 +380,18 @@ export default function MockTestsCatalog() {
           </div>
 
           <div className="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl p-4 text-center">
-            <p className="text-[10px] uppercase font-bold text-slate-600 dark:text-slate-400">Unlock All Tests</p>
-            <p className="text-xs text-slate-500 dark:text-slate-500 leading-normal mt-1 mb-3">Upgrade to Pass Pro for unrestricted CBT practice.</p>
+            <p className="text-[10px] uppercase font-bold text-slate-600 dark:text-slate-400">{t.unlockAll}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-500 leading-normal mt-1 mb-3">{t.upgradeDesc}</p>
             <button
               onClick={() => { setRequiredTierInfo('Testbook Pass Pro'); setUpgradePopupOpen(true); }}
               className="w-full bg-yellow-600 hover:bg-yellow-750 text-white py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-md active:scale-95 cursor-pointer"
             >
-              Get Pass Pro
+              {t.getPassPro}
             </button>
           </div>
         </aside>
 
-        {/* Right Side Content (Tests display) */}
+        {/* Right Side Content (Tests list/details) */}
         <main className="flex-1 p-8 overflow-y-auto">
           {showBookmarks ? (
             <div>
@@ -384,17 +399,17 @@ export default function MockTestsCatalog() {
               <div className="mb-6">
                 <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <Bookmark className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                  Bookmarked Questions
+                  {t.bookmarkTitle}
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Review your bookmarked questions and their step-by-step solutions below.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t.bookmarkDesc}</p>
               </div>
 
               {/* Bookmarked List */}
               {(!currentUser || !currentUser.bookmarkedQuestions || currentUser.bookmarkedQuestions.length === 0) ? (
                 <div className="text-center py-16 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
                   <Bookmark className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                  <p className="text-slate-600 dark:text-slate-400 text-sm font-bold">No bookmarks saved yet</p>
-                  <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Bookmark questions during test analysis to view them here.</p>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm font-bold">{t.noBookmarks}</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{t.noBookmarksDesc}</p>
                 </div>
               ) : (
                 <div className="space-y-4 max-w-4xl">
@@ -428,8 +443,8 @@ export default function MockTestsCatalog() {
                           <div className="flex items-center gap-3">
                             <button
                               onClick={(e) => {
-                                e.stopPropagation();
-                                toggleBookmark(bm.testId, bm.questionId);
+                                  e.stopPropagation();
+                                  toggleBookmark(bm.testId, bm.questionId);
                               }}
                               className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition cursor-pointer"
                               title="Remove Bookmark"
@@ -489,14 +504,14 @@ export default function MockTestsCatalog() {
 
                             {/* Solution Explanation */}
                             <div className="bg-blue-50/40 dark:bg-blue-950/10 p-4 border border-blue-100 dark:border-blue-900/45 rounded-xl">
-                              <p className="text-[11px] font-bold text-blue-850 dark:text-blue-400 mb-3 uppercase tracking-wide">Explanation / व्याख्या</p>
+                              <p className="text-[11px] font-bold text-blue-850 dark:text-blue-400 mb-3 uppercase tracking-wide">{t.explanation}</p>
                               <div className="space-y-4 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
                                 <div>
-                                  <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">ENGLISH EXPLANATION</p>
+                                  <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.englishExplanation}</p>
                                   <p className="whitespace-pre-line">{EXPLANATIONS[question.id]?.en || "No explanation available."}</p>
                                 </div>
                                 <div className="pt-3 border-t border-blue-100/50 dark:border-blue-950/20">
-                                  <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">हिन्दी व्याख्या</p>
+                                  <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.hindiExplanation}</p>
                                   <p className="whitespace-pre-line">{EXPLANATIONS[question.id]?.hi || "कोई व्याख्या उपलब्ध नहीं है।"}</p>
                                 </div>
                               </div>
@@ -509,35 +524,86 @@ export default function MockTestsCatalog() {
                 </div>
               )}
             </div>
-          ) : (
+          ) : selectedSubCategory === null ? (
             <>
-              <div className="mb-6">
+              <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-350">
                 <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-blue-500" />
-                  {currentCategoryObj?.name} Test Series
+                  {language === 'hi' ? TRANSLATIONS.hi.subCatTitle : TRANSLATIONS.en.subCatTitle}
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Simulate real examination CBT patterns. Select any card below to begin sitting.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {language === 'hi' ? TRANSLATIONS.hi.subCatDesc : TRANSLATIONS.en.subCatDesc}
+                </p>
               </div>
 
-              {/* Loop over subcategories */}
-              <div className="space-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
                 {currentCategoryObj?.subCategories.map(subCat => {
-                  const filteredTests = subCat.tests.filter(t => 
-                    t.title.toLowerCase().includes(searchQuery.toLowerCase())
-                  );
-
-                  if (filteredTests.length === 0) return null;
+                  const count = subCat.tests.length;
+                  const countStr = count === 1 
+                    ? (language === 'hi' ? `1 ${t.mocksCount}` : `1 ${t.mocksCount}`)
+                    : (language === 'hi' ? `${count} ${t.mocksCount}` : `${count} ${t.mocksCountPlural}`);
 
                   return (
-                    <div key={subCat.id} className="space-y-4">
-                      <div className="border-b border-slate-200 dark:border-slate-800 pb-2">
-                        <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                          <span className="w-1.5 h-3.5 bg-blue-600 rounded"></span>
+                    <button
+                      key={subCat.id}
+                      onClick={() => setSelectedSubCategory(subCat.id)}
+                      className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 p-6 rounded-2xl flex flex-col justify-between group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200"
+                    >
+                      <div>
+                        <div className="bg-blue-50 dark:bg-blue-900/25 p-3 rounded-xl text-blue-600 dark:text-blue-400 inline-block mb-4">
+                          <GraduationCap className="h-5 w-5" />
+                        </div>
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                           {subCat.name}
-                        </h3>
+                        </h4>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-lg">
+                          {countStr}
+                        </span>
                       </div>
+                      
+                      <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold text-[10px] uppercase tracking-wider mt-6 pt-4 border-t border-slate-150 dark:border-slate-800/60 w-full">
+                        {language === 'hi' ? "टेस्ट देखें" : "View Tests"} <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <>
+              {(() => {
+                const activeSubCat = currentCategoryObj?.subCategories.find(s => s.id === selectedSubCategory);
+                const filteredTests = activeSubCat?.tests.filter(t => 
+                  t.title.toLowerCase().includes(searchQuery.toLowerCase())
+                ) || [];
 
-                      {/* Test cards list grid */}
+                return (
+                  <div className="space-y-6 animate-in fade-in duration-300">
+                    <div className="mb-6 flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                      <div>
+                        <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                          <BookOpen className="h-5 w-5 text-blue-500" />
+                          {activeSubCat?.name}
+                        </h2>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          {t.testSeriesDesc}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setSelectedSubCategory(null)}
+                        className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95"
+                      >
+                        <ArrowLeft className="h-4 w-4" /> {t.backToSubcategories}
+                      </button>
+                    </div>
+
+                    {filteredTests.length === 0 ? (
+                      <div className="text-center py-16 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm font-bold">
+                          {language === 'hi' ? 'कोई मॉक टेस्ट नहीं मिला।' : 'No mock tests found.'}
+                        </p>
+                      </div>
+                    ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredTests.map(test => {
                           const hasPass = currentUser && (
@@ -553,7 +619,7 @@ export default function MockTestsCatalog() {
                           return (
                             <div
                               key={test.id}
-                              className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between shadow-sm"
+                              className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 hover:border-slate-300 dark:hover:hover:border-slate-700 transition flex flex-col justify-between shadow-sm"
                             >
                               <div>
                                 <div className="flex items-center justify-between mb-4">
@@ -564,22 +630,22 @@ export default function MockTestsCatalog() {
                                       ? 'bg-blue-100 border border-blue-300 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-400'
                                       : 'bg-yellow-100 border border-yellow-300 text-yellow-700 dark:bg-yellow-950/40 dark:border-yellow-800 dark:text-yellow-400'
                                   }`}>
-                                    {test.requiredTier === 'None' ? 'FREE TEST' : test.requiredTier.replace('Testbook', 'Mock Test')}
+                                    {test.requiredTier === 'None' ? t.freeTest : test.requiredTier.replace('Testbook', language === 'hi' ? 'मॉक टेस्ट' : 'Mock Test')}
                                   </span>
                                   
                                   {ongoing && (
                                     <span className="flex items-center gap-1 text-[9px] bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400 border border-orange-300 dark:border-orange-850 px-1.5 py-0.5 rounded font-black uppercase">
-                                      ⏸ Paused
+                                      ⏸ {t.paused}
                                     </span>
                                   )}
                                   {hasPass && !completed && !ongoing && (
                                     <span className="flex items-center gap-1 text-[9px] bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border border-green-300 dark:border-green-800 px-1.5 py-0.5 rounded font-bold">
-                                      <Check className="h-3 w-3" /> UNLOCKED
+                                      <Check className="h-3 w-3" /> {t.unlocked}
                                     </span>
                                   )}
                                   {completed && (
-                                    <span className="flex items-center gap-1 text-[9px] bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded font-black">
-                                      <Check className="h-3 w-3" /> ATTEMPTED
+                                    <span className="flex items-center gap-1 text-[9px] bg-green-100 text-green-805 dark:bg-green-950/60 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded font-black">
+                                      <Check className="h-3 w-3" /> {t.attempted}
                                     </span>
                                   )}
                                 </div>
@@ -590,15 +656,15 @@ export default function MockTestsCatalog() {
 
                                 <div className="grid grid-cols-3 gap-2 border-t border-slate-100 dark:border-slate-900 pt-3 mb-5 text-[10px] text-slate-500 dark:text-slate-400 font-bold">
                                   <div>
-                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">Questions</p>
+                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">{t.questions}</p>
                                     <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.questionsCount} Qs</p>
                                   </div>
                                   <div>
-                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">Duration</p>
+                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">{t.duration}</p>
                                     <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.durationMinutes} Mins</p>
                                   </div>
                                   <div>
-                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">Total Marks</p>
+                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">{t.totalMarks}</p>
                                     <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.maxMarks} Marks</p>
                                   </div>
                                 </div>
@@ -622,7 +688,7 @@ export default function MockTestsCatalog() {
                                     : 'bg-yellow-600 hover:bg-yellow-700 text-white shadow-yellow-900/20'
                                 }`}
                               >
-                                {completed ? 'View Solution & Analysis' : ongoing ? 'Resume Test' : hasPass ? 'Start Test' : 'Unlock with Pass'}
+                                {completed ? t.viewSolution : ongoing ? t.resumeTest : hasPass ? t.startTest : (language === 'hi' ? 'पास के साथ अनलॉक करें' : 'Unlock with Pass')}
                               </button>
 
                               {completed && (
@@ -631,17 +697,17 @@ export default function MockTestsCatalog() {
                                   disabled={attemptsCount >= 5}
                                   className="w-full text-center py-2.5 mt-2 rounded-lg text-xs font-bold transition-all border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/10 active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
-                                  {attemptsCount >= 5 ? 'Reattempt Test (5/5 Max)' : `Reattempt Test (${attemptsCount}/5)`}
+                                  {attemptsCount >= 5 ? t.maxLimitReached : `${t.reattempt} (${attemptsCount}/5)`}
                                 </button>
                               )}
                             </div>
                           );
                         })}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    )}
+                  </div>
+                );
+              })()}
             </>
           )}
         </main>

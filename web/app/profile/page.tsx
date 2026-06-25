@@ -4,11 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon } from 'lucide-react';
+import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon, Globe } from 'lucide-react';
+import { TRANSLATIONS } from '../translations';
 
 export default function StudentProfilePage() {
-  const { currentUser, updateProfile, updatePassword, logout, theme, toggleTheme } = useAuth();
+  const { currentUser, updateProfile, updatePassword, logout, theme, toggleTheme, language, setLanguage } = useAuth();
   const router = useRouter();
+  const t = TRANSLATIONS[language];
 
   // Input states
   const [name, setName] = useState('');
@@ -106,21 +108,31 @@ export default function StudentProfilePage() {
       {/* Dynamic Header */}
       <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-8 flex items-center justify-between shadow-sm">
         <Link href="/" className="flex items-center gap-2 text-slate-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 font-bold text-sm tracking-wide transition-colors">
-          <ChevronRight className="h-4 w-4 rotate-180" /> Back to Home
+          <ChevronRight className="h-4 w-4 rotate-180" /> {t.backToHome}
         </Link>
         
         <div className="flex items-center gap-4">
           {currentUser.role === 'ADMIN' && (
             <Link href="/admin" className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors px-3 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-white">
-              <LayoutDashboard className="h-3.5 w-3.5 text-blue-500" /> Admin Dashboard
+              <LayoutDashboard className="h-3.5 w-3.5 text-blue-500" /> {t.navAdmin}
             </Link>
           )}
+
+          {/* Language selector */}
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+            className="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+          >
+            <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
+            <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
+          </select>
 
           {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
             className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
-            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            title={theme === 'light' ? t.themeDark : t.themeLight}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
@@ -129,40 +141,38 @@ export default function StudentProfilePage() {
             onClick={handleSignOut}
             className="flex items-center gap-1 bg-red-100/50 dark:bg-red-950/20 border border-red-300 dark:border-red-900/40 hover:bg-red-200 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-all px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 cursor-pointer"
           >
-            <LogOut className="h-3.5 w-3.5" /> Log Out
+            <LogOut className="h-3.5 w-3.5" /> {t.signOut}
           </button>
         </div>
       </header>
 
       {/* Main page content area */}
-      <div className="max-w-6xl w-full mx-auto px-6 mt-8 flex flex-col lg:flex-row gap-8">
-        
-        {/* Left Side: Summary Card */}
+      <div className="max-w-6xl w-full mx-auto px-6 mt-8 flex flex-col lg:flex-row gap-8">        {/* Left Side: Summary Card */}
         <aside className="w-full lg:w-80 flex flex-col gap-6">
           
           {/* User profile recap */}
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl text-center shadow-sm relative overflow-hidden">
             {/* Ambient Background Glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none">{t.profileSidebarGlow}</div>
 
             <div className="relative h-20 w-20 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mx-auto flex items-center justify-center border border-blue-200 dark:border-blue-800/60 mb-4 text-2xl font-bold">
               {currentUser.name.split(' ').map(n => n[0]).join('')}
             </div>
             
             <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">{currentUser.name}</h3>
-            <p className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-wider mt-1">Candidate Code: {currentUser.candidateCode}</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-wider mt-1">{t.candidateCode}: {currentUser.candidateCode}</p>
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 truncate">{currentUser.email}</p>
 
             <div className="border-t border-slate-200 dark:border-slate-800 mt-5 pt-5 text-left space-y-3.5">
               <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
-                <span className="text-slate-500 dark:text-slate-500 font-bold">System Role</span>
+                <span className="text-slate-500 dark:text-slate-500 font-bold">{t.sysRole}</span>
                 <span className="bg-blue-100 border border-blue-300 text-blue-750 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
                   {currentUser.role}
                 </span>
               </div>
               
               <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
-                <span className="text-slate-500 dark:text-slate-500 font-bold">Pass Subscription</span>
+                <span className="text-slate-500 dark:text-slate-500 font-bold">{t.passSub}</span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
                   currentUser.subscriptionTier === 'Testbook Pass Pro'
                     ? 'bg-yellow-105/50 border-yellow-300 text-yellow-750 dark:bg-yellow-950/40 dark:border-yellow-700 dark:text-yellow-400'
@@ -170,26 +180,26 @@ export default function StudentProfilePage() {
                     ? 'bg-green-105/50 border-green-300 text-green-750 dark:bg-green-950/40 dark:border-green-700 dark:text-green-400'
                     : 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-500'
                 }`}>
-                  {currentUser.subscriptionTier === 'None' ? 'No Pass' : currentUser.subscriptionTier.replace('Testbook', 'Mock Test')}
+                  {currentUser.subscriptionTier === 'None' ? t.noPass : currentUser.subscriptionTier.replace('Testbook', language === 'hi' ? 'मॉक टेस्ट' : 'Mock Test')}
                 </span>
               </div>
 
               {currentUser.subscriptionPurchasedAt && (
                 <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
-                  <span className="text-slate-500 dark:text-slate-500 font-bold">Pass Purchased</span>
+                  <span className="text-slate-500 dark:text-slate-500 font-bold">{t.passPurchased}</span>
                   <span className="text-slate-800 dark:text-slate-300 font-mono text-[11px]">{currentUser.subscriptionPurchasedAt}</span>
                 </div>
               )}
 
               {currentUser.subscriptionExpiresAt && (
                 <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
-                  <span className="text-slate-500 dark:text-slate-500 font-bold">Pass Expires</span>
+                  <span className="text-slate-500 dark:text-slate-500 font-bold">{t.passExpires}</span>
                   <span className="text-slate-800 dark:text-slate-300 font-mono text-[11px]">{currentUser.subscriptionExpiresAt}</span>
                 </div>
               )}
 
               <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
-                <span className="text-slate-500 dark:text-slate-500 font-bold">Registered On</span>
+                <span className="text-slate-500 dark:text-slate-500 font-bold">{t.registeredOn}</span>
                 <span className="text-slate-800 dark:text-slate-300 font-mono text-[11px] flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   {currentUser.registeredDate}
@@ -199,27 +209,27 @@ export default function StudentProfilePage() {
               {/* Referral Details block */}
               <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl mt-4">
                 <p className="text-[9px] uppercase font-bold text-slate-500 flex items-center gap-1.5">
-                  <Gift className="h-3 w-3 text-yellow-600 dark:text-yellow-500" /> Share Referral Code
+                  <Gift className="h-3 w-3 text-yellow-600 dark:text-yellow-500" /> {t.referralTitle}
                 </p>
                 <div className="flex items-center justify-between gap-2 mt-1.5 bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800 font-mono text-[11px] text-slate-800 dark:text-white">
                   <span className="font-bold select-all">{currentUser.referralCode}</span>
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(currentUser.referralCode);
-                      alert("Referral code copied to clipboard!");
+                      alert(language === 'hi' ? "रेफरल कोड क्लिपबोर्ड पर कॉपी किया गया!" : "Referral code copied to clipboard!");
                     }}
                     className="text-[9px] text-blue-600 dark:text-blue-400 font-bold hover:underline select-none cursor-pointer"
                   >
-                    Copy
+                    {language === 'hi' ? "कॉपी" : "Copy"}
                   </button>
                 </div>
                 <div className="flex items-center justify-between text-[10px] mt-2.5 text-slate-500 dark:text-slate-400">
-                  <span>Successful Invites:</span>
+                  <span>{t.referralsCount}:</span>
                   <span className="font-bold text-blue-750 bg-blue-100 dark:text-white dark:bg-blue-950 px-1.5 py-0.5 rounded border border-blue-300 dark:border-blue-900">{currentUser.referralsCount}</span>
                 </div>
                 {currentUser.referredBy && (
                   <div className="text-[9px] text-slate-500 mt-2">
-                    Referred by: <span className="font-mono text-slate-600 dark:text-slate-400">{currentUser.referredBy}</span>
+                    {t.referredBy}: <span className="font-mono text-slate-600 dark:text-slate-400">{currentUser.referredBy}</span>
                   </div>
                 )}
               </div>
@@ -237,12 +247,12 @@ export default function StudentProfilePage() {
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
               <div>
                 <h3 className="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 flex items-center gap-2">
-                  <User className="h-4 w-4 text-blue-500" /> Manage Profile Details
+                  <User className="h-4 w-4 text-blue-500" /> {t.updateDetails}
                 </h3>
                 
                 <form onSubmit={handleUpdateProfile} className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Candidate Full Name</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.fullName}</label>
                     <input
                       type="text"
                       required
@@ -253,7 +263,7 @@ export default function StudentProfilePage() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Registered Email Address</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.emailAddr}</label>
                     <input
                       type="email"
                       required
@@ -264,7 +274,7 @@ export default function StudentProfilePage() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Mobile Phone Number</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.mobileNum}</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                         <Phone className="h-3.5 w-3.5" />
@@ -286,7 +296,7 @@ export default function StudentProfilePage() {
                       type="submit"
                       className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg text-xs transition-all shadow-lg shadow-blue-900/20 active:scale-95 cursor-pointer"
                     >
-                      <CheckCircle2 className="h-4 w-4" /> Save Profile Details
+                      <CheckCircle2 className="h-4 w-4" /> {t.saveProfileBtn}
                     </button>
                   </div>
                 </form>
@@ -297,12 +307,12 @@ export default function StudentProfilePage() {
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
               <div>
                 <h3 className="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-blue-500" /> Change Security Password
+                  <Lock className="h-4 w-4 text-blue-500" /> {t.changePass}
                 </h3>
                 
                 <form onSubmit={handleUpdatePassword} className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Current Password</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.oldPass}</label>
                     <input
                       type="password"
                       required
@@ -314,7 +324,7 @@ export default function StudentProfilePage() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">New Password</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.newPass}</label>
                     <input
                       type="password"
                       required
@@ -326,7 +336,7 @@ export default function StudentProfilePage() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Confirm New Password</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.confirmPass}</label>
                     <input
                       type="password"
                       required
@@ -342,7 +352,7 @@ export default function StudentProfilePage() {
                       type="submit"
                       className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg text-xs transition-all shadow-lg shadow-blue-900/20 active:scale-95 cursor-pointer"
                     >
-                      <KeyRound className="h-4 w-4" /> Update Password
+                      <KeyRound className="h-4 w-4" /> {t.updatePassBtn}
                     </button>
                   </div>
                 </form>
@@ -353,11 +363,11 @@ export default function StudentProfilePage() {
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
               <div>
                 <h3 className="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 flex items-center gap-2">
-                  <Sun className="h-4 w-4 text-blue-500" /> Default Theme Preference
+                  <Sun className="h-4 w-4 text-blue-500" /> {language === 'hi' ? 'डिफ़ॉल्ट थीम प्राथमिकता' : 'Default Theme Preference'}
                 </h3>
                 
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed font-semibold">
-                  Configure your default visual preference. The setting is saved instantly and applies globally.
+                  {language === 'hi' ? 'अपनी डिफ़ॉल्ट विज़ुअल थीम प्राथमिकता कॉन्फ़िगर करें। सेटिंग तुरंत सहेज ली जाती है।' : 'Configure your default visual preference. The setting is saved instantly and applies globally.'}
                 </p>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -369,10 +379,10 @@ export default function StudentProfilePage() {
                     className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-bold text-xs cursor-pointer transition active:scale-95 ${
                       theme === 'light'
                         ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20'
-                        : 'bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
+                        : 'bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-300'
                     }`}
                   >
-                    <Sun className="h-4 w-4" /> Light (White)
+                    <Sun className="h-4 w-4" /> {language === 'hi' ? 'लाइट (सफेद)' : 'Light (White)'}
                   </button>
                   <button
                     onClick={() => {
@@ -382,10 +392,52 @@ export default function StudentProfilePage() {
                     className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-bold text-xs cursor-pointer transition active:scale-95 ${
                       theme === 'dark'
                         ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20'
-                        : 'bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
+                        : 'bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-300'
                     }`}
                   >
-                    <Moon className="h-4 w-4" /> Dark
+                    <Moon className="h-4 w-4" /> {language === 'hi' ? 'डार्क' : 'Dark'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Default Language Settings */}
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+              <div>
+                <h3 className="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-blue-500" /> {t.defaultLangCard}
+                </h3>
+                
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed font-semibold">
+                  {t.defaultLangDesc}
+                </p>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => {
+                      if (language !== 'en') setLanguage('en');
+                    }}
+                    type="button"
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-bold text-xs cursor-pointer transition active:scale-95 ${
+                      language === 'en'
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20'
+                        : 'bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-300'
+                    }`}
+                  >
+                    {t.enLang}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (language !== 'hi') setLanguage('hi');
+                    }}
+                    type="button"
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-bold text-xs cursor-pointer transition active:scale-95 ${
+                      language === 'hi'
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20'
+                        : 'bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-300'
+                    }`}
+                  >
+                    {t.hiLang}
                   </button>
                 </div>
               </div>

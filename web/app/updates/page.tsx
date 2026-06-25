@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '../AuthContext';
 import { ShieldCheck, ChevronRight, Bell, Trophy, FileText, ArrowLeft, Sun, Moon } from 'lucide-react';
+import { TRANSLATIONS } from '../translations';
 
 const isNewlyPublished = (publishDateStr?: string) => {
   if (!publishDateStr) return false;
@@ -21,7 +22,8 @@ const isNewlyPublished = (publishDateStr?: string) => {
 };
 
 export default function UpdatesCenterPage() {
-  const { currentUser, logout, theme, toggleTheme, noticesList } = useAuth();
+  const { currentUser, logout, theme, toggleTheme, noticesList, language, setLanguage } = useAuth();
+  const t = TRANSLATIONS[language];
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200">
@@ -39,28 +41,38 @@ export default function UpdatesCenterPage() {
               <ShieldCheck className="h-5 w-5 text-white animate-pulse" />
             </div>
             <div>
-              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">MOCK TEST</h1>
-              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">Exam Preparation</p>
+              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
+              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
             </div>
           </Link>
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-500 dark:text-slate-400">
-            <Link href="/" className="hover:text-blue-600 dark:hover:text-white transition-colors">Home</Link>
-            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">Test Series</Link>
-            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors">Notices & Announcements</Link>
-            <Link href="/profile" className="hover:text-blue-600 dark:hover:text-white transition-colors">My Profile</Link>
-            <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors">Admin Panel</Link>
+            <Link href="/" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navHome}</Link>
+            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
+            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navUpdates}</Link>
+            <Link href="/profile" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navProfile}</Link>
+            <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navAdmin}</Link>
           </nav>
         </div>
 
         {/* Auth Buttons / Profile Panel */}
         <div className="flex items-center gap-4">
+          {/* Language selector */}
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+            className="px-2 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+          >
+            <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
+            <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
+          </select>
+
           {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
             className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
-            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            title={theme === 'light' ? t.themeDark : t.themeLight}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
@@ -71,22 +83,22 @@ export default function UpdatesCenterPage() {
                 <div className="h-5 w-5 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[10px]">
                   {currentUser.name[0]}
                 </div>
-                <span>Dashboard ({currentUser.name.split(' ')[0]})</span>
+                <span>{t.dashboard} ({currentUser.name.split(' ')[0]})</span>
               </Link>
               <button
                 onClick={logout}
                 className="hidden sm:block text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold cursor-pointer"
               >
-                Sign Out
+                {t.signOut}
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-3">
               <Link href="/auth" className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold">
-                Log In
+                {t.logIn}
               </Link>
               <Link href="/auth" className="bg-blue-600 hover:bg-blue-750 text-white font-bold py-2 px-4 rounded-xl text-xs shadow-lg shadow-blue-900/25 transition active:scale-95">
-                Sign Up
+                {t.signUp}
               </Link>
             </div>
           )}
@@ -100,13 +112,13 @@ export default function UpdatesCenterPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-900 pb-6">
           <div>
             <span className="text-[10px] bg-blue-100 border border-blue-200 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
-              📢 Realtime Advisory Hub
+              {language === 'hi' ? '📢 लाइव सूचना केंद्र' : '📢 Realtime Advisory Hub'}
             </span>
             <h2 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white mt-3 uppercase">
-              Live Updates & Examination Alerts
+              {t.updatesTitle}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">
-              Browse newly declared results, print call letters, and check announcements across active SSC, Railways, and Teaching mock series.
+              {t.updatesDesc}
             </p>
           </div>
           
@@ -114,7 +126,7 @@ export default function UpdatesCenterPage() {
             href="/"
             className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm text-slate-700 dark:text-slate-200 self-start sm:self-center"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to Home
+            <ArrowLeft className="h-4 w-4" /> {t.backToHome}
           </Link>
         </div>
 
@@ -124,7 +136,7 @@ export default function UpdatesCenterPage() {
           {/* Column 1: Notices & Announcements */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col min-h-[900px]">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-              <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> Live Notices & Announcements
+              <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> {t.liveNotices}
             </h3>
             
             <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[1000px] scrollbar-thin">
@@ -141,7 +153,7 @@ export default function UpdatesCenterPage() {
                         </span>
                         {isNewlyPublished(notice.publishDate) && (
                           <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
-                            NEW
+                            {t.newBadge}
                           </span>
                         )}
                       </div>
@@ -159,14 +171,14 @@ export default function UpdatesCenterPage() {
                     </h5>
                     {notice.lastDate && (
                       <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
-                        Last Date: {notice.lastDate}
+                        {t.lastDate} {notice.lastDate}
                       </p>
                     )}
                   </div>
                 ))
               ) : (
                 <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs">
-                  No active notices.
+                  {language === 'hi' ? 'कोई सक्रिय सूचना नहीं।' : 'No active notices.'}
                 </div>
               )}
             </div>
@@ -175,7 +187,7 @@ export default function UpdatesCenterPage() {
           {/* Column 2: Live Result Section */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col min-h-[900px]">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-              <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-pulse" /> Live Result Section
+              <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-pulse" /> {t.resultsMerits}
             </h3>
             
             <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[1000px] scrollbar-thin">
@@ -192,7 +204,7 @@ export default function UpdatesCenterPage() {
                         </span>
                         {isNewlyPublished(notice.publishDate) && (
                           <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
-                            NEW
+                            {t.newBadge}
                           </span>
                         )}
                       </div>
@@ -210,14 +222,14 @@ export default function UpdatesCenterPage() {
                     </h5>
                     {notice.lastDate && (
                       <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
-                        Last Date: {notice.lastDate}
+                        {t.lastDate} {notice.lastDate}
                       </p>
                     )}
                   </div>
                 ))
               ) : (
                 <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs">
-                  No active results.
+                  {language === 'hi' ? 'कोई सक्रिय परिणाम नहीं।' : 'No active results.'}
                 </div>
               )}
             </div>
@@ -226,7 +238,7 @@ export default function UpdatesCenterPage() {
           {/* Column 3: Live Admit Card Section */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col min-h-[900px]">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-              <FileText className="h-4.5 w-4.5 text-green-550" /> Live Admit Card Section
+              <FileText className="h-4.5 w-4.5 text-green-550" /> {t.admitCards}
             </h3>
             
             <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[1000px] scrollbar-thin">
@@ -243,7 +255,7 @@ export default function UpdatesCenterPage() {
                         </span>
                         {isNewlyPublished(notice.publishDate) && (
                           <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
-                            NEW
+                            {t.newBadge}
                           </span>
                         )}
                       </div>
@@ -261,14 +273,14 @@ export default function UpdatesCenterPage() {
                     </h5>
                     {notice.lastDate && (
                       <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
-                        Last Date: {notice.lastDate}
+                        {t.lastDate} {notice.lastDate}
                       </p>
                     )}
                   </div>
                 ))
               ) : (
                 <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs">
-                  No active admit cards.
+                  {language === 'hi' ? 'कोई सक्रिय प्रवेश पत्र नहीं।' : 'No active admit cards.'}
                 </div>
               )}
             </div>
@@ -280,8 +292,8 @@ export default function UpdatesCenterPage() {
 
       {/* FOOTER */}
       <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-12 px-6 md:px-12 mt-auto text-center text-xs text-slate-500 dark:text-slate-500 transition-colors duration-200 font-bold">
-        <p>© 2026 Mock Test CBT Mock Portal Simulator. All rights reserved.</p>
-        <p className="mt-1 font-semibold text-slate-400">Developed to simulate real-world government selection computer based assessments.</p>
+        <p>© 2026 {language === 'hi' ? 'मॉक टेस्ट सीबीटी मॉक पोर्टल सिम्युलेटर' : 'Mock Test CBT Mock Portal Simulator'}. {language === 'hi' ? 'सर्वाधिकार सुरक्षित।' : 'All rights reserved.'}</p>
+        <p className="mt-1 font-semibold text-slate-400">{language === 'hi' ? 'वास्तविक सरकारी चयन कंप्यूटर आधारित परीक्षाओं का अनुकरण करने के लिए विकसित।' : 'Developed to simulate real-world government selection computer based assessments.'}</p>
       </footer>
 
     </div>

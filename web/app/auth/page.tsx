@@ -5,10 +5,12 @@ import { useAuth } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Mail, User, AlertCircle, CheckCircle2, ChevronLeft, ShieldCheck, Phone, Gift, Sun, Moon } from 'lucide-react';
+import { TRANSLATIONS } from '../translations';
 
 export default function AuthPage() {
-  const { login, signup, theme, toggleTheme } = useAuth();
+  const { login, signup, theme, toggleTheme, language, setLanguage } = useAuth();
   const router = useRouter();
+  const t = TRANSLATIONS[language];
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   
   // Form states
@@ -30,35 +32,35 @@ export default function AuthPage() {
     if (activeTab === 'login') {
       const ok = login(email);
       if (ok) {
-        setSuccessMsg('Successfully logged in! Redirecting...');
+        setSuccessMsg(t.authLoginSuccess || 'Successfully logged in! Redirecting...');
         setTimeout(() => {
           router.push('/');
         }, 1500);
       } else {
-        setErrorMsg('Invalid credentials. Use rahul.sharma@example.com or sign up.');
+        setErrorMsg(t.authLoginFail || 'Invalid credentials. Use rahul.sharma@example.com or sign up.');
       }
     } else {
       if (!name.trim()) {
-        setErrorMsg('Please enter your full name.');
+        setErrorMsg(language === 'hi' ? 'कृपया अपना पूरा नाम दर्ज करें।' : 'Please enter your full name.');
         return;
       }
       if (!mobile.trim()) {
-        setErrorMsg('Please enter your mobile number.');
+        setErrorMsg(language === 'hi' ? 'कृपया अपना मोबाइल नंबर दर्ज करें।' : 'Please enter your mobile number.');
         return;
       }
       if (!/^\d{10}$/.test(mobile.trim())) {
-        setErrorMsg('Please enter a valid 10-digit mobile number.');
+        setErrorMsg(language === 'hi' ? 'कृपया एक वैध 10-अंकीय मोबाइल नंबर दर्ज करें।' : 'Please enter a valid 10-digit mobile number.');
         return;
       }
       
       const ok = signup(name, email, mobile.trim(), referralCodeInput.trim() || undefined);
       if (ok) {
-        setSuccessMsg('Account registered successfully! Redirecting...');
+        setSuccessMsg(t.authSignupSuccess || 'Account registered successfully! Redirecting...');
         setTimeout(() => {
           router.push('/');
         }, 1500);
       } else {
-        setErrorMsg('Email address already registered. Please login.');
+        setErrorMsg(t.authSignupFail || 'Email address already registered. Please login.');
       }
     }
   };
@@ -66,13 +68,24 @@ export default function AuthPage() {
   return (
     <div className="flex-1 flex flex-col justify-center bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 p-6 relative overflow-hidden transition-colors duration-200">
       
-      {/* Floating Theme Toggle */}
-      <div className="absolute top-6 right-6 z-20">
+      {/* Floating Header Actions */}
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+        {/* Language selector */}
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+          className="px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer shadow-sm"
+        >
+          <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
+          <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
+        </select>
+
+        {/* Theme Toggle */}
         <button 
           onClick={toggleTheme}
           type="button"
           className="p-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800 shadow-sm"
-          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+          title={theme === 'light' ? t.themeDark : t.themeLight}
         >
           {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
         </button>
@@ -86,7 +99,7 @@ export default function AuthPage() {
         
         {/* Back Link */}
         <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors mb-6 font-bold">
-          <ChevronLeft className="h-4 w-4" /> Back to Home
+          <ChevronLeft className="h-4 w-4" /> {t.backToHome}
         </Link>
 
         {/* Auth Card Container */}
@@ -97,8 +110,8 @@ export default function AuthPage() {
             <div className="inline-flex items-center justify-center bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/20 mb-3">
               <ShieldCheck className="h-6 w-6 text-white" />
             </div>
-            <h2 className="font-extrabold text-xl tracking-wider text-slate-900 dark:text-white">MOCK TEST ACCOUNT</h2>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold tracking-widest uppercase mt-1">Single Sign-On Access</p>
+            <h2 className="font-extrabold text-xl tracking-wider text-slate-900 dark:text-white">{language === 'hi' ? 'मॉक टेस्ट खाता' : 'MOCK TEST ACCOUNT'}</h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold tracking-widest uppercase mt-1">{language === 'hi' ? 'सिंगल साइन-ऑन एक्सेस' : 'Single Sign-On Access'}</p>
           </div>
 
           {/* Form Tabs */}
@@ -112,7 +125,7 @@ export default function AuthPage() {
                 color: activeTab === 'login' ? '#ffffff' : undefined
               }}
             >
-              Sign In
+              {t.authLoginTab}
             </button>
             <button
               onClick={() => { setActiveTab('signup'); setErrorMsg(null); setSuccessMsg(null); }}
@@ -123,7 +136,7 @@ export default function AuthPage() {
                 color: activeTab === 'signup' ? '#ffffff' : undefined
               }}
             >
-              Sign Up
+              {t.authRegisterTab}
             </button>
           </div>
 
@@ -146,7 +159,7 @@ export default function AuthPage() {
             
             {activeTab === 'signup' && (
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Full Name</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authName}</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                     <User className="h-4 w-4" />
@@ -156,7 +169,7 @@ export default function AuthPage() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your name"
+                    placeholder={t.authNamePlaceholder}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
                   />
                 </div>
@@ -164,7 +177,7 @@ export default function AuthPage() {
             )}
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Email Address</label>
+              <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authEmail}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                   <Mail className="h-4 w-4" />
@@ -174,7 +187,7 @@ export default function AuthPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
+                  placeholder={t.authEmailPlaceholder || "name@example.com"}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
                 />
               </div>
@@ -182,7 +195,7 @@ export default function AuthPage() {
 
             {activeTab === 'signup' && (
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Mobile Number</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authMobile}</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                     <Phone className="h-4 w-4" />
@@ -193,7 +206,7 @@ export default function AuthPage() {
                     maxLength={10}
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
-                    placeholder="10-digit number"
+                    placeholder={t.authMobilePlaceholder || "10-digit number"}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
                   />
                 </div>
@@ -202,7 +215,7 @@ export default function AuthPage() {
 
             {activeTab === 'signup' && (
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Referral Code (Optional)</label>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authRefOptional}</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                     <Gift className="h-4 w-4" />
@@ -219,7 +232,7 @@ export default function AuthPage() {
             )}
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Password</label>
+              <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authPassword}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                   <Lock className="h-4 w-4" />
@@ -229,7 +242,7 @@ export default function AuthPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={t.authPassPlaceholder || "••••••••"}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
                 />
               </div>
@@ -239,7 +252,9 @@ export default function AuthPage() {
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-xs tracking-wider uppercase transition-all shadow-lg shadow-blue-900/25 active:scale-[0.98] mt-6 cursor-pointer"
             >
-              {activeTab === 'login' ? 'Sign In to Account' : 'Register Account'}
+              {activeTab === 'login' 
+                ? (language === 'hi' ? 'खाते में साइन इन करें' : 'Sign In to Account') 
+                : (language === 'hi' ? 'खाता पंजीकृत करें' : 'Register Account')}
             </button>
 
           </form>
@@ -247,9 +262,9 @@ export default function AuthPage() {
           {/* Quick instructions */}
           <div className="text-[11px] text-slate-500 dark:text-slate-400 text-center border-t border-slate-200 dark:border-slate-800/80 pt-4 mt-6">
             {activeTab === 'login' ? (
-              <p>Demo Login: <strong className="text-slate-700 dark:text-slate-300">rahul.sharma@example.com</strong></p>
+              <p>{language === 'hi' ? 'डेमो लॉगिन' : 'Demo Login'}: <strong className="text-slate-700 dark:text-slate-300">rahul.sharma@example.com</strong></p>
             ) : (
-              <p>Sign up to create a new session profile with full mock test history tracking.</p>
+              <p>{language === 'hi' ? 'पूर्ण मॉक टेस्ट इतिहास ट्रैकिंग के साथ एक नया सत्र प्रोफ़ाइल बनाने के लिए साइन अप करें।' : 'Sign up to create a new session profile with full mock test history tracking.'}</p>
             )}
           </div>
 

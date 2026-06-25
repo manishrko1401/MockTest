@@ -96,6 +96,8 @@ interface AuthContextType {
   noticesList: Notice[];
   addNotice: (title: string, type: string, category: 'notice' | 'result' | 'admit_card', date?: string, url?: string, lastDateInput?: string) => void;
   deleteNotice: (id: string) => void;
+  language: 'en' | 'hi';
+  setLanguage: (lang: 'en' | 'hi') => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -193,6 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<MockUser | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [noticesList, setNoticesList] = useState<Notice[]>([]);
+  const [language, setLanguageState] = useState<'en' | 'hi'>('en');
 
   // Load initial data from localStorage with backfill checks
   useEffect(() => {
@@ -274,6 +277,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setTheme(savedTheme);
     } else {
       setTheme('light');
+    }
+
+    // Load language setting
+    const savedLang = localStorage.getItem('tb_lang') as 'en' | 'hi';
+    if (savedLang && ['en', 'hi'].includes(savedLang)) {
+      setLanguageState(savedLang);
+    } else {
+      setLanguageState('en');
     }
 
     // Load notices setting
@@ -360,6 +371,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updated = noticesList.filter(n => n.id !== id);
     setNoticesList(updated);
     localStorage.setItem('tb_notices', JSON.stringify(updated));
+  };
+
+  const setLanguage = (lang: 'en' | 'hi') => {
+    setLanguageState(lang);
+    localStorage.setItem('tb_lang', lang);
   };
 
   const login = (email: string): boolean => {
@@ -648,12 +664,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addAttempt,
         toggleBookmark,
         resetAttempt,
-        saveUserProfileByAdmin,
         saveOngoingSession,
         clearOngoingSession,
         noticesList,
         addNotice,
-        deleteNotice
+        deleteNotice,
+        language,
+        setLanguage,
+        saveUserProfileByAdmin
       }}
     >
       {children}

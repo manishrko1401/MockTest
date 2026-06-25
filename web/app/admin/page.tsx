@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth, MockUser, MockTestRecord } from '../AuthContext';
+import { TRANSLATIONS } from '../translations';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -70,7 +71,8 @@ export default function AdminAnalytics() {
   const [noticeLastDate, setNoticeLastDate] = useState('');
 
   // User Management state from context
-  const { usersList, saveUserProfileByAdmin, resetAttempt, theme, toggleTheme, noticesList, addNotice, deleteNotice } = useAuth();
+  const { usersList, saveUserProfileByAdmin, resetAttempt, theme, toggleTheme, noticesList, addNotice, deleteNotice, language, setLanguage } = useAuth();
+  const t = TRANSLATIONS[language];
 
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
@@ -295,24 +297,34 @@ export default function AdminAnalytics() {
         <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-8 flex items-center justify-between transition-colors duration-200">
           <h2 className="text-base font-extrabold tracking-wide text-slate-900 dark:text-white">
             {activeTab === 'analytics' 
-              ? 'Student Analytics & Speed Dashboard' 
+              ? (language === 'hi' ? 'छात्र विश्लेषण और स्पीड डैशबोर्ड' : 'Student Analytics & Speed Dashboard')
               : activeTab === 'upload' 
-              ? 'Bulk Question Ingestion Terminal' 
+              ? (language === 'hi' ? 'थोक प्रश्न प्रविष्टि टर्मिनल' : 'Bulk Question Ingestion Terminal')
               : activeTab === 'users'
-              ? 'User Management & Access Control'
-              : 'Live Updates & Notices Manager'}
+              ? (language === 'hi' ? 'उपयोगकर्ता प्रबंधन और पहुँच नियंत्रण' : 'User Management & Access Control')
+              : (language === 'hi' ? 'लाइव अपडेट और नोटिस प्रबंधक' : 'Live Updates & Notices Manager')}
           </h2>
           <div className="flex items-center gap-4">
             {/* Back to Home Link */}
             <Link href="/" className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors mr-2">
-              Back to Home
+              {t.backToHome}
             </Link>
+
+            {/* Language selector */}
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+              className="px-2 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+            >
+              <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
+              <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
+            </select>
 
             {/* Theme switcher */}
             <button 
               onClick={toggleTheme}
               className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
-              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+              title={theme === 'light' ? t.themeDark : t.themeLight}
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </button>
@@ -321,7 +333,7 @@ export default function AdminAnalytics() {
 
             <div className="flex items-center gap-3">
               <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">API Server Online</span>
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{language === 'hi' ? 'एपीआई सर्वर ऑनलाइन' : 'API Server Online'}</span>
             </div>
           </div>
         </header>

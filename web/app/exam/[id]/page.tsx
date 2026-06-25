@@ -141,10 +141,11 @@ function TcsIonEngine({ testId }: { testId: string }) {
     resumeExam,
   } = useTestEngine();
 
-  const { addAttempt, currentUser, saveOngoingSession } = useAuth();
+  const { addAttempt, currentUser, saveOngoingSession, language: authLanguage } = useAuth();
   const router = useRouter();
 
   const [attemptSaved, setAttemptSaved] = useState(false);
+  const [questionLanguages, setQuestionLanguages] = useState<Record<string, 'en' | 'hi'>>({});
 
   const stateRef = useRef(state);
   useEffect(() => {
@@ -165,11 +166,11 @@ function TcsIonEngine({ testId }: { testId: string }) {
         violationsCount: ongoingRecord.violations ?? 0,
         currentSectionIndex: ongoingRecord.currentSectionIndex ?? 0,
         currentQuestionIndex: ongoingRecord.currentQuestionIndex ?? 0,
-      });
+      }, authLanguage);
     } else {
-      initSession(examSession, 3); // 3 violations allowed
+      initSession(examSession, 3, undefined, authLanguage); // 3 violations allowed
     }
-  }, [initSession, testId]);
+  }, [initSession, testId, authLanguage]);
 
   // Save state on unload/unmount
   useEffect(() => {
@@ -482,70 +483,91 @@ function TcsIonEngine({ testId }: { testId: string }) {
             {/* Question Text & Math Rendering */}
             <div className="flex-1 overflow-y-auto p-6 bg-white">
               {currentQuestion ? (
-                <div>
-                  {/* Question Index Title */}
-                  <div className="mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-slate-800">
-                      Question No. {currentQuestionIndex + 1}
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-mono text-[10px] px-2 py-0.5 rounded-md">
-                        <Clock className="h-3 w-3 text-slate-500" />
-                        Time Spent: {Math.floor((activeResponse?.elapsedSeconds || 0) / 60)}:
-                        {String((activeResponse?.elapsedSeconds || 0) % 60).padStart(2, '0')}
+                (() => {
+                  const questionLang = questionLanguages[currentQuestion.id] || language;
+                  return (
+                    <div>
+                      {/* Question Index Title */}
+                      <div className="mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-sm font-bold text-slate-800">
+                            Question No. {currentQuestionIndex + 1}
+                          </h3>
+                          {/* Question-specific Language Switcher Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const nextLang = questionLang === 'en' ? 'hi' : 'en';
+                              setQuestionLanguages(prev => ({ ...prev, [currentQuestion.id]: nextLang }));
+                            }}
+                            className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2.5 py-1 rounded border border-blue-200 text-[10px] transition cursor-pointer active:scale-95 shadow-sm"
+                            title={questionLang === 'en' ? 'Switch question view to Hindi' : 'Switch question view to English'}
+                          >
+                            <Globe className="h-3.5 w-3.5 text-blue-500" />
+                            {questionLang === 'en' ? 'हिन्दी' : 'English'}
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-mono text-[10px] px-2 py-0.5 rounded-md">
+                            <Clock className="h-3 w-3 text-slate-500" />
+                            Time Spent: {Math.floor((activeResponse?.elapsedSeconds || 0) / 60)}:
+                            {String((activeResponse?.elapsedSeconds || 0) % 60).padStart(2, '0')}
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            ID: {currentQuestion.id}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-[10px] text-slate-400">
-                        ID: {currentQuestion.id}
+
+                      {/* Render Question Text Based on active Language */}
+                      <div className="mb-6 text-sm text-slate-900 leading-relaxed font-normal bg-slate-50 p-4 border border-slate-200 rounded">
+                        {questionLang === 'en'
+                          ? currentQuestion.content.en.questionText
+                          : currentQuestion.content.hi.questionText}
+
+                        {/* Optional Math Equation preview */}
+                        {(questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex) && (
+                          <div className="mt-2 p-2 bg-yellow-50 text-yellow-900 border border-yellow-200 rounded font-mono text-xs">
+                            LaTeX: {questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Options List Grid */}
+                      <div className="space-y-3 pl-2">
+                        {(questionLang === 'en'
+                          ? currentQuestion.content.en.options
+                          : currentQuestion.content.hi.options
+                        ).map((opt, idx) => {
+                          const optLabel = typeof opt === 'string' ? opt : opt.text;
+                          const isTempChosen = activeResponse?.tempOptionIndex === idx;
+
+                          return (
+                            <label
+                              key={idx}
+                              onClick={() => selectOption(idx)}
+                              className={`flex items-center gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition ${
+                                isTempChosen
+                                  ? 'bg-blue-50 border-blue-400 font-semibold'
+                                  : 'bg-white border-slate-200'
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name={`question-${currentQuestion.id}`}
+                                checked={isTempChosen}
+                                readOnly
+                                className="h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="text-slate-800 text-xs flex-1">{optLabel}</span>
+                            </label>
+                          );
+                        })}
                       </div>
                     </div>
-                  </div>
-
-                  {/* Render Question Text Based on active Language */}
-                  <div className="mb-6 text-sm text-slate-900 leading-relaxed font-normal bg-slate-50 p-4 border border-slate-200 rounded">
-                    {language === 'en'
-                      ? currentQuestion.content.en.questionText
-                      : currentQuestion.content.hi.questionText}
-
-                    {/* Optional Math Equation preview */}
-                    {(language === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex) && (
-                      <div className="mt-2 p-2 bg-yellow-50 text-yellow-900 border border-yellow-200 rounded font-mono text-xs">
-                        LaTeX: {language === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Options List Grid */}
-                  <div className="space-y-3 pl-2">
-                    {(language === 'en'
-                      ? currentQuestion.content.en.options
-                      : currentQuestion.content.hi.options
-                    ).map((opt, idx) => {
-                      const optLabel = typeof opt === 'string' ? opt : opt.text;
-                      const isTempChosen = activeResponse?.tempOptionIndex === idx;
-
-                      return (
-                        <label
-                          key={idx}
-                          onClick={() => selectOption(idx)}
-                          className={`flex items-center gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition ${
-                            isTempChosen
-                              ? 'bg-blue-50 border-blue-400 font-semibold'
-                              : 'bg-white border-slate-200'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name={`question-${currentQuestion.id}`}
-                            checked={isTempChosen}
-                            readOnly
-                            className="h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-slate-800 text-xs flex-1">{optLabel}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
+                  );
+                })()
               ) : (
                 <div className="text-center py-10 text-gray-500">No questions loaded in this section.</div>
               )}
@@ -712,9 +734,21 @@ function TcsIonEngine({ testId }: { testId: string }) {
 }
 
 function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: () => void }) {
+  const { theme, toggleTheme, language: authLang, setLanguage: setAuthLang } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
-  const { theme, toggleTheme } = useAuth();
+
+  // Sync instruction selection with default auth context language
+  useEffect(() => {
+    if (authLang) {
+      setLang(authLang);
+    }
+  }, [authLang]);
+
+  const handleLangChange = (newLang: 'en' | 'hi') => {
+    setLang(newLang);
+    setAuthLang(newLang); // Sets global/default language so the test initializes in it too!
+  };
   
   // Mapped metadata based on testId
   let examName = "General Mock Test Assessment";
@@ -787,7 +821,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
             <span className="text-slate-500 font-bold">View In:</span>
             <select
               value={lang}
-              onChange={(e) => setLang(e.target.value as 'en' | 'hi')}
+              onChange={(e) => handleLangChange(e.target.value as 'en' | 'hi')}
               className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 outline-none text-xs text-slate-800 dark:text-white cursor-pointer font-bold"
             >
               <option value="en">English</option>
@@ -833,6 +867,26 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
             <p className="font-bold text-slate-700 dark:text-slate-300 mt-4">{t.answering}</p>
             <p className="pl-2">{t.ans1}</p>
             <p className="pl-2">{t.ans2}</p>
+          </div>
+
+          {/* Choose Default Test Language */}
+          <div className="bg-blue-50/50 dark:bg-slate-900/45 border border-blue-100 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div>
+              <p className="font-bold text-slate-800 dark:text-white">
+                {lang === 'hi' ? 'अपनी डिफ़ॉल्ट परीक्षा भाषा चुनें' : 'Choose your default exam language'}
+              </p>
+              <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                {lang === 'hi' ? 'कृपया प्रश्नों को हल करने के लिए डिफ़ॉल्ट भाषा चुनें (आप इसे बाद में भी बदल सकते हैं)' : 'Please select the default language for viewing questions (you can also change this per question later)'}
+              </p>
+            </div>
+            <select
+              value={lang}
+              onChange={(e) => handleLangChange(e.target.value as 'en' | 'hi')}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 font-bold text-xs text-slate-800 dark:text-white cursor-pointer focus:outline-none"
+            >
+              <option value="en">English</option>
+              <option value="hi">हिंदी (Hindi)</option>
+            </select>
           </div>
         </div>
 

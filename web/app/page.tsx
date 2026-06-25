@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import Link from 'next/link';
 import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X } from 'lucide-react';
+import { TRANSLATIONS } from './translations';
 
 const EXAMS_BY_CATEGORY: Record<string, { id: string; name: string }[]> = {
   ssc: [
@@ -85,7 +86,8 @@ const isNewlyPublished = (publishDateStr?: string) => {
 };
 
 export default function HomeLandingPage() {
-  const { currentUser, logout, theme, toggleTheme, noticesList } = useAuth();
+  const { currentUser, logout, theme, toggleTheme, noticesList, language, setLanguage } = useAuth();
+  const t = TRANSLATIONS[language];
   
   const [successIndex, setSuccessIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -109,27 +111,37 @@ export default function HomeLandingPage() {
               <ShieldCheck className="h-5 w-5 text-white animate-pulse" />
             </div>
             <div>
-              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">MOCK TEST</h1>
-              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">Exam Preparation</p>
+              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
+              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
             </div>
           </Link>
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-500 dark:text-slate-400">
-            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">Test Series</Link>
-            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors">Notices & Announcements</Link>
-            <Link href="/profile" className="hover:text-blue-600 dark:hover:text-white transition-colors">My Profile</Link>
-            <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors">Admin Panel</Link>
+            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
+            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navUpdates}</Link>
+            <Link href="/profile" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navProfile}</Link>
+            <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navAdmin}</Link>
           </nav>
         </div>
 
-        {/* Auth Buttons / Profile Panel */}
+        {/* Auth Buttons / Profile Panel / Language Selector */}
         <div className="flex items-center gap-4">
+          {/* Language selector */}
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+            className="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-355 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+          >
+            <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
+            <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
+          </select>
+
           {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
             className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
-            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            title={theme === 'light' ? t.themeDark : t.themeLight}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
@@ -140,22 +152,22 @@ export default function HomeLandingPage() {
                 <div className="h-5 w-5 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[10px]">
                   {currentUser.name[0]}
                 </div>
-                <span>Dashboard ({currentUser.name.split(' ')[0]})</span>
+                <span>{t.dashboard} ({currentUser.name.split(' ')[0]})</span>
               </Link>
               <button
                 onClick={logout}
                 className="hidden sm:block text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold cursor-pointer"
               >
-                Sign Out
+                {t.signOut}
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-3">
               <Link href="/auth" className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold">
-                Log In
+                {t.logIn}
               </Link>
               <Link href="/auth" className="bg-blue-600 hover:bg-blue-750 text-white font-bold py-2 px-4 rounded-xl text-xs shadow-lg shadow-blue-900/25 transition active:scale-95">
-                Sign Up
+                {t.signUp}
               </Link>
             </div>
           )}
@@ -168,15 +180,15 @@ export default function HomeLandingPage() {
         {/* Left Side: Pitch Title */}
         <div className="space-y-6">
           <span className="inline-flex items-center gap-1.5 text-[10px] bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
-            🏆 India's #1 Exam Prep Portal
+            {t.heroBadge}
           </span>
           
           <h1 className="text-3xl md:text-5xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
-            Unlock Success In Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400">Govt Exams</span>
+            {t.heroTitlePrefix}<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400">{t.heroTitleSuffix}</span>
           </h1>
           
           <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base leading-relaxed max-w-lg font-semibold">
-            Join 5.1 Crore+ registered aspirants. Get comprehensive CBT mock sittings, instant accuracy graphs, tab-blur security alerts, and full access passes mapped to SSC, Banking, Railways, and State Exams.
+            {t.heroDesc}
           </p>
 
           {/* Quick search exam */}
@@ -188,29 +200,29 @@ export default function HomeLandingPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search exam (e.g. SSC CGL, RRB NTPC, SBI PO)..."
+              placeholder={t.searchPlaceholder}
               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl pl-11 pr-32 py-3 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 shadow-sm"
             />
             <Link
               href={`/mock-tests?q=${searchQuery}`}
               className="absolute right-2 top-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-xl text-[10px] transition active:scale-95 shadow-md cursor-pointer"
             >
-              Search Mock Test
+              {t.searchBtn}
             </Link>
           </div>
 
           {/* Counter Badges */}
           <div className="grid grid-cols-3 gap-6 pt-6 border-t border-slate-200 dark:border-slate-900 max-w-md">
             <div>
-              <p className="text-slate-500 text-[9px] uppercase font-bold tracking-widest">Active Users</p>
+              <p className="text-slate-500 text-[9px] uppercase font-bold tracking-widest">{t.activeUsers}</p>
               <h4 className="text-lg font-black text-slate-900 dark:text-white mt-1">5.1 Cr+</h4>
             </div>
             <div>
-              <p className="text-slate-500 text-[9px] uppercase font-bold tracking-widest">Mock Attempts</p>
+              <p className="text-slate-500 text-[9px] uppercase font-bold tracking-widest">{t.mockAttempts}</p>
               <h4 className="text-lg font-black text-slate-900 dark:text-white mt-1">12 Cr+</h4>
             </div>
             <div>
-              <p className="text-slate-500 text-[9px] uppercase font-bold tracking-widest">Selections</p>
+              <p className="text-slate-500 text-[9px] uppercase font-bold tracking-widest">{t.selections}</p>
               <h4 className="text-lg font-black text-green-600 dark:text-green-400 mt-1">8.4 Lakh+</h4>
             </div>
           </div>
@@ -221,7 +233,7 @@ export default function HomeLandingPage() {
           
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-4">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-              <Trophy className="h-4 w-4 text-yellow-500" /> Toppers Testimonials
+              <Trophy className="h-4 w-4 text-yellow-500" /> {t.topperTitle}
             </h3>
             <div className="flex gap-1">
               {SUCCESS_STORIES.map((_, idx) => (
@@ -256,8 +268,8 @@ export default function HomeLandingPage() {
       {/* CATEGORIES SECTION */}
       <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900">
         <div className="text-center max-w-xl mx-auto mb-12">
-          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">Popular Exam Mock Series</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">We catalog full sectional mock sittings, solved papers, and live analytics for all major domains.</p>
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.popularTitle}</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">{t.popularDesc}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -281,7 +293,7 @@ export default function HomeLandingPage() {
               </div>
               
               <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold text-[10px] uppercase tracking-wider mt-6 pt-4 border-t border-slate-200 dark:border-slate-880 w-full">
-                Explore Tests <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+                {t.exploreTests} <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
               </div>
             </button>
           ))}
@@ -291,17 +303,16 @@ export default function HomeLandingPage() {
       {/* PORTAL UPDATES BOARD */}
       <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900 space-y-12">
         <div className="text-center max-w-xl mx-auto">
-          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">Live Updates & Exam Alerts</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">Stay updated with the latest exam notices, admit cards release, and result declarations in real-time.</p>
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.liveUpdatesTitle}</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">{t.liveUpdatesDesc}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* Tile 1: Live Notices & Announcements */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
             <div>
               <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-                <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> Live Notices & Announcements
+                <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> {t.liveNotices}
               </h3>
               
               <div className="space-y-3 overflow-y-auto max-h-[442px] pr-1 scrollbar-thin">
@@ -318,7 +329,7 @@ export default function HomeLandingPage() {
                           </span>
                           {isNewlyPublished(notice.publishDate) && (
                             <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
-                              NEW
+                              {t.newBadge}
                             </span>
                           )}
                         </div>
@@ -335,15 +346,15 @@ export default function HomeLandingPage() {
                         )}
                       </h5>
                       {notice.lastDate && (
-                        <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
-                          Last Date: {notice.lastDate}
+                        <p className="text-[10px] text-red-505 font-extrabold mt-1 uppercase tracking-wider">
+                          {t.lastDate} {notice.lastDate}
                         </p>
                       )}
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
-                    No active notices at the moment.
+                    {language === 'hi' ? 'फिलहाल कोई सक्रिय नोटिस नहीं है।' : 'No active notices at the moment.'}
                   </div>
                 )}
               </div>
@@ -351,7 +362,7 @@ export default function HomeLandingPage() {
             
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
               <Link href="/updates" className="text-[9px] uppercase font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-                View All Notices <ChevronRight className="h-3.5 w-3.5" />
+                {language === 'hi' ? 'सभी नोटिस देखें' : 'View All Notices'} <ChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           </div>
@@ -360,7 +371,7 @@ export default function HomeLandingPage() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
             <div>
               <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-                <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-pulse" /> Live Result Section
+                <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-pulse" /> {t.resultsMerits}
               </h3>
               
               <div className="space-y-3 overflow-y-auto max-h-[442px] pr-1 scrollbar-thin">
@@ -377,7 +388,7 @@ export default function HomeLandingPage() {
                           </span>
                           {isNewlyPublished(notice.publishDate) && (
                             <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
-                              NEW
+                              {t.newBadge}
                             </span>
                           )}
                         </div>
@@ -394,15 +405,15 @@ export default function HomeLandingPage() {
                         )}
                       </h5>
                       {notice.lastDate && (
-                        <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
-                          Last Date: {notice.lastDate}
+                        <p className="text-[10px] text-red-505 font-extrabold mt-1 uppercase tracking-wider">
+                          {t.lastDate} {notice.lastDate}
                         </p>
                       )}
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
-                    No active results at the moment.
+                    {language === 'hi' ? 'फिलहाल कोई सक्रिय परिणाम नहीं हैं।' : 'No active results at the moment.'}
                   </div>
                 )}
               </div>
@@ -410,7 +421,7 @@ export default function HomeLandingPage() {
             
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
               <Link href="/updates" className="text-[9px] uppercase font-black text-yellow-600 dark:text-yellow-400 hover:underline flex items-center gap-1">
-                View All Results <ChevronRight className="h-3.5 w-3.5" />
+                {language === 'hi' ? 'सभी परिणाम देखें' : 'View All Results'} <ChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           </div>
@@ -419,7 +430,7 @@ export default function HomeLandingPage() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
             <div>
               <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-                <FileText className="h-4.5 w-4.5 text-green-550" /> Live Admit Card Section
+                <FileText className="h-4.5 w-4.5 text-green-550" /> {t.admitCards}
               </h3>
               
               <div className="space-y-3 overflow-y-auto max-h-[442px] pr-1 scrollbar-thin">
@@ -436,7 +447,7 @@ export default function HomeLandingPage() {
                           </span>
                           {isNewlyPublished(notice.publishDate) && (
                             <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
-                              NEW
+                              {t.newBadge}
                             </span>
                           )}
                         </div>
@@ -444,24 +455,24 @@ export default function HomeLandingPage() {
                       </div>
                       <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-snug">
                         {notice.url ? (
-                          <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:text-green-600 dark:hover:text-green-455 hover:underline flex items-center gap-1">
+                          <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:text-green-600 dark:hover:text-green-400 hover:underline flex items-center gap-1">
                             {notice.title}
-                            <ChevronRight className="h-3 w-3 inline shrink-0 animate-pulse text-green-500" />
+                            <ChevronRight className="h-3 w-3 inline shrink-0 animate-pulse text-green-550" />
                           </a>
                         ) : (
                           notice.title
                         )}
                       </h5>
                       {notice.lastDate && (
-                        <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
-                          Last Date: {notice.lastDate}
+                        <p className="text-[10px] text-red-505 font-extrabold mt-1 uppercase tracking-wider">
+                          {t.lastDate} {notice.lastDate}
                         </p>
                       )}
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
-                    No active admit cards at the moment.
+                    {language === 'hi' ? 'फिलहाल कोई सक्रिय एडमिट कार्ड नहीं हैं।' : 'No active admit cards at the moment.'}
                   </div>
                 )}
               </div>
@@ -469,7 +480,7 @@ export default function HomeLandingPage() {
             
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
               <Link href="/updates" className="text-[9px] uppercase font-black text-green-600 dark:text-green-400 hover:underline flex items-center gap-1">
-                View All Admit Cards <ChevronRight className="h-3.5 w-3.5" />
+                {language === 'hi' ? 'सभी एडमिट कार्ड देखें' : 'View All Admit Cards'} <ChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           </div>

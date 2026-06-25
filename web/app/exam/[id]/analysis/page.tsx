@@ -21,6 +21,7 @@ import {
   Timer,
   Bookmark
 } from 'lucide-react';
+import { TRANSLATIONS } from '../../../translations';
 
 // Detailed Bilingual Explanations Dictionary for all questions
 export const EXPLANATIONS: Record<string, { en: string; hi: string }> = {
@@ -61,13 +62,26 @@ export const EXPLANATIONS: Record<string, { en: string; hi: string }> = {
 export default function ExamSolutionAnalysisPage() {
   const params = useParams();
   const testId = (params?.id as string) || "ssc_cgl_tier1";
-  const { currentUser, theme, toggleTheme, toggleBookmark } = useAuth();
+  const { currentUser, theme, toggleTheme, toggleBookmark, language, setLanguage } = useAuth();
   const router = useRouter();
 
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [mounted, setMounted] = useState(false);
   const [selectedAttemptIdx, setSelectedAttemptIdx] = useState(0);
+  const t = TRANSLATIONS[lang];
+
+  // Sync selector language with auth context
+  useEffect(() => {
+    if (language) {
+      setLang(language);
+    }
+  }, [language]);
+
+  const handleLangChange = (newLang: 'en' | 'hi') => {
+    setLang(newLang);
+    setLanguage(newLang);
+  };
 
   // Load completed sessions for this testId
   const attempts = currentUser
@@ -253,12 +267,12 @@ export default function ExamSolutionAnalysisPage() {
       <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 backdrop-blur-md px-6 md:px-12 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-6">
           <Link href="/mock-tests" className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors">
-            <ArrowLeft className="h-4 w-4" /> Back to Test Series
+            <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}
           </Link>
           <span className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
           <div className="flex flex-col">
             <span className="font-extrabold text-sm text-slate-900 dark:text-white leading-tight">{examSession.testTitle}</span>
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Solution & Analysis Dashboard</span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{language === 'hi' ? 'समाधान और विश्लेषण डैशबोर्ड' : 'Solution & Analysis Dashboard'}</span>
           </div>
         </div>
 
@@ -268,7 +282,7 @@ export default function ExamSolutionAnalysisPage() {
             <Globe className="h-3.5 w-3.5 text-slate-500" />
             <select
               value={lang}
-              onChange={(e) => setLang(e.target.value as 'en' | 'hi')}
+              onChange={(e) => handleLangChange(e.target.value as 'en' | 'hi')}
               className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 outline-none text-xs text-slate-800 dark:text-slate-200 cursor-pointer font-bold transition-colors"
             >
               <option value="en">English</option>
@@ -280,7 +294,7 @@ export default function ExamSolutionAnalysisPage() {
           <button 
             onClick={toggleTheme}
             className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
-            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            title={theme === 'light' ? t.themeDark : t.themeLight}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
@@ -296,7 +310,7 @@ export default function ExamSolutionAnalysisPage() {
               <Award className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Score Obtained</p>
+              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisScore}</p>
               <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">
                 {sessionRecord.score} <span className="text-xs text-slate-500 font-bold font-sans">/ {sessionRecord.maxScore}</span>
               </h4>
@@ -308,7 +322,7 @@ export default function ExamSolutionAnalysisPage() {
               <CheckCircle2 className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Accuracy Ratio</p>
+              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisAccuracy}</p>
               <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{sessionRecord.accuracy}%</h4>
             </div>
           </div>
@@ -318,7 +332,7 @@ export default function ExamSolutionAnalysisPage() {
               <Timer className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Time Spent</p>
+              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisTimeTaken}</p>
               <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{formatDuration(sessionRecord.durationSeconds)}</h4>
             </div>
           </div>
@@ -328,7 +342,7 @@ export default function ExamSolutionAnalysisPage() {
               <ShieldAlert className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Cheat Violations</p>
+              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisViolations}</p>
               <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{sessionRecord.violations}</h4>
             </div>
           </div>
@@ -341,7 +355,7 @@ export default function ExamSolutionAnalysisPage() {
         <section className="max-w-6xl w-full mx-auto px-6 mt-6">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex-1">
-              <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Select Attempt to Analyze</h5>
+              <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{t.analysisAttemptSelector}</h5>
               <div className="flex flex-wrap gap-2">
                 {attempts.map((att, idx) => (
                   <button
@@ -353,23 +367,23 @@ export default function ExamSolutionAnalysisPage() {
                         : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-350 border-slate-200 dark:border-slate-800'
                     }`}
                   >
-                    Attempt {idx + 1} ({att.date})
+                    {t.analysisAttempt} {idx + 1} ({att.date})
                   </button>
                 ))}
               </div>
             </div>
             
             <div className="border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-800 pt-4 md:pt-0 md:pl-6 flex-1">
-              <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Attempts Performance & Comparison</h5>
+              <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{t.analysisCompareAttempts}</h5>
               <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                 {attempts.map((att, idx) => {
                   const isCurrent = selectedAttemptIdx === idx;
                   return (
                     <div key={att.id} className={`flex items-center justify-between text-xs p-2.5 rounded-xl font-bold border transition-colors ${isCurrent ? 'bg-blue-50/50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/80' : 'bg-slate-50 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400 border-slate-100 dark:border-slate-850'}`}>
-                      <span>Attempt {idx + 1} {isCurrent && '(Viewing)'}</span>
+                      <span>{t.analysisAttempt} {idx + 1} {isCurrent && (language === 'hi' ? '(अवलोकन)' : '(Viewing)')}</span>
                       <div className="flex items-center gap-4">
-                        <span>Score: <strong className="text-slate-850 dark:text-slate-200">{att.score}/{att.maxScore}</strong></span>
-                        <span>Accuracy: <strong className="text-slate-850 dark:text-slate-200">{att.accuracy}%</strong></span>
+                        <span>{language === 'hi' ? 'अंक:' : 'Score:'} <strong className="text-slate-850 dark:text-slate-200">{att.score}/{att.maxScore}</strong></span>
+                        <span>{language === 'hi' ? 'सटीकता:' : 'Accuracy:'} <strong className="text-slate-850 dark:text-slate-200">{att.accuracy}%</strong></span>
                       </div>
                     </div>
                   );
@@ -391,23 +405,23 @@ export default function ExamSolutionAnalysisPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4 mb-5 gap-3">
               <div className="flex items-center gap-3">
                 <span className="font-extrabold text-xs text-blue-600 dark:text-blue-400 uppercase tracking-widest">
-                  Question {activeQuestionIdx + 1}
+                  {language === 'hi' ? 'प्रश्न' : 'Question'} {activeQuestionIdx + 1}
                 </span>
                 
                 <div className="flex items-center gap-2">
                   {activeStatus.status === 'correct' && (
                     <span className="inline-flex items-center gap-1 bg-green-50 border border-green-200 dark:bg-green-950/20 dark:border-green-900 px-2 py-0.5 rounded text-[10px] font-bold text-green-600 dark:text-green-400 uppercase">
-                      <CheckCircle2 className="h-3 w-3" /> Correct
+                      <CheckCircle2 className="h-3 w-3" /> {t.analysisLegendCorrect}
                     </span>
                   )}
                   {activeStatus.status === 'incorrect' && (
                     <span className="inline-flex items-center gap-1 bg-red-50 border border-red-200 dark:bg-red-950/20 dark:border-red-900 px-2 py-0.5 rounded text-[10px] font-bold text-red-600 dark:text-red-400 uppercase">
-                      <XCircle className="h-3 w-3" /> Incorrect
+                      <XCircle className="h-3 w-3" /> {t.analysisLegendIncorrect}
                     </span>
                   )}
                   {activeStatus.status === 'skipped' && (
                     <span className="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 px-2 py-0.5 rounded text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
-                      <HelpCircle className="h-3 w-3" /> Skipped
+                      <HelpCircle className="h-3 w-3" /> {t.analysisLegendSkipped}
                     </span>
                   )}
                 </div>
@@ -417,10 +431,10 @@ export default function ExamSolutionAnalysisPage() {
               <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                 <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 dark:text-slate-400">
                   <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded">
-                    Your Time: <strong className="text-slate-800 dark:text-white font-bold">{userTime}s</strong>
+                    {language === 'hi' ? 'आपका समय: ' : 'Your Time: '}<strong className="text-slate-800 dark:text-white font-bold">{userTime}s</strong>
                   </span>
                   <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded">
-                    Avg Time: <strong className="text-slate-800 dark:text-white font-bold">{avgTime}s</strong>
+                    {language === 'hi' ? 'औसत समय: ' : 'Avg Time: '}<strong className="text-slate-800 dark:text-white font-bold">{avgTime}s</strong>
                   </span>
                 </div>
 
@@ -433,7 +447,7 @@ export default function ExamSolutionAnalysisPage() {
                   }`}
                 >
                   <Bookmark className={`h-3 w-3 ${isBookmarked ? 'fill-yellow-500 text-yellow-500' : ''}`} />
-                  {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                  {isBookmarked ? (language === 'hi' ? 'बुकमार्क किया गया' : 'Bookmarked') : (language === 'hi' ? 'बुकमार्क करें' : 'Bookmark')}
                 </button>
               </div>
             </div>
@@ -487,7 +501,7 @@ export default function ExamSolutionAnalysisPage() {
                     <div className="flex items-center gap-2">
                       {isUserSelectedIndex && (
                         <span className="text-[9px] uppercase font-black bg-blue-900 border border-blue-800 text-blue-400 px-2 py-0.5 rounded shadow">
-                          Your Choice
+                          {language === 'hi' ? 'आपका विकल्प' : 'Your Choice'}
                         </span>
                       )}
                       {isCorrectIndex && (
@@ -505,7 +519,7 @@ export default function ExamSolutionAnalysisPage() {
             {/* Explanation card */}
             <div className="mt-8 bg-slate-100 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
               <h5 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-2 mb-3.5 flex items-center gap-1.5">
-                <HelpCircle className="h-4 w-4 text-blue-500" /> Detailed Explanation & Concept
+                <HelpCircle className="h-4 w-4 text-blue-500" /> {language === 'hi' ? 'विस्तृत व्याख्या और अवधारणा' : 'Detailed Explanation & Concept'}
               </h5>
               <div className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed font-semibold">
                 {activeExplanation[lang] || activeExplanation['en']}
@@ -521,11 +535,11 @@ export default function ExamSolutionAnalysisPage() {
               disabled={activeQuestionIdx === 0}
               className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-slate-800 dark:text-white"
             >
-              <ChevronLeft className="h-4 w-4" /> Previous
+              <ChevronLeft className="h-4 w-4" /> {language === 'hi' ? 'पिछला' : 'Previous'}
             </button>
             
             <span className="text-xs font-bold text-slate-500">
-              {activeQuestionIdx + 1} of {totalQs}
+              {activeQuestionIdx + 1} / {totalQs}
             </span>
 
             <button
@@ -533,7 +547,7 @@ export default function ExamSolutionAnalysisPage() {
               disabled={activeQuestionIdx === totalQs - 1}
               className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-slate-800 dark:text-white"
             >
-              Next <ChevronRight className="h-4 w-4" />
+              {language === 'hi' ? 'अगला' : 'Next'} <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
@@ -543,22 +557,22 @@ export default function ExamSolutionAnalysisPage() {
         <aside className="w-full lg:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
           
           <h4 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2">
-            Question Palette
+            {t.analysisQuestionsPal}
           </h4>
 
           {/* Color Code Legend */}
           <div className="grid grid-cols-3 gap-2 mb-6 text-[9px] font-bold text-slate-600 dark:text-slate-400">
             <div className="flex items-center gap-1.5">
               <span className="h-3 w-3 rounded-full bg-green-500 animate-pulse"></span>
-              <span>Correct ({totalCorrect})</span>
+              <span>{t.analysisLegendCorrect} ({totalCorrect})</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-3 w-3 rounded-full bg-red-600"></span>
-              <span>Incorrect ({totalIncorrect})</span>
+              <span>{t.analysisLegendIncorrect} ({totalIncorrect})</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-3 w-3 rounded-full bg-slate-400 dark:bg-slate-600"></span>
-              <span>Skipped ({totalSkipped})</span>
+              <span>{t.analysisLegendSkipped} ({totalSkipped})</span>
             </div>
           </div>
 
@@ -597,7 +611,7 @@ export default function ExamSolutionAnalysisPage() {
               href="/mock-tests"
               className="block w-full text-center py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition active:scale-95"
             >
-              Analyze More Exams
+              {t.analysisGoToMockTests}
             </Link>
           </div>
 

@@ -87,7 +87,7 @@ export interface EngineState {
 }
 
 type EngineAction =
-  | { type: 'INIT_SESSION'; payload: { session: ActiveSession; maxViolations?: number; resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number } } }
+  | { type: 'INIT_SESSION'; payload: { session: ActiveSession; maxViolations?: number; defaultLanguage?: 'en' | 'hi'; resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number } } }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'hi' }
   | { type: 'TICK_TIMER' }
   | { type: 'SELECT_OPTION'; payload: { optionIndex: number | null } }
@@ -130,7 +130,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
   switch (action.type) {
     case 'INIT_SESSION': {
-      const { session, maxViolations = 3, resumeData } = action.payload;
+      const { session, maxViolations = 3, defaultLanguage = 'en', resumeData } = action.payload;
       let initialResponses: Record<string, QuestionResponse> = {};
       let initialTimeRemaining = session.totalDurationSeconds;
       let initialViolationsCount = 0;
@@ -177,7 +177,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         responses: initialResponses,
         timeRemaining: initialTimeRemaining,
         isTimerRunning: true,
-        language: 'en',
+        language: defaultLanguage,
         violationsCount: initialViolationsCount,
         maxViolationsAllowed: maxViolations,
         isExamSubmitted: false,
@@ -525,7 +525,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
 interface TestEngineContextType {
   state: EngineState;
-  initSession: (session: ActiveSession, maxViolations?: number, resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number }) => void;
+  initSession: (session: ActiveSession, maxViolations?: number, resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number }, defaultLanguage?: 'en' | 'hi') => void;
   selectOption: (optionIndex: number | null) => void;
   saveAndNext: () => void;
   clearResponse: () => void;
@@ -579,9 +579,10 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
   const initSession = useCallback((
     session: ActiveSession,
     maxViolations?: number,
-    resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number }
+    resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number },
+    defaultLanguage?: 'en' | 'hi'
   ) => {
-    dispatch({ type: 'INIT_SESSION', payload: { session, maxViolations, resumeData } });
+    dispatch({ type: 'INIT_SESSION', payload: { session, maxViolations, resumeData, defaultLanguage } });
   }, []);
 
   const selectOption = useCallback((optionIndex: number | null) => {
