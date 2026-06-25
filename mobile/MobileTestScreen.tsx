@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -62,6 +62,11 @@ export default function MobileTestScreen() {
   const [drawerVisible, setDrawerVisible] = useState<boolean>(false);
   const [activeTestId, setActiveTestId] = useState<string | null>(null);
   const [ongoingSessions, setOngoingSessions] = useState<Record<string, any>>({});
+
+  const mobileStateRef = useRef({ questions, currentIndex, timeLeft, activeTestId, viewMode });
+  useEffect(() => {
+    mobileStateRef.current = { questions, currentIndex, timeLeft, activeTestId, viewMode };
+  }, [questions, currentIndex, timeLeft, activeTestId, viewMode]);
 
   // Load saved sessions on mount
   useEffect(() => {
@@ -135,10 +140,17 @@ export default function MobileTestScreen() {
 
   // Auto-save on window close or React unmount
   useEffect(() => {
-    if (viewMode !== 'exam' || !activeTestId) return;
-
     const handleUnloadSave = () => {
-      saveSession(activeTestId, questions, currentIndex, timeLeft, 'ONGOING');
+      const currentMobileState = mobileStateRef.current;
+      if (currentMobileState.viewMode === 'exam' && currentMobileState.activeTestId) {
+        saveSession(
+          currentMobileState.activeTestId,
+          currentMobileState.questions,
+          currentMobileState.currentIndex,
+          currentMobileState.timeLeft,
+          'ONGOING'
+        );
+      }
     };
 
     if (typeof window !== 'undefined') {
@@ -151,7 +163,7 @@ export default function MobileTestScreen() {
         window.removeEventListener('beforeunload', handleUnloadSave);
       }
     };
-  }, [viewMode, activeTestId, questions, currentIndex, timeLeft]);
+  }, []);
 
   const activeQuestion = questions[currentIndex];
 

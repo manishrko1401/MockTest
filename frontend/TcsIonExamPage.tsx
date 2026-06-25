@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   useTestEngine,
   TestEngineProvider,
@@ -170,6 +170,11 @@ const TcsIonEngine: React.FC = () => {
     resumeExam,
   } = useTestEngine();
 
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
   // Initialize session on mount (checking for resume)
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -198,18 +203,19 @@ const TcsIonEngine: React.FC = () => {
   // Save state on unload/unmount
   useEffect(() => {
     const handleSave = () => {
-      if (state.session && !state.isExamSubmitted) {
+      const currentState = stateRef.current;
+      if (currentState.session && !currentState.isExamSubmitted) {
         const record = {
-          testId: state.session.testId,
+          testId: currentState.session.testId,
           status: 'ONGOING',
-          timeRemaining: state.timeRemaining,
-          violationsCount: state.violationsCount,
-          responses: state.responses,
-          currentSectionIndex: state.currentSectionIndex,
-          currentQuestionIndex: state.currentQuestionIndex,
+          timeRemaining: currentState.timeRemaining,
+          violationsCount: currentState.violationsCount,
+          responses: currentState.responses,
+          currentSectionIndex: currentState.currentSectionIndex,
+          currentQuestionIndex: currentState.currentQuestionIndex,
         };
         localStorage.setItem(
-          `tb_frontend_ongoing_session_${state.session.testId}`,
+          `tb_frontend_ongoing_session_${currentState.session.testId}`,
           JSON.stringify(record)
         );
       }
@@ -221,15 +227,7 @@ const TcsIonEngine: React.FC = () => {
       handleSave();
       window.removeEventListener('beforeunload', handleSave);
     };
-  }, [
-    state.session,
-    state.isExamSubmitted,
-    state.timeRemaining,
-    state.violationsCount,
-    state.responses,
-    state.currentSectionIndex,
-    state.currentQuestionIndex
-  ]);
+  }, []);
 
   // Clean up ongoing session on exam submission
   useEffect(() => {

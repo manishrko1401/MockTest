@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, use, useRef } from 'react';
 import {
   useTestEngine,
   TestEngineProvider,
@@ -146,6 +146,11 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
   const [attemptSaved, setAttemptSaved] = useState(false);
 
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
   // Initialize session on mount (checking for resume)
   useEffect(() => {
     const examSession = generateExamSession(testId);
@@ -169,16 +174,17 @@ function TcsIonEngine({ testId }: { testId: string }) {
   // Save state on unload/unmount
   useEffect(() => {
     const handleSave = () => {
+      const currentState = stateRef.current;
       // Save only if exam is active and not submitted yet
-      if (state.session && !state.isExamSubmitted) {
+      if (currentState.session && !currentState.isExamSubmitted) {
         saveOngoingSession(
           testId,
-          state.session.testTitle,
-          state.timeRemaining,
-          state.violationsCount,
-          state.responses,
-          state.currentSectionIndex,
-          state.currentQuestionIndex
+          currentState.session.testTitle,
+          currentState.timeRemaining,
+          currentState.violationsCount,
+          currentState.responses,
+          currentState.currentSectionIndex,
+          currentState.currentQuestionIndex
         );
       }
     };
@@ -189,7 +195,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
       handleSave();
       window.removeEventListener('beforeunload', handleSave);
     };
-  }, [testId, state.session, state.isExamSubmitted, state.timeRemaining, state.violationsCount, state.responses, saveOngoingSession]);
+  }, [testId, saveOngoingSession]);
 
   // Sync attempt score on exam submission
   useEffect(() => {
