@@ -1,0 +1,748 @@
+"use client";
+
+import React, { useEffect, useState, use } from 'react';
+import {
+  useTestEngine,
+  TestEngineProvider,
+  ActiveSession,
+  Question,
+  EngineState
+} from '../../useTestEngine';
+import { useAuth } from '../../AuthContext';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Check, ShieldAlert, ShieldCheck, Globe, User, BookOpen, AlertCircle, ArrowLeft, Sun, Moon } from 'lucide-react';
+
+// ============================================================================
+// DYNAMIC EXAM GENERATOR
+// ============================================================================
+export const generateExamSession = (id: string): ActiveSession => {
+  let title = "Government Prep Mock Test Simulator";
+  let duration = 3600; // 60 mins
+  let sections = [
+    { id: "sec_gs", name: "General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 },
+    { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 1, positiveMark: 2, negativeMark: 0.5 }
+  ];
+  let questions: Question[] = [];
+
+  if (id.includes('ssc')) {
+    title = id.includes('cgl') 
+      ? "SSC CGL 2026 Tier-I CBT Simulator" 
+      : id.includes('chsl') 
+      ? "SSC CHSL 2026 Preliminary Exam" 
+      : "SSC MTS Full-Length Practice Test";
+    duration = 3600;
+    sections = [
+      { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 },
+      { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 2, negativeMark: 0.5 },
+      { id: "sec_english", name: "English Comprehension", orderIndex: 2, positiveMark: 2, negativeMark: 0.5 }
+    ];
+    questions = [
+      {
+        id: "q_q1", sectionId: "sec_quant", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
+        content: {
+          en: { questionText: "If x + 1/x = 5, then find the value of x² + 1/x².", options: ["23", "25", "27", "21"], mathLatex: "x + \\frac{1}{x} = 5" },
+          hi: { questionText: "यदि x + 1/x = 5 है, तो x² + 1/x² का मान ज्ञात कीजिए।", options: ["23", "25", "27", "21"], mathLatex: "x + \\frac{1}{x} = 5" }
+        }
+      },
+      {
+        id: "q_q2", sectionId: "sec_quant", questionType: "mcq", orderIndex: 1, correctOptionIndex: 0,
+        content: {
+          en: { questionText: "The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A's present age?", options: ["20 years", "25 years", "30 years", "15 years"] },
+          hi: { questionText: "A और B की वर्तमान आयु का अनुपात 4:5 है। 5 वर्ष बाद यह अनुपात 5:6 हो जाता है। A की वर्तमान आयु क्या है?", options: ["20 वर्ष", "25 वर्ष", "30 वर्ष", "15 वर्ष"] }
+        }
+      },
+      {
+        id: "q_r1", sectionId: "sec_reasoning", questionType: "mcq", orderIndex: 0, correctOptionIndex: 3,
+        content: {
+          en: { questionText: "Identify the pattern and choose the next term in the series: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] },
+          hi: { questionText: "पैटर्न को पहचानें और श्रृंखला में अगला पद चुनें: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] }
+        }
+      },
+      {
+        id: "q_e1", sectionId: "sec_english", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
+        content: {
+          en: { questionText: "Select the antonym for the word: OBSTINATE", options: ["Flexible", "Stubborn", "Rigid", "Dogmatic"] },
+          hi: { questionText: "दिए गए शब्द का विलोम शब्द चुनें: OBSTINATE (हठी)", options: ["Flexible (लचीला)", "Stubborn (अड़ियल)", "Rigid (कठोर)", "Dogmatic (कट्टर)"] }
+        }
+      }
+    ];
+  } else if (id.includes('rrb') || id.includes('railway')) {
+    title = "RRB NTPC CBT-1 Mock Assessment Paper";
+    duration = 5400; // 90 minutes
+    sections = [
+      { id: "sec_math", name: "Mathematics", orderIndex: 0, positiveMark: 1, negativeMark: 0.33 },
+      { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 1, negativeMark: 0.33 },
+      { id: "sec_general", name: "General Awareness", orderIndex: 2, positiveMark: 1, negativeMark: 0.33 }
+    ];
+    questions = [
+      {
+        id: "q_m1", sectionId: "sec_math", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
+        content: {
+          en: { questionText: "Find the value of (0.43 * 0.43 - 0.17 * 0.17) / (0.43 - 0.17).", options: ["0.26", "0.60", "0.50", "0.43"] },
+          hi: { questionText: "मान ज्ञात करें: (0.43 * 0.43 - 0.17 * 0.17) / (0.43 - 0.17)", options: ["0.26", "0.60", "0.50", "0.43"] }
+        }
+      },
+      {
+        id: "q_g1", sectionId: "sec_general", questionType: "mcq", orderIndex: 0, correctOptionIndex: 2,
+        content: {
+          en: { questionText: "Which is the largest fresh water lake in India?", options: ["Chilika Lake", "Dal Lake", "Wular Lake", "Vembanad Lake"] },
+          hi: { questionText: "भारत में मीठे पानी की सबसे बड़ी झील कौन सी है?", options: ["चिलिका झील", "डल झील", "वुलर झील", "वेम्बनाड झील"] }
+        }
+      }
+    ];
+  } else {
+    title = "Testbook Assessment Series - General Mock Test";
+    duration = 3600;
+    sections = [
+      { id: "sec_paper1", name: "Aptitude & General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 }
+    ];
+    questions = [
+      {
+        id: "q_gen1", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
+        content: {
+          en: { questionText: "What is the unit of electric current?", options: ["Volt", "Ampere", "Ohm", "Watt"] },
+          hi: { questionText: "विद्युत धारा की इकाई क्या है?", options: ["वोल्ट", "एम्पीयर", "ओम", "वाट"] }
+        }
+      },
+      {
+        id: "q_gen2", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 1, correctOptionIndex: 1,
+        content: {
+          en: { questionText: "Which planet is known as the Red Planet?", options: ["Earth", "Mars", "Jupiter", "Saturn"] },
+          hi: { questionText: "किस ग्रह को लाल ग्रह के नाम से जाना जाता है?", options: ["पृथ्वी", "मंगल", "बृहस्पति", "शनि"] }
+        }
+      }
+    ];
+  }
+
+  return {
+    sessionId: `session_${id}_${Date.now().toString().substring(8)}`,
+    testId: id,
+    testTitle: title,
+    totalDurationSeconds: duration,
+    sections,
+    questions
+  };
+};
+
+function TcsIonEngine({ testId }: { testId: string }) {
+  const {
+    state,
+    initSession,
+    selectOption,
+    saveAndNext,
+    clearResponse,
+    markForReviewAndNext,
+    jumpToQuestion,
+    switchSection,
+    setLanguage,
+    submitExam,
+  } = useTestEngine();
+
+  const { addAttempt, currentUser } = useAuth();
+  const router = useRouter();
+
+  const [attemptSaved, setAttemptSaved] = useState(false);
+
+  // Initialize session on mount
+  useEffect(() => {
+    const examSession = generateExamSession(testId);
+    initSession(examSession, 3); // 3 violations allowed
+  }, [initSession, testId]);
+
+  // Sync attempt score on exam submission
+  useEffect(() => {
+    if (state.isExamSubmitted && state.score && currentUser && !attemptSaved) {
+      setAttemptSaved(true);
+      addAttempt(
+        testId,
+        state.session?.testTitle || "Mock Test Attempt",
+        state.score.obtainedMarks,
+        state.score.totalMarks,
+        state.score.accuracyPercentage,
+        state.session ? state.session.totalDurationSeconds - state.timeRemaining : 0,
+        state.violationsCount
+      );
+    }
+  }, [state.isExamSubmitted, state.score, currentUser, addAttempt, testId, attemptSaved]);
+
+  if (!state.session) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-100 font-sans">
+        <div className="text-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-gray-700 font-medium">Initializing Exam Terminal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { session, currentSectionIndex, currentQuestionIndex, responses, timeRemaining, language, violationsCount, isExamSubmitted, score } = state;
+  const currentSection = session.sections[currentSectionIndex];
+
+  // Helper to extract questions in current section
+  const currentSectionQuestions = session.questions
+    .filter((q) => q.sectionId === currentSection.id)
+    .sort((a, b) => a.orderIndex - b.orderIndex);
+
+  const currentQuestion = currentSectionQuestions[currentQuestionIndex];
+  const activeResponse = currentQuestion ? responses[currentQuestion.id] : null;
+
+  // Format Time Remaining: HH:MM:SS
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // State Counts for Legend
+  const getLegendCounts = () => {
+    let notVisited = 0;
+    let notAnswered = 0;
+    let answered = 0;
+    let marked = 0;
+    let markedAndAnswered = 0;
+
+    session.questions.forEach((q) => {
+      const resp = responses[q.id];
+      if (resp) {
+        if (resp.state === 1) notVisited++;
+        else if (resp.state === 2) notAnswered++;
+        else if (resp.state === 3) answered++;
+        else if (resp.state === 4) marked++;
+        else if (resp.state === 5) markedAndAnswered++;
+      }
+    });
+
+    return { notVisited, notAnswered, answered, marked, markedAndAnswered };
+  };
+
+  const counts = getLegendCounts();
+
+  return (
+    <div className="flex h-screen flex-col bg-gray-100 font-sans select-none text-xs leading-normal text-slate-800">
+      
+      {/* 1. TOP HEADER BANNER */}
+      <header className="flex h-12 items-center justify-between bg-[#0F2942] px-4 text-white">
+        <div className="flex items-center gap-3">
+          <div className="bg-red-600 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider animate-pulse">
+            Live Exam
+          </div>
+          <span className="font-bold text-sm tracking-wide">{session.testTitle}</span>
+        </div>
+
+        {/* Dynamic Countdown Clock */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 bg-[#1C3D5A] px-3 py-1.5 rounded border border-[#2E587A]">
+            <span className="text-gray-300 text-[10px] uppercase">Time Left:</span>
+            <span className="font-mono text-base font-bold text-yellow-400 tracking-wider">
+              {formatTime(timeRemaining)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 border-l border-slate-600 pl-4">
+            <Globe className="h-4 w-4 text-slate-400" />
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+              className="bg-[#1C3D5A] border border-[#2E587A] rounded px-1 py-0.5 text-xs text-white outline-none cursor-pointer"
+            >
+              <option value="en">English</option>
+              <option value="hi">हिंदी (Hindi)</option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      {/* GATING / SUBMITTED SCREEN OVERLAY */}
+      {isExamSubmitted ? (
+        <div className="flex flex-1 flex-col items-center justify-center bg-white p-8">
+          <div className="max-w-md w-full border border-slate-200 rounded-lg shadow-xl p-6 bg-slate-50 text-center">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 mb-4">
+              <Check className="h-6 w-6" />
+            </div>
+            <h2 className="text-lg font-bold text-slate-900 mb-2">Test Submitted Successfully!</h2>
+            <p className="text-gray-600 text-xs mb-6 font-semibold">Your attempt details have been synced to your profile statistics dashboard.</p>
+
+            <div className="grid grid-cols-2 gap-4 text-left border-y border-slate-200 py-4 mb-6">
+              <div>
+                <p className="text-gray-500 font-semibold">Total Marks:</p>
+                <p className="text-sm font-bold text-slate-800">{score?.totalMarks}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 font-semibold">Obtained Score:</p>
+                <p className="text-sm font-bold text-blue-600">{score?.obtainedMarks}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 font-semibold">Correct Answers:</p>
+                <p className="text-sm font-bold text-green-600">{score?.correctCount}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 font-semibold">Incorrect Answers:</p>
+                <p className="text-sm font-bold text-red-600">{score?.incorrectCount}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-gray-500 font-semibold">Accuracy Percentage:</p>
+                <p className="text-sm font-bold text-indigo-600">{score?.accuracyPercentage}%</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => router.push('/profile')}
+              className="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg shadow hover:bg-blue-750 transition"
+            >
+              Go to Profile Stats
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-1 overflow-hidden">
+          
+          {/* LEFT PANEL (75% WIDTH) - SUBJECTS TABS, QUESTION BLOCK & ACTIONS */}
+          <main className="flex w-[75%] flex-col border-r border-slate-200 bg-white">
+            
+            {/* Subject Tabs Switcher */}
+            <div className="flex h-10 border-b border-slate-200 bg-[#E9ECF2]">
+              {session.sections.map((sec, idx) => (
+                <button
+                  key={sec.id}
+                  onClick={() => switchSection(idx)}
+                  className={`flex items-center px-4 font-bold border-r border-slate-200 transition-colors ${
+                    idx === currentSectionIndex
+                      ? 'bg-white text-blue-800 border-t-2 border-t-orange-500 font-extrabold'
+                      : 'text-slate-600 hover:bg-[#DEE3EC]'
+                  }`}
+                >
+                  {sec.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Question Header Bar */}
+            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2 text-[11px] font-bold">
+              <span className="text-[#0747A6] text-xs">Question Type: Multiple Choice Question</span>
+              <div className="flex gap-2">
+                <span className="text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded">
+                  Marks: +{currentSection.positiveMark}
+                </span>
+                <span className="text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                  Negative: -{currentSection.negativeMark}
+                </span>
+              </div>
+            </div>
+
+            {/* Question Text & Math Rendering */}
+            <div className="flex-1 overflow-y-auto p-6 bg-white">
+              {currentQuestion ? (
+                <div>
+                  {/* Question Index Title */}
+                  <div className="mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-slate-800">
+                      Question No. {currentQuestionIndex + 1}
+                    </h3>
+                    <div className="text-[10px] text-slate-400">
+                      ID: {currentQuestion.id}
+                    </div>
+                  </div>
+
+                  {/* Render Question Text Based on active Language */}
+                  <div className="mb-6 text-sm text-slate-900 leading-relaxed font-normal bg-slate-50 p-4 border border-slate-200 rounded">
+                    {language === 'en'
+                      ? currentQuestion.content.en.questionText
+                      : currentQuestion.content.hi.questionText}
+
+                    {/* Optional Math Equation preview */}
+                    {(language === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex) && (
+                      <div className="mt-2 p-2 bg-yellow-50 text-yellow-900 border border-yellow-200 rounded font-mono text-xs">
+                        LaTeX: {language === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Options List Grid */}
+                  <div className="space-y-3 pl-2">
+                    {(language === 'en'
+                      ? currentQuestion.content.en.options
+                      : currentQuestion.content.hi.options
+                    ).map((opt, idx) => {
+                      const optLabel = typeof opt === 'string' ? opt : opt.text;
+                      const isTempChosen = activeResponse?.tempOptionIndex === idx;
+
+                      return (
+                        <label
+                          key={idx}
+                          onClick={() => selectOption(idx)}
+                          className={`flex items-center gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition ${
+                            isTempChosen
+                              ? 'bg-blue-50 border-blue-400 font-semibold'
+                              : 'bg-white border-slate-200'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name={`question-${currentQuestion.id}`}
+                            checked={isTempChosen}
+                            readOnly
+                            className="h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-slate-800 text-xs flex-1">{optLabel}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-10 text-gray-500">No questions loaded in this section.</div>
+              )}
+            </div>
+
+            {/* Bottom Actions Row */}
+            <footer className="flex h-14 items-center justify-between border-t border-slate-200 bg-[#E9ECF2] px-4">
+              <div className="flex gap-2">
+                <button
+                  onClick={markForReviewAndNext}
+                  className="bg-white border border-slate-300 text-slate-700 font-bold px-4 py-2 rounded shadow-sm hover:bg-slate-50 active:bg-slate-100 transition"
+                >
+                  Mark for Review & Next
+                </button>
+                <button
+                  onClick={clearResponse}
+                  className="bg-white border border-slate-300 text-slate-700 font-bold px-4 py-2 rounded shadow-sm hover:bg-slate-50 active:bg-slate-100 transition"
+                >
+                  Clear Response
+                </button>
+              </div>
+
+              <button
+                onClick={saveAndNext}
+                className="bg-[#2E7D32] text-white font-bold px-6 py-2 rounded shadow hover:bg-green-800 transition"
+              >
+                Save & Next
+              </button>
+            </footer>
+          </main>
+
+          {/* RIGHT PANEL (25% WIDTH) - CANDIDATE IDENTITY & QUESTION PALETTE GRID */}
+          <aside className="flex w-[25%] flex-col bg-[#F3F4F6] border-l border-slate-200 overflow-y-auto">
+            
+            {/* Profile Avatar Card */}
+            <div className="flex items-center gap-3 bg-white p-4 border-b border-slate-200">
+              <div className="relative h-12 w-12 rounded bg-slate-200 flex items-center justify-center border border-slate-300 text-slate-400">
+                <User className="h-6 w-6" />
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Candidate Code: {currentUser?.candidateCode || 'GUEST'}</p>
+                <p className="font-bold text-slate-900 truncate">{currentUser?.name || 'Guest User'}</p>
+                {violationsCount > 0 && (
+                  <span className="inline-flex items-center gap-1 text-[9px] bg-red-50 text-red-700 border border-red-200 rounded px-1 py-0.5 mt-1 font-bold">
+                    <ShieldAlert className="h-3 w-3" />
+                    Blur Violations: {violationsCount}/3
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Legend Panel of States (Custom Designs/Shapes matching TCS iON) */}
+            <div className="p-3 bg-white border-b border-slate-200 grid grid-cols-2 gap-x-2 gap-y-1.5 text-[10px]">
+              
+              <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center bg-gray-200 border border-gray-400 text-xs font-bold text-slate-800">
+                  {counts.notVisited}
+                </div>
+                <span>Not Visited</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center bg-[#C62828] text-white text-xs font-bold rounded-t-md">
+                  {counts.notAnswered}
+                </div>
+                <span>Not Answered</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center bg-[#2E7D32] text-white text-xs font-bold rounded-b-md">
+                  {counts.answered}
+                </div>
+                <span>Answered</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center bg-[#4527A0] text-white text-xs font-bold rounded-full">
+                  {counts.marked}
+                </div>
+                <span>Marked for Review</span>
+              </div>
+
+              <div className="flex items-center gap-2 col-span-2">
+                <div className="relative flex h-5 w-5 items-center justify-center bg-[#4527A0] text-white text-xs font-bold rounded-full">
+                  {counts.markedAndAnswered}
+                  <span className="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-0.5 border border-white">
+                    <Check className="h-2 w-2" />
+                  </span>
+                </div>
+                <span>Answered & Marked for Review</span>
+              </div>
+
+            </div>
+
+            {/* Active Palette Section Grid */}
+            <div className="flex-1 p-4 bg-white">
+              <h4 className="font-bold text-[#0F2942] uppercase text-[10px] tracking-wide mb-3">
+                Question Palette - {currentSection.name}
+              </h4>
+              
+              <div className="grid grid-cols-5 gap-2.5">
+                {currentSectionQuestions.map((q, idx) => {
+                  const resp = responses[q.id];
+                  const stateCode = resp?.state ?? 1;
+                  const isActive = idx === currentQuestionIndex;
+
+                  let styleClass = "";
+
+                  // Select style configurations based on TCS iON Palette State Rules
+                  switch (stateCode) {
+                    case 1: // Not Visited
+                      styleClass = "bg-gray-200 border-gray-400 text-slate-800";
+                      break;
+                    case 2: // Not Answered
+                      styleClass = "bg-[#C62828] text-white rounded-t-md border-transparent";
+                      break;
+                    case 3: // Answered
+                      styleClass = "bg-[#2E7D32] text-white rounded-b-md border-transparent";
+                      break;
+                    case 4: // Marked for Review
+                      styleClass = "bg-[#4527A0] text-white rounded-full border-transparent";
+                      break;
+                    case 5: // Answered & Marked for Review
+                      styleClass = "bg-[#4527A0] text-white rounded-full border-transparent relative";
+                      break;
+                  }
+
+                  return (
+                    <button
+                      key={q.id}
+                      onClick={() => jumpToQuestion(currentSectionIndex, idx)}
+                      className={`flex h-8 w-8 items-center justify-center border font-bold text-xs shadow-sm hover:opacity-90 active:scale-95 transition-all ${styleClass} ${
+                        isActive ? 'ring-2 ring-blue-500 ring-offset-1 z-10' : ''
+                      }`}
+                    >
+                      {idx + 1}
+                      {stateCode === 5 && (
+                        <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white">
+                          <Check className="h-1.5 w-1.5" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Submit Block Section */}
+            <div className="p-4 border-t border-slate-200 bg-slate-50">
+              <button
+                onClick={submitExam}
+                className="w-full bg-[#1A3B5C] text-white font-bold py-2.5 rounded shadow hover:bg-slate-800 transition"
+              >
+                Submit Exam Paper
+              </button>
+            </div>
+
+          </aside>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: () => void }) {
+  const [agreed, setAgreed] = useState(false);
+  const [lang, setLang] = useState<'en' | 'hi'>('en');
+  const { theme, toggleTheme } = useAuth();
+  
+  // Mapped metadata based on testId
+  let examName = "General Mock Test Assessment";
+  let questionsCount = 100;
+  let durationMinutes = 60;
+  let maxMarks = 200;
+  
+  if (testId.includes('ssc')) {
+    examName = "SSC CGL 2026 - Tier-I Combined Graduate Level Exam";
+    questionsCount = 4;
+    durationMinutes = 60;
+    maxMarks = 8;
+  } else if (testId.includes('rrb') || testId.includes('railway')) {
+    examName = "RRB NTPC CBT-1 Stage 1 Practice Simulator";
+    questionsCount = 2;
+    durationMinutes = 90;
+    maxMarks = 2;
+  } else if (testId.includes('ugc_net')) {
+    examName = "UGC NET Paper-1 Teaching & Research Aptitude";
+    questionsCount = 2;
+    durationMinutes = 60;
+    maxMarks = 4;
+  } else if (testId.includes('ctet') || testId.includes('teaching')) {
+    examName = "CTET 2026 Paper-I (Primary Class I-V) Mock Paper";
+    questionsCount = 2;
+    durationMinutes = 150;
+    maxMarks = 4;
+  }
+  
+  const text = {
+    en: {
+      title: "Please read the instructions carefully",
+      general: "General Instructions:",
+      gen1: "1. The clock will be set at the server. The countdown timer in the top right corner of screen will display the remaining time available for you to complete the examination.",
+      gen2: "2. The Question Palette displayed on the right side of screen will show the status of each question using one of the 5 symbols.",
+      gen3: "3. You can click on the character '>' arrow to collapse the question palette to maximize the question viewing area.",
+      answering: "Navigating to a Question:",
+      ans1: "4. To answer a question, select the radio button of one of the options and click 'Save & Next'.",
+      ans2: "5. To change your answer, click on the 'Clear Response' button to reset the selection.",
+      disclaimer: "I have read and understood all the instructions. All computer hardware allotted to me is in proper working condition. I agree that in case of any cheating or tab switching, the exam will be auto-submitted.",
+      btn: "I am ready to begin"
+    },
+    hi: {
+      title: "कृपया निर्देशों को ध्यान से पढ़ें",
+      general: "सामान्य निर्देश:",
+      gen1: "1. घड़ी सर्वर पर परीक्षा घड़ी के रूप में सेट की जाएगी। स्क्रीन के शीर्ष दाएं कोने में उलटी गिनती घड़ी आपके द्वारा परीक्षा पूरी करने के लिए उपलब्ध शेष समय को प्रदर्शित करेगी।",
+      gen2: "2. स्क्रीन के दाईं ओर प्रदर्शित प्रश्न पैलेट 5 प्रतीकों में से किसी एक का उपयोग करके प्रत्येक प्रश्न की स्थिति को दर्शाएगा।",
+      gen3: "3. प्रश्न देखने के क्षेत्र को अधिकतम करने के लिए आप प्रश्न पैलेट को बंद करने के लिए '>' तीर पर क्लिक कर सकते हैं।",
+      answering: "प्रश्न पर नेविगेट करना:",
+      ans1: "4. किसी प्रश्न का उत्तर देने के लिए, विकल्पों में से किसी एक को चुनें और 'Save & Next' पर क्लिक करें।",
+      ans2: "5. अपना उत्तर बदलने के लिए, चयन को रीसेट करने के लिए 'Clear Response' बटन पर क्लिक करें।",
+      disclaimer: "मैंने सभी निर्देशों को पढ़ और समझ लिया है। मुझे आवंटित सभी कंप्यूटर हार्डवेयर उचित कार्यशील स्थिति में हैं। मैं सहमत हूं कि किसी भी नकल या टैब स्विचिंग के मामले में, परीक्षा स्वतः सबमिट हो जाएगी।",
+      btn: "मैं तैयार हूँ (I am ready to begin)"
+    }
+  };
+
+  const t = text[lang];
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+      {/* Header bar */}
+      <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between shadow-sm">
+        <h2 className="font-extrabold text-sm tracking-wide flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-blue-600 animate-pulse" /> Instructions Panel
+        </h2>
+        
+        <div className="flex items-center gap-4">
+          {/* Lang Switcher */}
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="text-slate-500 font-bold">View In:</span>
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value as 'en' | 'hi')}
+              className="bg-slate-100 dark:bg-slate-800 border border-slate-350 dark:border-slate-700 rounded px-2 py-1 outline-none text-xs text-slate-850 dark:text-white cursor-pointer font-bold"
+            >
+              <option value="en">English</option>
+              <option value="hi">हिंदी (Hindi)</option>
+            </select>
+          </div>
+          
+          {/* Theme switcher */}
+          <button 
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-650 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-700"
+            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+          >
+            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          </button>
+        </div>
+      </header>
+
+      {/* Main Instructions Area */}
+      <main className="flex-1 max-w-4xl w-full mx-auto p-6 md:p-8 flex flex-col justify-between">
+        
+        <div className="space-y-6">
+          <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
+            <h1 className="text-lg font-black text-slate-850 dark:text-white uppercase tracking-wider">{examName}</h1>
+            <div className="flex gap-4 mt-2 text-xs text-slate-500 font-bold">
+              <span>Duration: {durationMinutes} Mins</span>
+              <span>•</span>
+              <span>Questions: {questionsCount} Qs</span>
+              <span>•</span>
+              <span>Marks: {maxMarks} Marks</span>
+            </div>
+          </div>
+
+          {/* Core instructions scroll box */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 h-[340px] overflow-y-auto space-y-4 text-xs leading-relaxed shadow-inner">
+            <h3 className="font-extrabold text-sm text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1.5">{t.title}</h3>
+            
+            <p className="font-bold text-slate-700 dark:text-slate-300">{t.general}</p>
+            <p className="pl-2">{t.gen1}</p>
+            <p className="pl-2">{t.gen2}</p>
+            <p className="pl-2">{t.gen3}</p>
+
+            <p className="font-bold text-slate-700 dark:text-slate-300 mt-4">{t.answering}</p>
+            <p className="pl-2">{t.ans1}</p>
+            <p className="pl-2">{t.ans2}</p>
+          </div>
+        </div>
+
+        {/* Disclaimer panel and button */}
+        <div className="mt-8 border-t border-slate-200 dark:border-slate-800 pt-6">
+          <label className="flex items-start gap-3 cursor-pointer select-none text-xs text-slate-650 dark:text-slate-400 leading-normal mb-6">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-slate-350 text-blue-650 focus:ring-blue-500 cursor-pointer"
+            />
+            <span>{t.disclaimer}</span>
+          </label>
+
+          <div className="flex justify-between items-center">
+            <Link 
+              href="/mock-tests" 
+              className="bg-slate-200 dark:bg-slate-850 hover:bg-slate-300 dark:hover:bg-slate-800 text-slate-750 dark:text-slate-300 font-bold px-6 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all active:scale-95"
+            >
+              Cancel
+            </Link>
+
+            <button
+              onClick={onStart}
+              disabled={!agreed}
+              className={`font-bold px-8 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all active:scale-95 shadow-md ${
+                agreed 
+                  ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-950/20 cursor-pointer' 
+                  : 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-600 shadow-none cursor-not-allowed'
+              }`}
+            >
+              {t.btn}
+            </button>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  );
+}
+
+export default function DynamicExamPage() {
+  const params = useParams();
+  const testId = (params?.id as string) || "ssc_cgl_tier1";
+  
+  const [isConfirmed, setIsConfirmed] = useState(false);
+
+  // Callback when Engine triggers background timer saves
+  const handleSaveSync = async (engineState: any) => {
+    console.log('Synchronizing test engine states with database endpoint...', {
+      sessionId: engineState.session.sessionId,
+      remaining: engineState.timeRemaining,
+      violations: engineState.violationsCount
+    });
+  };
+
+  if (!isConfirmed) {
+    return <ExamInstructionsScreen testId={testId} onStart={() => setIsConfirmed(true)} />;
+  }
+
+  return (
+    <TestEngineProvider onStateSync={handleSaveSync} syncIntervalSeconds={12}>
+      <TcsIonEngine testId={testId} />
+    </TestEngineProvider>
+  );
+}

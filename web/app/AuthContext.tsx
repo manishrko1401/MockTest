@@ -1,0 +1,454 @@
+"use client";
+
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+export interface MockTestRecord {
+  id: string;
+  testId?: string;
+  title: string;
+  score: number;
+  maxScore: number;
+  accuracy: number;
+  durationSeconds: number;
+  status: 'COMPLETED' | 'AUTO_SUBMITTED' | 'ONGOING';
+  violations: number;
+  date: string;
+}
+
+export interface MockUser {
+  id: string;
+  candidateCode: string;
+  name: string;
+  email: string;
+  mobile: string;
+  referralCode: string;
+  referredBy: string | null;
+  referralsCount: number;
+  role: 'STUDENT' | 'ADMIN' | 'CONTENT_CREATOR';
+  subscriptionTier: 'None' | 'Testbook Pass' | 'Testbook Pass Pro';
+  subscriptionPurchasedAt: string | null;
+  subscriptionExpiresAt: string | null;
+  registeredDate: string;
+  testSessions: MockTestRecord[];
+}
+
+interface AuthContextType {
+  currentUser: MockUser | null;
+  usersList: MockUser[];
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+  login: (email: string) => boolean;
+  signup: (name: string, email: string, mobile: string, referralCodeInput?: string) => boolean;
+  logout: () => void;
+  updateProfile: (name: string, email: string, mobile: string) => void;
+  updatePassword: (oldPass: string, newPass: string) => boolean;
+  addAttempt: (testId: string, title: string, score: number, maxScore: number, accuracy: number, durationSeconds: number, violations: number) => void;
+  resetAttempt: (userId: string, sessionId: string) => void;
+  saveUserProfileByAdmin: (
+    userId: string,
+    name: string,
+    email: string,
+    mobile: string,
+    referralCode: string,
+    referredBy: string | null,
+    referralsCount: number,
+    role: MockUser['role'],
+    tier: MockUser['subscriptionTier'],
+    purchasedAt: string | null,
+    expiry: string | null
+  ) => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const INITIAL_USERS: MockUser[] = [
+  {
+    id: 'u1',
+    candidateCode: 'CGL_9029',
+    name: 'Rahul Sharma',
+    email: 'rahul.sharma@example.com',
+    mobile: '9988776655',
+    referralCode: 'TB-RAHUL-1029',
+    referredBy: null,
+    referralsCount: 0,
+    role: 'STUDENT',
+    subscriptionTier: 'Testbook Pass Pro',
+    subscriptionPurchasedAt: '2026-03-15',
+    subscriptionExpiresAt: '2027-03-15',
+    registeredDate: '2026-01-10',
+    testSessions: [
+      { id: 'ts1', testId: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', score: 162.5, maxScore: 200, accuracy: 81.25, durationSeconds: 2520, status: 'COMPLETED', violations: 0, date: '2026-06-20' },
+      { id: 'ts2', testId: 'sbi_po_prelims', title: 'SBI PO Full Length Mock Test Series', score: 48.0, maxScore: 100, accuracy: 55.0, durationSeconds: 3480, status: 'AUTO_SUBMITTED', violations: 3, date: '2026-06-22' }
+    ]
+  },
+  {
+    id: 'u2',
+    candidateCode: 'CGL_4812',
+    name: 'Priya Patel',
+    email: 'priya.patel@example.com',
+    mobile: '9876543210',
+    referralCode: 'TB-PRIYA-4812',
+    referredBy: null,
+    referralsCount: 0,
+    role: 'STUDENT',
+    subscriptionTier: 'Testbook Pass',
+    subscriptionPurchasedAt: '2025-12-01',
+    subscriptionExpiresAt: '2026-12-01',
+    registeredDate: '2026-05-18',
+    testSessions: [
+      { id: 'ts3', testId: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', score: 138.0, maxScore: 200, accuracy: 72.5, durationSeconds: 3000, status: 'COMPLETED', violations: 1, date: '2026-06-24' }
+    ]
+  },
+  {
+    id: 'u3',
+    candidateCode: 'CGL_2291',
+    name: 'Vikram Singh',
+    email: 'vikram.singh@example.com',
+    mobile: '9123456789',
+    referralCode: 'TB-VIKRAM-2291',
+    referredBy: null,
+    referralsCount: 0,
+    role: 'CONTENT_CREATOR',
+    subscriptionTier: 'None',
+    subscriptionPurchasedAt: null,
+    subscriptionExpiresAt: null,
+    registeredDate: '2025-12-15',
+    testSessions: []
+  },
+  {
+    id: 'u4',
+    candidateCode: 'CGL_3034',
+    name: 'Amit Verma',
+    email: 'amit.verma@example.com',
+    mobile: '9555666777',
+    referralCode: 'TB-AMIT-3034',
+    referredBy: null,
+    referralsCount: 0,
+    role: 'STUDENT',
+    subscriptionTier: 'None',
+    subscriptionPurchasedAt: null,
+    subscriptionExpiresAt: null,
+    registeredDate: '2026-06-12',
+    testSessions: [
+      { id: 'ts4', testId: 'rrb_ntpc_stage1', title: 'RRB NTPC Free Sectional Tests', score: 28.0, maxScore: 40, accuracy: 80.0, durationSeconds: 900, status: 'COMPLETED', violations: 0, date: '2026-06-25' }
+    ]
+  }
+];
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [usersList, setUsersList] = useState<MockUser[]>([]);
+  const [currentUser, setCurrentUser] = useState<MockUser | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  // Load initial data from localStorage with backfill checks
+  useEffect(() => {
+    let loadedUsers: MockUser[] = [];
+    const savedUsers = localStorage.getItem('tb_users');
+    
+    if (savedUsers) {
+      try {
+        const parsed = JSON.parse(savedUsers) as MockUser[];
+        const needsBackfill = parsed.some(
+          u => !u.referralCode || !u.mobile || u.subscriptionPurchasedAt === undefined || 
+               u.testSessions.some(ts => !ts.testId)
+        );
+        if (needsBackfill) {
+          loadedUsers = parsed.map(u => {
+            const match = INITIAL_USERS.find(iu => iu.id === u.id);
+            const codeName = u.name.split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
+            
+            // Map existing testSession titles to their testIds if missing
+            const updatedSessions = u.testSessions.map(ts => {
+              if (ts.testId) return ts;
+              let tId = 'ssc_cgl_tier1';
+              if (ts.title.includes('SSC CGL')) tId = 'ssc_cgl_tier1';
+              else if (ts.title.includes('SBI PO')) tId = 'sbi_po_prelims';
+              else if (ts.title.includes('RRB NTPC')) tId = 'rrb_ntpc_stage1';
+              return { ...ts, testId: tId };
+            });
+
+            return {
+              ...u,
+              mobile: u.mobile || match?.mobile || '9988776655',
+              referralCode: u.referralCode || match?.referralCode || ('TB-' + codeName + '-' + Math.floor(1000 + Math.random() * 9000)),
+              referredBy: u.referredBy !== undefined ? u.referredBy : (match?.referredBy || null),
+              referralsCount: u.referralsCount !== undefined ? u.referralsCount : (match?.referralsCount || 0),
+              subscriptionPurchasedAt: u.subscriptionPurchasedAt !== undefined ? u.subscriptionPurchasedAt : (match?.subscriptionPurchasedAt || null),
+              testSessions: updatedSessions
+            };
+          });
+          localStorage.setItem('tb_users', JSON.stringify(loadedUsers));
+        } else {
+          loadedUsers = parsed;
+        }
+      } catch (e) {
+        loadedUsers = INITIAL_USERS;
+        localStorage.setItem('tb_users', JSON.stringify(INITIAL_USERS));
+      }
+    } else {
+      loadedUsers = INITIAL_USERS;
+      localStorage.setItem('tb_users', JSON.stringify(INITIAL_USERS));
+    }
+    
+    setUsersList(loadedUsers);
+
+    const savedSession = localStorage.getItem('tb_session');
+    if (savedSession) {
+      try {
+        const parsedSession = JSON.parse(savedSession) as MockUser;
+        const matchingLoadedUser = loadedUsers.find(u => u.id === parsedSession.id);
+        if (matchingLoadedUser) {
+          setCurrentUser(matchingLoadedUser);
+          localStorage.setItem('tb_session', JSON.stringify(matchingLoadedUser));
+        } else {
+          setCurrentUser(parsedSession);
+        }
+      } catch (e) {
+        const defaultUser = loadedUsers.find(u => u.id === 'u1') || loadedUsers[0];
+        setCurrentUser(defaultUser);
+        localStorage.setItem('tb_session', JSON.stringify(defaultUser));
+      }
+    } else {
+      const defaultUser = loadedUsers.find(u => u.id === 'u1') || loadedUsers[0];
+      setCurrentUser(defaultUser);
+      localStorage.setItem('tb_session', JSON.stringify(defaultUser));
+    }
+
+    // Load theme setting
+    const savedTheme = localStorage.getItem('tb_theme') as 'light' | 'dark';
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      setTheme('dark');
+    }
+  }, []);
+
+  // Sync theme changes with DOM node class selectors
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(nextTheme);
+    localStorage.setItem('tb_theme', nextTheme);
+  };
+
+  const login = (email: string): boolean => {
+    const user = usersList.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (user) {
+      setCurrentUser(user);
+      localStorage.setItem('tb_session', JSON.stringify(user));
+      return true;
+    }
+    return false;
+  };
+
+  const signup = (name: string, email: string, mobile: string, referralCodeInput?: string): boolean => {
+    // Check duplication
+    if (usersList.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+      return false;
+    }
+
+    const codeName = name.split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const referralCode = 'TB-' + codeName + '-' + Math.floor(1000 + Math.random() * 9000);
+
+    let updatedList = [...usersList];
+    let referredByCode: string | null = null;
+
+    if (referralCodeInput && referralCodeInput.trim() !== '') {
+      const referrerIndex = updatedList.findIndex(
+        u => u.referralCode.trim().toLowerCase() === referralCodeInput.trim().toLowerCase()
+      );
+      if (referrerIndex !== -1) {
+        referredByCode = updatedList[referrerIndex].referralCode;
+        updatedList[referrerIndex] = {
+          ...updatedList[referrerIndex],
+          referralsCount: updatedList[referrerIndex].referralsCount + 1
+        };
+      }
+    }
+
+    const newUser: MockUser = {
+      id: 'u_' + Math.random().toString(36).substring(2, 9),
+      candidateCode: 'CGL_' + Math.floor(1000 + Math.random() * 9000),
+      name,
+      email,
+      mobile,
+      referralCode,
+      referredBy: referredByCode,
+      referralsCount: 0,
+      role: 'STUDENT',
+      subscriptionTier: 'None',
+      subscriptionPurchasedAt: null,
+      subscriptionExpiresAt: null,
+      registeredDate: new Date().toISOString().split('T')[0],
+      testSessions: []
+    };
+
+    updatedList.push(newUser);
+    setUsersList(updatedList);
+    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+
+    // Log in newly created user
+    setCurrentUser(newUser);
+    localStorage.setItem('tb_session', JSON.stringify(newUser));
+    return true;
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('tb_session');
+  };
+
+  const updateProfile = (name: string, email: string, mobile: string) => {
+    if (!currentUser) return;
+    
+    const updatedUser = { ...currentUser, name, email, mobile };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('tb_session', JSON.stringify(updatedUser));
+
+    const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
+    setUsersList(updatedList);
+    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+  };
+
+  const updatePassword = (oldPass: string, newPass: string): boolean => {
+    // Simulated simple verification
+    if (oldPass === 'password' || oldPass.length > 0) {
+      return true;
+    }
+    return false;
+  };
+
+  const addAttempt = (
+    testId: string,
+    title: string,
+    score: number,
+    maxScore: number,
+    accuracy: number,
+    durationSeconds: number,
+    violations: number
+  ) => {
+    if (!currentUser) return;
+
+    const newRecord: MockTestRecord = {
+      id: 'ts_' + Math.random().toString(36).substring(2, 9),
+      testId,
+      title,
+      score,
+      maxScore,
+      accuracy,
+      durationSeconds,
+      status: 'COMPLETED',
+      violations,
+      date: new Date().toISOString().split('T')[0]
+    };
+
+    const updatedSessions = [newRecord, ...currentUser.testSessions];
+    const updatedUser = { ...currentUser, testSessions: updatedSessions };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('tb_session', JSON.stringify(updatedUser));
+
+    const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
+    setUsersList(updatedList);
+    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+  };
+
+  const resetAttempt = (userId: string, sessionId: string) => {
+    const updatedList = usersList.map(u => {
+      if (u.id === userId) {
+        const cleanedSessions = u.testSessions.filter(s => s.id !== sessionId);
+        const updatedU = { ...u, testSessions: cleanedSessions };
+        
+        // If the reset attempt was on the current user, update current session too
+        if (currentUser && currentUser.id === userId) {
+          setCurrentUser(updatedU);
+          localStorage.setItem('tb_session', JSON.stringify(updatedU));
+        }
+        return updatedU;
+      }
+      return u;
+    });
+
+    setUsersList(updatedList);
+    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+  };
+
+  const saveUserProfileByAdmin = (
+    userId: string,
+    name: string,
+    email: string,
+    mobile: string,
+    referralCode: string,
+    referredBy: string | null,
+    referralsCount: number,
+    role: MockUser['role'],
+    tier: MockUser['subscriptionTier'],
+    purchasedAt: string | null,
+    expiry: string | null
+  ) => {
+    const updatedList = usersList.map(u => {
+      if (u.id === userId) {
+        const updatedU = {
+          ...u,
+          name,
+          email,
+          mobile,
+          referralCode,
+          referredBy,
+          referralsCount,
+          role,
+          subscriptionTier: tier,
+          subscriptionPurchasedAt: purchasedAt,
+          subscriptionExpiresAt: expiry
+        };
+        
+        if (currentUser && currentUser.id === userId) {
+          setCurrentUser(updatedU);
+          localStorage.setItem('tb_session', JSON.stringify(updatedU));
+        }
+        return updatedU;
+      }
+      return u;
+    });
+
+    setUsersList(updatedList);
+    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        usersList,
+        theme,
+        toggleTheme,
+        login,
+        signup,
+        logout,
+        updateProfile,
+        updatePassword,
+        addAttempt,
+        resetAttempt,
+        saveUserProfileByAdmin
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

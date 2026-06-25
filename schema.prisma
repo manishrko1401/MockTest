@@ -1,0 +1,203 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  STUDENT
+  ADMIN
+  CONTENT_CREATOR
+}
+
+enum QuestionType {
+  MCQ
+  NUMERICAL
+  TRUE_FALSE
+}
+
+enum SessionStatus {
+  ONGOING
+  COMPLETED
+  AUTO_SUBMITTED
+  PAUSED
+}
+
+// 1. User Account Profile
+model User {
+  id                String             @id @default(uuid())
+  email             String             @unique
+  passwordHash      String
+  fullName          String
+  profilePhoto      String?
+  role              UserRole           @default(STUDENT)
+  subscriptions     UserSubscription[]
+  testSessions      UserTestSession[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@map("users")
+}
+
+// 2. Subscription Tiers (Testbook Pass Level)
+model SubscriptionTier {
+  id                String             @id @default(uuid())
+  name              String             @unique // e.g. "Testbook Pass", "Testbook Pass Pro"
+  price             Decimal            @db.Decimal(10, 2)
+  validityDays      Int
+  features          Json?              // Storage of array limits, dashboard configurations
+  userSubscriptions UserSubscription[]
+  mockTests         MockTest[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@map("subscription_tiers")
+}
+
+// 3. Mapping of User Subscriptions
+model UserSubscription {
+  id                String             @id @default(uuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tierId            String
+  tier              SubscriptionTier   @relation(fields: [tierId], references: [id], onDelete: Restrict)
+  startsAt          DateTime           @default(now())
+  expiresAt         DateTime
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+
+  @@map("user_subscriptions")
+}
+
+// 4. Course Categories (UPSC, Banking, SSC, Railways)
+model Category {
+  id                String             @id @default(uuid())
+  name              String             @unique
+  exams             Exam[]
+  createdAt         DateTime           @default(now())
+
+  @@map("categories")
+}
+
+// 5. Specific Exams (SSC CGL, Bank PO)
+model Exam {
+  id                String             @id @default(uuid())
+  categoryId        String
+  category          Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name              String
+  testSeries        TestSeries[]
+  createdAt         DateTime           @default(now())
+
+  @@map("exams")
+}
+
+// 6. Test Series Packages
+model TestSeries {
+  id                String             @id @default(uuid())
+  examId            String
+  exam              Exam               @relation(fields: [examId], references: [id], onDelete: Cascade)
+  title             String
+  description       String?
+  mockTests         MockTest[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@map("test_series")
+}
+
+// 7. Individual Mock Tests
+model MockTest {
+  id                String             @id @default(uuid())
+  testSeriesId      String
+  testSeries        TestSeries         @relation(fields: [testSeriesId], references: [id], onDelete: Cascade)
+  title             String
+  description       String?
+  durationMinutes   Int
+  passingCutoff     Float              @default(0.0)
+  requiredTierId    String?            // Null if free test
+  requiredTier      SubscriptionTier?  @relation(fields: [requiredTierId], references: [id], onDelete: SetNull)
+  sections          Section[]
+  sessions          UserTestSession[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@map("mock_tests")
+}
+
+// 8. Individual Sections per Mock Test
+model Section {
+  id                String             @id @default(uuid())
+  mockTestId        String
+  mockTest          MockTest           @relation(fields: [mockTestId], references: [id], onDelete: Cascade)
+  name              String
+  orderIndex        Int
+  positiveMarks     Float              @default(2.0)
+  negativeMarks     Float              @default(0.5)
+  questions         Question[]
+
+  @@unique([mockTestId, orderIndex])
+  @@map("sections")
+}
+
+// 9. Questions (Bilingual Support)
+model Question {
+  id                String                  @id @default(uuid())
+  sectionId         String
+  section           Section                 @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  type              QuestionType            @default(MCQ)
+  textEn            String
+  textHi            String
+  optionsEn         String[]                // Flat array of options (4 elements)
+  optionsHi         String[]                // Flat array of translated options (4 elements)
+  correctIndex      Int
+  explanationEn     String?
+  explanationHi     String?
+  imageUrl          String?
+  mathLatex         String?
+  orderIndex        Int
+  responseStates    QuestionResponseState[]
+  createdAt         DateTime                @default(now())
+
+  @@unique([sectionId, orderIndex])
+  @@map("questions")
+}
+
+// 10. User Mock Test Sitting Session
+model UserTestSession {
+  id                         String                  @id @default(uuid())
+  userId                     String
+  user                       User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mockTestId                 String
+  mockTest                   MockTest                @relation(fields: [mockTestId], references: [id], onDelete: Cascade)
+  status                     SessionStatus           @default(ONGOING)
+  startedAt                  DateTime                @default(now())
+  completedAt                DateTime?
+  remainingSeconds           Int
+  violationsCount            Int                     @default(0)
+  finalScore                 Float?
+  accuracyPercentage         Float?
+  timeSpentSeconds           Int                     @default(0)
+  responses                  QuestionResponseState[]
+  createdAt                  DateTime                @default(now())
+
+  @@map("user_test_sessions")
+}
+
+// 11. Individual Question State in Active Sitting
+model QuestionResponseState {
+  id                  String               @id @default(uuid())
+  sessionId           String
+  session             UserTestSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questionId          String
+  question            Question             @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOptionIndex Int?
+  state               Int                  @default(1) // 1: NOT_VISITED, 2: NOT_ANSWERED, 3: ANSWERED, 4: MARKED_FOR_REVIEW, 5: ANSWERED_AND_MARKED_FOR_REVIEW
+  elapsedSeconds      Int                  @default(0)
+  updatedAt           DateTime             @updatedAt
+
+  @@unique([sessionId, questionId])
+  @@map("question_response_states")
+}
