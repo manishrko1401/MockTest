@@ -498,7 +498,7 @@ export default function MockTestsCatalog() {
                             completed
                               ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-950/20'
                               : ongoing
-                              ? 'bg-orange-650 hover:bg-orange-700 text-white shadow-orange-950/20 font-bold'
+                              ? 'bg-orange-600 hover:bg-orange-700 text-white shadow-orange-950/20 font-bold'
                               : hasPass
                               ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20'
                               : 'bg-yellow-600 hover:bg-yellow-700 text-white shadow-yellow-900/20'
