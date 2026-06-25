@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe } from 'lucide-react';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -60,6 +60,9 @@ export default function AdminAnalytics() {
   const [jsonInput, setJsonInput] = useState<string>('');
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [parsedQuestions, setParsedQuestions] = useState<any[]>([]);
+  const [selectedUploadTestId, setSelectedUploadTestId] = useState<string>('');
+  const [previewQuestionIndex, setPreviewQuestionIndex] = useState<number>(0);
+  const [previewLanguage, setPreviewLanguage] = useState<'en' | 'hi'>('en');
 
   // Notices states
   const [noticeTitle, setNoticeTitle] = useState('');
@@ -128,6 +131,18 @@ export default function AdminAnalytics() {
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [resetTarget, setResetTarget] = useState<{ userId: string; sessionId: string; userName: string; sessionTitle: string } | null>(null);
 
+  const getCustomQuestionsCount = (testId: string) => {
+    if (typeof window === 'undefined') return 0;
+    const qs = localStorage.getItem(`tb_custom_questions_${testId}`);
+    if (!qs) return 0;
+    try {
+      const parsed = JSON.parse(qs);
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch (e) {
+      return 0;
+    }
+  };
+
   const showToast = (message: string) => {
     setToastMessage(message);
     setTimeout(() => {
@@ -185,10 +200,14 @@ export default function AdminAnalytics() {
     }
   };
 
-  // CSV/JSON Parser Simulation
   const handleBulkUploadSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setUploadStatus(null);
+
+    if (!selectedUploadTestId) {
+      setUploadStatus({ type: 'error', message: 'Please select a mock test to verify questions for.' });
+      return;
+    }
 
     if (!jsonInput.trim()) {
       setUploadStatus({ type: 'error', message: 'Input cannot be empty.' });
@@ -210,9 +229,10 @@ export default function AdminAnalytics() {
       }
 
       setParsedQuestions(questionsArray);
+      setPreviewQuestionIndex(0);
       setUploadStatus({
         type: 'success',
-        message: `Successfully validated ${questionsArray.length} questions for database insertion.`
+        message: `Questions successfully verified and loaded in the Live Preview! Review on the right, then click 'Confirm & Ingest Question Paper' below to save.`
       });
     } catch (err: any) {
       setUploadStatus({
@@ -220,6 +240,27 @@ export default function AdminAnalytics() {
         message: err.message || 'Malformed JSON content. Please structure questions schema matching database model.'
       });
       setParsedQuestions([]);
+    }
+  };
+
+  const handleConfirmIngestCustomQuestions = () => {
+    if (!selectedUploadTestId) {
+      showToast('Error: No target mock test selected.');
+      return;
+    }
+    if (parsedQuestions.length === 0) {
+      showToast('Error: No verified questions to save.');
+      return;
+    }
+    try {
+      localStorage.setItem(`tb_custom_questions_${selectedUploadTestId}`, JSON.stringify(parsedQuestions));
+      showToast(`Successfully saved ${parsedQuestions.length} questions to mock test!`);
+      setUploadStatus({
+        type: 'success',
+        message: `Custom question paper of ${parsedQuestions.length} question(s) successfully uploaded and saved for the target mock test!`
+      });
+    } catch (e) {
+      showToast('Error saving questions.');
     }
   };
 
@@ -548,30 +589,62 @@ export default function AdminAnalytics() {
           )}
 
           {/* TAB 2: BULK QUESTION UPLOADER PORTAL */}
-          {activeTab === 'upload' && (
-            <div className="grid grid-cols-3 gap-8">
-              
-              {/* Form Upload Input */}
-              <div className="col-span-2 bg-slate-950 border border-slate-800 p-6 rounded-xl">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-xs text-white uppercase tracking-wider">Paste Questions JSON Array</h3>
-                  <button
-                    type="button"
-                    onClick={loadTemplate}
-                    className="text-xs text-blue-400 font-bold hover:underline"
-                  >
-                    Load Sample Template
-                  </button>
-                </div>
+          {activeTab === 'upload' && (() => {
+            const allTests: { id: string; title: string; categoryName: string; subCategoryName: string }[] = [];
+            examCatalog.forEach(cat => {
+              cat.subCategories.forEach(sub => {
+                sub.tests.forEach(t => {
+                  allTests.push({
+                    id: t.id,
+                    title: t.title,
+                    categoryName: cat.name,
+                    subCategoryName: sub.name
+                  });
+                });
+              });
+            });
 
-                <form onSubmit={handleBulkUploadSubmit}>
-                  <textarea
-                    rows={12}
-                    value={jsonInput}
-                    onChange={(e) => setJsonInput(e.target.value)}
-                    placeholder="Enter valid JSON questions schema..."
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-4 text-xs font-mono text-slate-300 focus:outline-none focus:border-blue-500 mb-4"
-                  />
+            return (
+              <div className="grid grid-cols-3 gap-8">
+                
+                {/* Form Upload Input */}
+                <div className="col-span-2 bg-slate-950 border border-slate-800 p-6 rounded-xl">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-xs text-white uppercase tracking-wider">Paste Questions JSON Array</h3>
+                    <button
+                      type="button"
+                      onClick={loadTemplate}
+                      className="text-xs text-blue-400 font-bold hover:underline"
+                    >
+                      Load Sample Template
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleBulkUploadSubmit}>
+                    <div className="mb-4">
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Target Mock Test</label>
+                      <select
+                        required
+                        value={selectedUploadTestId}
+                        onChange={(e) => setSelectedUploadTestId(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-350 focus:outline-none focus:border-blue-500 cursor-pointer"
+                      >
+                        <option value="">-- Select Target Mock Test --</option>
+                        {allTests.map(t => (
+                          <option key={t.id} value={t.id}>
+                            {t.categoryName} &gt; {t.subCategoryName} &gt; {t.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <textarea
+                      rows={12}
+                      value={jsonInput}
+                      onChange={(e) => setJsonInput(e.target.value)}
+                      placeholder="Enter valid JSON questions schema..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg p-4 text-xs font-mono text-slate-300 focus:outline-none focus:border-blue-500 mb-4"
+                    />
 
                   {uploadStatus && (
                     <div className={`p-4 rounded-lg flex items-start gap-3 mb-4 border ${
@@ -584,50 +657,157 @@ export default function AdminAnalytics() {
                     </div>
                   )}
 
-                  <button
-                    type="submit"
-                    className="flex items-center gap-2 bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition"
-                  >
-                    <Database className="h-4 w-4" />
-                    Verify and Ingest Questions
-                  </button>
+                  <div className="flex gap-4 items-center">
+                    <button
+                      type="submit"
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-750 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition cursor-pointer"
+                    >
+                      <Database className="h-4 w-4" />
+                      Verify JSON & Load Preview
+                    </button>
+
+                    {parsedQuestions.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleConfirmIngestCustomQuestions}
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-750 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-green-700 active:scale-95 transition cursor-pointer shadow-lg shadow-green-900/10"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Confirm & Ingest Question Paper
+                      </button>
+                    )}
+                  </div>
                 </form>
               </div>
 
               {/* Parsing results tracker */}
-              <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl">
-                <h3 className="font-bold text-xs text-white uppercase tracking-wider mb-4">Validation Dashboard</h3>
-                
-                {parsedQuestions.length > 0 ? (
-                  <div className="space-y-4">
-                    <p className="text-xs text-slate-400">Total Validated Questions: <strong className="text-white">{parsedQuestions.length}</strong></p>
-                    
-                    <div className="max-h-96 overflow-y-auto space-y-3">
-                      {parsedQuestions.map((q, idx) => (
-                        <div key={idx} className="border-b border-slate-800 pb-3 text-xs">
-                          <p className="font-bold text-blue-400">Question {idx + 1}</p>
-                          <p className="text-slate-300 truncate mt-1">{q.textEn}</p>
-                          <div className="flex gap-2 mt-2">
-                            <span className="text-[10px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                              Options: {q.optionsEn.length}
-                            </span>
-                            <span className="text-[10px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800 text-green-400">
-                              Correct Index: {q.correctIndex}
-                            </span>
+              <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-800 mb-4">
+                    <h3 className="font-bold text-xs text-white uppercase tracking-wider">Live Preview Terminal</h3>
+                    {parsedQuestions.length > 0 && (
+                      <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded px-1.5 py-0.5">
+                        <Globe className="h-3 w-3 text-slate-400" />
+                        <select
+                          value={previewLanguage}
+                          onChange={(e) => setPreviewLanguage(e.target.value as 'en' | 'hi')}
+                          className="bg-transparent border-0 outline-none text-[10px] font-bold text-slate-200 cursor-pointer"
+                        >
+                          <option value="en" className="bg-slate-950">EN</option>
+                          <option value="hi" className="bg-slate-950">HI</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {parsedQuestions.length > 0 ? (
+                    (() => {
+                      const activeQ = parsedQuestions[previewQuestionIndex];
+                      if (!activeQ) return null;
+
+                      const qText = previewLanguage === 'en' ? activeQ.textEn : activeQ.textHi;
+                      const qOptions = previewLanguage === 'en' ? activeQ.optionsEn : activeQ.optionsHi;
+                      const qImg = previewLanguage === 'en' ? (activeQ.imageUrlEn || activeQ.imageUrl) : (activeQ.imageUrlHi || activeQ.imageUrl);
+                      const qExp = previewLanguage === 'en' ? activeQ.explanationEn : activeQ.explanationHi;
+
+                      return (
+                        <div className="space-y-4">
+                          
+                          {/* Question Navigator */}
+                          <div>
+                            <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2">Select Question ({parsedQuestions.length} Total)</p>
+                            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                              {parsedQuestions.map((_, idx) => (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => setPreviewQuestionIndex(idx)}
+                                  className={`h-6 min-w-[24px] px-1.5 rounded text-[10px] font-bold font-mono transition active:scale-95 cursor-pointer flex items-center justify-center border ${
+                                    previewQuestionIndex === idx
+                                      ? 'bg-blue-600 border-blue-500 text-white font-extrabold'
+                                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                                  }`}
+                                >
+                                  {idx + 1}
+                                </button>
+                              ))}
+                            </div>
                           </div>
+
+                          {/* EXACT USER VIEW PREVIEW BOX */}
+                          <div className="border border-slate-800 bg-[#0f172a] rounded-xl p-4 space-y-4 text-left">
+                            
+                            {/* Question Header */}
+                            <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-slate-500 pb-2 border-b border-slate-800/60">
+                              <span>Question No. {previewQuestionIndex + 1}</span>
+                              <span className="text-blue-400 font-extrabold">MCQ PREVIEW</span>
+                            </div>
+
+                            {/* Question Text */}
+                            <div className="text-xs text-slate-200 font-semibold leading-relaxed">
+                              {qText}
+                            </div>
+
+                            {/* Image Visualizer */}
+                            {qImg && (
+                              <div className="flex justify-center bg-white p-2 rounded-lg border border-slate-700 max-w-full overflow-hidden">
+                                <img
+                                  src={qImg}
+                                  alt="Preview Visual"
+                                  className="max-h-40 object-contain"
+                                />
+                              </div>
+                            )}
+
+                            {/* Options */}
+                            <div className="space-y-2">
+                              {Array.isArray(qOptions) && qOptions.map((opt, idx) => {
+                                const isCorrect = idx === activeQ.correctIndex;
+                                return (
+                                  <div
+                                    key={idx}
+                                    className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-[11px] font-semibold ${
+                                      isCorrect
+                                        ? 'bg-green-950/40 border-green-700 text-green-400 font-extrabold'
+                                        : 'bg-slate-900 border-slate-800 text-slate-400'
+                                    }`}
+                                  >
+                                    <span className={`h-4.5 w-4.5 rounded-full flex items-center justify-center font-bold text-[9px] ${
+                                      isCorrect ? 'bg-green-600 text-white font-extrabold' : 'bg-slate-800 text-slate-500'
+                                    }`}>
+                                      {String.fromCharCode(65 + idx)}
+                                    </span>
+                                    <span className="flex-1">{opt}</span>
+                                    {isCorrect && <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />}
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* EXACT USER SOLUTION/EXPLANATION VIEW */}
+                            <div className="bg-slate-900/60 border border-slate-805 p-3 rounded-lg space-y-1.5 text-left">
+                              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Step-by-Step Solution</p>
+                              <p className="text-slate-300 text-[11px] leading-relaxed font-normal whitespace-pre-wrap">
+                                {qExp || "No bilingual explanation provided for this question."}
+                              </p>
+                            </div>
+
+                          </div>
+
                         </div>
-                      ))}
+                      );
+                    })()
+                  ) : (
+                    <div className="text-center py-20 border border-dashed border-slate-800 rounded-lg text-slate-500 text-xs">
+                      <Upload className="h-10 w-10 mx-auto text-slate-700 mb-3" />
+                      No verified questions loaded. Paste your JSON array in the left workspace and click verify to preview the exact user simulator layout here.
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-20 border border-dashed border-slate-800 rounded-lg text-slate-500 text-xs">
-                    <Upload className="h-10 w-10 mx-auto text-slate-700 mb-3" />
-                    No validated questions compiled. Load the templates above and click Ingest.
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
-          )}
+          );
+        })()}
 
           {/* TAB 3: USER MANAGEMENT PORTAL */}
           {activeTab === 'users' && (
@@ -1576,7 +1756,18 @@ export default function AdminAnalytics() {
                             sub.tests.map(test => (
                               <tr key={test.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                                 <td className="py-3 px-4 text-slate-500 font-medium">{sub.name}</td>
-                                <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-200 max-w-[200px] truncate" title={test.title}>{test.title}</td>
+                                <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-200 max-w-[200px] truncate" title={test.title}>
+                                  <span>{test.title}</span>
+                                  {getCustomQuestionsCount(test.id) > 0 ? (
+                                    <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-green-950/60 text-green-400 border border-green-800 font-bold uppercase tracking-wider">
+                                      Custom Paper ({getCustomQuestionsCount(test.id)} Qs)
+                                    </span>
+                                  ) : (
+                                    <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-slate-900 text-slate-500 border border-slate-800 font-bold uppercase tracking-wider">
+                                      Default Qs
+                                    </span>
+                                  )}
+                                </td>
                                 <td className="py-3 px-4 text-slate-400 font-semibold">{test.questionsCount} Qs • {test.durationMinutes}m • {test.maxMarks}M</td>
                                 <td className="py-3 px-4">
                                   <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold ${

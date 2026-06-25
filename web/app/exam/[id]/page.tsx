@@ -38,100 +38,151 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[]): A
     title = catalogTest.title;
     duration = catalogTest.durationMinutes * 60;
   }
+
   let sections = [
     { id: "sec_gs", name: "General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 },
     { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 1, positiveMark: 2, negativeMark: 0.5 }
   ];
   let questions: Question[] = [];
 
-  if (id.includes('ssc')) {
-    title = id.includes('cgl') 
-      ? "SSC CGL 2026 Tier-I CBT Simulator" 
-      : id.includes('chsl') 
-      ? "SSC CHSL 2026 Preliminary Exam" 
-      : "SSC MTS Full-Length Practice Test";
-    duration = 3600;
-    sections = [
-      { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 },
-      { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 2, negativeMark: 0.5 },
-      { id: "sec_english", name: "English Comprehension", orderIndex: 2, positiveMark: 2, negativeMark: 0.5 }
-    ];
-    questions = [
-      {
-        id: "q_q1", sectionId: "sec_quant", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
-        content: {
-          en: { questionText: "If x + 1/x = 5, then find the value of x² + 1/x².", options: ["23", "25", "27", "21"], mathLatex: "x + \\frac{1}{x} = 5" },
-          hi: { questionText: "यदि x + 1/x = 5 है, तो x² + 1/x² का मान ज्ञात कीजिए।", options: ["23", "25", "27", "21"], mathLatex: "x + \\frac{1}{x} = 5" }
+  // Check if we have custom uploaded questions in localStorage
+  let hasCustomQuestions = false;
+  if (typeof window !== 'undefined') {
+    const savedCustomQs = localStorage.getItem(`tb_custom_questions_${id}`);
+    if (savedCustomQs) {
+      try {
+        const parsed = JSON.parse(savedCustomQs);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          hasCustomQuestions = true;
+          const positiveMark = id.includes('rrb') ? 1 : 2;
+          const negativeMark = id.includes('rrb') ? 0.33 : 0.5;
+
+          sections = [
+            { id: "sec_paper1", name: "Mock Test Questions", orderIndex: 0, positiveMark, negativeMark }
+          ];
+
+          questions = parsed.map((item: any, idx: number) => {
+            return {
+              id: `q_custom_${id}_${idx}`,
+              sectionId: "sec_paper1",
+              questionType: "mcq",
+              orderIndex: idx,
+              correctOptionIndex: item.correctIndex ?? 0,
+              content: {
+                en: {
+                  questionText: item.textEn,
+                  options: item.optionsEn || [],
+                  imageUrl: item.imageUrlEn || item.imageUrl
+                },
+                hi: {
+                  questionText: item.textHi,
+                  options: item.optionsHi || [],
+                  imageUrl: item.imageUrlHi || item.imageUrl
+                }
+              },
+              explanation: {
+                en: item.explanationEn || "Detailed explanation under review.",
+                hi: item.explanationHi || "विस्तृत विवरण समीक्षा के अधीन है।"
+              }
+            };
+          });
         }
-      },
-      {
-        id: "q_q2", sectionId: "sec_quant", questionType: "mcq", orderIndex: 1, correctOptionIndex: 0,
-        content: {
-          en: { questionText: "The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A's present age?", options: ["20 years", "25 years", "30 years", "15 years"] },
-          hi: { questionText: "A और B की वर्तमान आयु का अनुपात 4:5 है। 5 वर्ष बाद यह अनुपात 5:6 हो जाता है। A की वर्तमान आयु क्या है?", options: ["20 वर्ष", "25 वर्ष", "30 वर्ष", "15 वर्ष"] }
-        }
-      },
-      {
-        id: "q_r1", sectionId: "sec_reasoning", questionType: "mcq", orderIndex: 0, correctOptionIndex: 3,
-        content: {
-          en: { questionText: "Identify the pattern and choose the next term in the series: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] },
-          hi: { questionText: "पैटर्न को पहचानें और श्रृंखला में अगला पद चुनें: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] }
-        }
-      },
-      {
-        id: "q_e1", sectionId: "sec_english", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
-        content: {
-          en: { questionText: "Select the antonym for the word: OBSTINATE", options: ["Flexible", "Stubborn", "Rigid", "Dogmatic"] },
-          hi: { questionText: "दिए गए शब्द का विलोम शब्द चुनें: OBSTINATE (हठी)", options: ["Flexible (लचीला)", "Stubborn (अड़ियल)", "Rigid (कठोर)", "Dogmatic (कट्टर)"] }
-        }
+      } catch (e) {
+        console.error("Error parsing custom questions", e);
       }
-    ];
-  } else if (id.includes('rrb') || id.includes('railway')) {
-    title = "RRB NTPC CBT-1 Mock Assessment Paper";
-    duration = 5400; // 90 minutes
-    sections = [
-      { id: "sec_math", name: "Mathematics", orderIndex: 0, positiveMark: 1, negativeMark: 0.33 },
-      { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 1, negativeMark: 0.33 },
-      { id: "sec_general", name: "General Awareness", orderIndex: 2, positiveMark: 1, negativeMark: 0.33 }
-    ];
-    questions = [
-      {
-        id: "q_m1", sectionId: "sec_math", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
-        content: {
-          en: { questionText: "Find the value of (0.43 * 0.43 - 0.17 * 0.17) / (0.43 - 0.17).", options: ["0.26", "0.60", "0.50", "0.43"] },
-          hi: { questionText: "मान ज्ञात करें: (0.43 * 0.43 - 0.17 * 0.17) / (0.43 - 0.17)", options: ["0.26", "0.60", "0.50", "0.43"] }
+    }
+  }
+
+  if (!hasCustomQuestions) {
+    if (id.includes('ssc')) {
+      title = id.includes('cgl') 
+        ? "SSC CGL 2026 Tier-I CBT Simulator" 
+        : id.includes('chsl') 
+        ? "SSC CHSL 2026 Preliminary Exam" 
+        : "SSC MTS Full-Length Practice Test";
+      duration = 3600;
+      sections = [
+        { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 },
+        { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 2, negativeMark: 0.5 },
+        { id: "sec_english", name: "English Comprehension", orderIndex: 2, positiveMark: 2, negativeMark: 0.5 }
+      ];
+      questions = [
+        {
+          id: "q_q1", sectionId: "sec_quant", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
+          content: {
+            en: { questionText: "If x + 1/x = 5, then find the value of x² + 1/x².", options: ["23", "25", "27", "21"], mathLatex: "x + \\frac{1}{x} = 5" },
+            hi: { questionText: "यदि x + 1/x = 5 है, तो x² + 1/x² का मान ज्ञात कीजिए।", options: ["23", "25", "27", "21"], mathLatex: "x + \\frac{1}{x} = 5" }
+          }
+        },
+        {
+          id: "q_q2", sectionId: "sec_quant", questionType: "mcq", orderIndex: 1, correctOptionIndex: 0,
+          content: {
+            en: { questionText: "The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A's present age?", options: ["20 years", "25 years", "30 years", "15 years"] },
+            hi: { questionText: "A और B की वर्तमान आयु का अनुपात 4:5 है। 5 वर्ष बाद यह अनुपात 5:6 हो जाता है। A की वर्तमान आयु क्या है?", options: ["20 वर्ष", "25 वर्ष", "30 वर्ष", "15 वर्ष"] }
+          }
+        },
+        {
+          id: "q_r1", sectionId: "sec_reasoning", questionType: "mcq", orderIndex: 0, correctOptionIndex: 3,
+          content: {
+            en: { questionText: "Identify the pattern and choose the next term in the series: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] },
+            hi: { questionText: "पैटर्न को पहचानें और श्रृंखला में अगला पद चुनें: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] }
+          }
+        },
+        {
+          id: "q_e1", sectionId: "sec_english", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
+          content: {
+            en: { questionText: "Select the antonym for the word: OBSTINATE", options: ["Flexible", "Stubborn", "Rigid", "Dogmatic"] },
+            hi: { questionText: "दिए गए शब्द का विलोम शब्द चुनें: OBSTINATE (हठी)", options: ["Flexible (लचीला)", "Stubborn (अड़ियल)", "Rigid (कठोर)", "Dogmatic (कट्टर)"] }
+          }
         }
-      },
-      {
-        id: "q_g1", sectionId: "sec_general", questionType: "mcq", orderIndex: 0, correctOptionIndex: 2,
-        content: {
-          en: { questionText: "Which is the largest fresh water lake in India?", options: ["Chilika Lake", "Dal Lake", "Wular Lake", "Vembanad Lake"] },
-          hi: { questionText: "भारत में मीठे पानी की सबसे बड़ी झील कौन सी है?", options: ["चिलिका झील", "डल झील", "वुलर झील", "वेम्बनाड झील"] }
+      ];
+    } else if (id.includes('rrb') || id.includes('railway')) {
+      title = "RRB NTPC CBT-1 Mock Assessment Paper";
+      duration = 5400; // 90 minutes
+      sections = [
+        { id: "sec_math", name: "Mathematics", orderIndex: 0, positiveMark: 1, negativeMark: 0.33 },
+        { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 1, negativeMark: 0.33 },
+        { id: "sec_general", name: "General Awareness", orderIndex: 2, positiveMark: 1, negativeMark: 0.33 }
+      ];
+      questions = [
+        {
+          id: "q_m1", sectionId: "sec_math", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
+          content: {
+            en: { questionText: "Find the value of (0.43 * 0.43 - 0.17 * 0.17) / (0.43 - 0.17).", options: ["0.26", "0.60", "0.50", "0.43"] },
+            hi: { questionText: "मान ज्ञात करें: (0.43 * 0.43 - 0.17 * 0.17) / (0.43 - 0.17)", options: ["0.26", "0.60", "0.50", "0.43"] }
+          }
+        },
+        {
+          id: "q_g1", sectionId: "sec_general", questionType: "mcq", orderIndex: 0, correctOptionIndex: 2,
+          content: {
+            en: { questionText: "Which is the largest fresh water lake in India?", options: ["Chilika Lake", "Dal Lake", "Wular Lake", "Vembanad Lake"] },
+            hi: { questionText: "भारत में मीठे पानी की सबसे बड़ी झील कौन सी है?", options: ["चिलिका झील", "डल झील", "वुलर झील", "वेम्बनाड झील"] }
+          }
         }
-      }
-    ];
-  } else {
-    title = "Mock Test Assessment Series - General Mock Test";
-    duration = 3600;
-    sections = [
-      { id: "sec_paper1", name: "Aptitude & General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 }
-    ];
-    questions = [
-      {
-        id: "q_gen1", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
-        content: {
-          en: { questionText: "What is the unit of electric current?", options: ["Volt", "Ampere", "Ohm", "Watt"] },
-          hi: { questionText: "विद्युत धारा की इकाई क्या है?", options: ["वोल्ट", "एम्पीयर", "ओम", "वाट"] }
+      ];
+    } else {
+      title = "Mock Test Assessment Series - General Mock Test";
+      duration = 3600;
+      sections = [
+        { id: "sec_paper1", name: "Aptitude & General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 }
+      ];
+      questions = [
+        {
+          id: "q_gen1", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
+          content: {
+            en: { questionText: "What is the unit of electric current?", options: ["Volt", "Ampere", "Ohm", "Watt"] },
+            hi: { questionText: "विद्युत धारा की इकाई क्या है?", options: ["वोल्ट", "एम्पीयर", "ओम", "वाट"] }
+          }
+        },
+        {
+          id: "q_gen2", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 1, correctOptionIndex: 1,
+          content: {
+            en: { questionText: "Which planet is known as the Red Planet?", options: ["Earth", "Mars", "Jupiter", "Saturn"] },
+            hi: { questionText: "किस ग्रह को लाल ग्रह के नाम से जाना जाता है?", options: ["पृथ्वी", "मंगल", "बृहस्पति", "शनि"] }
+          }
         }
-      },
-      {
-        id: "q_gen2", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 1, correctOptionIndex: 1,
-        content: {
-          en: { questionText: "Which planet is known as the Red Planet?", options: ["Earth", "Mars", "Jupiter", "Saturn"] },
-          hi: { questionText: "किस ग्रह को लाल ग्रह के नाम से जाना जाता है?", options: ["पृथ्वी", "मंगल", "बृहस्पति", "शनि"] }
-        }
-      }
-    ];
+      ];
+    }
   }
 
   return {
@@ -143,6 +194,7 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[]): A
     questions
   };
 };
+
 
 function TcsIonEngine({ testId }: { testId: string }) {
   const {
@@ -549,6 +601,17 @@ function TcsIonEngine({ testId }: { testId: string }) {
                         {(questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex) && (
                           <div className="mt-2 p-2 bg-yellow-50 text-yellow-900 border border-yellow-200 rounded font-mono text-xs">
                             LaTeX: {questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex}
+                          </div>
+                        )}
+
+                        {/* Optional Question Image */}
+                        {(questionLang === 'en' ? currentQuestion.content.en.imageUrl : currentQuestion.content.hi.imageUrl) && (
+                          <div className="mt-3 flex justify-center bg-white p-2 border border-slate-200 rounded-md">
+                            <img
+                              src={questionLang === 'en' ? currentQuestion.content.en.imageUrl : currentQuestion.content.hi.imageUrl}
+                              alt="Question Visual"
+                              className="max-h-72 object-contain"
+                            />
                           </div>
                         )}
                       </div>

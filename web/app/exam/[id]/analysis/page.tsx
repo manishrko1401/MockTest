@@ -244,7 +244,7 @@ export default function ExamSolutionAnalysisPage() {
   const avgTime = 30 + (activeQuestion.id.charCodeAt(activeQuestion.id.length - 1) % 5) * 15;
   const isBookmarked = currentUser.bookmarkedQuestions?.some(b => b.testId === testId && b.questionId === activeQuestion.id) || false;
 
-  const activeExplanation = EXPLANATIONS[activeQuestion.id] || {
+  const activeExplanation = EXPLANATIONS[activeQuestion.id] || activeQuestion.explanation || {
     en: "Detailed solution step-by-step is currently under verification by subject experts.",
     hi: "विषय विशेषज्ञों द्वारा विस्तृत समाधान वर्तमान में सत्यापन के अधीन है।"
   };
@@ -461,6 +461,17 @@ export default function ExamSolutionAnalysisPage() {
               {activeQuestion.content[lang]?.mathLatex && (
                 <div className="bg-slate-100 dark:bg-slate-800/40 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800/80 font-mono text-xs text-blue-600 dark:text-blue-400">
                   Latex: {activeQuestion.content[lang].mathLatex}
+                </div>
+              )}
+
+              {/* Optional Question Image */}
+              {(activeQuestion.content[lang]?.imageUrl || activeQuestion.content['en']?.imageUrl) && (
+                <div className="flex justify-center bg-slate-50 dark:bg-slate-850 p-2 border border-slate-200 dark:border-slate-800 rounded-md">
+                  <img
+                    src={activeQuestion.content[lang]?.imageUrl || activeQuestion.content['en']?.imageUrl}
+                    alt="Question Visual"
+                    className="max-h-72 object-contain"
+                  />
                 </div>
               )}
             </div>

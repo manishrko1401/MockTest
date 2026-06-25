@@ -27,6 +27,10 @@ export interface Question {
   };
   correctOptionIndex: number; // Used for evaluation
   orderIndex: number;
+  explanation?: {
+    en: string;
+    hi: string;
+  };
 }
 
 export interface Section {
