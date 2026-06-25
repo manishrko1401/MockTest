@@ -191,7 +191,7 @@ const DEFAULT_NOTICES: Notice[] = [
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [usersList, setUsersList] = useState<MockUser[]>([]);
   const [currentUser, setCurrentUser] = useState<MockUser | null>(null);
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [noticesList, setNoticesList] = useState<Notice[]>([]);
 
   // Load initial data from localStorage with backfill checks
@@ -273,7 +273,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (savedTheme) {
       setTheme(savedTheme);
     } else {
-      setTheme('dark');
+      setTheme('light');
     }
 
     // Load notices setting

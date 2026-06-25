@@ -349,6 +349,48 @@ export default function StudentProfilePage() {
               </div>
             </div>
 
+            {/* Card 3: Default Theme Settings */}
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+              <div>
+                <h3 className="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 flex items-center gap-2">
+                  <Sun className="h-4 w-4 text-blue-500" /> Default Theme Preference
+                </h3>
+                
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed font-semibold">
+                  Configure your default visual preference. The setting is saved instantly and applies globally.
+                </p>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => {
+                      if (theme !== 'light') toggleTheme();
+                    }}
+                    type="button"
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-bold text-xs cursor-pointer transition active:scale-95 ${
+                      theme === 'light'
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20'
+                        : 'bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    <Sun className="h-4 w-4" /> Light (White)
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (theme !== 'dark') toggleTheme();
+                    }}
+                    type="button"
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-bold text-xs cursor-pointer transition active:scale-95 ${
+                      theme === 'dark'
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20'
+                        : 'bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    <Moon className="h-4 w-4" /> Dark
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </div>
 
         </main>

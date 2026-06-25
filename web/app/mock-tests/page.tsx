@@ -18,60 +18,144 @@ interface MockTestItem {
   requiredTier: 'None' | 'Testbook Pass' | 'Testbook Pass Pro';
 }
 
-interface TestCategory {
+interface TestSubCategory {
   id: string;
   name: string;
   tests: MockTestItem[];
+}
+
+interface TestCategory {
+  id: string;
+  name: string;
+  subCategories: TestSubCategory[];
 }
 
 const EXAM_CATALOG: TestCategory[] = [
   {
     id: 'ssc',
     name: 'SSC Exams',
-    tests: [
-      { id: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', questionsCount: 100, durationMinutes: 60, maxMarks: 200, isPremium: false, requiredTier: 'None' },
-      { id: 'ssc_chsl_tier1', title: 'SSC CHSL 2026 - Combined Higher Secondary Level Test', questionsCount: 100, durationMinutes: 60, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass' },
-      { id: 'ssc_mts_mock', title: 'SSC MTS Full-Length Practice Test Paper', questionsCount: 90, durationMinutes: 90, maxMarks: 270, isPremium: true, requiredTier: 'Testbook Pass' }
+    subCategories: [
+      {
+        id: 'ssc_cgl',
+        name: 'SSC CGL Exams',
+        tests: [
+          { id: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', questionsCount: 100, durationMinutes: 60, maxMarks: 200, isPremium: false, requiredTier: 'None' }
+        ]
+      },
+      {
+        id: 'ssc_chsl',
+        name: 'SSC CHSL Exams',
+        tests: [
+          { id: 'ssc_chsl_tier1', title: 'SSC CHSL 2026 - Combined Higher Secondary Level Test', questionsCount: 100, durationMinutes: 60, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass' }
+        ]
+      },
+      {
+        id: 'ssc_mts',
+        name: 'SSC MTS Exams',
+        tests: [
+          { id: 'ssc_mts_mock', title: 'SSC MTS Full-Length Practice Test Paper', questionsCount: 90, durationMinutes: 90, maxMarks: 270, isPremium: true, requiredTier: 'Testbook Pass' }
+        ]
+      }
     ]
   },
   {
     id: 'railways',
     name: 'Railways Exams',
-    tests: [
-      { id: 'rrb_ntpc_stage1', title: 'RRB NTPC CBT-1 Stage 1 Practice Simulator', questionsCount: 100, durationMinutes: 90, maxMarks: 100, isPremium: false, requiredTier: 'None' },
-      { id: 'rrb_group_d', title: 'RRB Group D Full Length Mock Test', questionsCount: 100, durationMinutes: 90, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass' }
+    subCategories: [
+      {
+        id: 'rrb_ntpc',
+        name: 'RRB NTPC Exams',
+        tests: [
+          { id: 'rrb_ntpc_stage1', title: 'RRB NTPC CBT-1 Stage 1 Practice Simulator', questionsCount: 100, durationMinutes: 90, maxMarks: 100, isPremium: false, requiredTier: 'None' }
+        ]
+      },
+      {
+        id: 'rrb_group_d',
+        name: 'RRB Group D Exams',
+        tests: [
+          { id: 'rrb_group_d', title: 'RRB Group D Full Length Mock Test', questionsCount: 100, durationMinutes: 90, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass' }
+        ]
+      }
     ]
   },
   {
     id: 'ugc_net',
     name: 'UGC NET Exams',
-    tests: [
-      { id: 'ugc_net_paper1', title: 'UGC NET Paper-1 Teaching & Research Aptitude', questionsCount: 50, durationMinutes: 60, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass Pro' },
-      { id: 'ugc_net_cs', title: 'UGC NET Computer Science & Applications Paper-II', questionsCount: 100, durationMinutes: 120, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+    subCategories: [
+      {
+        id: 'ugc_net_p1',
+        name: 'UGC NET Paper 1',
+        tests: [
+          { id: 'ugc_net_paper1', title: 'UGC NET Paper-1 Teaching & Research Aptitude', questionsCount: 50, durationMinutes: 60, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+        ]
+      },
+      {
+        id: 'ugc_net_cs',
+        name: 'UGC NET Computer Science',
+        tests: [
+          { id: 'ugc_net_cs', title: 'UGC NET Computer Science & Applications Paper-II', questionsCount: 100, durationMinutes: 120, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+        ]
+      }
     ]
   },
   {
     id: 'teaching',
     name: 'Teaching Exams',
-    tests: [
-      { id: 'ctet_paper1', title: 'CTET 2026 Paper-I (Primary Class I-V) Mock Paper', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: false, requiredTier: 'None' },
-      { id: 'ctet_paper2', title: 'CTET 2026 Paper-II (Mathematics & Science)', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: true, requiredTier: 'Testbook Pass' }
+    subCategories: [
+      {
+        id: 'ctet_p1',
+        name: 'CTET Paper 1 Exams',
+        tests: [
+          { id: 'ctet_paper1', title: 'CTET 2026 Paper-I (Primary Class I-V) Mock Paper', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: false, requiredTier: 'None' }
+        ]
+      },
+      {
+        id: 'ctet_p2',
+        name: 'CTET Paper 2 Exams',
+        tests: [
+          { id: 'ctet_paper2', title: 'CTET 2026 Paper-II (Mathematics & Science)', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: true, requiredTier: 'Testbook Pass' }
+        ]
+      }
     ]
   },
   {
     id: 'state_exams',
     name: 'All State Exams',
-    tests: [
-      { id: 'up_psc_prelims', title: 'UPPSC Prelims General Studies (GS Paper 1)', questionsCount: 150, durationMinutes: 120, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass Pro' },
-      { id: 'bihar_ssc', title: 'BSSC Inter-Level Full Practice Mock Paper', questionsCount: 150, durationMinutes: 135, maxMarks: 600, isPremium: true, requiredTier: 'Testbook Pass' }
+    subCategories: [
+      {
+        id: 'uppsc',
+        name: 'UPPSC Exams',
+        tests: [
+          { id: 'up_psc_prelims', title: 'UPPSC Prelims General Studies (GS Paper 1)', questionsCount: 150, durationMinutes: 120, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+        ]
+      },
+      {
+        id: 'bssc',
+        name: 'BSSC Exams',
+        tests: [
+          { id: 'bihar_ssc', title: 'BSSC Inter-Level Full Practice Mock Paper', questionsCount: 150, durationMinutes: 135, maxMarks: 600, isPremium: true, requiredTier: 'Testbook Pass' }
+        ]
+      }
     ]
   },
   {
     id: 'banking',
     name: 'Banking Exams',
-    tests: [
-      { id: 'sbi_po_prelims', title: 'SBI PO Preliminary Exam Full Length Mock Test', questionsCount: 100, durationMinutes: 60, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass Pro' },
-      { id: 'ibps_clerk', title: 'IBPS Clerk Preliminary Practice Mock Paper', questionsCount: 100, durationMinutes: 60, maxMarks: 100, isPremium: false, requiredTier: 'None' }
+    subCategories: [
+      {
+        id: 'sbi_po',
+        name: 'SBI PO Exams',
+        tests: [
+          { id: 'sbi_po_prelims', title: 'SBI PO Preliminary Exam Full Length Mock Test', questionsCount: 100, durationMinutes: 60, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+        ]
+      },
+      {
+        id: 'ibps_clerk',
+        name: 'IBPS Clerk Exams',
+        tests: [
+          { id: 'ibps_clerk', title: 'IBPS Clerk Preliminary Practice Mock Paper', questionsCount: 100, durationMinutes: 60, maxMarks: 100, isPremium: false, requiredTier: 'None' }
+        ]
+      }
     ]
   }
 ];
@@ -435,108 +519,128 @@ export default function MockTestsCatalog() {
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Simulate real examination CBT patterns. Select any card below to begin sitting.</p>
               </div>
 
-              {/* Test cards list grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {currentCategoryObj?.tests
-                  .filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
-                  .map(test => {
-                    const hasPass = currentUser && (
-                      (test.requiredTier === 'None') ||
-                      (test.requiredTier === 'Testbook Pass' && (currentUser.subscriptionTier === 'Testbook Pass' || currentUser.subscriptionTier === 'Testbook Pass Pro')) ||
-                      (test.requiredTier === 'Testbook Pass Pro' && currentUser.subscriptionTier === 'Testbook Pass Pro')
-                    );
+              {/* Loop over subcategories */}
+              <div className="space-y-10">
+                {currentCategoryObj?.subCategories.map(subCat => {
+                  const filteredTests = subCat.tests.filter(t => 
+                    t.title.toLowerCase().includes(searchQuery.toLowerCase())
+                  );
 
-                    const completed = isCompleted(test.id);
-                    const ongoing = getTestStatus(test.id) === 'ONGOING';
-                    const attemptsCount = getTestAttempts(test.id).length;
+                  if (filteredTests.length === 0) return null;
 
-                    return (
-                      <div
-                        key={test.id}
-                        className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between shadow-sm"
-                      >
-                        <div>
-                          <div className="flex items-center justify-between mb-4">
-                            <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                              test.requiredTier === 'None'
-                                ? 'bg-green-100 border border-green-300 text-green-700 dark:bg-green-950/40 dark:border-green-800 dark:text-green-400'
-                                : test.requiredTier === 'Testbook Pass'
-                                ? 'bg-blue-100 border border-blue-300 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-400'
-                                : 'bg-yellow-100 border border-yellow-300 text-yellow-700 dark:bg-yellow-950/40 dark:border-yellow-800 dark:text-yellow-400'
-                            }`}>
-                              {test.requiredTier === 'None' ? 'FREE TEST' : test.requiredTier.replace('Testbook', 'Mock Test')}
-                            </span>
-                            
-                            {ongoing && (
-                              <span className="flex items-center gap-1 text-[9px] bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400 border border-orange-300 dark:border-orange-850 px-1.5 py-0.5 rounded font-black uppercase">
-                                ⏸ Paused
-                              </span>
-                            )}
-                            {hasPass && !completed && !ongoing && (
-                              <span className="flex items-center gap-1 text-[9px] bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border border-green-300 dark:border-green-800 px-1.5 py-0.5 rounded font-bold">
-                                <Check className="h-3 w-3" /> UNLOCKED
-                              </span>
-                            )}
-                            {completed && (
-                              <span className="flex items-center gap-1 text-[9px] bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded font-black">
-                                <Check className="h-3 w-3" /> ATTEMPTED
-                              </span>
-                            )}
-                          </div>
-
-                          <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 leading-snug mb-3 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer">
-                            {test.title}
-                          </h4>
-
-                          <div className="grid grid-cols-3 gap-2 border-t border-slate-100 dark:border-slate-900 pt-3 mb-5 text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                            <div>
-                              <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">Questions</p>
-                              <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.questionsCount} Qs</p>
-                            </div>
-                            <div>
-                              <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">Duration</p>
-                              <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.durationMinutes} Mins</p>
-                            </div>
-                            <div>
-                              <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">Total Marks</p>
-                              <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.maxMarks} Marks</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() => {
-                            if (completed) {
-                              router.push(`/exam/${test.id}/analysis`);
-                            } else {
-                              handleStartExam(test);
-                            }
-                          }}
-                          className={`w-full text-center py-2.5 rounded-lg text-xs font-bold transition-all shadow-md active:scale-[0.98] cursor-pointer ${
-                            completed
-                              ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-950/20'
-                              : ongoing
-                              ? 'bg-orange-600 hover:bg-orange-700 text-white shadow-orange-950/20 font-bold'
-                              : hasPass
-                              ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20'
-                              : 'bg-yellow-600 hover:bg-yellow-700 text-white shadow-yellow-900/20'
-                          }`}
-                        >
-                          {completed ? 'View Solution & Analysis' : ongoing ? 'Resume Test' : hasPass ? 'Start Test' : 'Unlock with Pass'}
-                        </button>
-
-                        {completed && (
-                          <button
-                            onClick={() => handleReattemptExam(test)}
-                            disabled={attemptsCount >= 5}
-                            className="w-full text-center py-2.5 mt-2 rounded-lg text-xs font-bold transition-all border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/10 active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            {attemptsCount >= 5 ? 'Reattempt Test (5/5 Max)' : `Reattempt Test (${attemptsCount}/5)`}
-                          </button>
-                        )}
+                  return (
+                    <div key={subCat.id} className="space-y-4">
+                      <div className="border-b border-slate-200 dark:border-slate-800 pb-2">
+                        <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                          <span className="w-1.5 h-3.5 bg-blue-600 rounded"></span>
+                          {subCat.name}
+                        </h3>
                       </div>
-                    );
-                  })}
+
+                      {/* Test cards list grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredTests.map(test => {
+                          const hasPass = currentUser && (
+                            (test.requiredTier === 'None') ||
+                            (test.requiredTier === 'Testbook Pass' && (currentUser.subscriptionTier === 'Testbook Pass' || currentUser.subscriptionTier === 'Testbook Pass Pro')) ||
+                            (test.requiredTier === 'Testbook Pass Pro' && currentUser.subscriptionTier === 'Testbook Pass Pro')
+                          );
+
+                          const completed = isCompleted(test.id);
+                          const ongoing = getTestStatus(test.id) === 'ONGOING';
+                          const attemptsCount = getTestAttempts(test.id).length;
+
+                          return (
+                            <div
+                              key={test.id}
+                              className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between shadow-sm"
+                            >
+                              <div>
+                                <div className="flex items-center justify-between mb-4">
+                                  <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                    test.requiredTier === 'None'
+                                      ? 'bg-green-100 border border-green-300 text-green-700 dark:bg-green-950/40 dark:border-green-800 dark:text-green-400'
+                                      : test.requiredTier === 'Testbook Pass'
+                                      ? 'bg-blue-100 border border-blue-300 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-400'
+                                      : 'bg-yellow-100 border border-yellow-300 text-yellow-700 dark:bg-yellow-950/40 dark:border-yellow-800 dark:text-yellow-400'
+                                  }`}>
+                                    {test.requiredTier === 'None' ? 'FREE TEST' : test.requiredTier.replace('Testbook', 'Mock Test')}
+                                  </span>
+                                  
+                                  {ongoing && (
+                                    <span className="flex items-center gap-1 text-[9px] bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400 border border-orange-300 dark:border-orange-850 px-1.5 py-0.5 rounded font-black uppercase">
+                                      ⏸ Paused
+                                    </span>
+                                  )}
+                                  {hasPass && !completed && !ongoing && (
+                                    <span className="flex items-center gap-1 text-[9px] bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border border-green-300 dark:border-green-800 px-1.5 py-0.5 rounded font-bold">
+                                      <Check className="h-3 w-3" /> UNLOCKED
+                                    </span>
+                                  )}
+                                  {completed && (
+                                    <span className="flex items-center gap-1 text-[9px] bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded font-black">
+                                      <Check className="h-3 w-3" /> ATTEMPTED
+                                    </span>
+                                  )}
+                                </div>
+
+                                <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 leading-snug mb-3 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer">
+                                  {test.title}
+                                </h4>
+
+                                <div className="grid grid-cols-3 gap-2 border-t border-slate-100 dark:border-slate-900 pt-3 mb-5 text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                                  <div>
+                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">Questions</p>
+                                    <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.questionsCount} Qs</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">Duration</p>
+                                    <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.durationMinutes} Mins</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">Total Marks</p>
+                                    <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.maxMarks} Marks</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => {
+                                  if (completed) {
+                                    router.push(`/exam/${test.id}/analysis`);
+                                  } else {
+                                    handleStartExam(test);
+                                  }
+                                }}
+                                className={`w-full text-center py-2.5 rounded-lg text-xs font-bold transition-all shadow-md active:scale-[0.98] cursor-pointer ${
+                                  completed
+                                    ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-950/20'
+                                    : ongoing
+                                    ? 'bg-orange-600 hover:bg-orange-700 text-white shadow-orange-950/20 font-bold'
+                                    : hasPass
+                                    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20'
+                                    : 'bg-yellow-600 hover:bg-yellow-700 text-white shadow-yellow-900/20'
+                                }`}
+                              >
+                                {completed ? 'View Solution & Analysis' : ongoing ? 'Resume Test' : hasPass ? 'Start Test' : 'Unlock with Pass'}
+                              </button>
+
+                              {completed && (
+                                <button
+                                  onClick={() => handleReattemptExam(test)}
+                                  disabled={attemptsCount >= 5}
+                                  className="w-full text-center py-2.5 mt-2 rounded-lg text-xs font-bold transition-all border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/10 active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                  {attemptsCount >= 5 ? 'Reattempt Test (5/5 Max)' : `Reattempt Test (${attemptsCount}/5)`}
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </>
           )}
