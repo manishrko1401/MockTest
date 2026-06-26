@@ -17,6 +17,11 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Golden/Gold Colors */
+  --color-yellow-650: #d4af37; /* Gold */
+  --color-yellow-750: #b5942b; /* Darker Gold for hover */
+  --color-yellow-450: #f1e0a3; /* Lighter Gold */
 }
 
 body {

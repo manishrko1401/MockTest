@@ -1057,8 +1057,8 @@ export default function AdminAnalytics() {
                                 </div>
                                 <p className="text-[10px] text-slate-500">{user.email}</p>
                                 <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Joined: {user.registeredDate}</p>
-                                <div className="flex items-center gap-1 text-yellow-650 dark:text-yellow-450 text-[10px] font-black mt-1">
-                                  <Coins className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-500" />
+                                <div className="flex items-center gap-1 text-amber-400 text-[10px] font-black mt-1">
+                                  <Coins className="h-3.5 w-3.5 text-amber-400" />
                                   <span>{user.coins || 0} Coins</span>
                                 </div>
                               </td>
@@ -1266,8 +1266,8 @@ export default function AdminAnalytics() {
                               <div>
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Coins Balance</label>
                                 <div className="relative flex items-center">
-                                  <span className="absolute left-3 text-slate-500">
-                                    <Coins className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-500" />
+                                  <span className="absolute left-3 text-amber-400">
+                                    <Coins className="h-3.5 w-3.5 text-amber-400" />
                                   </span>
                                   <input
                                     type="number"
