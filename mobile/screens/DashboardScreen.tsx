@@ -207,55 +207,6 @@ export default function DashboardScreen({
 
     return (
       <ScrollView contentContainerStyle={styles.tabContent} showsVerticalScrollIndicator={false}>
-        {/* Pass status banner */}
-        <View style={styles.passCard}>
-          <View style={styles.passHeader}>
-            <Award color="#FBBF24" size={24} />
-            <Text style={styles.passTitle}>Mock Test Pass Club</Text>
-          </View>
-          <Text style={styles.passTierText}>
-            Status: {currentUser.subscriptionTier !== 'None' ? currentUser.subscriptionTier : 'No Active Pass'}
-          </Text>
-          {currentUser.subscriptionTier !== 'None' ? (
-            <Text style={styles.passExpiryText}>
-              Expires: {currentUser.subscriptionExpiresAt || '365 days'}
-            </Text>
-          ) : (
-            <Text style={styles.passUpgradeText}>
-              Unlock 50,000+ Mock Tests with Testbook Pass Pro
-            </Text>
-          )}
-        </View>
-
-        {/* Stats card */}
-        <View style={styles.statsCard}>
-          <View style={styles.statBox}>
-            <Trophy color="#F59E0B" size={22} />
-            <Text style={styles.statNum}>{currentUser.coins || 0}</Text>
-            <Text style={styles.statLabel}>Referral Coins</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.statBox}>
-            <CheckCircle color="#10B981" size={22} />
-            <Text style={styles.statNum}>{currentUser.testSessions?.length || 0}</Text>
-            <Text style={styles.statLabel}>Tests Taken</Text>
-          </View>
-        </View>
-
-        {/* Refer and Earn */}
-        <View style={styles.referCard}>
-          <View style={styles.referInfo}>
-            <Text style={styles.referTitle}>Refer & Earn 20 Coins</Text>
-            <Text style={styles.referSub}>
-              Share code <Text style={styles.referCode}>{currentUser.referralCode}</Text> and get 20 coins for every friend who completes a test.
-            </Text>
-            <Text style={styles.referSubCount}>
-              Friends Referred: {currentUser.referralsCount || 0}
-            </Text>
-          </View>
-          <Share2 color="#3B82F6" size={24} />
-        </View>
-
         {/* Swipable Announcements Slider */}
         <Text style={styles.sectionTitle}>📢 Official Announcements</Text>
         {(() => {
