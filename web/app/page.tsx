@@ -386,7 +386,10 @@ export default function HomeLandingPage() {
                 
                 <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
                   {noticesList.filter(n => n.category === mobileUpdateTab).length > 0 ? (
-                    noticesList.filter(n => n.category === mobileUpdateTab).map(notice => (
+                    [...noticesList]
+                      .filter(n => n.category === mobileUpdateTab)
+                      .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                      .map(notice => (
                       <div
                         key={notice.id}
                         className="p-3 rounded-xl bg-slate-55 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 flex flex-col gap-1"
@@ -746,7 +749,10 @@ export default function HomeLandingPage() {
               
               <div className="space-y-3 overflow-y-auto max-h-[442px] pr-1 scrollbar-thin">
                 {noticesList.filter(n => n.category === 'notice').length > 0 ? (
-                  noticesList.filter(n => n.category === 'notice').map(notice => (
+                  [...noticesList]
+                    .filter(n => n.category === 'notice')
+                    .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                    .map(notice => (
                     <div
                       key={notice.id}
                       className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
@@ -805,7 +811,10 @@ export default function HomeLandingPage() {
               
               <div className="space-y-3 overflow-y-auto max-h-[442px] pr-1 scrollbar-thin">
                 {noticesList.filter(n => n.category === 'result').length > 0 ? (
-                  noticesList.filter(n => n.category === 'result').map(notice => (
+                  [...noticesList]
+                    .filter(n => n.category === 'result')
+                    .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                    .map(notice => (
                     <div
                       key={notice.id}
                       className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
@@ -864,7 +873,10 @@ export default function HomeLandingPage() {
               
               <div className="space-y-3 overflow-y-auto max-h-[442px] pr-1 scrollbar-thin">
                 {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
-                  noticesList.filter(n => n.category === 'admit_card').map(notice => (
+                  [...noticesList]
+                    .filter(n => n.category === 'admit_card')
+                    .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                    .map(notice => (
                     <div
                       key={notice.id}
                       className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"

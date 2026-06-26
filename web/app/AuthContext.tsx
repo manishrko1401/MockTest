@@ -400,6 +400,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [language, setLanguageState] = useState<'en' | 'hi'>('en');
   const [examCatalog, setExamCatalog] = useState<TestCategory[]>([]);
 
+  const sortNotices = (list: Notice[]) => {
+    return [...list].sort((a, b) => {
+      const dateA = a.publishDate || '';
+      const dateB = b.publishDate || '';
+      if (dateA !== dateB) {
+        return dateB.localeCompare(dateA);
+      }
+      return b.id.localeCompare(a.id);
+    });
+  };
+
   const fetchUsersList = async () => {
     try {
       const res = await fetch('/api/db', {
@@ -410,7 +421,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await res.json();
       if (data.success) {
         setUsersList(data.usersList || []);
-        setNoticesList(data.noticesList || []);
+        setNoticesList(sortNotices(data.noticesList || []));
         setExamCatalog(data.examCatalog || []);
 
         const getCookie = (name: string) => {
@@ -521,7 +532,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       lastDate: lastDateStr || undefined
     };
 
-    const updated = [newNotice, ...noticesList];
+    const updated = sortNotices([newNotice, ...noticesList]);
     setNoticesList(updated);
 
     fetch('/api/db', {
@@ -535,7 +546,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const deleteNotice = (id: string) => {
-    const updated = noticesList.filter(n => n.id !== id);
+    const updated = sortNotices(noticesList.filter(n => n.id !== id));
     setNoticesList(updated);
 
     fetch('/api/db', {

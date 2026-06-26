@@ -196,7 +196,10 @@ export default function UpdatesCenterPage() {
 
             <div className="space-y-3.5 max-h-[500px] overflow-y-auto pr-1">
               {noticesList.filter(n => n.category === activeMobileTab).length > 0 ? (
-                noticesList.filter(n => n.category === activeMobileTab).map((notice) => (
+                [...noticesList]
+                  .filter(n => n.category === activeMobileTab)
+                  .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                  .map((notice) => (
                   <div
                     key={notice.id}
                     className="p-3.5 rounded-xl bg-slate-55 dark:bg-slate-955/40 border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5"
@@ -372,7 +375,10 @@ export default function UpdatesCenterPage() {
             
             <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[1000px] scrollbar-thin">
               {noticesList.filter(n => n.category === 'notice').length > 0 ? (
-                noticesList.filter(n => n.category === 'notice').map(notice => (
+                [...noticesList]
+                  .filter(n => n.category === 'notice')
+                  .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                  .map(notice => (
                   <div
                     key={notice.id}
                     className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
@@ -423,7 +429,10 @@ export default function UpdatesCenterPage() {
             
             <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[1000px] scrollbar-thin">
               {noticesList.filter(n => n.category === 'result').length > 0 ? (
-                noticesList.filter(n => n.category === 'result').map(notice => (
+                [...noticesList]
+                  .filter(n => n.category === 'result')
+                  .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                  .map(notice => (
                   <div
                     key={notice.id}
                     className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
@@ -474,7 +483,10 @@ export default function UpdatesCenterPage() {
             
             <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[1000px] scrollbar-thin">
               {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
-                noticesList.filter(n => n.category === 'admit_card').map(notice => (
+                [...noticesList]
+                  .filter(n => n.category === 'admit_card')
+                  .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                  .map(notice => (
                   <div
                     key={notice.id}
                     className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
