@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 
 // ============================================================================
@@ -59,9 +59,9 @@ const scoreVariance = [
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports' | 'announcements'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports' | 'announcements') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -80,6 +80,13 @@ export default function AdminAnalytics() {
   const [noticeSearch, setNoticeSearch] = useState('');
   const [noticeUrl, setNoticeUrl] = useState('');
   const [noticeLastDate, setNoticeLastDate] = useState('');
+
+  // Announcements states
+  const [announcementTitle, setAnnouncementTitle] = useState('');
+  const [announcementType, setAnnouncementType] = useState('NEWS');
+  const [announcementDate, setAnnouncementDate] = useState(new Date().toISOString().split('T')[0]);
+  const [announcementUrl, setAnnouncementUrl] = useState('');
+  const [announcementSearch, setAnnouncementSearch] = useState('');
 
   // User Management state from context
   const { 
@@ -490,6 +497,17 @@ export default function AdminAnalytics() {
               Live Notices & Updates
             </button>
             <button
+              onClick={() => selectTab('announcements')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                activeTab === 'announcements'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Megaphone className="h-4 w-4" />
+              {language === 'hi' ? 'आधिकारिक घोषणाएँ' : 'Manage Announcements'}
+            </button>
+            <button
               onClick={() => selectTab('categories')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
                 activeTab === 'categories'
@@ -573,6 +591,8 @@ export default function AdminAnalytics() {
                 ? (language === 'hi' ? 'परीक्षा उप-श्रेणियां प्रबंधित करें' : 'Manage Exam Subcategories')
                 : activeTab === 'mocks'
                 ? (language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests')
+                : activeTab === 'announcements'
+                ? (language === 'hi' ? 'आधिकारिक घोषणा प्रकाशक' : 'Official Announcements Publisher')
                 : (language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions')}
             </h2>
           </div>
@@ -2103,6 +2123,176 @@ export default function AdminAnalytics() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 9: ANNOUNCEMENTS MANAGER */}
+          {activeTab === 'announcements' && (
+            <div className="space-y-8 animate-in fade-in duration-200">
+              
+              {/* Info alert */}
+              <div className="bg-blue-500/10 border border-blue-500/25 p-4 rounded-xl flex items-start gap-3">
+                <Megaphone className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Official Announcements Publisher</p>
+                  <p className="text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
+                    Create and publish official announcements that will appear as a swipable horizontal carousel on the mobile app home screen. Announcements are saved as a special category of notices.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                {/* Form column (1/3) */}
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-xl h-fit">
+                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+                    <PlusCircle className="h-4.5 w-4.5 text-blue-500" /> Publish Announcement
+                  </h3>
+                  
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!announcementTitle.trim()) return;
+                    addNotice(announcementTitle, announcementType, 'announcement', announcementDate, announcementUrl);
+                    setAnnouncementTitle('');
+                    setAnnouncementUrl('');
+                    showToast('Announcement published successfully!');
+                  }} className="space-y-4 text-xs">
+                    
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Announcement Type / Tag</label>
+                      <input
+                        type="text"
+                        required
+                        value={announcementType}
+                        onChange={(e) => setAnnouncementType(e.target.value)}
+                        placeholder="e.g., PROMOTION, ALERT, NEWS, SOCIAL"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Publish Date</label>
+                      <input
+                        type="date"
+                        required
+                        value={announcementDate}
+                        onChange={(e) => setAnnouncementDate(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Details Link / URL (Optional)</label>
+                      <input
+                        type="url"
+                        value={announcementUrl}
+                        onChange={(e) => setAnnouncementUrl(e.target.value)}
+                        placeholder="https://example.com/details"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Announcement Content</label>
+                      <textarea
+                        required
+                        value={announcementTitle}
+                        onChange={(e) => setAnnouncementTitle(e.target.value)}
+                        placeholder="Type announcement description..."
+                        rows={4}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-855 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs active:scale-95 transition-all shadow-md cursor-pointer"
+                    >
+                      Publish Announcement
+                    </button>
+                  </form>
+                </div>
+
+                {/* List column (2/3) */}
+                <div className="lg:col-span-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                      <Megaphone className="h-4.5 w-4.5 text-blue-500" /> Active Announcements
+                    </h3>
+                    
+                    {/* Search bar */}
+                    <div className="relative w-full sm:w-64">
+                      <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                      <input
+                        type="text"
+                        value={announcementSearch}
+                        onChange={(e) => setAnnouncementSearch(e.target.value)}
+                        placeholder="Search announcements..."
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-700"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                          <th className="py-3 px-4">Content</th>
+                          <th className="py-3 px-4">Tag</th>
+                          <th className="py-3 px-4">Date</th>
+                          <th className="py-3 px-4 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {noticesList.filter(n => n.category === 'announcement').filter(n => 
+                          n.title.toLowerCase().includes(announcementSearch.toLowerCase()) ||
+                          n.type.toLowerCase().includes(announcementSearch.toLowerCase())
+                        ).length > 0 ? (
+                          noticesList.filter(n => n.category === 'announcement').filter(n => 
+                            n.title.toLowerCase().includes(announcementSearch.toLowerCase()) ||
+                            n.type.toLowerCase().includes(announcementSearch.toLowerCase())
+                          ).map((ann) => (
+                            <tr key={ann.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-350">
+                              <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 max-w-sm">
+                                {ann.url ? (
+                                  <a href={ann.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                                    {ann.title}
+                                    <ChevronRight className="h-3 w-3 inline animate-pulse" />
+                                  </a>
+                                ) : (
+                                  <span>{ann.title}</span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded text-[10px]">{ann.type}</span>
+                              </td>
+                              <td className="py-3 px-4 font-semibold text-[11px] text-slate-550 dark:text-slate-400">{ann.date}</td>
+                              <td className="py-3 px-4 text-right">
+                                <button
+                                  onClick={() => {
+                                    deleteNotice(ann.id);
+                                    showToast('Announcement deleted successfully.');
+                                  }}
+                                  className="text-red-650 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={4} className="py-8 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
+                              No matching announcements found.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
               </div>
             </div>
           )}

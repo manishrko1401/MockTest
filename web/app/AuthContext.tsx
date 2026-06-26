@@ -47,7 +47,7 @@ export interface Notice {
   date: string;
   publishDate: string; // YYYY-MM-DD
   type: string;
-  category: 'notice' | 'result' | 'admit_card';
+  category: 'notice' | 'result' | 'admit_card' | 'announcement';
   url?: string;
   lastDate?: string; // e.g. "10 July 2026"
 }
@@ -141,7 +141,7 @@ interface AuthContextType {
   ) => void;
   clearOngoingSession: (testId: string) => void;
   noticesList: Notice[];
-  addNotice: (title: string, type: string, category: 'notice' | 'result' | 'admit_card', date?: string, url?: string, lastDateInput?: string) => void;
+  addNotice: (title: string, type: string, category: 'notice' | 'result' | 'admit_card' | 'announcement', date?: string, url?: string, lastDateInput?: string) => void;
   deleteNotice: (id: string) => void;
   language: 'en' | 'hi';
   setLanguage: (lang: 'en' | 'hi') => void;
@@ -512,7 +512,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     document.cookie = "tb_theme=" + nextTheme + ";path=/;max-age=31536000";
   };
 
-  const addNotice = (title: string, type: string, category: 'notice' | 'result' | 'admit_card', dateInput?: string, url?: string, lastDateInput?: string) => {
+  const addNotice = (title: string, type: string, category: 'notice' | 'result' | 'admit_card' | 'announcement', dateInput?: string, url?: string, lastDateInput?: string) => {
     let dateStr = '';
     const publishDateRaw = dateInput || new Date().toISOString().split('T')[0];
 

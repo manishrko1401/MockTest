@@ -164,7 +164,7 @@ async function handleBootstrap() {
     date: n.date,
     publishDate: n.publishDate,
     type: n.type,
-    category: n.category as 'notice' | 'result' | 'admit_card',
+    category: n.category as 'notice' | 'result' | 'admit_card' | 'announcement',
     url: n.url || undefined,
     lastDate: n.lastDate || undefined,
   }));
@@ -857,7 +857,9 @@ async function seedDatabase() {
     { id: 'r3', title: 'SBI PO 2026 Prelims Scorecard & Cutoff Decided', date: '18 June 2026', publishDate: '2026-06-18', type: 'SCORECARD', category: 'result', url: 'https://sbi.co.in' },
     { id: 'a1', title: 'UGC NET June 2026 Admit Card Download Link Active', date: '23 June 2026', publishDate: '2026-06-23', type: 'ADMIT CARD', category: 'admit_card', url: 'https://ugcnet.nta.ac.in' },
     { id: 'a2', title: 'RRB ALP 2026 Stage 1 City Intimation Released', date: '22 June 2026', publishDate: '2026-06-22', type: 'CITY INFO', category: 'admit_card', url: 'https://indianrailways.gov.in' },
-    { id: 'a3', title: 'IBPS Clerk 2026 Prelims Call Letter Available', date: '19 June 2026', publishDate: '2026-06-19', type: 'CALL LETTER', category: 'admit_card', url: 'https://ibps.in' }
+    { id: 'a3', title: 'IBPS Clerk 2026 Prelims Call Letter Available', date: '19 June 2026', publishDate: '2026-06-19', type: 'CALL LETTER', category: 'admit_card', url: 'https://ibps.in' },
+    { id: 'an1', title: 'Free Pass Pro for 2 days for all users! Start practicing now.', date: '26 June 2026', publishDate: '2026-06-26', type: 'PROMOTION', category: 'announcement' },
+    { id: 'an2', title: 'Join our Telegram channel for daily government job updates.', date: '25 June 2026', publishDate: '2026-06-25', type: 'SOCIAL', category: 'announcement', url: 'https://telegram.me/mocktest' }
   ];
 
   for (const n of defaultNotices) {

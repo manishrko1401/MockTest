@@ -10,363 +10,609 @@ import {
   Dimensions,
   FlatList,
   Alert,
-  StatusBar
+  StatusBar,
+  AppState,
+  ActivityIndicator
 } from 'react-native';
+import { Globe, Award, AlertCircle, Menu, Eye } from 'lucide-react-native';
+import { ApiClient } from './api';
 
-// Dimensions for responsive bottom drawer height
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// ============================================================================
-// TYPES & MOCK DATA
-// ============================================================================
-interface TestSeries {
-  id: string;
-  title: string;
-  category: string;
-  totalTests: number;
-  isPremium: boolean;
-  enrolled: boolean;
+interface MobileTestScreenProps {
+  currentUser: any;
+  testId: string;
+  onBack: () => void;
+  onComplete: () => void;
 }
 
-interface Question {
+// TCS iON status palette matching useTestEngine.tsx
+// 1: NOT_VISITED (Gray)
+// 2: NOT_ANSWERED (Red/Orange)
+// 3: ANSWERED (Green)
+// 4: MARKED_FOR_REVIEW (Purple)
+// 5: ANSWERED_AND_MARKED_FOR_REVIEW (Purple with checkmark)
+type PaletteState = 1 | 2 | 3 | 4 | 5;
+
+interface MobileQuestion {
   id: string;
-  text: string;
-  options: string[];
-  selectedOption: number | null;
-  state: 1 | 2 | 3 | 4 | 5; // TCS iON 5-State Palette
+  sectionId: string;
+  questionType: string;
+  content: {
+    en: { questionText: string; options: string[] };
+    hi: { questionText: string; options: string[] };
+  };
+  correctOptionIndex: number;
+  orderIndex: number;
 }
 
-const mockTestSeries: TestSeries[] = [
-  { id: '1', title: 'SSC CGL Tier 1 Mock Package 2026', category: 'SSC Exams', totalTests: 45, isPremium: true, enrolled: true },
-  { id: '2', title: 'SBI PO Full Length Mock Test Series', category: 'Banking', totalTests: 30, isPremium: true, enrolled: false },
-  { id: '3', title: 'RRB NTPC Free Sectional Tests', category: 'Railways', totalTests: 15, isPremium: false, enrolled: true },
-  { id: '4', title: 'UPSC Prelims CSAT Mock Test Paper', category: 'Civil Services', totalTests: 20, isPremium: true, enrolled: false },
-];
+interface MobileSection {
+  id: string;
+  name: string;
+  orderIndex: number;
+  positiveMark: number;
+  negativeMark: number;
+}
 
-const initialQuestions: Question[] = [
-  { id: 'q1', text: 'Select the odd term out from the options:', options: ['Mercury', 'Venus', 'Mars', 'Moon'], selectedOption: null, state: 2 },
-  { id: 'q2', text: 'A work is completed by 10 men in 15 days. In how many days can 15 men complete the same work?', options: ['12 days', '10 days', '8 days', '15 days'], selectedOption: null, state: 1 },
-  { id: 'q3', text: 'Choose the correct synonym of: BENEVOLENT', options: ['Cruel', 'Kind-hearted', 'Greedy', 'Stingy'], selectedOption: null, state: 1 },
-  { id: 'q4', text: 'What is the sum of angles of a regular hexagon?', options: ['540°', '720°', '900°', '360°'], selectedOption: null, state: 1 },
-  { id: 'q5', text: 'In which year did the Constitution of India come into force?', options: ['1947', '1948', '1950', '1952'], selectedOption: null, state: 1 },
-];
+export default function MobileTestScreen({
+  currentUser,
+  testId,
+  onBack,
+  onComplete
+}: MobileTestScreenProps) {
+  const [loading, setLoading] = useState(true);
+  const [questions, setQuestions] = useState<MobileQuestion[]>([]);
+  const [sections, setSections] = useState<MobileSection[]>([]);
+  const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
+  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0); // Index within current section
 
-// ============================================================================
-// MOBILE CONTAINER COMPONENT
-// ============================================================================
-export default function MobileTestScreen() {
-  const [viewMode, setViewMode] = useState<'dashboard' | 'exam'>('dashboard');
-  const [questions, setQuestions] = useState<Question[]>(initialQuestions);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [timeLeft, setTimeLeft] = useState<number>(1800); // 30 mins
-  const [drawerVisible, setDrawerVisible] = useState<boolean>(false);
-  const [activeTestId, setActiveTestId] = useState<string | null>(null);
-  const [ongoingSessions, setOngoingSessions] = useState<Record<string, any>>({});
+  const [timeLeft, setTimeLeft] = useState(3600); // 60 mins default
+  const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const [lang, setLang] = useState<'en' | 'hi'>('en');
+  const [violationsCount, setViolationsCount] = useState(0);
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
-  const mobileStateRef = useRef({ questions, currentIndex, timeLeft, activeTestId, viewMode });
+  // User responses dictionary mapping questionId to state
+  const [responses, setResponses] = useState<Record<string, {
+    selectedOptionIndex: number | null;
+    tempOptionIndex: number | null;
+    state: PaletteState;
+    elapsedSeconds: number;
+  }>>({});
+
+  // AppState monitoring for anti-cheat focus loss
+  const appState = useRef(AppState.currentState);
+
   useEffect(() => {
-    mobileStateRef.current = { questions, currentIndex, timeLeft, activeTestId, viewMode };
-  }, [questions, currentIndex, timeLeft, activeTestId, viewMode]);
-
-  // Load saved sessions on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('tb_mobile_sessions');
-      if (saved) {
-        try {
-          setOngoingSessions(JSON.parse(saved));
-        } catch (e) {
-          console.error("Failed to parse ongoing sessions:", e);
-        }
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
+        // App went to background (cheating violation)
+        setViolationsCount((prev) => {
+          const next = prev + 1;
+          Alert.alert(
+            'Exam Warning',
+            `Leaving the app is a focus violation! This has been reported to the administrator. (Violations: ${next}/3)`
+          );
+          if (next >= 3) {
+            handleExamSubmit(true); // Force submit on 3 violations
+          }
+          return next;
+        });
       }
-    }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
-  const saveSession = (testId: string, qList: Question[], curIdx: number, time: number, status: 'ONGOING' | 'COMPLETED') => {
-    const updated = {
-      ...ongoingSessions,
-      [testId]: {
-        testId,
-        questions: qList,
-        currentIndex: curIdx,
-        timeLeft: time,
-        status
-      }
-    };
-    setOngoingSessions(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('tb_mobile_sessions', JSON.stringify(updated));
-    }
-  };
-
-  const handleStartOrResumeTest = (testId: string) => {
-    const session = ongoingSessions[testId];
-    setActiveTestId(testId);
-    if (session && session.status === 'ONGOING') {
-      setQuestions(session.questions);
-      setCurrentIndex(session.currentIndex);
-      setTimeLeft(session.timeLeft);
-    } else {
-      setQuestions(initialQuestions.map(q => ({ ...q, selectedOption: null, state: q.id === 'q1' ? 2 : 1 })));
-      setCurrentIndex(0);
-      setTimeLeft(1800);
-    }
-    setViewMode('exam');
-  };
-
-  const handlePauseAndExit = () => {
-    if (activeTestId) {
-      saveSession(activeTestId, questions, currentIndex, timeLeft, 'ONGOING');
-    }
-    setViewMode('dashboard');
-    setActiveTestId(null);
-  };
-
-  // Timer Tick Hook
+  // Initialize Exam Session & Questions
   useEffect(() => {
-    if (viewMode !== 'exam' || !activeTestId) return;
+    const loadExamData = async () => {
+      setLoading(true);
+      
+      // 1. Fetch questions from database
+      const res = await ApiClient.getCustomQuestions(testId);
+      let list: MobileQuestion[] = [];
+      let secs: MobileSection[] = [];
+      let durationSeconds = 3600;
+
+      const testTitle = testId.includes('ssc') ? 'SSC' : testId.includes('rrb') ? 'RRB' : 'Mock';
+
+      if (res.success && res.questions && Array.isArray(res.questions) && res.questions.length > 0) {
+        // Custom Questions
+        const isRRB = testId.includes('rrb');
+        const posMark = isRRB ? 1 : 2;
+        const negMark = isRRB ? 0.33 : 0.5;
+
+        secs = [{ id: 'sec_paper1', name: 'Mock Test Questions', orderIndex: 0, positiveMark: posMark, negativeMark: negMark }];
+        list = res.questions.map((q: any, idx: number) => ({
+          id: q.id || `q_custom_${idx}`,
+          sectionId: 'sec_paper1',
+          questionType: 'mcq',
+          orderIndex: idx,
+          correctOptionIndex: q.correctIndex !== undefined ? q.correctIndex : q.correctOptionIndex || 0,
+          content: {
+            en: {
+              questionText: q.textEn || q.content?.en?.questionText || '',
+              options: q.optionsEn || q.content?.en?.options || []
+            },
+            hi: {
+              questionText: q.textHi || q.content?.hi?.questionText || '',
+              options: q.optionsHi || q.content?.hi?.options || []
+            }
+          }
+        }));
+      } else {
+        // Fallback static question bank mirroring useTestEngine seeds
+        if (testId.includes('ssc')) {
+          secs = [
+            { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 },
+            { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 2, negativeMark: 0.5 },
+            { id: "sec_english", name: "English Comprehension", orderIndex: 2, positiveMark: 2, negativeMark: 0.5 }
+          ];
+          list = [
+            {
+              id: "q_q1", sectionId: "sec_quant", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
+              content: {
+                en: { questionText: "If x + 1/x = 5, then find the value of x² + 1/x².", options: ["23", "25", "27", "21"] },
+                hi: { questionText: "यदि x + 1/x = 5 है, तो x² + 1/x² का मान ज्ञात कीजिए।", options: ["23", "25", "27", "21"] }
+              }
+            },
+            {
+              id: "q_q2", sectionId: "sec_quant", questionType: "mcq", orderIndex: 1, correctOptionIndex: 0,
+              content: {
+                en: { questionText: "The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A's present age?", options: ["20 years", "25 years", "30 years", "15 years"] },
+                hi: { questionText: "A और B की वर्तमान आयु का अनुपात 4:5 है। 5 वर्ष बाद यह अनुपात 5:6 हो जाता है। A की वर्तमान आयु क्या है?", options: ["20 वर्ष", "25 वर्ष", "30 वर्ष", "15 वर्ष"] }
+              }
+            },
+            {
+              id: "q_r1", sectionId: "sec_reasoning", questionType: "mcq", orderIndex: 0, correctOptionIndex: 3,
+              content: {
+                en: { questionText: "Identify the pattern and choose the next term in the series: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] },
+                hi: { questionText: "पैटर्न को पहचानें और श्रृंखला में अगला पद चुनें: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] }
+              }
+            },
+            {
+              id: "q_e1", sectionId: "sec_english", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
+              content: {
+                en: { questionText: "Select the antonym for the word: OBSTINATE", options: ["Flexible", "Stubborn", "Rigid", "Dogmatic"] },
+                hi: { questionText: "दिए गए शब्द का विलोम शब्द चुनें: OBSTINATE (हठी)", options: ["Flexible (लचीला)", "Stubborn (अड़ियल)", "Rigid (कठोर)", "Dogmatic (कट्टर)"] }
+              }
+            }
+          ];
+        } else {
+          secs = [
+            { id: "sec_paper1", name: "Aptitude & General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 }
+          ];
+          list = [
+            {
+              id: "q_gen1", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
+              content: {
+                en: { questionText: "What is the unit of electric current?", options: ["Volt", "Ampere", "Ohm", "Watt"] },
+                hi: { questionText: "विद्युत धारा की इकाई क्या है?", options: ["वोल्ट", "एम्पीयर", "ओम", "वाट"] }
+              }
+            },
+            {
+              id: "q_gen2", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 1, correctOptionIndex: 1,
+              content: {
+                en: { questionText: "Which planet is known as the Red Planet?", options: ["Earth", "Mars", "Jupiter", "Saturn"] },
+                hi: { questionText: "किस ग्रह को लाल ग्रह के नाम से जाना जाता है?", options: ["पृथ्वी", "मंगल", "बृहस्पति", "शनि"] }
+              }
+            }
+          ];
+        }
+      }
+
+      setQuestions(list);
+      setSections(secs);
+
+      // 2. Initialize responses state dictionary
+      const respDict: Record<string, any> = {};
+      list.forEach((q) => {
+        respDict[q.id] = {
+          selectedOptionIndex: null,
+          tempOptionIndex: null,
+          state: 1 as PaletteState,
+          elapsedSeconds: 0
+        };
+      });
+
+      // 3. Try to resume from backend ongoing sessions
+      const ongoing = currentUser.testSessions?.find(
+        (s: any) => s.testId === testId && s.status === 'ONGOING'
+      );
+
+      if (ongoing) {
+        setTimeLeft(ongoing.timeRemaining ?? durationSeconds);
+        setViolationsCount(ongoing.violations ?? 0);
+        setCurrentSectionIdx(ongoing.currentSectionIndex ?? 0);
+        setCurrentQuestionIdx(ongoing.currentQuestionIndex ?? 0);
+
+        if (ongoing.responses) {
+          Object.entries(ongoing.responses).forEach(([qId, val]: any) => {
+            if (respDict[qId]) {
+              respDict[qId].selectedOptionIndex = val.selectedOptionIndex;
+              respDict[qId].tempOptionIndex = val.selectedOptionIndex;
+              respDict[qId].state = val.selectedOptionIndex !== null ? 3 : 2;
+            }
+          });
+        }
+      }
+
+      // Mark the starting question as visited
+      const activeSecQ = list.filter(q => q.sectionId === secs[0].id).sort((a,b)=>a.orderIndex - b.orderIndex);
+      if (activeSecQ.length > 0) {
+        const firstQId = activeSecQ[0].id;
+        if (respDict[firstQId].state === 1) {
+          respDict[firstQId].state = 2; // Visited (Not Answered)
+        }
+      }
+
+      setResponses(respDict);
+      setLoading(false);
+    };
+
+    loadExamData();
+  }, [testId, currentUser]);
+
+  // Timer Tick hook
+  useEffect(() => {
+    if (loading || !isTimerRunning) return;
+
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          handleExamSubmit();
+          handleExamSubmit(true); // Auto-submit when time expires
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
+
     return () => clearInterval(interval);
-  }, [viewMode, activeTestId]);
+  }, [loading, isTimerRunning]);
 
-  // Auto-save on window close or React unmount
+  // Trigger auto-save every 15 seconds to sync state with shared database
   useEffect(() => {
-    const handleUnloadSave = () => {
-      const currentMobileState = mobileStateRef.current;
-      if (currentMobileState.viewMode === 'exam' && currentMobileState.activeTestId) {
-        saveSession(
-          currentMobileState.activeTestId,
-          currentMobileState.questions,
-          currentMobileState.currentIndex,
-          currentMobileState.timeLeft,
-          'ONGOING'
-        );
-      }
-    };
+    if (loading || !isTimerRunning) return;
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', handleUnloadSave);
-    }
+    const autoSaveInterval = setInterval(() => {
+      saveOngoingSessionState();
+    }, 15000);
 
-    return () => {
-      handleUnloadSave();
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('beforeunload', handleUnloadSave);
-      }
-    };
-  }, []);
+    return () => clearInterval(autoSaveInterval);
+  }, [loading, isTimerRunning, currentSectionIdx, currentQuestionIdx, responses, timeLeft, violationsCount]);
 
-  const activeQuestion = questions[currentIndex];
+  const activeSection = sections[currentSectionIdx];
+  const sectionQuestions = activeSection
+    ? questions
+        .filter((q) => q.sectionId === activeSection.id)
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+    : [];
+
+  const activeQuestion = sectionQuestions[currentQuestionIdx];
 
   const formatTime = (sec: number) => {
-    const m = Math.floor(sec / 60);
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
     const s = sec % 60;
+    
+    if (h > 0) {
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleOptionSelect = (optionIndex: number) => {
-    const updated = [...questions];
-    updated[currentIndex].selectedOption = optionIndex;
-    setQuestions(updated);
+  const handleSelectOption = (optIdx: number) => {
+    if (!activeQuestion) return;
+    setResponses((prev) => ({
+      ...prev,
+      [activeQuestion.id]: {
+        ...prev[activeQuestion.id],
+        tempOptionIndex: optIdx
+      }
+    }));
   };
 
-  // 1. SAVE & NEXT ACTION
   const handleSaveAndNext = () => {
-    const updated = [...questions];
-    const hasSelection = updated[currentIndex].selectedOption !== null;
-    updated[currentIndex].state = hasSelection ? 3 : 2; // Answered (3) or Not Answered (2)
-    setQuestions(updated);
+    if (!activeQuestion) return;
 
-    if (currentIndex < questions.length - 1) {
-      // Mark next question as Visited (Not Answered) if Not Visited
-      if (updated[currentIndex + 1].state === 1) {
-        updated[currentIndex + 1].state = 2;
+    const currentResp = responses[activeQuestion.id];
+    const isAnswered = currentResp.tempOptionIndex !== null;
+
+    const updatedResponses = {
+      ...responses,
+      [activeQuestion.id]: {
+        ...currentResp,
+        selectedOptionIndex: currentResp.tempOptionIndex,
+        state: (isAnswered ? 3 : 2) as PaletteState
       }
-      setCurrentIndex(currentIndex + 1);
+    };
+
+    setResponses(updatedResponses);
+
+    // Navigate to next question in section
+    if (currentQuestionIdx < sectionQuestions.length - 1) {
+      const nextQ = sectionQuestions[currentQuestionIdx + 1];
+      if (updatedResponses[nextQ.id].state === 1) {
+        updatedResponses[nextQ.id].state = 2; // mark visited
+      }
+      setCurrentQuestionIdx(currentQuestionIdx + 1);
     } else {
-      Alert.alert('End of Section', 'You are on the last question. Use the palette drawer to submit or review.');
-    }
-  };
-
-  // 2. CLEAR RESPONSE ACTION
-  const handleClearResponse = () => {
-    const updated = [...questions];
-    updated[currentIndex].selectedOption = null;
-    updated[currentIndex].state = 2; // Resets state to Not Answered
-    setQuestions(updated);
-  };
-
-  // 3. MARK FOR REVIEW ACTION
-  const handleMarkForReview = () => {
-    const updated = [...questions];
-    const hasSelection = updated[currentIndex].selectedOption !== null;
-    updated[currentIndex].state = hasSelection ? 5 : 4; // Answered & Marked (5) or Marked for Review (4)
-    setQuestions(updated);
-
-    if (currentIndex < questions.length - 1) {
-      if (updated[currentIndex + 1].state === 1) {
-        updated[currentIndex + 1].state = 2;
+      // End of section, move to next section if available
+      if (currentSectionIdx < sections.length - 1) {
+        const nextSec = sections[currentSectionIdx + 1];
+        const nextSecQs = questions.filter(q => q.sectionId === nextSec.id).sort((a,b)=>a.orderIndex - b.orderIndex);
+        if (nextSecQs.length > 0 && updatedResponses[nextSecQs[0].id].state === 1) {
+          updatedResponses[nextSecQs[0].id].state = 2;
+        }
+        setCurrentSectionIdx(currentSectionIdx + 1);
+        setCurrentQuestionIdx(0);
+      } else {
+        Alert.alert('Section Complete', 'You are on the last question. Open the palette drawer to submit or review.');
       }
-      setCurrentIndex(currentIndex + 1);
     }
   };
 
-  const handleJumpToQuestion = (index: number) => {
-    const updated = [...questions];
-    // Revert current question if left untouched
-    if (updated[currentIndex].state === 1) {
-      updated[currentIndex].state = 2;
+  const handleClearResponse = () => {
+    if (!activeQuestion) return;
+    setResponses((prev) => ({
+      ...prev,
+      [activeQuestion.id]: {
+        ...prev[activeQuestion.id],
+        tempOptionIndex: null,
+        selectedOptionIndex: null,
+        state: 2 // Visited, but not answered
+      }
+    }));
+  };
+
+  const handleMarkForReview = () => {
+    if (!activeQuestion) return;
+
+    const currentResp = responses[activeQuestion.id];
+    const hasSelection = currentResp.tempOptionIndex !== null;
+
+    const updatedResponses = {
+      ...responses,
+      [activeQuestion.id]: {
+        ...currentResp,
+        selectedOptionIndex: currentResp.tempOptionIndex,
+        state: (hasSelection ? 5 : 4) as PaletteState
+      }
+    };
+
+    setResponses(updatedResponses);
+
+    if (currentQuestionIdx < sectionQuestions.length - 1) {
+      const nextQ = sectionQuestions[currentQuestionIdx + 1];
+      if (updatedResponses[nextQ.id].state === 1) {
+        updatedResponses[nextQ.id].state = 2;
+      }
+      setCurrentQuestionIdx(currentQuestionIdx + 1);
+    } else if (currentSectionIdx < sections.length - 1) {
+      setCurrentSectionIdx(currentSectionIdx + 1);
+      setCurrentQuestionIdx(0);
     }
-    // Set target question to visited
-    if (updated[index].state === 1) {
-      updated[index].state = 2;
-    }
-    setQuestions(updated);
-    setCurrentIndex(index);
+  };
+
+  const handleJumpToQuestion = (secIdx: number, qIdx: number) => {
+    const targetSection = sections[secIdx];
+    const targetQs = questions
+      .filter((q) => q.sectionId === targetSection.id)
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+    const targetQ = targetQs[qIdx];
+
+    setResponses((prev) => {
+      const copy = { ...prev };
+      if (copy[targetQ.id].state === 1) {
+        copy[targetQ.id].state = 2;
+      }
+      return copy;
+    });
+
+    setCurrentSectionIdx(secIdx);
+    setCurrentQuestionIdx(qIdx);
     setDrawerVisible(false);
   };
 
-  const handleExamSubmit = () => {
-    let correct = 0;
-    questions.forEach((q) => {
-      // For demo, assume option index 1 is always the correct choice
-      if ((q.state === 3 || q.state === 5) && q.selectedOption === 1) {
-        correct++;
-      }
+  // Sync state with database
+  const saveOngoingSessionState = async () => {
+    const formattedResponses: Record<string, any> = {};
+    Object.entries(responses).forEach(([qId, val]) => {
+      formattedResponses[qId] = {
+        selectedOptionIndex: val.selectedOptionIndex,
+        elapsedSeconds: val.elapsedSeconds
+      };
     });
 
-    if (activeTestId) {
-      saveSession(activeTestId, questions, currentIndex, timeLeft, 'COMPLETED');
-    }
+    await ApiClient.saveOngoingSession({
+      userId: currentUser.id,
+      testId,
+      timeRemaining: timeLeft,
+      violations: violationsCount,
+      currentSectionIndex: currentSectionIdx,
+      currentQuestionIndex: currentQuestionIdx,
+      responses: formattedResponses
+    });
+  };
 
+  const handlePauseAndExit = async () => {
+    setIsTimerRunning(false);
     Alert.alert(
-      'Exam Submitted',
-      `Performance Summary:\nCorrect Answers: ${correct}/${questions.length}\nAccuracy: ${((correct / questions.length) * 100).toFixed(1)}%`,
+      'Pause sitting?',
+      'Your exam states will be saved to the database. You can resume this attempt anytime.',
       [
+        { text: 'Cancel', onPress: () => setIsTimerRunning(true), style: 'cancel' },
         {
-          text: 'Return to Dashboard',
-          onPress: () => {
-            setViewMode('dashboard');
-            setActiveTestId(null);
-            setQuestions(initialQuestions.map(q => ({ ...q, selectedOption: null, state: q.id === 'q1' ? 2 : 1 })));
-            setCurrentIndex(0);
-            setTimeLeft(1800);
+          text: 'Save & Exit',
+          onPress: async () => {
+            setLoading(true);
+            await saveOngoingSessionState();
+            onBack();
           }
         }
       ]
     );
   };
 
-  // ============================================================================
-  // VIEW RENDERERS
-  // ============================================================================
+  // Submit assessment sittings
+  const handleExamSubmit = async (forced = false) => {
+    setIsTimerRunning(false);
 
-  if (viewMode === 'dashboard') {
+    const performSubmission = async () => {
+      setLoading(true);
+
+      // Compute stats
+      let correctCount = 0;
+      let incorrectCount = 0;
+      let unattemptedCount = 0;
+      let totalMarks = 0;
+
+      questions.forEach((q) => {
+        const resp = responses[q.id];
+        const selected = resp ? resp.selectedOptionIndex : null;
+        const qSection = sections.find((s) => s.id === q.sectionId);
+        const positiveMark = qSection ? qSection.positiveMark : 2;
+        const negativeMark = qSection ? qSection.negativeMark : 0.5;
+
+        if (selected === null) {
+          unattemptedCount++;
+        } else if (selected === q.correctOptionIndex) {
+          correctCount++;
+          totalMarks += positiveMark;
+        } else {
+          incorrectCount++;
+          totalMarks -= negativeMark;
+        }
+      });
+
+      const totalQs = questions.length;
+      const accuracy = totalQs > 0 ? (correctCount / (correctCount + incorrectCount || 1)) * 100 : 0;
+
+      const formattedResponses: Record<string, any> = {};
+      Object.entries(responses).forEach(([qId, val]) => {
+        formattedResponses[qId] = {
+          selectedOptionIndex: val.selectedOptionIndex,
+          elapsedSeconds: val.elapsedSeconds
+        };
+      });
+
+      const res = await ApiClient.addAttempt({
+        userId: currentUser.id,
+        testId,
+        score: totalMarks,
+        maxScore: totalQs * 2, // assume 2 marks max per question on average
+        accuracy,
+        durationSeconds: 3600 - timeLeft, // assuming 1 hr default test
+        violations: violationsCount,
+        responses: formattedResponses
+      });
+
+      setLoading(false);
+
+      if (res.success) {
+        Alert.alert(
+          forced ? 'Exam Submitted (Violation Limit)' : 'Exam Submitted Successfully',
+          `Assessment summary:\nMarks scored: ${totalMarks.toFixed(1)}\nCorrect answers: ${correctCount}/${totalQs}\nAccuracy: ${accuracy.toFixed(1)}%`,
+          [{ text: 'View Performance', onPress: onComplete }]
+        );
+      } else {
+        Alert.alert('Submission Error', res.error || 'Check network connection.');
+        setIsTimerRunning(true);
+      }
+    };
+
+    if (forced) {
+      await performSubmission();
+    } else {
+      Alert.alert(
+        'Submit Mock Paper?',
+        'Are you sure you want to finish and submit your exam sheet now?',
+        [
+          { text: 'Cancel', onPress: () => setIsTimerRunning(true), style: 'cancel' },
+          { text: 'Submit Paper', onPress: performSubmission }
+        ]
+      );
+    }
+  };
+
+  if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.dashHeader}>
-          <Text style={styles.dashTitle}>Mock Test Pass</Text>
-          <Text style={styles.dashSub}>Premium Member • Valid for 365 Days</Text>
-        </View>
-
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Categories Grid */}
-          <Text style={styles.sectionHeader}>Explore Test Series</Text>
-          <View style={styles.categoriesRow}>
-            {['SSC Exams', 'Banking', 'Railways', 'State PSC'].map((cat, i) => (
-              <TouchableOpacity key={i} style={styles.categoryBadge}>
-                <Text style={styles.categoryBadgeText}>{cat}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Test Series list */}
-          <Text style={styles.sectionHeader}>My Active Enrolled Packages</Text>
-          {mockTestSeries.map((item) => {
-            const session = ongoingSessions[item.id];
-            const isOngoing = session && session.status === 'ONGOING';
-            const isCompleted = session && session.status === 'COMPLETED';
-
-            return (
-              <View key={item.id} style={styles.testCard}>
-                <View style={styles.cardInfo}>
-                  <View style={styles.badgeRow}>
-                    <Text style={styles.tagText}>{item.category}</Text>
-                    {item.isPremium ? (
-                      <Text style={[styles.badge, styles.premiumBadge]}>PRO</Text>
-                    ) : (
-                      <Text style={[styles.badge, styles.freeBadge]}>FREE</Text>
-                    )}
-                    {isOngoing && (
-                      <Text style={styles.pausedBadge}>⏸ PAUSED</Text>
-                    )}
-                    {isCompleted && (
-                      <Text style={[styles.badge, styles.freeBadge]}>✓ COMPLETED</Text>
-                    )}
-                  </View>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Text style={styles.cardMeta}>{item.totalTests} Total Tests • Syllabus Tracker Ready</Text>
-                </View>
-
-                <TouchableOpacity
-                  style={isOngoing ? styles.resumeCardBtn : styles.cardBtn}
-                  onPress={() => handleStartOrResumeTest(item.id)}
-                >
-                  <Text style={styles.cardBtnText}>
-                    {isOngoing ? 'Resume Test' : 'Start Test'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            );
-          })}
-        </ScrollView>
-      </SafeAreaView>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={styles.loadingText}>Syncing sitting session...</Text>
+      </View>
     );
   }
 
-  // Active Exam Simulator View
+  // Active question details
+  const questionContent = activeQuestion?.content[lang];
+  const questionText = questionContent?.questionText || '';
+  const options = questionContent?.options || [];
+  const activeResp = activeQuestion ? responses[activeQuestion.id] : null;
+
   return (
-    <SafeAreaView style={styles.examContainer}>
-      <StatusBar barStyle="light-content" />
-      {/* Exam Header */}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0F2942" />
+
+      {/* CBT Header */}
       <View style={styles.examHeader}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity style={styles.pauseExitBtn} onPress={handlePauseAndExit}>
-            <Text style={styles.pauseExitBtnText}>⏸ Pause</Text>
-          </TouchableOpacity>
-          <View>
-            <Text style={styles.examTitle}>SSC CGL Tier 1 CBT</Text>
-            <Text style={styles.examSubTitle}>Question {currentIndex + 1} of {questions.length}</Text>
-          </View>
-        </View>
-        <View style={styles.timerBadge}>
+        <TouchableOpacity style={styles.pauseBtn} onPress={handlePauseAndExit}>
+          <Text style={styles.pauseBtnText}>⏸ Pause</Text>
+        </TouchableOpacity>
+
+        <View style={styles.timerBlock}>
           <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
         </View>
+
+        <TouchableOpacity style={styles.langBtn} onPress={() => setLang(lang === 'en' ? 'hi' : 'en')}>
+          <Globe size={14} color="#FFF" />
+          <Text style={styles.langText}>{lang === 'en' ? 'Hindi' : 'English'}</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Active Question Display */}
-      <ScrollView style={styles.questionPanel}>
-        <Text style={styles.questionIndex}>QUESTION NO. {currentIndex + 1}</Text>
-        <Text style={styles.questionBody}>{activeQuestion.text}</Text>
+      {/* Section Tabs */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sectionsRow}>
+        {sections.map((sec, idx) => (
+          <TouchableOpacity
+            key={sec.id}
+            style={[styles.sectionTab, currentSectionIdx === idx && styles.sectionTabActive]}
+            onPress={() => {
+              setCurrentSectionIdx(idx);
+              setCurrentQuestionIdx(0);
+            }}
+          >
+            <Text style={[styles.sectionTabText, currentSectionIdx === idx && styles.sectionTabTextActive]}>
+              {sec.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
-        <View style={styles.optionsContainer}>
-          {activeQuestion.options.map((opt, i) => {
-            const isSelected = activeQuestion.selectedOption === i;
+      {/* Question Panel */}
+      <ScrollView style={styles.questionContainer}>
+        <View style={styles.questionMetaRow}>
+          <Text style={styles.questionIndexText}>QUESTION NO. {currentQuestionIdx + 1}</Text>
+          {violationsCount > 0 && (
+            <Text style={styles.violationWarning}>Violations: {violationsCount}/3</Text>
+          )}
+        </View>
+
+        <Text style={styles.questionBody}>{questionText}</Text>
+
+        {/* Options Radio Grid */}
+        <View style={styles.optionsBlock}>
+          {options.map((opt, i) => {
+            const isSelected = activeResp?.tempOptionIndex === i;
             return (
               <TouchableOpacity
                 key={i}
-                style={[styles.optionBtn, isSelected && styles.optionBtnActive]}
-                onPress={() => handleOptionSelect(i)}
+                style={[styles.optionItem, isSelected && styles.optionItemActive]}
+                onPress={() => handleSelectOption(i)}
               >
                 <View style={[styles.optionDot, isSelected && styles.optionDotActive]} />
                 <Text style={[styles.optionText, isSelected && styles.optionTextActive]}>{opt}</Text>
@@ -376,36 +622,36 @@ export default function MobileTestScreen() {
         </View>
       </ScrollView>
 
-      {/* Footer Controllers */}
-      <View style={styles.footerBar}>
-        <TouchableOpacity style={styles.outlineButton} onPress={handleMarkForReview}>
-          <Text style={styles.outlineButtonText}>Mark Review</Text>
+      {/* Control Footer */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.secondaryBtn} onPress={handleMarkForReview}>
+          <Text style={styles.secondaryBtnText}>Mark Review</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.outlineButton} onPress={handleClearResponse}>
-          <Text style={styles.outlineButtonText}>Clear</Text>
+        <TouchableOpacity style={styles.secondaryBtn} onPress={handleClearResponse}>
+          <Text style={styles.secondaryBtnText}>Clear</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.primaryButton} onPress={handleSaveAndNext}>
-          <Text style={styles.primaryButtonText}>Save & Next</Text>
+        <TouchableOpacity style={styles.primaryBtn} onPress={handleSaveAndNext}>
+          <Text style={styles.primaryBtnText}>Save & Next</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Floating Action Trigger for Question Drawer */}
+      {/* Floating Palette Trigger */}
       <TouchableOpacity style={styles.fab} onPress={() => setDrawerVisible(true)}>
-        <Text style={styles.fabText}>📊 Palette</Text>
+        <Menu size={16} color="#FFF" />
+        <Text style={styles.fabText}>Palette</Text>
       </TouchableOpacity>
 
-      {/* TCS iON Bottom Slide Drawer Overlay */}
+      {/* TCS Palette Drawer Overlay */}
       <Modal
         visible={drawerVisible}
         animationType="slide"
         transparent={true}
         onRequestClose={() => setDrawerVisible(false)}
       >
-        <View style={styles.drawerOverlay}>
+        <View style={styles.modalOverlay}>
           <View style={styles.drawerSheet}>
-            
             <View style={styles.drawerHeader}>
               <Text style={styles.drawerTitle}>TCS iON Question Palette</Text>
               <TouchableOpacity style={styles.closeBtn} onPress={() => setDrawerVisible(false)}>
@@ -413,63 +659,70 @@ export default function MobileTestScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Shape Palette Grid */}
-            <View style={styles.gridContent}>
-              <FlatList
-                data={questions}
-                keyExtractor={(item) => item.id}
-                numColumns={5}
-                renderItem={({ item, index }) => {
-                  let styleClass = styles.pNotVisited;
-                  let textStyle = styles.pTextDark;
-                  let checkMark = false;
+            {/* Shape palette list */}
+            <ScrollView contentContainerStyle={styles.drawerScroll}>
+              {sections.map((sec, secIdx) => {
+                const secQs = questions
+                  .filter((q) => q.sectionId === sec.id)
+                  .sort((a, b) => a.orderIndex - b.orderIndex);
 
-                  switch (item.state) {
-                    case 2: // Not Answered
-                      styleClass = styles.pNotAnswered;
-                      textStyle = styles.pTextLight;
-                      break;
-                    case 3: // Answered
-                      styleClass = styles.pAnswered;
-                      textStyle = styles.pTextLight;
-                      break;
-                    case 4: // Marked
-                      styleClass = styles.pMarked;
-                      textStyle = styles.pTextLight;
-                      break;
-                    case 5: // Answered & Marked
-                      styleClass = styles.pMarkedAnswered;
-                      textStyle = styles.pTextLight;
-                      checkMark = true;
-                      break;
-                  }
+                return (
+                  <View key={sec.id} style={styles.drawerSecGroup}>
+                    <Text style={styles.drawerSecName}>{sec.name}</Text>
+                    <View style={styles.paletteGrid}>
+                      {secQs.map((q, qIdx) => {
+                        const resp = responses[q.id];
+                        const qState = resp ? resp.state : 1;
 
-                  const isActive = index === currentIndex;
+                        let stateStyle = styles.pNotVisited;
+                        let textStyle = styles.pTextDark;
+                        let hasCheck = false;
 
-                  return (
-                    <TouchableOpacity
-                      onPress={() => handleJumpToQuestion(index)}
-                      style={[
-                        styles.paletteCell,
-                        styleClass,
-                        isActive && { borderWidth: 2, borderColor: '#007AFF' }
-                      ]}
-                    >
-                      <Text style={[styles.paletteText, textStyle]}>{index + 1}</Text>
-                      {checkMark && <View style={styles.miniCheck}><Text style={styles.miniCheckText}>✓</Text></View>}
-                    </TouchableOpacity>
-                  );
-                }}
-              />
-            </View>
+                        if (qState === 2) {
+                          stateStyle = styles.pNotAnswered;
+                          textStyle = styles.pTextLight;
+                        } else if (qState === 3) {
+                          stateStyle = styles.pAnswered;
+                          textStyle = styles.pTextLight;
+                        } else if (qState === 4) {
+                          stateStyle = styles.pMarked;
+                          textStyle = styles.pTextLight;
+                        } else if (qState === 5) {
+                          stateStyle = styles.pMarkedAnswered;
+                          textStyle = styles.pTextLight;
+                          hasCheck = true;
+                        }
 
-            {/* Form submission */}
-            <View style={styles.drawerSubmitArea}>
-              <TouchableOpacity style={styles.submitPaperBtn} onPress={handleExamSubmit}>
-                <Text style={styles.submitPaperBtnText}>Submit Complete Paper</Text>
-              </TouchableOpacity>
-            </View>
+                        const isActive = currentSectionIdx === secIdx && currentQuestionIdx === qIdx;
 
+                        return (
+                          <TouchableOpacity
+                            key={q.id}
+                            style={[
+                              styles.paletteCell,
+                              stateStyle,
+                              isActive && { borderWidth: 2, borderColor: '#007AFF' }
+                            ]}
+                            onPress={() => handleJumpToQuestion(secIdx, qIdx)}
+                          >
+                            <Text style={[styles.paletteCellText, textStyle]}>{qIdx + 1}</Text>
+                            {hasCheck && (
+                              <View style={styles.miniCheck}>
+                                <Text style={styles.miniCheckText}>✓</Text>
+                              </View>
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+
+            <TouchableOpacity style={styles.submitPaperBtn} onPress={() => handleExamSubmit(false)}>
+              <Text style={styles.submitPaperBtnText}>Submit Complete Paper</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -477,208 +730,153 @@ export default function MobileTestScreen() {
   );
 }
 
-// ============================================================================
-// STYLES DEFINITION
-// ============================================================================
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F9FC',
+    backgroundColor: '#FFF',
   },
-  dashHeader: {
-    backgroundColor: '#0F2942',
-    padding: 20,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
   },
-  dashTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  dashSub: {
-    fontSize: 12,
-    color: '#4ADE80',
-    marginTop: 4,
-    fontWeight: 'bold',
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  sectionHeader: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#334155',
-    marginVertical: 12,
-  },
-  categoriesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 8,
-  },
-  categoryBadge: {
-    backgroundColor: '#E2E8F0',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  categoryBadgeText: {
-    fontSize: 12,
-    color: '#475569',
+  loadingText: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 10,
     fontWeight: '600',
   },
-  testCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardInfo: {
-    flex: 1,
-    paddingRight: 8,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  tagText: {
-    fontSize: 10,
-    color: '#64748B',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  badge: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  premiumBadge: {
-    backgroundColor: '#FEF3C7',
-    color: '#D97706',
-  },
-  freeBadge: {
-    backgroundColor: '#DCFCE7',
-    color: '#15803D',
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1E293B',
-    marginVertical: 4,
-  },
-  cardMeta: {
-    fontSize: 11,
-    color: '#64748B',
-  },
-  cardBtn: {
-    backgroundColor: '#2563EB',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-  },
-  cardBtnText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-
-  // Exam Layout Styling
-  examContainer: {
-    flex: 1,
-    backgroundColor: '#0F2942',
-  },
   examHeader: {
+    backgroundColor: '#0F2942',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2E587A',
   },
-  examTitle: {
+  pauseBtn: {
+    backgroundColor: '#1E293B',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#4B5563',
+  },
+  pauseBtnText: {
     color: '#FFF',
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: 'bold',
   },
-  examSubTitle: {
-    color: '#94A3B8',
-    fontSize: 11,
-    marginTop: 2,
-  },
-  timerBadge: {
+  timerBlock: {
     backgroundColor: '#1E3A8A',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#3B82F6',
+    borderColor: '#2563EB',
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 8,
   },
   timerText: {
     color: '#FBBF24',
-    fontSize: 15,
-    fontWeight: 'bold',
     fontFamily: 'monospace',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
-  questionPanel: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    padding: 20,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+  langBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#1E293B',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#4B5563',
   },
-  questionIndex: {
+  langText: {
+    color: '#FFF',
     fontSize: 11,
     fontWeight: 'bold',
+  },
+  sectionsRow: {
+    maxHeight: 44,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
+  },
+  sectionTab: {
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRightWidth: 1,
+    borderRightColor: '#E5E7EB',
+  },
+  sectionTabActive: {
+    backgroundColor: '#EFF6FF',
+    borderBottomWidth: 3,
+    borderBottomColor: '#2563EB',
+  },
+  sectionTabText: {
+    fontSize: 12,
+    color: '#4B5563',
+    fontWeight: '600',
+  },
+  sectionTabTextActive: {
     color: '#2563EB',
-    letterSpacing: 1,
+    fontWeight: 'bold',
+  },
+  questionContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  questionMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
+  },
+  questionIndexText: {
+    fontSize: 11,
+    color: '#2563EB',
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  violationWarning: {
+    fontSize: 11,
+    color: '#DC2626',
+    fontWeight: 'bold',
   },
   questionBody: {
     fontSize: 15,
-    color: '#1E293B',
+    color: '#1F2937',
     lineHeight: 22,
     fontWeight: '600',
     marginBottom: 20,
   },
-  optionsContainer: {
+  optionsBlock: {
+    gap: 10,
     marginBottom: 40,
   },
-  optionBtn: {
+  optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 10,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    padding: 12,
     backgroundColor: '#FFF',
   },
-  optionBtnActive: {
+  optionItemActive: {
     borderColor: '#2563EB',
     backgroundColor: '#EFF6FF',
   },
   optionDot: {
-    height: 16,
-    width: 16,
-    borderRadius: 8,
+    height: 14,
+    width: 14,
+    borderRadius: 7,
     borderWidth: 1,
-    borderColor: '#94A3B8',
-    marginRight: 12,
+    borderColor: '#9CA3AF',
+    marginRight: 10,
   },
   optionDotActive: {
     borderColor: '#2563EB',
@@ -686,216 +884,189 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 13,
-    color: '#334155',
+    color: '#374151',
   },
   optionTextActive: {
     color: '#1E40AF',
     fontWeight: 'bold',
   },
-  footerBar: {
-    backgroundColor: '#FFF',
+  footer: {
+    height: 56,
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    borderTopColor: '#E5E7EB',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  outlineButton: {
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     backgroundColor: '#FFF',
   },
-  outlineButtonText: {
-    color: '#334155',
+  secondaryBtn: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  secondaryBtnText: {
+    fontSize: 11,
+    color: '#4B5563',
     fontWeight: 'bold',
-    fontSize: 12,
   },
-  primaryButton: {
-    backgroundColor: '#2E7D32',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+  primaryBtn: {
+    backgroundColor: '#10B981',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
-  primaryButtonText: {
+  primaryBtnText: {
+    fontSize: 11,
     color: '#FFF',
     fontWeight: 'bold',
-    fontSize: 12,
   },
   fab: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 76,
     right: 16,
-    backgroundColor: '#1E3A8A',
-    borderRadius: 30,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
+    backgroundColor: '#0F2942',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
     shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 6,
-    elevation: 5,
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
   },
   fabText: {
     color: '#FFF',
+    fontSize: 11,
     fontWeight: 'bold',
-    fontSize: 12,
   },
-
-  // Modal Sheet overlay
-  drawerOverlay: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   drawerSheet: {
     backgroundColor: '#FFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: SCREEN_HEIGHT * 0.65,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 16,
+    maxHeight: SCREEN_HEIGHT * 0.7,
   },
   drawerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-    paddingBottom: 12,
-    marginBottom: 16,
+    borderBottomColor: '#F3F4F6',
+    paddingBottom: 10,
   },
   drawerTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#0F2942',
   },
   closeBtn: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
   },
   closeBtnText: {
-    color: '#64748B',
+    fontSize: 11,
+    color: '#4B5563',
+    fontWeight: 'bold',
+  },
+  drawerScroll: {
+    paddingVertical: 14,
+  },
+  drawerSecGroup: {
+    marginBottom: 16,
+  },
+  drawerSecName: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#3B82F6',
+    marginBottom: 8,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  paletteGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  paletteCell: {
+    height: SCREEN_WIDTH * 0.12,
+    width: SCREEN_WIDTH * 0.12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    position: 'relative',
+  },
+  paletteCellText: {
     fontSize: 11,
     fontWeight: 'bold',
   },
-  gridContent: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  paletteCell: {
-    height: SCREEN_WIDTH * 0.13,
-    width: SCREEN_WIDTH * 0.13,
-    margin: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  paletteText: {
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
   pNotVisited: {
-    backgroundColor: '#E2E8F0',
-    borderColor: '#CBD5E1',
-    borderWidth: 1,
+    backgroundColor: '#E5E7EB',
   },
   pNotAnswered: {
-    backgroundColor: '#C62828',
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
+    backgroundColor: '#FEE2E2',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
   pAnswered: {
-    backgroundColor: '#2E7D32',
-    borderBottomLeftRadius: 6,
-    borderBottomRightRadius: 6,
+    backgroundColor: '#D1FAE5',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
   },
   pMarked: {
-    backgroundColor: '#4527A0',
-    borderRadius: 30,
+    backgroundColor: '#F3E8FF',
+    borderRadius: 24,
   },
   pMarkedAnswered: {
-    backgroundColor: '#4527A0',
-    borderRadius: 30,
+    backgroundColor: '#F3E8FF',
+    borderRadius: 24,
   },
   pTextDark: {
-    color: '#334155',
+    color: '#374151',
   },
   pTextLight: {
-    color: '#FFF',
+    color: '#1F2937',
   },
   miniCheck: {
     position: 'absolute',
     bottom: -2,
     right: -2,
-    backgroundColor: '#22C55E',
-    borderRadius: 8,
-    width: 14,
-    height: 14,
+    backgroundColor: '#10B981',
+    height: 12,
+    width: 12,
+    borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#FFF',
   },
   miniCheckText: {
     color: '#FFF',
     fontSize: 8,
     fontWeight: 'bold',
   },
-  drawerSubmitArea: {
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    paddingTop: 16,
-  },
   submitPaperBtn: {
-    backgroundColor: '#1E293B',
-    paddingVertical: 14,
-    borderRadius: 10,
+    backgroundColor: '#10B981',
+    paddingVertical: 12,
+    borderRadius: 8,
     alignItems: 'center',
+    marginVertical: 10,
   },
   submitPaperBtnText: {
     color: '#FFF',
-    fontWeight: 'bold',
     fontSize: 13,
-  },
-  resumeCardBtn: {
-    backgroundColor: '#EA580C',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-  },
-  pausedBadge: {
-    backgroundColor: '#FFEDD5',
-    color: '#C2410C',
-    fontSize: 9,
-    fontWeight: 'bold',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  pauseExitBtn: {
-    backgroundColor: '#1E3A8A',
-    borderColor: '#3B82F6',
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    marginRight: 10,
-  },
-  pauseExitBtnText: {
-    color: '#FFF',
-    fontSize: 11,
     fontWeight: 'bold',
   },
 });
