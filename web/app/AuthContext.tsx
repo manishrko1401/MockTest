@@ -77,8 +77,8 @@ interface AuthContextType {
   usersList: MockUser[];
   theme: 'light' | 'dark';
   toggleTheme: () => void;
-  login: (email: string) => boolean;
-  signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string) => boolean;
+  login: (email: string) => Promise<boolean>;
+  signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string) => Promise<boolean>;
   logout: () => void;
   updateProfile: (name: string, email: string, mobile: string) => void;
   updatePassword: (oldPass: string, newPass: string) => boolean;
@@ -387,143 +387,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [language, setLanguageState] = useState<'en' | 'hi'>('en');
   const [examCatalog, setExamCatalog] = useState<TestCategory[]>([]);
 
-  // Load initial data from localStorage with backfill checks
-  useEffect(() => {
-    let loadedUsers: MockUser[] = [];
-    const savedUsers = localStorage.getItem('tb_users');
-    
-    if (savedUsers) {
-      try {
-        const parsed = JSON.parse(savedUsers) as MockUser[];
-        const needsBackfill = parsed.some(
-          u => !u.referralCode || !u.mobile || u.subscriptionPurchasedAt === undefined || 
-               u.testSessions.some(ts => !ts.testId)
-        );
-        if (needsBackfill) {
-          loadedUsers = parsed.map(u => {
-            const match = INITIAL_USERS.find(iu => iu.id === u.id);
-            const codeName = u.name.split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
-            
-            // Map existing testSession titles to their testIds if missing
-            const updatedSessions = u.testSessions.map(ts => {
-              if (ts.testId) return ts;
-              let tId = 'ssc_cgl_tier1';
-              if (ts.title.includes('SSC CGL')) tId = 'ssc_cgl_tier1';
-              else if (ts.title.includes('SBI PO')) tId = 'sbi_po_prelims';
-              else if (ts.title.includes('RRB NTPC')) tId = 'rrb_ntpc_stage1';
-              return { ...ts, testId: tId };
-            });
-
-            return {
-              ...u,
-              mobile: u.mobile || match?.mobile || '9988776655',
-              referralCode: u.referralCode || match?.referralCode || ('TB-' + codeName + '-' + Math.floor(1000 + Math.random() * 9000)),
-              referredBy: u.referredBy !== undefined ? u.referredBy : (match?.referredBy || null),
-              referralsCount: u.referralsCount !== undefined ? u.referralsCount : (match?.referralsCount || 0),
-              subscriptionPurchasedAt: u.subscriptionPurchasedAt !== undefined ? u.subscriptionPurchasedAt : (match?.subscriptionPurchasedAt || null),
-              testSessions: updatedSessions
-            };
-          });
-          localStorage.setItem('tb_users', JSON.stringify(loadedUsers));
-        } else {
-          loadedUsers = parsed;
-        }
-      } catch (e) {
-        loadedUsers = INITIAL_USERS;
-        localStorage.setItem('tb_users', JSON.stringify(INITIAL_USERS));
-      }
-    } else {
-      loadedUsers = INITIAL_USERS;
-      localStorage.setItem('tb_users', JSON.stringify(INITIAL_USERS));
-    }
-    
-    if (!loadedUsers.some(u => u.role === 'ADMIN')) {
-      loadedUsers.push({
-        id: 'u_admin',
-        candidateCode: 'ADMIN_001',
-        name: 'Administrator',
-        email: 'admin@mocktest.com',
-        mobile: '9999999999',
-        referralCode: 'TB-ADMIN-1111',
-        referredBy: null,
-        referralsCount: 0,
-        role: 'ADMIN',
-        subscriptionTier: 'None',
-        subscriptionPurchasedAt: null,
-        subscriptionExpiresAt: null,
-        registeredDate: '2026-01-01',
-        testSessions: []
+  const fetchUsersList = async () => {
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'bootstrap' })
       });
-      localStorage.setItem('tb_users', JSON.stringify(loadedUsers));
-    }
-    setUsersList(loadedUsers);
+      const data = await res.json();
+      if (data.success) {
+        setUsersList(data.usersList || []);
+        setNoticesList(data.noticesList || []);
+        setExamCatalog(data.examCatalog || []);
 
-    const savedSession = localStorage.getItem('tb_session');
-    if (savedSession) {
-      try {
-        const parsedSession = JSON.parse(savedSession) as MockUser;
-        const matchingLoadedUser = loadedUsers.find(u => u.id === parsedSession.id);
-        if (matchingLoadedUser) {
-          setCurrentUser(matchingLoadedUser);
-          localStorage.setItem('tb_session', JSON.stringify(matchingLoadedUser));
-        } else {
-          setCurrentUser(parsedSession);
+        const getCookie = (name: string) => {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop()?.split(';').shift();
+          return null;
+        };
+        const savedUserId = getCookie('tb_user_id');
+        if (savedUserId) {
+          const matchingUser = (data.usersList || []).find((u: any) => u.id === savedUserId);
+          if (matchingUser) {
+            if (matchingUser.isBlocked) {
+              document.cookie = "tb_user_id=;path=/;max-age=0";
+              setCurrentUser(null);
+            } else {
+              setCurrentUser(matchingUser);
+            }
+          }
         }
-      } catch (e) {
-        setCurrentUser(null);
-        localStorage.removeItem('tb_session');
       }
-    } else {
-      setCurrentUser(null);
+    } catch (err) {
+      console.error("Fetch data error:", err);
     }
+  };
 
-    // Load theme setting
-    const savedTheme = localStorage.getItem('tb_theme') as 'light' | 'dark';
+  // Load initial data from Supabase
+  useEffect(() => {
+    fetchUsersList();
+
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift();
+      return null;
+    };
+    const savedTheme = getCookie('tb_theme') as 'light' | 'dark';
     if (savedTheme) {
       setTheme(savedTheme);
     } else {
       setTheme('light');
     }
 
-    // Load language setting
-    const savedLang = localStorage.getItem('tb_lang') as 'en' | 'hi';
+    const savedLang = getCookie('tb_lang') as 'en' | 'hi';
     if (savedLang && ['en', 'hi'].includes(savedLang)) {
       setLanguageState(savedLang);
     } else {
       setLanguageState('en');
     }
-
-    // Load notices setting
-    const savedNotices = localStorage.getItem('tb_notices');
-    let loadedNotices: Notice[] = [];
-    if (savedNotices) {
-      try {
-        loadedNotices = JSON.parse(savedNotices) as Notice[];
-      } catch (e) {
-        loadedNotices = DEFAULT_NOTICES;
-        localStorage.setItem('tb_notices', JSON.stringify(DEFAULT_NOTICES));
-      }
-    } else {
-      loadedNotices = DEFAULT_NOTICES;
-      localStorage.setItem('tb_notices', JSON.stringify(DEFAULT_NOTICES));
-    }
-    setNoticesList(loadedNotices);
-
-    // Load exam catalog setting
-    const savedCatalog = localStorage.getItem('tb_exam_catalog');
-    let loadedCatalog: TestCategory[] = [];
-    if (savedCatalog) {
-      try {
-        loadedCatalog = JSON.parse(savedCatalog) as TestCategory[];
-      } catch (e) {
-        loadedCatalog = DEFAULT_EXAM_CATALOG;
-        localStorage.setItem('tb_exam_catalog', JSON.stringify(DEFAULT_EXAM_CATALOG));
-      }
-    } else {
-      loadedCatalog = DEFAULT_EXAM_CATALOG;
-      localStorage.setItem('tb_exam_catalog', JSON.stringify(DEFAULT_EXAM_CATALOG));
-    }
-    setExamCatalog(loadedCatalog);
   }, []);
 
   // Sync theme changes with DOM node class selectors
@@ -540,7 +463,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const toggleTheme = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(nextTheme);
-    localStorage.setItem('tb_theme', nextTheme);
+    document.cookie = "tb_theme=" + nextTheme + ";path=/;max-age=31536000";
   };
 
   const addNotice = (title: string, type: string, category: 'notice' | 'result' | 'admit_card', dateInput?: string, url?: string, lastDateInput?: string) => {
@@ -573,8 +496,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       lastDateStr = `${day} ${monthStr} ${year}`;
     }
 
+    const newId = 'nt_' + Math.random().toString(36).substring(2, 9);
     const newNotice: Notice = {
-      id: 'nt_' + Math.random().toString(36).substring(2, 9),
+      id: newId,
       title,
       type: type.toUpperCase(),
       category,
@@ -586,13 +510,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updated = [newNotice, ...noticesList];
     setNoticesList(updated);
-    localStorage.setItem('tb_notices', JSON.stringify(updated));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'add-notice',
+        data: newNotice
+      })
+    }).catch(err => console.error("Add notice error:", err));
   };
 
   const deleteNotice = (id: string) => {
     const updated = noticesList.filter(n => n.id !== id);
     setNoticesList(updated);
-    localStorage.setItem('tb_notices', JSON.stringify(updated));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete-notice',
+        data: { id }
+      })
+    }).catch(err => console.error("Delete notice error:", err));
   };
 
   const addCategory = (name: string) => {
@@ -604,13 +544,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     const updated = [...examCatalog, newCategory];
     setExamCatalog(updated);
-    localStorage.setItem('tb_exam_catalog', JSON.stringify(updated));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'add-category',
+        data: { id: newId, name }
+      })
+    }).catch(err => console.error("Add category error:", err));
   };
 
   const deleteCategory = (categoryId: string) => {
     const updated = examCatalog.filter(c => c.id !== categoryId);
     setExamCatalog(updated);
-    localStorage.setItem('tb_exam_catalog', JSON.stringify(updated));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete-category',
+        data: { categoryId }
+      })
+    }).catch(err => console.error("Delete category error:", err));
   };
 
   const addSubCategory = (categoryId: string, name: string) => {
@@ -630,7 +586,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return c;
     });
     setExamCatalog(updated);
-    localStorage.setItem('tb_exam_catalog', JSON.stringify(updated));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'add-subcategory',
+        data: { id: newId, categoryId, name }
+      })
+    }).catch(err => console.error("Add subcategory error:", err));
   };
 
   const deleteSubCategory = (categoryId: string, subCategoryId: string) => {
@@ -644,7 +608,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return c;
     });
     setExamCatalog(updated);
-    localStorage.setItem('tb_exam_catalog', JSON.stringify(updated));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete-subcategory',
+        data: { subCategoryId }
+      })
+    }).catch(err => console.error("Delete subcategory error:", err));
   };
 
   const addMockTest = (categoryId: string, subCategoryId: string, test: Omit<MockTestItem, 'id'>) => {
@@ -671,7 +643,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return c;
     });
     setExamCatalog(updated);
-    localStorage.setItem('tb_exam_catalog', JSON.stringify(updated));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'add-mocktest',
+        data: { categoryId, subCategoryId, id: newId, ...test }
+      })
+    }).catch(err => console.error("Add mocktest error:", err));
   };
 
   const deleteMockTest = (categoryId: string, subCategoryId: string, testId: string) => {
@@ -693,110 +673,119 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return c;
     });
     setExamCatalog(updated);
-    localStorage.setItem('tb_exam_catalog', JSON.stringify(updated));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete-mocktest',
+        data: { testId }
+      })
+    }).catch(err => console.error("Delete mocktest error:", err));
   };
 
   const setLanguage = (lang: 'en' | 'hi') => {
     setLanguageState(lang);
-    localStorage.setItem('tb_lang', lang);
+    document.cookie = "tb_lang=" + lang + ";path=/;max-age=31536000";
   };
 
-  const login = (email: string): boolean => {
-    const trimmedEmail = email.trim().toLowerCase();
-    const user = usersList.find(u => u.email.trim().toLowerCase() === trimmedEmail);
-    if (user) {
-      setCurrentUser(user);
-      localStorage.setItem('tb_session', JSON.stringify(user));
-      return true;
+  const login = async (email: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'login',
+          data: { email }
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        setCurrentUser(data.user);
+        document.cookie = "tb_user_id=" + data.user.id + ";path=/;max-age=31536000";
+        fetchUsersList();
+        return true;
+      }
+    } catch (e) {
+      console.error("Login API error:", e);
     }
     return false;
   };
 
-  const signup = (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string): boolean => {
-    const trimmedEmail = email.trim().toLowerCase();
-    const trimmedName = name.trim();
-    const trimmedMobile = mobile.trim();
-
-    // Check duplication
-    if (usersList.some(u => u.email.trim().toLowerCase() === trimmedEmail)) {
-      return false;
-    }
-
-    const codeName = trimmedName.split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const referralCode = 'TB-' + codeName + '-' + Math.floor(1000 + Math.random() * 9000);
-
-    let updatedList = [...usersList];
-    let referredByCode: string | null = null;
-
-    if (referralCodeInput && referralCodeInput.trim() !== '') {
-      const referrerIndex = updatedList.findIndex(
-        u => u.referralCode.trim().toLowerCase() === referralCodeInput.trim().toLowerCase()
-      );
-      if (referrerIndex !== -1) {
-        referredByCode = updatedList[referrerIndex].referralCode;
-        updatedList[referrerIndex] = {
-          ...updatedList[referrerIndex],
-          referralsCount: updatedList[referrerIndex].referralsCount + 1
-        };
+  const signup = async (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'signup',
+          data: { name, email, mobile, password, referralCodeInput }
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        setCurrentUser(data.user);
+        setUsersList(prev => [data.user, ...prev]);
+        document.cookie = "tb_user_id=" + data.user.id + ";path=/;max-age=31536000";
+        return true;
       }
+    } catch (e) {
+      console.error("Signup API error:", e);
     }
-
-    const newUser: MockUser = {
-      id: 'u_' + Math.random().toString(36).substring(2, 9),
-      candidateCode: 'CGL_' + Math.floor(1000 + Math.random() * 9000),
-      name: trimmedName,
-      email: trimmedEmail,
-      mobile: trimmedMobile,
-      referralCode,
-      referredBy: referredByCode,
-      referralsCount: 0,
-      role: 'STUDENT',
-      subscriptionTier: 'None',
-      subscriptionPurchasedAt: null,
-      subscriptionExpiresAt: null,
-      registeredDate: new Date().toISOString().split('T')[0],
-      testSessions: [],
-      password: password || 'password123',
-      isBlocked: false
-    };
-
-    updatedList.push(newUser);
-    setUsersList(updatedList);
-    localStorage.setItem('tb_users', JSON.stringify(updatedList));
-
-    // Log in newly created user
-    setCurrentUser(newUser);
-    localStorage.setItem('tb_session', JSON.stringify(newUser));
-    return true;
+    return false;
   };
 
   const logout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('tb_session');
+    document.cookie = "tb_user_id=;path=/;max-age=0";
   };
 
   const updateProfile = (name: string, email: string, mobile: string) => {
     if (!currentUser) return;
-    
+
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedName = name.trim();
     const trimmedMobile = mobile.trim();
 
     const updatedUser = { ...currentUser, name: trimmedName, email: trimmedEmail, mobile: trimmedMobile };
     setCurrentUser(updatedUser);
-    localStorage.setItem('tb_session', JSON.stringify(updatedUser));
 
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
-    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update-profile',
+        data: { userId: currentUser.id, name: trimmedName, email: trimmedEmail, mobile: trimmedMobile }
+      })
+    }).catch(err => console.error("Update profile API error:", err));
   };
 
   const updatePassword = (oldPass: string, newPass: string): boolean => {
-    // Simulated simple verification
-    if (oldPass === 'password' || oldPass.length > 0) {
-      return true;
+    if (!currentUser) return false;
+
+    if (currentUser.password && oldPass !== currentUser.password) {
+      return false;
     }
-    return false;
+
+    const updatedUser = { ...currentUser, password: newPass };
+    setCurrentUser(updatedUser);
+
+    const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
+    setUsersList(updatedList);
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update-password',
+        data: { userId: currentUser.id, newPass }
+      })
+    }).catch(err => console.error("Update password API error:", err));
+
+    return true;
   };
 
   const addAttempt = (
@@ -831,11 +820,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updatedSessions = [newRecord, ...filteredSessions];
     const updatedUser = { ...currentUser, testSessions: updatedSessions };
     setCurrentUser(updatedUser);
-    localStorage.setItem('tb_session', JSON.stringify(updatedUser));
 
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
-    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'add-attempt',
+        data: {
+          userId: currentUser.id,
+          testId,
+          title,
+          score,
+          maxScore,
+          accuracy,
+          durationSeconds,
+          violations,
+          responses
+        }
+      })
+    }).catch(err => console.error("Add attempt API error:", err));
   };
 
   const saveOngoingSession = (
@@ -879,11 +885,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updatedUser = { ...currentUser, testSessions: updatedSessions };
     setCurrentUser(updatedUser);
-    localStorage.setItem('tb_session', JSON.stringify(updatedUser));
 
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
-    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'save-ongoing-session',
+        data: {
+          userId: currentUser.id,
+          testId,
+          title,
+          timeRemaining,
+          violations,
+          responses,
+          currentSectionIndex,
+          currentQuestionIndex
+        }
+      })
+    }).catch(err => console.error("Save ongoing session error:", err));
   };
 
   const clearOngoingSession = (testId: string) => {
@@ -893,32 +915,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
     const updatedUser = { ...currentUser, testSessions: updatedSessions };
     setCurrentUser(updatedUser);
-    localStorage.setItem('tb_session', JSON.stringify(updatedUser));
 
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
-    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'clear-ongoing-session',
+        data: { userId: currentUser.id, testId }
+      })
+    }).catch(err => console.error("Clear ongoing session error:", err));
   };
 
   const toggleBookmark = (testId: string, questionId: string) => {
     if (!currentUser) return;
     const currentBookmarks = currentUser.bookmarkedQuestions || [];
     const exists = currentBookmarks.some(b => b.testId === testId && b.questionId === questionId);
-    
+
     let updatedBookmarks;
     if (exists) {
       updatedBookmarks = currentBookmarks.filter(b => !(b.testId === testId && b.questionId === questionId));
     } else {
       updatedBookmarks = [...currentBookmarks, { testId, questionId }];
     }
-    
+
     const updatedUser = { ...currentUser, bookmarkedQuestions: updatedBookmarks };
     setCurrentUser(updatedUser);
-    localStorage.setItem('tb_session', JSON.stringify(updatedUser));
-    
+
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
-    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'toggle-bookmark',
+        data: { userId: currentUser.id, bookmarks: updatedBookmarks }
+      })
+    }).catch(err => console.error("Toggle bookmark error:", err));
   };
 
   const resetAttempt = (userId: string, sessionId: string) => {
@@ -926,11 +962,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (u.id === userId) {
         const cleanedSessions = u.testSessions.filter(s => s.id !== sessionId);
         const updatedU = { ...u, testSessions: cleanedSessions };
-        
-        // If the reset attempt was on the current user, update current session too
+
         if (currentUser && currentUser.id === userId) {
           setCurrentUser(updatedU);
-          localStorage.setItem('tb_session', JSON.stringify(updatedU));
         }
         return updatedU;
       }
@@ -938,7 +972,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     setUsersList(updatedList);
-    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'reset-attempt',
+        data: { userId, sessionId }
+      })
+    }).catch(err => console.error("Reset attempt API error:", err));
   };
 
   const saveUserProfileByAdmin = (
@@ -973,10 +1015,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           password: password || u.password || 'password123',
           isBlocked: isBlocked ?? u.isBlocked ?? false
         };
-        
+
         if (currentUser && currentUser.id === userId) {
           setCurrentUser(updatedU);
-          localStorage.setItem('tb_session', JSON.stringify(updatedU));
         }
         return updatedU;
       }
@@ -984,7 +1025,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     setUsersList(updatedList);
-    localStorage.setItem('tb_users', JSON.stringify(updatedList));
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'save-profile-admin',
+        data: {
+          userId,
+          name,
+          email,
+          mobile,
+          referralCode,
+          referredBy,
+          referralsCount,
+          role,
+          tier,
+          purchasedAt,
+          expiry,
+          password,
+          isBlocked
+        }
+      })
+    }).catch(err => console.error("Save profile admin error:", err));
   };
 
   return (

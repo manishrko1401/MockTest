@@ -25,7 +25,7 @@ export default function AuthPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -36,7 +36,7 @@ export default function AuthPage() {
         setErrorMsg(language === 'hi' ? 'यह खाता ब्लॉक कर दिया गया है। कृपया व्यवस्थापक से संपर्क करें।' : 'This account has been blocked. Please contact the administrator.');
         return;
       }
-      const ok = login(email);
+      const ok = await login(email);
       if (ok) {
         setSuccessMsg(t.authLoginSuccess || 'Successfully logged in! Redirecting...');
         setTimeout(() => {
@@ -59,7 +59,7 @@ export default function AuthPage() {
         return;
       }
       
-      const ok = signup(name, email, mobile.trim(), password, referralCodeInput.trim() || undefined);
+      const ok = await signup(name, email, mobile.trim(), password, referralCodeInput.trim() || undefined);
       if (ok) {
         setSuccessMsg(t.authSignupSuccess || 'Account registered successfully! Redirecting...');
         setTimeout(() => {

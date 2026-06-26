@@ -110,13 +110,13 @@ export default function AdminAnalytics() {
   const [adminPassword, setAdminPassword] = useState('');
   const [adminLoginError, setAdminLoginError] = useState<string | null>(null);
 
-  const handleAdminLoginSubmit = (e: React.FormEvent) => {
+  const handleAdminLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAdminLoginError(null);
 
     // Hardcoded password verification for the admin panel
     if (adminEmail.trim().toLowerCase() === 'admin@mocktest.com' && adminPassword === 'test@admin123') {
-      const ok = login('admin@mocktest.com');
+      const ok = await login('admin@mocktest.com');
       if (ok) {
         showToast('Admin access authorized successfully!');
       } else {
@@ -166,15 +166,15 @@ export default function AdminAnalytics() {
   const [resetTarget, setResetTarget] = useState<{ userId: string; sessionId: string; userName: string; sessionTitle: string } | null>(null);
 
   const getCustomQuestionsCount = (testId: string) => {
-    if (typeof window === 'undefined') return 0;
-    const qs = localStorage.getItem(`tb_custom_questions_${testId}`);
-    if (!qs) return 0;
-    try {
-      const parsed = JSON.parse(qs);
-      return Array.isArray(parsed) ? parsed.length : 0;
-    } catch (e) {
-      return 0;
+    for (const cat of examCatalog) {
+      for (const sub of cat.subCategories) {
+        const found = sub.tests.find(t => t.id === testId);
+        if (found) {
+          return (found as any).customQuestionsCount || 0;
+        }
+      }
     }
+    return 0;
   };
 
   const showToast = (message: string) => {
@@ -281,7 +281,7 @@ export default function AdminAnalytics() {
     }
   };
 
-  const handleConfirmIngestCustomQuestions = () => {
+  const handleConfirmIngestCustomQuestions = async () => {
     if (!selectedUploadTestId) {
       showToast('Error: No target mock test selected.');
       return;
@@ -291,12 +291,27 @@ export default function AdminAnalytics() {
       return;
     }
     try {
-      localStorage.setItem(`tb_custom_questions_${selectedUploadTestId}`, JSON.stringify(parsedQuestions));
-      showToast(`Successfully saved ${parsedQuestions.length} questions to mock test!`);
-      setUploadStatus({
-        type: 'success',
-        message: `Custom question paper of ${parsedQuestions.length} question(s) successfully uploaded and saved for the target mock test!`
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save-custom-questions',
+          data: { testId: selectedUploadTestId, questions: parsedQuestions }
+        })
       });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Successfully saved ${parsedQuestions.length} questions to mock test!`);
+        setUploadStatus({
+          type: 'success',
+          message: `Custom question paper of ${parsedQuestions.length} question(s) successfully uploaded and saved for the target mock test!`
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        showToast('Error saving questions.');
+      }
     } catch (e) {
       showToast('Error saving questions.');
     }

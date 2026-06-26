@@ -17,7 +17,7 @@ import { useIsMobile } from '../../useIsMobile';
 // ============================================================================
 // DYNAMIC EXAM GENERATOR
 // ============================================================================
-export const generateExamSession = (id: string, examCatalog?: TestCategory[]): ActiveSession => {
+export const generateExamSession = (id: string, examCatalog?: TestCategory[], customQs?: any): ActiveSession => {
   let title = "Government Prep Mock Test Simulator";
   let duration = 3600; // 60 mins
   let catalogTest: MockTestItem | null = null;
@@ -46,52 +46,42 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[]): A
   ];
   let questions: Question[] = [];
 
-  // Check if we have custom uploaded questions in localStorage
+  // Check if we have custom uploaded questions
   let hasCustomQuestions = false;
-  if (typeof window !== 'undefined') {
-    const savedCustomQs = localStorage.getItem(`tb_custom_questions_${id}`);
-    if (savedCustomQs) {
-      try {
-        const parsed = JSON.parse(savedCustomQs);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          hasCustomQuestions = true;
-          const positiveMark = id.includes('rrb') ? 1 : 2;
-          const negativeMark = id.includes('rrb') ? 0.33 : 0.5;
+  if (customQs && Array.isArray(customQs) && customQs.length > 0) {
+    hasCustomQuestions = true;
+    const positiveMark = id.includes('rrb') ? 1 : 2;
+    const negativeMark = id.includes('rrb') ? 0.33 : 0.5;
 
-          sections = [
-            { id: "sec_paper1", name: "Mock Test Questions", orderIndex: 0, positiveMark, negativeMark }
-          ];
+    sections = [
+      { id: "sec_paper1", name: "Mock Test Questions", orderIndex: 0, positiveMark, negativeMark }
+    ];
 
-          questions = parsed.map((item: any, idx: number) => {
-            return {
-              id: `q_custom_${id}_${idx}`,
-              sectionId: "sec_paper1",
-              questionType: "mcq",
-              orderIndex: idx,
-              correctOptionIndex: item.correctIndex ?? 0,
-              content: {
-                en: {
-                  questionText: item.textEn,
-                  options: item.optionsEn || [],
-                  imageUrl: item.imageUrlEn || item.imageUrl
-                },
-                hi: {
-                  questionText: item.textHi,
-                  options: item.optionsHi || [],
-                  imageUrl: item.imageUrlHi || item.imageUrl
-                }
-              },
-              explanation: {
-                en: item.explanationEn || "Detailed explanation under review.",
-                hi: item.explanationHi || "विस्तृत विवरण समीक्षा के अधीन है।"
-              }
-            };
-          });
+    questions = customQs.map((item: any, idx: number) => {
+      return {
+        id: `q_custom_${id}_${idx}`,
+        sectionId: "sec_paper1",
+        questionType: "mcq",
+        orderIndex: idx,
+        correctOptionIndex: item.correctIndex ?? 0,
+        content: {
+          en: {
+            questionText: item.textEn,
+            options: item.optionsEn || [],
+            imageUrl: item.imageUrlEn || item.imageUrl
+          },
+          hi: {
+            questionText: item.textHi,
+            options: item.optionsHi || [],
+            imageUrl: item.imageUrlHi || item.imageUrl
+          }
+        },
+        explanation: {
+          en: item.explanationEn || "Detailed explanation under review.",
+          hi: item.explanationHi || "विस्तृत विवरण समीक्षा के अधीन है।"
         }
-      } catch (e) {
-        console.error("Error parsing custom questions", e);
-      }
-    }
+      };
+    });
   }
 
   if (!hasCustomQuestions) {
@@ -229,23 +219,45 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
   // Initialize session on mount (checking for resume)
   useEffect(() => {
-    const examSession = generateExamSession(testId, examCatalog);
-    const ongoingRecord = currentUser?.testSessions?.find(
-      s => s.testId === testId && s.status === 'ONGOING'
-    );
+    const initialize = async () => {
+      let customQs = null;
+      try {
+        const res = await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get-custom-questions',
+            data: { testId }
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.questions) {
+          customQs = data.questions;
+        }
+      } catch (err) {
+        console.error("Error fetching custom questions:", err);
+      }
 
-    if (ongoingRecord && ongoingRecord.responses) {
-      initSession(examSession, 3, {
-        responses: ongoingRecord.responses as any,
-        timeRemaining: ongoingRecord.timeRemaining ?? examSession.totalDurationSeconds,
-        violationsCount: ongoingRecord.violations ?? 0,
-        currentSectionIndex: ongoingRecord.currentSectionIndex ?? 0,
-        currentQuestionIndex: ongoingRecord.currentQuestionIndex ?? 0,
-      }, authLanguage);
-    } else {
-      initSession(examSession, 3, undefined, authLanguage); // 3 violations allowed
-    }
-  }, [initSession, testId, authLanguage, examCatalog]);
+      const examSession = generateExamSession(testId, examCatalog, customQs);
+      const ongoingRecord = currentUser?.testSessions?.find(
+        s => s.testId === testId && s.status === 'ONGOING'
+      );
+
+      if (ongoingRecord && ongoingRecord.responses) {
+        initSession(examSession, 3, {
+          responses: ongoingRecord.responses as any,
+          timeRemaining: ongoingRecord.timeRemaining ?? examSession.totalDurationSeconds,
+          violationsCount: ongoingRecord.violations ?? 0,
+          currentSectionIndex: ongoingRecord.currentSectionIndex ?? 0,
+          currentQuestionIndex: ongoingRecord.currentQuestionIndex ?? 0,
+        }, authLanguage);
+      } else {
+        initSession(examSession, 3, undefined, authLanguage); // 3 violations allowed
+      }
+    };
+
+    initialize();
+  }, [initSession, testId, authLanguage, examCatalog, currentUser]);
 
   // Save state on unload/unmount
   useEffect(() => {
