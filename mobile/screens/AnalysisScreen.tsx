@@ -116,6 +116,10 @@ export default function AnalysisScreen({
 
   return (
     <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+      {/* Decorative Blur Orbs */}
+      <View style={[styles.blurOrbLeft, isDark && { backgroundColor: 'rgba(59, 130, 246, 0.08)' }]} />
+      <View style={[styles.blurOrbRight, isDark && { backgroundColor: 'rgba(99, 102, 241, 0.08)' }]} />
+
       {/* Header */}
       <View style={[styles.header, isDark && { backgroundColor: ThemeColors.dark.headerBg }]}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
@@ -365,7 +369,28 @@ export default function AnalysisScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F8FAFC',
+    overflow: 'hidden',
+  },
+  blurOrbLeft: {
+    position: 'absolute',
+    top: '15%',
+    left: '-20%',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(37, 99, 235, 0.04)',
+    zIndex: -1,
+  },
+  blurOrbRight: {
+    position: 'absolute',
+    bottom: '15%',
+    right: '-20%',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(79, 70, 229, 0.04)',
+    zIndex: -1,
   },
   header: {
     backgroundColor: '#0F2942',
@@ -659,7 +684,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E7EB',
   },
   stickyNavContainer: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F8FAFC',
     paddingBottom: 2,
     zIndex: 10,
   },
