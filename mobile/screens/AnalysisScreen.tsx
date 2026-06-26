@@ -36,6 +36,8 @@ export default function AnalysisScreen({
   const [questions, setQuestions] = useState<any[]>([]);
   const [loadingQs, setLoadingQs] = useState(true);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
+  const [cardOffsets, setCardOffsets] = useState<Record<number, number>>({});
+  const scrollViewRef = React.useRef<ScrollView>(null);
 
   // Reconstruct deterministic student responses seed to align with the website
   let seed = 0;
@@ -119,7 +121,7 @@ export default function AnalysisScreen({
         <Text style={styles.headerTitle}>Test Analytics Summary</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Statistics Board */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{attempt.title}</Text>
@@ -127,7 +129,7 @@ export default function AnalysisScreen({
 
           <View style={styles.scoreRow}>
             <View style={styles.scoreBlock}>
-              <Text style={styles.scoreNum}>{attempt.score.toFixed(1)}</Text>
+              <Text style={styles.scoreNum}>{attempt.score.toFixed(1)} / {attempt.maxScore.toFixed(0)}</Text>
               <Text style={styles.scoreLabel}>My Score</Text>
             </View>
             <View style={styles.divider} />
@@ -142,6 +144,49 @@ export default function AnalysisScreen({
             </View>
           </View>
         </View>
+
+        {/* Question sliding navigator */}
+        {!loadingQs && questions.length > 0 && (
+          <View style={styles.navigationCard}>
+            <Text style={styles.navSectionTitle}>Question Navigator</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navRow}>
+              {questions.map((q, idx) => {
+                const userResponse = attempt.responses ? attempt.responses[q.id] : null;
+                const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
+                const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
+                const isCorrect = selectedIdx === correctIdx;
+                const isUnattempted = selectedIdx === null;
+
+                let circleStyle = styles.circleUnattempted;
+                let textStyle = styles.circleTextUnattempted;
+                if (!isUnattempted) {
+                  if (isCorrect) {
+                    circleStyle = styles.circleCorrect;
+                    textStyle = styles.circleTextCorrect;
+                  } else {
+                    circleStyle = styles.circleIncorrect;
+                    textStyle = styles.circleTextIncorrect;
+                  }
+                }
+
+                return (
+                  <TouchableOpacity
+                    key={q.id || idx}
+                    style={[styles.circle, circleStyle]}
+                    onPress={() => {
+                      const yOffset = cardOffsets[idx];
+                      if (yOffset !== undefined && scrollViewRef.current) {
+                        scrollViewRef.current.scrollTo({ y: yOffset, animated: true });
+                      }
+                    }}
+                  >
+                    <Text style={[styles.circleText, textStyle]}>{idx + 1}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Bilingual Selector */}
         <View style={styles.langSelectorRow}>
@@ -175,7 +220,14 @@ export default function AnalysisScreen({
             const avgTime = 30 + (qId ? (qId.charCodeAt(qId.length - 1) % 5) : 0) * 15;
 
             return (
-              <View key={q.id || idx} style={styles.solutionCard}>
+              <View 
+                key={q.id || idx} 
+                style={styles.solutionCard}
+                onLayout={(e) => {
+                  const { y } = e.nativeEvent.layout;
+                  setCardOffsets(prev => ({ ...prev, [idx]: y }));
+                }}
+              >
                 <View style={styles.solCardHeader}>
                   <Text style={styles.solIndex}>Question {idx + 1}</Text>
                   
@@ -595,5 +647,59 @@ const styles = StyleSheet.create({
     width: 1,
     height: 10,
     backgroundColor: '#E5E7EB',
+  },
+  navigationCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  navSectionTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#374151',
+    textTransform: 'uppercase',
+    marginBottom: 10,
+    letterSpacing: 0.5,
+  },
+  navRow: {
+    gap: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  circle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+  },
+  circleCorrect: {
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
+  },
+  circleIncorrect: {
+    backgroundColor: '#DC2626',
+    borderColor: '#DC2626',
+  },
+  circleUnattempted: {
+    backgroundColor: '#FFF',
+    borderColor: '#9CA3AF',
+  },
+  circleText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  circleTextCorrect: {
+    color: '#FFF',
+  },
+  circleTextIncorrect: {
+    color: '#FFF',
+  },
+  circleTextUnattempted: {
+    color: '#4B5563',
   },
 });
