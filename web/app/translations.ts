@@ -109,6 +109,8 @@ export const TRANSLATIONS = {
     referralCode: "Your Referral Code",
     referredBy: "Referred By",
     referralsCount: "Successful Referrals",
+    coinsBalance: "Coins Balance",
+    coinsCount: "Coins",
     referralShareDesc: "Share your code to earn premium passes when friends register!",
     referralPlaceholder: "Enter referrer code (optional)",
 
@@ -302,6 +304,8 @@ export const TRANSLATIONS = {
     referralCode: "आपका रेफरल कोड",
     referredBy: "इनके द्वारा संदर्भित",
     referralsCount: "सफल रेफरल",
+    coinsBalance: "सिक्कों का बैलेंस",
+    coinsCount: "सिक्के",
     referralShareDesc: "जब आपके दोस्त पंजीकरण करेंगे तो प्रीमियम पास प्राप्त करने के लिए अपना कोड साझा करें!",
     referralPlaceholder: "रेफरर कोड दर्ज करें (वैकल्पिक)",
 

@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 
 // ============================================================================
@@ -140,6 +140,7 @@ export default function AdminAnalytics() {
   const [editReferredBy, setEditReferredBy] = useState('');
   const [editPassword, setEditPassword] = useState('');
   const [editIsBlocked, setEditIsBlocked] = useState(false);
+  const [editCoins, setEditCoins] = useState<number>(0);
 
   // Category management form states
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -198,6 +199,7 @@ export default function AdminAnalytics() {
     setEditPurchasedAt(user.subscriptionPurchasedAt || '');
     setEditPassword(user.password || 'password123');
     setEditIsBlocked(user.isBlocked || false);
+    setEditCoins(user.coins || 0);
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -219,7 +221,8 @@ export default function AdminAnalytics() {
       purchasedAt,
       expiry,
       editPassword.trim(),
-      editIsBlocked
+      editIsBlocked,
+      Number(editCoins)
     );
     
     showToast('User profile updated successfully!');
@@ -1054,6 +1057,10 @@ export default function AdminAnalytics() {
                                 </div>
                                 <p className="text-[10px] text-slate-500">{user.email}</p>
                                 <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Joined: {user.registeredDate}</p>
+                                <div className="flex items-center gap-1 text-yellow-650 dark:text-yellow-450 text-[10px] font-black mt-1">
+                                  <Coins className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-500" />
+                                  <span>{user.coins || 0} Coins</span>
+                                </div>
                               </td>
                               <td className="py-3.5 px-2">
                                 <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
@@ -1254,6 +1261,22 @@ export default function AdminAnalytics() {
                                   <option value="false">Active (Unblocked)</option>
                                   <option value="true">Suspended (Blocked)</option>
                                 </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Coins Balance</label>
+                                <div className="relative flex items-center">
+                                  <span className="absolute left-3 text-slate-500">
+                                    <Coins className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-500" />
+                                  </span>
+                                  <input
+                                    type="number"
+                                    required
+                                    value={editCoins}
+                                    onChange={(e) => setEditCoins(Number(e.target.value))}
+                                    className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
+                                  />
+                                </div>
                               </div>
 
                             </div>

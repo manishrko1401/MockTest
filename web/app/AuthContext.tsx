@@ -70,6 +70,8 @@ export interface MockUser {
   bookmarkedQuestions?: { testId: string; questionId: string; }[];
   password?: string;
   isBlocked?: boolean;
+  coins: number;
+  referralCoinsCredited: boolean;
 }
 
 interface AuthContextType {
@@ -107,7 +109,8 @@ interface AuthContextType {
     purchasedAt: string | null,
     expiry: string | null,
     password?: string,
-    isBlocked?: boolean
+    isBlocked?: boolean,
+    coins?: number
   ) => void;
   saveOngoingSession: (
     testId: string,
@@ -282,7 +285,9 @@ const INITIAL_USERS: MockUser[] = [
     registeredDate: '2026-01-01',
     testSessions: [],
     password: 'password123',
-    isBlocked: false
+    isBlocked: false,
+    coins: 0,
+    referralCoinsCredited: false
   },
   {
     id: 'u1',
@@ -303,7 +308,9 @@ const INITIAL_USERS: MockUser[] = [
       { id: 'ts2', testId: 'sbi_po_prelims', title: 'SBI PO Full Length Mock Test Series', score: 48.0, maxScore: 100, accuracy: 55.0, durationSeconds: 3480, status: 'AUTO_SUBMITTED', violations: 3, date: '2026-06-22' }
     ],
     password: 'password123',
-    isBlocked: false
+    isBlocked: false,
+    coins: 0,
+    referralCoinsCredited: false
   },
   {
     id: 'u2',
@@ -323,7 +330,9 @@ const INITIAL_USERS: MockUser[] = [
       { id: 'ts3', testId: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', score: 138.0, maxScore: 200, accuracy: 72.5, durationSeconds: 3000, status: 'COMPLETED', violations: 1, date: '2026-06-24' }
     ],
     password: 'password123',
-    isBlocked: false
+    isBlocked: false,
+    coins: 0,
+    referralCoinsCredited: false
   },
   {
     id: 'u3',
@@ -341,7 +350,9 @@ const INITIAL_USERS: MockUser[] = [
     registeredDate: '2025-12-15',
     testSessions: [],
     password: 'password123',
-    isBlocked: false
+    isBlocked: false,
+    coins: 0,
+    referralCoinsCredited: false
   },
   {
     id: 'u4',
@@ -361,7 +372,9 @@ const INITIAL_USERS: MockUser[] = [
       { id: 'ts4', testId: 'rrb_ntpc_stage1', title: 'RRB NTPC Free Sectional Tests', score: 28.0, maxScore: 40, accuracy: 80.0, durationSeconds: 900, status: 'COMPLETED', violations: 0, date: '2026-06-25' }
     ],
     password: 'password123',
-    isBlocked: false
+    isBlocked: false,
+    coins: 0,
+    referralCoinsCredited: false
   }
 ];
 
@@ -998,7 +1011,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     purchasedAt: string | null,
     expiry: string | null,
     password?: string,
-    isBlocked?: boolean
+    isBlocked?: boolean,
+    coins?: number
   ) => {
     const updatedList = usersList.map(u => {
       if (u.id === userId) {
@@ -1015,7 +1029,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           subscriptionPurchasedAt: purchasedAt,
           subscriptionExpiresAt: expiry,
           password: password || u.password || 'password123',
-          isBlocked: isBlocked ?? u.isBlocked ?? false
+          isBlocked: isBlocked ?? u.isBlocked ?? false,
+          coins: coins !== undefined ? coins : u.coins ?? 0
         };
 
         if (currentUser && currentUser.id === userId) {
@@ -1046,7 +1061,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           purchasedAt,
           expiry,
           password,
-          isBlocked
+          isBlocked,
+          coins
         }
       })
     }).catch(err => console.error("Save profile admin error:", err));

@@ -117,6 +117,8 @@ async function handleBootstrap() {
       subscriptionExpiresAt: u.subscriptionExpiresAt,
       registeredDate: formatDateTime(u.createdAt),
       isBlocked: u.isBlocked,
+      coins: u.coins,
+      referralCoinsCredited: u.referralCoinsCredited,
       password: u.passwordHash, // Exposed for simulated profile views in mock dashboard
       bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
       testSessions: u.testSessions.map((session: any) => {
@@ -277,6 +279,8 @@ async function handleSignup(data: any) {
       subscriptionExpiresAt: newUser.subscriptionExpiresAt,
       registeredDate: formatDateTime(newUser.createdAt),
       isBlocked: newUser.isBlocked,
+      coins: newUser.coins,
+      referralCoinsCredited: newUser.referralCoinsCredited,
       testSessions: [],
       bookmarkedQuestions: [],
     },
@@ -324,6 +328,8 @@ async function handleLogin(data: any) {
     registeredDate: formatDateTime(user.createdAt),
     isBlocked: user.isBlocked,
     password: user.passwordHash,
+    coins: user.coins,
+    referralCoinsCredited: user.referralCoinsCredited,
     bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],
     testSessions: user.testSessions.map((session: any) => {
       const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number }> = {};
@@ -398,6 +404,7 @@ async function handleSaveProfileAdmin(data: any) {
     expiry,
     password,
     isBlocked,
+    coins
   } = data;
 
   await prisma.user.update({
@@ -415,6 +422,7 @@ async function handleSaveProfileAdmin(data: any) {
       subscriptionExpiresAt: expiry,
       passwordHash: password,
       isBlocked,
+      coins: coins !== undefined ? Number(coins) : undefined
     },
   });
 
@@ -460,6 +468,50 @@ async function handleAddAttempt(data: any) {
       completedAt: new Date(),
     },
   });
+
+  // Check if this is the user's first completed session and if they have a pending referral
+  try {
+    const userObj = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { referredBy: true, referralCoinsCredited: true }
+    });
+
+    if (userObj && userObj.referredBy && !userObj.referralCoinsCredited) {
+      const completedSessionsCount = await prisma.userTestSession.count({
+        where: {
+          userId,
+          status: { in: ['COMPLETED', 'AUTO_SUBMITTED'] }
+        }
+      });
+
+      if (completedSessionsCount === 1) {
+        // 1. Credit 10 coins to the referred user and set referralCoinsCredited: true
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            coins: { increment: 10 },
+            referralCoinsCredited: true
+          }
+        });
+
+        // 2. Find the referrer by referralCode and credit 20 coins
+        const referrer = await prisma.user.findFirst({
+          where: { referralCode: { equals: userObj.referredBy.trim(), mode: 'insensitive' } }
+        });
+
+        if (referrer) {
+          await prisma.user.update({
+            where: { id: referrer.id },
+            data: {
+              coins: { increment: 20 }
+            }
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Failed to credit referral coins:", err);
+  }
 
   // Create question responses
   if (responses) {

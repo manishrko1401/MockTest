@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon, Globe, ArrowLeft, ShieldCheck, Menu, X, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon, Globe, ArrowLeft, ShieldCheck, Menu, X, Eye, EyeOff, Coins } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 
@@ -215,6 +215,11 @@ export default function StudentProfilePage() {
                   <Calendar className="h-3.5 w-3.5 text-slate-400" />
                   {currentUser.registeredDate}
                 </span>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                <span className="flex items-center gap-1"><Coins className="h-3.5 w-3.5 text-yellow-650 dark:text-yellow-500" /> {t.coinsBalance}</span>
+                <span className="text-yellow-650 dark:text-yellow-400 font-mono font-black text-xs">{currentUser.coins || 0} {t.coinsCount}</span>
               </div>
 
               {/* Referral Details block */}
@@ -476,6 +481,11 @@ export default function StudentProfilePage() {
                   <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   {currentUser.registeredDate}
                 </span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+                <span className="text-slate-500 dark:text-slate-500 font-bold flex items-center gap-1.5"><Coins className="h-4 w-4 text-yellow-650 dark:text-yellow-500" /> {t.coinsBalance}</span>
+                <span className="text-yellow-650 dark:text-yellow-400 font-mono font-black text-sm">{currentUser.coins || 0} {t.coinsCount}</span>
               </div>
 
               {/* Referral Details block */}
