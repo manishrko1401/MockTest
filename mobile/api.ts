@@ -4,7 +4,7 @@
 
 // Replace this with your computer's local IP address if testing on a physical device,
 // or your production domain name if deployed to Vercel/Supabase.
-export const BASE_URL = 'http://192.168.1.60:3000';
+export const BASE_URL = 'https://web-beta-orpin-80.vercel.app';
 export const API_URL = `${BASE_URL}/api/db`;
 
 async function postRequest(action: string, data: any = {}) {
