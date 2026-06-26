@@ -1026,7 +1026,6 @@ export default function AdminAnalytics() {
                     </thead>
                     <tbody className="divide-y divide-slate-800/50">
                       {[...usersList]
-                        .reverse()
                         .filter(u => {
                           const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                                                 u.email.toLowerCase().includes(searchTerm.toLowerCase());
