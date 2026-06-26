@@ -243,6 +243,13 @@ export default function StudentProfilePage() {
                   <span>{t.referralsCount}:</span>
                   <span className="font-bold text-blue-700 bg-blue-50 dark:text-white dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-900">{currentUser.referralsCount}</span>
                 </div>
+                <Link 
+                  href="/referrals" 
+                  className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-800/80 text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline select-none cursor-pointer animate-pulse"
+                >
+                  <span>{language === 'hi' ? "नियम और आमंत्रित मित्र देखें" : "View Rules & Referred Friends"}</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
             </div>
           </section>
@@ -514,6 +521,13 @@ export default function StudentProfilePage() {
                     {t.referredBy}: <span className="font-mono text-slate-600 dark:text-slate-400">{currentUser.referredBy}</span>
                   </div>
                 )}
+                <Link 
+                  href="/referrals" 
+                  className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-850 text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline select-none cursor-pointer"
+                >
+                  <span>{language === 'hi' ? "नियम और आमंत्रित मित्र देखें" : "View Rules & Referred Friends"}</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
             </div>
           </div>

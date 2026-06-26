@@ -193,6 +193,25 @@ export const TRANSLATIONS = {
     analysisLegendCorrect: "Correct",
     analysisLegendIncorrect: "Incorrect",
     analysisLegendSkipped: "Skipped",
+    
+    // Referrals Page
+    referralsPageTitle: "Referral Rules & Invites Tracker",
+    referralsPageDesc: "Invite friends, track their CBT mock test progress, and earn bonus prep coins together.",
+    referralRulesHeader: "How It Works",
+    referralRule1Title: "1. Share Invite Code",
+    referralRule1Desc: "Copy your code and share it with friends who are preparing for competitive exams.",
+    referralRule2Title: "2. Friend Registers",
+    referralRule2Desc: "Your friend signs up on Mock Test and enters your referral code on the signup screen.",
+    referralRule3Title: "3. Complete First Mock Test",
+    referralRule3Desc: "Once they complete any full-length or practice mock test sitting on the CBT interface.",
+    referralRule4Title: "4. Both Receive Coins",
+    referralRule4Desc: "You get 20 Coins and your friend gets 10 Coins instantly credited!",
+    myReferredFriends: "Referred Candidates Progress",
+    noReferredFriends: "You haven't referred any candidates yet.",
+    referralStep1: "Account Registered",
+    referralStep2: "First Test Attempt",
+    referralStatusPending: "Waiting for test attempt...",
+    referralStatusCompleted: "Completed! Coins Credited"
   },
   hi: {
     // Header & Navigation
@@ -388,5 +407,24 @@ export const TRANSLATIONS = {
     analysisLegendCorrect: "सही",
     analysisLegendIncorrect: "गलत",
     analysisLegendSkipped: "छोड़ा गया",
+
+    // Referrals Page
+    referralsPageTitle: "रेफरल नियम और आमंत्रण ट्रैकर",
+    referralsPageDesc: "दोस्तों को आमंत्रित करें, उनकी सीबीटी मॉक टेस्ट प्रगति को ट्रैक करें, और साथ में बोनस कॉइन्स कमाएं।",
+    referralRulesHeader: "यह कैसे काम करता है",
+    referralRule1Title: "1. आमंत्रण कोड साझा करें",
+    referralRule1Desc: "अपना कोड कॉपी करें और उन दोस्तों के साथ साझा करें जो प्रतियोगी परीक्षाओं की तैयारी कर रहे हैं।",
+    referralRule2Title: "2. मित्र का पंजीकरण",
+    referralRule2Desc: "आपका मित्र मॉक टेस्ट पर पंजीकरण करता है और साइनअप स्क्रीन पर आपका रेफरल कोड दर्ज करता है।",
+    referralRule3Title: "3. पहला मॉक टेस्ट पूरा करें",
+    referralRule3Desc: "जैसे ही वे सीबीटी इंटरफ़ेस पर कोई भी पूर्ण-लंबाई या अभ्यास मॉक टेस्ट पूरा करते हैं।",
+    referralRule4Title: "4. दोनों को कॉइन्स मिलेंगे",
+    referralRule4Desc: "आपको 20 कॉइन्स और आपके मित्र को 10 कॉइन्स तुरंत क्रेडिट कर दिए जाते हैं!",
+    myReferredFriends: "संदर्भित उम्मीदवारों की प्रगति",
+    noReferredFriends: "आपने अभी तक किसी भी उम्मीदवार को संदर्भित नहीं किया है।",
+    referralStep1: "खाता पंजीकृत",
+    referralStep2: "पहला टेस्ट प्रयास",
+    referralStatusPending: "टेस्ट प्रयास की प्रतीक्षा...",
+    referralStatusCompleted: "पूर्ण! कॉइन्स क्रेडिट कर दिए गए"
   }
 };
