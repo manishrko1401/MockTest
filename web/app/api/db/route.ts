@@ -532,7 +532,27 @@ async function handleAddAttempt(data: any) {
     }
   }
 
-  return NextResponse.json({ success: true });
+  // Fetch updated user coins and referral credit status
+  let updatedCoins = 0;
+  let updatedReferralCoinsCredited = false;
+  try {
+    const userUpdate = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { coins: true, referralCoinsCredited: true }
+    });
+    if (userUpdate) {
+      updatedCoins = userUpdate.coins;
+      updatedReferralCoinsCredited = userUpdate.referralCoinsCredited;
+    }
+  } catch (err) {
+    console.error("Failed to get updated coins:", err);
+  }
+
+  return NextResponse.json({
+    success: true,
+    coins: updatedCoins,
+    referralCoinsCredited: updatedReferralCoinsCredited
+  });
 }
 
 async function handleSaveOngoingSession(data: any) {
