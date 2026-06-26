@@ -11,6 +11,17 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
+import { 
+  ShieldCheck, 
+  Mail, 
+  Lock, 
+  User, 
+  Phone, 
+  Gift, 
+  Eye, 
+  EyeOff, 
+  AlertCircle 
+} from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
 
@@ -20,11 +31,14 @@ interface AuthScreenProps {
 }
 
 export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScreenProps) {
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [referralCode, setReferralCode] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -47,8 +61,20 @@ export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScree
   };
 
   const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !mobile.trim()) {
-      setError('Name, Email and Mobile are required');
+    if (!name.trim()) {
+      setError('Please enter your full name.');
+      return;
+    }
+    if (!email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (!mobile.trim()) {
+      setError('Please enter your mobile number.');
+      return;
+    }
+    if (!/^\d{10}$/.test(mobile.trim())) {
+      setError('Please enter a valid 10-digit mobile number.');
       return;
     }
     setLoading(true);
@@ -70,99 +96,195 @@ export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScree
     handleLogin(emailAddress);
   };
 
+  const handleSubmit = () => {
+    if (activeTab === 'login') {
+      handleLogin(email);
+    } else {
+      handleRegister();
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}
     >
+      {/* Decorative Blur Orbs */}
+      <View style={[styles.blurOrbLeft, isDark && { backgroundColor: 'rgba(59, 130, 246, 0.08)' }]} />
+      <View style={[styles.blurOrbRight, isDark && { backgroundColor: 'rgba(99, 102, 241, 0.08)' }]} />
+
       <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-        {/* Logo/Brand Header */}
+        {/* Shield Header */}
         <View style={styles.headerBlock}>
-          <Text style={[styles.logoText, isDark && { color: ThemeColors.dark.text }]}>testbook</Text>
-          <Text style={[styles.subLogoText, isDark && { color: ThemeColors.dark.textMuted }]}>India's No. 1 Govt Exam Prep Platform</Text>
+          <View style={styles.shieldIconContainer}>
+            <ShieldCheck size={28} color="#FFF" />
+          </View>
+          <Text style={[styles.logoText, isDark && { color: ThemeColors.dark.text }]}>MOCK TEST ACCOUNT</Text>
+          <Text style={[styles.subLogoText, isDark && { color: ThemeColors.dark.textMuted }]}>SINGLE SIGN-ON ACCESS</Text>
         </View>
 
         {/* Input Card */}
         <View style={[styles.card, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-          <Text style={[styles.cardTitle, isDark && { color: ThemeColors.dark.text }]}>
-            {isRegistering ? 'Create Student Account' : 'Sign In with Email'}
-          </Text>
+          
+          {/* Tab Switcher */}
+          <View style={[styles.tabBar, isDark && { backgroundColor: '#020617', borderColor: '#334155' }]}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={[
+                styles.tabButton,
+                activeTab === 'login' && styles.tabButtonActive
+              ]}
+              onPress={() => {
+                setActiveTab('login');
+                setError('');
+              }}
+            >
+              <Text style={[
+                styles.tabButtonText,
+                activeTab === 'login' ? styles.tabButtonTextActive : (isDark ? { color: '#94A3B8' } : { color: '#4B5563' })
+              ]}>
+                LOGIN
+              </Text>
+            </TouchableOpacity>
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={[
+                styles.tabButton,
+                activeTab === 'signup' && styles.tabButtonActive
+              ]}
+              onPress={() => {
+                setActiveTab('signup');
+                setError('');
+              }}
+            >
+              <Text style={[
+                styles.tabButtonText,
+                activeTab === 'signup' ? styles.tabButtonTextActive : (isDark ? { color: '#94A3B8' } : { color: '#4B5563' })
+              ]}>
+                REGISTER
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-          {isRegistering ? (
-            <>
+          {/* Feedback Message */}
+          {error ? (
+            <View style={[styles.errorBox, isDark && { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444' }]}>
+              <AlertCircle size={16} color="#EF4444" style={styles.errorIcon} />
+              <Text style={[styles.errorText, isDark && { color: '#FCA5A5' }]}>{error}</Text>
+            </View>
+          ) : null}
+
+          {/* Form Fields */}
+          {activeTab === 'signup' && (
+            <View style={styles.fieldGroup}>
               <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Full Name</Text>
-              <TextInput
-                style={[styles.input, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
-                placeholder="e.g. Rahul Sharma"
-                placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
+              <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
+                <User size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, isDark && { color: ThemeColors.dark.text }]}
+                  placeholder="e.g. Rahul Sharma"
+                  placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
+              </View>
+            </View>
+          )}
 
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Email Address</Text>
+            <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
+              <Mail size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
+              <TextInput
+                style={[styles.input, isDark && { color: ThemeColors.dark.text }]}
+                placeholder="student@example.com"
+                placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
+          </View>
+
+          {activeTab === 'signup' && (
+            <View style={styles.fieldGroup}>
               <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Mobile Number</Text>
-              <TextInput
-                style={[styles.input, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
-                placeholder="e.g. 9876543210"
-                placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
-                value={mobile}
-                onChangeText={setMobile}
-                keyboardType="phone-pad"
-              />
-            </>
-          ) : null}
+              <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
+                <Phone size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, isDark && { color: ThemeColors.dark.text }]}
+                  placeholder="10-digit number"
+                  placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
+                  value={mobile}
+                  onChangeText={(val) => setMobile(val.replace(/\D/g, ''))}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                />
+              </View>
+            </View>
+          )}
 
-          <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Email Address</Text>
-          <TextInput
-            style={[styles.input, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
-            placeholder="e.g. student@example.com"
-            placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-
-          {isRegistering ? (
-            <>
+          {activeTab === 'signup' && (
+            <View style={styles.fieldGroup}>
               <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Referral Code (Optional)</Text>
-              <TextInput
-                style={[styles.input, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
-                placeholder="e.g. TB-RAHUL-1029"
-                placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
-                value={referralCode}
-                onChangeText={setReferralCode}
-                autoCapitalize="characters"
-              />
-            </>
-          ) : null}
+              <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
+                <Gift size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, isDark && { color: ThemeColors.dark.text }]}
+                  placeholder="e.g. TB-RAHUL-1029"
+                  placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
+                  value={referralCode}
+                  onChangeText={setReferralCode}
+                  autoCapitalize="characters"
+                />
+              </View>
+            </View>
+          )}
 
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Password</Text>
+            <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
+              <Lock size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
+              <TextInput
+                style={[styles.input, { flex: 1 }, isDark && { color: ThemeColors.dark.text }]}
+                placeholder="••••••••"
+                placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff size={16} color={isDark ? '#94A3B8' : '#6B7280'} />
+                ) : (
+                  <Eye size={16} color={isDark ? '#94A3B8' : '#6B7280'} />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Action Button */}
           <TouchableOpacity
+            activeOpacity={0.9}
             style={styles.primaryBtn}
-            onPress={isRegistering ? handleRegister : () => handleLogin(email)}
+            onPress={handleSubmit}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#FFF" />
             ) : (
               <Text style={styles.primaryBtnText}>
-                {isRegistering ? 'Register & Start Prep' : 'Continue'}
+                {activeTab === 'login' ? 'SIGN IN TO ACCOUNT' : 'REGISTER ACCOUNT'}
               </Text>
             )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.toggleBtn}
-            onPress={() => {
-              setIsRegistering(!isRegistering);
-              setError('');
-            }}
-          >
-            <Text style={[styles.toggleBtnText, isDark && { color: '#60A5FA' }]}>
-              {isRegistering ? 'Already have an account? Log In' : 'New to Testbook? Register here'}
-            </Text>
           </TouchableOpacity>
         </View>
 
@@ -171,18 +293,21 @@ export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScree
           <Text style={[styles.quickAccessTitle, isDark && { color: ThemeColors.dark.textMuted }]}>Developer Quick Logins</Text>
           <View style={styles.pickerRow}>
             <TouchableOpacity
+              activeOpacity={0.8}
               style={[styles.quickBadge, { backgroundColor: '#1E3A8A' }]}
               onPress={() => selectQuickAccount('admin@mocktest.com')}
             >
               <Text style={styles.quickBadgeText}>Admin</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              activeOpacity={0.8}
               style={[styles.quickBadge, { backgroundColor: '#10B981' }]}
               onPress={() => selectQuickAccount('rahul.sharma@example.com')}
             >
               <Text style={styles.quickBadgeText}>Pass Pro User</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              activeOpacity={0.8}
               style={[styles.quickBadge, { backgroundColor: '#F59E0B' }]}
               onPress={() => selectQuickAccount('amit.verma@example.com')}
             >
@@ -198,65 +323,132 @@ export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScree
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F8FAFC', // slate 50 matching web
+  },
+  blurOrbLeft: {
+    position: 'absolute',
+    top: '15%',
+    left: '-20%',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(37, 99, 235, 0.04)', // blue-600/10
+  },
+  blurOrbRight: {
+    position: 'absolute',
+    bottom: '15%',
+    right: '-20%',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(79, 70, 229, 0.04)', // indigo-600/10
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: 24,
   },
   headerBlock: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 24,
+  },
+  shieldIconContainer: {
+    backgroundColor: '#2563EB',
+    padding: 10,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: '#2563EB',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
   },
   logoText: {
-    fontSize: 38,
-    fontWeight: '900',
-    color: '#0F2942',
-    letterSpacing: -1,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A', // Slate 900
+    letterSpacing: 2,
+    textAlign: 'center',
   },
   subLogoText: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: 10,
+    color: '#64748B', // Slate 500
     marginTop: 4,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    textAlign: 'center',
   },
   card: {
     backgroundColor: '#FFF',
     borderRadius: 16,
     padding: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 16,
     elevation: 4,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E2E8F0', // slate 200
   },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1F2937',
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9', // Slate 100
+    borderRadius: 10,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     marginBottom: 20,
-    textAlign: 'center',
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabButtonActive: {
+    backgroundColor: '#2563EB', // Blue 600
+  },
+  tabButtonText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  tabButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  fieldGroup: {
+    marginBottom: 16,
   },
   inputLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#4B5563',
-    marginBottom: 6,
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#64748B',
+    marginBottom: 8,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    backgroundColor: '#FAFAFA',
+    paddingHorizontal: 12,
+  },
+  inputIcon: {
+    marginRight: 8,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    paddingHorizontal: 14,
+    flex: 1,
     paddingVertical: 10,
-    fontSize: 14,
-    color: '#1F2937',
-    marginBottom: 16,
-    backgroundColor: '#FAFAFA',
+    fontSize: 13,
+    color: '#0F172A',
+    fontWeight: '600',
+  },
+  eyeButton: {
+    padding: 6,
   },
   primaryBtn: {
     backgroundColor: '#2563EB',
@@ -264,41 +456,47 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
+    shadowColor: '#2563EB',
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
   },
   primaryBtnText: {
     color: '#FFF',
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: 'bold',
+    letterSpacing: 1.5,
   },
-  toggleBtn: {
-    marginTop: 20,
+  errorBox: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FEE2E2',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 16,
   },
-  toggleBtnText: {
-    color: '#2563EB',
-    fontSize: 13,
-    fontWeight: '600',
+  errorIcon: {
+    marginRight: 8,
   },
   errorText: {
-    color: '#DC2626',
-    backgroundColor: '#FEF2F2',
-    padding: 10,
-    borderRadius: 6,
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#FEE2E2',
-    fontWeight: '600',
+    flex: 1,
+    color: '#B91C1C',
+    fontSize: 12,
+    fontWeight: 'bold',
+    lineHeight: 16,
   },
   quickAccessBlock: {
-    marginTop: 40,
+    marginTop: 30,
     alignItems: 'center',
   },
   quickAccessTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
-    color: '#9CA3AF',
+    color: '#94A3B8',
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 12,
@@ -311,10 +509,15 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 1,
   },
   quickBadgeText: {
     color: '#FFF',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
   },
 });
