@@ -4,10 +4,11 @@ import React, { useState } from 'react';
 import { useAuth, TestCategory, TestSubCategory, MockTestItem } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu } from 'lucide-react';
 import { generateExamSession } from '../exam/[id]/page';
 import { EXPLANATIONS } from '../exam/[id]/analysis/page';
 import { TRANSLATIONS } from '../translations';
+import { useIsMobile } from '../useIsMobile';
 
 export default function MockTestsCatalog() {
   const { currentUser, saveUserProfileByAdmin, theme, toggleTheme, toggleBookmark, clearOngoingSession, language, setLanguage, examCatalog } = useAuth();
@@ -127,6 +128,375 @@ export default function MockTestsCatalog() {
     clearOngoingSession(test.id);
     router.push(`/exam/${test.id}`);
   };
+
+  const { isMobile, isMounted } = useIsMobile();
+
+  if (isMounted && isMobile) {
+    // Filter tests by search query
+    const getMobileFilteredCatalog = () => {
+      if (!searchQuery) return examCatalog;
+      return examCatalog.map(cat => ({
+        ...cat,
+        subCategories: cat.subCategories.map(sub => ({
+          ...sub,
+          tests: sub.tests.filter(t => 
+            t.title.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        })).filter(sub => sub.tests.length > 0)
+      })).filter(cat => cat.subCategories.length > 0);
+    };
+
+    const filteredCatalog = getMobileFilteredCatalog();
+    const activeCategoryObj = filteredCatalog.find(c => c.id === selectedCategory);
+
+    return (
+      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200">
+        
+        {/* MOBILE HEADER */}
+        <header className="h-14 border-b border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
+          <Link href="/" className="flex items-center gap-1 text-slate-700 dark:text-white font-bold text-xs">
+            <ArrowLeft className="h-4 w-4" /> {t.navHome}
+          </Link>
+          
+          <div className="flex items-center gap-2">
+            {/* Bookmarked Questions Button */}
+            <button
+              onClick={() => setShowBookmarks(!showBookmarks)}
+              className={`p-1.5 rounded-lg flex items-center justify-center gap-1 border text-[10px] font-bold transition h-8 ${
+                showBookmarks 
+                  ? 'bg-yellow-500 border-yellow-500 text-white shadow-sm'
+                  : 'bg-slate-105 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+              }`}
+              title={t.bookmarks}
+            >
+              <Bookmark className={`h-3.5 w-3.5 ${showBookmarks ? 'fill-white' : ''}`} />
+              {currentUser?.bookmarkedQuestions?.length ? (
+                <span className="bg-red-500 text-white rounded-full text-[8px] px-1 py-0.5 font-bold leading-none">
+                  {currentUser.bookmarkedQuestions.length}
+                </span>
+              ) : null}
+            </button>
+
+            {/* Language Selector */}
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+              className="px-1.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold outline-none"
+            >
+              <option value="en">EN</option>
+              <option value="hi">हिं</option>
+            </select>
+
+            {/* Theme switcher */}
+            <button 
+              onClick={toggleTheme}
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800"
+            >
+              {theme === 'light' ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+            </button>
+          </div>
+        </header>
+
+        <main className="flex-1 p-4 flex flex-col gap-5">
+          
+          {/* SEARCH FILTER */}
+          <div className="relative w-full">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+              <Search className="h-4 w-4" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t.searchMocksPlaceholder}
+              className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm"
+            />
+          </div>
+
+          {/* RENDER BOOKMARKS OVERLAY VIEW */}
+          {showBookmarks ? (
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-4 rounded-2xl shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase flex items-center gap-1">
+                  <Bookmark className="h-4 w-4 text-yellow-500 fill-yellow-500" /> Bookmarked Questions ({currentUser?.bookmarkedQuestions?.length || 0})
+                </h3>
+                <button
+                  onClick={() => setShowBookmarks(false)}
+                  className="text-[10px] text-blue-600 font-bold"
+                >
+                  Back to List
+                </button>
+              </div>
+
+              {(!currentUser?.bookmarkedQuestions || currentUser.bookmarkedQuestions.length === 0) ? (
+                <div className="text-center py-8 text-slate-400 text-xs">
+                  No bookmarked questions yet. Click bookmarks inside mock sittings solutions to review here.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {currentUser.bookmarkedQuestions.map((bm) => {
+                    const exam = generateExamSession(bm.testId, examCatalog);
+                    const question = exam.questions.find(q => q.id === bm.questionId);
+                    if (!question) return null;
+
+                    const qContent = language === 'hi' ? question.content.hi : question.content.en;
+                    const isExpanded = !!expandedBookmarks[bm.questionId];
+                    const expl = EXPLANATIONS[bm.questionId] || {};
+
+                    return (
+                      <div
+                        key={bm.questionId}
+                        className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[8px] bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 font-extrabold px-1.5 py-0.5 rounded uppercase">
+                            {exam.testTitle}
+                          </span>
+                          <button
+                            onClick={() => toggleBookmark(bm.testId, bm.questionId)}
+                            className="p-1 rounded text-red-500 hover:bg-red-50"
+                            title="Remove Bookmark"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        <p className="font-bold text-slate-850 dark:text-slate-200 mt-2 line-clamp-2">
+                          {qContent.questionText}
+                        </p>
+
+                        <button
+                          onClick={() => toggleExpandBookmark(bm.questionId)}
+                          className="mt-3 flex items-center gap-1 text-[9px] text-blue-600 font-extrabold uppercase hover:underline"
+                        >
+                          {isExpanded ? <>Collapse Solution <ChevronUp className="h-3 w-3" /></> : <>Reveal Solved Options <ChevronDown className="h-3 w-3" /></>}
+                        </button>
+
+                        {isExpanded && (
+                          <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
+                            {qContent.options && qContent.options.length > 0 && (
+                              <div className="space-y-1.5">
+                                <p className="font-extrabold text-[9px] text-slate-400 uppercase">Multiple Choice Options:</p>
+                                {qContent.options.map((opt, oIdx) => {
+                                  const text = typeof opt === 'string' ? opt : (opt as any).text;
+                                  const isCorrect = oIdx === question.correctOptionIndex;
+                                  return (
+                                    <div
+                                      key={oIdx}
+                                      className={`p-2 rounded-lg text-[10px] font-semibold flex items-center justify-between border ${
+                                        isCorrect 
+                                          ? 'bg-green-50 border-green-300 text-green-800 dark:bg-green-950/20 dark:border-green-900/60 dark:text-green-300' 
+                                          : 'bg-white border-slate-200 dark:bg-slate-950 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                                      }`}
+                                    >
+                                      <span>{text}</span>
+                                      {isCorrect && <Check className="h-3 w-3 text-green-600 shrink-0" />}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            
+                            <div className="bg-yellow-50/50 dark:bg-yellow-950/10 border border-yellow-250 dark:border-yellow-900/40 p-2.5 rounded-lg">
+                              <p className="font-extrabold text-[9px] text-yellow-800 dark:text-yellow-400 uppercase">Correct Explanation:</p>
+                              <p className="text-[10px] text-slate-700 dark:text-slate-350 leading-relaxed mt-1 font-medium">
+                                {language === 'hi' ? (expl.hi || "विवरण उपलब्ध नहीं है।") : (expl.en || "No explanation text provided.")}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* CATEGORY SWIPE TAB BAR */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none shrink-0 border-b border-slate-200 dark:border-slate-800">
+                {filteredCatalog.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      setSelectedSubCategory(null);
+                    }}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition cursor-pointer border ${
+                      selectedCategory === cat.id
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                        : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    {cat.name.split(' ')[0]} Exams
+                  </button>
+                ))}
+              </div>
+
+              {/* MOCK TESTS CARD LIST GROUPED BY SUB-CATEGORY */}
+              <div className="flex-1 space-y-6 overflow-y-auto">
+                {activeCategoryObj ? (
+                  activeCategoryObj.subCategories.length === 0 ? (
+                    <div className="text-center py-12 text-slate-400 text-xs">
+                      No matching tests found.
+                    </div>
+                  ) : (
+                    activeCategoryObj.subCategories.map((subCat) => (
+                      <div key={subCat.id} className="space-y-3">
+                        {/* Sub Category Title Banner */}
+                        <div className="flex items-center gap-1.5 text-slate-500 font-extrabold text-[10px] uppercase tracking-wider pl-1">
+                          <GraduationCap className="h-4 w-4 text-blue-500" />
+                          <span>{subCat.name}</span>
+                        </div>
+
+                        {/* Test Cards List */}
+                        <div className="space-y-3">
+                          {subCat.tests.map((test) => {
+                            const attempts = getTestAttempts(test.id);
+                            const attemptsCount = attempts.length;
+                            const status = getTestStatus(test.id);
+                            const isTestPremium = test.isPremium;
+
+                            let statusText = "";
+                            let statusColor = "text-slate-400";
+                            
+                            if (status === 'ONGOING') {
+                              statusText = "Ongoing Sitting";
+                              statusColor = "text-yellow-600 font-extrabold bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-250 dark:border-yellow-900/60 px-1.5 py-0.5 rounded text-[8px]";
+                            } else if (isCompleted(test.id)) {
+                              statusText = `Completed (${attemptsCount} times)`;
+                              statusColor = "text-green-655 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/60 px-1.5 py-0.5 rounded text-[8px]";
+                            }
+
+                            return (
+                              <div
+                                key={test.id}
+                                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm flex flex-col justify-between gap-4"
+                              >
+                                <div className="space-y-1">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h4 className="font-extrabold text-xs text-slate-900 dark:text-white leading-snug">
+                                      {test.title}
+                                    </h4>
+                                    
+                                    {isTestPremium ? (
+                                      <span className="inline-block bg-amber-100 text-amber-700 dark:bg-amber-955 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
+                                        PRO
+                                      </span>
+                                    ) : (
+                                      <span className="inline-block bg-blue-105 text-blue-700 dark:bg-blue-955 dark:text-blue-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
+                                        FREE
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-[9px] text-slate-505 font-bold">
+                                    <span>{test.questionsCount} Qs</span>
+                                    <span>•</span>
+                                    <span>{test.durationMinutes} Mins</span>
+                                    <span>•</span>
+                                    <span>{test.maxMarks} Marks</span>
+                                  </div>
+
+                                  {statusText && (
+                                    <div className="pt-1.5 flex">
+                                      <span className={statusColor}>{statusText}</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+                                  {status === 'ONGOING' ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleStartExam(test)}
+                                        className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm"
+                                      >
+                                        Resume Test
+                                      </button>
+                                      <button
+                                        onClick={() => handleReattemptExam(test)}
+                                        className="bg-slate-105 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-700"
+                                      >
+                                        Reset
+                                      </button>
+                                    </>
+                                  ) : isCompleted(test.id) ? (
+                                    <>
+                                      <Link
+                                        href={`/exam/${test.id}/analysis`}
+                                        className="flex-1 bg-blue-655 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm"
+                                      >
+                                        View Analysis
+                                      </Link>
+                                      <button
+                                        onClick={() => handleReattemptExam(test)}
+                                        className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px]"
+                                      >
+                                        Reattempt
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleStartExam(test)}
+                                      className="w-full bg-[#1C3D5A] hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-[10px] shadow animate-pulse"
+                                    >
+                                      Start Practice Test
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))
+                  )
+                ) : (
+                  <div className="text-center py-12 text-slate-400 text-xs">
+                    Select a category to view exams.
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+        </main>
+
+        {/* Upgrade subscription modal (mobile adapted) */}
+        {upgradePopupOpen && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm p-0">
+            <div className="bg-white dark:bg-slate-905 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-6 w-full max-w-md shadow-2xl animate-in slide-in-from-bottom duration-200">
+              <div className="flex items-center gap-2.5 text-yellow-600 mb-4">
+                <ShieldAlert className="h-5.5 w-5.5" />
+                <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-900 dark:text-white">Unlock Gated Mock Test</h4>
+              </div>
+              
+              <p className="text-slate-605 dark:text-slate-300 text-[11px] leading-relaxed mb-6 font-semibold">
+                This is a premium assessment test. To start sitting, you need to upgrade your subscription pass to <strong className="text-yellow-600 dark:text-yellow-400">{requiredTierInfo.replace('Testbook', 'Mock Test')}</strong> or higher.
+              </p>
+              
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handlePurchasePass}
+                  className="w-full bg-yellow-650 hover:bg-yellow-750 text-white py-3 rounded-xl text-xs font-bold shadow transition"
+                >
+                  Simulate Unlock Now
+                </button>
+                <button
+                  onClick={() => setUpgradePopupOpen(false)}
+                  className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 py-3 rounded-xl text-xs font-bold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200">

@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import Link from 'next/link';
-import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X } from 'lucide-react';
+import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
+import { useIsMobile } from './useIsMobile';
 
 const EXAMS_BY_CATEGORY: Record<string, { id: string; name: string }[]> = {
   ssc: [
@@ -92,8 +93,434 @@ export default function HomeLandingPage() {
   const [successIndex, setSuccessIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedModalCategory, setSelectedModalCategory] = useState<string | null>(null);
+  
+  const { isMobile, isMounted } = useIsMobile();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileUpdateTab, setMobileUpdateTab] = useState<'notice' | 'result' | 'admit_card'>('notice');
 
   const activeTopper = SUCCESS_STORIES[successIndex];
+
+  if (isMounted && isMobile) {
+    return (
+      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200">
+        {/* Mobile Orbs */}
+        <div className="absolute top-10 -left-20 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute top-[50%] -right-20 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        {/* MOBILE HEADER */}
+        <header className="h-14 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="bg-blue-600 p-1.5 rounded-lg shadow">
+              <ShieldCheck className="h-4.5 w-4.5 text-white animate-pulse" />
+            </div>
+            <div>
+              <h1 className="font-extrabold text-xs leading-none text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
+              <p className="text-[7px] text-blue-600 dark:text-blue-400 font-bold tracking-wider uppercase mt-0.5">{t.logoSub}</p>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            {/* Hamburger Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-350 border border-slate-200 dark:border-slate-800 active:scale-95"
+            >
+              {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
+            </button>
+          </div>
+        </header>
+
+        {/* MOBILE SLIDE-DOWN DRAWER MENU */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-x-0 top-14 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-205 dark:border-slate-900 z-30 shadow-lg p-6 flex flex-col gap-6 animate-in slide-in-from-top-4 duration-200">
+            <nav className="flex flex-col gap-4 text-sm font-bold text-slate-650 dark:text-slate-300">
+              <Link href="/mock-tests" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navTestSeries}</Link>
+              <Link href="/updates" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navUpdates}</Link>
+              <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navProfile}</Link>
+              {currentUser?.role === 'ADMIN' && (
+                <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navAdmin}</Link>
+              )}
+            </nav>
+
+            <div className="flex flex-col gap-4 border-t border-slate-100 dark:border-slate-900 pt-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-505">{t.langSelect}:</span>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold"
+                >
+                  <option value="en">English</option>
+                  <option value="hi">हिन्दी</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Theme:</span>
+                <button
+                  onClick={toggleTheme}
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold flex items-center gap-1.5"
+                >
+                  {theme === 'light' ? <><Moon className="h-3.5 w-3.5" /> Dark</> : <><Sun className="h-3.5 w-3.5" /> Light</>}
+                </button>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-100 dark:border-slate-900 pt-4 flex flex-col gap-2">
+              {currentUser ? (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
+                      {currentUser.name[0]}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{currentUser.name}</p>
+                      <p className="text-[9px] text-slate-400 font-bold uppercase">{currentUser.candidateCode}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full py-2.5 rounded-xl border border-red-200 text-red-650 dark:border-red-900/40 dark:text-red-400 font-bold text-xs hover:bg-red-50 text-center flex items-center justify-center gap-1"
+                  >
+                    <LogOut className="h-3.5 w-3.5" /> {t.signOut}
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    href="/auth"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-705 dark:text-slate-300 font-bold text-xs text-center"
+                  >
+                    {t.logIn}
+                  </Link>
+                  <Link
+                    href="/auth"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs text-center shadow"
+                  >
+                    {t.signUp}
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* HERO SECTION */}
+        <main className="flex-1 flex flex-col p-4 space-y-8 relative z-10">
+          <section className="text-center pt-8 pb-4 space-y-4">
+            <span className="inline-flex items-center gap-1 bg-blue-105 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-black px-3 py-1 rounded-full text-[9px] uppercase tracking-wider">
+              {t.heroBadge}
+            </span>
+
+            <h1 className="text-3xl font-black leading-tight text-slate-900 dark:text-white">
+              {t.heroTitlePrefix}<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400">
+                {t.heroTitleSuffix}
+              </span>
+            </h1>
+
+            <p className="text-slate-655 dark:text-slate-400 text-xs leading-relaxed max-w-sm mx-auto font-semibold">
+              {t.heroDesc}
+            </p>
+
+            {/* Quick search exam */}
+            <div className="relative max-w-md w-full mx-auto pt-2">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                <Search className="h-4 w-4" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t.searchPlaceholder}
+                className="w-full bg-white dark:bg-slate-900 border border-slate-202 dark:border-slate-800 rounded-2xl pl-10 pr-24 py-3 text-[11px] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 shadow-sm"
+              />
+              <Link
+                href={`/mock-tests?q=${searchQuery}`}
+                className="absolute right-1.5 top-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-xl text-[9px] transition active:scale-95 shadow"
+              >
+                {t.searchBtn.split(' ')[0]}
+              </Link>
+            </div>
+
+            {/* Counter Badges */}
+            <div className="grid grid-cols-3 gap-2 pt-6 border-t border-slate-200 dark:border-slate-900 max-w-sm mx-auto">
+              <div className="text-center">
+                <p className="text-slate-500 text-[7px] uppercase font-bold tracking-widest leading-none">{t.activeUsers.split(' ')[0]}</p>
+                <h4 className="text-sm font-black text-slate-900 dark:text-white mt-1">5.1 Cr+</h4>
+              </div>
+              <div className="text-center border-x border-slate-200 dark:border-slate-800">
+                <p className="text-slate-500 text-[7px] uppercase font-bold tracking-widest leading-none">{t.mockAttempts.split(' ')[0]}</p>
+                <h4 className="text-sm font-black text-slate-900 dark:text-white mt-1">12 Cr+</h4>
+              </div>
+              <div className="text-center">
+                <p className="text-slate-505 text-[7px] uppercase font-bold tracking-widest leading-none">{t.selections}</p>
+                <h4 className="text-sm font-black text-green-600 dark:text-green-400 mt-1">8.4 L+</h4>
+              </div>
+            </div>
+          </section>
+
+          {/* TOPPERS TESTIMONIAL PANEL */}
+          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm flex flex-col justify-between min-h-[220px]">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
+              <h3 className="font-extrabold text-[10px] text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1">
+                <Trophy className="h-3.5 w-3.5 text-yellow-500" /> Topper Testimonials
+              </h3>
+              <div className="flex gap-1">
+                {SUCCESS_STORIES.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSuccessIndex(idx)}
+                    className={`h-1.5 w-1.5 rounded-full transition-all ${successIndex === idx ? 'bg-blue-500 w-3' : 'bg-slate-300 dark:bg-slate-700'}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 flex flex-col justify-center min-h-[100px]">
+              <p className="text-slate-700 dark:text-slate-300 italic text-[11px] leading-relaxed mb-4 font-medium">
+                "{activeTopper.quote}"
+              </p>
+              
+              <div className="flex items-center gap-2.5">
+                <div className={`h-8 w-8 rounded-full bg-gradient-to-r ${activeTopper.gradient} text-white flex items-center justify-center font-black text-[10px] shadow`}>
+                  {activeTopper.initials}
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-[11px] text-slate-900 dark:text-white leading-none">{activeTopper.name}</h4>
+                  <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider mt-1">{activeTopper.exam.split(' (')[0]}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* POPULAR CATEGORIES */}
+          <section className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-900">
+            <div className="text-center max-w-sm mx-auto">
+              <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.popularTitle}</h2>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">{t.popularDesc}</p>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {CATEGORIES.map(cat => (
+                <button
+                  onClick={() => setSelectedModalCategory(cat.id)}
+                  key={cat.id}
+                  className="bg-white dark:bg-slate-900/40 border border-slate-205 dark:border-slate-800 p-4 rounded-xl flex flex-col justify-between group text-left w-full shadow-sm"
+                >
+                  <div className="w-full">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg text-blue-600 dark:text-blue-400">
+                        <GraduationCap className="h-4.5 w-4.5" />
+                      </div>
+                      <span className="text-[9px] text-blue-600 dark:text-blue-400 font-black tracking-wider">
+                        {cat.count}
+                      </span>
+                    </div>
+                    <h4 className="font-extrabold text-xs text-slate-905 dark:text-white mb-1">{cat.name}</h4>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">{cat.desc}</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[9px] uppercase tracking-wider mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 w-full">
+                    {t.exploreTests} <ChevronRight className="h-3 w-3" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* MOBILE TABS UPDATES SECTION */}
+          <section className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-900">
+            <div className="text-center max-w-sm mx-auto">
+              <h2 className="text-lg font-black tracking-tight text-slate-905 dark:text-white uppercase">{t.liveUpdatesTitle}</h2>
+              <p className="text-[10px] text-slate-505 dark:text-slate-400 mt-1 font-semibold">{t.liveUpdatesDesc}</p>
+            </div>
+
+            {/* TAB SELECTION BAR */}
+            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
+              <button
+                onClick={() => setMobileUpdateTab('notice')}
+                className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
+                  mobileUpdateTab === 'notice' 
+                    ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Notices
+              </button>
+              <button
+                onClick={() => setMobileUpdateTab('result')}
+                className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
+                  mobileUpdateTab === 'result' 
+                    ? 'bg-white dark:bg-slate-800 text-yellow-600 dark:text-white shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Results
+              </button>
+              <button
+                onClick={() => setMobileUpdateTab('admit_card')}
+                className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
+                  mobileUpdateTab === 'admit_card' 
+                    ? 'bg-white dark:bg-slate-805 text-green-600 dark:text-white shadow-sm'
+                    : 'text-slate-505 hover:text-slate-700'
+                }`}
+              >
+                Admit Cards
+              </button>
+            </div>
+
+            {/* RENDER ACTIVE TAB */}
+            <div className="bg-white dark:bg-slate-905 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm min-h-[300px] flex flex-col justify-between">
+              <div>
+                <h3 className="font-extrabold text-[10px] text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                  {mobileUpdateTab === 'notice' && <><Bell className="h-4 w-4 text-blue-600 animate-bounce" /> {t.liveNotices}</>}
+                  {mobileUpdateTab === 'result' && <><Trophy className="h-4 w-4 text-yellow-500" /> {t.resultsMerits}</>}
+                  {mobileUpdateTab === 'admit_card' && <><FileText className="h-4 w-4 text-green-550" /> {t.admitCards}</>}
+                </h3>
+                
+                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                  {noticesList.filter(n => n.category === mobileUpdateTab).length > 0 ? (
+                    noticesList.filter(n => n.category === mobileUpdateTab).map(notice => (
+                      <div
+                        key={notice.id}
+                        className="p-3 rounded-xl bg-slate-55 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 flex flex-col gap-1"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1">
+                            <span className={`text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide ${
+                              mobileUpdateTab === 'notice' ? 'bg-blue-105 text-blue-700 dark:bg-blue-950 dark:text-blue-400' :
+                              mobileUpdateTab === 'result' ? 'bg-yellow-100 text-yellow-750 dark:bg-yellow-950/50 dark:text-yellow-400' :
+                              'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
+                            }`}>
+                              {notice.type}
+                            </span>
+                            {isNewlyPublished(notice.publishDate) && (
+                              <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
+                                {t.newBadge}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[7px] text-slate-400 font-semibold">{notice.date}</span>
+                        </div>
+                        <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                          {notice.url ? (
+                            <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-0.5">
+                              {notice.title}
+                              <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
+                            </a>
+                          ) : (
+                            notice.title
+                          )}
+                        </h5>
+                        {notice.lastDate && (
+                          <p className="text-[8px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
+                            {t.lastDate} {notice.lastDate}
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12 text-slate-400 text-xs">
+                      {t.noAlerts || 'No active alerts in this section.'}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <Link href="/updates" className="text-[8px] uppercase font-black text-blue-600 dark:text-blue-450 hover:underline flex items-center gap-0.5">
+                  {language === 'hi' ? 'सभी अपडेट देखें' : 'View All Alerts'} <ChevronRight className="h-3 w-3" />
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          {/* CBT Security Banner */}
+          <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 rounded-2xl shadow relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
+            <div className="relative z-10 flex flex-col gap-4">
+              <div>
+                <h3 className="font-black text-xs uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <Info className="h-4 w-4 text-blue-250" /> CBT Security
+                </h3>
+                <p className="text-[10px] text-blue-100 leading-relaxed font-semibold">
+                  Strict browser focus tracking to simulate real exam environments.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2.5 border-t border-white/10 pt-3">
+                <div className="flex gap-2 items-start text-[10px]">
+                  <CheckCircle className="h-3.5 w-3.5 text-blue-200 shrink-0 mt-0.5" />
+                  <span><strong>Anti-Cheat Shield</strong>: Losses of focus auto-submit sittings.</span>
+                </div>
+                <div className="flex gap-2 items-start text-[10px]">
+                  <CheckCircle className="h-3.5 w-3.5 text-blue-200 shrink-0 mt-0.5" />
+                  <span><strong>Bilingual sittings</strong>: English & Hindi switch seamlessly.</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        {/* FOOTER */}
+        <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-6 px-4 text-center text-[10px] text-slate-500 transition-colors duration-200">
+          <p className="font-bold">© 2026 Mock Test CBT Portal. All rights reserved.</p>
+        </footer>
+
+        {/* Categories modal logic remains exactly same, styled adaptively */}
+        {selectedModalCategory && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm p-0">
+            <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-6 w-full max-w-md shadow-2xl animate-in slide-in-from-bottom duration-250 flex flex-col justify-between max-h-[85vh] overflow-y-auto">
+              <div>
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+                  <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <GraduationCap className="h-4.5 w-4.5 text-blue-600" />
+                    {CATEGORIES.find(c => c.id === selectedModalCategory)?.name}
+                  </h4>
+                  <button
+                    onClick={() => setSelectedModalCategory(null)}
+                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-slate-505 leading-normal mb-4 font-semibold">
+                  Select an exam category option:
+                </p>
+
+                <div className="space-y-2.5">
+                  {EXAMS_BY_CATEGORY[selectedModalCategory]?.map((exam) => (
+                    <Link
+                      key={exam.id}
+                      href={`/mock-tests?cat=${selectedModalCategory}`}
+                      onClick={() => setSelectedModalCategory(null)}
+                      className="w-full flex items-center justify-between p-3.5 bg-slate-55 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-bold text-slate-800 dark:text-slate-200"
+                    >
+                      <span className="flex-1 pr-2">{exam.name}</span>
+                      <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedModalCategory(null)}
+                className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 py-3 rounded-xl text-xs font-bold mt-6"
+              >
+                Close View
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200">

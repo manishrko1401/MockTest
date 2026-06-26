@@ -18,7 +18,8 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu } from 'lucide-react';
+import { useIsMobile } from '../useIsMobile';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -56,7 +57,14 @@ const scoreVariance = [
 // CORE ADMIN COMPONENT
 // ============================================================================
 export default function AdminAnalytics() {
+  const { isMobile, isMounted } = useIsMobile();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks'>('analytics');
+
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks') => {
+    setActiveTab(tab);
+    setMobileSidebarOpen(false);
+  };
   const [jsonInput, setJsonInput] = useState<string>('');
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [parsedQuestions, setParsedQuestions] = useState<any[]>([]);
@@ -382,8 +390,22 @@ export default function AdminAnalytics() {
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 overflow-hidden transition-colors duration-200">
       
+      {/* SIDEBAR NAVIGATION BACKDROP ON MOBILE */}
+      {isMounted && isMobile && mobileSidebarOpen && (
+        <div 
+          onClick={() => setMobileSidebarOpen(false)}
+          className="fixed inset-0 bg-black/60 z-40 backdrop-blur-xs transition-opacity duration-200"
+        />
+      )}
+
       {/* SIDEBAR NAVIGATION */}
-      <aside className="w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between">
+      <aside className={`
+        ${isMounted && isMobile 
+          ? `fixed inset-y-0 left-0 z-50 w-64 shadow-2xl transition-transform duration-300 transform ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}` 
+          : 'w-64 border-r border-slate-200 dark:border-slate-800'
+        }
+        bg-white dark:bg-slate-950 p-6 flex flex-col justify-between h-full shrink-0
+      `}>
         <div>
           {/* Brand logo */}
           <div className="flex items-center gap-3 mb-8">
@@ -399,7 +421,7 @@ export default function AdminAnalytics() {
           {/* Nav Items */}
           <nav className="space-y-2 font-sans">
             <button
-              onClick={() => setActiveTab('analytics')}
+              onClick={() => selectTab('analytics')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
                 activeTab === 'analytics'
                   ? 'bg-blue-600 text-white'
@@ -410,7 +432,7 @@ export default function AdminAnalytics() {
               Student Performance
             </button>
             <button
-              onClick={() => setActiveTab('upload')}
+              onClick={() => selectTab('upload')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
                 activeTab === 'upload'
                   ? 'bg-blue-600 text-white'
@@ -421,7 +443,7 @@ export default function AdminAnalytics() {
               Bulk Question Importer
             </button>
             <button
-              onClick={() => setActiveTab('users')}
+              onClick={() => selectTab('users')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
                 activeTab === 'users'
                   ? 'bg-blue-600 text-white'
@@ -432,7 +454,7 @@ export default function AdminAnalytics() {
               User Management
             </button>
             <button
-              onClick={() => setActiveTab('notices')}
+              onClick={() => selectTab('notices')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
                 activeTab === 'notices'
                   ? 'bg-blue-600 text-white'
@@ -443,7 +465,7 @@ export default function AdminAnalytics() {
               Live Notices & Updates
             </button>
             <button
-              onClick={() => setActiveTab('categories')}
+              onClick={() => selectTab('categories')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
                 activeTab === 'categories'
                   ? 'bg-blue-600 text-white'
@@ -454,7 +476,7 @@ export default function AdminAnalytics() {
               {language === 'hi' ? 'परीक्षा श्रेणियां' : 'Exam Categories'}
             </button>
             <button
-              onClick={() => setActiveTab('subcategories')}
+              onClick={() => selectTab('subcategories')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
                 activeTab === 'subcategories'
                   ? 'bg-blue-600 text-white'
@@ -465,7 +487,7 @@ export default function AdminAnalytics() {
               {language === 'hi' ? 'उप-श्रेणियां' : 'Sub Categories'}
             </button>
             <button
-              onClick={() => setActiveTab('mocks')}
+              onClick={() => selectTab('mocks')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
                 activeTab === 'mocks'
                   ? 'bg-blue-600 text-white'
@@ -490,23 +512,33 @@ export default function AdminAnalytics() {
       <main className="flex-1 flex flex-col overflow-hidden">
         
         {/* TOP BAR */}
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-8 flex items-center justify-between transition-colors duration-200">
-          <h2 className="text-base font-extrabold tracking-wide text-slate-900 dark:text-white">
-            {activeTab === 'analytics' 
-              ? (language === 'hi' ? 'छात्र विश्लेषण और स्पीड डैशबोर्ड' : 'Student Analytics & Speed Dashboard')
-              : activeTab === 'upload' 
-              ? (language === 'hi' ? 'थोक प्रश्न प्रविष्टि टर्मिनल' : 'Bulk Question Ingestion Terminal')
-              : activeTab === 'users'
-              ? (language === 'hi' ? 'उपयोगकर्ता प्रबंधन और पहुँच नियंत्रण' : 'User Management & Access Control')
-              : activeTab === 'notices'
-              ? (language === 'hi' ? 'लाइव अपडेट और नोटिस प्रबंधक' : 'Live Updates & Notices Manager')
-              : activeTab === 'categories'
-              ? (language === 'hi' ? 'परीक्षा श्रेणियां प्रबंधित करें' : 'Manage Exam Categories')
-              : activeTab === 'subcategories'
-              ? (language === 'hi' ? 'परीक्षा उप-श्रेणियां प्रबंधित करें' : 'Manage Exam Subcategories')
-              : (language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests')}
-          </h2>
-          <div className="flex items-center gap-4">
+        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 sm:px-8 flex items-center justify-between transition-colors duration-200">
+          <div className="flex items-center gap-3">
+            {isMounted && isMobile && (
+              <button
+                onClick={() => setMobileSidebarOpen(true)}
+                className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 cursor-pointer"
+              >
+                <Menu className="h-4.5 w-4.5" />
+              </button>
+            )}
+            <h2 className="text-xs sm:text-sm md:text-base font-extrabold tracking-wide text-slate-900 dark:text-white truncate max-w-[150px] sm:max-w-[300px] md:max-w-none">
+              {activeTab === 'analytics' 
+                ? (language === 'hi' ? 'छात्र विश्लेषण और स्पीड डैशबोर्ड' : 'Student Analytics & Speed Dashboard')
+                : activeTab === 'upload' 
+                ? (language === 'hi' ? 'थोक प्रश्न प्रविष्टि टर्मिनल' : 'Bulk Question Ingestion Terminal')
+                : activeTab === 'users'
+                ? (language === 'hi' ? 'उपयोगकर्ता प्रबंधन और पहुँच नियंत्रण' : 'User Management & Access Control')
+                : activeTab === 'notices'
+                ? (language === 'hi' ? 'लाइव अपडेट और नोटिस प्रबंधक' : 'Live Updates & Notices Manager')
+                : activeTab === 'categories'
+                ? (language === 'hi' ? 'परीक्षा श्रेणियां प्रबंधित करें' : 'Manage Exam Categories')
+                : activeTab === 'subcategories'
+                ? (language === 'hi' ? 'परीक्षा उप-श्रेणियां प्रबंधित करें' : 'Manage Exam Subcategories')
+                : (language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests')}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             {/* Back to Home Link */}
             <Link href="/" className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors mr-2">
               {t.backToHome}

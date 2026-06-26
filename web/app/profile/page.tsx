@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon, Globe } from 'lucide-react';
+import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon, Globe, ArrowLeft, ShieldCheck, Menu, X } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
+import { useIsMobile } from '../useIsMobile';
 
 export default function StudentProfilePage() {
   const { currentUser, updateProfile, updatePassword, logout, theme, toggleTheme, language, setLanguage } = useAuth();
@@ -98,6 +99,246 @@ export default function StudentProfilePage() {
             Log In
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  const { isMobile } = useIsMobile();
+
+  if (mounted && isMobile) {
+    return (
+      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none pb-8 transition-colors duration-200">
+        
+        {/* MOBILE HEADER */}
+        <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
+          <Link href="/" className="flex items-center gap-1 text-slate-705 dark:text-white hover:text-blue-600 font-bold text-xs">
+            <ArrowLeft className="h-4 w-4" /> {t.navHome}
+          </Link>
+
+          <div className="flex items-center gap-2">
+            {/* Language Selector */}
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+              className="px-1.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-905 border border-slate-202 dark:border-slate-800 text-[10px] font-bold outline-none cursor-pointer"
+            >
+              <option value="en">EN</option>
+              <option value="hi">हिं</option>
+            </select>
+
+            {/* Theme Toggler */}
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-202 dark:border-slate-800"
+            >
+              {theme === 'light' ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+            </button>
+
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-0.5 bg-red-100/50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/40 text-red-650 dark:text-red-400 px-2.5 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer"
+            >
+              <LogOut className="h-3 w-3" />
+            </button>
+          </div>
+        </header>
+
+        {/* MAIN CONTAINER */}
+        <main className="flex-1 p-4 space-y-6 relative">
+          
+          {/* TOAST STATS MESSAGES */}
+          {successMsg && (
+            <div className="fixed top-16 inset-x-4 z-50 p-3 bg-green-600 text-white rounded-xl text-xs font-bold shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-3">
+              <CheckCircle2 className="h-4.5 w-4.5" /> {successMsg}
+            </div>
+          )}
+          {errorMsg && (
+            <div className="fixed top-16 inset-x-4 z-50 p-3 bg-red-600 text-white rounded-xl text-xs font-bold shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-3">
+              <AlertCircle className="h-4.5 w-4.5" /> {errorMsg}
+            </div>
+          )}
+
+          {/* PROFILE CARD */}
+          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm text-center relative overflow-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div className="relative h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-450 mx-auto flex items-center justify-center border border-blue-200 dark:border-blue-800 mb-3 text-lg font-bold">
+              {currentUser.name.split(' ').map(n => n[0]).join('')}
+            </div>
+            
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-slate-100">{currentUser.name}</h3>
+            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-1">{t.candidateCode}: {currentUser.candidateCode}</p>
+            <p className="text-[10px] text-slate-600 mt-1 truncate">{currentUser.email}</p>
+
+            <div className="border-t border-slate-100 dark:border-slate-800 mt-4 pt-4 text-left space-y-2.5">
+              <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                <span>{t.sysRole}</span>
+                <span className="bg-blue-100 border border-blue-200 text-blue-700 dark:bg-blue-950 dark:border-blue-900 dark:text-blue-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase">
+                  {currentUser.role}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                <span>{t.passSub}</span>
+                <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded border uppercase ${
+                  currentUser.subscriptionTier === 'Testbook Pass Pro'
+                    ? 'bg-yellow-100 border-yellow-250 text-yellow-750 dark:bg-yellow-950/40 dark:border-yellow-905 dark:text-yellow-405'
+                    : currentUser.subscriptionTier === 'Testbook Pass'
+                    ? 'bg-green-150 border-green-250 text-green-750 dark:bg-green-955/40 dark:border-green-905 dark:text-green-405'
+                    : 'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-800'
+                }`}>
+                  {currentUser.subscriptionTier === 'None' ? t.noPass : currentUser.subscriptionTier.replace('Testbook', language === 'hi' ? 'मॉक टेस्ट' : 'Mock Test')}
+                </span>
+              </div>
+
+              {currentUser.subscriptionPurchasedAt && (
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                  <span>{t.passPurchased}</span>
+                  <span className="text-slate-800 dark:text-slate-300 font-mono text-[10px]">{currentUser.subscriptionPurchasedAt}</span>
+                </div>
+              )}
+
+              {currentUser.subscriptionExpiresAt && (
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                  <span>{t.passExpires}</span>
+                  <span className="text-slate-800 dark:text-slate-300 font-mono text-[10px]">{currentUser.subscriptionExpiresAt}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                <span>{t.registeredOn}</span>
+                <span className="text-slate-805 dark:text-slate-300 font-mono text-[10px] flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                  {currentUser.registeredDate}
+                </span>
+              </div>
+
+              {/* Referral Details block */}
+              <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-3.5 rounded-xl mt-4">
+                <p className="text-[9px] uppercase font-bold text-slate-500 flex items-center gap-1">
+                  <Gift className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-500" /> {t.referralTitle}
+                </p>
+                <div className="flex items-center justify-between gap-2 mt-1.5 bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded border border-slate-200 dark:border-slate-800 font-mono text-[10px] text-slate-800 dark:text-white shadow-sm">
+                  <span className="font-bold select-all">{currentUser.referralCode}</span>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(currentUser.referralCode);
+                      alert(language === 'hi' ? "रेफरल कोड कॉपी किया गया!" : "Referral code copied!");
+                    }}
+                    className="text-[9px] text-blue-650 dark:text-blue-400 font-bold"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="flex items-center justify-between text-[10px] mt-2.5 text-slate-500">
+                  <span>{t.referralsCount}:</span>
+                  <span className="font-bold text-blue-700 bg-blue-50 dark:text-white dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-900">{currentUser.referralsCount}</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ACCOUNT SETTINGS FORM STACK */}
+          <section className="space-y-6">
+            
+            {/* Details Update Form */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-202 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
+              <h3 className="font-extrabold text-[11px] text-slate-850 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3.5 mb-4 flex items-center gap-2">
+                <User className="h-4 w-4 text-blue-505" /> {t.updateDetails}
+              </h3>
+
+              <form onSubmit={handleUpdateProfile} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.fullName}</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-slate-55 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.emailAddr}</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-slate-55 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-805 dark:text-slate-202 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-505 font-bold uppercase tracking-wider mb-1">{t.mobileNum}</label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-xs text-slate-400 font-mono">+91</span>
+                    <input
+                      type="tel"
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value)}
+                      className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-202 dark:border-slate-800 rounded-xl pl-11 pr-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-750 text-white font-bold py-2.5 rounded-xl text-xs shadow transition cursor-pointer"
+                >
+                  {t.saveProfileBtn}
+                </button>
+              </form>
+            </div>
+
+            {/* Password Update Form */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-202 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
+              <h3 className="font-extrabold text-[11px] text-slate-850 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3.5 mb-4 flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-blue-500" /> {t.changePass}
+              </h3>
+
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.oldPass}</label>
+                  <input
+                    type="password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.newPass}</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-202 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.confirmPass}</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-202 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-850 dark:text-slate-202 focus:outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs shadow transition cursor-pointer"
+                >
+                  {t.updatePassBtn}
+                </button>
+              </form>
+            </div>
+
+          </section>
+
+        </main>
       </div>
     );
   }

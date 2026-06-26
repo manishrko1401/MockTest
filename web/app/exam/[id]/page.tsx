@@ -11,7 +11,8 @@ import {
 import { useAuth, TestCategory, MockTestItem } from '../../AuthContext';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Check, ShieldAlert, ShieldCheck, Globe, User, BookOpen, AlertCircle, ArrowLeft, Sun, Moon, Clock, Pause, Play } from 'lucide-react';
+import { Check, ShieldAlert, ShieldCheck, Globe, User, BookOpen, AlertCircle, ArrowLeft, Sun, Moon, Clock, Pause, Play, Menu, X } from 'lucide-react';
+import { useIsMobile } from '../../useIsMobile';
 
 // ============================================================================
 // DYNAMIC EXAM GENERATOR
@@ -217,6 +218,9 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
   const [attemptSaved, setAttemptSaved] = useState(false);
   const [questionLanguages, setQuestionLanguages] = useState<Record<string, 'en' | 'hi'>>({});
+
+  const { isMobile, isMounted } = useIsMobile();
+  const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
 
   const stateRef = useRef(state);
   useEffect(() => {
@@ -514,6 +518,289 @@ function TcsIonEngine({ testId }: { testId: string }) {
               Go to Test Series
             </button>
           </div>
+        </div>
+      ) : isMounted && isMobile ? (
+        <div className="flex flex-col flex-1 overflow-y-auto relative bg-white pb-20">
+          {/* 2. SUBJECTS TABS SWITCHER FOR MOBILE */}
+          <div className="flex h-10 border-b border-slate-200 bg-[#E9ECF2] overflow-x-auto shrink-0 scrollbar-none">
+            {session.sections.map((sec, idx) => (
+              <button
+                key={sec.id}
+                onClick={() => switchSection(idx)}
+                className={`flex items-center px-4 font-bold border-r border-slate-200 whitespace-nowrap text-[11px] transition-colors shrink-0 ${
+                  idx === currentSectionIndex
+                    ? 'bg-white text-blue-800 border-t-2 border-t-orange-500 font-extrabold'
+                    : 'text-slate-600 hover:bg-[#DEE3EC]'
+                }`}
+              >
+                {sec.name}
+              </button>
+            ))}
+          </div>
+
+          {/* 3. QUESTION HEADER BAR */}
+          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2 text-[10px] font-bold shrink-0">
+            <span className="text-[#0747A6]">Question Type: MCQ</span>
+            <div className="flex gap-2">
+              <span className="text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded text-[9px]">
+                +{currentSection.positiveMark}
+              </span>
+              <span className="text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded text-[9px]">
+                -{currentSection.negativeMark}
+              </span>
+            </div>
+          </div>
+
+          {/* 4. ACTIVE QUESTION TEXT & OPTIONS AREA */}
+          <div className="flex-1 overflow-y-auto p-4 bg-white pb-20">
+            {currentQuestion ? (
+              (() => {
+                const questionLang = questionLanguages[currentQuestion.id] || language;
+                return (
+                  <div>
+                    {/* Question Header Row */}
+                    <div className="mb-3 pb-2 border-b border-slate-100 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="text-xs font-bold text-slate-800">
+                          Q No. {currentQuestionIndex + 1}
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextLang = questionLang === 'en' ? 'hi' : 'en';
+                            setQuestionLanguages(prev => ({ ...prev, [currentQuestion.id]: nextLang }));
+                          }}
+                          className="flex items-center gap-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded border border-blue-200 text-[9px] transition shadow-xs cursor-pointer"
+                        >
+                          <Globe className="h-2.5 w-2.5 text-blue-500" />
+                          {questionLang === 'en' ? 'हिन्दी' : 'English'}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 font-mono text-[9px] bg-slate-100 border border-slate-200 text-slate-600 px-2 py-0.5 rounded">
+                        <Clock className="h-2.5 w-2.5 text-slate-505" />
+                        <span>{Math.floor((activeResponse?.elapsedSeconds || 0) / 60)}:
+                        {String((activeResponse?.elapsedSeconds || 0) % 60).padStart(2, '0')}</span>
+                      </div>
+                    </div>
+
+                    {/* Question Text */}
+                    <div className="mb-4 text-xs text-slate-900 leading-relaxed font-normal bg-slate-50 p-3.5 border border-slate-200 rounded">
+                      {questionLang === 'en'
+                        ? currentQuestion.content.en.questionText
+                        : currentQuestion.content.hi.questionText}
+
+                      {/* Optional Math */}
+                      {(questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex) && (
+                        <div className="mt-2 p-1.5 bg-yellow-55 text-yellow-900 border border-yellow-200 rounded font-mono text-[10px]">
+                          Latex: {questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex}
+                        </div>
+                      )}
+
+                      {/* Optional Question Image */}
+                      {(questionLang === 'en' ? currentQuestion.content.en.imageUrl : currentQuestion.content.hi.imageUrl) && (
+                        <div className="mt-2.5 flex justify-center bg-white p-1.5 border border-slate-200 rounded-md">
+                          <img
+                            src={questionLang === 'en' ? currentQuestion.content.en.imageUrl : currentQuestion.content.hi.imageUrl}
+                            alt="Question Visual"
+                            className="max-h-48 object-contain"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Options Grid */}
+                    <div className="space-y-2">
+                      {(questionLang === 'en'
+                        ? currentQuestion.content.en.options
+                        : currentQuestion.content.hi.options
+                      ).map((opt, idx) => {
+                        const optLabel = typeof opt === 'string' ? opt : opt.text;
+                        const isTempChosen = activeResponse?.tempOptionIndex === idx;
+
+                        return (
+                          <label
+                            key={idx}
+                            onClick={() => selectOption(idx)}
+                            className={`flex items-center gap-3.5 p-3.5 rounded-xl border cursor-pointer hover:bg-slate-50 transition text-[11px] ${
+                              isTempChosen
+                                ? 'bg-blue-50 border-blue-400 font-bold text-blue-900 shadow-sm'
+                                : 'bg-white border-slate-200 text-slate-800'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name={`question-${currentQuestion.id}`}
+                              checked={isTempChosen}
+                              readOnly
+                              className="h-3.5 w-3.5 border-slate-350 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="flex-1">{optLabel}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()
+            ) : (
+              <div className="text-center py-10 text-gray-500 text-xs">No questions loaded.</div>
+            )}
+          </div>
+
+          {/* 5. STICKY ACTIONS BAR */}
+          <footer className="fixed bottom-0 inset-x-0 bg-[#E9ECF2] border-t border-slate-202 z-20 px-3 py-2 flex items-center justify-between gap-2 shadow-inner">
+            <button
+              onClick={() => setMobilePaletteOpen(true)}
+              className="bg-white border border-slate-305 text-slate-700 font-black p-2 rounded shadow-sm hover:bg-slate-50 text-[10px] w-12 flex flex-col items-center justify-center shrink-0 cursor-pointer"
+              title="Show Palette"
+            >
+              <Menu className="h-3.5 w-3.5 text-slate-605" />
+              <span className="text-[7px] uppercase mt-0.5 font-bold">Palette</span>
+            </button>
+
+            <div className="flex gap-2 flex-1">
+              <button
+                onClick={markForReviewAndNext}
+                className="bg-white border border-slate-300 text-slate-700 font-bold px-2 py-2.5 rounded shadow-sm hover:bg-slate-50 active:bg-slate-100 transition text-[10px] flex-1 text-center cursor-pointer"
+              >
+                Review & Next
+              </button>
+              <button
+                onClick={clearResponse}
+                className="bg-white border border-slate-300 text-slate-750 font-bold px-2 py-2.5 rounded shadow-sm hover:bg-slate-50 active:bg-slate-100 transition text-[10px] flex-1 text-center cursor-pointer"
+              >
+                Clear
+              </button>
+            </div>
+
+            <button
+              onClick={saveAndNext}
+              className="bg-[#2E7D32] hover:bg-green-800 text-white font-bold px-4 py-2.5 rounded shadow transition text-[10px] shrink-0 cursor-pointer"
+            >
+              Save & Next
+            </button>
+          </footer>
+
+          {/* 6. BOTTOM DRAWER PALETTE SHEET */}
+          {mobilePaletteOpen && (
+            <>
+              {/* Drawer Backdrop Mask */}
+              <div 
+                onClick={() => setMobilePaletteOpen(false)}
+                className="fixed inset-0 bg-black/60 z-30 backdrop-blur-xs transition-opacity duration-200"
+              />
+
+              {/* Drawer Layout */}
+              <div className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 dark:border-slate-800 z-40 rounded-t-3xl shadow-2xl p-5 max-h-[85vh] overflow-y-auto flex flex-col justify-between animate-in slide-in-from-bottom duration-250">
+                <div>
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                    <h4 className="font-extrabold text-[11px] text-[#0F2942] uppercase tracking-wider">
+                      Question Palette - {currentSection.name}
+                    </h4>
+                    <button
+                      onClick={() => setMobilePaletteOpen(false)}
+                      className="p-1 rounded bg-slate-105 text-slate-550 cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Legend counts for stats */}
+                  <div className="grid grid-cols-2 gap-2 text-[9px] mb-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100 font-semibold">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-4.5 w-4.5 bg-gray-200 border border-gray-400 text-slate-800 font-bold flex items-center justify-center text-[9px] shadow-xs">
+                        {counts.notVisited}
+                      </div>
+                      <span>Not Visited</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-4.5 w-4.5 bg-[#C62828] text-white font-bold flex items-center justify-center text-[9px] rounded-t-sm shadow-xs">
+                        {counts.notAnswered}
+                      </div>
+                      <span>Not Answered</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-4.5 w-4.5 bg-[#2E7D32] text-white font-bold flex items-center justify-center text-[9px] rounded-b-sm shadow-xs">
+                        {counts.answered}
+                      </div>
+                      <span>Answered</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-4.5 w-4.5 bg-[#4527A0] text-white font-bold flex items-center justify-center text-[9px] rounded-full shadow-xs">
+                        {counts.marked}
+                      </div>
+                      <span>Marked Review</span>
+                    </div>
+                  </div>
+
+                  {/* Numbers Grid */}
+                  <div className="grid grid-cols-5 gap-2.5 py-2">
+                    {currentSectionQuestions.map((q, idx) => {
+                      const resp = responses[q.id];
+                      const stateCode = resp?.state ?? 1;
+                      const isActive = idx === currentQuestionIndex;
+
+                      let styleClass = "";
+                      switch (stateCode) {
+                        case 1: // Not Visited
+                          styleClass = "bg-gray-200 border-gray-400 text-slate-800";
+                          break;
+                        case 2: // Not Answered
+                          styleClass = "bg-[#C62828] text-white rounded-t-md border-transparent";
+                          break;
+                        case 3: // Answered
+                          styleClass = "bg-[#2E7D32] text-white rounded-b-md border-transparent";
+                          break;
+                        case 4: // Marked for Review
+                          styleClass = "bg-[#4527A0] text-white rounded-full border-transparent";
+                          break;
+                        case 5: // Answered & Marked for Review
+                          styleClass = "bg-[#4527A0] text-white rounded-full border-transparent relative";
+                          break;
+                      }
+
+                      return (
+                        <button
+                          key={q.id}
+                          onClick={() => {
+                            jumpToQuestion(currentSectionIndex, idx);
+                            setMobilePaletteOpen(false);
+                          }}
+                          className={`flex h-9 w-9 items-center justify-center border font-bold text-xs shadow-sm cursor-pointer ${styleClass} ${
+                            isActive ? 'ring-2 ring-blue-500 ring-offset-1 z-10' : ''
+                          }`}
+                        >
+                          {idx + 1}
+                          {stateCode === 5 && (
+                            <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white">
+                              <Check className="h-1.5 w-1.5" />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 mt-6">
+                  <button
+                    onClick={() => {
+                      setMobilePaletteOpen(false);
+                      submitExam();
+                    }}
+                    className="w-full bg-[#1A3B5C] hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow text-xs uppercase cursor-pointer"
+                  >
+                    Submit Exam Paper
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
         </div>
       ) : (
         <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
