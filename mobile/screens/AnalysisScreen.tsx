@@ -121,7 +121,7 @@ export default function AnalysisScreen({
         <Text style={styles.headerTitle}>Test Analytics Summary</Text>
       </View>
 
-      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} stickyHeaderIndices={[1]}>
         {/* Statistics Board */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{attempt.title}</Text>
@@ -145,48 +145,52 @@ export default function AnalysisScreen({
           </View>
         </View>
 
-        {/* Question sliding navigator */}
-        {!loadingQs && questions.length > 0 && (
-          <View style={styles.navigationCard}>
-            <Text style={styles.navSectionTitle}>Question Navigator</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navRow}>
-              {questions.map((q, idx) => {
-                const userResponse = attempt.responses ? attempt.responses[q.id] : null;
-                const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
-                const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
-                const isCorrect = selectedIdx === correctIdx;
-                const isUnattempted = selectedIdx === null;
+        {/* Question sliding navigator wrapper (sticks to top) */}
+        <View style={styles.stickyNavContainer}>
+          {!loadingQs && questions.length > 0 && (
+            <View style={styles.navigationCard}>
+              <Text style={styles.navSectionTitle}>Question Navigator</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navRow}>
+                {questions.map((q, idx) => {
+                  const userResponse = attempt.responses ? attempt.responses[q.id] : null;
+                  const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
+                  const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
+                  const isCorrect = selectedIdx === correctIdx;
+                  const isUnattempted = selectedIdx === null;
 
-                let circleStyle = styles.circleUnattempted;
-                let textStyle = styles.circleTextUnattempted;
-                if (!isUnattempted) {
-                  if (isCorrect) {
-                    circleStyle = styles.circleCorrect;
-                    textStyle = styles.circleTextCorrect;
-                  } else {
-                    circleStyle = styles.circleIncorrect;
-                    textStyle = styles.circleTextIncorrect;
+                  let circleStyle = styles.circleUnattempted;
+                  let textStyle = styles.circleTextUnattempted;
+                  if (!isUnattempted) {
+                    if (isCorrect) {
+                      circleStyle = styles.circleCorrect;
+                      textStyle = styles.circleTextCorrect;
+                    } else {
+                      circleStyle = styles.circleIncorrect;
+                      textStyle = styles.circleTextIncorrect;
+                    }
                   }
-                }
 
-                return (
-                  <TouchableOpacity
-                    key={q.id || idx}
-                    style={[styles.circle, circleStyle]}
-                    onPress={() => {
-                      const yOffset = cardOffsets[idx];
-                      if (yOffset !== undefined && scrollViewRef.current) {
-                        scrollViewRef.current.scrollTo({ y: yOffset, animated: true });
-                      }
-                    }}
-                  >
-                    <Text style={[styles.circleText, textStyle]}>{idx + 1}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        )}
+                  return (
+                    <TouchableOpacity
+                      key={q.id || idx}
+                      style={[styles.circle, circleStyle]}
+                      onPress={() => {
+                        const yOffset = cardOffsets[idx];
+                        if (yOffset !== undefined && scrollViewRef.current) {
+                          // Scroll to layout y offset. Since sticky container height is around 90px, 
+                          // we subtract 100px to ensure card header is fully visible and not blocked by the navigator.
+                          scrollViewRef.current.scrollTo({ y: Math.max(0, yOffset - 100), animated: true });
+                        }
+                      }}
+                    >
+                      <Text style={[styles.circleText, textStyle]}>{idx + 1}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
+        </View>
 
         {/* Bilingual Selector */}
         <View style={styles.langSelectorRow}>
@@ -648,11 +652,16 @@ const styles = StyleSheet.create({
     height: 10,
     backgroundColor: '#E5E7EB',
   },
+  stickyNavContainer: {
+    backgroundColor: '#F3F4F6',
+    paddingBottom: 2,
+    zIndex: 10,
+  },
   navigationCard: {
     backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
