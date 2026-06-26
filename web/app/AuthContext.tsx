@@ -688,7 +688,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = (email: string): boolean => {
-    const user = usersList.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const trimmedEmail = email.trim().toLowerCase();
+    const user = usersList.find(u => u.email.trim().toLowerCase() === trimmedEmail);
     if (user) {
       setCurrentUser(user);
       localStorage.setItem('tb_session', JSON.stringify(user));
@@ -698,12 +699,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signup = (name: string, email: string, mobile: string, referralCodeInput?: string): boolean => {
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedName = name.trim();
+    const trimmedMobile = mobile.trim();
+
     // Check duplication
-    if (usersList.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+    if (usersList.some(u => u.email.trim().toLowerCase() === trimmedEmail)) {
       return false;
     }
 
-    const codeName = name.split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const codeName = trimmedName.split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
     const referralCode = 'TB-' + codeName + '-' + Math.floor(1000 + Math.random() * 9000);
 
     let updatedList = [...usersList];
@@ -725,9 +730,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newUser: MockUser = {
       id: 'u_' + Math.random().toString(36).substring(2, 9),
       candidateCode: 'CGL_' + Math.floor(1000 + Math.random() * 9000),
-      name,
-      email,
-      mobile,
+      name: trimmedName,
+      email: trimmedEmail,
+      mobile: trimmedMobile,
       referralCode,
       referredBy: referredByCode,
       referralsCount: 0,
@@ -757,7 +762,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateProfile = (name: string, email: string, mobile: string) => {
     if (!currentUser) return;
     
-    const updatedUser = { ...currentUser, name, email, mobile };
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedName = name.trim();
+    const trimmedMobile = mobile.trim();
+
+    const updatedUser = { ...currentUser, name: trimmedName, email: trimmedEmail, mobile: trimmedMobile };
     setCurrentUser(updatedUser);
     localStorage.setItem('tb_session', JSON.stringify(updatedUser));
 
