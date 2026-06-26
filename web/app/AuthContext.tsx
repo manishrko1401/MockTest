@@ -74,6 +74,16 @@ export interface MockUser {
   referralCoinsCredited: boolean;
 }
 
+export interface ReportedQuestion {
+  id: string;
+  questionId: string;
+  questionText: string;
+  mockTestId: string;
+  mockTestTitle: string;
+  message: string;
+  createdAt: string;
+}
+
 interface AuthContextType {
   currentUser: MockUser | null;
   usersList: MockUser[];
@@ -84,6 +94,14 @@ interface AuthContextType {
   logout: () => void;
   updateProfile: (name: string, email: string, mobile: string) => void;
   updatePassword: (oldPass: string, newPass: string) => boolean;
+  reportedQuestionsList: ReportedQuestion[];
+  reportQuestion: (
+    questionId: string,
+    message: string,
+    questionText?: string,
+    mockTestId?: string,
+    mockTestTitle?: string
+  ) => Promise<{ success: boolean; error?: string }>;
   addAttempt: (
     testId: string,
     title: string,
@@ -399,6 +417,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [noticesList, setNoticesList] = useState<Notice[]>([]);
   const [language, setLanguageState] = useState<'en' | 'hi'>('en');
   const [examCatalog, setExamCatalog] = useState<TestCategory[]>([]);
+  const [reportedQuestionsList, setReportedQuestionsList] = useState<ReportedQuestion[]>([]);
 
   const sortNotices = (list: Notice[]) => {
     return [...list].sort((a, b) => {
@@ -423,6 +442,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUsersList(data.usersList || []);
         setNoticesList(sortNotices(data.noticesList || []));
         setExamCatalog(data.examCatalog || []);
+        if (data.reportedQuestionsList) {
+          setReportedQuestionsList(data.reportedQuestionsList);
+        }
 
         const getCookie = (name: string) => {
           const value = `; ${document.cookie}`;
@@ -1096,6 +1118,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).catch(err => console.error("Save profile admin error:", err));
   };
 
+  const reportQuestion = async (
+    questionId: string,
+    message: string,
+    questionText?: string,
+    mockTestId?: string,
+    mockTestTitle?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'report-question',
+          data: {
+            questionId,
+            message,
+            questionText,
+            mockTestId,
+            mockTestTitle,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.reported) {
+        setReportedQuestionsList(prev => [data.reported, ...prev]);
+        return { success: true };
+      }
+      return { success: false, error: data.error || 'Failed to submit report' };
+    } catch (e: any) {
+      console.error("Report question API error:", e);
+      return { success: false, error: e.message || 'Connection error' };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -1125,7 +1181,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addSubCategory,
         deleteSubCategory,
         addMockTest,
-        deleteMockTest
+        deleteMockTest,
+        reportedQuestionsList,
+        reportQuestion
       }}
     >
       {children}

@@ -572,10 +572,15 @@ function TcsIonEngine({ testId }: { testId: string }) {
                   <div>
                     {/* Question Header Row */}
                     <div className="mb-3 pb-2 border-b border-slate-100 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="text-xs font-bold text-slate-800">
-                          Q No. {currentQuestionIndex + 1}
-                        </h3>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <div className="flex flex-col">
+                          <h3 className="text-xs font-bold text-slate-800">
+                            Q No. {currentQuestionIndex + 1}
+                          </h3>
+                          <span className="text-[8px] text-slate-400 font-mono">
+                            ID: {currentQuestion.id}
+                          </span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => {

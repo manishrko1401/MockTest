@@ -62,7 +62,7 @@ export const EXPLANATIONS: Record<string, { en: string; hi: string }> = {
 export default function ExamSolutionAnalysisPage() {
   const params = useParams();
   const testId = (params?.id as string) || "ssc_cgl_tier1";
-  const { currentUser, theme, toggleTheme, toggleBookmark, language, setLanguage } = useAuth();
+  const { currentUser, theme, toggleTheme, toggleBookmark, language, setLanguage, reportQuestion } = useAuth();
   const router = useRouter();
 
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
@@ -249,6 +249,55 @@ export default function ExamSolutionAnalysisPage() {
     hi: "विषय विशेषज्ञों द्वारा विस्तृत समाधान वर्तमान में सत्यापन के अधीन है।"
   };
 
+  // Report modal states & handlers
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportQuestionId, setReportQuestionId] = useState('');
+  const [reportMessage, setReportMessage] = useState('');
+  const [reportingError, setReportingError] = useState('');
+  const [reportingSuccess, setReportingSuccess] = useState(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
+  const handleOpenReportModal = (qId: string) => {
+    setReportQuestionId(qId);
+    setReportMessage('');
+    setReportingError('');
+    setReportingSuccess(false);
+    setReportModalOpen(true);
+  };
+
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reportMessage.trim()) {
+      setReportingError(language === 'hi' ? 'कृपया रिपोर्ट संदेश दर्ज करें।' : 'Please enter a report message.');
+      return;
+    }
+    setIsSubmittingReport(true);
+    setReportingError('');
+
+    try {
+      const qText = activeQuestion.content[lang]?.questionText || activeQuestion.content['en']?.questionText || '';
+      const result = await reportQuestion(
+        reportQuestionId,
+        reportMessage,
+        qText,
+        testId,
+        examSession.testTitle
+      );
+      if (result.success) {
+        setReportingSuccess(true);
+        setTimeout(() => {
+          setReportModalOpen(false);
+        }, 1500);
+      } else {
+        setReportingError(result.error || (language === 'hi' ? 'सहेजने में विफल।' : 'Failed to save report.'));
+      }
+    } catch (err: any) {
+      setReportingError(err.message || 'An error occurred.');
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
   // KPI calculations
   const totalCorrect = questionStatuses.filter(s => s.status === 'correct').length;
   const totalIncorrect = questionStatuses.filter(s => s.status === 'incorrect').length;
@@ -403,9 +452,12 @@ export default function ExamSolutionAnalysisPage() {
           <div>
             {/* Question Header Status */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4 mb-5 gap-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <span className="font-extrabold text-xs text-blue-600 dark:text-blue-400 uppercase tracking-widest">
                   {language === 'hi' ? 'प्रश्न' : 'Question'} {activeQuestionIdx + 1}
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                  (ID: {activeQuestion.id})
                 </span>
                 
                 <div className="flex items-center gap-2">
@@ -448,6 +500,14 @@ export default function ExamSolutionAnalysisPage() {
                 >
                   <Bookmark className={`h-3 w-3 ${isBookmarked ? 'fill-yellow-500 text-yellow-500' : ''}`} />
                   {isBookmarked ? (language === 'hi' ? 'बुकमार्क किया गया' : 'Bookmarked') : (language === 'hi' ? 'बुकमार्क करें' : 'Bookmark')}
+                </button>
+
+                <button
+                  onClick={() => handleOpenReportModal(activeQuestion.id)}
+                  className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-red-200 dark:border-red-905 bg-red-55 dark:bg-red-950/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/45 transition-all active:scale-95 cursor-pointer"
+                >
+                  <ShieldAlert className="h-3 w-3" />
+                  {language === 'hi' ? 'रिपोर्ट करें' : 'Report'}
                 </button>
               </div>
             </div>
@@ -629,6 +689,82 @@ export default function ExamSolutionAnalysisPage() {
         </aside>
 
       </section>
+
+      {/* 4. REPORT QUESTION POPUP MODAL */}
+      {reportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 text-slate-800 dark:text-slate-100 transition-all">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+              <h3 className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                <ShieldAlert className="h-5 w-5 text-red-500" />
+                {language === 'hi' ? 'प्रश्न रिपोर्ट करें' : 'Report Question'}
+              </h3>
+              <button
+                onClick={() => setReportModalOpen(false)}
+                className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-pointer border border-transparent"
+              >
+                <XCircle className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleReportSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
+                  {language === 'hi' ? 'प्रश्न आईडी' : 'Question ID'}
+                </label>
+                <input
+                  type="text"
+                  value={reportQuestionId}
+                  disabled
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 font-mono text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
+                  {language === 'hi' ? 'रिपोर्ट विवरण / संदेश' : 'Report Description / Message'}
+                </label>
+                <textarea
+                  value={reportMessage}
+                  onChange={(e) => setReportMessage(e.target.value)}
+                  placeholder={language === 'hi' ? 'कृपया प्रश्न में त्रुटि या समस्या का विवरण दर्ज करें...' : 'Describe the issue or error in the question...'}
+                  rows={4}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 focus:border-blue-500 outline-none transition-colors"
+                />
+              </div>
+
+              {reportingError && (
+                <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg p-3 text-[11px] font-semibold text-red-600 dark:text-red-400 leading-tight">
+                  {reportingError}
+                </div>
+              )}
+
+              {reportingSuccess && (
+                <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg p-3 text-[11px] font-semibold text-green-600 dark:text-green-400 leading-tight">
+                  {language === 'hi' ? 'रिपोर्ट सफलतापूर्वक दर्ज की गई!' : 'Report submitted successfully!'}
+                </div>
+              )}
+
+              <div className="flex gap-3 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setReportModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition active:scale-95 cursor-pointer"
+                >
+                  {language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingReport || reportingSuccess}
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-750 text-white shadow-md shadow-blue-500/25 transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingReport ? (language === 'hi' ? 'सबमिट किया जा रहा है...' : 'Submitting...') : (language === 'hi' ? 'जमा करें' : 'Submit')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

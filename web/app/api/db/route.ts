@@ -65,6 +65,8 @@ export async function POST(request: Request) {
         return await handleSaveCustomQuestions(data);
       case 'get-custom-questions':
         return await handleGetCustomQuestions(data);
+      case 'report-question':
+        return await handleReportQuestion(data);
       default:
         return NextResponse.json({ success: false, error: `Invalid action: ${action}` }, { status: 400 });
     }
@@ -208,11 +210,29 @@ async function handleBootstrap() {
     };
   });
 
+  // Fetch Reported Questions
+  const reportedQuestions = await prisma.reportedQuestion.findMany({
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  const reportedQuestionsList = reportedQuestions.map((rq: any) => ({
+    id: rq.id,
+    questionId: rq.questionId,
+    questionText: rq.questionText,
+    mockTestId: rq.mockTestId,
+    mockTestTitle: rq.mockTestTitle,
+    message: rq.message,
+    createdAt: formatDateTime(rq.createdAt),
+  }));
+
   return NextResponse.json({
     success: true,
     usersList,
     noticesList,
     examCatalog,
+    reportedQuestionsList,
   });
 }
 
@@ -790,6 +810,33 @@ async function handleGetCustomQuestions(data: any) {
   return NextResponse.json({
     success: true,
     questions: mockTest?.customQuestions || null,
+  });
+}
+
+async function handleReportQuestion(data: any) {
+  const { questionId, message, questionText, mockTestId, mockTestTitle } = data;
+
+  const reported = await prisma.reportedQuestion.create({
+    data: {
+      questionId,
+      message,
+      questionText: questionText || '',
+      mockTestId: mockTestId || '',
+      mockTestTitle: mockTestTitle || '',
+    },
+  });
+
+  return NextResponse.json({
+    success: true,
+    reported: {
+      id: reported.id,
+      questionId: reported.questionId,
+      message: reported.message,
+      questionText: reported.questionText,
+      mockTestId: reported.mockTestId,
+      mockTestTitle: reported.mockTestTitle,
+      createdAt: formatDateTime(reported.createdAt),
+    },
   });
 }
 

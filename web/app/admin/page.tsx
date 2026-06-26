@@ -59,9 +59,9 @@ const scoreVariance = [
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -101,7 +101,8 @@ export default function AdminAnalytics() {
     addSubCategory,
     deleteSubCategory,
     addMockTest,
-    deleteMockTest
+    deleteMockTest,
+    reportedQuestionsList
   } = useAuth();
   const t = TRANSLATIONS[language];
 
@@ -521,6 +522,17 @@ export default function AdminAnalytics() {
               <PlusCircle className="h-4 w-4" />
               {language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests'}
             </button>
+            <button
+              onClick={() => selectTab('reports')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                activeTab === 'reports'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <AlertCircle className="h-4 w-4" />
+              {language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions'}
+            </button>
           </nav>
         </div>
 
@@ -559,7 +571,9 @@ export default function AdminAnalytics() {
                 ? (language === 'hi' ? 'परीक्षा श्रेणियां प्रबंधित करें' : 'Manage Exam Categories')
                 : activeTab === 'subcategories'
                 ? (language === 'hi' ? 'परीक्षा उप-श्रेणियां प्रबंधित करें' : 'Manage Exam Subcategories')
-                : (language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests')}
+                : activeTab === 'mocks'
+                ? (language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests')
+                : (language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions')}
             </h2>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -1996,6 +2010,98 @@ export default function AdminAnalytics() {
                       </tbody>
                     </table>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 8: REPORTED QUESTIONS */}
+          {activeTab === 'reports' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex-1 max-w-md relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                    <Search className="h-4 w-4" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder={language === 'hi' ? 'प्रश्न आईडी, परीक्षा या संदेश से खोजें...' : 'Search by Question ID, Test, or message...'}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-xl text-xs text-slate-850 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors font-semibold"
+                  />
+                </div>
+                
+                <div className="flex gap-4 shrink-0 text-xs font-bold text-slate-500 dark:text-slate-400">
+                  <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-500 animate-pulse" />
+                    <span>{language === 'hi' ? 'कुल रिपोर्ट:' : 'Total Reports:'} <strong className="text-slate-850 dark:text-white font-extrabold">{reportedQuestionsList.length}</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden p-6">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
+                  {language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Question Logs'}
+                </h3>
+
+                <div className="overflow-x-auto max-h-[600px] overflow-y-auto pr-1">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead className="sticky top-0 bg-white dark:bg-slate-950 z-10 border-b border-slate-200 dark:border-slate-800">
+                      <tr className="text-slate-405 dark:text-slate-500 uppercase text-[9px] tracking-wider font-bold">
+                        <th className="py-3 px-4">{language === 'hi' ? 'प्रश्न आईडी' : 'Question ID'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'मॉक टेस्ट' : 'Mock Test'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'प्रश्न पाठ' : 'Question Text'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'विवरण / संदेश' : 'Report Message'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'दिनांक और समय' : 'Report Date & Time'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportedQuestionsList.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-slate-400 dark:text-slate-505 font-bold">
+                            {language === 'hi' ? 'कोई रिपोर्ट किए गए प्रश्न नहीं मिले।' : 'No reported questions found.'}
+                          </td>
+                        </tr>
+                      ) : (
+                        reportedQuestionsList
+                          .filter(rq => {
+                            const term = searchTerm.toLowerCase().trim();
+                            if (!term) return true;
+                            return (
+                              rq.questionId.toLowerCase().includes(term) ||
+                              rq.mockTestTitle.toLowerCase().includes(term) ||
+                              rq.message.toLowerCase().includes(term) ||
+                              rq.questionText.toLowerCase().includes(term)
+                            );
+                          })
+                          .map((rq) => (
+                            <tr key={rq.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                              <td className="py-4 px-4 font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                                {rq.questionId}
+                              </td>
+                              <td className="py-4 px-4 font-bold text-slate-800 dark:text-slate-200">
+                                <div className="leading-tight">
+                                  <div>{rq.mockTestTitle || 'N/A'}</div>
+                                  <div className="text-[9px] text-slate-400 font-normal">{rq.mockTestId || 'N/A'}</div>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 text-slate-500 max-w-[200px] truncate font-medium" title={rq.questionText}>
+                                {rq.questionText || <span className="italic text-slate-400 font-normal">No question sample</span>}
+                              </td>
+                              <td className="py-4 px-4 text-slate-700 dark:text-slate-350 max-w-[250px] whitespace-normal font-semibold">
+                                <div className="bg-red-50/40 dark:bg-red-950/10 border border-red-100 dark:border-red-950 p-2.5 rounded-lg text-slate-850 dark:text-slate-300">
+                                  {rq.message}
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 text-slate-450 dark:text-slate-500 whitespace-nowrap font-semibold">
+                                {rq.createdAt}
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

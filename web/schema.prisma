@@ -234,3 +234,17 @@ model Notice {
 
   @@map("notices")
 }
+
+// 13. Reported Questions from Candidates
+model ReportedQuestion {
+  id            String   @id @default(uuid())
+  questionId    String
+  questionText  String   @default("")
+  mockTestId    String   @default("")
+  mockTestTitle String   @default("")
+  message       String
+  createdAt     DateTime @default(now())
+
+  @@map("reported_questions")
+}
+
