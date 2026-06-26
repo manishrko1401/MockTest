@@ -6,7 +6,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL ? process.env.DATABASE_URL.trim() : undefined;
 
 let prismaInstance: PrismaClient;
 
