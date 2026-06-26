@@ -69,6 +69,12 @@ export default function ExamSolutionAnalysisPage() {
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [mounted, setMounted] = useState(false);
   const [selectedAttemptIdx, setSelectedAttemptIdx] = useState(0);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportQuestionId, setReportQuestionId] = useState('');
+  const [reportMessage, setReportMessage] = useState('');
+  const [reportingError, setReportingError] = useState('');
+  const [reportingSuccess, setReportingSuccess] = useState(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const t = TRANSLATIONS[lang];
 
   // Sync selector language with auth context
@@ -249,13 +255,7 @@ export default function ExamSolutionAnalysisPage() {
     hi: "विषय विशेषज्ञों द्वारा विस्तृत समाधान वर्तमान में सत्यापन के अधीन है।"
   };
 
-  // Report modal states & handlers
-  const [reportModalOpen, setReportModalOpen] = useState(false);
-  const [reportQuestionId, setReportQuestionId] = useState('');
-  const [reportMessage, setReportMessage] = useState('');
-  const [reportingError, setReportingError] = useState('');
-  const [reportingSuccess, setReportingSuccess] = useState(false);
-  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  // Report modal states & handlers (hooks are declared at the top of the component)
 
   const handleOpenReportModal = (qId: string) => {
     setReportQuestionId(qId);

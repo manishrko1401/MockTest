@@ -217,6 +217,11 @@ function TcsIonEngine({ testId }: { testId: string }) {
     stateRef.current = state;
   }, [state]);
 
+  const saveOngoingSessionRef = useRef(saveOngoingSession);
+  useEffect(() => {
+    saveOngoingSessionRef.current = saveOngoingSession;
+  }, [saveOngoingSession]);
+
   // Initialize session on mount (checking for resume)
   useEffect(() => {
     const initialize = async () => {
@@ -265,7 +270,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
       const currentState = stateRef.current;
       // Save only if exam is active and not submitted yet
       if (currentState.session && !currentState.isExamSubmitted) {
-        saveOngoingSession(
+        saveOngoingSessionRef.current(
           testId,
           currentState.session.testTitle,
           currentState.timeRemaining,
@@ -283,7 +288,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
       handleSave();
       window.removeEventListener('beforeunload', handleSave);
     };
-  }, [testId, saveOngoingSession]);
+  }, [testId]);
 
   // Sync attempt score on exam submission
   useEffect(() => {

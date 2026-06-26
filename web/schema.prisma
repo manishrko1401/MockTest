@@ -174,7 +174,6 @@ model Question {
   imageUrl          String?
   mathLatex         String?
   orderIndex        Int
-  responseStates    QuestionResponseState[]
   createdAt         DateTime                @default(now())
 
   @@unique([sectionId, orderIndex])
@@ -210,7 +209,6 @@ model QuestionResponseState {
   sessionId           String
   session             UserTestSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   questionId          String
-  question            Question             @relation(fields: [questionId], references: [id], onDelete: Cascade)
   selectedOptionIndex Int?
   state               Int                  @default(1) // 1: NOT_VISITED, 2: NOT_ANSWERED, 3: ANSWERED, 4: MARKED_FOR_REVIEW, 5: ANSWERED_AND_MARKED_FOR_REVIEW
   elapsedSeconds      Int                  @default(0)
