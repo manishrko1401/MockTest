@@ -8,7 +8,7 @@ import { Lock, Mail, User, AlertCircle, CheckCircle2, ChevronLeft, ShieldCheck, 
 import { TRANSLATIONS } from '../translations';
 
 export default function AuthPage() {
-  const { login, signup, theme, toggleTheme, language, setLanguage } = useAuth();
+  const { login, signup, theme, toggleTheme, language, setLanguage, usersList } = useAuth();
   const router = useRouter();
   const t = TRANSLATIONS[language];
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
@@ -31,6 +31,11 @@ export default function AuthPage() {
     setSuccessMsg(null);
 
     if (activeTab === 'login') {
+      const user = usersList.find(u => u.email.trim().toLowerCase() === email.trim().toLowerCase());
+      if (user && user.isBlocked) {
+        setErrorMsg(language === 'hi' ? 'यह खाता ब्लॉक कर दिया गया है। कृपया व्यवस्थापक से संपर्क करें।' : 'This account has been blocked. Please contact the administrator.');
+        return;
+      }
       const ok = login(email);
       if (ok) {
         setSuccessMsg(t.authLoginSuccess || 'Successfully logged in! Redirecting...');
@@ -54,7 +59,7 @@ export default function AuthPage() {
         return;
       }
       
-      const ok = signup(name, email, mobile.trim(), referralCodeInput.trim() || undefined);
+      const ok = signup(name, email, mobile.trim(), password, referralCodeInput.trim() || undefined);
       if (ok) {
         setSuccessMsg(t.authSignupSuccess || 'Account registered successfully! Redirecting...');
         setTimeout(() => {

@@ -68,6 +68,8 @@ export interface MockUser {
   registeredDate: string;
   testSessions: MockTestRecord[];
   bookmarkedQuestions?: { testId: string; questionId: string; }[];
+  password?: string;
+  isBlocked?: boolean;
 }
 
 interface AuthContextType {
@@ -76,7 +78,7 @@ interface AuthContextType {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   login: (email: string) => boolean;
-  signup: (name: string, email: string, mobile: string, referralCodeInput?: string) => boolean;
+  signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string) => boolean;
   logout: () => void;
   updateProfile: (name: string, email: string, mobile: string) => void;
   updatePassword: (oldPass: string, newPass: string) => boolean;
@@ -103,7 +105,9 @@ interface AuthContextType {
     role: MockUser['role'],
     tier: MockUser['subscriptionTier'],
     purchasedAt: string | null,
-    expiry: string | null
+    expiry: string | null,
+    password?: string,
+    isBlocked?: boolean
   ) => void;
   saveOngoingSession: (
     testId: string,
@@ -276,7 +280,9 @@ const INITIAL_USERS: MockUser[] = [
     subscriptionPurchasedAt: null,
     subscriptionExpiresAt: null,
     registeredDate: '2026-01-01',
-    testSessions: []
+    testSessions: [],
+    password: 'password123',
+    isBlocked: false
   },
   {
     id: 'u1',
@@ -295,7 +301,9 @@ const INITIAL_USERS: MockUser[] = [
     testSessions: [
       { id: 'ts1', testId: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', score: 162.5, maxScore: 200, accuracy: 81.25, durationSeconds: 2520, status: 'COMPLETED', violations: 0, date: '2026-06-20' },
       { id: 'ts2', testId: 'sbi_po_prelims', title: 'SBI PO Full Length Mock Test Series', score: 48.0, maxScore: 100, accuracy: 55.0, durationSeconds: 3480, status: 'AUTO_SUBMITTED', violations: 3, date: '2026-06-22' }
-    ]
+    ],
+    password: 'password123',
+    isBlocked: false
   },
   {
     id: 'u2',
@@ -313,7 +321,9 @@ const INITIAL_USERS: MockUser[] = [
     registeredDate: '2026-05-18',
     testSessions: [
       { id: 'ts3', testId: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', score: 138.0, maxScore: 200, accuracy: 72.5, durationSeconds: 3000, status: 'COMPLETED', violations: 1, date: '2026-06-24' }
-    ]
+    ],
+    password: 'password123',
+    isBlocked: false
   },
   {
     id: 'u3',
@@ -329,7 +339,9 @@ const INITIAL_USERS: MockUser[] = [
     subscriptionPurchasedAt: null,
     subscriptionExpiresAt: null,
     registeredDate: '2025-12-15',
-    testSessions: []
+    testSessions: [],
+    password: 'password123',
+    isBlocked: false
   },
   {
     id: 'u4',
@@ -347,7 +359,9 @@ const INITIAL_USERS: MockUser[] = [
     registeredDate: '2026-06-12',
     testSessions: [
       { id: 'ts4', testId: 'rrb_ntpc_stage1', title: 'RRB NTPC Free Sectional Tests', score: 28.0, maxScore: 40, accuracy: 80.0, durationSeconds: 900, status: 'COMPLETED', violations: 0, date: '2026-06-25' }
-    ]
+    ],
+    password: 'password123',
+    isBlocked: false
   }
 ];
 
@@ -698,7 +712,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
-  const signup = (name: string, email: string, mobile: string, referralCodeInput?: string): boolean => {
+  const signup = (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string): boolean => {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedName = name.trim();
     const trimmedMobile = mobile.trim();
@@ -741,7 +755,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscriptionPurchasedAt: null,
       subscriptionExpiresAt: null,
       registeredDate: new Date().toISOString().split('T')[0],
-      testSessions: []
+      testSessions: [],
+      password: password || 'password123',
+      isBlocked: false
     };
 
     updatedList.push(newUser);
@@ -936,7 +952,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role: MockUser['role'],
     tier: MockUser['subscriptionTier'],
     purchasedAt: string | null,
-    expiry: string | null
+    expiry: string | null,
+    password?: string,
+    isBlocked?: boolean
   ) => {
     const updatedList = usersList.map(u => {
       if (u.id === userId) {
@@ -951,7 +969,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role,
           subscriptionTier: tier,
           subscriptionPurchasedAt: purchasedAt,
-          subscriptionExpiresAt: expiry
+          subscriptionExpiresAt: expiry,
+          password: password || u.password || 'password123',
+          isBlocked: isBlocked ?? u.isBlocked ?? false
         };
         
         if (currentUser && currentUser.id === userId) {

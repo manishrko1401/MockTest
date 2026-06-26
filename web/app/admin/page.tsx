@@ -138,6 +138,8 @@ export default function AdminAnalytics() {
   const [editMobile, setEditMobile] = useState('');
   const [editReferralCode, setEditReferralCode] = useState('');
   const [editReferredBy, setEditReferredBy] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editIsBlocked, setEditIsBlocked] = useState(false);
 
   // Category management form states
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -194,6 +196,8 @@ export default function AdminAnalytics() {
     setEditTier(user.subscriptionTier);
     setEditExpiry(user.subscriptionExpiresAt || '');
     setEditPurchasedAt(user.subscriptionPurchasedAt || '');
+    setEditPassword(user.password || 'password123');
+    setEditIsBlocked(user.isBlocked || false);
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -213,7 +217,9 @@ export default function AdminAnalytics() {
       editRole,
       editTier,
       purchasedAt,
-      expiry
+      expiry,
+      editPassword.trim(),
+      editIsBlocked
     );
     
     showToast('User profile updated successfully!');
@@ -1004,7 +1010,8 @@ export default function AdminAnalytics() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/50">
-                      {usersList
+                      {[...usersList]
+                        .reverse()
                         .filter(u => {
                           const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                                                 u.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -1023,7 +1030,14 @@ export default function AdminAnalytics() {
                               }`}
                             >
                               <td className="py-3.5 pr-2">
-                                <p className="font-bold text-white text-xs">{user.name}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="font-bold text-white text-xs">{user.name}</p>
+                                  {user.isBlocked && (
+                                    <span className="bg-red-950/45 border border-red-800 text-red-400 text-[8px] font-extrabold px-1 rounded uppercase tracking-wider">
+                                      Blocked
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="text-[10px] text-slate-500">{user.email}</p>
                               </td>
                               <td className="py-3.5 px-2">
@@ -1187,7 +1201,7 @@ export default function AdminAnalytics() {
                                       required
                                       value={editPurchasedAt}
                                       onChange={(e) => setEditPurchasedAt(e.target.value)}
-                                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold cursor-pointer"
                                     />
                                   </div>
                                   <div>
@@ -1197,11 +1211,35 @@ export default function AdminAnalytics() {
                                       required
                                       value={editExpiry}
                                       onChange={(e) => setEditExpiry(e.target.value)}
-                                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold cursor-pointer"
                                     />
                                   </div>
                                 </>
                               )}
+
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Account Password</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={editPassword}
+                                  onChange={(e) => setEditPassword(e.target.value)}
+                                  placeholder="User password"
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Account Block Status</label>
+                                <select
+                                  value={editIsBlocked ? 'true' : 'false'}
+                                  onChange={(e) => setEditIsBlocked(e.target.value === 'true')}
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold cursor-pointer"
+                                >
+                                  <option value="false">Active (Unblocked)</option>
+                                  <option value="true">Suspended (Blocked)</option>
+                                </select>
+                              </div>
 
                             </div>
 
