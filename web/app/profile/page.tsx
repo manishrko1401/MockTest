@@ -89,7 +89,7 @@ export default function StudentProfilePage() {
 
   const handleSignOut = () => {
     logout();
-    router.push('/auth');
+    router.push('/');
   };
 
   if (!currentUser) {
