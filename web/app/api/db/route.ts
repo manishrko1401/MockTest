@@ -167,6 +167,7 @@ async function handleBootstrap() {
     category: n.category as 'notice' | 'result' | 'admit_card' | 'announcement',
     url: n.url || undefined,
     lastDate: n.lastDate || undefined,
+    imageUrl: n.imageUrl || undefined,
   }));
 
   // Fetch Exam Catalog
