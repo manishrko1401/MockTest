@@ -77,8 +77,8 @@ interface AuthContextType {
   usersList: MockUser[];
   theme: 'light' | 'dark';
   toggleTheme: () => void;
-  login: (email: string) => Promise<boolean>;
-  signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string) => Promise<boolean>;
+  login: (email: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (name: string, email: string, mobile: string) => void;
   updatePassword: (oldPass: string, newPass: string) => boolean;
@@ -689,7 +689,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     document.cookie = "tb_lang=" + lang + ";path=/;max-age=31536000";
   };
 
-  const login = async (email: string): Promise<boolean> => {
+  const login = async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
@@ -704,15 +704,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentUser(data.user);
         document.cookie = "tb_user_id=" + data.user.id + ";path=/;max-age=31536000";
         fetchUsersList();
-        return true;
+        return { success: true };
       }
-    } catch (e) {
+      return { success: false, error: data.error || 'Login failed' };
+    } catch (e: any) {
       console.error("Login API error:", e);
+      return { success: false, error: e.message || 'Connection error' };
     }
-    return false;
   };
 
-  const signup = async (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string): Promise<boolean> => {
+  const signup = async (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
@@ -727,12 +728,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentUser(data.user);
         setUsersList(prev => [data.user, ...prev]);
         document.cookie = "tb_user_id=" + data.user.id + ";path=/;max-age=31536000";
-        return true;
+        return { success: true };
       }
-    } catch (e) {
+      return { success: false, error: data.error || 'Signup failed' };
+    } catch (e: any) {
       console.error("Signup API error:", e);
+      return { success: false, error: e.message || 'Connection error' };
     }
-    return false;
   };
 
   const logout = () => {

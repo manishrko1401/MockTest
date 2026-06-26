@@ -36,14 +36,14 @@ export default function AuthPage() {
         setErrorMsg(language === 'hi' ? 'यह खाता ब्लॉक कर दिया गया है। कृपया व्यवस्थापक से संपर्क करें।' : 'This account has been blocked. Please contact the administrator.');
         return;
       }
-      const ok = await login(email);
-      if (ok) {
+      const res = await login(email);
+      if (res.success) {
         setSuccessMsg(t.authLoginSuccess || 'Successfully logged in! Redirecting...');
         setTimeout(() => {
           router.push('/');
         }, 1500);
       } else {
-        setErrorMsg(t.authLoginFail || 'Invalid credentials. Please register or sign up.');
+        setErrorMsg(res.error || t.authLoginFail || 'Invalid credentials. Please register or sign up.');
       }
     } else {
       if (!name.trim()) {
@@ -59,14 +59,14 @@ export default function AuthPage() {
         return;
       }
       
-      const ok = await signup(name, email, mobile.trim(), password, referralCodeInput.trim() || undefined);
-      if (ok) {
+      const res = await signup(name, email, mobile.trim(), password, referralCodeInput.trim() || undefined);
+      if (res.success) {
         setSuccessMsg(t.authSignupSuccess || 'Account registered successfully! Redirecting...');
         setTimeout(() => {
           router.push('/');
         }, 1500);
       } else {
-        setErrorMsg(t.authSignupFail || 'Email address already registered. Please login.');
+        setErrorMsg(res.error || t.authSignupFail || 'Email address already registered. Please login.');
       }
     }
   };

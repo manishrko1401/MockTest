@@ -116,11 +116,11 @@ export default function AdminAnalytics() {
 
     // Hardcoded password verification for the admin panel
     if (adminEmail.trim().toLowerCase() === 'admin@mocktest.com' && adminPassword === 'test@admin123') {
-      const ok = await login('admin@mocktest.com');
-      if (ok) {
+      const res = await login('admin@mocktest.com');
+      if (res.success) {
         showToast('Admin access authorized successfully!');
       } else {
-        setAdminLoginError('Database synchronization error. Admin user account could not be activated.');
+        setAdminLoginError(res.error || 'Database synchronization error. Admin user account could not be activated.');
       }
     } else {
       setAdminLoginError('Invalid Admin ID or Password.');
