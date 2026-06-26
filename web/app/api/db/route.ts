@@ -1,6 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 
+function formatDateTime(date: Date) {
+  try {
+    return new Intl.DateTimeFormat('en-IN', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: 'Asia/Kolkata'
+    }).format(new Date(date));
+  } catch (e) {
+    return new Date(date).toISOString();
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -103,7 +115,7 @@ async function handleBootstrap() {
       subscriptionTier: u.subscriptionTier,
       subscriptionPurchasedAt: u.subscriptionPurchasedAt,
       subscriptionExpiresAt: u.subscriptionExpiresAt,
-      registeredDate: u.createdAt.toISOString().split('T')[0],
+      registeredDate: formatDateTime(u.createdAt),
       isBlocked: u.isBlocked,
       password: u.passwordHash, // Exposed for simulated profile views in mock dashboard
       bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
@@ -263,7 +275,7 @@ async function handleSignup(data: any) {
       subscriptionTier: newUser.subscriptionTier,
       subscriptionPurchasedAt: newUser.subscriptionPurchasedAt,
       subscriptionExpiresAt: newUser.subscriptionExpiresAt,
-      registeredDate: newUser.createdAt.toISOString().split('T')[0],
+      registeredDate: formatDateTime(newUser.createdAt),
       isBlocked: newUser.isBlocked,
       testSessions: [],
       bookmarkedQuestions: [],
@@ -309,7 +321,7 @@ async function handleLogin(data: any) {
     subscriptionTier: user.subscriptionTier,
     subscriptionPurchasedAt: user.subscriptionPurchasedAt,
     subscriptionExpiresAt: user.subscriptionExpiresAt,
-    registeredDate: user.createdAt.toISOString().split('T')[0],
+    registeredDate: formatDateTime(user.createdAt),
     isBlocked: user.isBlocked,
     password: user.passwordHash,
     bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],

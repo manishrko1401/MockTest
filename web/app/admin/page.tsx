@@ -1053,6 +1053,7 @@ export default function AdminAnalytics() {
                                   )}
                                 </div>
                                 <p className="text-[10px] text-slate-500">{user.email}</p>
+                                <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Joined: {user.registeredDate}</p>
                               </td>
                               <td className="py-3.5 px-2">
                                 <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
