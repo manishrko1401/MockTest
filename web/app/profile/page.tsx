@@ -28,6 +28,8 @@ export default function StudentProfilePage() {
 
   const [mounted, setMounted] = useState(false);
 
+  const { isMobile } = useIsMobile();
+
   // Sync input values and set client-only mount flag
   useEffect(() => {
     setMounted(true);
@@ -88,8 +90,9 @@ export default function StudentProfilePage() {
   };
 
   const handleSignOut = () => {
-    logout();
     router.push('/');
+    // Delay logout slightly so router navigation starts before currentUser becomes null
+    setTimeout(() => logout(), 100);
   };
 
   if (!currentUser) {
@@ -107,7 +110,6 @@ export default function StudentProfilePage() {
     );
   }
 
-  const { isMobile } = useIsMobile();
 
   if (mounted && isMobile) {
     return (
