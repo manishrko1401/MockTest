@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Globe, Award, AlertCircle, Menu, Eye } from 'lucide-react-native';
 import { ApiClient } from './api';
+import { ThemeColors } from './theme';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -23,7 +24,9 @@ interface MobileTestScreenProps {
   currentUser: any;
   testId: string;
   onBack: () => void;
-  onComplete: () => void;
+  onComplete: (submittedTestId?: string) => void;
+  isDark?: boolean;
+  examCatalog?: any[];
 }
 
 // TCS iON status palette matching useTestEngine.tsx
@@ -58,9 +61,13 @@ export default function MobileTestScreen({
   currentUser,
   testId,
   onBack,
-  onComplete
+  onComplete,
+  isDark = false,
+  examCatalog = []
 }: MobileTestScreenProps) {
   const [loading, setLoading] = useState(true);
+  const [loadingText, setLoadingText] = useState('Syncing sitting session...');
+  const [totalDuration, setTotalDuration] = useState(3600);
   const [questions, setQuestions] = useState<MobileQuestion[]>([]);
   const [sections, setSections] = useState<MobileSection[]>([]);
   const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
@@ -71,6 +78,20 @@ export default function MobileTestScreen({
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [violationsCount, setViolationsCount] = useState(0);
   const [drawerVisible, setDrawerVisible] = useState(false);
+
+  // Modern custom modal state
+  const [modalConfig, setModalConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    buttons: { text: string; onPress: () => void; style?: 'cancel' | 'default' | 'destructive' }[];
+    isPauseModal?: boolean;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+    buttons: [],
+  });
 
   // User responses dictionary mapping questionId to state
   const [responses, setResponses] = useState<Record<string, {
@@ -89,10 +110,18 @@ export default function MobileTestScreen({
         // App went to background (cheating violation)
         setViolationsCount((prev) => {
           const next = prev + 1;
-          Alert.alert(
-            'Exam Warning',
-            `Leaving the app is a focus violation! This has been reported to the administrator. (Violations: ${next}/3)`
-          );
+          setModalConfig({
+            visible: true,
+            title: 'Exam Warning',
+            message: `Leaving the app is a focus violation! This has been reported to the administrator. (Violations: ${next}/3)`,
+            buttons: [
+              {
+                text: 'Understand',
+                onPress: () => setModalConfig((prevVal) => ({ ...prevVal, visible: false })),
+                style: 'default'
+              }
+            ]
+          });
           if (next >= 3) {
             handleExamSubmit(true); // Force submit on 3 violations
           }
@@ -111,12 +140,45 @@ export default function MobileTestScreen({
   useEffect(() => {
     const loadExamData = async () => {
       setLoading(true);
+      setLoadingText('Syncing sitting session...');
       
       // 1. Fetch questions from database
       const res = await ApiClient.getCustomQuestions(testId);
       let list: MobileQuestion[] = [];
       let secs: MobileSection[] = [];
       let durationSeconds = 3600;
+
+      // Find test details in catalog to get correct duration
+      let catalogTest: any = null;
+      if (examCatalog && examCatalog.length > 0) {
+        for (const cat of examCatalog) {
+          for (const sub of cat.subCategories || []) {
+            const found = (sub.tests || []).find((t: any) => t.id === testId);
+            if (found) {
+              catalogTest = found;
+              break;
+            }
+          }
+          if (catalogTest) break;
+        }
+      }
+
+      if (catalogTest && catalogTest.durationMinutes) {
+        durationSeconds = catalogTest.durationMinutes * 60;
+      } else {
+        // Fallbacks
+        if (testId.includes('ssc')) {
+          durationSeconds = 3600; // 60 mins
+        } else if (testId.includes('rrb')) {
+          durationSeconds = 5400; // 90 mins
+        } else if (testId.includes('ctet')) {
+          durationSeconds = 9000; // 150 mins
+        } else if (testId.includes('ugc_net')) {
+          durationSeconds = testId.includes('paper1') ? 3600 : 7200; // 60 or 120 mins
+        }
+      }
+
+      setTotalDuration(durationSeconds);
 
       const testTitle = testId.includes('ssc') ? 'SSC' : testId.includes('rrb') ? 'RRB' : 'Mock';
 
@@ -164,7 +226,7 @@ export default function MobileTestScreen({
               id: "q_q2", sectionId: "sec_quant", questionType: "mcq", orderIndex: 1, correctOptionIndex: 0,
               content: {
                 en: { questionText: "The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A's present age?", options: ["20 years", "25 years", "30 years", "15 years"] },
-                hi: { questionText: "A और B की वर्तमान आयु का अनुपात 4:5 है। 5 वर्ष बाद यह अनुपात 5:6 हो जाता है। A की वर्तमान आयु क्या है?", options: ["20 वर्ष", "25 वर्ष", "30 वर्ष", "15 वर्ष"] }
+                hi: { questionText: "A और B की वर्तमान आयु का अनुपात 4:5 है। 5 वर्ष बाद यह अनुपात 5:6 हो जाता है। A की वर्तमान आयु क्या है?", options: ["20 वर्ष", "25 वर्ष", "30 वर्ष", "15 years"] }
               }
             },
             {
@@ -239,6 +301,8 @@ export default function MobileTestScreen({
             }
           });
         }
+      } else {
+        setTimeLeft(durationSeconds);
       }
 
       // Mark the starting question as visited
@@ -255,7 +319,7 @@ export default function MobileTestScreen({
     };
 
     loadExamData();
-  }, [testId, currentUser]);
+  }, [testId, currentUser, examCatalog]);
 
   // Timer Tick hook
   useEffect(() => {
@@ -352,7 +416,18 @@ export default function MobileTestScreen({
         setCurrentSectionIdx(currentSectionIdx + 1);
         setCurrentQuestionIdx(0);
       } else {
-        Alert.alert('Section Complete', 'You are on the last question. Open the palette drawer to submit or review.');
+        setModalConfig({
+          visible: true,
+          title: 'Section Complete',
+          message: 'You are on the last question. Open the palette drawer to submit or review.',
+          buttons: [
+            {
+              text: 'OK',
+              onPress: () => setModalConfig((prevVal) => ({ ...prevVal, visible: false })),
+              style: 'default'
+            }
+          ]
+        });
       }
     }
   };
@@ -442,21 +517,32 @@ export default function MobileTestScreen({
 
   const handlePauseAndExit = async () => {
     setIsTimerRunning(false);
-    Alert.alert(
-      'Pause sitting?',
-      'Your exam states will be saved to the database. You can resume this attempt anytime.',
-      [
-        { text: 'Cancel', onPress: () => setIsTimerRunning(true), style: 'cancel' },
+    setModalConfig({
+      visible: true,
+      title: 'Test Paused',
+      message: 'Your progress has been saved. You can resume this attempt anytime.',
+      isPauseModal: true,
+      buttons: [
         {
-          text: 'Save & Exit',
+          text: 'Resume',
+          onPress: () => {
+            setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
+            setIsTimerRunning(true);
+          },
+          style: 'cancel'
+        },
+        {
+          text: 'Back to Home Screen',
           onPress: async () => {
+            setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
             setLoading(true);
             await saveOngoingSessionState();
             onBack();
-          }
+          },
+          style: 'destructive'
         }
       ]
-    );
+    });
   };
 
   // Submit assessment sittings
@@ -465,12 +551,14 @@ export default function MobileTestScreen({
 
     const performSubmission = async () => {
       setLoading(true);
+      setLoadingText('Submitting your answers...');
 
       // Compute stats
       let correctCount = 0;
       let incorrectCount = 0;
       let unattemptedCount = 0;
       let totalMarks = 0;
+      let totalMaxScore = 0;
 
       questions.forEach((q) => {
         const resp = responses[q.id];
@@ -478,6 +566,8 @@ export default function MobileTestScreen({
         const qSection = sections.find((s) => s.id === q.sectionId);
         const positiveMark = qSection ? qSection.positiveMark : 2;
         const negativeMark = qSection ? qSection.negativeMark : 0.5;
+
+        totalMaxScore += positiveMark;
 
         if (selected === null) {
           unattemptedCount++;
@@ -505,9 +595,9 @@ export default function MobileTestScreen({
         userId: currentUser.id,
         testId,
         score: totalMarks,
-        maxScore: totalQs * 2, // assume 2 marks max per question on average
+        maxScore: totalMaxScore,
         accuracy,
-        durationSeconds: 3600 - timeLeft, // assuming 1 hr default test
+        durationSeconds: totalDuration - timeLeft,
         violations: violationsCount,
         responses: formattedResponses
       });
@@ -515,36 +605,76 @@ export default function MobileTestScreen({
       setLoading(false);
 
       if (res.success) {
-        Alert.alert(
-          forced ? 'Exam Submitted (Violation Limit)' : 'Exam Submitted Successfully',
-          `Assessment summary:\nMarks scored: ${totalMarks.toFixed(1)}\nCorrect answers: ${correctCount}/${totalQs}\nAccuracy: ${accuracy.toFixed(1)}%`,
-          [{ text: 'View Performance', onPress: onComplete }]
-        );
+        setModalConfig({
+          visible: true,
+          title: forced ? 'Exam Submitted (Violation Limit)' : 'Exam Submitted Successfully',
+          message: `Assessment summary:\nMarks scored: ${totalMarks.toFixed(1)}\nCorrect answers: ${correctCount}/${totalQs}\nAccuracy: ${accuracy.toFixed(1)}%`,
+          buttons: [
+            {
+              text: 'View Performance',
+              onPress: () => {
+                setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
+                setLoading(true);
+                setLoadingText('Generating performance analysis...');
+                onComplete(testId);
+              },
+              style: 'default'
+            }
+          ]
+        });
       } else {
-        Alert.alert('Submission Error', res.error || 'Check network connection.');
-        setIsTimerRunning(true);
+        setModalConfig({
+          visible: true,
+          title: 'Submission Error',
+          message: res.error || 'Check network connection.',
+          buttons: [
+            {
+              text: 'OK',
+              onPress: () => {
+                setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
+                setIsTimerRunning(true);
+              },
+              style: 'default'
+            }
+          ]
+        });
       }
     };
 
     if (forced) {
       await performSubmission();
     } else {
-      Alert.alert(
-        'Submit Mock Paper?',
-        'Are you sure you want to finish and submit your exam sheet now?',
-        [
-          { text: 'Cancel', onPress: () => setIsTimerRunning(true), style: 'cancel' },
-          { text: 'Submit Paper', onPress: performSubmission }
+      setModalConfig({
+        visible: true,
+        title: 'Submit Mock Paper?',
+        message: 'Are you sure you want to finish and submit your exam sheet now?',
+        buttons: [
+          {
+            text: 'Cancel',
+            onPress: () => {
+              setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
+              setIsTimerRunning(true);
+            },
+            style: 'cancel'
+          },
+          {
+            text: 'Submit Paper',
+            onPress: () => {
+              setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
+              performSubmission();
+            },
+            style: 'default'
+          }
         ]
-      );
+      });
     }
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
         <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={styles.loadingText}>Syncing sitting session...</Text>
+        <Text style={[styles.loadingText, isDark && { color: ThemeColors.dark.text }]}>{loadingText}</Text>
       </View>
     );
   }
@@ -556,11 +686,14 @@ export default function MobileTestScreen({
   const activeResp = activeQuestion ? responses[activeQuestion.id] : null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F2942" />
+    <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+      <StatusBar 
+        barStyle={isDark ? 'light-content' : 'dark-content'} 
+        backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
+      />
 
       {/* CBT Header */}
-      <View style={styles.examHeader}>
+      <View style={[styles.examHeader, isDark && { backgroundColor: ThemeColors.dark.headerBg }]}>
         <TouchableOpacity style={styles.pauseBtn} onPress={handlePauseAndExit}>
           <Text style={styles.pauseBtnText}>⏸ Pause</Text>
         </TouchableOpacity>
@@ -576,17 +709,27 @@ export default function MobileTestScreen({
       </View>
 
       {/* Section Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sectionsRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.sectionsRow, isDark && { backgroundColor: ThemeColors.dark.card, borderBottomColor: ThemeColors.dark.border }]}>
         {sections.map((sec, idx) => (
           <TouchableOpacity
             key={sec.id}
-            style={[styles.sectionTab, currentSectionIdx === idx && styles.sectionTabActive]}
+            style={[
+              styles.sectionTab, 
+              isDark && { borderRightColor: ThemeColors.dark.border },
+              currentSectionIdx === idx && styles.sectionTabActive,
+              currentSectionIdx === idx && isDark && { backgroundColor: '#1E293B', borderBottomColor: '#60A5FA' }
+            ]}
             onPress={() => {
               setCurrentSectionIdx(idx);
               setCurrentQuestionIdx(0);
             }}
           >
-            <Text style={[styles.sectionTabText, currentSectionIdx === idx && styles.sectionTabTextActive]}>
+            <Text style={[
+              styles.sectionTabText, 
+              isDark && { color: ThemeColors.dark.textMuted },
+              currentSectionIdx === idx && styles.sectionTabTextActive,
+              currentSectionIdx === idx && isDark && { color: '#60A5FA' }
+            ]}>
               {sec.name}
             </Text>
           </TouchableOpacity>
@@ -594,15 +737,15 @@ export default function MobileTestScreen({
       </ScrollView>
 
       {/* Question Panel */}
-      <ScrollView style={styles.questionContainer}>
+      <ScrollView style={[styles.questionContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
         <View style={styles.questionMetaRow}>
-          <Text style={styles.questionIndexText}>QUESTION NO. {currentQuestionIdx + 1}</Text>
+          <Text style={[styles.questionIndexText, isDark && { color: '#60A5FA' }]}>QUESTION NO. {currentQuestionIdx + 1}</Text>
           {violationsCount > 0 && (
             <Text style={styles.violationWarning}>Violations: {violationsCount}/3</Text>
           )}
         </View>
 
-        <Text style={styles.questionBody}>{questionText}</Text>
+        <Text style={[styles.questionBody, isDark && { color: ThemeColors.dark.text }]}>{questionText}</Text>
 
         {/* Options Radio Grid */}
         <View style={styles.optionsBlock}>
@@ -611,11 +754,26 @@ export default function MobileTestScreen({
             return (
               <TouchableOpacity
                 key={i}
-                style={[styles.optionItem, isSelected && styles.optionItemActive]}
+                style={[
+                  styles.optionItem, 
+                  isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border },
+                  isSelected && styles.optionItemActive,
+                  isSelected && isDark && { borderColor: '#60A5FA', backgroundColor: '#1E3A8A' }
+                ]}
                 onPress={() => handleSelectOption(i)}
               >
-                <View style={[styles.optionDot, isSelected && styles.optionDotActive]} />
-                <Text style={[styles.optionText, isSelected && styles.optionTextActive]}>{opt}</Text>
+                <View style={[
+                  styles.optionDot, 
+                  isDark && { borderColor: ThemeColors.dark.border },
+                  isSelected && styles.optionDotActive,
+                  isSelected && isDark && { borderColor: '#60A5FA', backgroundColor: '#60A5FA' }
+                ]} />
+                <Text style={[
+                  styles.optionText, 
+                  isDark && { color: ThemeColors.dark.text },
+                  isSelected && styles.optionTextActive,
+                  isSelected && isDark && { color: '#FFF' }
+                ]}>{opt}</Text>
               </TouchableOpacity>
             );
           })}
@@ -623,13 +781,13 @@ export default function MobileTestScreen({
       </ScrollView>
 
       {/* Control Footer */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.secondaryBtn} onPress={handleMarkForReview}>
-          <Text style={styles.secondaryBtnText}>Mark Review</Text>
+      <View style={[styles.footer, isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder }]}>
+        <TouchableOpacity style={[styles.secondaryBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]} onPress={handleMarkForReview}>
+          <Text style={[styles.secondaryBtnText, isDark && { color: ThemeColors.dark.text }]}>Mark Review</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondaryBtn} onPress={handleClearResponse}>
-          <Text style={styles.secondaryBtnText}>Clear</Text>
+        <TouchableOpacity style={[styles.secondaryBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]} onPress={handleClearResponse}>
+          <Text style={[styles.secondaryBtnText, isDark && { color: ThemeColors.dark.text }]}>Clear</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.primaryBtn} onPress={handleSaveAndNext}>
@@ -650,12 +808,12 @@ export default function MobileTestScreen({
         transparent={true}
         onRequestClose={() => setDrawerVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.drawerSheet}>
-            <View style={styles.drawerHeader}>
-              <Text style={styles.drawerTitle}>TCS iON Question Palette</Text>
-              <TouchableOpacity style={styles.closeBtn} onPress={() => setDrawerVisible(false)}>
-                <Text style={styles.closeBtnText}>✕ Close</Text>
+        <View style={[styles.modalOverlay, isDark && { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
+          <View style={[styles.drawerSheet, isDark && { backgroundColor: ThemeColors.dark.card }]}>
+            <View style={[styles.drawerHeader, isDark && { borderBottomColor: ThemeColors.dark.border }]}>
+              <Text style={[styles.drawerTitle, isDark && { color: ThemeColors.dark.text }]}>TCS iON Question Palette</Text>
+              <TouchableOpacity style={[styles.closeBtn, isDark && { backgroundColor: '#0F172A' }]} onPress={() => setDrawerVisible(false)}>
+                <Text style={[styles.closeBtnText, isDark && { color: ThemeColors.dark.text }]}>✕ Close</Text>
               </TouchableOpacity>
             </View>
 
@@ -668,29 +826,37 @@ export default function MobileTestScreen({
 
                 return (
                   <View key={sec.id} style={styles.drawerSecGroup}>
-                    <Text style={styles.drawerSecName}>{sec.name}</Text>
+                    <Text style={[styles.drawerSecName, isDark && { backgroundColor: '#0F172A', color: '#60A5FA' }]}>{sec.name}</Text>
                     <View style={styles.paletteGrid}>
                       {secQs.map((q, qIdx) => {
                         const resp = responses[q.id];
                         const qState = resp ? resp.state : 1;
 
-                        let stateStyle = styles.pNotVisited;
-                        let textStyle = styles.pTextDark;
+                        let stateStyle: any = styles.pNotVisited;
+                        let textStyle: any = styles.pTextDark;
                         let hasCheck = false;
 
-                        if (qState === 2) {
-                          stateStyle = styles.pNotAnswered;
-                          textStyle = styles.pTextLight;
-                        } else if (qState === 3) {
-                          stateStyle = styles.pAnswered;
-                          textStyle = styles.pTextLight;
-                        } else if (qState === 4) {
-                          stateStyle = styles.pMarked;
-                          textStyle = styles.pTextLight;
-                        } else if (qState === 5) {
-                          stateStyle = styles.pMarkedAnswered;
-                          textStyle = styles.pTextLight;
-                          hasCheck = true;
+                        switch (qState) {
+                          case 2: // Not Answered
+                            stateStyle = isDark ? [styles.pNotAnswered, { backgroundColor: '#7F1D1D' }] : styles.pNotAnswered;
+                            textStyle = isDark ? [styles.pTextLight, { color: '#FFF' }] : styles.pTextLight;
+                            break;
+                          case 3: // Answered
+                            stateStyle = isDark ? [styles.pAnswered, { backgroundColor: '#064E3B' }] : styles.pAnswered;
+                            textStyle = isDark ? [styles.pTextLight, { color: '#FFF' }] : styles.pTextLight;
+                            break;
+                          case 4: // Marked
+                            stateStyle = isDark ? [styles.pMarked, { backgroundColor: '#581C87' }] : styles.pMarked;
+                            textStyle = isDark ? [styles.pTextLight, { color: '#FFF' }] : styles.pTextLight;
+                            break;
+                          case 5: // Answered & Marked
+                            stateStyle = isDark ? [styles.pMarkedAnswered, { backgroundColor: '#581C87' }] : styles.pMarkedAnswered;
+                            textStyle = isDark ? [styles.pTextLight, { color: '#FFF' }] : styles.pTextLight;
+                            hasCheck = true;
+                            break;
+                          default:
+                            stateStyle = isDark ? [styles.pNotVisited, { backgroundColor: '#334155' }] : styles.pNotVisited;
+                            textStyle = isDark ? [styles.pTextDark, { color: '#94A3B8' }] : styles.pTextDark;
                         }
 
                         const isActive = currentSectionIdx === secIdx && currentQuestionIdx === qIdx;
@@ -723,6 +889,61 @@ export default function MobileTestScreen({
             <TouchableOpacity style={styles.submitPaperBtn} onPress={() => handleExamSubmit(false)}>
               <Text style={styles.submitPaperBtnText}>Submit Complete Paper</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modern Custom Modal for Alerts & Pause */}
+      <Modal
+        visible={modalConfig.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!modalConfig.isPauseModal) {
+            setModalConfig((prev) => ({ ...prev, visible: false }));
+          }
+        }}
+      >
+        <View style={[
+          styles.customModalOverlay,
+          modalConfig.isPauseModal ? styles.customModalOverlayPaused : styles.customModalOverlayStandard
+        ]}>
+          <View style={[styles.modalContent, isDark && { backgroundColor: ThemeColors.dark.card }]}>
+            {modalConfig.isPauseModal && (
+              <View style={styles.pauseIconContainer}>
+                <Text style={styles.pauseIconText}>⏸</Text>
+              </View>
+            )}
+            <Text style={[styles.modalTitle, isDark && { color: ThemeColors.dark.text }]}>{modalConfig.title}</Text>
+            <Text style={[styles.modalMessage, isDark && { color: ThemeColors.dark.textMuted }]}>{modalConfig.message}</Text>
+            
+            <View style={styles.modalButtonsContainer}>
+              {modalConfig.buttons.map((btn, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  activeOpacity={0.8}
+                  style={[
+                    styles.modalButton,
+                    btn.style === 'cancel' 
+                      ? [styles.modalButtonCancel, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }] 
+                      : btn.style === 'destructive' 
+                        ? styles.modalButtonDestructive 
+                        : styles.modalButtonDefault,
+                    modalConfig.buttons.length > 1 && { minWidth: '45%' }
+                  ]}
+                  onPress={btn.onPress}
+                >
+                  <Text style={[
+                    styles.modalButtonText,
+                    btn.style === 'cancel' 
+                      ? [styles.modalButtonTextCancel, isDark && { color: ThemeColors.dark.textMuted }] 
+                      : styles.modalButtonTextDefault
+                  ]}>
+                    {btn.text}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
       </Modal>
@@ -1068,5 +1289,94 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 13,
     fontWeight: 'bold',
+  },
+  // Modern Custom Modal Styles
+  customModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  customModalOverlayStandard: {
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+  },
+  customModalOverlayPaused: {
+    backgroundColor: 'rgba(15, 23, 42, 0.98)',
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  pauseIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  pauseIconText: {
+    fontSize: 24,
+    color: '#3B82F6',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#0F2942',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalMessage: {
+    fontSize: 13,
+    color: '#4B5563',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 24,
+  },
+  modalButtonsContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  modalButton: {
+    flex: 1,
+    minWidth: 120,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonDefault: {
+    backgroundColor: '#3B82F6',
+  },
+  modalButtonCancel: {
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  modalButtonDestructive: {
+    backgroundColor: '#EF4444',
+  },
+  modalButtonText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  modalButtonTextDefault: {
+    color: '#FFF',
+  },
+  modalButtonTextCancel: {
+    color: '#4B5563',
   },
 });

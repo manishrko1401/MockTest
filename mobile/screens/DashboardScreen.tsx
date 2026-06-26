@@ -11,7 +11,8 @@ import {
   StatusBar,
   Dimensions,
   Linking,
-  TextInput
+  TextInput,
+  Image
 } from 'react-native';
 import {
   Trophy,
@@ -36,6 +37,7 @@ import {
   Coins
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
+import { ThemeColors } from '../theme';
 
 interface DashboardScreenProps {
   currentUser: any;
@@ -46,6 +48,8 @@ interface DashboardScreenProps {
   onOpenAttemptAnalysis: (attempt: any) => void;
   onOpenExam: (testId: string) => void;
   onRefreshUser: (userId: string) => Promise<void>;
+  isDark?: boolean;
+  onToggleTheme?: (dark: boolean) => void;
 }
 
 const SUCCESS_STORIES = [
@@ -80,7 +84,9 @@ export default function DashboardScreen({
   onSelectTestSeries,
   onOpenAttemptAnalysis,
   onOpenExam,
-  onRefreshUser
+  onRefreshUser,
+  isDark = false,
+  onToggleTheme
 }: DashboardScreenProps) {
   const [activeTab, setActiveTab] = useState<'home' | 'tests' | 'notices' | 'profile'>('home');
   const [refreshing, setRefreshing] = useState(false);
@@ -208,13 +214,13 @@ export default function DashboardScreen({
     return (
       <ScrollView contentContainerStyle={styles.tabContent} showsVerticalScrollIndicator={false}>
         {/* Swipable Announcements Slider */}
-        <Text style={styles.sectionTitle}>📢 Official Announcements</Text>
+        <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>📢 Official Announcements</Text>
         {(() => {
           const announcements = notices.filter(n => n.category === 'announcement');
           if (announcements.length === 0) {
             return (
-              <View style={styles.emptyAnnouncementCard}>
-                <Text style={styles.emptyAnnouncementText}>No active announcements at the moment.</Text>
+              <View style={[styles.emptyAnnouncementCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+                <Text style={[styles.emptyAnnouncementText, isDark && { color: ThemeColors.dark.textMuted }]}>No active announcements at the moment.</Text>
               </View>
             );
           }
@@ -228,30 +234,52 @@ export default function DashboardScreen({
                 style={styles.carouselScrollView}
               >
                 {announcements.map((ann, idx) => (
-                  <View key={ann.id || idx} style={[styles.carouselSlide, { width: Dimensions.get('window').width - 32 }]}>
-                    <View style={styles.announcementCardContent}>
-                      <View style={styles.announcementCardHeader}>
-                        <Text style={styles.announcementTypeBadge}>{ann.type || 'NEWS'}</Text>
-                        <Text style={styles.announcementDateText}>{ann.date}</Text>
+                  <View 
+                    key={ann.id || idx} 
+                    style={[
+                      styles.carouselSlide, 
+                      { width: Dimensions.get('window').width - 32 },
+                      ann.imageUrl ? { padding: 0, overflow: 'hidden' } : {},
+                      isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }
+                    ]}
+                  >
+                    {ann.imageUrl ? (
+                      <TouchableOpacity
+                        activeOpacity={ann.url ? 0.9 : 1}
+                        onPress={() => ann.url && Linking.openURL(ann.url)}
+                        style={{ width: '100%', height: '100%' }}
+                      >
+                        <Image
+                          source={{ uri: ann.imageUrl }}
+                          style={{ width: '100%', height: '100%' }}
+                          resizeMode="cover"
+                        />
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={styles.announcementCardContent}>
+                        <View style={styles.announcementCardHeader}>
+                          <Text style={[styles.announcementTypeBadge, isDark && { backgroundColor: ThemeColors.dark.bg, color: '#60A5FA', borderColor: '#334155' }]}>{ann.type || 'NEWS'}</Text>
+                          <Text style={styles.announcementDateText}>{ann.date}</Text>
+                        </View>
+                        <Text style={[styles.announcementTitleText, isDark && { color: ThemeColors.dark.text }]}>{ann.title}</Text>
+                        {ann.url && (
+                          <TouchableOpacity
+                            style={styles.announcementLinkBtn}
+                            onPress={() => Linking.openURL(ann.url)}
+                          >
+                            <Text style={[styles.announcementLinkText, isDark && { color: '#60A5FA' }]}>View Details</Text>
+                            <ExternalLink size={12} color={isDark ? '#60A5FA' : '#2563EB'} />
+                          </TouchableOpacity>
+                        )}
                       </View>
-                      <Text style={styles.announcementTitleText}>{ann.title}</Text>
-                      {ann.url && (
-                        <TouchableOpacity
-                          style={styles.announcementLinkBtn}
-                          onPress={() => Linking.openURL(ann.url)}
-                        >
-                          <Text style={styles.announcementLinkText}>View Details</Text>
-                          <ExternalLink size={12} color="#2563EB" />
-                        </TouchableOpacity>
-                      )}
-                    </View>
+                    )}
                   </View>
                 ))}
               </ScrollView>
               
               <View style={styles.storyDotRow}>
                 <View style={styles.storyIndicatorDot} />
-                <Text style={styles.swipeIndicatorText}>
+                <Text style={[styles.swipeIndicatorText, isDark && { color: ThemeColors.dark.textMuted }]}>
                   Swipe card to read other announcements ({announcements.length} total)
                 </Text>
               </View>
@@ -260,34 +288,34 @@ export default function DashboardScreen({
         })()}
 
         {/* Categories Quick Filter */}
-        <Text style={styles.sectionTitle}>Explore Categories</Text>
+        <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Explore Categories</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesRow}>
           {examCatalog.map((cat) => (
             <TouchableOpacity
               key={cat.id}
-              style={styles.categoryBadge}
+              style={[styles.categoryBadge, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}
               onPress={() => {
                 setActiveTab('tests');
               }}
             >
-              <Text style={styles.categoryBadgeText}>{cat.name}</Text>
+              <Text style={[styles.categoryBadgeText, isDark && { color: ThemeColors.dark.text }]}>{cat.name}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
 
         {/* Explore Test Series */}
-        <Text style={styles.sectionTitle}>Popular Test Series</Text>
+        <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Popular Test Series</Text>
         {featuredExams.map((exam) => (
           <TouchableOpacity
             key={exam.id}
-            style={styles.seriesCard}
+            style={[styles.seriesCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}
             onPress={() => onSelectTestSeries(exam)}
           >
             <View style={styles.seriesCardLeft}>
-              <BookOpen color="#4B5563" size={20} />
+              <BookOpen color={isDark ? ThemeColors.dark.text : '#4B5563'} size={20} />
               <View style={styles.seriesDetails}>
-                <Text style={styles.seriesTitle}>{exam.name} Series</Text>
-                <Text style={styles.seriesMeta}>
+                <Text style={[styles.seriesTitle, isDark && { color: ThemeColors.dark.text }]}>{exam.name} Series</Text>
+                <Text style={[styles.seriesMeta, isDark && { color: ThemeColors.dark.textMuted }]}>
                   {exam.categoryName} • {exam.tests?.length || 0} practice papers
                 </Text>
               </View>
@@ -309,16 +337,16 @@ export default function DashboardScreen({
           showsVerticalScrollIndicator={false}
           renderItem={({ item: category }) => (
             <TouchableOpacity
-              style={styles.categoryCard}
+              style={[styles.categoryCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}
               onPress={() => setSelectedCategoryId(category.id)}
             >
               <View style={styles.categoryCardLeft}>
-                <View style={styles.categoryIconCircle}>
-                  <GraduationCap color="#2563EB" size={20} />
+                <View style={[styles.categoryIconCircle, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+                  <GraduationCap color={isDark ? ThemeColors.dark.text : '#2563EB'} size={20} />
                 </View>
                 <View style={styles.categoryDetails}>
-                  <Text style={styles.categoryTitle}>{category.name}</Text>
-                  <Text style={styles.categoryMeta}>
+                  <Text style={[styles.categoryTitle, isDark && { color: ThemeColors.dark.text }]}>{category.name}</Text>
+                  <Text style={[styles.categoryMeta, isDark && { color: ThemeColors.dark.textMuted }]}>
                     {category.subCategories?.length || 0} Sub-Exam Categories
                   </Text>
                 </View>
@@ -339,11 +367,11 @@ export default function DashboardScreen({
     return (
       <View style={{ flex: 1 }}>
         <TouchableOpacity
-          style={styles.backToCatBtn}
+          style={[styles.backToCatBtn, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border, borderBottomColor: ThemeColors.dark.border }]}
           onPress={() => setSelectedCategoryId(null)}
         >
-          <ChevronLeft color="#2563EB" size={16} />
-          <Text style={styles.backToCatText}>Back to Exam Categories</Text>
+          <ChevronLeft color={isDark ? '#60A5FA' : '#2563EB'} size={16} />
+          <Text style={[styles.backToCatText, isDark && { color: '#60A5FA' }]}>Back to Exam Categories</Text>
         </TouchableOpacity>
 
         <FlatList
@@ -353,14 +381,14 @@ export default function DashboardScreen({
           showsVerticalScrollIndicator={false}
           renderItem={({ item: sub }) => (
             <TouchableOpacity
-              style={styles.seriesCard}
+              style={[styles.seriesCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}
               onPress={() => onSelectTestSeries({ ...sub, categoryName: selectedCategory.name })}
             >
               <View style={styles.seriesCardLeft}>
-                <BookOpen color="#3B82F6" size={20} />
+                <BookOpen color={isDark ? '#60A5FA' : '#3B82F6'} size={20} />
                 <View style={styles.seriesDetails}>
-                  <Text style={styles.seriesTitle}>{sub.name} Series</Text>
-                  <Text style={styles.seriesMeta}>
+                  <Text style={[styles.seriesTitle, isDark && { color: ThemeColors.dark.text }]}>{sub.name} Series</Text>
+                  <Text style={[styles.seriesMeta, isDark && { color: ThemeColors.dark.textMuted }]}>
                     {sub.tests?.length || 0} Full Length Mock Tests
                   </Text>
                 </View>
@@ -379,12 +407,17 @@ export default function DashboardScreen({
     return (
       <View style={{ flex: 1 }}>
         {/* Notice Tabs Switcher (Web-identical tabs) */}
-        <View style={styles.noticeFilterTabs}>
+        <View style={[styles.noticeFilterTabs, isDark && { backgroundColor: ThemeColors.dark.card, borderBottomColor: ThemeColors.dark.border }]}>
           <TouchableOpacity
             style={[styles.noticeFilterTab, activeNoticeTab === 'notice' && styles.noticeTabNoticeActive]}
             onPress={() => setActiveNoticeTab('notice')}
           >
-            <Text style={[styles.noticeFilterText, activeNoticeTab === 'notice' && styles.noticeTabTextActive]}>
+            <Text style={[
+              styles.noticeFilterText,
+              activeNoticeTab === 'notice' && styles.noticeTabTextActive,
+              isDark && activeNoticeTab === 'notice' && { color: '#60A5FA' },
+              isDark && activeNoticeTab !== 'notice' && { color: ThemeColors.dark.textMuted }
+            ]}>
               Notices
             </Text>
           </TouchableOpacity>
@@ -392,7 +425,12 @@ export default function DashboardScreen({
             style={[styles.noticeFilterTab, activeNoticeTab === 'result' && styles.noticeTabResultActive]}
             onPress={() => setActiveNoticeTab('result')}
           >
-            <Text style={[styles.noticeFilterText, activeNoticeTab === 'result' && styles.noticeTabTextActive]}>
+            <Text style={[
+              styles.noticeFilterText,
+              activeNoticeTab === 'result' && styles.noticeTabTextActive,
+              isDark && activeNoticeTab === 'result' && { color: '#60A5FA' },
+              isDark && activeNoticeTab !== 'result' && { color: ThemeColors.dark.textMuted }
+            ]}>
               Results
             </Text>
           </TouchableOpacity>
@@ -400,7 +438,12 @@ export default function DashboardScreen({
             style={[styles.noticeFilterTab, activeNoticeTab === 'admit_card' && styles.noticeTabAdmitActive]}
             onPress={() => setActiveNoticeTab('admit_card')}
           >
-            <Text style={[styles.noticeFilterText, activeNoticeTab === 'admit_card' && styles.noticeTabTextActive]}>
+            <Text style={[
+              styles.noticeFilterText,
+              activeNoticeTab === 'admit_card' && styles.noticeTabTextActive,
+              isDark && activeNoticeTab === 'admit_card' && { color: '#60A5FA' },
+              isDark && activeNoticeTab !== 'admit_card' && { color: ThemeColors.dark.textMuted }
+            ]}>
               Admit Cards
             </Text>
           </TouchableOpacity>
@@ -408,9 +451,9 @@ export default function DashboardScreen({
 
         {/* Group Header */}
         <View style={styles.noticeGroupHeader}>
-          {activeNoticeTab === 'notice' && <Text style={styles.noticeGroupTitle}>🔔 Live Notices & Advisories</Text>}
-          {activeNoticeTab === 'result' && <Text style={styles.noticeGroupTitle}>🏆 Results & Merit Lists</Text>}
-          {activeNoticeTab === 'admit_card' && <Text style={styles.noticeGroupTitle}>📄 Admit Cards & Call Letters</Text>}
+          {activeNoticeTab === 'notice' && <Text style={[styles.noticeGroupTitle, isDark && { color: ThemeColors.dark.text }]}>🔔 Live Notices & Advisories</Text>}
+          {activeNoticeTab === 'result' && <Text style={[styles.noticeGroupTitle, isDark && { color: ThemeColors.dark.text }]}>🏆 Results & Merit Lists</Text>}
+          {activeNoticeTab === 'admit_card' && <Text style={[styles.noticeGroupTitle, isDark && { color: ThemeColors.dark.text }]}>📄 Admit Cards & Call Letters</Text>}
         </View>
 
         <FlatList
@@ -424,31 +467,31 @@ export default function DashboardScreen({
             if (notice.category === 'admit_card') catColor = '#F59E0B';
 
             return (
-              <View style={[styles.noticeCard, { borderLeftColor: catColor }]}>
+              <View style={[styles.noticeCard, { borderLeftColor: catColor }, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
                 <View style={styles.noticeHeader}>
                   <Text style={[styles.noticeBadge, { color: catColor, borderColor: catColor }]}>
                     {notice.type || notice.category.toUpperCase()}
                   </Text>
                   <Text style={styles.noticeDate}>{notice.date}</Text>
                 </View>
-                <Text style={styles.noticeTitle}>{notice.title}</Text>
+                <Text style={[styles.noticeTitle, isDark && { color: ThemeColors.dark.text }]}>{notice.title}</Text>
                 {notice.lastDate && (
-                  <Text style={styles.noticeSubText}>Last Date: {notice.lastDate}</Text>
+                  <Text style={[styles.noticeSubText, isDark && { color: ThemeColors.dark.textMuted }]}>Last Date: {notice.lastDate}</Text>
                 )}
                 {notice.url && (
                   <TouchableOpacity
                     style={styles.noticeLinkBtn}
                     onPress={() => Linking.openURL(notice.url)}
                   >
-                    <Text style={styles.noticeLinkText}>Official Link</Text>
-                    <ExternalLink size={12} color="#2563EB" />
+                    <Text style={[styles.noticeLinkText, isDark && { color: '#60A5FA' }]}>Official Link</Text>
+                    <ExternalLink size={12} color={isDark ? '#60A5FA' : '#2563EB'} />
                   </TouchableOpacity>
                 )}
               </View>
             );
           }}
           ListEmptyComponent={
-            <Text style={styles.noNoticesText}>No announcements in this category.</Text>
+            <Text style={[styles.noNoticesText, isDark && { color: ThemeColors.dark.textMuted }]}>No announcements in this category.</Text>
           }
         />
       </View>
@@ -459,85 +502,115 @@ export default function DashboardScreen({
     return (
       <ScrollView contentContainerStyle={styles.tabContent} showsVerticalScrollIndicator={false}>
         {/* User Card */}
-        <View style={styles.profileHeaderCard}>
+        <View style={[styles.profileHeaderCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
           <View style={styles.avatar}>
             <User color="#FFF" size={32} />
           </View>
-          <Text style={styles.profileName}>{currentUser.name}</Text>
-          <Text style={styles.profileEmail}>{currentUser.email}</Text>
+          <Text style={[styles.profileName, isDark && { color: ThemeColors.dark.text }]}>{currentUser.name}</Text>
+          <Text style={[styles.profileEmail, isDark && { color: ThemeColors.dark.textMuted }]}>{currentUser.email}</Text>
           <View style={styles.badgeRow}>
-            <Text style={styles.profileCodeBadge}>Roll Code: {currentUser.candidateCode}</Text>
-            <Text style={styles.profileCoinsBadge}>🪙 {currentUser.coins || 0} Coins</Text>
+            <Text style={[styles.profileCodeBadge, isDark && { backgroundColor: '#0F172A', color: ThemeColors.dark.text }]}>Roll Code: {currentUser.candidateCode}</Text>
+            <Text style={[styles.profileCoinsBadge, isDark && { backgroundColor: '#0F172A', color: ThemeColors.dark.text }]}>🪙 {currentUser.coins || 0} Coins</Text>
           </View>
         </View>
 
         {/* System Details */}
-        <View style={styles.sysDetailsCard}>
+        <View style={[styles.sysDetailsCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
           <View style={styles.sysDetailItem}>
-            <Text style={styles.sysDetailLabel}>System Role</Text>
-            <Text style={styles.sysDetailVal}>{currentUser.role}</Text>
+            <Text style={[styles.sysDetailLabel, isDark && { color: ThemeColors.dark.textMuted }]}>System Role</Text>
+            <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.role}</Text>
           </View>
           <View style={styles.sysDetailItem}>
-            <Text style={styles.sysDetailLabel}>Pass Status</Text>
-            <Text style={styles.sysDetailVal}>{currentUser.subscriptionTier === 'None' ? 'No Active Pass' : currentUser.subscriptionTier}</Text>
+            <Text style={[styles.sysDetailLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Pass Status</Text>
+            <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.subscriptionTier === 'None' ? 'No Active Pass' : currentUser.subscriptionTier}</Text>
           </View>
           {currentUser.subscriptionPurchasedAt && (
             <View style={styles.sysDetailItem}>
-              <Text style={styles.sysDetailLabel}>Pass Purchased At</Text>
-              <Text style={styles.sysDetailVal}>{currentUser.subscriptionPurchasedAt}</Text>
+              <Text style={[styles.sysDetailLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Pass Purchased At</Text>
+              <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.subscriptionPurchasedAt}</Text>
             </View>
           )}
           {currentUser.subscriptionExpiresAt && (
             <View style={styles.sysDetailItem}>
-              <Text style={styles.sysDetailLabel}>Pass Expires At</Text>
-              <Text style={styles.sysDetailVal}>{currentUser.subscriptionExpiresAt}</Text>
+              <Text style={[styles.sysDetailLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Pass Expires At</Text>
+              <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.subscriptionExpiresAt}</Text>
             </View>
           )}
           <View style={styles.sysDetailItem}>
-            <Text style={styles.sysDetailLabel}>Registered On</Text>
-            <Text style={styles.sysDetailVal}>{currentUser.registeredDate || 'Recently'}</Text>
+            <Text style={[styles.sysDetailLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Registered On</Text>
+            <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.registeredDate || 'Recently'}</Text>
           </View>
         </View>
 
         {/* Referral Card */}
-        <View style={styles.profileReferralCard}>
-          <Text style={styles.referCardTitle}>🎁 Referral Rewards</Text>
-          <View style={styles.referralCodeRow}>
-            <Text style={styles.referralCodeText}>{currentUser.referralCode}</Text>
+        <View style={[styles.profileReferralCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+          <Text style={[styles.referCardTitle, isDark && { color: ThemeColors.dark.text }]}>🎁 Referral Rewards</Text>
+          <View style={[styles.referralCodeRow, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+            <Text style={[styles.referralCodeText, isDark && { color: '#60A5FA' }]}>{currentUser.referralCode}</Text>
             <TouchableOpacity style={styles.copyReferralBtn} onPress={shareReferralCode}>
               <Text style={styles.copyReferralBtnText}>Share & Copy</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.referCountRow}>
-            <Text style={styles.referCountLabel}>Friends Referred:</Text>
-            <Text style={styles.referCountVal}>{currentUser.referralsCount || 0}</Text>
+            <Text style={[styles.referCountLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Friends Referred:</Text>
+            <Text style={[styles.referCountVal, isDark && { color: ThemeColors.dark.text, backgroundColor: '#0F172A' }]}>{currentUser.referralsCount || 0}</Text>
+          </View>
+        </View>
+
+        {/* App Theme Settings */}
+        <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+          <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>🎨 App Theme Settings</Text>
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+            <TouchableOpacity 
+              activeOpacity={0.8}
+              style={[
+                styles.themeToggleBtn,
+                !isDark ? styles.themeToggleBtnActive : (isDark ? styles.themeToggleBtnInactiveDark : styles.themeToggleBtnInactiveLight)
+              ]}
+              onPress={() => onToggleTheme && onToggleTheme(false)}
+            >
+              <Text style={[styles.themeToggleText, !isDark ? styles.themeToggleTextActive : styles.themeToggleTextInactive]}>☀️ Light Mode</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              activeOpacity={0.8}
+              style={[
+                styles.themeToggleBtn,
+                isDark ? styles.themeToggleBtnActive : styles.themeToggleBtnInactiveLight
+              ]}
+              onPress={() => onToggleTheme && onToggleTheme(true)}
+            >
+              <Text style={[styles.themeToggleText, isDark ? styles.themeToggleTextActive : styles.themeToggleTextInactive]}>🌙 Dark Mode</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
         {/* Edit details form */}
-        <View style={styles.formCard}>
+        <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
           <TouchableOpacity 
-            style={[styles.collapsibleHeader, showUpdateProfile && { borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingBottom: 8 }]} 
+            style={[styles.collapsibleHeader, showUpdateProfile && { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F3F4F6', paddingBottom: 8 }]} 
             onPress={() => setShowUpdateProfile(!showUpdateProfile)}
           >
-            <Text style={styles.formCardTitle}>👤 Update Profile Details</Text>
-            <Text style={styles.expandToggleText}>{showUpdateProfile ? '▲ Collapse' : '▼ Expand'}</Text>
+            <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>👤 Update Profile Details</Text>
+            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>{showUpdateProfile ? '▲ Collapse' : '▼ Expand'}</Text>
           </TouchableOpacity>
 
           {showUpdateProfile && (
             <View style={{ marginTop: 12 }}>
               <View style={styles.formInputGroup}>
-                <Text style={styles.formInputLabel}>Full Name</Text>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Full Name</Text>
                 <TextInput
-                  style={styles.formInput}
+                  style={[styles.formInput, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
+                  placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
                   value={profileName}
                   onChangeText={setProfileName}
                 />
               </View>
               <View style={styles.formInputGroup}>
-                <Text style={styles.formInputLabel}>Email Address</Text>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Email Address</Text>
                 <TextInput
-                  style={styles.formInput}
+                  style={[styles.formInput, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
+                  placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
                   value={profileEmail}
                   onChangeText={setProfileEmail}
                   keyboardType="email-address"
@@ -545,9 +618,10 @@ export default function DashboardScreen({
                 />
               </View>
               <View style={styles.formInputGroup}>
-                <Text style={styles.formInputLabel}>Mobile Number</Text>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Mobile Number</Text>
                 <TextInput
-                  style={styles.formInput}
+                  style={[styles.formInput, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
+                  placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
                   value={profileMobile}
                   onChangeText={setProfileMobile}
                   keyboardType="phone-pad"
@@ -561,59 +635,62 @@ export default function DashboardScreen({
         </View>
 
         {/* Reset Password form */}
-        <View style={styles.formCard}>
+        <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
           <TouchableOpacity 
-            style={[styles.collapsibleHeader, showChangePassword && { borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingBottom: 8 }]} 
+            style={[styles.collapsibleHeader, showChangePassword && { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F3F4F6', paddingBottom: 8 }]} 
             onPress={() => setShowChangePassword(!showChangePassword)}
           >
-            <Text style={styles.formCardTitle}>🔑 Change Account Password</Text>
-            <Text style={styles.expandToggleText}>{showChangePassword ? '▲ Collapse' : '▼ Expand'}</Text>
+            <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>🔑 Change Account Password</Text>
+            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>{showChangePassword ? '▲ Collapse' : '▼ Expand'}</Text>
           </TouchableOpacity>
 
           {showChangePassword && (
             <View style={{ marginTop: 12 }}>
               <View style={styles.formInputGroup}>
-                <Text style={styles.formInputLabel}>Old Password</Text>
-                <View style={styles.pwInputRow}>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Old Password</Text>
+                <View style={[styles.pwInputRow, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
                   <TextInput
-                    style={styles.pwInput}
+                    style={[styles.pwInput, isDark && { color: ThemeColors.dark.text }]}
+                    placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
                     value={oldPassword}
                     onChangeText={setOldPassword}
                     secureTextEntry={!showOldPassword}
                     autoCapitalize="none"
                   />
                   <TouchableOpacity onPress={() => setShowOldPassword(!showOldPassword)}>
-                    <Text style={styles.pwToggleText}>{showOldPassword ? 'Hide' : 'Show'}</Text>
+                    <Text style={[styles.pwToggleText, isDark && { color: '#60A5FA' }]}>{showOldPassword ? 'Hide' : 'Show'}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
               <View style={styles.formInputGroup}>
-                <Text style={styles.formInputLabel}>New Password</Text>
-                <View style={styles.pwInputRow}>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>New Password</Text>
+                <View style={[styles.pwInputRow, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
                   <TextInput
-                    style={styles.pwInput}
+                    style={[styles.pwInput, isDark && { color: ThemeColors.dark.text }]}
+                    placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
                     value={newPassword}
                     onChangeText={setNewPassword}
                     secureTextEntry={!showNewPassword}
                     autoCapitalize="none"
                   />
                   <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
-                    <Text style={styles.pwToggleText}>{showNewPassword ? 'Hide' : 'Show'}</Text>
+                    <Text style={[styles.pwToggleText, isDark && { color: '#60A5FA' }]}>{showNewPassword ? 'Hide' : 'Show'}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
               <View style={styles.formInputGroup}>
-                <Text style={styles.formInputLabel}>Confirm New Password</Text>
-                <View style={styles.pwInputRow}>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Confirm New Password</Text>
+                <View style={[styles.pwInputRow, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
                   <TextInput
-                    style={styles.pwInput}
+                    style={[styles.pwInput, isDark && { color: ThemeColors.dark.text }]}
+                    placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
                   />
                   <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                    <Text style={styles.pwToggleText}>{showConfirmPassword ? 'Hide' : 'Show'}</Text>
+                    <Text style={[styles.pwToggleText, isDark && { color: '#60A5FA' }]}>{showConfirmPassword ? 'Hide' : 'Show'}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -624,26 +701,29 @@ export default function DashboardScreen({
           )}
         </View>
 
-        <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
-          <LogOut size={16} color="#DC2626" />
-          <Text style={styles.logoutText}>Log Out Account</Text>
+        <TouchableOpacity style={[styles.logoutBtn, isDark && { backgroundColor: '#3F1F1F', borderColor: '#EF4444' }]} onPress={onLogout}>
+          <LogOut size={16} color="#EF4444" />
+          <Text style={[styles.logoutText, isDark && { color: '#FCA5A5' }]}>Log Out Account</Text>
         </TouchableOpacity>
       </ScrollView>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F2942" />
+    <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+      <StatusBar 
+        barStyle={isDark ? 'light-content' : 'dark-content'} 
+        backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
+      />
 
       {/* Header Banner */}
-      <View style={styles.dashHeader}>
-        <Text style={styles.dashTitle}>Testbook Prep Hub</Text>
-        <Text style={styles.dashSub}>Candidate: {currentUser.name}</Text>
+      <View style={[styles.dashHeader, isDark && { backgroundColor: ThemeColors.dark.headerBg }]}>
+        <Text style={styles.dashTitle}>MockTest Hub</Text>
+        <Text style={[styles.dashSub, isDark && { color: ThemeColors.dark.textMuted }]}>Candidate: {currentUser.name}</Text>
       </View>
 
       {/* Main View Area */}
-      <View style={styles.mainView}>
+      <View style={[styles.mainView, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
         {activeTab === 'home' && renderHomeTab()}
         {activeTab === 'tests' && renderTestsTab()}
         {activeTab === 'notices' && renderNoticesTab()}
@@ -651,37 +731,73 @@ export default function DashboardScreen({
       </View>
 
       {/* Bottom Nav bar */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder }]}>
         <TouchableOpacity
-          style={[styles.navBtn, activeTab === 'home' && styles.navBtnActive]}
+          style={[
+            styles.navBtn, 
+            activeTab === 'home' && styles.navBtnActive,
+            activeTab === 'home' && isDark && { borderTopColor: '#60A5FA' }
+          ]}
           onPress={() => setActiveTab('home')}
         >
-          <Trophy size={20} color={activeTab === 'home' ? '#2563EB' : '#6B7280'} />
-          <Text style={[styles.navText, activeTab === 'home' && styles.navTextActive]}>Home</Text>
+          <Trophy size={20} color={activeTab === 'home' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#6B7280')} />
+          <Text style={[
+            styles.navText, 
+            activeTab === 'home' && styles.navTextActive,
+            isDark && activeTab === 'home' && { color: '#60A5FA' },
+            isDark && activeTab !== 'home' && { color: '#94A3B8' }
+          ]}>Home</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.navBtn, activeTab === 'tests' && styles.navBtnActive]}
+          style={[
+            styles.navBtn, 
+            activeTab === 'tests' && styles.navBtnActive,
+            activeTab === 'tests' && isDark && { borderTopColor: '#60A5FA' }
+          ]}
           onPress={() => setActiveTab('tests')}
         >
-          <BookOpen size={20} color={activeTab === 'tests' ? '#2563EB' : '#6B7280'} />
-          <Text style={[styles.navText, activeTab === 'tests' && styles.navTextActive]}>Tests</Text>
+          <BookOpen size={20} color={activeTab === 'tests' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#6B7280')} />
+          <Text style={[
+            styles.navText, 
+            activeTab === 'tests' && styles.navTextActive,
+            isDark && activeTab === 'tests' && { color: '#60A5FA' },
+            isDark && activeTab !== 'tests' && { color: '#94A3B8' }
+          ]}>Tests</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.navBtn, activeTab === 'notices' && styles.navBtnActive]}
+          style={[
+            styles.navBtn, 
+            activeTab === 'notices' && styles.navBtnActive,
+            activeTab === 'notices' && isDark && { borderTopColor: '#60A5FA' }
+          ]}
           onPress={() => setActiveTab('notices')}
         >
-          <Bell size={20} color={activeTab === 'notices' ? '#2563EB' : '#6B7280'} />
-          <Text style={[styles.navText, activeTab === 'notices' && styles.navTextActive]}>Notices</Text>
+          <Bell size={20} color={activeTab === 'notices' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#6B7280')} />
+          <Text style={[
+            styles.navText, 
+            activeTab === 'notices' && styles.navTextActive,
+            isDark && activeTab === 'notices' && { color: '#60A5FA' },
+            isDark && activeTab !== 'notices' && { color: '#94A3B8' }
+          ]}>Notices</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.navBtn, activeTab === 'profile' && styles.navBtnActive]}
+          style={[
+            styles.navBtn, 
+            activeTab === 'profile' && styles.navBtnActive,
+            activeTab === 'profile' && isDark && { borderTopColor: '#60A5FA' }
+          ]}
           onPress={() => setActiveTab('profile')}
         >
-          <User size={20} color={activeTab === 'profile' ? '#2563EB' : '#6B7280'} />
-          <Text style={[styles.navText, activeTab === 'profile' && styles.navTextActive]}>Me</Text>
+          <User size={20} color={activeTab === 'profile' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#6B7280')} />
+          <Text style={[
+            styles.navText, 
+            activeTab === 'profile' && styles.navTextActive,
+            isDark && activeTab === 'profile' && { color: '#60A5FA' },
+            isDark && activeTab !== 'profile' && { color: '#94A3B8' }
+          ]}>Me</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -1334,7 +1450,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
     padding: 16,
-    minHeight: 140,
+    minHeight: 180,
     justifyContent: 'center',
   },
   storyDotRow: {
@@ -1410,5 +1526,35 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     color: '#2563EB',
+  },
+  themeToggleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  themeToggleBtnActive: {
+    backgroundColor: '#3B82F6',
+    borderColor: '#3B82F6',
+  },
+  themeToggleBtnInactiveLight: {
+    backgroundColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
+  },
+  themeToggleBtnInactiveDark: {
+    backgroundColor: '#0F172A',
+    borderColor: '#334155',
+  },
+  themeToggleText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  themeToggleTextActive: {
+    color: '#FFF',
+  },
+  themeToggleTextInactive: {
+    color: '#6B7280',
   },
 });

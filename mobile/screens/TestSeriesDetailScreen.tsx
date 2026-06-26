@@ -19,6 +19,7 @@ import {
   Eye
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
+import { ThemeColors } from '../theme';
 
 interface TestSeriesDetailScreenProps {
   currentUser: any;
@@ -27,6 +28,7 @@ interface TestSeriesDetailScreenProps {
   onOpenExam: (testId: string) => void;
   onRefreshUser: (userId: string) => Promise<void>;
   onOpenAttemptAnalysis: (attempt: any) => void;
+  isDark?: boolean;
 }
 
 export default function TestSeriesDetailScreen({
@@ -35,7 +37,8 @@ export default function TestSeriesDetailScreen({
   onBack,
   onOpenExam,
   onRefreshUser,
-  onOpenAttemptAnalysis
+  onOpenAttemptAnalysis,
+  isDark = false
 }: TestSeriesDetailScreenProps) {
 
   // Helper to check if a user has access to a mock test based on their subscription tier
@@ -106,9 +109,9 @@ export default function TestSeriesDetailScreen({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, isDark && { backgroundColor: ThemeColors.dark.headerBg }]}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
           <ArrowLeft color="#FFF" size={20} />
         </TouchableOpacity>
@@ -119,7 +122,7 @@ export default function TestSeriesDetailScreen({
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>Available Practice Papers</Text>
+        <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Available Practice Papers</Text>
 
         {series.tests && series.tests.length > 0 ? (
           series.tests.map((test: any) => {
@@ -133,9 +136,9 @@ export default function TestSeriesDetailScreen({
             );
 
             return (
-              <View key={test.id} style={styles.testCard}>
+              <View key={test.id} style={[styles.testCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
                 <View style={styles.testCardHeader}>
-                  <Text style={styles.testTitle}>{test.title}</Text>
+                  <Text style={[styles.testTitle, isDark && { color: ThemeColors.dark.text }]}>{test.title}</Text>
                   {test.requiredTier !== 'None' ? (
                     <Text style={[styles.badge, styles.proBadge]}>PRO</Text>
                   ) : (
@@ -146,16 +149,16 @@ export default function TestSeriesDetailScreen({
                 {/* Test Parameters */}
                 <View style={styles.metaRow}>
                   <View style={styles.metaItem}>
-                    <HelpCircle size={14} color="#6B7280" />
-                    <Text style={styles.metaText}>{test.questionsCount} Questions</Text>
+                    <HelpCircle size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
+                    <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.questionsCount} Questions</Text>
                   </View>
                   <View style={styles.metaItem}>
-                    <Clock size={14} color="#6B7280" />
-                    <Text style={styles.metaText}>{test.durationMinutes} Mins</Text>
+                    <Clock size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
+                    <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.durationMinutes} Mins</Text>
                   </View>
                   <View style={styles.metaItem}>
-                    <Coins size={14} color="#6B7280" />
-                    <Text style={styles.metaText}>{test.maxMarks} Marks</Text>
+                    <Coins size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
+                    <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.maxMarks} Marks</Text>
                   </View>
                 </View>
 
@@ -167,7 +170,7 @@ export default function TestSeriesDetailScreen({
                   </View>
                 )}
                 {isPaused && (
-                  <Text style={styles.statusPausedText}>⏸ Test attempt in-progress (paused)</Text>
+                  <Text style={[styles.statusPausedText, isDark && { color: '#60A5FA' }]}>⏸ Test attempt in-progress (paused)</Text>
                 )}
 
                 {/* Actions */}
@@ -175,11 +178,11 @@ export default function TestSeriesDetailScreen({
                   <View style={{ gap: 8 }}>
                     {isCompleted && attempt && (
                       <TouchableOpacity
-                        style={styles.analysisBtn}
+                        style={[styles.analysisBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
                         onPress={() => onOpenAttemptAnalysis(attempt)}
                       >
-                        <Eye size={14} color="#475569" />
-                        <Text style={styles.analysisBtnText}>Solution & Analysis</Text>
+                        <Eye size={14} color={isDark ? ThemeColors.dark.text : '#475569'} />
+                        <Text style={[styles.analysisBtnText, isDark && { color: ThemeColors.dark.text }]}>Solution & Analysis</Text>
                       </TouchableOpacity>
                     )}
                     <TouchableOpacity
@@ -193,17 +196,17 @@ export default function TestSeriesDetailScreen({
                     </TouchableOpacity>
                   </View>
                 ) : (
-                  <View style={styles.lockBlock}>
+                  <View style={[styles.lockBlock, isDark && { borderTopColor: ThemeColors.dark.border }]}>
                     <View style={styles.lockMsg}>
                       <Lock size={14} color="#DC2626" />
                       <Text style={styles.lockMsgText}>Requires {test.requiredTier}</Text>
                     </View>
                     <TouchableOpacity
-                      style={styles.unlockBtn}
+                      style={[styles.unlockBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
                       onPress={() => handleUnlockWithCoins(test.title, test.requiredTier)}
                     >
                       <Coins size={14} color="#D97706" />
-                      <Text style={styles.unlockBtnText}>Unlock (20 Coins)</Text>
+                      <Text style={[styles.unlockBtnText, isDark && { color: '#FBBF24' }]}>Unlock (20 Coins)</Text>
                     </TouchableOpacity>
                   </View>
                 )}

@@ -14,6 +14,7 @@ import DashboardScreen from './screens/DashboardScreen';
 import TestSeriesDetailScreen from './screens/TestSeriesDetailScreen';
 import MobileTestScreen from './MobileTestScreen';
 import AnalysisScreen from './screens/AnalysisScreen';
+import { ThemeColors } from './theme';
 
 type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis';
 
@@ -22,6 +23,9 @@ export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('auth');
   const [currentUser, setCurrentUser] = useState<any>(null);
   
+  // Theme state
+  const [isDark, setIsDark] = useState(false);
+
   // App data loaded from database bootstrap
   const [notices, setNotices] = useState<any[]>([]);
   const [examCatalog, setExamCatalog] = useState<any[]>([]);
@@ -35,6 +39,12 @@ export default function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // Load saved theme
+        const savedTheme = await SecureStore.getItemAsync('app_theme');
+        if (savedTheme === 'dark') {
+          setIsDark(true);
+        }
+
         // Bootstrap notices & exams catalog from database
         const bootRes = await ApiClient.bootstrap();
         if (bootRes.success) {
@@ -60,6 +70,11 @@ export default function App() {
 
     initializeApp();
   }, []);
+
+  const handleToggleTheme = async (dark: boolean) => {
+    setIsDark(dark);
+    await SecureStore.setItemAsync('app_theme', dark ? 'dark' : 'light');
+  };
 
   // Refresh user data (coins, sessions) to keep in sync with Web/Admin changes
   const refreshUserData = async (userId: string) => {
@@ -109,19 +124,22 @@ export default function App() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
         <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={styles.loadingText}>Connecting to Testbook Server...</Text>
+        <Text style={[styles.loadingText, isDark && { color: ThemeColors.dark.text }]}>Connecting to Testbook Server...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F2942" />
+    <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+      <StatusBar 
+        barStyle={isDark ? 'light-content' : 'dark-content'} 
+        backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
+      />
 
       {viewMode === 'auth' && (
-        <AuthScreen onLoginSuccess={handleLoginSuccess} />
+        <AuthScreen onLoginSuccess={handleLoginSuccess} isDark={isDark} />
       )}
 
       {viewMode === 'dashboard' && currentUser && (
@@ -134,6 +152,8 @@ export default function App() {
           onOpenAttemptAnalysis={handleOpenAttemptAnalysis}
           onOpenExam={handleOpenExam}
           onRefreshUser={refreshUserData}
+          isDark={isDark}
+          onToggleTheme={handleToggleTheme}
         />
       )}
 
@@ -145,6 +165,7 @@ export default function App() {
           onOpenExam={handleOpenExam}
           onRefreshUser={refreshUserData}
           onOpenAttemptAnalysis={handleOpenAttemptAnalysis}
+          isDark={isDark}
         />
       )}
 
@@ -152,29 +173,42 @@ export default function App() {
         <MobileTestScreen
           currentUser={currentUser}
           testId={activeTestId}
+          examCatalog={examCatalog}
           onBack={async () => {
             await refreshUserData(currentUser.id);
             setViewMode('dashboard');
           }}
-          onComplete={async () => {
-            await refreshUserData(currentUser.id);
-            // Grab the last attempt to redirect to analysis screen
+          onComplete={async (submittedTestId?: string) => {
+            // Keep track of the current sessions before login refresh
+            const existingSessionIds = new Set((currentUser?.testSessions || []).map((s: any) => s.id));
+            
+            // Login once to refresh all user data and get attempts
             const res = await ApiClient.login(currentUser.email);
             if (res.success && res.user) {
               setCurrentUser(res.user);
-              const sortedAttempts = [...res.user.testSessions].sort((a: any, b: any) => 
-                new Date(b.date).getTime() - new Date(a.date).getTime()
-              );
-              if (sortedAttempts.length > 0) {
-                setSelectedAttempt(sortedAttempts[0]);
+              
+              // Find the new session (the one that is not in the set of pre-existing session IDs)
+              const newSession = res.user.testSessions.find((s: any) => !existingSessionIds.has(s.id));
+              
+              if (newSession) {
+                setSelectedAttempt(newSession);
                 setViewMode('analysis');
               } else {
-                setViewMode('dashboard');
+                // Fallback: take the last session matching testId (insertion order puts newest last)
+                const targetTestId = submittedTestId || activeTestId;
+                const testSessions = res.user.testSessions.filter((s: any) => s.testId === targetTestId);
+                if (testSessions.length > 0) {
+                  setSelectedAttempt(testSessions[testSessions.length - 1]);
+                  setViewMode('analysis');
+                } else {
+                  setViewMode('dashboard');
+                }
               }
             } else {
               setViewMode('dashboard');
             }
           }}
+          isDark={isDark}
         />
       )}
 
@@ -183,6 +217,7 @@ export default function App() {
           currentUser={currentUser}
           attempt={selectedAttempt}
           onBack={() => setViewMode('dashboard')}
+          isDark={isDark}
         />
       )}
     </SafeAreaView>

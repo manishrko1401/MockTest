@@ -12,12 +12,14 @@ import {
   Alert
 } from 'react-native';
 import { ApiClient } from '../api';
+import { ThemeColors } from '../theme';
 
 interface AuthScreenProps {
   onLoginSuccess: (user: any) => void;
+  isDark?: boolean;
 }
 
-export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
+export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScreenProps) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -71,18 +73,18 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
         {/* Logo/Brand Header */}
         <View style={styles.headerBlock}>
-          <Text style={styles.logoText}>testbook</Text>
-          <Text style={styles.subLogoText}>India's No. 1 Govt Exam Prep Platform</Text>
+          <Text style={[styles.logoText, isDark && { color: ThemeColors.dark.text }]}>testbook</Text>
+          <Text style={[styles.subLogoText, isDark && { color: ThemeColors.dark.textMuted }]}>India's No. 1 Govt Exam Prep Platform</Text>
         </View>
 
         {/* Input Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>
+        <View style={[styles.card, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+          <Text style={[styles.cardTitle, isDark && { color: ThemeColors.dark.text }]}>
             {isRegistering ? 'Create Student Account' : 'Sign In with Email'}
           </Text>
 
@@ -90,19 +92,21 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
           {isRegistering ? (
             <>
-              <Text style={styles.inputLabel}>Full Name</Text>
+              <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Full Name</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
                 placeholder="e.g. Rahul Sharma"
+                placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
               />
 
-              <Text style={styles.inputLabel}>Mobile Number</Text>
+              <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Mobile Number</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
                 placeholder="e.g. 9876543210"
+                placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
                 value={mobile}
                 onChangeText={setMobile}
                 keyboardType="phone-pad"
@@ -110,10 +114,11 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
             </>
           ) : null}
 
-          <Text style={styles.inputLabel}>Email Address</Text>
+          <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Email Address</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
             placeholder="e.g. student@example.com"
+            placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -122,10 +127,11 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
           {isRegistering ? (
             <>
-              <Text style={styles.inputLabel}>Referral Code (Optional)</Text>
+              <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Referral Code (Optional)</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
                 placeholder="e.g. TB-RAHUL-1029"
+                placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
                 value={referralCode}
                 onChangeText={setReferralCode}
                 autoCapitalize="characters"
@@ -154,7 +160,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
               setError('');
             }}
           >
-            <Text style={styles.toggleBtnText}>
+            <Text style={[styles.toggleBtnText, isDark && { color: '#60A5FA' }]}>
               {isRegistering ? 'Already have an account? Log In' : 'New to Testbook? Register here'}
             </Text>
           </TouchableOpacity>
@@ -162,7 +168,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
         {/* Quick Account Pickers */}
         <View style={styles.quickAccessBlock}>
-          <Text style={styles.quickAccessTitle}>Developer Quick Logins</Text>
+          <Text style={[styles.quickAccessTitle, isDark && { color: ThemeColors.dark.textMuted }]}>Developer Quick Logins</Text>
           <View style={styles.pickerRow}>
             <TouchableOpacity
               style={[styles.quickBadge, { backgroundColor: '#1E3A8A' }]}

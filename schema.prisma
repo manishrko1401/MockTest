@@ -228,6 +228,7 @@ model Notice {
   category    String   // notice, result, admit_card
   url         String?
   lastDate    String?
+  imageUrl    String?
   createdAt   DateTime @default(now())
 
   @@map("notices")

@@ -665,7 +665,7 @@ async function handleResetAttempt(data: any) {
 }
 
 async function handleAddNotice(data: any) {
-  const { id, title, type, category, date, publishDate, url, lastDate } = data;
+  const { id, title, type, category, date, publishDate, url, lastDate, imageUrl } = data;
 
   await prisma.notice.create({
     data: {
@@ -677,6 +677,7 @@ async function handleAddNotice(data: any) {
       publishDate,
       url: url || null,
       lastDate: lastDate || null,
+      imageUrl: imageUrl || null,
     },
   });
 

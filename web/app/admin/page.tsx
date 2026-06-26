@@ -86,6 +86,7 @@ export default function AdminAnalytics() {
   const [announcementType, setAnnouncementType] = useState('NEWS');
   const [announcementDate, setAnnouncementDate] = useState(new Date().toISOString().split('T')[0]);
   const [announcementUrl, setAnnouncementUrl] = useState('');
+  const [announcementImageUrl, setAnnouncementImageUrl] = useState('');
   const [announcementSearch, setAnnouncementSearch] = useState('');
 
   // User Management state from context
@@ -2092,7 +2093,7 @@ export default function AdminAnalytics() {
                               rq.questionId.toLowerCase().includes(term) ||
                               rq.mockTestTitle.toLowerCase().includes(term) ||
                               rq.message.toLowerCase().includes(term) ||
-                              rq.questionText.toLowerCase().includes(term)
+                      rq.questionText.toLowerCase().includes(term)
                             );
                           })
                           .map((rq) => (
@@ -2153,9 +2154,10 @@ export default function AdminAnalytics() {
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     if (!announcementTitle.trim()) return;
-                    addNotice(announcementTitle, announcementType, 'announcement', announcementDate, announcementUrl);
+                    addNotice(announcementTitle, announcementType, 'announcement', announcementDate, announcementUrl, undefined, announcementImageUrl);
                     setAnnouncementTitle('');
                     setAnnouncementUrl('');
+                    setAnnouncementImageUrl('');
                     showToast('Announcement published successfully!');
                   }} className="space-y-4 text-xs">
                     
@@ -2191,6 +2193,20 @@ export default function AdminAnalytics() {
                         placeholder="https://example.com/details"
                         className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Image URL (Optional)</label>
+                      <input
+                        type="url"
+                        value={announcementImageUrl}
+                        onChange={(e) => setAnnouncementImageUrl(e.target.value)}
+                        placeholder="https://example.com/image.png"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-855 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      />
+                      <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">
+                        💡 Perfect size for tile view is 1200x600 (aspect ratio 2:1) for clean coverage.
+                      </p>
                     </div>
 
                     <div>
@@ -2262,6 +2278,14 @@ export default function AdminAnalytics() {
                                   </a>
                                 ) : (
                                   <span>{ann.title}</span>
+                                )}
+                                {ann.imageUrl && (
+                                  <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                    <span>🖼️ Image:</span>
+                                    <a href={ann.imageUrl} target="_blank" rel="noopener noreferrer" className="underline truncate max-w-[200px] inline-block font-normal">
+                                      {ann.imageUrl}
+                                    </a>
+                                  </div>
                                 )}
                               </td>
                               <td className="py-3 px-4">

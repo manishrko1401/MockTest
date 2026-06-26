@@ -21,17 +21,20 @@ import {
   Globe
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
+import { ThemeColors } from '../theme';
 
 interface AnalysisScreenProps {
   currentUser: any;
   attempt: any; // The past session attempt data
   onBack: () => void;
+  isDark?: boolean;
 }
 
 export default function AnalysisScreen({
   currentUser,
   attempt,
-  onBack
+  onBack,
+  isDark = false
 }: AnalysisScreenProps) {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loadingQs, setLoadingQs] = useState(true);
@@ -112,9 +115,9 @@ export default function AnalysisScreen({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, isDark && { backgroundColor: ThemeColors.dark.headerBg }]}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
           <ArrowLeft color="#FFF" size={20} />
         </TouchableOpacity>
@@ -123,33 +126,33 @@ export default function AnalysisScreen({
 
       <ScrollView ref={scrollViewRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} stickyHeaderIndices={[1]}>
         {/* Statistics Board */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{attempt.title}</Text>
-          <Text style={styles.cardDate}>Submitted on: {attempt.date}</Text>
+        <View style={[styles.card, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+          <Text style={[styles.cardTitle, isDark && { color: ThemeColors.dark.text }]}>{attempt.title}</Text>
+          <Text style={[styles.cardDate, isDark && { color: ThemeColors.dark.textMuted }]}>Submitted on: {attempt.date}</Text>
 
-          <View style={styles.scoreRow}>
+          <View style={[styles.scoreRow, isDark && { borderColor: ThemeColors.dark.border }]}>
             <View style={styles.scoreBlock}>
-              <Text style={styles.scoreNum}>{attempt.score.toFixed(1)} / {attempt.maxScore.toFixed(0)}</Text>
-              <Text style={styles.scoreLabel}>My Score</Text>
+              <Text style={[styles.scoreNum, isDark && { color: '#60A5FA' }]}>{attempt.score.toFixed(1)} / {attempt.maxScore.toFixed(0)}</Text>
+              <Text style={[styles.scoreLabel, isDark && { color: ThemeColors.dark.textMuted }]}>My Score</Text>
             </View>
-            <View style={styles.divider} />
+            <View style={[styles.divider, isDark && { backgroundColor: ThemeColors.dark.border }]} />
             <View style={styles.scoreBlock}>
-              <Text style={styles.scoreNum}>{attempt.accuracy.toFixed(1)}%</Text>
-              <Text style={styles.scoreLabel}>Accuracy</Text>
+              <Text style={[styles.scoreNum, isDark && { color: '#60A5FA' }]}>{attempt.accuracy.toFixed(1)}%</Text>
+              <Text style={[styles.scoreLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Accuracy</Text>
             </View>
-            <View style={styles.divider} />
+            <View style={[styles.divider, isDark && { backgroundColor: ThemeColors.dark.border }]} />
             <View style={styles.scoreBlock}>
-              <Text style={styles.scoreNum}>{Math.round(attempt.durationSeconds / 60)}m</Text>
-              <Text style={styles.scoreLabel}>Duration</Text>
+              <Text style={[styles.scoreNum, isDark && { color: '#60A5FA' }]}>{Math.round(attempt.durationSeconds / 60)}m</Text>
+              <Text style={[styles.scoreLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Duration</Text>
             </View>
           </View>
         </View>
 
         {/* Question sliding navigator wrapper (sticks to top) */}
-        <View style={styles.stickyNavContainer}>
+        <View style={[styles.stickyNavContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
           {!loadingQs && questions.length > 0 && (
-            <View style={styles.navigationCard}>
-              <Text style={styles.navSectionTitle}>Question Navigator</Text>
+            <View style={[styles.navigationCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+              <Text style={[styles.navSectionTitle, isDark && { color: ThemeColors.dark.text }]}>Question Navigator</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navRow}>
                 {questions.map((q, idx) => {
                   const userResponse = attempt.responses ? attempt.responses[q.id] : null;
@@ -158,8 +161,12 @@ export default function AnalysisScreen({
                   const isCorrect = selectedIdx === correctIdx;
                   const isUnattempted = selectedIdx === null;
 
-                  let circleStyle = styles.circleUnattempted;
-                  let textStyle = styles.circleTextUnattempted;
+                  let circleStyle: any = isDark 
+                    ? [styles.circleUnattempted, { backgroundColor: '#0F172A', borderColor: '#334155' }] 
+                    : styles.circleUnattempted;
+                  let textStyle: any = isDark 
+                    ? [styles.circleTextUnattempted, { color: ThemeColors.dark.textMuted }] 
+                    : styles.circleTextUnattempted;
                   if (!isUnattempted) {
                     if (isCorrect) {
                       circleStyle = styles.circleCorrect;
@@ -177,8 +184,6 @@ export default function AnalysisScreen({
                       onPress={() => {
                         const yOffset = cardOffsets[idx];
                         if (yOffset !== undefined && scrollViewRef.current) {
-                          // Scroll to layout y offset. Since sticky container height is around 90px, 
-                          // we subtract 100px to ensure card header is fully visible and not blocked by the navigator.
                           scrollViewRef.current.scrollTo({ y: Math.max(0, yOffset - 100), animated: true });
                         }
                       }}
@@ -194,18 +199,18 @@ export default function AnalysisScreen({
 
         {/* Bilingual Selector */}
         <View style={styles.langSelectorRow}>
-          <Text style={styles.solutionsHeading}>Detailed Solutions</Text>
+          <Text style={[styles.solutionsHeading, isDark && { color: ThemeColors.dark.text }]}>Detailed Solutions</Text>
           <TouchableOpacity
-            style={styles.langBtn}
+            style={[styles.langBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
             onPress={() => setLang(lang === 'en' ? 'hi' : 'en')}
           >
-            <Globe size={14} color="#2563EB" />
-            <Text style={styles.langBtnText}>{lang === 'en' ? 'Hindi (हिन्दी)' : 'English'}</Text>
+            <Globe size={14} color={isDark ? '#60A5FA' : '#2563EB'} />
+            <Text style={[styles.langBtnText, isDark && { color: '#60A5FA' }]}>{lang === 'en' ? 'Hindi (हिन्दी)' : 'English'}</Text>
           </TouchableOpacity>
         </View>
 
         {loadingQs ? (
-          <Text style={styles.loadingText}>Loading solution key explanations...</Text>
+          <Text style={[styles.loadingText, isDark && { color: ThemeColors.dark.textMuted }]}>Loading solution key explanations...</Text>
         ) : (
           questions.map((q, idx) => {
             const userResponse = attempt.responses ? attempt.responses[q.id] : null;
@@ -226,14 +231,14 @@ export default function AnalysisScreen({
             return (
               <View 
                 key={q.id || idx} 
-                style={styles.solutionCard}
+                style={[styles.solutionCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}
                 onLayout={(e) => {
                   const { y } = e.nativeEvent.layout;
                   setCardOffsets(prev => ({ ...prev, [idx]: y }));
                 }}
               >
                 <View style={styles.solCardHeader}>
-                  <Text style={styles.solIndex}>Question {idx + 1}</Text>
+                  <Text style={[styles.solIndex, isDark && { color: '#60A5FA' }]}>Question {idx + 1}</Text>
                   
                   {isUnattempted ? (
                     <Text style={[styles.solBadge, styles.unattemptedBadge]}>UNATTEMPTED</Text>
@@ -245,20 +250,20 @@ export default function AnalysisScreen({
                 </View>
 
                 {/* Question individual vs average time stats */}
-                <View style={styles.timeSpentRow}>
+                <View style={[styles.timeSpentRow, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
                   <View style={styles.timeSpentItem}>
-                    <Text style={styles.timeSpentLabel}>My Time:</Text>
-                    <Text style={styles.timeSpentVal}>{userTime}s</Text>
+                    <Text style={[styles.timeSpentLabel, isDark && { color: ThemeColors.dark.textMuted }]}>My Time:</Text>
+                    <Text style={[styles.timeSpentVal, isDark && { color: ThemeColors.dark.text }]}>{userTime}s</Text>
                   </View>
-                  <View style={styles.timeSpentDivider} />
+                  <View style={[styles.timeSpentDivider, isDark && { backgroundColor: ThemeColors.dark.border }]} />
                   <View style={styles.timeSpentItem}>
-                    <Text style={styles.timeSpentLabel}>Avg Time:</Text>
-                    <Text style={styles.timeSpentVal}>{avgTime}s</Text>
+                    <Text style={[styles.timeSpentLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Avg Time:</Text>
+                    <Text style={[styles.timeSpentVal, isDark && { color: ThemeColors.dark.text }]}>{avgTime}s</Text>
                   </View>
                 </View>
 
                 {/* Question Text */}
-                <Text style={styles.solBody}>{questionBodyText}</Text>
+                <Text style={[styles.solBody, isDark && { color: ThemeColors.dark.text }]}>{questionBodyText}</Text>
 
                 {/* Options List */}
                 <View style={styles.optionsBlock}>
@@ -268,30 +273,30 @@ export default function AnalysisScreen({
                     const isSelectedOpt = optIdx === selectedIdx;
 
                     const optStyle: any = isCorrectOpt 
-                      ? [styles.optItem, styles.optCorrect] 
+                      ? [styles.optItem, styles.optCorrect, isDark && { backgroundColor: '#064E3B', borderColor: '#059669' }] 
                       : (isSelectedOpt && !isCorrectOpt) 
-                      ? [styles.optItem, styles.optIncorrect] 
-                      : styles.optItem;
+                      ? [styles.optItem, styles.optIncorrect, isDark && { backgroundColor: '#7F1D1D', borderColor: '#DC2626' }] 
+                      : [styles.optItem, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }];
 
                     const dotStyle: any = isCorrectOpt 
                       ? [styles.optDot, { backgroundColor: '#10B981', borderColor: '#10B981' }] 
                       : (isSelectedOpt && !isCorrectOpt) 
                       ? [styles.optDot, { backgroundColor: '#DC2626', borderColor: '#DC2626' }] 
-                      : styles.optDot;
+                      : [styles.optDot, isDark && { borderColor: '#475569' }];
 
                     return (
                       <View key={optIdx} style={optStyle}>
                         <View style={dotStyle} />
-                        <Text style={styles.optText}>{optText}</Text>
+                        <Text style={[styles.optText, isDark && { color: ThemeColors.dark.text }]}>{optText}</Text>
                       </View>
                     );
                   })}
                 </View>
 
                 {/* Explanation */}
-                <View style={styles.explanationBox}>
-                  <Text style={styles.explanationTitle}>Explanation:</Text>
-                  <Text style={styles.explanationText}>
+                <View style={[styles.explanationBox, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}>
+                  <Text style={[styles.explanationTitle, isDark && { color: ThemeColors.dark.text }]}>Explanation:</Text>
+                  <Text style={[styles.explanationText, isDark && { color: ThemeColors.dark.textMuted }]}>
                     {explanationText || 'Detailed explanation not provided.'}
                   </Text>
                 </View>
@@ -301,8 +306,8 @@ export default function AnalysisScreen({
                   style={styles.reportBtn}
                   onPress={() => handleOpenReportModal(q)}
                 >
-                  <Flag size={12} color="#9CA3AF" />
-                  <Text style={styles.reportBtnText}>Report Issue</Text>
+                  <Flag size={12} color={isDark ? ThemeColors.dark.textMuted : '#9CA3AF'} />
+                  <Text style={[styles.reportBtnText, isDark && { color: ThemeColors.dark.textMuted }]}>Report Issue</Text>
                 </TouchableOpacity>
               </View>
             );
@@ -317,22 +322,23 @@ export default function AnalysisScreen({
         transparent={true}
         onRequestClose={() => setReportModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <View style={[styles.modalOverlay, isDark && { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
+          <View style={[styles.modalContent, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border, borderWidth: 1 }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Report Question Bug</Text>
+              <Text style={[styles.modalTitle, isDark && { color: ThemeColors.dark.text }]}>Report Question Bug</Text>
               <TouchableOpacity onPress={() => setReportModalVisible(false)}>
-                <X size={20} color="#4B5563" />
+                <X size={20} color={isDark ? ThemeColors.dark.textMuted : '#4B5563'} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalSubtitle}>
+            <Text style={[styles.modalSubtitle, isDark && { color: ThemeColors.dark.textMuted }]}>
               Help us correct errors in typing, translations, options, or answer keys.
             </Text>
 
             <TextInput
-              style={styles.modalInput}
+              style={[styles.modalInput, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
               placeholder="e.g. The options are missing in Hindi translator, or option 2 should be the correct answer..."
+              placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
               value={reportMessage}
               onChangeText={setReportMessage}
               multiline={true}
