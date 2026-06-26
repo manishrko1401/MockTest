@@ -139,7 +139,11 @@ export default function App() {
       />
 
       {viewMode === 'auth' && (
-        <AuthScreen onLoginSuccess={handleLoginSuccess} isDark={isDark} />
+        <AuthScreen 
+          onLoginSuccess={handleLoginSuccess} 
+          isDark={isDark} 
+          onToggleTheme={handleToggleTheme} 
+        />
       )}
 
       {viewMode === 'dashboard' && currentUser && (

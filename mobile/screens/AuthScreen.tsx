@@ -20,7 +20,9 @@ import {
   Gift, 
   Eye, 
   EyeOff, 
-  AlertCircle 
+  AlertCircle,
+  Sun,
+  Moon
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
@@ -28,9 +30,10 @@ import { ThemeColors } from '../theme';
 interface AuthScreenProps {
   onLoginSuccess: (user: any) => void;
   isDark?: boolean;
+  onToggleTheme?: (dark: boolean) => void;
 }
 
-export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScreenProps) {
+export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleTheme }: AuthScreenProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -91,11 +94,6 @@ export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScree
     }
   };
 
-  const selectQuickAccount = (emailAddress: string) => {
-    setEmail(emailAddress);
-    handleLogin(emailAddress);
-  };
-
   const handleSubmit = () => {
     if (activeTab === 'login') {
       handleLogin(email);
@@ -109,6 +107,26 @@ export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScree
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}
     >
+      {/* Theme Toggle Button */}
+      {onToggleTheme && (
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => onToggleTheme(!isDark)}
+          style={[
+            styles.themeToggle,
+            isDark 
+              ? { backgroundColor: '#1E293B', borderColor: '#334155' } 
+              : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }
+          ]}
+        >
+          {isDark ? (
+            <Sun size={18} color="#F59E0B" />
+          ) : (
+            <Moon size={18} color="#475569" />
+          )}
+        </TouchableOpacity>
+      )}
+
       {/* Decorative Blur Orbs */}
       <View style={[styles.blurOrbLeft, isDark && { backgroundColor: 'rgba(59, 130, 246, 0.08)' }]} />
       <View style={[styles.blurOrbRight, isDark && { backgroundColor: 'rgba(99, 102, 241, 0.08)' }]} />
@@ -169,7 +187,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScree
 
           {/* Feedback Message */}
           {error ? (
-            <View style={[styles.errorBox, isDark && { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444' }]}>
+            <View style={[styles.errorBox, isDark && { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: '#7F1D1D' }]}>
               <AlertCircle size={16} color="#EF4444" style={styles.errorIcon} />
               <Text style={[styles.errorText, isDark && { color: '#FCA5A5' }]}>{error}</Text>
             </View>
@@ -274,7 +292,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScree
           {/* Action Button */}
           <TouchableOpacity
             activeOpacity={0.9}
-            style={styles.primaryBtn}
+            style={[styles.primaryBtn, isDark && { backgroundColor: '#3B82F6', shadowColor: '#3B82F6' }]}
             onPress={handleSubmit}
             disabled={loading}
           >
@@ -287,34 +305,6 @@ export default function AuthScreen({ onLoginSuccess, isDark = false }: AuthScree
             )}
           </TouchableOpacity>
         </View>
-
-        {/* Quick Account Pickers */}
-        <View style={styles.quickAccessBlock}>
-          <Text style={[styles.quickAccessTitle, isDark && { color: ThemeColors.dark.textMuted }]}>Developer Quick Logins</Text>
-          <View style={styles.pickerRow}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[styles.quickBadge, { backgroundColor: '#1E3A8A' }]}
-              onPress={() => selectQuickAccount('admin@mocktest.com')}
-            >
-              <Text style={styles.quickBadgeText}>Admin</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[styles.quickBadge, { backgroundColor: '#10B981' }]}
-              onPress={() => selectQuickAccount('rahul.sharma@example.com')}
-            >
-              <Text style={styles.quickBadgeText}>Pass Pro User</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[styles.quickBadge, { backgroundColor: '#F59E0B' }]}
-              onPress={() => selectQuickAccount('amit.verma@example.com')}
-            >
-              <Text style={styles.quickBadgeText}>Free User</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -324,6 +314,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC', // slate 50 matching web
+  },
+  themeToggle: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 40,
+    right: 20,
+    zIndex: 20,
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
   blurOrbLeft: {
     position: 'absolute',
@@ -351,6 +355,7 @@ const styles = StyleSheet.create({
   headerBlock: {
     alignItems: 'center',
     marginBottom: 24,
+    marginTop: 40,
   },
   shieldIconContainer: {
     backgroundColor: '#2563EB',
@@ -488,36 +493,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     lineHeight: 16,
-  },
-  quickAccessBlock: {
-    marginTop: 30,
-    alignItems: 'center',
-  },
-  quickAccessTitle: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-  pickerRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  quickBadge: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  quickBadgeText: {
-    color: '#FFF',
-    fontSize: 11,
-    fontWeight: 'bold',
   },
 });
