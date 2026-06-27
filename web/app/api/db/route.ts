@@ -136,11 +136,12 @@ async function handleBootstrap() {
       password: u.passwordHash, // Exposed for simulated profile views in mock dashboard
       bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
       testSessions: u.testSessions.map((session: any) => {
-        const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number }> = {};
+        const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
         session.responses.forEach((r: any) => {
           responsesRecord[r.questionId] = {
             selectedOptionIndex: r.selectedOptionIndex,
             elapsedSeconds: r.elapsedSeconds,
+            state: r.state,
           };
         });
         return {
@@ -367,11 +368,12 @@ async function handleLogin(data: any) {
     referralCoinsCredited: user.referralCoinsCredited,
     bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],
     testSessions: user.testSessions.map((session: any) => {
-      const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number }> = {};
+      const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
       session.responses.forEach((r: any) => {
         responsesRecord[r.questionId] = {
           selectedOptionIndex: r.selectedOptionIndex,
           elapsedSeconds: r.elapsedSeconds,
+          state: r.state,
         };
       });
       return {

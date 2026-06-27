@@ -87,6 +87,99 @@ export default function AnalysisScreen({
   const [reportMessage, setReportMessage] = useState('');
   const [reporting, setReporting] = useState(false);
   const [expandedExplanations, setExpandedExplanations] = useState<Record<number, boolean>>({});
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'incorrect' | 'overtime' | 'unattempted' | 'correct' | 'marked'>('all');
+
+  const categories = [
+    { id: 'all', label: 'All' },
+    { id: 'incorrect', label: 'Incorrect' },
+    { id: 'overtime', label: 'Overtime' },
+    { id: 'unattempted', label: 'Unattempted' },
+    { id: 'correct', label: 'Correct' },
+    { id: 'marked', label: 'Marked' }
+  ];
+
+  const categoryCounts = React.useMemo(() => {
+    let correct = 0;
+    let incorrect = 0;
+    let overtime = 0;
+    let unattempted = 0;
+    let marked = 0;
+
+    questions.forEach((q, idx) => {
+      const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
+      const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
+      const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
+      
+      const qId = q.id || '';
+      const userTime = activeAttempt.responses?.[qId]?.elapsedSeconds ?? (15 + (seed + idx) % 75);
+      const avgTime = 30 + (qId ? (qId.charCodeAt(qId.length - 1) % 5) : 0) * 15;
+
+      const isCorrect = selectedIdx === correctIdx;
+      const isUnattempted = selectedIdx === null;
+      const isOvertime = userTime > avgTime;
+      const isMarked = userResponse?.state === 4 || userResponse?.state === 5;
+
+      if (isUnattempted) {
+        unattempted++;
+      } else if (isCorrect) {
+        correct++;
+      } else {
+        incorrect++;
+      }
+
+      if (isOvertime) {
+        overtime++;
+      }
+      if (isMarked) {
+        marked++;
+      }
+    });
+
+    return {
+      all: questions.length,
+      correct,
+      incorrect,
+      overtime,
+      unattempted,
+      marked,
+    };
+  }, [questions, activeAttempt, seed]);
+
+  const filteredQuestions = React.useMemo(() => {
+    return questions.map((q, idx) => ({ q, idx })).filter(({ q, idx }) => {
+      if (selectedCategory === 'all') return true;
+
+      const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
+      const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
+      const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
+
+      const qId = q.id || '';
+      const userTime = activeAttempt.responses?.[qId]?.elapsedSeconds ?? (15 + (seed + idx) % 75);
+      const avgTime = 30 + (qId ? (qId.charCodeAt(qId.length - 1) % 5) : 0) * 15;
+
+      const isCorrect = selectedIdx === correctIdx;
+      const isUnattempted = selectedIdx === null;
+      const isOvertime = userTime > avgTime;
+      const isMarked = userResponse?.state === 4 || userResponse?.state === 5;
+
+      if (selectedCategory === 'incorrect') {
+        return !isUnattempted && !isCorrect;
+      }
+      if (selectedCategory === 'overtime') {
+        return isOvertime;
+      }
+      if (selectedCategory === 'unattempted') {
+        return isUnattempted;
+      }
+      if (selectedCategory === 'correct') {
+        return isCorrect;
+      }
+      if (selectedCategory === 'marked') {
+        return isMarked;
+      }
+      return true;
+    });
+  }, [questions, selectedCategory, activeAttempt, seed]);
 
   const toggleExplanation = (idx: number) => {
     setExpandedExplanations(prev => ({
@@ -105,6 +198,7 @@ export default function AnalysisScreen({
   React.useEffect(() => {
     const fetchQuestions = async () => {
       setExpandedExplanations({});
+      setSelectedCategory('all');
       setLoadingQs(true);
       const res = await ApiClient.getCustomQuestions(activeAttempt.testId);
       if (res.success && res.questions && Array.isArray(res.questions)) {
@@ -185,8 +279,38 @@ export default function AnalysisScreen({
         ref={scrollViewRef}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[testAttempts.length > 1 ? 2 : 1]}
+        stickyHeaderIndices={[testAttempts.length > 1 ? 3 : 2]}
       >
+        {/* Slide Navigator Category Filter (Pills) */}
+        <View style={[styles.categoryContainer, isDark && { backgroundColor: 'transparent', borderBottomColor: ThemeColors.dark.border }]}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={styles.categoryScroll}
+          >
+            {categories.map(cat => (
+              <TouchableOpacity 
+                key={cat.id} 
+                style={[
+                  styles.categoryPill, 
+                  selectedCategory === cat.id ? styles.categoryPillSelected : styles.categoryPillUnselected,
+                  isDark && selectedCategory === cat.id && { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
+                  isDark && selectedCategory !== cat.id && { backgroundColor: '#1E293B', borderColor: '#334155' }
+                ]}
+                onPress={() => setSelectedCategory(cat.id as any)}
+              >
+                <Text style={[
+                  styles.categoryPillText, 
+                  selectedCategory === cat.id ? styles.categoryPillTextSelected : styles.categoryPillTextUnselected,
+                  isDark && selectedCategory === cat.id && { color: '#FFF' },
+                  isDark && selectedCategory !== cat.id && { color: '#9CA3AF' }
+                ]}>
+                  {cat.label} ({categoryCounts[cat.id as keyof typeof categoryCounts] || 0})
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
         {/* Attempts Navigator (Last 3 Attempts) */}
         {testAttempts.length > 1 && (
           <View style={[styles.attemptsNavigator, isDark ? { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border } : { backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }]}>
@@ -245,7 +369,7 @@ export default function AnalysisScreen({
             <View style={[styles.navigationCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
               <Text style={[styles.navSectionTitle, isDark && { color: ThemeColors.dark.text }]}>Question Navigator</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navRow}>
-                {questions.map((q, idx) => {
+                {filteredQuestions.map(({ q, idx }) => {
                   const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
                   const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
                   const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
@@ -288,9 +412,16 @@ export default function AnalysisScreen({
           )}
         </View>
 
-        {/* Bilingual Selector */}
-        <View style={styles.langSelectorRow}>
-          <Text style={[styles.solutionsHeading, isDark && { color: ThemeColors.dark.text }]}>Detailed Solutions</Text>
+        {/* Solutions Heading & Meta */}
+        <View style={{ paddingHorizontal: 16, marginTop: 14, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <View style={{ alignItems: 'flex-start' }}>
+            <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {selectedCategory === 'all' ? 'FULL TEST' : `${selectedCategory} QUESTIONS`}
+            </Text>
+            <Text style={{ fontSize: 14, fontWeight: '800', color: isDark ? '#F1F5F9' : '#1E293B', marginTop: 2 }}>
+              {filteredQuestions.length} {filteredQuestions.length === 1 ? 'Question' : 'Questions'}
+            </Text>
+          </View>
           <TouchableOpacity
             style={[styles.langBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
             onPress={() => setLang(lang === 'en' ? 'hi' : 'en')}
@@ -302,8 +433,14 @@ export default function AnalysisScreen({
 
         {loadingQs ? (
           <Text style={[styles.loadingText, isDark && { color: ThemeColors.dark.textMuted }]}>Loading solution key explanations...</Text>
+        ) : filteredQuestions.length === 0 ? (
+          <View style={{ paddingVertical: 40, paddingHorizontal: 20, alignItems: 'center' }}>
+            <Text style={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', marginVertical: 30 }}>
+              No questions found in this category.
+            </Text>
+          </View>
         ) : (
-          questions.map((q, idx) => {
+          filteredQuestions.map(({ q, idx }) => {
             const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
             const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
             const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
@@ -883,5 +1020,40 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#6B7280',
     marginTop: 1,
+  },
+  categoryContainer: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  categoryScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  categoryPill: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryPillSelected: {
+    backgroundColor: '#3B82F6',
+    borderColor: '#3B82F6',
+  },
+  categoryPillUnselected: {
+    backgroundColor: '#EDF2F7',
+    borderColor: '#E2E8F0',
+  },
+  categoryPillText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  categoryPillTextSelected: {
+    color: '#FFFFFF',
+  },
+  categoryPillTextUnselected: {
+    color: '#4A5568',
   },
 });
