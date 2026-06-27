@@ -872,7 +872,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const filteredSessions = currentUser.testSessions.filter(
       s => !(s.testId === testId && s.status === 'ONGOING')
     );
-    const updatedSessions = [newRecord, ...filteredSessions];
+    const otherSessions = filteredSessions.filter(s => s.testId !== testId);
+    const thisTestSessions = filteredSessions.filter(s => s.testId === testId);
+    const prunedThisTestSessions = [newRecord, ...thisTestSessions].slice(0, 3);
+    const updatedSessions = [...prunedThisTestSessions, ...otherSessions];
     const updatedUser = { ...currentUser, testSessions: updatedSessions };
     setCurrentUser(updatedUser);
 

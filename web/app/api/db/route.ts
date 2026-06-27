@@ -567,6 +567,34 @@ async function handleAddAttempt(data: any) {
     }
   }
 
+  // Keep only the last 3 completed/auto-submitted attempts in the database
+  try {
+    const completedSessions = await prisma.userTestSession.findMany({
+      where: {
+        userId,
+        mockTestId: testId,
+        status: { in: ['COMPLETED', 'AUTO_SUBMITTED'] },
+      },
+      orderBy: {
+        completedAt: 'desc',
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (completedSessions.length > 3) {
+      const toDeleteIds = completedSessions.slice(3).map(s => s.id);
+      await prisma.userTestSession.deleteMany({
+        where: {
+          id: { in: toDeleteIds },
+        },
+      });
+    }
+  } catch (err) {
+    console.error("Failed to prune old attempts:", err);
+  }
+
   // Fetch updated user coins and referral credit status
   let updatedCoins = 0;
   let updatedReferralCoinsCredited = false;

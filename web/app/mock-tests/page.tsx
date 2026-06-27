@@ -448,10 +448,9 @@ export default function MockTestsCatalog() {
                                        </Link>
                                        <button
                                          onClick={() => handleReattemptExam(test)}
-                                         disabled={attemptsCount >= 5}
-                                         className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-805 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                         className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-805 cursor-pointer"
                                        >
-                                         Reattempt
+                                         {t.reattempt}
                                        </button>
                                      </>
                                    ) : (
@@ -940,10 +939,9 @@ export default function MockTestsCatalog() {
                                     </Link>
                                     <button
                                       onClick={() => handleReattemptExam(test)}
-                                      disabled={attemptsCount >= 5}
-                                      className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                      className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
                                     >
-                                      {attemptsCount >= 5 ? t.maxLimitReached : `${t.reattempt} (${attemptsCount}/5)`}
+                                      {t.reattempt}
                                     </button>
                                   </>
                                 ) : (
