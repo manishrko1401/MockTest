@@ -290,7 +290,7 @@ export default function DashboardScreen({
                         style={{ width: Dimensions.get('window').width - 32, height: 180, justifyContent: 'center', alignItems: 'center' }}
                       >
                         <Image
-                          source={{ uri: ann.imageUrl }}
+                          source={{ uri: ann.imageUrl.trim().replace(/^http:\/\//i, 'https://') }}
                           style={{ width: Dimensions.get('window').width - 34, height: 178 }}
                           resizeMode="contain"
                         />
@@ -775,9 +775,31 @@ export default function DashboardScreen({
       <View style={[styles.blurOrbRight, isDark && { backgroundColor: 'rgba(99, 102, 241, 0.08)' }]} />
 
       {/* Header Banner */}
-      <View style={[styles.dashHeader, isDark && { backgroundColor: ThemeColors.dark.headerBg }]}>
-        <Text style={styles.dashTitle}>MockTest Hub</Text>
-        <Text style={[styles.dashSub, isDark && { color: ThemeColors.dark.textMuted }]}>Candidate: {currentUser.name}</Text>
+      <View style={[styles.dashHeader, isDark && { backgroundColor: ThemeColors.dark.headerBg, borderBottomColor: '#1E293B' }]}>
+        {/* Header Decorative Glows */}
+        <View style={styles.headerGlowLeft} />
+        <View style={styles.headerGlowRight} />
+        
+        <View style={styles.dashHeaderRow}>
+          <View style={styles.dashHeaderLeft}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Trophy size={18} color="#FBBF24" />
+              <Text style={styles.dashTitle}>
+                MockTest <Text style={{ color: '#38BDF8' }}>Hub</Text>
+              </Text>
+            </View>
+            <Text style={[styles.dashSub, isDark && { color: ThemeColors.dark.textMuted }]}>
+              Candidate: <Text style={{ fontWeight: 'bold', color: '#E2E8F0' }}>{currentUser.name}</Text>
+            </Text>
+          </View>
+          
+          <View style={styles.dashHeaderRight}>
+            <View style={[styles.headerCoinBadge, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+              <Coins size={14} color="#FBBF24" />
+              <Text style={styles.headerCoinText}>{currentUser.coins || 0}</Text>
+            </View>
+          </View>
+        </View>
       </View>
 
       {/* Main View Area */}
@@ -896,19 +918,74 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   dashHeader: {
-    backgroundColor: '#0F2942',
+    backgroundColor: '#0F172A',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 18,
+    position: 'relative',
+    overflow: 'hidden',
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+  },
+  headerGlowLeft: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    top: -50,
+    left: -50,
+    backgroundColor: '#3B82F6',
+    opacity: 0.25,
+    zIndex: 0,
+  },
+  headerGlowRight: {
+    position: 'absolute',
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    bottom: -40,
+    right: -30,
+    backgroundColor: '#6366F1',
+    opacity: 0.3,
+    zIndex: 0,
+  },
+  dashHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  dashHeaderLeft: {
+    flex: 1,
+  },
+  dashHeaderRight: {
+    marginLeft: 12,
+  },
+  headerCoinBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  headerCoinText: {
+    color: '#FBBF24',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   dashTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '900',
     color: '#FFF',
+    letterSpacing: 0.5,
   },
   dashSub: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#94A3B8',
-    marginTop: 2,
+    marginTop: 4,
   },
   mainView: {
     flex: 1,
