@@ -20,7 +20,9 @@ import {
   Flag,
   Globe,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
@@ -81,10 +83,19 @@ export default function AnalysisScreen({
   const [activeQuestion, setActiveQuestion] = useState<any>(null);
   const [reportMessage, setReportMessage] = useState('');
   const [reporting, setReporting] = useState(false);
+  const [expandedExplanations, setExpandedExplanations] = useState<Record<number, boolean>>({});
+
+  const toggleExplanation = (idx: number) => {
+    setExpandedExplanations(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }));
+  };
 
   // Load test questions on mount to show solution explanations
   React.useEffect(() => {
     const fetchQuestions = async () => {
+      setExpandedExplanations({});
       setLoadingQs(true);
       const res = await ApiClient.getCustomQuestions(activeAttempt.testId);
       if (res.success && res.questions && Array.isArray(res.questions)) {
@@ -361,12 +372,31 @@ export default function AnalysisScreen({
                 </View>
 
                 {/* Explanation */}
-                <View style={[styles.explanationBox, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}>
-                  <Text style={[styles.explanationTitle, isDark && { color: ThemeColors.dark.text }]}>Explanation:</Text>
-                  <Text style={[styles.explanationText, isDark && { color: ThemeColors.dark.textMuted }]}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => toggleExplanation(idx)}
+                  style={[styles.explanationBox, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
+                >
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text style={[styles.explanationTitle, isDark && { color: ThemeColors.dark.text }]}>Explanation:</Text>
+                    {expandedExplanations[idx] ? (
+                      <ChevronUp size={14} color={isDark ? ThemeColors.dark.textMuted : '#4B5563'} />
+                    ) : (
+                      <ChevronDown size={14} color={isDark ? ThemeColors.dark.textMuted : '#4B5563'} />
+                    )}
+                  </View>
+                  <Text
+                    numberOfLines={expandedExplanations[idx] ? undefined : 2}
+                    style={[styles.explanationText, isDark && { color: ThemeColors.dark.textMuted }]}
+                  >
                     {explanationText || 'Detailed explanation not provided.'}
                   </Text>
-                </View>
+                  {!expandedExplanations[idx] && explanationText && explanationText.length > 80 && (
+                    <Text style={{ fontSize: 10, color: '#3B82F6', fontWeight: 'bold', marginTop: 4 }}>
+                      Tap to read more...
+                    </Text>
+                  )}
+                </TouchableOpacity>
 
                 {/* Report button */}
                 <TouchableOpacity
