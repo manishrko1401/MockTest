@@ -75,6 +75,31 @@ export default function AdminAnalytics() {
   const [supportLoading, setSupportLoading] = useState(false);
   const [supportUsersLoading, setSupportUsersLoading] = useState(false);
   const [supportSending, setSupportSending] = useState(false);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingMessageText, setEditingMessageText] = useState('');
+
+  const handleSaveEditMessage = async (messageId: string, text: string) => {
+    if (!text.trim()) return;
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'edit-support-message',
+          data: { messageId, newMessage: text.trim() }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSupportMessages(prev => prev.map(msg => msg.id === messageId ? data.message : msg));
+        setEditingMessageId(null);
+        showToast('Message updated successfully');
+        fetchSupportUsers(false);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Poll support users list
   const fetchSupportUsers = async (showLoading = false) => {
@@ -2273,40 +2298,79 @@ export default function AdminAnalytics() {
                       const initials = user.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'ST';
                       
                       return (
-                        <button
+                        <div
                           key={user.id}
                           onClick={() => setSelectedSupportUserId(user.id)}
-                          className={`w-full text-left p-4 flex items-center gap-3 transition-colors text-xs font-sans cursor-pointer ${
+                          className={`w-full text-left p-4 flex items-center justify-between gap-3 transition-colors text-xs font-sans cursor-pointer relative group ${
                             isSelected 
-                              ? 'bg-blue-55/60 dark:bg-blue-950/20' 
+                              ? 'bg-blue-50/60 dark:bg-blue-950/20' 
                               : 'hover:bg-slate-50 dark:hover:bg-slate-900/40'
                           }`}
                         >
-                          <div className="h-10 w-10 rounded-full bg-blue-600/10 dark:bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-black flex items-center justify-center shrink-0">
-                            {initials}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <span className="font-extrabold text-slate-900 dark:text-white truncate">{user.name}</span>
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="h-10 w-10 rounded-full bg-blue-600/10 dark:bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-black flex items-center justify-center shrink-0">
+                              {initials}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <span className="font-extrabold text-slate-900 dark:text-white truncate">{user.name}</span>
+                                {user.lastMessage && (
+                                  <span className="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap ml-2">
+                                    {new Date(user.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mb-1">{user.email}</p>
                               {user.lastMessage && (
-                                <span className="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap ml-2">
-                                  {new Date(user.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
+                                <p className={`text-[11px] truncate leading-tight ${user.unseenCount > 0 ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-500 dark:text-slate-400 font-semibold'}`}>
+                                  {user.lastMessage.sender === 'ADMIN' ? 'You: ' : ''}{user.lastMessage.message}
+                                </p>
                               )}
                             </div>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mb-1">{user.email}</p>
-                            {user.lastMessage && (
-                              <p className={`text-[11px] truncate leading-tight ${user.unseenCount > 0 ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-500 dark:text-slate-400 font-semibold'}`}>
-                                {user.lastMessage.sender === 'ADMIN' ? 'You: ' : ''}{user.lastMessage.message}
-                              </p>
-                            )}
                           </div>
-                          {user.unseenCount > 0 && (
-                            <span className="bg-emerald-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center shrink-0 ml-1">
-                              {user.unseenCount}
-                            </span>
-                          )}
-                        </button>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            {user.unseenCount > 0 && (
+                              <span className="bg-emerald-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center">
+                                {user.unseenCount}
+                              </span>
+                            )}
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const confirmDelete = window.confirm(
+                                  `Are you sure you want to delete the support conversation with ${user.name}? This will delete all messages permanently.`
+                                );
+                                if (confirmDelete) {
+                                  try {
+                                    const res = await fetch('/api/db', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        action: 'delete-support-conversation',
+                                        data: { userId: user.id }
+                                      })
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                      showToast(`Deleted conversation with ${user.name}`);
+                                      if (selectedSupportUserId === user.id) {
+                                        setSelectedSupportUserId(null);
+                                      }
+                                      fetchSupportUsers(false);
+                                    }
+                                  } catch (err) {
+                                    console.error(err);
+                                  }
+                                }
+                              }}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-slate-900 rounded-lg cursor-pointer"
+                              title="Delete Conversation"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
                       );
                     })
                   )}
@@ -2343,22 +2407,66 @@ export default function AdminAnalytics() {
                       ) : (
                         supportMessages.map((msg) => {
                           const isStudent = msg.sender === 'STUDENT';
+                          const isEditing = editingMessageId === msg.id;
                           return (
                             <div
                               key={msg.id}
-                              className={`flex ${isStudent ? 'justify-start' : 'justify-end'}`}
+                              className={`flex ${isStudent ? 'justify-start' : 'justify-end'} group/msg`}
                             >
-                              <div className={`max-w-[70%] p-3.5 rounded-xl border text-xs font-medium shadow-xs ${
+                              <div className={`max-w-[70%] p-3.5 rounded-xl border text-xs font-medium shadow-xs relative ${
                                 isStudent
                                   ? 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-xs'
                                   : 'bg-blue-600 border-blue-600 text-white rounded-br-xs'
                               }`}>
-                                <p className="leading-relaxed whitespace-pre-wrap break-words">{msg.message}</p>
-                                <div className={`text-[8px] text-right mt-1.5 font-bold ${
-                                  isStudent ? 'text-slate-400 dark:text-slate-505' : 'text-blue-200'
-                                }`}>
-                                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </div>
+                                {isEditing ? (
+                                  <div className="flex flex-col gap-2 min-w-[200px]">
+                                    <textarea
+                                      value={editingMessageText}
+                                      onChange={(e) => setEditingMessageText(e.target.value)}
+                                      className="w-full bg-blue-700 text-white border border-blue-500 rounded p-1.5 focus:outline-none text-xs"
+                                      rows={2}
+                                      autoFocus
+                                    />
+                                    <div className="flex justify-end gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingMessageId(null)}
+                                        className="bg-blue-700 hover:bg-blue-800 text-blue-200 px-2 py-1 rounded text-[10px] font-bold"
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSaveEditMessage(msg.id, editingMessageText)}
+                                        className="bg-white hover:bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold"
+                                      >
+                                        Save
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <p className="leading-relaxed whitespace-pre-wrap break-words">{msg.message}</p>
+                                    <div className="flex items-center justify-between mt-1.5 gap-4">
+                                      {!isStudent && (
+                                        <button
+                                          onClick={() => {
+                                            setEditingMessageId(msg.id);
+                                            setEditingMessageText(msg.message);
+                                          }}
+                                          className="opacity-0 group-hover/msg:opacity-100 transition-opacity text-[9px] text-blue-200 hover:text-white underline cursor-pointer"
+                                        >
+                                          Edit
+                                        </button>
+                                      )}
+                                      <div className={`text-[8px] font-bold flex-1 text-right ${
+                                        isStudent ? 'text-slate-400 dark:text-slate-505' : 'text-blue-200'
+                                      }`}>
+                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
                               </div>
                             </div>
                           );

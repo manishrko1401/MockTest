@@ -73,6 +73,10 @@ export async function POST(request: Request) {
         return await handleSendSupportMessage(data);
       case 'get-support-users':
         return await handleGetSupportUsers();
+      case 'delete-support-conversation':
+        return await handleDeleteSupportConversation(data);
+      case 'edit-support-message':
+        return await handleEditSupportMessage(data);
       default:
         return NextResponse.json({ success: false, error: `Invalid action: ${action}` }, { status: 400 });
     }
@@ -1338,4 +1342,41 @@ async function handleGetSupportUsers() {
   });
 
   return NextResponse.json({ success: true, users: sorted });
+}
+
+async function handleDeleteSupportConversation(data: any) {
+  const { userId } = data;
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  await prisma.supportMessage.deleteMany({
+    where: { userId }
+  });
+
+  return NextResponse.json({ success: true });
+}
+
+async function handleEditSupportMessage(data: any) {
+  const { messageId, newMessage } = data;
+  if (!messageId || !newMessage) {
+    return NextResponse.json({ success: false, error: 'messageId and newMessage are required' }, { status: 400 });
+  }
+
+  const msg = await prisma.supportMessage.update({
+    where: { id: messageId },
+    data: { message: newMessage }
+  });
+
+  return NextResponse.json({
+    success: true,
+    message: {
+      id: msg.id,
+      userId: msg.userId,
+      sender: msg.sender,
+      message: msg.message,
+      isRead: msg.isRead,
+      createdAt: msg.createdAt.toISOString()
+    }
+  });
 }
