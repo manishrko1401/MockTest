@@ -356,110 +356,119 @@ export default function MockTestsCatalog() {
                             const attemptsCount = attempts.length;
                             const status = getTestStatus(test.id);
                             const isTestPremium = test.isPremium;
-
-                            let statusText = "";
-                            let statusColor = "text-slate-400";
-                            
-                            if (status === 'ONGOING') {
-                              statusText = "Ongoing Sitting";
-                              statusColor = "text-yellow-600 font-extrabold bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-250 dark:border-yellow-900/60 px-1.5 py-0.5 rounded text-[8px]";
-                            } else if (isCompleted(test.id)) {
-                              statusText = `Completed (${attemptsCount} times)`;
-                              statusColor = "text-green-655 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/60 px-1.5 py-0.5 rounded text-[8px]";
-                            }
+                            const completed = isCompleted(test.id);
+                            const ongoing = status === 'ONGOING';
+                            const hasPass = currentUser && (
+                              (test.requiredTier === 'None') ||
+                              (test.requiredTier === 'Testbook Pass' && (currentUser.subscriptionTier === 'Testbook Pass' || currentUser.subscriptionTier === 'Testbook Pass Pro')) ||
+                              (test.requiredTier === 'Testbook Pass Pro' && currentUser.subscriptionTier === 'Testbook Pass Pro')
+                            );
 
                             return (
                               <div
                                 key={test.id}
-                                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm flex flex-col justify-between gap-4"
+                                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4.5 rounded-xl shadow-sm hover:shadow-md hover:border-blue-500/50 dark:hover:border-blue-500/50 transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full"
                               >
-                                <div className="space-y-1">
-                                  <div className="flex items-start justify-between gap-2">
-                                    <h4 className="font-extrabold text-xs text-slate-900 dark:text-white leading-snug">
-                                      {test.title}
-                                    </h4>
-                                    
-                                    {isTestPremium ? (
-                                      <span className="inline-block bg-amber-100 text-amber-700 dark:bg-amber-955 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
-                                        PRO
-                                      </span>
-                                    ) : (
-                                      <span className="inline-block bg-blue-105 text-blue-700 dark:bg-blue-955 dark:text-blue-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
-                                        FREE
-                                      </span>
-                                    )}
-                                  </div>
+                                 <div className="space-y-1.5 flex-1 w-full text-left">
+                                   <div className="flex flex-wrap items-center gap-2">
+                                     {isTestPremium ? (
+                                       <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-250 dark:border-amber-900/60 uppercase tracking-wider">
+                                         {language === 'hi' ? 'प्रो' : 'PRO'}
+                                       </span>
+                                     ) : (
+                                       <span className="bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60 uppercase tracking-wider">
+                                         {language === 'hi' ? 'मुफ़्त' : 'FREE'}
+                                       </span>
+                                     )}
 
-                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-[9px] text-slate-505 font-bold">
-                                    <span>{test.questionsCount} Qs</span>
-                                    <span>•</span>
-                                    <span>{test.durationMinutes} Mins</span>
-                                    <span>•</span>
-                                    <span>{test.maxMarks} Marks</span>
-                                  </div>
+                                     {ongoing && (
+                                       <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-250 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                         ⏸ {language === 'hi' ? 'रुका हुआ' : 'PAUSED'}
+                                       </span>
+                                     )}
+                                     
+                                     {completed && (
+                                       <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 border border-green-200 dark:border-green-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                         ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
+                                       </span>
+                                     )}
+                                   </div>
 
-                                  {statusText && (
-                                    <div className="pt-1.5 flex">
-                                      <span className={statusColor}>{statusText}</span>
-                                    </div>
-                                  )}
+                                   <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">
+                                     {test.title}
+                                   </h4>
 
-                                  {attemptsCount > 0 && (() => {
-                                    const lastAttempt = [...attempts].sort((a, b) => b.date.localeCompare(a.date))[0];
-                                    if (!lastAttempt) return null;
-                                    return (
-                                      <div className="mt-2 bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800/80 px-2 py-1.5 rounded-lg flex items-center justify-between text-[9px] font-bold text-slate-600 dark:text-slate-400">
-                                        <span>{language === 'hi' ? 'पिछला प्रयास' : 'Last Attempt'}</span>
-                                        <span className="text-blue-600 dark:text-blue-400 font-extrabold">
-                                          {lastAttempt.score}/{lastAttempt.maxScore} {language === 'hi' ? 'अंक' : 'marks'}
-                                        </span>
-                                      </div>
-                                    );
-                                  })()}
-                                </div>
+                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
+                                     <span>{test.questionsCount} Qs</span>
+                                     <span>•</span>
+                                     <span>{test.durationMinutes} Mins</span>
+                                     <span>•</span>
+                                     <span>{test.maxMarks} Marks</span>
+                                     <span>•</span>
+                                     <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 English, Hindi</span>
+                                   </div>
 
-                                <div className="flex items-center gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
-                                  {status === 'ONGOING' ? (
-                                    <>
-                                      <button
-                                        onClick={() => handleStartExam(test)}
-                                        className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm"
-                                      >
-                                        Resume Test
-                                      </button>
-                                      <button
-                                        onClick={() => handleReattemptExam(test)}
-                                        className="bg-slate-105 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-700"
-                                      >
-                                        Reset
-                                      </button>
-                                    </>
-                                  ) : isCompleted(test.id) ? (
-                                    <>
-                                      <Link
-                                        href={`/exam/${test.id}/analysis`}
-                                        className="flex-1 bg-blue-655 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm"
-                                      >
-                                        View Analysis
-                                      </Link>
-                                      <button
-                                        onClick={() => handleReattemptExam(test)}
-                                        className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px]"
-                                      >
-                                        Reattempt
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <button
-                                      onClick={() => handleStartExam(test)}
-                                      className="w-full bg-[#1C3D5A] hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-[10px] shadow animate-pulse"
-                                    >
-                                      Start Practice Test
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            );
+                                   {attemptsCount > 0 && (() => {
+                                     const lastAttempt = [...attempts].sort((a, b) => b.date.localeCompare(a.date))[0];
+                                     if (!lastAttempt) return null;
+                                     return (
+                                       <div className="inline-flex items-center gap-2 bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800/80 px-2 py-0.5 rounded text-[8px] font-bold text-slate-600 dark:text-slate-400">
+                                         <span>{language === 'hi' ? 'पिछला प्रयास' : 'Last Attempt'}:</span>
+                                         <span className="text-blue-600 dark:text-blue-400 font-extrabold">
+                                           {lastAttempt.score}/{lastAttempt.maxScore} {language === 'hi' ? 'अंक' : 'marks'}
+                                         </span>
+                                       </div>
+                                     );
+                                   })()}
+                                 </div>
+
+                                 <div className="flex items-center gap-2 w-full sm:w-auto border-t sm:border-t-0 border-slate-100 dark:border-slate-800/80 pt-3 sm:pt-0 shrink-0">
+                                   {ongoing ? (
+                                     <>
+                                       <button
+                                         onClick={() => handleStartExam(test)}
+                                         className="flex-1 sm:w-32 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm cursor-pointer"
+                                       >
+                                         Resume Test
+                                       </button>
+                                       <button
+                                         onClick={() => handleReattemptExam(test)}
+                                         className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-805 cursor-pointer"
+                                       >
+                                         Reset
+                                       </button>
+                                     </>
+                                   ) : completed ? (
+                                     <>
+                                       <Link
+                                         href={`/exam/${test.id}/analysis`}
+                                         className="flex-1 sm:w-32 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm block"
+                                       >
+                                         View Analysis
+                                       </Link>
+                                       <button
+                                         onClick={() => handleReattemptExam(test)}
+                                         disabled={attemptsCount >= 5}
+                                         className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-805 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                       >
+                                         Reattempt
+                                       </button>
+                                     </>
+                                   ) : (
+                                     <button
+                                       onClick={() => handleStartExam(test)}
+                                       className={`w-full sm:w-44 text-white font-bold py-2.5 rounded-lg text-[10px] text-center shadow-sm cursor-pointer ${
+                                         hasPass 
+                                           ? 'bg-[#1C3D5A] hover:bg-slate-800' 
+                                           : 'bg-yellow-600 hover:bg-yellow-700'
+                                       }`}
+                                     >
+                                       {hasPass ? 'Start Practice Test' : (language === 'hi' ? 'पास के साथ अनलॉक करें' : 'Unlock with Pass')}
+                                     </button>
+                                   )}
+                                 </div>
+                               </div>
+                             );
                           })}
                         </div>
                       </div>
@@ -833,7 +842,7 @@ export default function MockTestsCatalog() {
                         </p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div className="space-y-3">
                         {filteredTests.map(test => {
                           const hasPass = currentUser && (
                             (test.requiredTier === 'None') ||
@@ -843,67 +852,60 @@ export default function MockTestsCatalog() {
 
                           const completed = isCompleted(test.id);
                           const ongoing = getTestStatus(test.id) === 'ONGOING';
-                          const attemptsCount = getTestAttempts(test.id).length;
+                          const attempts = getTestAttempts(test.id);
+                          const attemptsCount = attempts.length;
+                          const isTestPremium = test.isPremium;
 
                           return (
                             <div
                               key={test.id}
-                              className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 hover:border-slate-300 dark:hover:hover:border-slate-700 transition flex flex-col justify-between shadow-sm"
+                              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4.5 rounded-xl shadow-sm hover:shadow-md hover:border-blue-500/50 dark:hover:border-blue-500/50 transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full"
                             >
-                              <div>
-                                <div className="flex items-center justify-between mb-4">
-                                  <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                    test.requiredTier === 'None'
-                                      ? 'bg-green-100 border border-green-300 text-green-700 dark:bg-green-950/40 dark:border-green-800 dark:text-green-400'
-                                      : test.requiredTier === 'Testbook Pass'
-                                      ? 'bg-blue-100 border border-blue-300 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-400'
-                                      : 'bg-yellow-100 border border-yellow-300 text-yellow-700 dark:bg-yellow-950/40 dark:border-yellow-800 dark:text-yellow-400'
-                                  }`}>
-                                    {test.requiredTier === 'None' ? t.freeTest : test.requiredTier.replace('Testbook', language === 'hi' ? 'मॉक टेस्ट' : 'Mock Test')}
-                                  </span>
-                                  
+                              <div className="space-y-1.5 flex-1 w-full text-left">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  {isTestPremium ? (
+                                    <span className="bg-amber-50 text-amber-700 dark:bg-amber-955 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-250 dark:border-amber-900/60 uppercase tracking-wider">
+                                      {language === 'hi' ? 'प्रो' : 'PRO'}
+                                    </span>
+                                  ) : (
+                                    <span className="bg-green-50 text-green-700 dark:bg-green-955 dark:text-green-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60 uppercase tracking-wider">
+                                      {language === 'hi' ? 'मुफ़्त' : 'FREE'}
+                                    </span>
+                                  )}
+
                                   {ongoing && (
-                                    <span className="flex items-center gap-1 text-[9px] bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400 border border-orange-300 dark:border-orange-850 px-1.5 py-0.5 rounded font-black uppercase">
-                                      ⏸ {t.paused}
+                                    <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-955 dark:text-orange-400 border border-orange-250 dark:border-orange-850 px-1.5 py-0.5 rounded font-black uppercase">
+                                      ⏸ {language === 'hi' ? 'रुका हुआ' : 'PAUSED'}
                                     </span>
                                   )}
-                                  {hasPass && !completed && !ongoing && (
-                                    <span className="flex items-center gap-1 text-[9px] bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border border-green-300 dark:border-green-800 px-1.5 py-0.5 rounded font-bold">
-                                      <Check className="h-3 w-3" /> {t.unlocked}
-                                    </span>
-                                  )}
+                                  
                                   {completed && (
-                                    <span className="flex items-center gap-1 text-[9px] bg-green-100 text-green-805 dark:bg-green-950/60 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded font-black">
-                                      <Check className="h-3 w-3" /> {t.attempted}
+                                    <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-805 dark:bg-green-955/60 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded font-black uppercase">
+                                      ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                     </span>
                                   )}
                                 </div>
 
-                                <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 leading-snug mb-3 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer">
+                                <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-105 leading-snug">
                                   {test.title}
                                 </h4>
 
-                                <div className="grid grid-cols-3 gap-2 border-t border-slate-100 dark:border-slate-900 pt-3 mb-5 text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                                  <div>
-                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">{t.questions}</p>
-                                    <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.questionsCount} Qs</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">{t.duration}</p>
-                                    <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.durationMinutes} Mins</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider text-[8px]">{t.totalMarks}</p>
-                                    <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.maxMarks} Marks</p>
-                                  </div>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
+                                  <span>{test.questionsCount} Qs</span>
+                                  <span>•</span>
+                                  <span>{test.durationMinutes} Mins</span>
+                                  <span>•</span>
+                                  <span>{test.maxMarks} Marks</span>
+                                  <span>•</span>
+                                  <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 English, Hindi</span>
                                 </div>
 
                                 {attemptsCount > 0 && (() => {
-                                  const lastAttempt = [...getTestAttempts(test.id)].sort((a, b) => b.date.localeCompare(a.date))[0];
+                                  const lastAttempt = [...attempts].sort((a, b) => b.date.localeCompare(a.date))[0];
                                   if (!lastAttempt) return null;
                                   return (
-                                    <div className="mb-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-150 dark:border-slate-800/80 px-2.5 py-1.5 rounded-lg flex items-center justify-between text-[10px] font-bold text-slate-600 dark:text-slate-400">
-                                      <span>{language === 'hi' ? 'पिछला प्रयास' : 'Last Attempt'}</span>
+                                    <div className="inline-flex items-center gap-2 bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800/80 px-2 py-0.5 rounded text-[8px] font-bold text-slate-600 dark:text-slate-400">
+                                      <span>{language === 'hi' ? 'पिछला प्रयास' : 'Last Attempt'}:</span>
                                       <span className="text-blue-600 dark:text-blue-400 font-extrabold">
                                         {lastAttempt.score}/{lastAttempt.maxScore} {language === 'hi' ? 'अंक' : 'marks'}
                                       </span>
@@ -912,36 +914,51 @@ export default function MockTestsCatalog() {
                                 })()}
                               </div>
 
-                              <button
-                                onClick={() => {
-                                  if (completed) {
-                                    router.push(`/exam/${test.id}/analysis`);
-                                  } else {
-                                    handleStartExam(test);
-                                  }
-                                }}
-                                className={`w-full text-center py-2.5 rounded-lg text-xs font-bold transition-all shadow-md active:scale-[0.98] cursor-pointer ${
-                                  completed
-                                    ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-950/20'
-                                    : ongoing
-                                    ? 'bg-orange-600 hover:bg-orange-700 text-white shadow-orange-950/20 font-bold'
-                                    : hasPass
-                                    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20'
-                                    : 'bg-yellow-600 hover:bg-yellow-700 text-white shadow-yellow-900/20'
-                                }`}
-                              >
-                                {completed ? t.viewSolution : ongoing ? t.resumeTest : hasPass ? t.startTest : (language === 'hi' ? 'पास के साथ अनलॉक करें' : 'Unlock with Pass')}
-                              </button>
-
-                              {completed && (
-                                <button
-                                  onClick={() => handleReattemptExam(test)}
-                                  disabled={attemptsCount >= 5}
-                                  className="w-full text-center py-2.5 mt-2 rounded-lg text-xs font-bold transition-all border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/10 active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                                >
-                                  {attemptsCount >= 5 ? t.maxLimitReached : `${t.reattempt} (${attemptsCount}/5)`}
-                                </button>
-                              )}
+                              <div className="flex items-center gap-2 w-full sm:w-auto border-t sm:border-t-0 border-slate-100 dark:border-slate-800/80 pt-3 sm:pt-0 shrink-0">
+                                {ongoing ? (
+                                  <>
+                                    <button
+                                      onClick={() => handleStartExam(test)}
+                                      className="flex-1 sm:w-32 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm cursor-pointer"
+                                    >
+                                      Resume Test
+                                    </button>
+                                    <button
+                                      onClick={() => handleReattemptExam(test)}
+                                      className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                    >
+                                      Reset
+                                    </button>
+                                  </>
+                                ) : completed ? (
+                                  <>
+                                    <Link
+                                      href={`/exam/${test.id}/analysis`}
+                                      className="flex-1 sm:w-32 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm block"
+                                    >
+                                      View Analysis
+                                    </Link>
+                                    <button
+                                      onClick={() => handleReattemptExam(test)}
+                                      disabled={attemptsCount >= 5}
+                                      className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                      {attemptsCount >= 5 ? t.maxLimitReached : `${t.reattempt} (${attemptsCount}/5)`}
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={() => handleStartExam(test)}
+                                    className={`w-full sm:w-44 text-white font-bold py-2.5 rounded-lg text-[10px] text-center shadow-sm cursor-pointer ${
+                                      hasPass 
+                                        ? 'bg-[#1C3D5A] hover:bg-slate-800' 
+                                        : 'bg-yellow-600 hover:bg-yellow-700'
+                                    }`}
+                                  >
+                                    {hasPass ? 'Start Practice Test' : (language === 'hi' ? 'पास के साथ अनलॉक करें' : 'Unlock with Pass')}
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           );
                         })}
