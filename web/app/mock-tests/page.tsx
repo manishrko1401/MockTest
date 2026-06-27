@@ -403,6 +403,19 @@ export default function MockTestsCatalog() {
                                       <span className={statusColor}>{statusText}</span>
                                     </div>
                                   )}
+
+                                  {attemptsCount > 0 && (() => {
+                                    const lastAttempt = [...attempts].sort((a, b) => b.date.localeCompare(a.date))[0];
+                                    if (!lastAttempt) return null;
+                                    return (
+                                      <div className="mt-2 bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800/80 px-2 py-1.5 rounded-lg flex items-center justify-between text-[9px] font-bold text-slate-600 dark:text-slate-400">
+                                        <span>{language === 'hi' ? 'पिछला प्रयास' : 'Last Attempt'}</span>
+                                        <span className="text-blue-600 dark:text-blue-400 font-extrabold">
+                                          {lastAttempt.score}/{lastAttempt.maxScore} {language === 'hi' ? 'अंक' : 'marks'}
+                                        </span>
+                                      </div>
+                                    );
+                                  })()}
                                 </div>
 
                                 <div className="flex items-center gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
@@ -884,6 +897,19 @@ export default function MockTestsCatalog() {
                                     <p className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{test.maxMarks} Marks</p>
                                   </div>
                                 </div>
+
+                                {attemptsCount > 0 && (() => {
+                                  const lastAttempt = [...getTestAttempts(test.id)].sort((a, b) => b.date.localeCompare(a.date))[0];
+                                  if (!lastAttempt) return null;
+                                  return (
+                                    <div className="mb-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-150 dark:border-slate-800/80 px-2.5 py-1.5 rounded-lg flex items-center justify-between text-[10px] font-bold text-slate-600 dark:text-slate-400">
+                                      <span>{language === 'hi' ? 'पिछला प्रयास' : 'Last Attempt'}</span>
+                                      <span className="text-blue-600 dark:text-blue-400 font-extrabold">
+                                        {lastAttempt.score}/{lastAttempt.maxScore} {language === 'hi' ? 'अंक' : 'marks'}
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
                               </div>
 
                               <button
