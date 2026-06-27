@@ -926,7 +926,7 @@ const styles = StyleSheet.create({
   dashHeader: {
     backgroundColor: '#0F172A',
     paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingVertical: 10,
     position: 'relative',
     overflow: 'hidden',
     borderBottomWidth: 1,
@@ -991,7 +991,7 @@ const styles = StyleSheet.create({
   dashSub: {
     fontSize: 11,
     color: '#94A3B8',
-    marginTop: 4,
+    marginTop: 1,
   },
   mainView: {
     flex: 1,
