@@ -752,7 +752,7 @@ export default function MockTestsCatalog() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in duration-300">
                 {currentCategoryObj?.subCategories.map(subCat => {
                   const count = subCat.tests.length;
                   const countStr = count === 1 
@@ -763,22 +763,22 @@ export default function MockTestsCatalog() {
                     <button
                       key={subCat.id}
                       onClick={() => setSelectedSubCategory(subCat.id)}
-                      className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 p-6 rounded-2xl flex flex-col justify-between group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200"
+                      className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 p-4 rounded-xl flex flex-col justify-between group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200"
                     >
                       <div>
-                        <div className="bg-blue-50 dark:bg-blue-900/25 p-3 rounded-xl text-blue-600 dark:text-blue-400 inline-block mb-4">
-                          <GraduationCap className="h-5 w-5" />
+                        <div className="bg-blue-50 dark:bg-blue-900/25 p-2 rounded-lg text-blue-600 dark:text-blue-400 inline-block mb-3">
+                          <GraduationCap className="h-4 w-4" />
                         </div>
                         <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                           {subCat.name}
                         </h4>
-                        <span className="text-xs text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-lg">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded-md">
                           {countStr}
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold text-[10px] uppercase tracking-wider mt-6 pt-4 border-t border-slate-150 dark:border-slate-800/60 w-full">
-                        {language === 'hi' ? "टेस्ट देखें" : "View Tests"} <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+                      <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[9px] uppercase tracking-wider mt-4 pt-2.5 border-t border-slate-150 dark:border-slate-800/60 w-full">
+                        {language === 'hi' ? "टेस्ट देखें" : "View Tests"} <ChevronRight className="h-3 w-3 transition group-hover:translate-x-1" />
                       </div>
                     </button>
                   );
