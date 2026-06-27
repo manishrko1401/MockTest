@@ -196,6 +196,25 @@ export default function AdminAnalytics() {
   const [previewQuestionIndex, setPreviewQuestionIndex] = useState<number>(0);
   const [previewLanguage, setPreviewLanguage] = useState<'en' | 'hi'>('en');
 
+  // Easy Form Importer states
+  const [importerMode, setImporterMode] = useState<'json' | 'form'>('json');
+  const [formTextEn, setFormTextEn] = useState('');
+  const [formTextHi, setFormTextHi] = useState('');
+  const [opt1En, setOpt1En] = useState('');
+  const [opt1Hi, setOpt1Hi] = useState('');
+  const [opt2En, setOpt2En] = useState('');
+  const [opt2Hi, setOpt2Hi] = useState('');
+  const [opt3En, setOpt3En] = useState('');
+  const [opt3Hi, setOpt3Hi] = useState('');
+  const [opt4En, setOpt4En] = useState('');
+  const [opt4Hi, setOpt4Hi] = useState('');
+  const [opt5En, setOpt5En] = useState('');
+  const [opt5Hi, setOpt5Hi] = useState('');
+  const [formCorrectIndex, setFormCorrectIndex] = useState(0);
+  const [formExplanationEn, setFormExplanationEn] = useState('');
+  const [formExplanationHi, setFormExplanationHi] = useState('');
+  const [formQuestionsList, setFormQuestionsList] = useState<any[]>([]);
+
   // Notices states
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeType, setNoticeType] = useState('EXAM DATE');
@@ -477,6 +496,81 @@ export default function AdminAnalytics() {
       }
     ];
     setJsonInput(JSON.stringify(template, null, 2));
+  };
+
+  const handleAddFormQuestion = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formTextEn.trim() || !formTextHi.trim()) {
+      showToast("Question text is required in both English and Hindi");
+      return;
+    }
+
+    if (!opt1En.trim() || !opt1Hi.trim() ||
+        !opt2En.trim() || !opt2Hi.trim() ||
+        !opt3En.trim() || !opt3Hi.trim() ||
+        !opt4En.trim() || !opt4Hi.trim()) {
+      showToast("First 4 options are required in both English and Hindi");
+      return;
+    }
+
+    const optionsEn = [opt1En.trim(), opt2En.trim(), opt3En.trim(), opt4En.trim()];
+    const optionsHi = [opt1Hi.trim(), opt2Hi.trim(), opt3Hi.trim(), opt4Hi.trim()];
+
+    if (opt5En.trim() || opt5Hi.trim()) {
+      optionsEn.push(opt5En.trim() || "Option 5");
+      optionsHi.push(opt5Hi.trim() || "विकल्प 5");
+    }
+
+    if (formCorrectIndex >= optionsEn.length) {
+      showToast(`Correct option index is out of bounds (max: ${optionsEn.length})`);
+      return;
+    }
+
+    const newQ = {
+      textEn: formTextEn.trim(),
+      textHi: formTextHi.trim(),
+      optionsEn,
+      optionsHi,
+      correctIndex: Number(formCorrectIndex),
+      explanationEn: formExplanationEn.trim() || undefined,
+      explanationHi: formExplanationHi.trim() || undefined
+    };
+
+    const updatedList = [...formQuestionsList, newQ];
+    setFormQuestionsList(updatedList);
+    setJsonInput(JSON.stringify(updatedList, null, 2));
+    setParsedQuestions(updatedList);
+    setPreviewQuestionIndex(updatedList.length - 1);
+
+    // Clear form inputs
+    setFormTextEn('');
+    setFormTextHi('');
+    setOpt1En('');
+    setOpt1Hi('');
+    setOpt2En('');
+    setOpt2Hi('');
+    setOpt3En('');
+    setOpt3Hi('');
+    setOpt4En('');
+    setOpt4Hi('');
+    setOpt5En('');
+    setOpt5Hi('');
+    setFormCorrectIndex(0);
+    setFormExplanationEn('');
+    setFormExplanationHi('');
+
+    showToast("Question added to preview list!");
+  };
+
+  const handleClearFormQuestions = () => {
+    if (window.confirm("Are you sure you want to clear all questions built so far?")) {
+      setFormQuestionsList([]);
+      setJsonInput('[]');
+      setParsedQuestions([]);
+      setPreviewQuestionIndex(0);
+      showToast("Questions list cleared.");
+    }
   };
 
   if (currentUser?.role !== 'ADMIN') {
@@ -935,76 +1029,301 @@ export default function AdminAnalytics() {
                 
                 {/* Form Upload Input */}
                 <div className="col-span-2 bg-slate-950 border border-slate-800 p-6 rounded-xl">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-xs text-white uppercase tracking-wider">Paste Questions JSON Array</h3>
-                    <button
-                      type="button"
-                      onClick={loadTemplate}
-                      className="text-xs text-blue-400 font-bold hover:underline"
-                    >
-                      Load Sample Template
-                    </button>
-                  </div>
-
-                  <form onSubmit={handleBulkUploadSubmit}>
-                    <div className="mb-4">
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Target Mock Test</label>
-                      <select
-                        required
-                        value={selectedUploadTestId}
-                        onChange={(e) => setSelectedUploadTestId(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-350 focus:outline-none focus:border-blue-500 cursor-pointer"
-                      >
-                        <option value="">-- Select Target Mock Test --</option>
-                        {allTests.map(t => (
-                          <option key={t.id} value={t.id}>
-                            {t.categoryName} &gt; {t.subCategoryName} &gt; {t.title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <textarea
-                      rows={12}
-                      value={jsonInput}
-                      onChange={(e) => setJsonInput(e.target.value)}
-                      placeholder="Enter valid JSON questions schema..."
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg p-4 text-xs font-mono text-slate-300 focus:outline-none focus:border-blue-500 mb-4"
-                    />
-
-                  {uploadStatus && (
-                    <div className={`p-4 rounded-lg flex items-start gap-3 mb-4 border ${
-                      uploadStatus.type === 'success'
-                        ? 'bg-green-950/30 border-green-800 text-green-400'
-                        : 'bg-red-950/30 border-red-800 text-red-400'
-                    }`}>
-                      <AlertCircle className="h-5 w-5 mt-0.5" />
-                      <span className="text-xs leading-relaxed">{uploadStatus.message}</span>
-                    </div>
-                  )}
-
-                  <div className="flex gap-4 items-center">
-                    <button
-                      type="submit"
-                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-750 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition cursor-pointer"
-                    >
-                      <Database className="h-4 w-4" />
-                      Verify JSON & Load Preview
-                    </button>
-
-                    {parsedQuestions.length > 0 && (
+                  
+                  {/* Mode switcher tab bar */}
+                  <div className="flex border-b border-slate-800 pb-3 mb-6 justify-between items-center">
+                    <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={handleConfirmIngestCustomQuestions}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-750 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-green-700 active:scale-95 transition cursor-pointer shadow-lg shadow-green-900/10"
+                        onClick={() => setImporterMode('json')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          importerMode === 'json'
+                            ? 'bg-blue-600 text-white shadow-md'
+                            : 'bg-slate-900 text-slate-400 hover:text-slate-200'
+                        }`}
                       >
-                        <CheckCircle2 className="h-4 w-4" />
-                        Confirm & Ingest Question Paper
+                        Paste JSON Array
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImporterMode('form')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          importerMode === 'form'
+                            ? 'bg-blue-600 text-white shadow-md'
+                            : 'bg-slate-900 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        Interactive Form Builder
+                      </button>
+                    </div>
+
+                    {importerMode === 'json' ? (
+                      <button
+                        type="button"
+                        onClick={loadTemplate}
+                        className="text-xs text-blue-400 font-bold hover:underline cursor-pointer"
+                      >
+                        Load Sample Template
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleClearFormQuestions}
+                        className="text-xs text-red-400 font-bold hover:underline cursor-pointer"
+                      >
+                        Clear Built Questions ({formQuestionsList.length})
                       </button>
                     )}
                   </div>
-                </form>
-              </div>
+
+                  {/* Target Mock Test Selector (Always visible) */}
+                  <div className="mb-6">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Target Mock Test</label>
+                    <select
+                      required
+                      value={selectedUploadTestId}
+                      onChange={(e) => setSelectedUploadTestId(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-355 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
+                    >
+                      <option value="">-- Select Target Mock Test --</option>
+                      {allTests.map(t => (
+                        <option key={t.id} value={t.id}>
+                          {t.categoryName} &gt; {t.subCategoryName} &gt; {t.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {importerMode === 'json' ? (
+                    <form onSubmit={handleBulkUploadSubmit}>
+                      <textarea
+                        rows={12}
+                        value={jsonInput}
+                        onChange={(e) => setJsonInput(e.target.value)}
+                        placeholder="Enter valid JSON questions schema..."
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg p-4 text-xs font-mono text-slate-300 focus:outline-none focus:border-blue-500 mb-4"
+                      />
+
+                      {uploadStatus && (
+                        <div className={`p-4 rounded-lg flex items-start gap-3 mb-4 border ${
+                          uploadStatus.type === 'success'
+                            ? 'bg-green-950/30 border-green-800 text-green-400'
+                            : 'bg-red-950/30 border-red-800 text-red-400'
+                        }`}>
+                          <AlertCircle className="h-5 w-5 mt-0.5" />
+                          <span className="text-xs leading-relaxed">{uploadStatus.message}</span>
+                        </div>
+                      )}
+
+                      <div className="flex gap-4 items-center">
+                        <button
+                          type="submit"
+                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-755 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition cursor-pointer"
+                        >
+                          <Database className="h-4 w-4" />
+                          Verify JSON & Load Preview
+                        </button>
+
+                        {parsedQuestions.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleConfirmIngestCustomQuestions}
+                            className="flex items-center gap-2 bg-green-600 hover:bg-green-755 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-green-700 active:scale-95 transition cursor-pointer shadow-lg shadow-green-900/10"
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            Confirm & Ingest Question Paper
+                          </button>
+                        )}
+                      </div>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleAddFormQuestion} className="space-y-6 text-xs text-slate-300">
+                      
+                      {/* Bilingual Questions Input Grid */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Question Text (English)</label>
+                          <textarea
+                            value={formTextEn}
+                            onChange={(e) => setFormTextEn(e.target.value)}
+                            placeholder="Type question in English..."
+                            rows={3}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500 resize-none font-medium"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">प्रश्न पाठ (Hindi)</label>
+                          <textarea
+                            value={formTextHi}
+                            onChange={(e) => setFormTextHi(e.target.value)}
+                            placeholder="Type question in Hindi..."
+                            rows={3}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500 resize-none font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Options Grid */}
+                      <div className="space-y-3">
+                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-800/60 pb-1.5 mb-2">Option Choices (1-4 required, 5 optional)</h4>
+                        
+                        {/* Option 1 */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            value={opt1En}
+                            onChange={(e) => setOpt1En(e.target.value)}
+                            placeholder="Option 1 (English)"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                          />
+                          <input
+                            type="text"
+                            value={opt1Hi}
+                            onChange={(e) => setOpt1Hi(e.target.value)}
+                            placeholder="विकल्प 1 (Hindi)"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                          />
+                        </div>
+
+                        {/* Option 2 */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            value={opt2En}
+                            onChange={(e) => setOpt2En(e.target.value)}
+                            placeholder="Option 2 (English)"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                          />
+                          <input
+                            type="text"
+                            value={opt2Hi}
+                            onChange={(e) => setOpt2Hi(e.target.value)}
+                            placeholder="विकल्प 2 (Hindi)"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                          />
+                        </div>
+
+                        {/* Option 3 */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            value={opt3En}
+                            onChange={(e) => setOpt3En(e.target.value)}
+                            placeholder="Option 3 (English)"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                          />
+                          <input
+                            type="text"
+                            value={opt3Hi}
+                            onChange={(e) => setOpt3Hi(e.target.value)}
+                            placeholder="विकल्प 3 (Hindi)"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                          />
+                        </div>
+
+                        {/* Option 4 */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            value={opt4En}
+                            onChange={(e) => setOpt4En(e.target.value)}
+                            placeholder="Option 4 (English)"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                          />
+                          <input
+                            type="text"
+                            value={opt4Hi}
+                            onChange={(e) => setOpt4Hi(e.target.value)}
+                            placeholder="विकल्प 4 (Hindi)"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                          />
+                        </div>
+
+                        {/* Option 5 (Optional) */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            value={opt5En}
+                            onChange={(e) => setOpt5En(e.target.value)}
+                            placeholder="Option 5 (Optional) (English)"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                          />
+                          <input
+                            type="text"
+                            value={opt5Hi}
+                            onChange={(e) => setOpt5Hi(e.target.value)}
+                            placeholder="विकल्प 5 (वैकल्पिक) (Hindi)"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Correct Option index & Explanations */}
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Right Option / Correct Choice</label>
+                          <select
+                            value={formCorrectIndex}
+                            onChange={(e) => setFormCorrectIndex(Number(e.target.value))}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-350 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
+                          >
+                            <option value={0}>Option 1</option>
+                            <option value={1}>Option 2</option>
+                            <option value={2}>Option 3</option>
+                            <option value={3}>Option 4</option>
+                            {opt5En.trim() && <option value={4}>Option 5</option>}
+                          </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Explanation (English)</label>
+                            <textarea
+                              value={formExplanationEn}
+                              onChange={(e) => setFormExplanationEn(e.target.value)}
+                              placeholder="Explanation in English..."
+                              rows={2.5}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500 resize-none font-medium"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">व्याख्या (Hindi)</label>
+                            <textarea
+                              value={formExplanationHi}
+                              onChange={(e) => setFormExplanationHi(e.target.value)}
+                              placeholder="Explanation in Hindi..."
+                              rows={2.5}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500 resize-none font-medium"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-4 items-center border-t border-slate-800/80 pt-4 mt-2">
+                        <button
+                          type="submit"
+                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-755 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition cursor-pointer shadow-lg shadow-blue-900/20"
+                        >
+                          <PlusCircle className="h-4 w-4" />
+                          Add Question to List
+                        </button>
+
+                        {parsedQuestions.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleConfirmIngestCustomQuestions}
+                            className="flex items-center gap-2 bg-green-600 hover:bg-green-755 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-green-700 active:scale-95 transition cursor-pointer shadow-lg shadow-green-900/10"
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            Confirm & Ingest Question Paper ({parsedQuestions.length})
+                          </button>
+                        )}
+                      </div>
+                    </form>
+                  )}
+
+                </div>
 
               {/* Parsing results tracker */}
               <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl flex flex-col justify-between">
