@@ -377,23 +377,19 @@ export default function AnalysisScreen({
                   onPress={() => toggleExplanation(idx)}
                   style={[styles.explanationBox, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
                 >
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <Text style={[styles.explanationTitle, isDark && { color: ThemeColors.dark.text }]}>Explanation:</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={[styles.explanationTitle, isDark && { color: ThemeColors.dark.text }, { marginBottom: 0 }]}>Explanation:</Text>
                     {expandedExplanations[idx] ? (
                       <ChevronUp size={14} color={isDark ? ThemeColors.dark.textMuted : '#4B5563'} />
                     ) : (
                       <ChevronDown size={14} color={isDark ? ThemeColors.dark.textMuted : '#4B5563'} />
                     )}
                   </View>
-                  <Text
-                    numberOfLines={expandedExplanations[idx] ? undefined : 2}
-                    style={[styles.explanationText, isDark && { color: ThemeColors.dark.textMuted }]}
-                  >
-                    {explanationText || 'Detailed explanation not provided.'}
-                  </Text>
-                  {!expandedExplanations[idx] && explanationText && explanationText.length > 80 && (
-                    <Text style={{ fontSize: 10, color: '#3B82F6', fontWeight: 'bold', marginTop: 4 }}>
-                      Tap to read more...
+                  {expandedExplanations[idx] && (
+                    <Text
+                      style={[styles.explanationText, { marginTop: 6 }, isDark && { color: ThemeColors.dark.textMuted }]}
+                    >
+                      {explanationText || 'Detailed explanation not provided.'}
                     </Text>
                   )}
                 </TouchableOpacity>
