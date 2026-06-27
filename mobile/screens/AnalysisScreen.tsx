@@ -22,7 +22,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Bookmark
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
@@ -31,6 +32,7 @@ interface AnalysisScreenProps {
   currentUser: any;
   attempt: any; // The past session attempt data
   onBack: () => void;
+  onToggleBookmark: (testId: string, questionId: string) => void;
   isDark?: boolean;
 }
 
@@ -38,6 +40,7 @@ export default function AnalysisScreen({
   currentUser,
   attempt,
   onBack,
+  onToggleBookmark,
   isDark = false
 }: AnalysisScreenProps) {
   const [questions, setQuestions] = useState<any[]>([]);
@@ -90,6 +93,12 @@ export default function AnalysisScreen({
       ...prev,
       [idx]: !prev[idx]
     }));
+  };
+
+  const isBookmarked = (qId: string) => {
+    return (currentUser?.bookmarkedQuestions || []).some(
+      (b: any) => b.testId === activeAttempt.testId && b.questionId === qId
+    );
   };
 
   // Load test questions on mount to show solution explanations
@@ -320,7 +329,20 @@ export default function AnalysisScreen({
                 }}
               >
                 <View style={styles.solCardHeader}>
-                  <Text style={[styles.solIndex, isDark && { color: '#60A5FA' }]}>Question {idx + 1}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={[styles.solIndex, isDark && { color: '#60A5FA' }]}>Question {idx + 1}</Text>
+                    <TouchableOpacity 
+                      activeOpacity={0.7}
+                      onPress={() => onToggleBookmark(activeAttempt.testId, q.id)}
+                      style={{ padding: 4 }}
+                    >
+                      <Bookmark 
+                        size={15} 
+                        color={isBookmarked(q.id) ? '#F59E0B' : (isDark ? ThemeColors.dark.textMuted : '#9CA3AF')} 
+                        fill={isBookmarked(q.id) ? '#F59E0B' : 'transparent'} 
+                      />
+                    </TouchableOpacity>
+                  </View>
                   
                   {isUnattempted ? (
                     <Text style={[styles.solBadge, styles.unattemptedBadge]}>UNATTEMPTED</Text>

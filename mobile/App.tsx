@@ -96,6 +96,29 @@ export default function App() {
     }
   };
 
+  // Toggle bookmark for a question
+  const handleToggleBookmark = async (testId: string, questionId: string) => {
+    if (!currentUser) return;
+    const currentBookmarks = currentUser.bookmarkedQuestions || [];
+    const exists = currentBookmarks.some((b: any) => b.testId === testId && b.questionId === questionId);
+
+    let updatedBookmarks;
+    if (exists) {
+      updatedBookmarks = currentBookmarks.filter((b: any) => !(b.testId === testId && b.questionId === questionId));
+    } else {
+      updatedBookmarks = [...currentBookmarks, { testId, questionId }];
+    }
+
+    const updatedUser = { ...currentUser, bookmarkedQuestions: updatedBookmarks };
+    setCurrentUser(updatedUser);
+
+    try {
+      await ApiClient.toggleBookmark(currentUser.id, updatedBookmarks);
+    } catch (err) {
+      console.error("Toggle bookmark error:", err);
+    }
+  };
+
   const handleLoginSuccess = async (user: any) => {
     setCurrentUser(user);
     await SecureStore.setItemAsync('tb_user_email', user.email);
@@ -235,6 +258,7 @@ export default function App() {
           currentUser={currentUser}
           attempt={selectedAttempt}
           onBack={() => setViewMode('dashboard')}
+          onToggleBookmark={handleToggleBookmark}
           isDark={isDark}
         />
       )}
