@@ -1,7 +1,7 @@
 export const TRANSLATIONS = {
   en: {
     // Header & Navigation
-    logoTitle: "MOCK TEST",
+    logoTitle: "MOCK TEST HUB",
     logoSub: "Exam Preparation",
     navHome: "Home",
     navTestSeries: "Test Series",
@@ -215,7 +215,7 @@ export const TRANSLATIONS = {
   },
   hi: {
     // Header & Navigation
-    logoTitle: "मॉक टेस्ट",
+    logoTitle: "मॉक टेस्ट हब",
     logoSub: "परीक्षा की तैयारी",
     navHome: "मुख्य पृष्ठ",
     navTestSeries: "टेस्ट सीरीज",

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mock Test - India's #1 Govt Exam Prep Site",
+  title: "Mock Test Hub - India's #1 Govt Exam Prep Site",
   description: "Get mock tests, notice updates, and access passes for SSC, Railways, UGC NET, Teaching, and State Exams.",
 };
 
