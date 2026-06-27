@@ -137,7 +137,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
           <View style={styles.shieldIconContainer}>
             <ShieldCheck size={28} color="#FFF" />
           </View>
-          <Text style={[styles.logoText, isDark && { color: ThemeColors.dark.text }]}>MOCK TEST ACCOUNT</Text>
+          <Text style={[styles.logoText, isDark && { color: ThemeColors.dark.text }]}>MOCKTEST HUB ACCOUNT</Text>
           <Text style={[styles.subLogoText, isDark && { color: ThemeColors.dark.textMuted }]}>SINGLE SIGN-ON ACCESS</Text>
         </View>
 
