@@ -60,8 +60,12 @@ export default function AnalysisScreen({
     const fetchQuestions = async () => {
       setLoadingQs(true);
       const res = await ApiClient.getCustomQuestions(attempt.testId);
-      if (res.success && res.questions) {
-        setQuestions(res.questions);
+      if (res.success && res.questions && Array.isArray(res.questions)) {
+        const mappedQuestions = res.questions.map((q: any, idx: number) => ({
+          ...q,
+          id: q.id || `q_custom_${idx}`
+        }));
+        setQuestions(mappedQuestions);
       } else {
         // Fallback: Generate hardcoded default questions to review if no custom ones are found
         const fallbackList = attempt.testId.includes('ssc') 

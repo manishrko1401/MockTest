@@ -59,7 +59,7 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
 
     questions = customQs.map((item: any, idx: number) => {
       return {
-        id: `q_custom_${id}_${idx}`,
+        id: item.id || `q_custom_${id}_${idx}`,
         sectionId: "sec_paper1",
         questionType: "mcq",
         orderIndex: idx,

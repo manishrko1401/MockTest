@@ -454,20 +454,25 @@ export default function AdminAnalytics() {
     }
 
     try {
-      const data = JSON.parse(jsonInput);
-      const questionsArray = Array.isArray(data) ? data : [data];
+      const parsedData = JSON.parse(jsonInput);
+      const questionsArray = (Array.isArray(parsedData) ? parsedData : [parsedData]).map((q: any) => ({
+        ...q,
+        id: q.id || 'q_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 6)
+      }));
 
       // Validate core fields mapping to database schema
       for (const item of questionsArray) {
         if (!item.textEn || !item.textHi || !item.optionsEn || !item.optionsHi || item.correctIndex === undefined) {
           throw new Error('All questions must map textEn, textHi, optionsEn, optionsHi, and correctIndex.');
         }
-        if (!Array.isArray(item.optionsEn) || item.optionsEn.length !== 4) {
-          throw new Error('optionsEn must be an array of exactly 4 strings.');
+        if (!Array.isArray(item.optionsEn) || item.optionsEn.length < 4) {
+          throw new Error('optionsEn must be an array of at least 4 strings.');
         }
       }
 
       setParsedQuestions(questionsArray);
+      setFormQuestionsList(questionsArray);
+      setJsonInput(JSON.stringify(questionsArray, null, 2));
       setPreviewQuestionIndex(0);
       setUploadStatus({
         type: 'success',
@@ -573,6 +578,9 @@ export default function AdminAnalytics() {
     }
 
     const newQ = {
+      id: editingQuestionIndex !== null && formQuestionsList[editingQuestionIndex]?.id
+        ? formQuestionsList[editingQuestionIndex].id
+        : 'q_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 6),
       textEn: formTextEn.trim(),
       textHi: formTextHi.trim(),
       optionsEn,
