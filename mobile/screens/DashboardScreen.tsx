@@ -763,11 +763,15 @@ export default function DashboardScreen({
     );
   };
 
+  const totalTestsGiven = (currentUser.testSessions || []).filter(
+    (s: any) => s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'
+  ).length;
+
   return (
     <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
       <StatusBar 
         barStyle={isDark ? 'light-content' : 'dark-content'} 
-        backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
+        backgroundColor={isDark ? ThemeColors.dark.headerBg : '#E0F2FE'} 
       />
 
       {/* Decorative Blur Orbs */}
@@ -775,7 +779,7 @@ export default function DashboardScreen({
       <View style={[styles.blurOrbRight, isDark && { backgroundColor: 'rgba(99, 102, 241, 0.08)' }]} />
 
       {/* Header Banner */}
-      <View style={[styles.dashHeader, isDark && { backgroundColor: ThemeColors.dark.headerBg, borderBottomColor: '#1E293B' }]}>
+      <View style={[styles.dashHeader, isDark ? { backgroundColor: ThemeColors.dark.headerBg, borderBottomColor: '#1E293B' } : { backgroundColor: '#E0F2FE', borderBottomColor: '#BAE6FD' }]}>
         {/* Header Decorative Glows */}
         <View style={styles.headerGlowLeft} />
         <View style={styles.headerGlowRight} />
@@ -783,20 +787,22 @@ export default function DashboardScreen({
         <View style={styles.dashHeaderRow}>
           <View style={styles.dashHeaderLeft}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Trophy size={18} color="#FBBF24" />
-              <Text style={styles.dashTitle}>
-                MockTest <Text style={{ color: '#38BDF8' }}>Hub</Text>
+              <Trophy size={18} color={isDark ? '#FBBF24' : '#D97706'} />
+              <Text style={[styles.dashTitle, isDark ? { color: '#FFF' } : { color: '#0F172A' }]}>
+                MockTest <Text style={{ color: isDark ? '#38BDF8' : '#2563EB' }}>Hub</Text>
               </Text>
             </View>
-            <Text style={[styles.dashSub, isDark && { color: ThemeColors.dark.textMuted }]}>
-              Candidate: <Text style={{ fontWeight: 'bold', color: '#E2E8F0' }}>{currentUser.name}</Text>
+            <Text style={[styles.dashSub, isDark ? { color: ThemeColors.dark.textMuted } : { color: '#334155' }]}>
+              Candidate: <Text style={{ fontWeight: 'bold', color: isDark ? '#E2E8F0' : '#0F172A' }}>{currentUser.name}</Text>
             </Text>
           </View>
           
           <View style={styles.dashHeaderRight}>
-            <View style={[styles.headerCoinBadge, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
-              <Coins size={14} color="#FBBF24" />
-              <Text style={styles.headerCoinText}>{currentUser.coins || 0}</Text>
+            <View style={[styles.headerTestBadge, isDark ? { backgroundColor: '#1E293B', borderColor: '#334155' } : { backgroundColor: '#FFFFFF', borderColor: '#BAE6FD' }]}>
+              <BookOpen size={13} color={isDark ? '#60A5FA' : '#0284C7'} />
+              <Text style={[styles.headerTestText, isDark ? { color: '#60A5FA' } : { color: '#0284C7' }]}>
+                Tests: {totalTestsGiven}
+              </Text>
             </View>
           </View>
         </View>
@@ -960,20 +966,20 @@ const styles = StyleSheet.create({
   dashHeaderRight: {
     marginLeft: 12,
   },
-  headerCoinBadge: {
+  headerTestBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#BAE6FD',
   },
-  headerCoinText: {
-    color: '#FBBF24',
-    fontSize: 12,
+  headerTestText: {
+    color: '#0284C7',
+    fontSize: 11,
     fontWeight: 'bold',
   },
   dashTitle: {
