@@ -281,36 +281,6 @@ export default function AnalysisScreen({
         showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[testAttempts.length > 1 ? 3 : 2]}
       >
-        {/* Slide Navigator Category Filter (Pills) */}
-        <View style={[styles.categoryContainer, isDark && { backgroundColor: 'transparent', borderBottomColor: ThemeColors.dark.border }]}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
-            contentContainerStyle={styles.categoryScroll}
-          >
-            {categories.map(cat => (
-              <TouchableOpacity 
-                key={cat.id} 
-                style={[
-                  styles.categoryPill, 
-                  selectedCategory === cat.id ? styles.categoryPillSelected : styles.categoryPillUnselected,
-                  isDark && selectedCategory === cat.id && { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
-                  isDark && selectedCategory !== cat.id && { backgroundColor: '#1E293B', borderColor: '#334155' }
-                ]}
-                onPress={() => setSelectedCategory(cat.id as any)}
-              >
-                <Text style={[
-                  styles.categoryPillText, 
-                  selectedCategory === cat.id ? styles.categoryPillTextSelected : styles.categoryPillTextUnselected,
-                  isDark && selectedCategory === cat.id && { color: '#FFF' },
-                  isDark && selectedCategory !== cat.id && { color: '#9CA3AF' }
-                ]}>
-                  {cat.label} ({categoryCounts[cat.id as keyof typeof categoryCounts] || 0})
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
         {/* Attempts Navigator (Last 3 Attempts) */}
         {testAttempts.length > 1 && (
           <View style={[styles.attemptsNavigator, isDark ? { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border } : { backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }]}>
@@ -361,6 +331,37 @@ export default function AnalysisScreen({
               <Text style={[styles.scoreLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Duration</Text>
             </View>
           </View>
+        </View>
+
+        {/* Slide Navigator Category Filter (Pills) */}
+        <View style={[styles.categoryContainer, isDark && { backgroundColor: 'transparent', borderBottomColor: ThemeColors.dark.border }]}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={styles.categoryScroll}
+          >
+            {categories.map(cat => (
+              <TouchableOpacity 
+                key={cat.id} 
+                style={[
+                  styles.categoryPill, 
+                  selectedCategory === cat.id ? styles.categoryPillSelected : styles.categoryPillUnselected,
+                  isDark && selectedCategory === cat.id && { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
+                  isDark && selectedCategory !== cat.id && { backgroundColor: '#1E293B', borderColor: '#334155' }
+                ]}
+                onPress={() => setSelectedCategory(cat.id as any)}
+              >
+                <Text style={[
+                  styles.categoryPillText, 
+                  selectedCategory === cat.id ? styles.categoryPillTextSelected : styles.categoryPillTextUnselected,
+                  isDark && selectedCategory === cat.id && { color: '#FFF' },
+                  isDark && selectedCategory !== cat.id && { color: '#9CA3AF' }
+                ]}>
+                  {cat.label} ({categoryCounts[cat.id as keyof typeof categoryCounts] || 0})
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
 
         {/* Question sliding navigator wrapper (sticks to top) */}
