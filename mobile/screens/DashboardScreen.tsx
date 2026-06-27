@@ -287,11 +287,11 @@ export default function DashboardScreen({
                       <TouchableOpacity
                         activeOpacity={ann.url ? 0.9 : 1}
                         onPress={() => ann.url && Linking.openURL(ann.url)}
-                        style={{ width: '100%', height: 180, justifyContent: 'center', alignItems: 'center' }}
+                        style={{ width: Dimensions.get('window').width - 32, height: 180, justifyContent: 'center', alignItems: 'center' }}
                       >
                         <Image
                           source={{ uri: ann.imageUrl }}
-                          style={{ width: '100%', height: '100%' }}
+                          style={{ width: Dimensions.get('window').width - 34, height: 178 }}
                           resizeMode="contain"
                         />
                       </TouchableOpacity>
