@@ -36,6 +36,7 @@ import {
   Lock,
   Coins
 } from 'lucide-react-native';
+import * as SecureStore from 'expo-secure-store';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
 
@@ -50,6 +51,7 @@ interface DashboardScreenProps {
   onRefreshUser: (userId: string) => Promise<void>;
   isDark?: boolean;
   onToggleTheme?: (dark: boolean) => void;
+  onOpenSupportChat: () => void;
 }
 
 const SUCCESS_STORIES = [
@@ -86,10 +88,48 @@ export default function DashboardScreen({
   onOpenExam,
   onRefreshUser,
   isDark = false,
-  onToggleTheme
+  onToggleTheme,
+  onOpenSupportChat
 }: DashboardScreenProps) {
   const [activeTab, setActiveTab] = useState<'home' | 'tests' | 'notices' | 'profile'>('home');
   const [refreshing, setRefreshing] = useState(false);
+
+  // Notice badges and seen states
+  const [seenNoticeIds, setSeenNoticeIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadSeenNotices = async () => {
+      try {
+        const seenStr = await SecureStore.getItemAsync('seen_notice_ids');
+        if (seenStr) {
+          setSeenNoticeIds(JSON.parse(seenStr));
+        }
+      } catch (err) {
+        console.error('Failed to load seen notices', err);
+      }
+    };
+    loadSeenNotices();
+  }, []);
+
+  const markAllNoticesAsSeen = async () => {
+    if (!notices || notices.length === 0) return;
+    const allNoticeIds = notices.map(n => n.id).filter(Boolean);
+    const updatedSeen = Array.from(new Set([...seenNoticeIds, ...allNoticeIds]));
+    setSeenNoticeIds(updatedSeen);
+    try {
+      await SecureStore.setItemAsync('seen_notice_ids', JSON.stringify(updatedSeen));
+    } catch (err) {
+      console.error('Failed to save seen notices', err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'notices') {
+      markAllNoticesAsSeen();
+    }
+  }, [activeTab, notices]);
+
+  const unseenCount = notices.filter(n => n.id && !seenNoticeIds.includes(n.id)).length;
 
   // App states
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -557,6 +597,20 @@ export default function DashboardScreen({
           </View>
         </View>
 
+        {/* Support Chat Card */}
+        <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+          <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>💬 Talk to Support Team</Text>
+          <Text style={[styles.sysDetailLabel, { marginTop: 6, marginBottom: 12, textTransform: 'none' }, isDark && { color: ThemeColors.dark.textMuted }]}>
+            Have any questions, doubts, or technical issues? Get in touch with our support representatives directly.
+          </Text>
+          <TouchableOpacity 
+            style={[styles.formSubmitBtn, { backgroundColor: '#2563EB', marginTop: 0 }]} 
+            onPress={onOpenSupportChat}
+          >
+            <Text style={styles.formSubmitBtnText}>Start Chatting</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* App Theme Settings */}
         <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
           <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>🎨 App Theme Settings</Text>
@@ -778,7 +832,14 @@ export default function DashboardScreen({
           ]}
           onPress={() => setActiveTab('notices')}
         >
-          <Bell size={20} color={activeTab === 'notices' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#6B7280')} />
+          <View style={styles.iconBadgeContainer}>
+            <Bell size={20} color={activeTab === 'notices' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#6B7280')} />
+            {unseenCount > 0 && (
+              <View style={[styles.badge, isDark && { borderColor: ThemeColors.dark.bottomNavBg }]}>
+                <Text style={styles.badgeText}>{unseenCount}</Text>
+              </View>
+            )}
+          </View>
           <Text style={[
             styles.navText, 
             activeTab === 'notices' && styles.navTextActive,
@@ -1581,5 +1642,33 @@ const styles = StyleSheet.create({
   },
   themeToggleTextInactive: {
     color: '#6B7280',
+  },
+  iconBadgeContainer: {
+    position: 'relative',
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    right: -6,
+    top: -4,
+    backgroundColor: '#EF4444',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFF',
+    paddingHorizontal: 2,
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 8,
+    fontWeight: 'bold',
+    lineHeight: 11,
+    textAlign: 'center',
   },
 });

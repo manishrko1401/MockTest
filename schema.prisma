@@ -50,6 +50,7 @@ model User {
   bookmarkedQuestions     Json?
   coins                   Int                @default(0)
   referralCoinsCredited   Boolean            @default(false)
+  supportMessages         SupportMessage[]
 
   @@map("users")
 }
@@ -245,5 +246,18 @@ model ReportedQuestion {
   createdAt     DateTime @default(now())
 
   @@map("reported_questions")
+}
+
+// 14. Support Team Chat Messages
+model SupportMessage {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sender    String   // "STUDENT" or "ADMIN"
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("support_messages")
 }
 

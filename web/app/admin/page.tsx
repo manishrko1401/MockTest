@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 
 // ============================================================================
@@ -59,13 +59,112 @@ const scoreVariance = [
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports' | 'announcements'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports' | 'announcements' | 'support'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports' | 'announcements') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports' | 'announcements' | 'support') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
   const [jsonInput, setJsonInput] = useState<string>('');
+
+  // Support team states
+  const [supportUsers, setSupportUsers] = useState<any[]>([]);
+  const [selectedSupportUserId, setSelectedSupportUserId] = useState<string | null>(null);
+  const [supportMessages, setSupportMessages] = useState<any[]>([]);
+  const [supportInputText, setSupportInputText] = useState('');
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [supportUsersLoading, setSupportUsersLoading] = useState(false);
+  const [supportSending, setSupportSending] = useState(false);
+
+  // Poll support users list
+  const fetchSupportUsers = async (showLoading = false) => {
+    if (showLoading) setSupportUsersLoading(true);
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get-support-users' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSupportUsers(data.users || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    if (showLoading) setSupportUsersLoading(false);
+  };
+
+  // Poll support messages for active chat
+  const fetchSupportMessages = async (userId: string, markAsRead = false) => {
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'get-support-messages',
+          data: { userId, markAsRead, readerRole: 'ADMIN' }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSupportMessages(data.messages || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Poll user list every 4 seconds
+  React.useEffect(() => {
+    fetchSupportUsers(true);
+    const interval = setInterval(() => {
+      fetchSupportUsers(false);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Poll messages every 3 seconds if a user is selected
+  React.useEffect(() => {
+    if (!selectedSupportUserId) {
+      setSupportMessages([]);
+      return;
+    }
+    fetchSupportMessages(selectedSupportUserId, true);
+    const interval = setInterval(() => {
+      fetchSupportMessages(selectedSupportUserId, false);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [selectedSupportUserId]);
+
+  const handleSendAdminMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSupportUserId || !supportInputText.trim() || supportSending) return;
+    const text = supportInputText.trim();
+    setSupportInputText('');
+    setSupportSending(true);
+
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send-support-message',
+          data: { userId: selectedSupportUserId, sender: 'ADMIN', message: text }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSupportMessages(prev => [...prev, data.message]);
+        fetchSupportUsers(false);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setSupportSending(false);
+  };
+
+  const totalUnseenCount = supportUsers.reduce((sum, u) => sum + (u.unseenCount || 0), 0);
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [parsedQuestions, setParsedQuestions] = useState<any[]>([]);
   const [selectedUploadTestId, setSelectedUploadTestId] = useState<string>('');
@@ -552,6 +651,24 @@ export default function AdminAnalytics() {
               <AlertCircle className="h-4 w-4" />
               {language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions'}
             </button>
+            <button
+              onClick={() => selectTab('support')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                activeTab === 'support'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <MessageSquare className="h-4 w-4" />
+                <span>{language === 'hi' ? 'सपोर्ट टीम' : 'Support Team'}</span>
+              </div>
+              {totalUnseenCount > 0 && (
+                <span className="bg-red-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center">
+                  {totalUnseenCount}
+                </span>
+              )}
+            </button>
           </nav>
         </div>
 
@@ -594,6 +711,8 @@ export default function AdminAnalytics() {
                 ? (language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests')
                 : activeTab === 'announcements'
                 ? (language === 'hi' ? 'आधिकारिक घोषणा प्रकाशक' : 'Official Announcements Publisher')
+                : activeTab === 'support'
+                ? (language === 'hi' ? 'सपोर्ट टीम टिकटिंग केंद्र' : 'Support Team Helpdesk')
                 : (language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions')}
             </h2>
           </div>
@@ -2125,6 +2244,160 @@ export default function AdminAnalytics() {
                   </table>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* TAB 10: SUPPORT TEAM HELP DESK */}
+          {activeTab === 'support' && (
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden h-[calc(100vh-12rem)] flex animate-in fade-in duration-200">
+              
+              {/* User List sidebar (1/3 width) */}
+              <div className="w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full bg-slate-50/50 dark:bg-slate-950">
+                <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <MessageSquare className="h-4.5 w-4.5 text-blue-500" /> Conversations
+                  </h3>
+                  {supportUsersLoading && (
+                    <RefreshCw className="h-3.5 w-3.5 text-slate-400 animate-spin" />
+                  )}
+                </div>
+
+                <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-900">
+                  {supportUsers.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-400 dark:text-slate-500 font-semibold italic">
+                      No customer chat tickets found.
+                    </div>
+                  ) : (
+                    supportUsers.map((user) => {
+                      const isSelected = selectedSupportUserId === user.id;
+                      const initials = user.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'ST';
+                      
+                      return (
+                        <button
+                          key={user.id}
+                          onClick={() => setSelectedSupportUserId(user.id)}
+                          className={`w-full text-left p-4 flex items-center gap-3 transition-colors text-xs font-sans cursor-pointer ${
+                            isSelected 
+                              ? 'bg-blue-55/60 dark:bg-blue-950/20' 
+                              : 'hover:bg-slate-50 dark:hover:bg-slate-900/40'
+                          }`}
+                        >
+                          <div className="h-10 w-10 rounded-full bg-blue-600/10 dark:bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-black flex items-center justify-center shrink-0">
+                            {initials}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <span className="font-extrabold text-slate-900 dark:text-white truncate">{user.name}</span>
+                              {user.lastMessage && (
+                                <span className="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap ml-2">
+                                  {new Date(user.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mb-1">{user.email}</p>
+                            {user.lastMessage && (
+                              <p className={`text-[11px] truncate leading-tight ${user.unseenCount > 0 ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-500 dark:text-slate-400 font-semibold'}`}>
+                                {user.lastMessage.sender === 'ADMIN' ? 'You: ' : ''}{user.lastMessage.message}
+                              </p>
+                            )}
+                          </div>
+                          {user.unseenCount > 0 && (
+                            <span className="bg-emerald-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center shrink-0 ml-1">
+                              {user.unseenCount}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Chat Viewport (2/3 width) */}
+              <div className="flex-1 flex flex-col h-full bg-white dark:bg-slate-950">
+                {selectedSupportUserId ? (
+                  <>
+                    {/* Active User Header */}
+                    {(() => {
+                      const selectedUser = supportUsers.find(u => u.id === selectedSupportUserId);
+                      return (
+                        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/20 dark:bg-slate-900/10">
+                          <div>
+                            <h4 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">{selectedUser?.name || 'Loading user...'}</h4>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">{selectedUser?.email}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Active session</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Messages Body */}
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/20 dark:bg-slate-900/5">
+                      {supportMessages.length === 0 ? (
+                        <div className="h-full flex items-center justify-center text-xs text-slate-400 dark:text-slate-500 italic font-semibold">
+                          No messages in this conversation.
+                        </div>
+                      ) : (
+                        supportMessages.map((msg) => {
+                          const isStudent = msg.sender === 'STUDENT';
+                          return (
+                            <div
+                              key={msg.id}
+                              className={`flex ${isStudent ? 'justify-start' : 'justify-end'}`}
+                            >
+                              <div className={`max-w-[70%] p-3.5 rounded-xl border text-xs font-medium shadow-xs ${
+                                isStudent
+                                  ? 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-xs'
+                                  : 'bg-blue-600 border-blue-600 text-white rounded-br-xs'
+                              }`}>
+                                <p className="leading-relaxed whitespace-pre-wrap break-words">{msg.message}</p>
+                                <div className={`text-[8px] text-right mt-1.5 font-bold ${
+                                  isStudent ? 'text-slate-400 dark:text-slate-505' : 'text-blue-200'
+                                }`}>
+                                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Chat Footer Input */}
+                    <form onSubmit={handleSendAdminMessage} className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center gap-3">
+                      <input
+                        type="text"
+                        required
+                        value={supportInputText}
+                        onChange={(e) => setSupportInputText(e.target.value)}
+                        placeholder="Type a reply here..."
+                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!supportInputText.trim() || supportSending}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md hover:shadow-lg disabled:bg-blue-300 disabled:shadow-none cursor-pointer"
+                      >
+                        Reply
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400 dark:text-slate-500">
+                    <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-full mb-4">
+                      <MessageCircle className="h-10 w-10 text-slate-350 dark:text-slate-700" />
+                    </div>
+                    <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-750 dark:text-white mb-1">Select a Student</h4>
+                    <p className="text-xs max-w-sm leading-relaxed font-semibold">
+                      Click a student conversation from the list to start responding to tickets and chatting in real-time.
+                    </p>
+                  </div>
+                )}
+              </div>
+
             </div>
           )}
 

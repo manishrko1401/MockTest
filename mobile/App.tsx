@@ -14,9 +14,10 @@ import DashboardScreen from './screens/DashboardScreen';
 import TestSeriesDetailScreen from './screens/TestSeriesDetailScreen';
 import MobileTestScreen from './MobileTestScreen';
 import AnalysisScreen from './screens/AnalysisScreen';
+import SupportChatScreen from './screens/SupportChatScreen';
 import { ThemeColors } from './theme';
 
-type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis';
+type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis' | 'support_chat';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -82,6 +83,13 @@ export default function App() {
     const res = await ApiClient.login(currentUser.email);
     if (res.success && res.user) {
       setCurrentUser(res.user);
+    }
+    
+    // Refresh notices list and exam catalog to fetch newly uploaded notices
+    const bootRes = await ApiClient.bootstrap();
+    if (bootRes.success) {
+      setNotices(bootRes.noticesList || []);
+      setExamCatalog(bootRes.examCatalog || []);
     }
   };
 
@@ -158,6 +166,7 @@ export default function App() {
           onRefreshUser={refreshUserData}
           isDark={isDark}
           onToggleTheme={handleToggleTheme}
+          onOpenSupportChat={() => setViewMode('support_chat')}
         />
       )}
 
@@ -220,6 +229,14 @@ export default function App() {
         <AnalysisScreen
           currentUser={currentUser}
           attempt={selectedAttempt}
+          onBack={() => setViewMode('dashboard')}
+          isDark={isDark}
+        />
+      )}
+
+      {viewMode === 'support_chat' && currentUser && (
+        <SupportChatScreen
+          currentUser={currentUser}
           onBack={() => setViewMode('dashboard')}
           isDark={isDark}
         />

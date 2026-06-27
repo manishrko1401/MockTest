@@ -67,6 +67,12 @@ export async function POST(request: Request) {
         return await handleGetCustomQuestions(data);
       case 'report-question':
         return await handleReportQuestion(data);
+      case 'get-support-messages':
+        return await handleGetSupportMessages(data);
+      case 'send-support-message':
+        return await handleSendSupportMessage(data);
+      case 'get-support-users':
+        return await handleGetSupportUsers();
       default:
         return NextResponse.json({ success: false, error: `Invalid action: ${action}` }, { status: 400 });
     }
@@ -1215,4 +1221,121 @@ async function seedDatabase() {
   }
 
   console.log('Database seeding successfully finished!');
+}
+
+async function handleGetSupportMessages(data: any) {
+  const { userId, markAsRead, readerRole } = data;
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  if (markAsRead) {
+    if (readerRole === 'ADMIN') {
+      await prisma.supportMessage.updateMany({
+        where: { userId, sender: 'STUDENT', isRead: false },
+        data: { isRead: true }
+      });
+    } else if (readerRole === 'STUDENT') {
+      await prisma.supportMessage.updateMany({
+        where: { userId, sender: 'ADMIN', isRead: false },
+        data: { isRead: true }
+      });
+    }
+  }
+
+  const messages = await prisma.supportMessage.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'asc' }
+  });
+
+  return NextResponse.json({
+    success: true,
+    messages: messages.map(msg => ({
+      id: msg.id,
+      userId: msg.userId,
+      sender: msg.sender,
+      message: msg.message,
+      isRead: msg.isRead,
+      createdAt: msg.createdAt.toISOString()
+    }))
+  });
+}
+
+async function handleSendSupportMessage(data: any) {
+  const { userId, sender, message } = data;
+  if (!userId || !sender || !message) {
+    return NextResponse.json({ success: false, error: 'Required fields: userId, sender, message' }, { status: 400 });
+  }
+
+  const msg = await prisma.supportMessage.create({
+    data: {
+      userId,
+      sender,
+      message,
+      isRead: false
+    }
+  });
+
+  return NextResponse.json({
+    success: true,
+    message: {
+      id: msg.id,
+      userId: msg.userId,
+      sender: msg.sender,
+      message: msg.message,
+      isRead: msg.isRead,
+      createdAt: msg.createdAt.toISOString()
+    }
+  });
+}
+
+async function handleGetSupportUsers() {
+  const users = await prisma.user.findMany({
+    where: {
+      supportMessages: {
+        some: {}
+      }
+    },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      supportMessages: {
+        orderBy: {
+          createdAt: 'desc'
+        },
+        take: 1
+      },
+      _count: {
+        select: {
+          supportMessages: {
+            where: {
+              sender: 'STUDENT',
+              isRead: false
+            }
+          }
+        }
+      }
+    }
+  });
+
+  const sorted = users.map(u => ({
+    id: u.id,
+    name: u.fullName,
+    email: u.email,
+    lastMessage: u.supportMessages[0] ? {
+      id: u.supportMessages[0].id,
+      message: u.supportMessages[0].message,
+      createdAt: u.supportMessages[0].createdAt.toISOString(),
+      sender: u.supportMessages[0].sender,
+      isRead: u.supportMessages[0].isRead
+    } : null,
+    unseenCount: u._count.supportMessages
+  })).sort((a, b) => {
+    const dateA = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;
+    const dateB = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;
+    return dateB - dateA;
+  });
+
+  return NextResponse.json({ success: true, users: sorted });
 }

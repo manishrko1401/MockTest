@@ -119,4 +119,16 @@ export const ApiClient = {
     mockTestId: string;
     mockTestTitle: string;
   }) => postRequest('report-question', params),
+
+  /**
+   * Fetches support chat messages for user
+   */
+  getSupportMessages: (userId: string, markAsRead = true) => 
+    postRequest('get-support-messages', { userId, markAsRead, readerRole: 'STUDENT' }),
+
+  /**
+   * Sends a new support chat message
+   */
+  sendSupportMessage: (userId: string, sender: 'STUDENT' | 'ADMIN', message: string) => 
+    postRequest('send-support-message', { userId, sender, message }),
 };
