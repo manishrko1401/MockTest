@@ -279,7 +279,7 @@ export default function DashboardScreen({
                     style={[
                       styles.carouselSlide, 
                       { width: Dimensions.get('window').width - 32 },
-                      ann.imageUrl ? { padding: 0, overflow: 'hidden' } : {},
+                      ann.imageUrl ? { height: 180, minHeight: 180, padding: 0, overflow: 'hidden' } : {},
                       isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }
                     ]}
                   >
@@ -287,12 +287,12 @@ export default function DashboardScreen({
                       <TouchableOpacity
                         activeOpacity={ann.url ? 0.9 : 1}
                         onPress={() => ann.url && Linking.openURL(ann.url)}
-                        style={{ width: '100%', height: '100%' }}
+                        style={{ width: '100%', height: 180, justifyContent: 'center', alignItems: 'center' }}
                       >
                         <Image
                           source={{ uri: ann.imageUrl }}
                           style={{ width: '100%', height: '100%' }}
-                          resizeMode="cover"
+                          resizeMode="contain"
                         />
                       </TouchableOpacity>
                     ) : (
