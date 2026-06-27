@@ -84,7 +84,6 @@ export default function AnalysisScreen({
   const [reportMessage, setReportMessage] = useState('');
   const [reporting, setReporting] = useState(false);
   const [expandedExplanations, setExpandedExplanations] = useState<Record<number, boolean>>({});
-  const [showAttemptBar, setShowAttemptBar] = useState(true);
 
   const toggleExplanation = (idx: number) => {
     setExpandedExplanations(prev => ({
@@ -97,7 +96,6 @@ export default function AnalysisScreen({
   React.useEffect(() => {
     const fetchQuestions = async () => {
       setExpandedExplanations({});
-      setShowAttemptBar(true);
       setLoadingQs(true);
       const res = await ApiClient.getCustomQuestions(activeAttempt.testId);
       if (res.success && res.questions && Array.isArray(res.questions)) {
@@ -174,51 +172,41 @@ export default function AnalysisScreen({
         <Text style={styles.headerTitle}>Test Analytics Summary</Text>
       </View>
 
-      {/* Attempts Navigator (Last 3 Attempts) */}
-      {showAttemptBar && testAttempts.length > 1 && (
-        <View style={[styles.attemptsNavigator, isDark ? { backgroundColor: ThemeColors.dark.card, borderBottomColor: ThemeColors.dark.border } : { backgroundColor: '#FFFFFF', borderBottomColor: '#E5E7EB' }]}>
-          <TouchableOpacity 
-            disabled={activeAttemptIndex >= testAttempts.length - 1} 
-            onPress={() => setActiveAttemptIndex(activeAttemptIndex + 1)}
-            style={styles.navArrowBtn}
-          >
-            <ChevronLeft size={20} color={activeAttemptIndex >= testAttempts.length - 1 ? (isDark ? '#475569' : '#D1D5DB') : (isDark ? '#60A5FA' : '#2563EB')} />
-          </TouchableOpacity>
-          
-          <View style={{ alignItems: 'center' }}>
-            <Text style={[styles.navAttemptsText, isDark && { color: ThemeColors.dark.text }]}>
-              Attempt {testAttempts.length - activeAttemptIndex} of {testAttempts.length}
-            </Text>
-            <Text style={[styles.navAttemptsSubtext, isDark && { color: ThemeColors.dark.textMuted }]}>
-              {activeAttemptIndex === 0 ? 'Latest Attempt' : `Previous Attempt (${testAttempts.length - activeAttemptIndex})`}
-            </Text>
-          </View>
-
-          <TouchableOpacity 
-            disabled={activeAttemptIndex <= 0} 
-            onPress={() => setActiveAttemptIndex(activeAttemptIndex - 1)}
-            style={styles.navArrowBtn}
-          >
-            <ChevronRight size={20} color={activeAttemptIndex <= 0 ? (isDark ? '#475569' : '#D1D5DB') : (isDark ? '#60A5FA' : '#2563EB')} />
-          </TouchableOpacity>
-        </View>
-      )}
-
       <ScrollView
         ref={scrollViewRef}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[1]}
-        scrollEventThrottle={16}
-        onScroll={(event) => {
-          const y = event.nativeEvent.contentOffset.y;
-          if (y > 10) {
-            if (showAttemptBar) setShowAttemptBar(false);
-          } else {
-            if (!showAttemptBar) setShowAttemptBar(true);
-          }
-        }}
+        stickyHeaderIndices={[testAttempts.length > 1 ? 2 : 1]}
       >
+        {/* Attempts Navigator (Last 3 Attempts) */}
+        {testAttempts.length > 1 && (
+          <View style={[styles.attemptsNavigator, isDark ? { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border } : { backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }]}>
+            <TouchableOpacity 
+              disabled={activeAttemptIndex >= testAttempts.length - 1} 
+              onPress={() => setActiveAttemptIndex(activeAttemptIndex + 1)}
+              style={styles.navArrowBtn}
+            >
+              <ChevronLeft size={20} color={activeAttemptIndex >= testAttempts.length - 1 ? (isDark ? '#475569' : '#D1D5DB') : (isDark ? '#60A5FA' : '#2563EB')} />
+            </TouchableOpacity>
+            
+            <View style={{ alignItems: 'center' }}>
+              <Text style={[styles.navAttemptsText, isDark && { color: ThemeColors.dark.text }]}>
+                Attempt {testAttempts.length - activeAttemptIndex} of {testAttempts.length}
+              </Text>
+              <Text style={[styles.navAttemptsSubtext, isDark && { color: ThemeColors.dark.textMuted }]}>
+                {activeAttemptIndex === 0 ? 'Latest Attempt' : `Previous Attempt (${testAttempts.length - activeAttemptIndex})`}
+              </Text>
+            </View>
+
+            <TouchableOpacity 
+              disabled={activeAttemptIndex <= 0} 
+              onPress={() => setActiveAttemptIndex(activeAttemptIndex - 1)}
+              style={styles.navArrowBtn}
+            >
+              <ChevronRight size={20} color={activeAttemptIndex <= 0 ? (isDark ? '#475569' : '#D1D5DB') : (isDark ? '#60A5FA' : '#2563EB')} />
+            </TouchableOpacity>
+          </View>
+        )}
         {/* Statistics Board */}
         <View style={[styles.card, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
           <Text style={[styles.cardTitle, isDark && { color: ThemeColors.dark.text }]}>{activeAttempt.title}</Text>
@@ -855,9 +843,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    zIndex: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: 10,
   },
   navArrowBtn: {
     padding: 8,
