@@ -67,6 +67,8 @@ export async function POST(request: Request) {
         return await handleGetCustomQuestions(data);
       case 'report-question':
         return await handleReportQuestion(data);
+      case 'delete-reported-question':
+        return await handleDeleteReportedQuestion(data);
       case 'get-support-messages':
         return await handleGetSupportMessages(data);
       case 'send-support-message':
@@ -235,6 +237,8 @@ async function handleBootstrap() {
     mockTestId: rq.mockTestId,
     mockTestTitle: rq.mockTestTitle,
     message: rq.message,
+    userId: rq.userId || null,
+    candidateCode: rq.candidateCode || null,
     createdAt: formatDateTime(rq.createdAt),
   }));
 
@@ -826,7 +830,7 @@ async function handleGetCustomQuestions(data: any) {
 }
 
 async function handleReportQuestion(data: any) {
-  const { questionId, message, questionText, mockTestId, mockTestTitle } = data;
+  const { questionId, message, questionText, mockTestId, mockTestTitle, userId, candidateCode } = data;
 
   const reported = await prisma.reportedQuestion.create({
     data: {
@@ -835,6 +839,8 @@ async function handleReportQuestion(data: any) {
       questionText: questionText || '',
       mockTestId: mockTestId || '',
       mockTestTitle: mockTestTitle || '',
+      userId: userId || null,
+      candidateCode: candidateCode || null,
     },
   });
 
@@ -847,6 +853,8 @@ async function handleReportQuestion(data: any) {
       questionText: reported.questionText,
       mockTestId: reported.mockTestId,
       mockTestTitle: reported.mockTestTitle,
+      userId: reported.userId,
+      candidateCode: reported.candidateCode,
       createdAt: formatDateTime(reported.createdAt),
     },
   });
@@ -1379,4 +1387,17 @@ async function handleEditSupportMessage(data: any) {
       createdAt: msg.createdAt.toISOString()
     }
   });
+}
+
+async function handleDeleteReportedQuestion(data: any) {
+  const { id } = data;
+  if (!id) {
+    return NextResponse.json({ success: false, error: 'Log ID is required' }, { status: 400 });
+  }
+
+  await prisma.reportedQuestion.delete({
+    where: { id }
+  });
+
+  return NextResponse.json({ success: true });
 }

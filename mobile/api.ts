@@ -118,6 +118,8 @@ export const ApiClient = {
     questionText: string;
     mockTestId: string;
     mockTestTitle: string;
+    userId?: string;
+    candidateCode?: string;
   }) => postRequest('report-question', params),
 
   /**

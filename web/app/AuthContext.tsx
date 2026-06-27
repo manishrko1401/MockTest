@@ -82,6 +82,8 @@ export interface ReportedQuestion {
   mockTestId: string;
   mockTestTitle: string;
   message: string;
+  userId?: string | null;
+  candidateCode?: string | null;
   createdAt: string;
 }
 
@@ -102,6 +104,9 @@ interface AuthContextType {
     questionText?: string,
     mockTestId?: string,
     mockTestTitle?: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  deleteReportedQuestion: (
+    id: string
   ) => Promise<{ success: boolean; error?: string }>;
   addAttempt: (
     testId: string,
@@ -1154,6 +1159,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const deleteReportedQuestion = async (
+    id: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete-reported-question',
+          data: { id }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReportedQuestionsList(prev => prev.filter(rq => rq.id !== id));
+        return { success: true };
+      }
+      return { success: false, error: data.error || 'Failed to delete reported question log' };
+    } catch (e: any) {
+      console.error("Delete reported question log error:", e);
+      return { success: false, error: e.message || 'Connection error' };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -1185,7 +1214,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addMockTest,
         deleteMockTest,
         reportedQuestionsList,
-        reportQuestion
+        reportQuestion,
+        deleteReportedQuestion
       }}
     >
       {children}

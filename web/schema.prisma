@@ -243,6 +243,8 @@ model ReportedQuestion {
   mockTestId    String   @default("")
   mockTestTitle String   @default("")
   message       String
+  userId        String?
+  candidateCode String?
   createdAt     DateTime @default(now())
 
   @@map("reported_questions")

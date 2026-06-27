@@ -102,7 +102,9 @@ export default function AnalysisScreen({
       questionText: qText || '',
       mockTestId: attempt.testId,
       mockTestTitle: attempt.title,
-      message: reportMessage.trim()
+      message: reportMessage.trim(),
+      userId: currentUser?.id || 'unknown',
+      candidateCode: currentUser?.candidateCode || ''
     });
     setReporting(false);
 

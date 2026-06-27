@@ -234,7 +234,8 @@ export default function AdminAnalytics() {
     deleteSubCategory,
     addMockTest,
     deleteMockTest,
-    reportedQuestionsList
+    reportedQuestionsList,
+    deleteReportedQuestion
   } = useAuth();
   const t = TRANSLATIONS[language];
 
@@ -1161,7 +1162,7 @@ export default function AdminAnalytics() {
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search name/email..."
+                      placeholder="Search name/email/roll code..."
                       className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
                     />
                   </div>
@@ -1175,8 +1176,8 @@ export default function AdminAnalytics() {
                       >
                         <option value="ALL">All Roles</option>
                         <option value="STUDENT">Student</option>
-                        <option value="ADMIN">Admin</option>
                         <option value="CONTENT_CREATOR">Creator</option>
+                        <option value="ADMIN">Admin</option>
                       </select>
                     </div>
 
@@ -1210,7 +1211,8 @@ export default function AdminAnalytics() {
                       {[...usersList]
                         .filter(u => {
                           const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                                u.email.toLowerCase().includes(searchTerm.toLowerCase());
+                                                u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                                (u.candidateCode && u.candidateCode.toLowerCase().includes(searchTerm.toLowerCase()));
                           const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
                           const matchesTier = tierFilter === 'ALL' || u.subscriptionTier === tierFilter;
                           return matchesSearch && matchesRole && matchesTier;
@@ -1235,6 +1237,11 @@ export default function AdminAnalytics() {
                                   )}
                                 </div>
                                 <p className="text-[10px] text-slate-500">{user.email}</p>
+                                {user.candidateCode && (
+                                  <p className="text-[10px] text-blue-400 font-extrabold mt-0.5">
+                                    Roll Code: <span className="font-mono bg-slate-950 px-1 py-0.5 rounded text-[9px] border border-slate-800 text-white">{user.candidateCode}</span>
+                                  </p>
+                                )}
                                 <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Joined: {user.registeredDate}</p>
                                 <div className="flex items-center gap-1 text-amber-400 text-[10px] font-black mt-1">
                                   <Coins className="h-3.5 w-3.5 text-amber-400" />
@@ -2213,18 +2220,20 @@ export default function AdminAnalytics() {
                 <div className="overflow-x-auto max-h-[600px] overflow-y-auto pr-1">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead className="sticky top-0 bg-white dark:bg-slate-950 z-10 border-b border-slate-200 dark:border-slate-800">
-                      <tr className="text-slate-405 dark:text-slate-500 uppercase text-[9px] tracking-wider font-bold">
+                      <tr className="text-slate-400 dark:text-slate-500 uppercase text-[9px] tracking-wider font-bold">
                         <th className="py-3 px-4">{language === 'hi' ? 'प्रश्न आईडी' : 'Question ID'}</th>
                         <th className="py-3 px-4">{language === 'hi' ? 'मॉक टेस्ट' : 'Mock Test'}</th>
                         <th className="py-3 px-4">{language === 'hi' ? 'प्रश्न पाठ' : 'Question Text'}</th>
                         <th className="py-3 px-4">{language === 'hi' ? 'विवरण / संदेश' : 'Report Message'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'रिपोर्टर (रोल कोड)' : 'Reporter (Roll Code)'}</th>
                         <th className="py-3 px-4">{language === 'hi' ? 'दिनांक और समय' : 'Report Date & Time'}</th>
+                        <th className="py-3 px-4 text-right">{language === 'hi' ? 'कार्रवाई' : 'Action'}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {reportedQuestionsList.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="py-8 text-center text-slate-400 dark:text-slate-505 font-bold">
+                          <td colSpan={7} className="py-8 text-center text-slate-400 dark:text-slate-500 font-bold">
                             {language === 'hi' ? 'कोई रिपोर्ट किए गए प्रश्न नहीं मिले।' : 'No reported questions found.'}
                           </td>
                         </tr>
@@ -2237,7 +2246,8 @@ export default function AdminAnalytics() {
                               rq.questionId.toLowerCase().includes(term) ||
                               rq.mockTestTitle.toLowerCase().includes(term) ||
                               rq.message.toLowerCase().includes(term) ||
-                      rq.questionText.toLowerCase().includes(term)
+                              rq.questionText.toLowerCase().includes(term) ||
+                              (rq.candidateCode && rq.candidateCode.toLowerCase().includes(term))
                             );
                           })
                           .map((rq) => (
@@ -2255,12 +2265,41 @@ export default function AdminAnalytics() {
                                 {rq.questionText || <span className="italic text-slate-400 font-normal">No question sample</span>}
                               </td>
                               <td className="py-4 px-4 text-slate-700 dark:text-slate-350 max-w-[250px] whitespace-normal font-semibold">
-                                <div className="bg-red-50/40 dark:bg-red-950/10 border border-red-100 dark:border-red-950 p-2.5 rounded-lg text-slate-850 dark:text-slate-300">
+                                <div className="bg-red-50/40 dark:bg-red-950/10 border border-red-100 dark:border-red-950 p-2.5 rounded-lg text-slate-855 dark:text-slate-300">
                                   {rq.message}
                                 </div>
                               </td>
+                              <td className="py-4 px-4 whitespace-nowrap font-bold">
+                                {rq.candidateCode ? (
+                                  <span className="font-mono bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded border border-blue-100 dark:border-blue-900/30 text-[10px]">
+                                    {rq.candidateCode}
+                                  </span>
+                                ) : (
+                                  <span className="italic text-slate-400 font-normal">Guest / N/A</span>
+                                )}
+                              </td>
                               <td className="py-4 px-4 text-slate-450 dark:text-slate-500 whitespace-nowrap font-semibold">
                                 {rq.createdAt}
+                              </td>
+                              <td className="py-4 px-4 text-right whitespace-nowrap">
+                                <button
+                                  onClick={async () => {
+                                    const confirmDelete = window.confirm(
+                                      "Are you sure you want to delete this reported question log?"
+                                    );
+                                    if (confirmDelete) {
+                                      const res = await deleteReportedQuestion(rq.id);
+                                      if (res.success) {
+                                        showToast("Report log deleted successfully.");
+                                      } else {
+                                        showToast(res.error || "Failed to delete log.");
+                                      }
+                                    }
+                                  }}
+                                  className="text-red-650 dark:text-red-405 hover:text-red-700 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2.5 py-1 rounded-lg cursor-pointer text-[10px]"
+                                >
+                                  Delete Log
+                                </button>
                               </td>
                             </tr>
                           ))
