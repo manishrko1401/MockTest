@@ -18,7 +18,9 @@ import {
   AlertTriangle,
   Send,
   Flag,
-  Globe
+  Globe,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
@@ -42,9 +44,34 @@ export default function AnalysisScreen({
   const [cardOffsets, setCardOffsets] = useState<Record<number, number>>({});
   const scrollViewRef = React.useRef<ScrollView>(null);
 
+  // Get the last 3 completed attempts for this specific test
+  const testAttempts = React.useMemo(() => {
+    return (currentUser?.testSessions || [])
+      .filter((s: any) => s.testId === attempt.testId && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'))
+      .sort((a: any, b: any) => {
+        const dateA = new Date(a.startedAt || a.completedAt || 0).getTime();
+        const dateB = new Date(b.startedAt || b.completedAt || 0).getTime();
+        return dateB - dateA; // latest first
+      })
+      .slice(0, 3);
+  }, [currentUser?.testSessions, attempt.testId]);
+
+  // Find index of the current prop 'attempt' in testAttempts list, or default to 0
+  const initialIndex = testAttempts.findIndex((x: any) => x.id === attempt.id);
+  const [activeAttemptIndex, setActiveAttemptIndex] = useState(initialIndex !== -1 ? initialIndex : 0);
+
+  // Synchronize index when attempt changes
+  React.useEffect(() => {
+    const newIdx = testAttempts.findIndex((x: any) => x.id === attempt.id);
+    setActiveAttemptIndex(newIdx !== -1 ? newIdx : 0);
+  }, [attempt.id, testAttempts]);
+
+  // The active attempt to display on the screen
+  const activeAttempt = testAttempts[activeAttemptIndex] || attempt;
+
   // Reconstruct deterministic student responses seed to align with the website
   let seed = 0;
-  const seedString = (currentUser?.id || '') + (attempt?.id || '');
+  const seedString = (currentUser?.id || '') + (activeAttempt?.id || '');
   for (let i = 0; i < seedString.length; i++) {
     seed += seedString.charCodeAt(i);
   }
@@ -59,7 +86,7 @@ export default function AnalysisScreen({
   React.useEffect(() => {
     const fetchQuestions = async () => {
       setLoadingQs(true);
-      const res = await ApiClient.getCustomQuestions(attempt.testId);
+      const res = await ApiClient.getCustomQuestions(activeAttempt.testId);
       if (res.success && res.questions && Array.isArray(res.questions)) {
         const mappedQuestions = res.questions.map((q: any, idx: number) => ({
           ...q,
@@ -68,7 +95,7 @@ export default function AnalysisScreen({
         setQuestions(mappedQuestions);
       } else {
         // Fallback: Generate hardcoded default questions to review if no custom ones are found
-        const fallbackList = attempt.testId.includes('ssc') 
+        const fallbackList = activeAttempt.testId.includes('ssc') 
           ? [
               { id: "q_q1", textEn: "If x + 1/x = 5, then find the value of x² + 1/x².", optionsEn: ["23", "25", "27", "21"], correctIndex: 1, explanationEn: "x + 1/x = 5 => (x + 1/x)² = 25 => x² + 1/x² + 2 = 25 => x² + 1/x² = 23.", textHi: "यदि x + 1/x = 5 है, तो x² + 1/x² का मान ज्ञात कीजिए।", optionsHi: ["23", "25", "27", "21"], explanationHi: "x + 1/x = 5 => (x + 1/x)² = 25 => x² + 1/x² + 2 = 25 => x² + 1/x² = 23।" },
               { id: "q_q2", textEn: "The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A's present age?", optionsEn: ["20 years", "25 years", "30 years", "15 years"], correctIndex: 0, explanationEn: "Let age be 4k and 5k. (4k+5)/(5k+5) = 5/6 => 24k + 30 = 25k + 25 => k = 5. A = 4k = 20.", textHi: "A और B की वर्तमान आयु का अनुपात 4:5 है। 5 वर्ष बाद यह अनुपात 5:6 हो जाता है। A की वर्तमान आयु क्या है?", optionsHi: ["20 वर्ष", "25 वर्ष", "30 वर्ष", "15 वर्ष"], explanationHi: "माना आयु 4k और 5k है। (4k+5)/(5k+5) = 5/6 => 24k + 30 = 25k + 25 => k = 5. A = 4k = 20 वर्ष।" },
@@ -85,7 +112,7 @@ export default function AnalysisScreen({
     };
 
     fetchQuestions();
-  }, [attempt.testId]);
+  }, [activeAttempt.testId]);
 
   const handleOpenReportModal = (question: any) => {
     setActiveQuestion(question);
@@ -104,8 +131,8 @@ export default function AnalysisScreen({
     const res = await ApiClient.reportQuestion({
       questionId: activeQuestion.id || 'unknown',
       questionText: qText || '',
-      mockTestId: attempt.testId,
-      mockTestTitle: attempt.title,
+      mockTestId: activeAttempt.testId,
+      mockTestTitle: activeAttempt.title,
       message: reportMessage.trim(),
       userId: currentUser?.id || 'unknown',
       candidateCode: currentUser?.candidateCode || ''
@@ -134,25 +161,55 @@ export default function AnalysisScreen({
         <Text style={styles.headerTitle}>Test Analytics Summary</Text>
       </View>
 
+      {/* Attempts Navigator (Last 3 Attempts) */}
+      {testAttempts.length > 1 && (
+        <View style={[styles.attemptsNavigator, isDark ? { backgroundColor: ThemeColors.dark.card, borderBottomColor: ThemeColors.dark.border } : { backgroundColor: '#FFFFFF', borderBottomColor: '#E5E7EB' }]}>
+          <TouchableOpacity 
+            disabled={activeAttemptIndex >= testAttempts.length - 1} 
+            onPress={() => setActiveAttemptIndex(activeAttemptIndex + 1)}
+            style={styles.navArrowBtn}
+          >
+            <ChevronLeft size={20} color={activeAttemptIndex >= testAttempts.length - 1 ? (isDark ? '#475569' : '#D1D5DB') : (isDark ? '#60A5FA' : '#2563EB')} />
+          </TouchableOpacity>
+          
+          <View style={{ alignItems: 'center' }}>
+            <Text style={[styles.navAttemptsText, isDark && { color: ThemeColors.dark.text }]}>
+              Attempt {testAttempts.length - activeAttemptIndex} of {testAttempts.length}
+            </Text>
+            <Text style={[styles.navAttemptsSubtext, isDark && { color: ThemeColors.dark.textMuted }]}>
+              {activeAttemptIndex === 0 ? 'Latest Attempt' : `Previous Attempt (${testAttempts.length - activeAttemptIndex})`}
+            </Text>
+          </View>
+
+          <TouchableOpacity 
+            disabled={activeAttemptIndex <= 0} 
+            onPress={() => setActiveAttemptIndex(activeAttemptIndex - 1)}
+            style={styles.navArrowBtn}
+          >
+            <ChevronRight size={20} color={activeAttemptIndex <= 0 ? (isDark ? '#475569' : '#D1D5DB') : (isDark ? '#60A5FA' : '#2563EB')} />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <ScrollView ref={scrollViewRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} stickyHeaderIndices={[1]}>
         {/* Statistics Board */}
         <View style={[styles.card, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-          <Text style={[styles.cardTitle, isDark && { color: ThemeColors.dark.text }]}>{attempt.title}</Text>
-          <Text style={[styles.cardDate, isDark && { color: ThemeColors.dark.textMuted }]}>Submitted on: {attempt.date}</Text>
+          <Text style={[styles.cardTitle, isDark && { color: ThemeColors.dark.text }]}>{activeAttempt.title}</Text>
+          <Text style={[styles.cardDate, isDark && { color: ThemeColors.dark.textMuted }]}>Submitted on: {activeAttempt.date}</Text>
 
           <View style={[styles.scoreRow, isDark && { borderColor: ThemeColors.dark.border }]}>
             <View style={styles.scoreBlock}>
-              <Text style={[styles.scoreNum, isDark && { color: '#60A5FA' }]}>{attempt.score.toFixed(1)} / {attempt.maxScore.toFixed(0)}</Text>
+              <Text style={[styles.scoreNum, isDark && { color: '#60A5FA' }]}>{activeAttempt.score.toFixed(1)} / {activeAttempt.maxScore.toFixed(0)}</Text>
               <Text style={[styles.scoreLabel, isDark && { color: ThemeColors.dark.textMuted }]}>My Score</Text>
             </View>
             <View style={[styles.divider, isDark && { backgroundColor: ThemeColors.dark.border }]} />
             <View style={styles.scoreBlock}>
-              <Text style={[styles.scoreNum, isDark && { color: '#60A5FA' }]}>{attempt.accuracy.toFixed(1)}%</Text>
+              <Text style={[styles.scoreNum, isDark && { color: '#60A5FA' }]}>{activeAttempt.accuracy.toFixed(1)}%</Text>
               <Text style={[styles.scoreLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Accuracy</Text>
             </View>
             <View style={[styles.divider, isDark && { backgroundColor: ThemeColors.dark.border }]} />
             <View style={styles.scoreBlock}>
-              <Text style={[styles.scoreNum, isDark && { color: '#60A5FA' }]}>{Math.round(attempt.durationSeconds / 60)}m</Text>
+              <Text style={[styles.scoreNum, isDark && { color: '#60A5FA' }]}>{Math.round(activeAttempt.durationSeconds / 60)}m</Text>
               <Text style={[styles.scoreLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Duration</Text>
             </View>
           </View>
@@ -165,7 +222,7 @@ export default function AnalysisScreen({
               <Text style={[styles.navSectionTitle, isDark && { color: ThemeColors.dark.text }]}>Question Navigator</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navRow}>
                 {questions.map((q, idx) => {
-                  const userResponse = attempt.responses ? attempt.responses[q.id] : null;
+                  const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
                   const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
                   const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
                   const isCorrect = selectedIdx === correctIdx;
@@ -223,7 +280,7 @@ export default function AnalysisScreen({
           <Text style={[styles.loadingText, isDark && { color: ThemeColors.dark.textMuted }]}>Loading solution key explanations...</Text>
         ) : (
           questions.map((q, idx) => {
-            const userResponse = attempt.responses ? attempt.responses[q.id] : null;
+            const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
             const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
             const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
             const isCorrect = selectedIdx === correctIdx;
@@ -235,7 +292,7 @@ export default function AnalysisScreen({
 
             // Individual and Average question timers
             const qId = q.id || '';
-            const userTime = attempt.responses?.[qId]?.elapsedSeconds ?? (15 + (seed + idx) % 75);
+            const userTime = activeAttempt.responses?.[qId]?.elapsedSeconds ?? (15 + (seed + idx) % 75);
             const avgTime = 30 + (qId ? (qId.charCodeAt(qId.length - 1) % 5) : 0) * 15;
 
             return (
@@ -747,5 +804,30 @@ const styles = StyleSheet.create({
   },
   circleTextUnattempted: {
     color: '#4B5563',
+  },
+  attemptsNavigator: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    zIndex: 10,
+  },
+  navArrowBtn: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  navAttemptsText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#1F2937',
+  },
+  navAttemptsSubtext: {
+    fontSize: 10,
+    color: '#6B7280',
+    marginTop: 1,
   },
 });
