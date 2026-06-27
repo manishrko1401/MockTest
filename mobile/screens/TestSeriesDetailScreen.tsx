@@ -131,11 +131,16 @@ export default function TestSeriesDetailScreen({
         {series.tests && series.tests.length > 0 ? (
           series.tests.map((test: any) => {
             const allowed = hasAccess(test.requiredTier);
-            const attempt = currentUser.testSessions?.find(
-              (s: any) => s.testId === test.id && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED')
-            );
-            const isCompleted = !!attempt;
-            const isPaused = currentUser.testSessions?.some(
+            const completedAttempts = (currentUser.testSessions || [])
+              .filter((s: any) => s.testId === test.id && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'))
+              .sort((a: any, b: any) => {
+                const timeA = a.startedAt ? new Date(a.startedAt).getTime() : 0;
+                const timeB = b.startedAt ? new Date(b.startedAt).getTime() : 0;
+                return timeB - timeA;
+              });
+            const attempt = completedAttempts[0];
+            const isCompleted = completedAttempts.length > 0;
+            const isPaused = (currentUser.testSessions || []).some(
               (s: any) => s.testId === test.id && s.status === 'ONGOING'
             );
 
@@ -167,10 +172,12 @@ export default function TestSeriesDetailScreen({
                 </View>
 
                 {/* Subtitle / Status */}
-                {isCompleted && (
+                {isCompleted && attempt && (
                   <View style={styles.statusCompletedRow}>
                     <CheckCircle size={14} color="#10B981" />
-                    <Text style={styles.statusCompletedText}>Attempted & Completed</Text>
+                    <Text style={styles.statusCompletedText}>
+                      Attempted & Completed (Last Score: {attempt.score.toFixed(1)}/{attempt.maxScore.toFixed(0)})
+                    </Text>
                   </View>
                 )}
                 {isPaused && (
