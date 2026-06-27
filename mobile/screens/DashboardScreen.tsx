@@ -44,6 +44,7 @@ interface DashboardScreenProps {
   currentUser: any;
   notices: any[];
   examCatalog: any[];
+  usersList?: any[];
   onLogout: () => void;
   onSelectTestSeries: (series: any) => void;
   onOpenAttemptAnalysis: (attempt: any) => void;
@@ -82,6 +83,7 @@ export default function DashboardScreen({
   currentUser,
   notices,
   examCatalog,
+  usersList = [],
   onLogout,
   onSelectTestSeries,
   onOpenAttemptAnalysis,
@@ -135,6 +137,8 @@ export default function DashboardScreen({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [showUpdateProfile, setShowUpdateProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showReferralRules, setShowReferralRules] = useState(false);
+  const [showReferredFriends, setShowReferredFriends] = useState(false);
 
   // Form and tab states
   const [activeNoticeTab, setActiveNoticeTab] = useState<'notice' | 'result' | 'admit_card'>('notice');
@@ -583,18 +587,127 @@ export default function DashboardScreen({
         </View>
 
         {/* Referral Card */}
-        <View style={[styles.profileReferralCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-          <Text style={[styles.referCardTitle, isDark && { color: ThemeColors.dark.text }]}>🎁 Referral Rewards</Text>
+        <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+          <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>🎁 Referral Program</Text>
+          <Text style={[styles.sysDetailLabel, { marginTop: 6, marginBottom: 12, textTransform: 'none' }, isDark && { color: ThemeColors.dark.textMuted }]}>
+            Invite your friends to prepare with MockTest Hub. Share your referral code below:
+          </Text>
+
           <View style={[styles.referralCodeRow, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
             <Text style={[styles.referralCodeText, isDark && { color: '#60A5FA' }]}>{currentUser.referralCode}</Text>
             <TouchableOpacity style={styles.copyReferralBtn} onPress={shareReferralCode}>
               <Text style={styles.copyReferralBtnText}>Share & Copy</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.referCountRow}>
-            <Text style={[styles.referCountLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Friends Referred:</Text>
-            <Text style={[styles.referCountVal, isDark && { color: ThemeColors.dark.text, backgroundColor: '#0F172A' }]}>{currentUser.referralsCount || 0}</Text>
-          </View>
+
+          {/* Collapsible View Rules */}
+          <TouchableOpacity 
+            style={[styles.collapsibleHeader, { marginTop: 16, borderTopWidth: 1, borderTopColor: isDark ? '#334155' : '#F3F4F6', paddingTop: 12 }]} 
+            onPress={() => setShowReferralRules(!showReferralRules)}
+          >
+            <Text style={[styles.formCardTitle, { fontSize: 12 }, isDark && { color: ThemeColors.dark.text }]}>📋 How It Works & Rules</Text>
+            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>{showReferralRules ? '▲ Hide' : '▼ View'}</Text>
+          </TouchableOpacity>
+
+          {showReferralRules && (
+            <View style={{ marginTop: 10, gap: 10 }}>
+              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+                <View style={styles.ruleStepNumberContainer}><Text style={styles.ruleStepNumber}>1</Text></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Share Invite Code</Text>
+                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>Copy your code and share it with friends who are preparing for competitive exams.</Text>
+                </View>
+              </View>
+
+              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+                <View style={[styles.ruleStepNumberContainer, { backgroundColor: '#C084FC' }]}><Text style={styles.ruleStepNumber}>2</Text></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Friend Registers</Text>
+                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>Your friend signs up on Mock Test and enters your referral code on the signup screen.</Text>
+                </View>
+              </View>
+
+              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+                <View style={[styles.ruleStepNumberContainer, { backgroundColor: '#FBBF24' }]}><Text style={styles.ruleStepNumber}>3</Text></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Complete First Mock Test</Text>
+                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>Once they complete any full-length or practice mock test sitting on the CBT interface.</Text>
+                </View>
+              </View>
+
+              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+                <View style={[styles.ruleStepNumberContainer, { backgroundColor: '#34D399' }]}><Text style={styles.ruleStepNumber}>4</Text></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Both Receive Coins</Text>
+                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>You get 20 Coins and your friend gets 10 Coins instantly credited!</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* Collapsible Invites Tracker */}
+          <TouchableOpacity 
+            style={[styles.collapsibleHeader, { marginTop: 12, borderTopWidth: 1, borderTopColor: isDark ? '#334155' : '#F3F4F6', paddingTop: 12 }]} 
+            onPress={() => setShowReferredFriends(!showReferredFriends)}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[styles.formCardTitle, { fontSize: 12 }, isDark && { color: ThemeColors.dark.text }]}>👥 Referred Friends Tracker</Text>
+              <View style={styles.referredCountBadge}>
+                <Text style={styles.referredCountBadgeText}>
+                  {usersList.filter((u: any) => u.referredBy && u.referredBy.trim().toLowerCase() === currentUser.referralCode.trim().toLowerCase()).length}
+                </Text>
+              </View>
+            </View>
+            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>{showReferredFriends ? '▲ Hide' : '▼ Track'}</Text>
+          </TouchableOpacity>
+
+          {showReferredFriends && (() => {
+            const referredFriendsList = usersList.filter(
+              (u: any) => u.referredBy && u.referredBy.trim().toLowerCase() === currentUser.referralCode.trim().toLowerCase()
+            );
+
+            if (referredFriendsList.length === 0) {
+              return (
+                <View style={{ marginTop: 10, padding: 16, alignItems: 'center', backgroundColor: isDark ? '#0F172A' : '#F9FAFB', borderRadius: 8 }}>
+                  <Text style={{ fontSize: 11, color: isDark ? '#94A3B8' : '#6B7280', fontStyle: 'italic' }}>
+                    You haven't referred any candidates yet.
+                  </Text>
+                </View>
+              );
+            }
+
+            return (
+              <View style={{ marginTop: 10, gap: 10 }}>
+                {referredFriendsList.map((friend: any) => {
+                  const hasCompletedTest = friend.testSessions && friend.testSessions.length > 0;
+                  
+                  return (
+                    <View key={friend.id} style={[styles.friendTrackerCard, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={[styles.friendNameText, isDark && { color: ThemeColors.dark.text }]}>{friend.name || 'Candidate'}</Text>
+                        <Text style={[styles.friendProgressText, { color: hasCompletedTest ? '#10B981' : '#F59E0B' }]}>
+                          {hasCompletedTest ? 'Completed! 20 Coins' : 'Pending Test Attempt'}
+                        </Text>
+                      </View>
+                      
+                      {/* Progress Bar */}
+                      <View style={styles.friendProgressBarBg}>
+                        <View style={[styles.friendProgressBarFill, { width: hasCompletedTest ? '100%' : '50%', backgroundColor: hasCompletedTest ? '#10B981' : '#FBBF24' }]} />
+                      </View>
+
+                      {/* Steps detail */}
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                        <Text style={styles.stepDetailLabel}>✓ Registered</Text>
+                        <Text style={[styles.stepDetailLabel, { color: hasCompletedTest ? '#10B981' : '#6B7280' }]}>
+                          {hasCompletedTest ? '✓ Test Completed' : '⌛ Attempting test...'}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            );
+          })()}
         </View>
 
         {/* Support Chat Card */}
@@ -1753,5 +1866,82 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     lineHeight: 11,
     textAlign: 'center',
+  },
+  ruleStepItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    borderRadius: 12,
+    padding: 10,
+  },
+  ruleStepNumberContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#3B82F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ruleStepNumber: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  ruleStepTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#1F2937',
+  },
+  ruleStepDesc: {
+    fontSize: 10,
+    color: '#6B7280',
+    marginTop: 2,
+    lineHeight: 14,
+  },
+  referredCountBadge: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 10,
+  },
+  referredCountBadgeText: {
+    color: '#FFF',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  friendTrackerCard: {
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 12,
+  },
+  friendNameText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#1F2937',
+  },
+  friendProgressText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  friendProgressBarBg: {
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  friendProgressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  stepDetailLabel: {
+    fontSize: 9,
+    color: '#10B981',
+    fontWeight: 'bold',
   },
 });

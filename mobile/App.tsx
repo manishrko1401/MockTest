@@ -30,6 +30,7 @@ export default function App() {
   // App data loaded from database bootstrap
   const [notices, setNotices] = useState<any[]>([]);
   const [examCatalog, setExamCatalog] = useState<any[]>([]);
+  const [usersList, setUsersList] = useState<any[]>([]);
 
   // Navigation states
   const [selectedSeries, setSelectedSeries] = useState<any>(null);
@@ -51,6 +52,7 @@ export default function App() {
         if (bootRes.success) {
           setNotices(bootRes.noticesList || []);
           setExamCatalog(bootRes.examCatalog || []);
+          setUsersList(bootRes.usersList || []);
         }
 
         // Check SecureStore for auto-login
@@ -90,6 +92,7 @@ export default function App() {
     if (bootRes.success) {
       setNotices(bootRes.noticesList || []);
       setExamCatalog(bootRes.examCatalog || []);
+      setUsersList(bootRes.usersList || []);
     }
   };
 
@@ -102,6 +105,7 @@ export default function App() {
     if (bootRes.success) {
       setNotices(bootRes.noticesList || []);
       setExamCatalog(bootRes.examCatalog || []);
+      setUsersList(bootRes.usersList || []);
     }
     setViewMode('dashboard');
   };
@@ -159,6 +163,7 @@ export default function App() {
           currentUser={currentUser}
           notices={notices}
           examCatalog={examCatalog}
+          usersList={usersList}
           onLogout={handleLogout}
           onSelectTestSeries={handleSelectSeries}
           onOpenAttemptAnalysis={handleOpenAttemptAnalysis}
