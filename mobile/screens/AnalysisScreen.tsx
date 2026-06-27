@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
