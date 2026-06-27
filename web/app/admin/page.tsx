@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth, MockUser, MockTestRecord } from '../AuthContext';
 import { TRANSLATIONS } from '../translations';
@@ -214,6 +214,7 @@ export default function AdminAnalytics() {
   const [formExplanationEn, setFormExplanationEn] = useState('');
   const [formExplanationHi, setFormExplanationHi] = useState('');
   const [formQuestionsList, setFormQuestionsList] = useState<any[]>([]);
+  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
 
   // Notices states
   const [noticeTitle, setNoticeTitle] = useState('');
@@ -337,6 +338,50 @@ export default function AdminAnalytics() {
       setToastMessage(null);
     }, 3000);
   };
+
+  useEffect(() => {
+    const fetchExistingQuestions = async () => {
+      if (!selectedUploadTestId) {
+        setFormQuestionsList([]);
+        setParsedQuestions([]);
+        setJsonInput('');
+        setEditingQuestionIndex(null);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get-custom-questions',
+            data: { testId: selectedUploadTestId }
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+          setFormQuestionsList(data.questions);
+          setParsedQuestions(data.questions);
+          setJsonInput(JSON.stringify(data.questions, null, 2));
+          setPreviewQuestionIndex(0);
+          setEditingQuestionIndex(null);
+          showToast(`Loaded ${data.questions.length} existing question(s) from this mock test.`);
+        } else {
+          // No questions found
+          setFormQuestionsList([]);
+          setParsedQuestions([]);
+          setJsonInput('[]');
+          setPreviewQuestionIndex(0);
+          setEditingQuestionIndex(null);
+        }
+      } catch (e) {
+        console.error("Failed to fetch questions:", e);
+        showToast("Error loading existing mock test questions.");
+      }
+    };
+
+    fetchExistingQuestions();
+  }, [selectedUploadTestId]);
 
   const handleSelectUser = (user: MockUser) => {
     setSelectedUserId(user.id);
@@ -537,11 +582,21 @@ export default function AdminAnalytics() {
       explanationHi: formExplanationHi.trim() || undefined
     };
 
-    const updatedList = [...formQuestionsList, newQ];
+    let updatedList;
+    if (editingQuestionIndex !== null) {
+      updatedList = [...formQuestionsList];
+      updatedList[editingQuestionIndex] = newQ;
+      setEditingQuestionIndex(null);
+      showToast("Question updated in list!");
+    } else {
+      updatedList = [...formQuestionsList, newQ];
+      showToast("Question added to preview list!");
+    }
+
     setFormQuestionsList(updatedList);
     setJsonInput(JSON.stringify(updatedList, null, 2));
     setParsedQuestions(updatedList);
-    setPreviewQuestionIndex(updatedList.length - 1);
+    setPreviewQuestionIndex(editingQuestionIndex !== null ? editingQuestionIndex : updatedList.length - 1);
 
     // Clear form inputs
     setFormTextEn('');
@@ -559,8 +614,6 @@ export default function AdminAnalytics() {
     setFormCorrectIndex(0);
     setFormExplanationEn('');
     setFormExplanationHi('');
-
-    showToast("Question added to preview list!");
   };
 
   const handleClearFormQuestions = () => {
@@ -1305,9 +1358,47 @@ export default function AdminAnalytics() {
                           type="submit"
                           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-755 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition cursor-pointer shadow-lg shadow-blue-900/20"
                         >
-                          <PlusCircle className="h-4 w-4" />
-                          Add Question to List
+                          {editingQuestionIndex !== null ? (
+                            <>
+                              <Edit className="h-4 w-4" />
+                              Update Question #{editingQuestionIndex + 1}
+                            </>
+                          ) : (
+                            <>
+                              <PlusCircle className="h-4 w-4" />
+                              Add Question to List
+                            </>
+                          )}
                         </button>
+
+                        {editingQuestionIndex !== null && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingQuestionIndex(null);
+                              // Clear form inputs
+                              setFormTextEn('');
+                              setFormTextHi('');
+                              setOpt1En('');
+                              setOpt1Hi('');
+                              setOpt2En('');
+                              setOpt2Hi('');
+                              setOpt3En('');
+                              setOpt3Hi('');
+                              setOpt4En('');
+                              setOpt4Hi('');
+                              setOpt5En('');
+                              setOpt5Hi('');
+                              setFormCorrectIndex(0);
+                              setFormExplanationEn('');
+                              setFormExplanationHi('');
+                              showToast("Edit cancelled.");
+                            }}
+                            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-350 font-bold py-2.5 px-6 rounded-lg text-xs active:scale-95 transition cursor-pointer"
+                          >
+                            Cancel Edit
+                          </button>
+                        )}
 
                         {parsedQuestions.length > 0 && (
                           <button
@@ -1436,6 +1527,58 @@ export default function AdminAnalytics() {
                                 {qExp || "No bilingual explanation provided for this question."}
                               </p>
                             </div>
+
+                            {importerMode === 'form' && (
+                              <div className="flex justify-between items-center pt-3 border-t border-slate-850 mt-4">
+                                <span className="text-[10px] text-slate-500 font-medium">Modify this question:</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const q = parsedQuestions[previewQuestionIndex];
+                                      setEditingQuestionIndex(previewQuestionIndex);
+                                      setFormTextEn(q.textEn || '');
+                                      setFormTextHi(q.textHi || '');
+                                      setOpt1En(q.optionsEn?.[0] || '');
+                                      setOpt1Hi(q.optionsHi?.[0] || '');
+                                      setOpt2En(q.optionsEn?.[1] || '');
+                                      setOpt2Hi(q.optionsHi?.[1] || '');
+                                      setOpt3En(q.optionsEn?.[2] || '');
+                                      setOpt3Hi(q.optionsHi?.[2] || '');
+                                      setOpt4En(q.optionsEn?.[3] || '');
+                                      setOpt4Hi(q.optionsHi?.[3] || '');
+                                      setOpt5En(q.optionsEn?.[4] || '');
+                                      setOpt5Hi(q.optionsHi?.[4] || '');
+                                      setFormCorrectIndex(Number(q.correctIndex) || 0);
+                                      setFormExplanationEn(q.explanationEn || '');
+                                      setFormExplanationHi(q.explanationHi || '');
+                                      showToast(`Question #${previewQuestionIndex + 1} loaded into form builder.`);
+                                    }}
+                                    className="flex items-center gap-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition active:scale-95"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (window.confirm(`Are you sure you want to delete Question #${previewQuestionIndex + 1} from this list?`)) {
+                                        const updatedList = formQuestionsList.filter((_, idx) => idx !== previewQuestionIndex);
+                                        setFormQuestionsList(updatedList);
+                                        setJsonInput(JSON.stringify(updatedList, null, 2));
+                                        setParsedQuestions(updatedList);
+                                        setPreviewQuestionIndex(Math.max(0, previewQuestionIndex - 1));
+                                        showToast("Question deleted from list.");
+                                      }
+                                    }}
+                                    className="flex items-center gap-1 bg-red-650/10 hover:bg-red-655/20 text-red-400 border border-red-500/20 px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition active:scale-95"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            )}
 
                           </div>
 
