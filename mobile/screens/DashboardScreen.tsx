@@ -96,6 +96,33 @@ export default function DashboardScreen({
   const [activeTab, setActiveTab] = useState<'home' | 'tests' | 'notices' | 'profile'>('home');
   const [refreshing, setRefreshing] = useState(false);
 
+  // Announcement auto-sliding states & refs
+  const announcementScrollRef = React.useRef<ScrollView>(null);
+  const [announcementIndex, setAnnouncementIndex] = useState(0);
+  const [userHasSwiped, setUserHasSwiped] = useState(false);
+
+  const announcementsList = React.useMemo(() => {
+    return notices.filter(n => n.category === 'announcement');
+  }, [notices]);
+
+  useEffect(() => {
+    if (announcementsList.length <= 1 || userHasSwiped) return;
+
+    const interval = setInterval(() => {
+      setAnnouncementIndex(prevIndex => {
+        const nextIndex = (prevIndex + 1) % announcementsList.length;
+        const slideWidth = Dimensions.get('window').width - 32;
+        announcementScrollRef.current?.scrollTo({
+          x: nextIndex * slideWidth,
+          animated: true,
+        });
+        return nextIndex;
+      });
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(interval);
+  }, [announcementsList, userHasSwiped]);
+
   // Notice badges and seen states
   const [seenNoticeIds, setSeenNoticeIds] = useState<string[]>([]);
 
@@ -272,10 +299,20 @@ export default function DashboardScreen({
           return (
             <View>
               <ScrollView
+                ref={announcementScrollRef}
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
                 style={styles.carouselScrollView}
+                onScrollBeginDrag={() => {
+                  setUserHasSwiped(true);
+                }}
+                onMomentumScrollEnd={(event) => {
+                  const slideWidth = Dimensions.get('window').width - 32;
+                  const offset = event.nativeEvent.contentOffset.x;
+                  const newIdx = Math.round(offset / slideWidth);
+                  setAnnouncementIndex(newIdx);
+                }}
               >
                 {announcements.map((ann, idx) => (
                   <View 
@@ -322,9 +359,21 @@ export default function DashboardScreen({
               </ScrollView>
               
               <View style={styles.storyDotRow}>
-                <View style={styles.storyIndicatorDot} />
+                <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                  {announcements.map((_, i) => (
+                    <View 
+                      key={i} 
+                      style={[
+                        styles.storyIndicatorDot, 
+                        announcementIndex === i 
+                          ? { backgroundColor: '#3B82F6', width: 12 } 
+                          : { backgroundColor: isDark ? '#475569' : '#D1D5DB', width: 6 }
+                      ]} 
+                    />
+                  ))}
+                </View>
                 <Text style={[styles.swipeIndicatorText, isDark && { color: ThemeColors.dark.textMuted }]}>
-                  Swipe card to read other announcements ({announcements.length} total)
+                  Swipe card to read other announcements ({announcementIndex + 1}/{announcements.length})
                 </Text>
               </View>
             </View>
