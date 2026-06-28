@@ -165,6 +165,7 @@ function renderHtml(html: string, style: any, isDark: boolean | undefined): Reac
         elements.push(<Text key={keyIdx++}>• </Text>);
       } else if (tag === '</li>') {
         elements.push(<Text key={keyIdx++}>{'\n'}</Text>);
+      }
     } else {
       // Decode HTML entities
       let text = token
