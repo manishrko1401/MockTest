@@ -115,7 +115,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
           style={[
             styles.themeToggle,
             isDark 
-              ? { backgroundColor: '#1E293B', borderColor: '#334155' } 
+              ? { backgroundColor: '#16223F', borderColor: '#1F2E54' } 
               : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }
           ]}
         >

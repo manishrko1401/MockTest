@@ -446,7 +446,7 @@ export default function DashboardScreen({
               onPress={() => setSelectedCategoryId(category.id)}
             >
               <View style={styles.categoryCardLeft}>
-                <View style={[styles.categoryIconCircle, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+                <View style={[styles.categoryIconCircle, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
                   <GraduationCap color={isDark ? ThemeColors.dark.text : '#2563EB'} size={20} />
                 </View>
                 <View style={styles.categoryDetails}>
@@ -614,8 +614,8 @@ export default function DashboardScreen({
           <Text style={[styles.profileName, isDark && { color: ThemeColors.dark.text }]}>{currentUser.name}</Text>
           <Text style={[styles.profileEmail, isDark && { color: ThemeColors.dark.textMuted }]}>{currentUser.email}</Text>
           <View style={styles.badgeRow}>
-            <Text style={[styles.profileCodeBadge, isDark && { backgroundColor: '#0F172A', color: ThemeColors.dark.text }]}>Roll Code: {currentUser.candidateCode}</Text>
-            <Text style={[styles.profileCoinsBadge, isDark && { backgroundColor: '#0F172A', color: ThemeColors.dark.text }]}>🪙 {currentUser.coins || 0} Coins</Text>
+            <Text style={[styles.profileCodeBadge, isDark && { backgroundColor: '#0B1329', color: ThemeColors.dark.text }]}>Roll Code: {currentUser.candidateCode}</Text>
+            <Text style={[styles.profileCoinsBadge, isDark && { backgroundColor: '#0B1329', color: ThemeColors.dark.text }]}>🪙 {currentUser.coins || 0} Coins</Text>
           </View>
         </View>
 
@@ -654,7 +654,7 @@ export default function DashboardScreen({
             Invite your friends to prepare with MockTest Hub. Share your referral code below:
           </Text>
 
-          <View style={[styles.referralCodeRow, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+          <View style={[styles.referralCodeRow, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
             <Text style={[styles.referralCodeText, isDark && { color: '#60A5FA' }]}>{currentUser.referralCode}</Text>
             <TouchableOpacity style={styles.copyReferralBtn} onPress={shareReferralCode}>
               <Text style={styles.copyReferralBtnText}>Share & Copy</Text>
@@ -672,7 +672,7 @@ export default function DashboardScreen({
 
           {showReferralRules && (
             <View style={{ marginTop: 10, gap: 10 }}>
-              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
                 <View style={styles.ruleStepNumberContainer}><Text style={styles.ruleStepNumber}>1</Text></View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Share Invite Code</Text>
@@ -680,7 +680,7 @@ export default function DashboardScreen({
                 </View>
               </View>
 
-              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
                 <View style={[styles.ruleStepNumberContainer, { backgroundColor: '#C084FC' }]}><Text style={styles.ruleStepNumber}>2</Text></View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Friend Registers</Text>
@@ -688,7 +688,7 @@ export default function DashboardScreen({
                 </View>
               </View>
 
-              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
                 <View style={[styles.ruleStepNumberContainer, { backgroundColor: '#FBBF24' }]}><Text style={styles.ruleStepNumber}>3</Text></View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Complete First Mock Test</Text>
@@ -696,7 +696,7 @@ export default function DashboardScreen({
                 </View>
               </View>
 
-              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+              <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
                 <View style={[styles.ruleStepNumberContainer, { backgroundColor: '#34D399' }]}><Text style={styles.ruleStepNumber}>4</Text></View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Both Receive Coins</Text>
@@ -729,7 +729,7 @@ export default function DashboardScreen({
 
             if (referredFriendsList.length === 0) {
               return (
-                <View style={{ marginTop: 10, padding: 16, alignItems: 'center', backgroundColor: isDark ? '#0F172A' : '#F9FAFB', borderRadius: 8 }}>
+                <View style={{ marginTop: 10, padding: 16, alignItems: 'center', backgroundColor: isDark ? '#0B1329' : '#F9FAFB', borderRadius: 8 }}>
                   <Text style={{ fontSize: 11, color: isDark ? '#94A3B8' : '#6B7280', fontStyle: 'italic' }}>
                     You haven't referred any candidates yet.
                   </Text>
@@ -743,7 +743,7 @@ export default function DashboardScreen({
                   const hasCompletedTest = friend.testSessions && friend.testSessions.length > 0;
                   
                   return (
-                    <View key={friend.id} style={[styles.friendTrackerCard, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+                    <View key={friend.id} style={[styles.friendTrackerCard, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text style={[styles.friendNameText, isDark && { color: ThemeColors.dark.text }]}>{friend.name || 'Candidate'}</Text>
                         <Text style={[styles.friendProgressText, { color: hasCompletedTest ? '#10B981' : '#F59E0B' }]}>
@@ -985,7 +985,7 @@ export default function DashboardScreen({
       <View style={[styles.blurOrbRight, isDark && { backgroundColor: 'rgba(99, 102, 241, 0.08)' }]} />
 
       {/* Header Banner */}
-      <View style={[styles.dashHeader, isDark ? { backgroundColor: ThemeColors.dark.headerBg, borderBottomColor: '#1E293B' } : { backgroundColor: '#E0F2FE', borderBottomColor: '#BAE6FD' }]}>
+      <View style={[styles.dashHeader, isDark ? { backgroundColor: ThemeColors.dark.headerBg, borderBottomColor: '#1F2E54' } : { backgroundColor: '#E0F2FE', borderBottomColor: '#BAE6FD' }]}>
         {/* Header Decorative Glows */}
         <View style={styles.headerGlowLeft} />
         <View style={styles.headerGlowRight} />
@@ -1004,7 +1004,7 @@ export default function DashboardScreen({
           </View>
           
           <View style={styles.dashHeaderRight}>
-            <View style={[styles.headerTestBadge, isDark ? { backgroundColor: '#1E293B', borderColor: '#334155' } : { backgroundColor: '#FFFFFF', borderColor: '#BAE6FD' }]}>
+            <View style={[styles.headerTestBadge, isDark ? { backgroundColor: '#16223F', borderColor: '#1F2E54' } : { backgroundColor: '#FFFFFF', borderColor: '#BAE6FD' }]}>
               <BookOpen size={13} color={isDark ? '#60A5FA' : '#0284C7'} />
               <Text style={[styles.headerTestText, isDark ? { color: '#60A5FA' } : { color: '#0284C7' }]}>
                 Tests: {totalTestsGiven}
@@ -1130,13 +1130,13 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   dashHeader: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0B1329',
     paddingHorizontal: 20,
     paddingVertical: 10,
     position: 'relative',
     overflow: 'hidden',
     borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    borderBottomColor: '#1F2E54',
   },
   headerGlowLeft: {
     position: 'absolute',
@@ -1919,8 +1919,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   themeToggleBtnInactiveDark: {
-    backgroundColor: '#0F172A',
-    borderColor: '#334155',
+    backgroundColor: '#0B1329',
+    borderColor: '#1F2E54',
   },
   themeToggleText: {
     fontSize: 12,

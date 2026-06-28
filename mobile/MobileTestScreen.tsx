@@ -787,7 +787,7 @@ export default function MobileTestScreen({
         <View style={[styles.instHeader, isDark && { backgroundColor: ThemeColors.dark.headerBg }]}>
           <Text style={styles.instHeaderTitle}>Instructions Panel</Text>
           <TouchableOpacity 
-            style={[styles.instLangBtn, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]} 
+            style={[styles.instLangBtn, isDark && { backgroundColor: '#16223F', borderColor: '#1F2E54' }]} 
             onPress={() => setLang(lang === 'en' ? 'hi' : 'en')}
           >
             <Globe size={13} color={isDark ? '#94A3B8' : '#4B5563'} />
@@ -890,7 +890,7 @@ export default function MobileTestScreen({
         {/* Footer controls */}
         <View style={[styles.instFooter, isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder }]}>
           <TouchableOpacity 
-            style={[styles.instCancelBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]} 
+            style={[styles.instCancelBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]} 
             onPress={handleCancelInstructions}
           >
             <Text style={[styles.instCancelText, isDark && { color: ThemeColors.dark.text }]}>Cancel</Text>
@@ -946,7 +946,7 @@ export default function MobileTestScreen({
               styles.sectionTab, 
               isDark && { borderRightColor: ThemeColors.dark.border },
               currentSectionIdx === idx && styles.sectionTabActive,
-              currentSectionIdx === idx && isDark && { backgroundColor: '#1E293B', borderBottomColor: '#60A5FA' }
+              currentSectionIdx === idx && isDark && { backgroundColor: '#16223F', borderBottomColor: '#60A5FA' }
             ]}
             onPress={() => {
               setCurrentSectionIdx(idx);
@@ -972,7 +972,7 @@ export default function MobileTestScreen({
             <Text style={[styles.questionIndexText, isDark && { color: '#60A5FA' }]}>QUESTION NO. {currentQuestionIdx + 1}</Text>
             <View style={[
               styles.questionTimerBadge,
-              isDark ? { backgroundColor: '#1E293B', borderColor: '#334155' } : { backgroundColor: '#F3F4F6', borderColor: '#E5E7EB' }
+              isDark ? { backgroundColor: '#16223F', borderColor: '#1F2E54' } : { backgroundColor: '#F3F4F6', borderColor: '#E5E7EB' }
             ]}>
               <Text style={[styles.questionTimerText, isDark ? { color: '#94A3B8' } : { color: '#4B5563' }]}>
                 ⏱ {formatTime(activeResp?.elapsedSeconds || 0)}
@@ -1021,11 +1021,11 @@ export default function MobileTestScreen({
 
       {/* Control Footer */}
       <View style={[styles.footer, isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder }]}>
-        <TouchableOpacity style={[styles.secondaryBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]} onPress={handleMarkForReview}>
+        <TouchableOpacity style={[styles.secondaryBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]} onPress={handleMarkForReview}>
           <Text style={[styles.secondaryBtnText, isDark && { color: ThemeColors.dark.text }]}>Mark Review</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.secondaryBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]} onPress={handleClearResponse}>
+        <TouchableOpacity style={[styles.secondaryBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]} onPress={handleClearResponse}>
           <Text style={[styles.secondaryBtnText, isDark && { color: ThemeColors.dark.text }]}>Clear</Text>
         </TouchableOpacity>
 
@@ -1051,7 +1051,7 @@ export default function MobileTestScreen({
           <View style={[styles.drawerSheet, isDark && { backgroundColor: ThemeColors.dark.card }]}>
             <View style={[styles.drawerHeader, isDark && { borderBottomColor: ThemeColors.dark.border }]}>
               <Text style={[styles.drawerTitle, isDark && { color: ThemeColors.dark.text }]}>TCS iON Question Palette</Text>
-              <TouchableOpacity style={[styles.closeBtn, isDark && { backgroundColor: '#0F172A' }]} onPress={() => setDrawerVisible(false)}>
+              <TouchableOpacity style={[styles.closeBtn, isDark && { backgroundColor: '#0B1329' }]} onPress={() => setDrawerVisible(false)}>
                 <Text style={[styles.closeBtnText, isDark && { color: ThemeColors.dark.text }]}>✕ Close</Text>
               </TouchableOpacity>
             </View>
@@ -1065,7 +1065,7 @@ export default function MobileTestScreen({
 
                 return (
                   <View key={sec.id} style={styles.drawerSecGroup}>
-                    <Text style={[styles.drawerSecName, isDark && { backgroundColor: '#0F172A', color: '#60A5FA' }]}>{sec.name}</Text>
+                    <Text style={[styles.drawerSecName, isDark && { backgroundColor: '#0B1329', color: '#60A5FA' }]}>{sec.name}</Text>
                     <View style={styles.paletteGrid}>
                       {secQs.map((q, qIdx) => {
                         const resp = responses[q.id];
@@ -1164,7 +1164,7 @@ export default function MobileTestScreen({
                   style={[
                     styles.modalButton,
                     btn.style === 'cancel' 
-                      ? [styles.modalButtonCancel, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }] 
+                      ? [styles.modalButtonCancel, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }] 
                       : btn.style === 'destructive' 
                         ? styles.modalButtonDestructive 
                         : styles.modalButtonDefault,

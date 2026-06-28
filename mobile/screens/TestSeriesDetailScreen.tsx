@@ -189,7 +189,7 @@ export default function TestSeriesDetailScreen({
                   <View style={{ gap: 8 }}>
                     {isCompleted && attempt && (
                       <TouchableOpacity
-                        style={[styles.analysisBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
+                        style={[styles.analysisBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
                         onPress={() => onOpenAttemptAnalysis(attempt)}
                       >
                         <Eye size={14} color={isDark ? ThemeColors.dark.text : '#475569'} />
@@ -213,7 +213,7 @@ export default function TestSeriesDetailScreen({
                       <Text style={styles.lockMsgText}>Requires {test.requiredTier}</Text>
                     </View>
                     <TouchableOpacity
-                      style={[styles.unlockBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
+                      style={[styles.unlockBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
                       onPress={() => handleUnlockWithCoins(test.title, test.requiredTier)}
                     >
                       <Coins size={14} color="#D97706" />

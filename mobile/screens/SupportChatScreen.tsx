@@ -83,7 +83,7 @@ export default function SupportChatScreen({
           styles.messageBubble,
           isMe 
             ? [styles.messageBubbleRight, isDark && { backgroundColor: '#2563EB' }] 
-            : [styles.messageBubbleLeft, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]
+            : [styles.messageBubbleLeft, isDark && { backgroundColor: '#16223F', borderColor: '#1F2E54' }]
         ]}>
           <Text style={[
             styles.messageText,

@@ -349,7 +349,7 @@ export default function AnalysisScreen({
                   styles.categoryPill, 
                   selectedCategory === cat.id ? styles.categoryPillSelected : styles.categoryPillUnselected,
                   isDark && selectedCategory === cat.id && { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
-                  isDark && selectedCategory !== cat.id && { backgroundColor: '#1E293B', borderColor: '#334155' }
+                  isDark && selectedCategory !== cat.id && { backgroundColor: '#16223F', borderColor: '#1F2E54' }
                 ]}
                 onPress={() => setSelectedCategory(cat.id as any)}
               >
@@ -380,7 +380,7 @@ export default function AnalysisScreen({
                   const isUnattempted = selectedIdx === null;
 
                   let circleStyle: any = isDark 
-                    ? [styles.circleUnattempted, { backgroundColor: '#0F172A', borderColor: '#334155' }] 
+                    ? [styles.circleUnattempted, { backgroundColor: '#0B1329', borderColor: '#1F2E54' }] 
                     : styles.circleUnattempted;
                   let textStyle: any = isDark 
                     ? [styles.circleTextUnattempted, { color: ThemeColors.dark.textMuted }] 
@@ -426,7 +426,7 @@ export default function AnalysisScreen({
             </Text>
           </View>
           <TouchableOpacity
-            style={[styles.langBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
+            style={[styles.langBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
             onPress={() => setLang(lang === 'en' ? 'hi' : 'en')}
           >
             <Globe size={14} color={isDark ? '#60A5FA' : '#2563EB'} />
@@ -494,7 +494,7 @@ export default function AnalysisScreen({
                 </View>
 
                 {/* Question individual vs average time stats */}
-                <View style={[styles.timeSpentRow, isDark && { backgroundColor: '#0F172A', borderColor: ThemeColors.dark.border }]}>
+                <View style={[styles.timeSpentRow, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
                   <View style={styles.timeSpentItem}>
                     <Text style={[styles.timeSpentLabel, isDark && { color: ThemeColors.dark.textMuted }]}>My Time:</Text>
                     <Text style={[styles.timeSpentVal, isDark && { color: ThemeColors.dark.text }]}>{userTime}s</Text>
@@ -520,7 +520,7 @@ export default function AnalysisScreen({
                       ? [styles.optItem, styles.optCorrect, isDark && { backgroundColor: '#064E3B', borderColor: '#059669' }] 
                       : (isSelectedOpt && !isCorrectOpt) 
                       ? [styles.optItem, styles.optIncorrect, isDark && { backgroundColor: '#7F1D1D', borderColor: '#DC2626' }] 
-                      : [styles.optItem, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }];
+                      : [styles.optItem, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }];
 
                     const dotStyle: any = isCorrectOpt 
                       ? [styles.optDot, { backgroundColor: '#10B981', borderColor: '#10B981' }] 
@@ -541,7 +541,7 @@ export default function AnalysisScreen({
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => toggleExplanation(idx)}
-                  style={[styles.explanationBox, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
+                  style={[styles.explanationBox, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
                 >
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Text style={[styles.explanationTitle, isDark && { color: ThemeColors.dark.text }, { marginBottom: 0 }]}>Explanation:</Text>

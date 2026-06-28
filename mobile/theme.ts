@@ -17,21 +17,21 @@ export const ThemeColors = {
     cardLight: '#F9FAFB',
   },
   dark: {
-    bg: '#0F172A',          // Slate 900
-    card: '#1E293B',         // Slate 800
+    bg: '#0B1329',          // Rich midnight dark navy (matches loader!)
+    card: '#16223F',         // Slightly lighter navy for cards
     text: '#F8FAFC',         // Slate 50
     textMuted: '#94A3B8',    // Slate 400
-    border: '#334155',       // Slate 700
-    headerBg: '#020617',     // Slate 950
+    border: '#1F2E54',       // Cohesive navy border
+    headerBg: '#080E1E',     // Deeper header navy
     headerText: '#F8FAFC',   // Slate 50
-    primary: '#3B82F6',      // Blue 500
-    primaryLight: '#1E293B', // Slate 800
-    inputBg: '#0F172A',      // Slate 900
-    inputBorder: '#475569',  // Slate 600
-    bottomNavBg: '#1E293B',  // Slate 800
-    bottomNavBorder: '#334155', // Slate 700
+    primary: '#38BDF8',      // Bright sky blue accent for dark mode readability
+    primaryLight: '#16223F', // Card matching accent
+    inputBg: '#080E1E',      // Deeper navy inputs
+    inputBorder: '#2E3F6F',  // Styled input borders
+    bottomNavBg: '#080E1E',  // matching navy bottom nav
+    bottomNavBorder: '#1F2E54', // Navy border
     textInverse: '#FFFFFF',
-    cardLight: '#1E293B',
+    cardLight: '#16223F',
   }
 };
 
