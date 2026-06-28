@@ -85,6 +85,25 @@ function translateLatexToUnicode(latex: string): string {
   // Strip trailing braces
   clean = clean.replace(/{(.*?)}/g, '$1');
   
+  // Sum, Product, Integral
+  clean = clean.replace(/\\+sum/g, '∑');
+  clean = clean.replace(/\\+prod/g, '∏');
+  clean = clean.replace(/\\+int/g, '∫');
+  
+  // Overline (bar notation)
+  clean = clean.replace(/\\+overline\s*{(.*?)}/g, '$1̄');
+  clean = clean.replace(/\\+bar\s*{(.*?)}/g, '$1̄');
+  
+  // Text mode, mathrm, rm - strip the command, keep the text
+  clean = clean.replace(/\\+(?:text|rm|mathrm|mathbf|textbf)\s*{(.*?)}/g, '$1');
+  
+  // Left/Right delimiters (just strip them, keep the bracket)
+  clean = clean.replace(/\\+left\s*/g, '');
+  clean = clean.replace(/\\+right\s*/g, '');
+  
+  // Currency symbols
+  clean = clean.replace(/\\+rupee/g, '₹');
+  
   // Remove loose LaTeX escape backslashes
   clean = clean.replace(/\\/g, '');
   
