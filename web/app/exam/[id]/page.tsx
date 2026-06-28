@@ -356,9 +356,11 @@ function TcsIonEngine({ testId }: { testId: string }) {
   }, [state.isExamSubmitted, state.score, currentUser, addAttempt, testId, attemptSaved, state.responses, state.session, state.timeRemaining, state.violationsCount]);
 
   // Compute a safe activeQuestionId for MathJax hook at the top level
-  const activeQuestionId = (state.session && state.session.sections && state.session.sections[state.currentSectionIndex])
-    ? state.session.questions
-        .filter((q) => q.sectionId === state.session.sections[state.currentSectionIndex].id)
+  const tempSession = state.session;
+  const tempSection = tempSession?.sections?.[state.currentSectionIndex];
+  const activeQuestionId = (tempSession && tempSection)
+    ? tempSession.questions
+        .filter((q) => q.sectionId === tempSection.id)
         .sort((a, b) => a.orderIndex - b.orderIndex)[state.currentQuestionIndex]?.id
     : null;
 
