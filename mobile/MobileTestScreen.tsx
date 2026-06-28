@@ -219,24 +219,51 @@ export default function MobileTestScreen({
         const posMark = isRRB ? 1 : 2;
         const negMark = isRRB ? 0.33 : 0.5;
 
-        secs = [{ id: 'sec_paper1', name: 'Mock Test Questions', orderIndex: 0, positiveMark: posMark, negativeMark: negMark }];
-        list = res.questions.map((q: any, idx: number) => ({
-          id: q.id || `q_custom_${idx}`,
-          sectionId: 'sec_paper1',
-          questionType: 'mcq',
-          orderIndex: idx,
-          correctOptionIndex: q.correctIndex !== undefined ? q.correctIndex : q.correctOptionIndex || 0,
-          content: {
-            en: {
-              questionText: q.textEn || q.content?.en?.questionText || '',
-              options: q.optionsEn || q.content?.en?.options || []
-            },
-            hi: {
-              questionText: q.textHi || q.content?.hi?.questionText || '',
-              options: q.optionsHi || q.content?.hi?.options || []
-            }
+        // Dynamically build sections based on unique question section fields
+        const sectionNames: string[] = [];
+        res.questions.forEach((q: any) => {
+          const sec = q.section || "General Studies";
+          if (!sectionNames.includes(sec)) {
+            sectionNames.push(sec);
           }
+        });
+
+        secs = sectionNames.map((name, idx) => ({
+          id: `sec_custom_${idx}`,
+          name,
+          orderIndex: idx,
+          positiveMark: posMark,
+          negativeMark: negMark
         }));
+
+        const sectionCounters: Record<string, number> = {};
+        sectionNames.forEach(name => {
+          sectionCounters[name] = 0;
+        });
+
+        list = res.questions.map((q: any, idx: number) => {
+          const secName = q.section || "General Studies";
+          const secId = `sec_custom_${sectionNames.indexOf(secName)}`;
+          const qOrder = sectionCounters[secName]++;
+
+          return {
+            id: q.id || `q_custom_${idx}`,
+            sectionId: secId,
+            questionType: 'mcq',
+            orderIndex: qOrder,
+            correctOptionIndex: q.correctIndex !== undefined ? q.correctIndex : q.correctOptionIndex || 0,
+            content: {
+              en: {
+                questionText: q.textEn || q.content?.en?.questionText || '',
+                options: q.optionsEn || q.content?.en?.options || []
+              },
+              hi: {
+                questionText: q.textHi || q.content?.hi?.questionText || '',
+                options: q.optionsHi || q.content?.hi?.options || []
+              }
+            }
+          };
+        });
       } else {
         // Fallback static question bank mirroring useTestEngine seeds
         if (testId.includes('ssc')) {

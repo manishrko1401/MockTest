@@ -62,7 +62,7 @@ export const EXPLANATIONS: Record<string, { en: string; hi: string }> = {
 export default function ExamSolutionAnalysisPage() {
   const params = useParams();
   const testId = (params?.id as string) || "ssc_cgl_tier1";
-  const { currentUser, theme, toggleTheme, toggleBookmark, language, setLanguage, reportQuestion } = useAuth();
+  const { currentUser, theme, toggleTheme, toggleBookmark, language, setLanguage, reportQuestion, examCatalog } = useAuth();
   const router = useRouter();
 
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
@@ -75,6 +75,8 @@ export default function ExamSolutionAnalysisPage() {
   const [reportingError, setReportingError] = useState('');
   const [reportingSuccess, setReportingSuccess] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [customQs, setCustomQs] = useState<any[] | null>(null);
+  const [loadingCustomQs, setLoadingCustomQs] = useState(true);
   const t = TRANSLATIONS[lang];
 
   // Sync selector language with auth context
@@ -99,7 +101,29 @@ export default function ExamSolutionAnalysisPage() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    const fetchCustomQuestions = async () => {
+      try {
+        const res = await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get-custom-questions',
+            data: { testId }
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.questions) {
+          setCustomQs(data.questions);
+        }
+      } catch (err) {
+        console.error("Error fetching custom questions:", err);
+      } finally {
+        setLoadingCustomQs(false);
+      }
+    };
+    fetchCustomQuestions();
+  }, [testId]);
 
   // Initialize to latest attempt index once attempts load
   useEffect(() => {
@@ -108,7 +132,7 @@ export default function ExamSolutionAnalysisPage() {
     }
   }, [attempts.length]);
 
-  if (!mounted) {
+  if (!mounted || loadingCustomQs) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 font-sans">
         <div className="text-center">
@@ -159,7 +183,7 @@ export default function ExamSolutionAnalysisPage() {
   }
 
   // Generate the exam session questions list
-  const examSession = generateExamSession(testId);
+  const examSession = generateExamSession(testId, examCatalog, customQs);
   const questions = examSession.questions;
 
   // Reconstruct deterministic student responses based on accuracy & score using user+session ID seed

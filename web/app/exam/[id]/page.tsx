@@ -53,16 +53,38 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
     const positiveMark = id.includes('rrb') ? 1 : 2;
     const negativeMark = id.includes('rrb') ? 0.33 : 0.5;
 
-    sections = [
-      { id: "sec_paper1", name: "Mock Test Questions", orderIndex: 0, positiveMark, negativeMark }
-    ];
+    // Dynamically build sections based on unique question section fields
+    const sectionNames: string[] = [];
+    customQs.forEach((item: any) => {
+      const sec = item.section || "General Studies";
+      if (!sectionNames.includes(sec)) {
+        sectionNames.push(sec);
+      }
+    });
+
+    sections = sectionNames.map((name, idx) => ({
+      id: `sec_custom_${idx}`,
+      name,
+      orderIndex: idx,
+      positiveMark,
+      negativeMark
+    }));
+
+    const sectionCounters: Record<string, number> = {};
+    sectionNames.forEach(name => {
+      sectionCounters[name] = 0;
+    });
 
     questions = customQs.map((item: any, idx: number) => {
+      const secName = item.section || "General Studies";
+      const secId = `sec_custom_${sectionNames.indexOf(secName)}`;
+      const qOrder = sectionCounters[secName]++;
+
       return {
         id: item.id || `q_custom_${id}_${idx}`,
-        sectionId: "sec_paper1",
+        sectionId: secId,
         questionType: "mcq",
-        orderIndex: idx,
+        orderIndex: qOrder,
         correctOptionIndex: item.correctIndex ?? 0,
         content: {
           en: {

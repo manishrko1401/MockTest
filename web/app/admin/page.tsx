@@ -216,6 +216,25 @@ export default function AdminAnalytics() {
   const [formQuestionsList, setFormQuestionsList] = useState<any[]>([]);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
 
+  // Question sections setup
+  const defaultSections = [
+    "General Studies",
+    "Quantitative Aptitude",
+    "General Intelligence & Reasoning",
+    "English Comprehension",
+    "Mathematics",
+    "General Awareness"
+  ];
+  const [selectedSection, setSelectedSection] = useState('General Studies');
+  const [customSectionName, setCustomSectionName] = useState('');
+
+  const getAvailableSections = () => {
+    const fromForm = formQuestionsList.map(q => q.section).filter(Boolean);
+    const fromParsed = parsedQuestions.map(q => q.section).filter(Boolean);
+    const allSecs = [...defaultSections, ...fromForm, ...fromParsed];
+    return Array.from(new Set(allSecs));
+  };
+
   // Notices states
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeType, setNoticeType] = useState('EXAM DATE');
@@ -457,7 +476,8 @@ export default function AdminAnalytics() {
       const parsedData = JSON.parse(jsonInput);
       const questionsArray = (Array.isArray(parsedData) ? parsedData : [parsedData]).map((q: any) => ({
         ...q,
-        id: q.id || 'q_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 6)
+        id: q.id || 'q_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 6),
+        section: q.section || 'General Studies'
       }));
 
       // Validate core fields mapping to database schema
@@ -533,7 +553,8 @@ export default function AdminAnalytics() {
         optionsHi: ["एम्पीयर", "वोल्ट", "ओम", "वाट"],
         correctIndex: 0,
         explanationEn: "Ampere is the base unit of electric current.",
-        explanationHi: "एम्पीयर विद्युत धारा की मूल इकाई है।"
+        explanationHi: "एम्पीयर विद्युत धारा की मूल इकाई है।",
+        section: "General Studies"
       },
       {
         textEn: "Which planet is known as the Red Planet?",
@@ -542,7 +563,8 @@ export default function AdminAnalytics() {
         optionsHi: ["पृथ्वी", "मंगल", "बृहस्पति", "शनि"],
         correctIndex: 1,
         explanationEn: "Mars is called the Red Planet due to iron oxide on its surface.",
-        explanationHi: "मंगल को उसकी सतह पर आयरन ऑक्साइड के कारण लाल ग्रह कहा जाता है।"
+        explanationHi: "मंगल को उसकी सतह पर आयरन ऑक्साइड के कारण लाल ग्रह कहा जाता है।",
+        section: "General Studies"
       }
     ];
     setJsonInput(JSON.stringify(template, null, 2));
@@ -577,6 +599,12 @@ export default function AdminAnalytics() {
       return;
     }
 
+    const sectionToSave = selectedSection === 'create_new' ? customSectionName.trim() : selectedSection;
+    if (!sectionToSave) {
+      showToast("Please specify a section name");
+      return;
+    }
+
     const newQ = {
       id: editingQuestionIndex !== null && formQuestionsList[editingQuestionIndex]?.id
         ? formQuestionsList[editingQuestionIndex].id
@@ -587,7 +615,8 @@ export default function AdminAnalytics() {
       optionsHi,
       correctIndex: Number(formCorrectIndex),
       explanationEn: formExplanationEn.trim() || undefined,
-      explanationHi: formExplanationHi.trim() || undefined
+      explanationHi: formExplanationHi.trim() || undefined,
+      section: sectionToSave
     };
 
     let updatedList;
@@ -622,6 +651,8 @@ export default function AdminAnalytics() {
     setFormCorrectIndex(0);
     setFormExplanationEn('');
     setFormExplanationHi('');
+    setSelectedSection(sectionToSave);
+    setCustomSectionName('');
   };
 
   const handleClearFormQuestions = () => {
@@ -1200,6 +1231,43 @@ export default function AdminAnalytics() {
                   ) : (
                     <form onSubmit={handleAddFormQuestion} className="space-y-6 text-xs text-slate-300">
                       
+                      {/* Question Section Selector */}
+                      <div className="bg-slate-900/40 p-4 border border-slate-800 rounded-lg space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Question Section</label>
+                            <select
+                              value={selectedSection}
+                              onChange={(e) => {
+                                setSelectedSection(e.target.value);
+                                if (e.target.value !== 'create_new') {
+                                  setCustomSectionName('');
+                                }
+                              }}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-350 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
+                            >
+                              {getAvailableSections().map((sec) => (
+                                <option key={sec} value={sec}>{sec}</option>
+                              ))}
+                              <option value="create_new" className="text-blue-400 font-bold">+ Create New Section...</option>
+                            </select>
+                          </div>
+                          {selectedSection === 'create_new' && (
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Custom Section Name</label>
+                              <input
+                                type="text"
+                                required
+                                value={customSectionName}
+                                onChange={(e) => setCustomSectionName(e.target.value)}
+                                placeholder="Enter custom section name..."
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium animate-fadeIn"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       {/* Bilingual Questions Input Grid */}
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -1400,6 +1468,8 @@ export default function AdminAnalytics() {
                               setFormCorrectIndex(0);
                               setFormExplanationEn('');
                               setFormExplanationHi('');
+                              setSelectedSection('General Studies');
+                              setCustomSectionName('');
                               showToast("Edit cancelled.");
                             }}
                             className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-350 font-bold py-2.5 px-6 rounded-lg text-xs active:scale-95 transition cursor-pointer"
@@ -1484,6 +1554,11 @@ export default function AdminAnalytics() {
                             {/* Question Header */}
                             <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-slate-500 pb-2 border-b border-slate-800/60">
                               <span>Question No. {previewQuestionIndex + 1}</span>
+                              {activeQ.section && (
+                                <span className="text-yellow-500 font-extrabold px-1.5 py-0.5 bg-slate-900 border border-slate-800 rounded">
+                                  Section: {activeQ.section}
+                                </span>
+                              )}
                               <span className="text-blue-400 font-extrabold">MCQ PREVIEW</span>
                             </div>
 
@@ -1560,6 +1635,16 @@ export default function AdminAnalytics() {
                                       setFormCorrectIndex(Number(q.correctIndex) || 0);
                                       setFormExplanationEn(q.explanationEn || '');
                                       setFormExplanationHi(q.explanationHi || '');
+
+                                      const sectionName = q.section || 'General Studies';
+                                      if (defaultSections.includes(sectionName)) {
+                                        setSelectedSection(sectionName);
+                                        setCustomSectionName('');
+                                      } else {
+                                        setSelectedSection('create_new');
+                                        setCustomSectionName(sectionName);
+                                      }
+
                                       showToast(`Question #${previewQuestionIndex + 1} loaded into form builder.`);
                                     }}
                                     className="flex items-center gap-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition active:scale-95"
