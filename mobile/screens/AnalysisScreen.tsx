@@ -5,12 +5,12 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Modal,
   TextInput,
   Alert,
   Dimensions
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   Check,
@@ -327,7 +327,9 @@ export default function AnalysisScreen({
             </View>
             <View style={[styles.divider, isDark && { backgroundColor: ThemeColors.dark.border }]} />
             <View style={styles.scoreBlock}>
-              <Text style={[styles.scoreNum, isDark && { color: '#60A5FA' }]}>{Math.round(activeAttempt.durationSeconds / 60)}m</Text>
+              <Text style={[styles.scoreNum, isDark && { color: '#60A5FA' }]}>
+                {Math.floor(activeAttempt.durationSeconds / 60)}m {activeAttempt.durationSeconds % 60}s
+              </Text>
               <Text style={[styles.scoreLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Duration</Text>
             </View>
           </View>

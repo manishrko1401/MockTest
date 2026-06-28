@@ -5,7 +5,6 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Modal,
   Dimensions,
   FlatList,
@@ -14,6 +13,7 @@ import {
   AppState,
   ActivityIndicator
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Globe, Award, AlertCircle, Menu, Eye } from 'lucide-react-native';
 import { ApiClient } from './api';
 import { ThemeColors } from './theme';
@@ -57,6 +57,33 @@ interface MobileSection {
   negativeMark: number;
 }
 
+const instructionTexts = {
+  en: {
+    title: "Please read the instructions carefully",
+    general: "General Instructions:",
+    gen1: "1. The clock will be set at the server. The countdown timer in the top right corner of screen will display the remaining time available for you to complete the examination.",
+    gen2: "2. The Question Palette displayed on the right side of screen will show the status of each question using one of the 5 symbols.",
+    gen3: "3. You can click on the character '>' arrow to collapse the question palette to maximize the question viewing area.",
+    answering: "Navigating to a Question:",
+    ans1: "4. To answer a question, select the radio button of one of the options and click 'Save & Next'.",
+    ans2: "5. To change your answer, click on the 'Clear Response' button to reset the selection.",
+    disclaimer: "I have read and understood all the instructions. All computer hardware allotted to me is in proper working condition. I agree that in case of any cheating or tab switching, the exam will be auto-submitted.",
+    btn: "I am ready to begin"
+  },
+  hi: {
+    title: "कृपया निर्देशों को ध्यान से पढ़ें",
+    general: "सामान्य निर्देश:",
+    gen1: "1. घड़ी सर्वर पर परीक्षा घड़ी के रूप में सेट की जाएगी। स्क्रीन के शीर्ष दाएं कोने में उलटी गिनती घड़ी आपके द्वारा परीक्षा पूरी करने के लिए उपलब्ध शेष समय को प्रदर्शित करेगी।",
+    gen2: "2. स्क्रीन के दाईं ओर प्रदर्शित प्रश्न पैलेट 5 प्रतीकों में से किसी एक का उपयोग करके प्रत्येक प्रश्न की स्थिति को दर्शाएगा।",
+    gen3: "3. प्रश्न देखने के क्षेत्र को अधिकतम करने के लिए आप प्रश्न पैलेट को बंद करने के लिए '>' तीर पर क्लिक कर सकते हैं।",
+    answering: "प्रश्न पर नेविगेट करना:",
+    ans1: "4. किसी प्रश्न का उत्तर देने के लिए, विकल्पों में से किसी एक को चुनें और 'Save & Next' पर क्लिक करें।",
+    ans2: "5. अपना उत्तर बदलने के लिए, चयन को रीसेट करने के लिए 'Clear Response' बटन पर क्लिक करें।",
+    disclaimer: "मैंने सभी निर्देशों को पढ़ और समझ लिया है। मुझे आवंटित सभी कंप्यूटर हार्डवेयर उचित कार्यशील स्थिति में हैं। मैं सहमत हूं कि किसी भी नकल या टैब स्विचिंग के मामले में, परीक्षा स्वतः सबमिट हो जाएगी।",
+    btn: "मैं तैयार हूँ (I am ready to begin)"
+  }
+};
+
 export default function MobileTestScreen({
   currentUser,
   testId,
@@ -74,10 +101,14 @@ export default function MobileTestScreen({
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0); // Index within current section
 
   const [timeLeft, setTimeLeft] = useState(3600); // 60 mins default
-  const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [violationsCount, setViolationsCount] = useState(0);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
+  const [agreed, setAgreed] = useState(false);
+  const activeQuestionIdRef = useRef<string | null>(null);
+  const isExitingRef = useRef(false);
 
   // Modern custom modal state
   const [modalConfig, setModalConfig] = useState<{
@@ -136,9 +167,9 @@ export default function MobileTestScreen({
     };
   }, []);
 
-  // Initialize Exam Session & Questions
   useEffect(() => {
     const loadExamData = async () => {
+      if (isExitingRef.current) return;
       setLoading(true);
       setLoadingText('Syncing sitting session...');
       
@@ -298,6 +329,7 @@ export default function MobileTestScreen({
               respDict[qId].selectedOptionIndex = val.selectedOptionIndex;
               respDict[qId].tempOptionIndex = val.selectedOptionIndex;
               respDict[qId].state = val.selectedOptionIndex !== null ? 3 : 2;
+              respDict[qId].elapsedSeconds = val.elapsedSeconds ?? 0;
             }
           });
         }
@@ -314,6 +346,7 @@ export default function MobileTestScreen({
         }
       }
 
+      if (isExitingRef.current) return;
       setResponses(respDict);
       setLoading(false);
     };
@@ -334,6 +367,21 @@ export default function MobileTestScreen({
         }
         return prev - 1;
       });
+
+      const qId = activeQuestionIdRef.current;
+      if (qId) {
+        setResponses((prev) => {
+          const currentResp = prev[qId];
+          if (!currentResp) return prev;
+          return {
+            ...prev,
+            [qId]: {
+              ...currentResp,
+              elapsedSeconds: (currentResp.elapsedSeconds || 0) + 1
+            }
+          };
+        });
+      }
     }, 1000);
 
     return () => clearInterval(interval);
@@ -358,6 +406,15 @@ export default function MobileTestScreen({
     : [];
 
   const activeQuestion = sectionQuestions[currentQuestionIdx];
+
+  // Sync activeQuestion.id with the ref to avoid stale closures in timer interval
+  useEffect(() => {
+    if (activeQuestion) {
+      activeQuestionIdRef.current = activeQuestion.id;
+    } else {
+      activeQuestionIdRef.current = null;
+    }
+  }, [activeQuestion?.id]);
 
   const formatTime = (sec: number) => {
     const h = Math.floor(sec / 3600);
@@ -515,6 +572,18 @@ export default function MobileTestScreen({
     });
   };
 
+  const handleCancelInstructions = async () => {
+    isExitingRef.current = true;
+    setLoading(true);
+    setLoadingText('Cancelling exam sitting...');
+    try {
+      await ApiClient.clearOngoingSession(currentUser.id, testId);
+    } catch (err) {
+      console.error("Failed to clear ongoing session:", err);
+    }
+    onBack();
+  };
+
   const handlePauseAndExit = async () => {
     setIsTimerRunning(false);
     setModalConfig({
@@ -534,8 +603,10 @@ export default function MobileTestScreen({
         {
           text: 'Back to Home Screen',
           onPress: async () => {
+            isExitingRef.current = true;
             setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
             setLoading(true);
+            setLoadingText('Saving session progress...');
             await saveOngoingSessionState();
             onBack();
           },
@@ -685,6 +756,164 @@ export default function MobileTestScreen({
   const options = questionContent?.options || [];
   const activeResp = activeQuestion ? responses[activeQuestion.id] : null;
 
+  if (showInstructions) {
+    const t = instructionTexts[lang];
+    
+    let examName = "General Mock Test Assessment";
+    if (testId.includes('ssc')) {
+      examName = "SSC CGL 2026 - Tier-I Combined Graduate Level Exam";
+    } else if (testId.includes('rrb') || testId.includes('railway')) {
+      examName = "RRB NTPC CBT-1 Stage 1 Practice Simulator";
+    } else if (testId.includes('ugc_net')) {
+      examName = "UGC NET Paper-1 Teaching & Research Aptitude";
+    } else if (testId.includes('ctet') || testId.includes('teaching')) {
+      examName = "CTET 2026 Paper-I (Primary Class I-V) Mock Paper";
+    }
+
+    let maxMarks = 0;
+    questions.forEach(q => {
+      const qSec = sections.find(s => s.id === q.sectionId);
+      maxMarks += qSec ? qSec.positiveMark : 2;
+    });
+    if (maxMarks === 0) maxMarks = 200;
+
+    return (
+      <SafeAreaView style={[styles.instContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+        <StatusBar 
+          barStyle={isDark ? 'light-content' : 'dark-content'} 
+          backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
+        />
+        {/* Header */}
+        <View style={[styles.instHeader, isDark && { backgroundColor: ThemeColors.dark.headerBg }]}>
+          <Text style={styles.instHeaderTitle}>Instructions Panel</Text>
+          <TouchableOpacity 
+            style={[styles.instLangBtn, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]} 
+            onPress={() => setLang(lang === 'en' ? 'hi' : 'en')}
+          >
+            <Globe size={13} color={isDark ? '#94A3B8' : '#4B5563'} />
+            <Text style={[styles.instLangText, isDark && { color: '#94A3B8' }]}>
+              {lang === 'en' ? 'Hindi' : 'English'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Content */}
+        <ScrollView contentContainerStyle={styles.instScrollContent}>
+          <Text style={[styles.instExamName, isDark && { color: '#FFF' }]}>{examName}</Text>
+          
+          {/* Metadata Row */}
+          <View style={[styles.instMetaRow, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+            <View style={styles.instMetaItem}>
+              <Text style={[styles.instMetaValue, isDark && { color: '#60A5FA' }]}>{Math.round(totalDuration / 60)} Mins</Text>
+              <Text style={[styles.instMetaLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Duration</Text>
+            </View>
+            <View style={[styles.instMetaDivider, isDark && { backgroundColor: ThemeColors.dark.border }]} />
+            <View style={styles.instMetaItem}>
+              <Text style={[styles.instMetaValue, isDark && { color: '#60A5FA' }]}>{questions.length} Qs</Text>
+              <Text style={[styles.instMetaLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Questions</Text>
+            </View>
+            <View style={[styles.instMetaDivider, isDark && { backgroundColor: ThemeColors.dark.border }]} />
+            <View style={styles.instMetaItem}>
+              <Text style={[styles.instMetaValue, isDark && { color: '#60A5FA' }]}>{maxMarks} Marks</Text>
+              <Text style={[styles.instMetaLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Max Marks</Text>
+            </View>
+          </View>
+
+          {/* Instructions Box */}
+          <View style={[styles.instTextBox, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+            <Text style={[styles.instTextTitle, isDark && { color: '#60A5FA' }]}>{t.title}</Text>
+            
+            <Text style={[styles.instTextHeading, isDark && { color: ThemeColors.dark.text }]}>{t.general}</Text>
+            <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.gen1}</Text>
+            <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.gen2}</Text>
+            <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.gen3}</Text>
+
+            <Text style={[styles.instTextHeading, { marginTop: 14 }, isDark && { color: ThemeColors.dark.text }]}>{t.answering}</Text>
+            <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.ans1}</Text>
+            <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.ans2}</Text>
+          </View>
+
+          {/* Default Language Selector */}
+          <View style={[styles.instLangSelectCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+            <View style={{ flex: 1, marginRight: 10 }}>
+              <Text style={[styles.instLangSelectTitle, isDark && { color: '#FFF' }]}>
+                {lang === 'hi' ? 'अपनी डिफ़ॉल्ट परीक्षा भाषा चुनें' : 'Choose your default exam language'}
+              </Text>
+              <Text style={[styles.instLangSelectSub, isDark && { color: ThemeColors.dark.textMuted }]}>
+                {lang === 'hi' ? 'कृपया प्रश्नों को हल करने के लिए डिफ़ॉल्ट भाषा चुनें' : 'Select the default language for viewing questions'}
+              </Text>
+            </View>
+            <View style={styles.instSelectorContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.langSelectorOption,
+                  lang === 'en' && styles.langSelectorOptionActive,
+                  isDark && { borderColor: ThemeColors.dark.border }
+                ]}
+                onPress={() => setLang('en')}
+              >
+                <Text style={[styles.langSelectorText, lang === 'en' && styles.langSelectorTextActive, isDark && lang !== 'en' && { color: ThemeColors.dark.textMuted }]}>English</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.langSelectorOption,
+                  lang === 'hi' && styles.langSelectorOptionActive,
+                  isDark && { borderColor: ThemeColors.dark.border }
+                ]}
+                onPress={() => setLang('hi')}
+              >
+                <Text style={[styles.langSelectorText, lang === 'hi' && styles.langSelectorTextActive, isDark && lang !== 'hi' && { color: ThemeColors.dark.textMuted }]}>हिंदी</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Disclaimer Checkbox */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.checkboxContainer}
+            onPress={() => setAgreed(!agreed)}
+          >
+            <View style={[
+              styles.checkbox,
+              agreed && styles.checkboxChecked,
+              isDark && { borderColor: ThemeColors.dark.border },
+              agreed && isDark && { backgroundColor: '#10B981', borderColor: '#10B981' }
+            ]}>
+              {agreed && <Text style={styles.checkboxTick}>✓</Text>}
+            </View>
+            <Text style={[styles.checkboxLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
+              {t.disclaimer}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* Footer controls */}
+        <View style={[styles.instFooter, isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder }]}>
+          <TouchableOpacity 
+            style={[styles.instCancelBtn, isDark && { backgroundColor: '#0F172A', borderColor: '#334155' }]} 
+            onPress={handleCancelInstructions}
+          >
+            <Text style={[styles.instCancelText, isDark && { color: ThemeColors.dark.text }]}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            disabled={!agreed}
+            style={[
+              styles.instStartBtn, 
+              !agreed && styles.instStartBtnDisabled,
+              agreed && isDark && { shadowColor: '#10B981' }
+            ]} 
+            onPress={() => {
+              setShowInstructions(false);
+              setIsTimerRunning(true);
+            }}
+          >
+            <Text style={styles.instStartText}>{t.btn}</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
       <StatusBar 
@@ -739,7 +968,17 @@ export default function MobileTestScreen({
       {/* Question Panel */}
       <ScrollView style={[styles.questionContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
         <View style={styles.questionMetaRow}>
-          <Text style={[styles.questionIndexText, isDark && { color: '#60A5FA' }]}>QUESTION NO. {currentQuestionIdx + 1}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={[styles.questionIndexText, isDark && { color: '#60A5FA' }]}>QUESTION NO. {currentQuestionIdx + 1}</Text>
+            <View style={[
+              styles.questionTimerBadge,
+              isDark ? { backgroundColor: '#1E293B', borderColor: '#334155' } : { backgroundColor: '#F3F4F6', borderColor: '#E5E7EB' }
+            ]}>
+              <Text style={[styles.questionTimerText, isDark ? { color: '#94A3B8' } : { color: '#4B5563' }]}>
+                ⏱ {formatTime(activeResp?.elapsedSeconds || 0)}
+              </Text>
+            </View>
+          </View>
           {violationsCount > 0 && (
             <Text style={styles.violationWarning}>Violations: {violationsCount}/3</Text>
           )}
@@ -1378,5 +1617,243 @@ const styles = StyleSheet.create({
   },
   modalButtonTextCancel: {
     color: '#4B5563',
+  },
+  instContainer: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  instHeader: {
+    height: 56,
+    backgroundColor: '#0F2942',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  instHeaderTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  instLangBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+  },
+  instLangText: {
+    fontSize: 11,
+    color: '#4B5563',
+    fontWeight: 'bold',
+  },
+  instScrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  instExamName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#0F2942',
+    textAlign: 'center',
+    marginBottom: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  instMetaRow: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingVertical: 14,
+    marginBottom: 16,
+  },
+  instMetaItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  instMetaValue: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#2563EB',
+  },
+  instMetaLabel: {
+    fontSize: 10,
+    color: '#6B7280',
+    marginTop: 4,
+    fontWeight: '600',
+  },
+  instMetaDivider: {
+    width: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  instTextBox: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 16,
+    marginBottom: 16,
+  },
+  instTextTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#2563EB',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+    paddingBottom: 8,
+    marginBottom: 10,
+  },
+  instTextHeading: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 6,
+  },
+  instTextBody: {
+    fontSize: 11,
+    color: '#4B5563',
+    lineHeight: 16,
+    marginBottom: 8,
+    paddingLeft: 4,
+  },
+  instLangSelectCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  instLangSelectTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#1F2937',
+  },
+  instLangSelectSub: {
+    fontSize: 9,
+    color: '#6B7280',
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  instSelectorContainer: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  langSelectorOption: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#F9FAFB',
+    borderRightWidth: 1,
+    borderRightColor: '#E5E7EB',
+  },
+  langSelectorOptionActive: {
+    backgroundColor: '#3B82F6',
+  },
+  langSelectorText: {
+    fontSize: 11,
+    color: '#4B5563',
+    fontWeight: 'bold',
+  },
+  langSelectorTextActive: {
+    color: '#FFF',
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginVertical: 20,
+    paddingHorizontal: 4,
+  },
+  checkbox: {
+    height: 18,
+    width: 18,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: '#9CA3AF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
+  },
+  checkboxTick: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 12,
+    color: '#4B5563',
+    lineHeight: 18,
+  },
+  instFooter: {
+    height: 56,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    backgroundColor: '#FFF',
+  },
+  instCancelBtn: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  instCancelText: {
+    fontSize: 12,
+    color: '#4B5563',
+    fontWeight: 'bold',
+  },
+  instStartBtn: {
+    backgroundColor: '#10B981',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    shadowColor: '#10B981',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  instStartBtnDisabled: {
+    backgroundColor: '#D1D5DB',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  instStartText: {
+    fontSize: 12,
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+  questionTimerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  questionTimerText: {
+    fontSize: 10,
+    fontWeight: '600',
+    fontFamily: 'monospace',
   },
 });

@@ -4,9 +4,9 @@ import {
   View,
   ActivityIndicator,
   Text,
-  SafeAreaView,
   StatusBar
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import { ApiClient } from './api';
 import AuthScreen from './screens/AuthScreen';
@@ -15,6 +15,7 @@ import TestSeriesDetailScreen from './screens/TestSeriesDetailScreen';
 import MobileTestScreen from './MobileTestScreen';
 import AnalysisScreen from './screens/AnalysisScreen';
 import SupportChatScreen from './screens/SupportChatScreen';
+import { Trophy } from 'lucide-react-native';
 import { ThemeColors } from './theme';
 
 type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis' | 'support_chat';
@@ -22,6 +23,7 @@ type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis' | '
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('auth');
+  const [previousViewMode, setPreviousViewMode] = useState<ViewMode>('dashboard');
   const [currentUser, setCurrentUser] = useState<any>(null);
   
   // Theme state
@@ -36,6 +38,8 @@ export default function App() {
   const [selectedSeries, setSelectedSeries] = useState<any>(null);
   const [selectedAttempt, setSelectedAttempt] = useState<any>(null);
   const [activeTestId, setActiveTestId] = useState<string>('');
+  const [dashboardTab, setDashboardTab] = useState<'home' | 'tests' | 'notices' | 'profile'>('home');
+  const [dashboardCategoryId, setDashboardCategoryId] = useState<string | null>(null);
 
   // 1. Initial mounting check for saved credentials & bootstrap catalogs
   useEffect(() => {
@@ -148,129 +152,165 @@ export default function App() {
   };
 
   const handleOpenExam = (testId: string) => {
+    setPreviousViewMode(viewMode);
     setActiveTestId(testId);
     setViewMode('exam');
   };
 
   const handleOpenAttemptAnalysis = (attempt: any) => {
+    setPreviousViewMode(viewMode);
     setSelectedAttempt(attempt);
     setViewMode('analysis');
   };
 
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
-        <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={[styles.loadingText, isDark && { color: ThemeColors.dark.text }]}>Connecting to Testbook Server...</Text>
+      <View style={[styles.loadingContainer, isDark ? { backgroundColor: '#0B1329' } : { backgroundColor: '#F8FAFC' }]}>
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={isDark ? "#0B1329" : "#F8FAFC"} />
+        
+        {/* Background Decorative Glow Orbs */}
+        <View style={[styles.glowOrb, { top: -100, left: -100, backgroundColor: isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(186, 230, 253, 0.4)' }]} />
+        <View style={[styles.glowOrb, { bottom: -100, right: -100, backgroundColor: isDark ? 'rgba(99, 102, 241, 0.12)' : 'rgba(221, 214, 254, 0.4)' }]} />
+
+        <View style={styles.loadingContent}>
+          {/* Logo container */}
+          <View style={[styles.logoIconContainer, isDark ? { backgroundColor: '#1E293B', borderColor: '#334155' } : { backgroundColor: '#E0F2FE', borderColor: '#BAE6FD' }]}>
+            <Trophy size={48} color={isDark ? '#38BDF8' : '#2563EB'} />
+          </View>
+
+          <Text style={[styles.appNameText, isDark ? { color: '#FFFFFF' } : { color: '#0F172A' }]}>
+            MockTest <Text style={{ color: '#2563EB' }}>Hub</Text>
+          </Text>
+          <Text style={[styles.appSubText, isDark ? { color: '#94A3B8' } : { color: '#6B7280' }]}>
+            Your Personal CBT Prep Engine
+          </Text>
+
+          {/* Premium custom loading animation indicator */}
+          <View style={styles.spinnerContainer}>
+            <ActivityIndicator size="large" color="#2563EB" />
+          </View>
+
+          <Text style={[styles.loadingStatusText, isDark ? { color: '#64748B' } : { color: '#9CA3AF' }]}>
+            Connecting to secure server...
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
-      <StatusBar 
-        barStyle={isDark ? 'light-content' : 'dark-content'} 
-        backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
-      />
-
-      {viewMode === 'auth' && (
-        <AuthScreen 
-          onLoginSuccess={handleLoginSuccess} 
-          isDark={isDark} 
-          onToggleTheme={handleToggleTheme} 
+    <SafeAreaProvider>
+      <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+        <StatusBar 
+          barStyle={isDark ? 'light-content' : 'dark-content'} 
+          backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
         />
-      )}
 
-      {viewMode === 'dashboard' && currentUser && (
-        <DashboardScreen
-          currentUser={currentUser}
-          notices={notices}
-          examCatalog={examCatalog}
-          usersList={usersList}
-          onLogout={handleLogout}
-          onSelectTestSeries={handleSelectSeries}
-          onOpenAttemptAnalysis={handleOpenAttemptAnalysis}
-          onOpenExam={handleOpenExam}
-          onRefreshUser={refreshUserData}
-          isDark={isDark}
-          onToggleTheme={handleToggleTheme}
-          onOpenSupportChat={() => setViewMode('support_chat')}
-        />
-      )}
+        {viewMode === 'auth' && (
+          <AuthScreen 
+            onLoginSuccess={handleLoginSuccess} 
+            isDark={isDark} 
+            onToggleTheme={handleToggleTheme} 
+          />
+        )}
 
-      {viewMode === 'series_detail' && currentUser && selectedSeries && (
-        <TestSeriesDetailScreen
-          currentUser={currentUser}
-          series={selectedSeries}
-          onBack={() => setViewMode('dashboard')}
-          onOpenExam={handleOpenExam}
-          onRefreshUser={refreshUserData}
-          onOpenAttemptAnalysis={handleOpenAttemptAnalysis}
-          isDark={isDark}
-        />
-      )}
+        {viewMode === 'dashboard' && currentUser && (
+          <DashboardScreen
+            currentUser={currentUser}
+            notices={notices}
+            examCatalog={examCatalog}
+            usersList={usersList}
+            onLogout={handleLogout}
+            onSelectTestSeries={handleSelectSeries}
+            onOpenAttemptAnalysis={handleOpenAttemptAnalysis}
+            onOpenExam={handleOpenExam}
+            onRefreshUser={refreshUserData}
+            isDark={isDark}
+            onToggleTheme={handleToggleTheme}
+            onOpenSupportChat={() => setViewMode('support_chat')}
+            activeTab={dashboardTab}
+            setActiveTab={setDashboardTab}
+            selectedCategoryId={dashboardCategoryId}
+            setSelectedCategoryId={setDashboardCategoryId}
+          />
+        )}
 
-      {viewMode === 'exam' && currentUser && activeTestId && (
-        <MobileTestScreen
-          currentUser={currentUser}
-          testId={activeTestId}
-          examCatalog={examCatalog}
-          onBack={async () => {
-            await refreshUserData(currentUser.id);
-            setViewMode('dashboard');
-          }}
-          onComplete={async (submittedTestId?: string) => {
-            // Keep track of the current sessions before login refresh
-            const existingSessionIds = new Set((currentUser?.testSessions || []).map((s: any) => s.id));
-            
-            // Login once to refresh all user data and get attempts
-            const res = await ApiClient.login(currentUser.email);
-            if (res.success && res.user) {
-              setCurrentUser(res.user);
+        {viewMode === 'series_detail' && currentUser && selectedSeries && (
+          <TestSeriesDetailScreen
+            currentUser={currentUser}
+            series={selectedSeries}
+            onBack={() => setViewMode('dashboard')}
+            onOpenExam={handleOpenExam}
+            onRefreshUser={refreshUserData}
+            onOpenAttemptAnalysis={handleOpenAttemptAnalysis}
+            isDark={isDark}
+          />
+        )}
+
+        {viewMode === 'exam' && currentUser && activeTestId && (
+          <MobileTestScreen
+            currentUser={currentUser}
+            testId={activeTestId}
+            examCatalog={examCatalog}
+            onBack={async () => {
+              await refreshUserData(currentUser.id);
+              setViewMode(previousViewMode);
+            }}
+            onComplete={async (submittedTestId?: string) => {
+              // Keep track of the current sessions before login refresh
+              const existingSessionIds = new Set((currentUser?.testSessions || []).map((s: any) => s.id));
               
-              // Find the new session (the one that is not in the set of pre-existing session IDs)
-              const newSession = res.user.testSessions.find((s: any) => !existingSessionIds.has(s.id));
-              
-              if (newSession) {
-                setSelectedAttempt(newSession);
-                setViewMode('analysis');
-              } else {
-                // Fallback: take the last session matching testId (insertion order puts newest last)
-                const targetTestId = submittedTestId || activeTestId;
-                const testSessions = res.user.testSessions.filter((s: any) => s.testId === targetTestId);
-                if (testSessions.length > 0) {
-                  setSelectedAttempt(testSessions[testSessions.length - 1]);
+              // Login once to refresh all user data and get attempts
+              const res = await ApiClient.login(currentUser.email);
+              if (res.success && res.user) {
+                setCurrentUser(res.user);
+                
+                // Find the new session (the one that is not in the set of pre-existing session IDs)
+                const newSession = res.user.testSessions.find((s: any) => !existingSessionIds.has(s.id));
+                
+                if (newSession) {
+                  setPreviousViewMode(selectedSeries ? 'series_detail' : 'dashboard');
+                  setSelectedAttempt(newSession);
                   setViewMode('analysis');
                 } else {
-                  setViewMode('dashboard');
+                  // Fallback: take the last session matching testId (insertion order puts newest last)
+                  const targetTestId = submittedTestId || activeTestId;
+                  const testSessions = res.user.testSessions.filter((s: any) => s.testId === targetTestId);
+                  if (testSessions.length > 0) {
+                    setPreviousViewMode(selectedSeries ? 'series_detail' : 'dashboard');
+                    setSelectedAttempt(testSessions[testSessions.length - 1]);
+                    setViewMode('analysis');
+                  } else {
+                    setViewMode('dashboard');
+                  }
                 }
+              } else {
+                setViewMode('dashboard');
               }
-            } else {
-              setViewMode('dashboard');
-            }
-          }}
-          isDark={isDark}
-        />
-      )}
+            }}
+            isDark={isDark}
+          />
+        )}
 
-      {viewMode === 'analysis' && currentUser && selectedAttempt && (
-        <AnalysisScreen
-          currentUser={currentUser}
-          attempt={selectedAttempt}
-          onBack={() => setViewMode('dashboard')}
-          onToggleBookmark={handleToggleBookmark}
-          isDark={isDark}
-        />
-      )}
+        {viewMode === 'analysis' && currentUser && selectedAttempt && (
+          <AnalysisScreen
+            currentUser={currentUser}
+            attempt={selectedAttempt}
+            onBack={() => setViewMode(previousViewMode)}
+            onToggleBookmark={handleToggleBookmark}
+            isDark={isDark}
+          />
+        )}
 
-      {viewMode === 'support_chat' && currentUser && (
-        <SupportChatScreen
-          currentUser={currentUser}
-          onBack={() => setViewMode('dashboard')}
-          isDark={isDark}
-        />
-      )}
-    </SafeAreaView>
+        {viewMode === 'support_chat' && currentUser && (
+          <SupportChatScreen
+            currentUser={currentUser}
+            onBack={() => setViewMode('dashboard')}
+            isDark={isDark}
+          />
+        )}
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
@@ -283,12 +323,49 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF',
   },
-  loadingText: {
-    marginTop: 12,
+  glowOrb: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+  },
+  loadingContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  appNameText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  appSubText: {
     fontSize: 14,
-    color: '#3B82F6',
+    marginTop: 6,
+    fontWeight: '500',
+  },
+  spinnerContainer: {
+    marginTop: 40,
+    marginBottom: 20,
+  },
+  loadingStatusText: {
+    fontSize: 12,
     fontWeight: '600',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
 });

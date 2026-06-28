@@ -5,7 +5,6 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   FlatList,
   Alert,
   StatusBar,
@@ -14,6 +13,7 @@ import {
   TextInput,
   Image
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Trophy,
   BookOpen,
@@ -53,6 +53,10 @@ interface DashboardScreenProps {
   isDark?: boolean;
   onToggleTheme?: (dark: boolean) => void;
   onOpenSupportChat: () => void;
+  activeTab: 'home' | 'tests' | 'notices' | 'profile';
+  setActiveTab: (tab: 'home' | 'tests' | 'notices' | 'profile') => void;
+  selectedCategoryId: string | null;
+  setSelectedCategoryId: (id: string | null) => void;
 }
 
 const SUCCESS_STORIES = [
@@ -91,9 +95,13 @@ export default function DashboardScreen({
   onRefreshUser,
   isDark = false,
   onToggleTheme,
-  onOpenSupportChat
+  onOpenSupportChat,
+  activeTab,
+  setActiveTab,
+  selectedCategoryId,
+  setSelectedCategoryId
 }: DashboardScreenProps) {
-  const [activeTab, setActiveTab] = useState<'home' | 'tests' | 'notices' | 'profile'>('home');
+
   const [refreshing, setRefreshing] = useState(false);
 
   // Announcement auto-sliding states & refs
@@ -161,7 +169,7 @@ export default function DashboardScreen({
   const unseenCount = notices.filter(n => n.id && !seenNoticeIds.includes(n.id)).length;
 
   // App states
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
   const [showUpdateProfile, setShowUpdateProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showReferralRules, setShowReferralRules] = useState(false);
@@ -925,9 +933,41 @@ export default function DashboardScreen({
     );
   };
 
-  const totalTestsGiven = (currentUser.testSessions || []).filter(
-    (s: any) => s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'
-  ).length;
+  const totalTestsGiven = (() => {
+    const catalogTestsMap = new Map<string, any>();
+    (examCatalog || []).forEach(cat => {
+      (cat.subCategories || []).forEach((sub: any) => {
+        (sub.tests || []).forEach((t: any) => {
+          catalogTestsMap.set(t.id, t);
+        });
+      });
+    });
+
+    return (currentUser.testSessions || []).filter((s: any) => {
+      if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') {
+        return false;
+      }
+
+      const test = catalogTestsMap.get(s.testId);
+      let totalSec = 3600;
+      if (test && test.durationMinutes) {
+        totalSec = test.durationMinutes * 60;
+      } else {
+        if (s.testId.includes('ssc')) {
+          totalSec = 3600;
+        } else if (s.testId.includes('rrb')) {
+          totalSec = 5400;
+        } else if (s.testId.includes('ctet')) {
+          totalSec = 9000;
+        } else if (s.testId.includes('ugc_net')) {
+          totalSec = s.testId.includes('paper1') ? 3600 : 7200;
+        }
+      }
+
+      const spentSec = s.durationSeconds || 0;
+      return spentSec >= totalSec * 0.75;
+    }).length;
+  })();
 
   return (
     <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
