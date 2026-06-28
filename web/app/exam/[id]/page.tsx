@@ -31,6 +31,37 @@ function decodeHtml(text: string): string {
   return decoded;
 }
 
+// Targeted, memoized component for MathJax rendering to prevent React re-render clashing
+const MathJaxText = React.memo(({ content, className, component: Component = 'span' }: { content: string, className?: string, component?: 'span' | 'div' }) => {
+  const containerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current && typeof window !== 'undefined' && (window as any).MathJax?.typesetPromise) {
+      const MathJax = (window as any).MathJax;
+      try {
+        MathJax.typesetClear([containerRef.current]);
+        MathJax.typesetPromise([containerRef.current]).catch((err: any) => {
+          console.warn("MathJax typeset error:", err);
+        });
+      } catch (e) {
+        MathJax.typesetPromise([containerRef.current]).catch((err: any) => {
+          console.warn("MathJax typeset error:", err);
+        });
+      }
+    }
+  }, [content]);
+
+  return (
+    <Component
+      ref={containerRef as any}
+      className={className}
+      dangerouslySetInnerHTML={{ __html: content }}
+    />
+  );
+});
+MathJaxText.displayName = 'MathJaxText';
+
+
 // ============================================================================
 // DYNAMIC EXAM GENERATOR
 // ============================================================================
@@ -364,18 +395,6 @@ function TcsIonEngine({ testId }: { testId: string }) {
         .sort((a, b) => a.orderIndex - b.orderIndex)[state.currentQuestionIndex]?.id
     : null;
 
-  // Trigger MathJax typesetting on active question change
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (typeof window !== 'undefined' && (window as any).MathJax?.typesetPromise) {
-        (window as any).MathJax.typesetClear?.();
-        (window as any).MathJax.typesetPromise().catch((err: any) => {
-          console.warn("MathJax typesetting failed:", err);
-        });
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [activeQuestionId, state.language]);
 
   if (!state.session) {
     return (
@@ -669,13 +688,12 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
                     {/* Question Text */}
                     <div className="mb-4 text-xs text-slate-900 leading-relaxed font-normal bg-slate-50 p-3.5 border border-slate-200 rounded">
-                      <div
+                      <MathJaxText
+                        component="div"
                         className="markup-content font-sans"
-                        dangerouslySetInnerHTML={{
-                          __html: decodeHtml(questionLang === 'en'
-                            ? currentQuestion.content.en.questionText
-                            : currentQuestion.content.hi.questionText)
-                        }}
+                        content={decodeHtml(questionLang === 'en'
+                          ? currentQuestion.content.en.questionText
+                          : currentQuestion.content.hi.questionText)}
                       />
 
                       {/* Optional Math */}
@@ -723,7 +741,10 @@ function TcsIonEngine({ testId }: { testId: string }) {
                               readOnly
                               className="h-3.5 w-3.5 border-slate-350 text-blue-600 focus:ring-blue-500"
                             />
-                            <span className="flex-1 font-sans" dangerouslySetInnerHTML={{ __html: decodeHtml(optLabel) }} />
+                            <MathJaxText
+                              className="flex-1 font-sans"
+                              content={decodeHtml(optLabel)}
+                            />
                           </label>
                         );
                       })}
@@ -968,13 +989,12 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
                       {/* Render Question Text Based on active Language */}
                       <div className="mb-6 text-sm text-slate-900 leading-relaxed font-normal bg-slate-50 p-4 border border-slate-200 rounded">
-                        <div
+                        <MathJaxText
+                          component="div"
                           className="markup-content font-sans"
-                          dangerouslySetInnerHTML={{
-                            __html: decodeHtml(questionLang === 'en'
-                              ? currentQuestion.content.en.questionText
-                              : currentQuestion.content.hi.questionText)
-                          }}
+                          content={decodeHtml(questionLang === 'en'
+                            ? currentQuestion.content.en.questionText
+                            : currentQuestion.content.hi.questionText)}
                         />
 
                         {/* Optional Math Equation preview */}
@@ -1022,7 +1042,10 @@ function TcsIonEngine({ testId }: { testId: string }) {
                                 readOnly
                                 className="h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500"
                               />
-                              <span className="text-slate-800 text-xs flex-1 font-sans" dangerouslySetInnerHTML={{ __html: decodeHtml(optLabel) }} />
+                              <MathJaxText
+                                className="text-slate-800 text-xs flex-1 font-sans"
+                                content={decodeHtml(optLabel)}
+                              />
                             </label>
                           );
                         })}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth, MockUser, MockTestRecord } from '../../../AuthContext';
 import { generateExamSession } from '../page';
 import { useParams, useRouter } from 'next/navigation';
@@ -39,6 +39,37 @@ function decodeHtml(text: string): string {
   }
   return decoded;
 }
+
+// Targeted, memoized component for MathJax rendering to prevent React re-render clashing
+const MathJaxText = React.memo(({ content, className, component: Component = 'span' }: { content: string, className?: string, component?: 'span' | 'div' }) => {
+  const containerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current && typeof window !== 'undefined' && (window as any).MathJax?.typesetPromise) {
+      const MathJax = (window as any).MathJax;
+      try {
+        MathJax.typesetClear([containerRef.current]);
+        MathJax.typesetPromise([containerRef.current]).catch((err: any) => {
+          console.warn("MathJax typeset error:", err);
+        });
+      } catch (e) {
+        MathJax.typesetPromise([containerRef.current]).catch((err: any) => {
+          console.warn("MathJax typeset error:", err);
+        });
+      }
+    }
+  }, [content]);
+
+  return (
+    <Component
+      ref={containerRef as any}
+      className={className}
+      dangerouslySetInnerHTML={{ __html: content }}
+    />
+  );
+});
+MathJaxText.displayName = 'MathJaxText';
+
 
 // Detailed Bilingual Explanations Dictionary for all questions
 export const EXPLANATIONS: Record<string, { en: string; hi: string }> = {
@@ -154,18 +185,6 @@ export default function ExamSolutionAnalysisPage() {
   const tempQuestions = tempSession?.questions || [];
   const activeQuestionId = tempQuestions[activeQuestionIdx]?.id;
 
-  // Trigger MathJax typesetting on active question change
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (typeof window !== 'undefined' && (window as any).MathJax?.typesetPromise) {
-        (window as any).MathJax.typesetClear?.();
-        (window as any).MathJax.typesetPromise().catch((err: any) => {
-          console.warn("MathJax typesetting failed:", err);
-        });
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [activeQuestionId, language]);
 
   if (!mounted || loadingCustomQs) {
     return (
@@ -573,11 +592,10 @@ export default function ExamSolutionAnalysisPage() {
 
             {/* Question Box */}
             <div className="mb-6 space-y-4">
-              <div 
+              <MathJaxText
+                component="div"
                 className="text-sm font-semibold text-slate-900 dark:text-white leading-relaxed markup-content"
-                dangerouslySetInnerHTML={{
-                  __html: decodeHtml(activeQuestion.content[lang]?.questionText || activeQuestion.content['en']?.questionText || "")
-                }}
+                content={decodeHtml(activeQuestion.content[lang]?.questionText || activeQuestion.content['en']?.questionText || "")}
               />
 
               {activeQuestion.content[lang]?.mathLatex && (
@@ -628,7 +646,7 @@ export default function ExamSolutionAnalysisPage() {
                       }`}>
                         {String.fromCharCode(65 + optIdx)}
                       </span>
-                      <span dangerouslySetInnerHTML={{ __html: decodeHtml(optLabel) }} />
+                      <MathJaxText content={decodeHtml(optLabel)} />
                     </span>
 
                     <div className="flex items-center gap-2">
@@ -654,11 +672,10 @@ export default function ExamSolutionAnalysisPage() {
               <h5 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-2 mb-3.5 flex items-center gap-1.5">
                 <HelpCircle className="h-4 w-4 text-blue-500" /> {language === 'hi' ? 'विस्तृत व्याख्या और अवधारणा' : 'Detailed Explanation & Concept'}
               </h5>
-              <div 
+              <MathJaxText
+                component="div"
                 className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold markup-content"
-                dangerouslySetInnerHTML={{
-                  __html: decodeHtml(activeExplanation[lang] || activeExplanation['en'] || "")
-                }}
+                content={decodeHtml(activeExplanation[lang] || activeExplanation['en'] || "")}
               />
             </div>
 
