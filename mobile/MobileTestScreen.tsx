@@ -1036,10 +1036,7 @@ export default function MobileTestScreen({
                   isSelected && isDark && { borderColor: '#60A5FA', backgroundColor: '#60A5FA' }
                 ]} />
                 <HtmlText
-                  style={[
-                    styles.optionText, 
-                    isSelected && styles.optionTextActive,
-                  ]}
+                  style={styles.optionText}
                   isDark={isDark}
                   html={opt}
                 />

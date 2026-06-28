@@ -110,9 +110,7 @@ function translateLatexToUnicode(latex: string): string {
   return clean;
 }
 
-export const HtmlText: React.FC<HtmlTextProps> = ({ html, style, isDark }) => {
-  if (!html) return null;
-
+function renderHtml(html: string, style: any, isDark: boolean | undefined): React.ReactNode[] {
   // First decode HTML entities recursively to handle double-escaped elements
   let clean = html;
   for (let i = 0; i < 3; i++) {
@@ -201,7 +199,7 @@ export const HtmlText: React.FC<HtmlTextProps> = ({ html, style, isDark }) => {
         .replace(/&there4;/g, '∴');
 
       // Check if text has LaTeX math blocks and translate them
-      const mathRegex = /(\\+[\(\[][\s\S]*?\\+[\)\]]|\$\$?[\s\S]*?\$\$?)/g;
+      const mathRegex = /(\\+[\(\[[\s\S]*?\\+[\)\]]|\$\$?[\s\S]*?\$\$?)/g;
       text = text.replace(mathRegex, (match) => translateLatexToUnicode(match));
 
       if (text) {
@@ -220,9 +218,23 @@ export const HtmlText: React.FC<HtmlTextProps> = ({ html, style, isDark }) => {
     }
   });
 
+  return elements;
+}
+
+// Custom comparison: only re-render when html content or dark mode changes.
+// Ignores style prop changes (e.g. selection highlight) to prevent LaTeX re-parsing flicker.
+function arePropsEqual(prev: HtmlTextProps, next: HtmlTextProps): boolean {
+  return prev.html === next.html && prev.isDark === next.isDark;
+}
+
+const HtmlTextInner: React.FC<HtmlTextProps> = ({ html, style, isDark }) => {
+  if (!html) return null;
+  const elements = renderHtml(html, style, isDark);
   return (
     <Text style={style}>
       {elements}
     </Text>
   );
 };
+
+export const HtmlText = React.memo(HtmlTextInner, arePropsEqual);
