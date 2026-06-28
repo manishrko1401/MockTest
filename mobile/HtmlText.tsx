@@ -274,9 +274,126 @@ function decodeEntities(text: string): string {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Main rendering function – returns an array of React nodes (Text + View)
-// The outer container MUST be a View (not Text) to allow mixing View children.
+// HTML Table renderer
+// Parses <table><tr><td>/<th> structure and renders as a bordered View grid
 // ──────────────────────────────────────────────────────────────────────────────
+function renderTableHtml(
+  tableHtml: string,
+  textStyle: any,
+  isDark: boolean | undefined,
+  keyPrefix: string
+): React.ReactNode {
+  const borderColor = isDark ? '#4B5563' : '#D1D5DB';
+  const headerBg   = isDark ? '#1F2937' : '#E5E7EB';
+  const evenBg     = isDark ? '#111827' : '#F9FAFB';
+  const textColor  = isDark ? '#E5E7EB' : '#1F2937';
+  const fontSize   = (textStyle?.fontSize ?? 13) * 0.88;
+
+  // Extract rows
+  const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  const rows: Array<Array<{ text: string; isHeader: boolean }>> = [];
+  let rowMatch: RegExpExecArray | null;
+
+  while ((rowMatch = rowRegex.exec(tableHtml)) !== null) {
+    const rowHtml = rowMatch[1];
+    const cells: Array<{ text: string; isHeader: boolean }> = [];
+    const cellRegex = /<(td|th)[^>]*>([\s\S]*?)<\/(td|th)>/gi;
+    let cellMatch: RegExpExecArray | null;
+
+    while ((cellMatch = cellRegex.exec(rowHtml)) !== null) {
+      const isHeader = cellMatch[1].toLowerCase() === 'th';
+      // Strip inner tags, decode entities
+      let cellText = cellMatch[2]
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      // Decode HTML entities
+      cellText = decodeEntities(cellText);
+      // Apply LaTeX translation
+      cellText = translateLatexToUnicode(cellText);
+      cells.push({ text: cellText, isHeader });
+    }
+
+    if (cells.length > 0) rows.push(cells);
+  }
+
+  if (rows.length === 0) return null;
+
+  // Find max columns across all rows for flex calculation
+  const maxCols = Math.max(...rows.map(r => r.length));
+
+  return (
+    <View
+      key={keyPrefix}
+      style={{
+        width: '100%',
+        borderWidth: 1,
+        borderColor,
+        borderRadius: 4,
+        overflow: 'hidden',
+        marginVertical: 8,
+      }}
+    >
+      {rows.map((row, rIdx) => {
+        const isHeaderRow = rIdx === 0 || row.some(c => c.isHeader);
+        return (
+          <View
+            key={rIdx}
+            style={{
+              flexDirection: 'row',
+              backgroundColor: isHeaderRow ? headerBg : (rIdx % 2 === 0 ? evenBg : 'transparent'),
+            }}
+          >
+            {row.map((cell, cIdx) => (
+              <View
+                key={cIdx}
+                style={{
+                  flex: 1,
+                  borderRightWidth: cIdx < maxCols - 1 ? 1 : 0,
+                  borderBottomWidth: rIdx < rows.length - 1 ? 1 : 0,
+                  borderColor,
+                  padding: 6,
+                  minWidth: 0,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize,
+                    color: textColor,
+                    fontWeight: isHeaderRow || cell.isHeader ? 'bold' : 'normal',
+                    textAlign: 'center',
+                  }}
+                >
+                  {cell.text}
+                </Text>
+              </View>
+            ))}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+// Split HTML into table and non-table chunks
+function splitByTables(
+  html: string
+): Array<{ type: 'table' | 'text'; content: string }> {
+  const parts: Array<{ type: 'table' | 'text'; content: string }> = [];
+  let remaining = html;
+  while (remaining.length > 0) {
+    const tblStart = remaining.toLowerCase().indexOf('<table');
+    if (tblStart === -1) { parts.push({ type: 'text', content: remaining }); break; }
+    if (tblStart > 0) parts.push({ type: 'text', content: remaining.slice(0, tblStart) });
+    const tblEnd = remaining.toLowerCase().indexOf('</table>', tblStart);
+    if (tblEnd === -1) { parts.push({ type: 'text', content: remaining.slice(tblStart) }); break; }
+    const endIdx = tblEnd + 8;
+    parts.push({ type: 'table', content: remaining.slice(tblStart, endIdx) });
+    remaining = remaining.slice(endIdx);
+  }
+  return parts;
+}
+
 function renderContent(
   html: string,
   textStyle: any,
@@ -292,6 +409,26 @@ function renderContent(
 
   // Strip HTML comments
   clean = clean.replace(/<!--[\s\S]*?-->/g, '');
+
+  // ── Pre-pass: extract <table> blocks and render them separately ─────────────
+  const chunks = splitByTables(clean);
+  if (chunks.some(c => c.type === 'table')) {
+    // Has at least one table – process chunk by chunk
+    const allNodes: React.ReactNode[] = [];
+    let tableCount = 0;
+    for (const chunk of chunks) {
+      if (chunk.type === 'table') {
+        const tblNode = renderTableHtml(chunk.content, textStyle, isDark, `tbl-${tableCount++}`);
+        if (tblNode) allNodes.push(tblNode);
+      } else if (chunk.content.trim()) {
+        // Recurse for non-table text (strips tables from input so no infinite loop)
+        allNodes.push(...renderContent(chunk.content, textStyle, isDark));
+      }
+    }
+    return allNodes;
+  }
+
+  // ── No table: proceed with normal token-based rendering ─────────────────────
 
   // Split by HTML tags
   const tokens = clean.split(/(<[^>]+>)/g);
