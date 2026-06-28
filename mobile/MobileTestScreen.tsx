@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Globe, Award, AlertCircle, Menu, Eye } from 'lucide-react-native';
 import { ApiClient } from './api';
 import { ThemeColors } from './theme';
+import { HtmlText } from './HtmlText';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -1011,7 +1012,7 @@ export default function MobileTestScreen({
           )}
         </View>
 
-        <Text style={[styles.questionBody, isDark && { color: ThemeColors.dark.text }]}>{questionText}</Text>
+        <HtmlText style={styles.questionBody} isDark={isDark} html={questionText} />
 
         {/* Options Radio Grid */}
         <View style={styles.optionsBlock}>
@@ -1034,12 +1035,14 @@ export default function MobileTestScreen({
                   isSelected && styles.optionDotActive,
                   isSelected && isDark && { borderColor: '#60A5FA', backgroundColor: '#60A5FA' }
                 ]} />
-                <Text style={[
-                  styles.optionText, 
-                  isDark && { color: ThemeColors.dark.text },
-                  isSelected && styles.optionTextActive,
-                  isSelected && isDark && { color: '#FFF' }
-                ]}>{opt}</Text>
+                <HtmlText
+                  style={[
+                    styles.optionText, 
+                    isSelected && styles.optionTextActive,
+                  ]}
+                  isDark={isDark}
+                  html={opt}
+                />
               </TouchableOpacity>
             );
           })}

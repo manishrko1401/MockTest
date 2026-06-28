@@ -30,3 +30,76 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/* Rich content formatting styles for Testbook compatibility */
+.markup-content p {
+  margin-bottom: 0.5rem;
+}
+.markup-content p:last-child {
+  margin-bottom: 0;
+}
+.markup-content strong, .markup-content b {
+  font-weight: 700;
+}
+.markup-content ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+  margin-top: 0.25rem;
+}
+.markup-content ul ul {
+  list-style-type: circle;
+  padding-left: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+.markup-content ul ul ul {
+  list-style-type: square;
+  padding-left: 1.25rem;
+}
+.markup-content ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+  margin-top: 0.25rem;
+}
+.markup-content ol ol {
+  list-style-type: lower-alpha;
+  padding-left: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+.markup-content li {
+  margin-bottom: 0.25rem;
+}
+.markup-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.825rem;
+}
+.markup-content th, .markup-content td {
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.dark .markup-content th, .dark .markup-content td {
+  border-color: #334155;
+}
+.markup-content th {
+  background-color: #f1f5f9;
+  font-weight: 700;
+}
+.dark .markup-content th {
+  background-color: #1e293b;
+}
+.markup-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0.75rem auto;
+  border-radius: 0.375rem;
+}
+.markup-content svg {
+  display: block;
+  margin: 0.75rem auto;
+  max-width: 100%;
+}

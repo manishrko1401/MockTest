@@ -10,6 +10,23 @@ import { EXPLANATIONS } from '../exam/[id]/analysis/page';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 
+function decodeHtml(text: string): string {
+  if (!text) return "";
+  let decoded = text;
+  for (let i = 0; i < 3; i++) {
+    const temp = decoded
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ');
+    if (temp === decoded) break;
+    decoded = temp;
+  }
+  return decoded;
+}
+
 export default function MockTestsCatalog() {
   const { currentUser, saveUserProfileByAdmin, theme, toggleTheme, toggleBookmark, clearOngoingSession, language, setLanguage, examCatalog } = useAuth();
   const router = useRouter();
@@ -49,6 +66,17 @@ export default function MockTestsCatalog() {
       [qId]: !prev[qId]
     }));
   };
+
+  // Trigger MathJax typesetting whenever bookmarks are expanded
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).MathJax) {
+      try {
+        (window as any).MathJax.typesetPromise();
+      } catch (err) {
+        console.warn("MathJax typesetting failed:", err);
+      }
+    }
+  }, [expandedBookmarks]);
 
   const currentCategoryObj = examCatalog.find(c => c.id === selectedCategory);
   
@@ -697,12 +725,12 @@ export default function MockTestsCatalog() {
                             {/* Question Text */}
                             <div className="bg-slate-50 dark:bg-slate-900/60 p-4 border border-slate-200 dark:border-slate-800 rounded text-xs leading-relaxed text-slate-800 dark:text-slate-200">
                               <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">Question (English):</p>
-                              <p className="font-normal mb-3">{question.content.en.questionText}</p>
+                              <div className="font-normal mb-3 markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(question.content.en.questionText) }} />
                               {question.content.en.mathLatex && (
                                 <p className="mb-3 font-mono text-[10px] text-yellow-600 dark:text-yellow-500 bg-yellow-500/5 px-2 py-1 rounded">LaTeX: {question.content.en.mathLatex}</p>
                               )}
                               <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">प्रश्न (Hindi):</p>
-                              <p className="font-normal">{question.content.hi.questionText}</p>
+                              <div className="font-normal markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(question.content.hi.questionText) }} />
                               {question.content.hi.mathLatex && (
                                 <p className="mt-3 font-mono text-[10px] text-yellow-600 dark:text-yellow-500 bg-yellow-500/5 px-2 py-1 rounded">LaTeX: {question.content.hi.mathLatex}</p>
                               )}
@@ -729,10 +757,10 @@ export default function MockTestsCatalog() {
                                       }`}
                                     >
                                       <div className="flex items-center justify-between">
-                                        <span>Option {oIdx + 1}: {textEn}</span>
+                                        <span className="flex items-center gap-1">Option {oIdx + 1}: <span dangerouslySetInnerHTML={{ __html: decodeHtml(textEn) }} /></span>
                                         {isCorrect && <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />}
                                       </div>
-                                      <span className="text-[10px] opacity-80 mt-0.5">हिंदी: {textHi}</span>
+                                      <span className="text-[10px] opacity-80 mt-0.5 flex items-center gap-1">हिंदी: <span dangerouslySetInnerHTML={{ __html: decodeHtml(textHi) }} /></span>
                                     </div>
                                   );
                                 })}
@@ -745,11 +773,11 @@ export default function MockTestsCatalog() {
                               <div className="space-y-4 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
                                 <div>
                                   <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.englishExplanation}</p>
-                                  <p className="whitespace-pre-line">{EXPLANATIONS[question.id]?.en || "No explanation available."}</p>
+                                  <div className="markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(EXPLANATIONS[question.id]?.en || "No explanation available.") }} />
                                 </div>
                                 <div className="pt-3 border-t border-blue-100/50 dark:border-blue-950/20">
                                   <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.hindiExplanation}</p>
-                                  <p className="whitespace-pre-line">{EXPLANATIONS[question.id]?.hi || "कोई व्याख्या उपलब्ध नहीं है।"}</p>
+                                  <div className="markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(EXPLANATIONS[question.id]?.hi || "कोई व्याख्या उपलब्ध नहीं है।") }} />
                                 </div>
                               </div>
                             </div>

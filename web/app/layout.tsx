@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./AuthContext";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,27 @@ export default function RootLayout({
         <AuthProvider>
           {children}
         </AuthProvider>
+
+        {/* Load MathJax configuration and library script for LaTeX support */}
+        <Script id="mathjax-config" strategy="afterInteractive">
+          {`
+            window.MathJax = {
+              tex: {
+                inlineMath: [['\\\\(', '\\\\)'], ['$', '$']],
+                displayMath: [['\\\\[', '\\\\]'], ['$$', '$$']],
+                processEscapes: true
+              },
+              options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'math-tex'
+              }
+            };
+          `}
+        </Script>
+        <Script
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

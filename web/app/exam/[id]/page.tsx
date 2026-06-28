@@ -14,6 +14,23 @@ import Link from 'next/link';
 import { Check, ShieldAlert, ShieldCheck, Globe, User, BookOpen, AlertCircle, ArrowLeft, Sun, Moon, Clock, Pause, Play, Menu, X } from 'lucide-react';
 import { useIsMobile } from '../../useIsMobile';
 
+function decodeHtml(text: string): string {
+  if (!text) return "";
+  let decoded = text;
+  for (let i = 0; i < 3; i++) {
+    const temp = decoded
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ');
+    if (temp === decoded) break;
+    decoded = temp;
+  }
+  return decoded;
+}
+
 // ============================================================================
 // DYNAMIC EXAM GENERATOR
 // ============================================================================
@@ -360,6 +377,17 @@ function TcsIonEngine({ testId }: { testId: string }) {
   const currentQuestion = currentSectionQuestions[currentQuestionIndex];
   const activeResponse = currentQuestion ? responses[currentQuestion.id] : null;
 
+  // Trigger MathJax typesetting on active question change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).MathJax) {
+      try {
+        (window as any).MathJax.typesetPromise();
+      } catch (err) {
+        console.warn("MathJax typesetting failed:", err);
+      }
+    }
+  }, [currentQuestion?.id]);
+
   // Format Time Remaining: HH:MM:SS
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -630,9 +658,14 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
                     {/* Question Text */}
                     <div className="mb-4 text-xs text-slate-900 leading-relaxed font-normal bg-slate-50 p-3.5 border border-slate-200 rounded">
-                      {questionLang === 'en'
-                        ? currentQuestion.content.en.questionText
-                        : currentQuestion.content.hi.questionText}
+                      <div
+                        className="markup-content font-sans"
+                        dangerouslySetInnerHTML={{
+                          __html: decodeHtml(questionLang === 'en'
+                            ? currentQuestion.content.en.questionText
+                            : currentQuestion.content.hi.questionText)
+                        }}
+                      />
 
                       {/* Optional Math */}
                       {(questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex) && (
@@ -679,7 +712,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                               readOnly
                               className="h-3.5 w-3.5 border-slate-350 text-blue-600 focus:ring-blue-500"
                             />
-                            <span className="flex-1">{optLabel}</span>
+                            <span className="flex-1 font-sans" dangerouslySetInnerHTML={{ __html: decodeHtml(optLabel) }} />
                           </label>
                         );
                       })}
@@ -924,9 +957,14 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
                       {/* Render Question Text Based on active Language */}
                       <div className="mb-6 text-sm text-slate-900 leading-relaxed font-normal bg-slate-50 p-4 border border-slate-200 rounded">
-                        {questionLang === 'en'
-                          ? currentQuestion.content.en.questionText
-                          : currentQuestion.content.hi.questionText}
+                        <div
+                          className="markup-content font-sans"
+                          dangerouslySetInnerHTML={{
+                            __html: decodeHtml(questionLang === 'en'
+                              ? currentQuestion.content.en.questionText
+                              : currentQuestion.content.hi.questionText)
+                          }}
+                        />
 
                         {/* Optional Math Equation preview */}
                         {(questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex) && (
@@ -973,7 +1011,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                                 readOnly
                                 className="h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500"
                               />
-                              <span className="text-slate-800 text-xs flex-1">{optLabel}</span>
+                              <span className="text-slate-800 text-xs flex-1 font-sans" dangerouslySetInnerHTML={{ __html: decodeHtml(optLabel) }} />
                             </label>
                           );
                         })}

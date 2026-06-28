@@ -27,6 +27,7 @@ import {
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
+import { HtmlText } from '../HtmlText';
 
 interface AnalysisScreenProps {
   currentUser: any;
@@ -507,7 +508,7 @@ export default function AnalysisScreen({
                 </View>
 
                 {/* Question Text */}
-                <Text style={[styles.solBody, isDark && { color: ThemeColors.dark.text }]}>{questionBodyText}</Text>
+                <HtmlText style={styles.solBody} isDark={isDark} html={questionBodyText} />
 
                 {/* Options List */}
                 <View style={styles.optionsBlock}>
@@ -531,7 +532,7 @@ export default function AnalysisScreen({
                     return (
                       <View key={optIdx} style={optStyle}>
                         <View style={dotStyle} />
-                        <Text style={[styles.optText, isDark && { color: ThemeColors.dark.text }]}>{optText}</Text>
+                        <HtmlText style={styles.optText} isDark={isDark} html={optText} />
                       </View>
                     );
                   })}
@@ -552,11 +553,11 @@ export default function AnalysisScreen({
                     )}
                   </View>
                   {expandedExplanations[idx] && (
-                    <Text
-                      style={[styles.explanationText, { marginTop: 6 }, isDark && { color: ThemeColors.dark.textMuted }]}
-                    >
-                      {explanationText || 'Detailed explanation not provided.'}
-                    </Text>
+                    <HtmlText
+                      style={[styles.explanationText, { marginTop: 6 }]}
+                      isDark={isDark}
+                      html={explanationText || 'Detailed explanation not provided.'}
+                    />
                   )}
                 </TouchableOpacity>
 

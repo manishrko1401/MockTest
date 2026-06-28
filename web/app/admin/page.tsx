@@ -1563,9 +1563,10 @@ export default function AdminAnalytics() {
                             </div>
 
                             {/* Question Text */}
-                            <div className="text-xs text-slate-200 font-semibold leading-relaxed">
-                              {qText}
-                            </div>
+                            <div
+                              className="text-xs text-slate-200 font-semibold leading-relaxed markup-content"
+                              dangerouslySetInnerHTML={{ __html: qText || "" }}
+                            />
 
                             {/* Image Visualizer */}
                             {qImg && (
@@ -1596,7 +1597,7 @@ export default function AdminAnalytics() {
                                     }`}>
                                       {String.fromCharCode(65 + idx)}
                                     </span>
-                                    <span className="flex-1">{opt}</span>
+                                    <span className="flex-1 font-sans" dangerouslySetInnerHTML={{ __html: opt || "" }} />
                                     {isCorrect && <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />}
                                   </div>
                                 );
@@ -1606,9 +1607,10 @@ export default function AdminAnalytics() {
                             {/* EXACT USER SOLUTION/EXPLANATION VIEW */}
                             <div className="bg-slate-900/60 border border-slate-805 p-3 rounded-lg space-y-1.5 text-left">
                               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Step-by-Step Solution</p>
-                              <p className="text-slate-300 text-[11px] leading-relaxed font-normal whitespace-pre-wrap">
-                                {qExp || "No bilingual explanation provided for this question."}
-                              </p>
+                              <div
+                                className="text-slate-300 text-[11px] leading-relaxed font-normal markup-content"
+                                dangerouslySetInnerHTML={{ __html: qExp || "No bilingual explanation provided for this question." }}
+                              />
                             </div>
 
                             {importerMode === 'form' && (
