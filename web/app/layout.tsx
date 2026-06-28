@@ -42,10 +42,6 @@ export default function RootLayout({
                 inlineMath: [['\\\\(', '\\\\)'], ['$', '$']],
                 displayMath: [['\\\\[', '\\\\]'], ['$$', '$$']],
                 processEscapes: true
-              },
-              options: {
-                ignoreHtmlClass: 'tex2jax_ignore',
-                processHtmlClass: 'math-tex'
               }
             };
           `}
