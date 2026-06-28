@@ -167,10 +167,11 @@ export const HtmlText: React.FC<HtmlTextProps> = ({ html, style, isDark }) => {
         elements.push(<Text key={keyIdx++}>• </Text>);
       } else if (tag === '</li>') {
         elements.push(<Text key={keyIdx++}>{'\n'}</Text>);
-      }
     } else {
       // Decode HTML entities
       let text = token
+        .replace(/&#([0-9]+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+        .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
         .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')

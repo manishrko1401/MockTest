@@ -2,7 +2,10 @@ window.MathJax = {
   tex: {
     inlineMath: [['\\(', '\\)'], ['$', '$']],
     displayMath: [['\\[', '\\]'], ['$$', '$$']],
-    processEscapes: true
+    processEscapes: true,
+    macros: {
+      rupee: '{\\text{₹}}'
+    }
   },
   startup: {
     typeset: true,
