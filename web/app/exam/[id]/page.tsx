@@ -355,6 +355,24 @@ function TcsIonEngine({ testId }: { testId: string }) {
     }
   }, [state.isExamSubmitted, state.score, currentUser, addAttempt, testId, attemptSaved, state.responses, state.session, state.timeRemaining, state.violationsCount]);
 
+  // Compute a safe activeQuestionId for MathJax hook at the top level
+  const activeQuestionId = (state.session && state.session.sections && state.session.sections[state.currentSectionIndex])
+    ? state.session.questions
+        .filter((q) => q.sectionId === state.session.sections[state.currentSectionIndex].id)
+        .sort((a, b) => a.orderIndex - b.orderIndex)[state.currentQuestionIndex]?.id
+    : null;
+
+  // Trigger MathJax typesetting on active question change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).MathJax) {
+      try {
+        (window as any).MathJax.typesetPromise();
+      } catch (err) {
+        console.warn("MathJax typesetting failed:", err);
+      }
+    }
+  }, [activeQuestionId]);
+
   if (!state.session) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-100 font-sans">
@@ -376,17 +394,6 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
   const currentQuestion = currentSectionQuestions[currentQuestionIndex];
   const activeResponse = currentQuestion ? responses[currentQuestion.id] : null;
-
-  // Trigger MathJax typesetting on active question change
-  useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).MathJax) {
-      try {
-        (window as any).MathJax.typesetPromise();
-      } catch (err) {
-        console.warn("MathJax typesetting failed:", err);
-      }
-    }
-  }, [currentQuestion?.id]);
 
   // Format Time Remaining: HH:MM:SS
   const formatTime = (seconds: number) => {

@@ -149,6 +149,22 @@ export default function ExamSolutionAnalysisPage() {
     }
   }, [attempts.length]);
 
+  // Generate a safe activeQuestionId for MathJax effect hook at the top level
+  const tempSession = (currentUser && attempts[selectedAttemptIdx]) ? generateExamSession(testId, examCatalog, customQs) : null;
+  const tempQuestions = tempSession?.questions || [];
+  const activeQuestionId = tempQuestions[activeQuestionIdx]?.id;
+
+  // Trigger MathJax typesetting on active question change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).MathJax) {
+      try {
+        (window as any).MathJax.typesetPromise();
+      } catch (err) {
+        console.warn("MathJax typesetting failed:", err);
+      }
+    }
+  }, [activeQuestionId]);
+
   if (!mounted || loadingCustomQs) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 font-sans">
@@ -286,17 +302,6 @@ export default function ExamSolutionAnalysisPage() {
   const activeQuestion = questions[activeQuestionIdx];
   const activeStatus = questionStatuses[activeQuestionIdx];
 
-  // Trigger MathJax typesetting on active question change
-  useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).MathJax) {
-      try {
-        (window as any).MathJax.typesetPromise();
-      } catch (err) {
-        console.warn("MathJax typesetting failed:", err);
-      }
-    }
-  }, [activeQuestion?.id]);
-  
   // Calculate question time statistics and bookmark state
   const userTime = sessionRecord.responses?.[activeQuestion.id]?.elapsedSeconds ?? (15 + (seed + activeQuestionIdx) % 75);
   const avgTime = 30 + (activeQuestion.id.charCodeAt(activeQuestion.id.length - 1) % 5) * 15;

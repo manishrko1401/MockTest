@@ -107,26 +107,44 @@ function analyzeFile(filePath) {
 }
 
 try {
-  const files = fs.readdirSync(__dirname).filter(f => f.startsWith('response') && (f.endsWith('.json') || f.endsWith('.jeson')));
-  
   let questionsFile = null;
   let solutionsFile = null;
-  
-  for (const file of files) {
-    const filePath = path.join(__dirname, file);
-    const result = analyzeFile(filePath);
-    if (result) {
-      if (result.type === 'questions') {
-        questionsFile = result;
-      } else if (result.type === 'solutions') {
-        solutionsFile = result;
+
+  // Check command line arguments first
+  const args = process.argv.slice(2);
+  if (args.length > 0) {
+    for (const arg of args) {
+      const filePath = path.isAbsolute(arg) ? arg : path.join(__dirname, arg);
+      const result = analyzeFile(filePath);
+      if (result) {
+        if (result.type === 'questions') {
+          questionsFile = result;
+        } else if (result.type === 'solutions') {
+          solutionsFile = result;
+        }
       }
     }
   }
-  
+
+  // Fallback to auto-detecting files in the folder if args are not provided or incomplete
+  if (!questionsFile || !solutionsFile) {
+    const files = fs.readdirSync(__dirname).filter(f => f.startsWith('response') && (f.endsWith('.json') || f.endsWith('.jeson')));
+    for (const file of files) {
+      const filePath = path.join(__dirname, file);
+      const result = analyzeFile(filePath);
+      if (result) {
+        if (result.type === 'questions' && !questionsFile) {
+          questionsFile = result;
+        } else if (result.type === 'solutions' && !solutionsFile) {
+          solutionsFile = result;
+        }
+      }
+    }
+  }
+
   if (!questionsFile) {
     console.error("❌ Error: Could not locate a Questions JSON file (containing the questions and options list).");
-    console.log("Please make sure you have 'response.json' or 'response.jeson' in this folder containing the exam questions.");
+    console.log("Please make sure you provide the file as an argument or have 'response.json' or 'response.jeson' in this folder containing the exam questions.");
     process.exit(1);
   }
   

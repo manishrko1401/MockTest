@@ -13,7 +13,12 @@ let prismaInstance: PrismaClient;
 if (globalForPrisma.prisma) {
   prismaInstance = globalForPrisma.prisma;
 } else {
-  const pool = new Pool({ connectionString });
+  const pool = new Pool({
+    connectionString,
+    connectionTimeoutMillis: 30000, // 30s timeout to handle Supabase cold starts
+    idleTimeoutMillis: 30000,       // close idle connections after 30s
+    max: 5,                         // max 5 connections in pool
+  });
   const adapter = new PrismaPg(pool);
   prismaInstance = new PrismaClient({
     adapter,
