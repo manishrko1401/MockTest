@@ -274,10 +274,10 @@ function renderHtml(html: string, style: any, isDark: boolean | undefined): Reac
         .replace(/&frac14;/g, '¼')
         .replace(/&frac34;/g, '¾');
 
-      // Check if text has LaTeX math blocks and translate them
-      // Matches \(...\), \[...\], $$...$$, $...$
-      const mathRegex = /(\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$|\$[^$\n]+?\$)/g;
-      text = text.replace(mathRegex, (match) => translateLatexToUnicode(match));
+      // Apply LaTeX → Unicode conversion to the full text.
+      // We run it unconditionally (not just on \(…\) blocks) because some questions
+      // contain \text{…}, \frac{}{}, etc. outside explicit math delimiters.
+      text = translateLatexToUnicode(text);
 
 
       if (text) {
