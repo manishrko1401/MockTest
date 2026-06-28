@@ -11,7 +11,8 @@ import {
   Dimensions,
   Linking,
   TextInput,
-  Image
+  Image,
+  Share
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -243,12 +244,15 @@ export default function DashboardScreen({
     }
   };
 
-  const shareReferralCode = () => {
-    const shareMessage = `Hey! Start preparing for govt exams with Testbook. Use my referral code: ${currentUser.referralCode} to get free coins!`;
-    Alert.alert('Share Referral', shareMessage, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Copy Code', onPress: () => Alert.alert('Copied', 'Referral code copied!') }
-    ]);
+  const shareReferralCode = async () => {
+    const shareMessage = `Hey! Start preparing for exams with MockTest Hub. Use my referral code: ${currentUser.referralCode} to get free coins!`;
+    try {
+      await Share.share({
+        message: shareMessage,
+      });
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    }
   };
 
   const handleRefresh = async () => {
