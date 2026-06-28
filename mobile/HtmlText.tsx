@@ -13,10 +13,8 @@ function translateLatexToUnicode(latex: string): string {
   
   let clean = latex;
   
-  // Remove \( and \) wraps (handling any escaped backslashes)
-  clean = clean.replace(/\\+\(|\\+\)/g, '');
-  // Remove \[ and \] wraps
-  clean = clean.replace(/\\+\[|\\+\]/g, '');
+  // Remove \( and \) wraps, \[ and \] wraps, and $$ or $ wraps
+  clean = clean.replace(/\\+\(|\\+\)|\\+\[|\\+\]|\$\$?/g, '');
   
   // Replace fractions: \frac{num}{den} -> (num) / (den)
   clean = clean.replace(/\\+frac\s*{(.*?)}{(.*?)}/g, '($1) / ($2)');
@@ -183,7 +181,7 @@ export const HtmlText: React.FC<HtmlTextProps> = ({ html, style, isDark }) => {
         .replace(/&there4;/g, '∴');
 
       // Check if text has LaTeX math blocks and translate them
-      const mathRegex = /(\\+\([\s\S]*?\\+\)|\\+\[[\s\S]*?\\+\])/g;
+      const mathRegex = /(\\+[\(\[][\s\S]*?\\+[\)\]]|\$\$?[\s\S]*?\$\$?)/g;
       text = text.replace(mathRegex, (match) => translateLatexToUnicode(match));
 
       if (text) {
