@@ -366,14 +366,16 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
   // Trigger MathJax typesetting on active question change
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).MathJax) {
-      try {
-        (window as any).MathJax.typesetPromise();
-      } catch (err) {
-        console.warn("MathJax typesetting failed:", err);
+    const timer = setTimeout(() => {
+      if (typeof window !== 'undefined' && (window as any).MathJax?.typesetPromise) {
+        (window as any).MathJax.typesetClear?.();
+        (window as any).MathJax.typesetPromise().catch((err: any) => {
+          console.warn("MathJax typesetting failed:", err);
+        });
       }
-    }
-  }, [activeQuestionId]);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeQuestionId, state.language]);
 
   if (!state.session) {
     return (

@@ -34,18 +34,11 @@ export default function RootLayout({
           {children}
         </AuthProvider>
 
-        {/* Load MathJax configuration and library script for LaTeX support */}
-        <Script id="mathjax-config" strategy="afterInteractive">
-          {`
-            window.MathJax = {
-              tex: {
-                inlineMath: [['\\\\(', '\\\\)'], ['$', '$']],
-                displayMath: [['\\\\[', '\\\\]'], ['$$', '$$']],
-                processEscapes: true
-              }
-            };
-          `}
-        </Script>
+        {/* Load MathJax configuration (static file to avoid RSC escaping issues) */}
+        <Script
+          src="/mathjax-config.js"
+          strategy="beforeInteractive"
+        />
         <Script
           src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
           strategy="afterInteractive"

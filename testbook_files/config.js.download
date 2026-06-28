@@ -1,0 +1,80 @@
+/**
+ * @license Copyright (c) 2003-2013, CKSource - Frederico Knabben. All rights reserved.
+ * For licensing, see LICENSE.html or http://ckeditor.com/license
+ */
+
+CKEDITOR.editorConfig = function( config ) {
+
+	// Define changes to default configuration here. For example:
+	config.filebrowserBrowseUrl = '/kcfinder/browse.php?type=files';
+	config.filebrowserImageBrowseUrl = '/kcfinder/browse.php?type=images';
+	config.filebrowserUploadUrl = '/kcfinder/upload.php?type=files';
+	config.filebrowserImageUploadUrl = '/kcfinder/upload.php?type=images';
+	config.disableNativeSpellChecker = false;
+	config.disallowedContent = 'br';
+	
+	//config.plugins = 'widget,lineutils,mathjax,eqneditor';
+	config.extraPlugins = 'widget,lineutils,mathjax,codemirror,Sourcedialog,youtube,shortbol,notequalfix,downloadoriginal,cleanhtml';
+	config.height = 80;
+	config.allowedContent = true;
+	config.autoParagraph = false;
+	
+	//config.font_names = 'Kruti Dev 010/KrutiDev10, sans-serif;' +config.font_names;
+
+
+	config.keystrokes = [
+		[ CKEDITOR.CTRL + 219, 'subscript' ],    // Ctrl+[
+		[ CKEDITOR.CTRL + 221, 'superscript' ],    // Ctrl+]
+		[ CKEDITOR.CTRL + 81, 'mathjax' ],    // Ctrl+Q
+		[ CKEDITOR.CTRL + 77, 'image' ],    // Ctrl+M
+		[ CKEDITOR.CTRL + 191, 'table' ],    // Ctrl+/
+	];
+
+
+	CKEDITOR.config.toolbar =
+	[
+		{ name: 'document', items : ['Sourcedialog'] },
+		{ name: 'styles', items : [ 'Styles', 'Font', 'Format', 'FontSize'] },
+		{ name: 'editing', items : [ 'SpellChecker'] },
+
+		{ name: 'basicstyles', items :  [ 'Bold','Italic','Underline','Strike','Subscript','Superscript','-','RemoveFormat','Notequalfix','Cleanhtml' ] },
+		{ name: 'paragraph', items : [ 'NumberedList','BulletedList','-','Outdent','Indent','-','Blockquote','CreateDiv',
+		'-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock','-','BidiLtr','BidiRtl' ] },
+		{ name: 'insert', items : [ 'Image','Mathjax','Table','SpecialChar','Youtube', 'Downloadoriginal'] },
+		{name: 'links', items:['Link']},
+	];
+
+// for full tool bar uncomment this and comment above array.
+/*
+CKEDITOR.config.toolbar =
+[
+	{ name: 'document', items : [ 'SourceDialog','-','Save','NewPage','DocProps','Preview','Print','-','Templates' ] },
+	{ name: 'clipboard', items : [ 'Cut','Copy','Paste','PasteText','PasteFromWord','-','Undo','Redo' ] },
+	{ name: 'editing', items : [ 'Find','Replace','-','SelectAll','-','SpellChecker', 'Scayt' ] },
+	{ name: 'forms', items : [ 'Form', 'Checkbox', 'Radio', 'TextField', 'Textarea', 'Select', 'Button', 'ImageButton',
+        'HiddenField' ] },
+	'/',
+	{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','Subscript','Superscript','-','RemoveFormat' ] },
+	{ name: 'paragraph', items : [ 'NumberedList','BulletedList','-','Outdent','Indent','-','Blockquote','CreateDiv',
+	'-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock','-','BidiLtr','BidiRtl' ] },
+	{ name: 'links', items : [ 'Link','Unlink','Anchor' ] },
+	{ name: 'insert', items : [ 'Image','Flash','Table','HorizontalRule','Smiley','SpecialChar','PageBreak','Iframe', 'SourceDialog', 'Mathjax' ] },
+	'/',
+	{ name: 'styles', items : [ 'Styles','Format','Font','FontSize' ] },
+	{ name: 'colors', items : [ 'TextColor','BGColor' ] },
+	{ name: 'tools', items : [ 'Maximize', 'ShowBlocks','-','About' ] },
+];
+*/
+	config.enterMode = CKEDITOR.ENTER_P;
+	(function() {
+		var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+		if (isChrome) {
+			CKEDITOR.on( 'instanceLoaded', function( e ){
+				this.addCss('.cke_editable { line-height: normal; }');
+			});
+		}
+	})();
+
+
+};
+
