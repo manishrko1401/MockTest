@@ -640,7 +640,7 @@ export default function MockTestsCatalog() {
       <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
         
         {/* Left Side Navigation (Categories list) */}
-        <aside className="w-full lg:w-64 bg-white dark:bg-slate-950 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-6 lg:gap-0 justify-between shrink-0">
+        <aside className="w-full lg:w-64 bg-white dark:bg-slate-950 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-6 lg:gap-0 justify-between shrink-0 lg:overflow-y-auto scrollbar-thin">
           <div>
             <h3 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-4 font-sans">{t.examCategories}</h3>
             
@@ -666,7 +666,7 @@ export default function MockTestsCatalog() {
               )}
             </div>
 
-            <nav className="space-y-1 max-h-[350px] lg:max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin">
+            <nav className="space-y-1">
               {filteredSidebarCategories.length > 0 ? (
                 filteredSidebarCategories.map((category) => (
                   <button
