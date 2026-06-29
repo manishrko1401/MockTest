@@ -23,6 +23,7 @@ export default function MarksCalculator() {
   const [gender, setGender] = useState('Male');
   const [state, setState] = useState('Delhi');
   const [responseUrl, setResponseUrl] = useState('');
+  const [htmlContent, setHtmlContent] = useState('');
   
   // Custom marking states
   const [posMark, setPosMark] = useState(2);
@@ -54,6 +55,7 @@ export default function MarksCalculator() {
   // Load sample answer key data
   const handleLoadSample = () => {
     setErrorMessage('');
+    setHtmlContent(generateSampleHtml());
     setResponseUrl('https://ssc.digialm.com/EForms/configuredHtml/2207/98711/Response_Sheet_SSC_CGL_2025_MOCK.html');
   };
 
@@ -62,12 +64,27 @@ export default function MarksCalculator() {
     e.preventDefault();
     setErrorMessage('');
 
+    const pastedHtml = htmlContent.trim();
     const urlToFetch = responseUrl.trim();
+
+    // If user pasted HTML directly, use that (fastest path — no network needed)
+    if (pastedHtml) {
+      try {
+        const questions = parseAnswerKey(pastedHtml);
+        if (questions.length === 0) throw new Error('No questions found in the pasted HTML. Please make sure you copied the full page source.');
+        setParsedQuestions(questions);
+        setIsCalculated(true);
+        setActiveResultTab('summary');
+      } catch (err: any) {
+        setErrorMessage(err.message || 'Could not parse the pasted HTML. Please make sure you copied the full response sheet page source.');
+      }
+      return;
+    }
 
     if (!urlToFetch) {
       setErrorMessage(language === 'hi'
-        ? 'कृपया उत्तर कुंजी का URL दर्ज करें।'
-        : 'Please enter the Response Sheet URL.'
+        ? 'कृपया URL दर्ज करें या नीचे HTML पेस्ट करें।'
+        : 'Please enter the Response Sheet URL, or paste the page HTML below.'
       );
       return;
     }
@@ -76,7 +93,7 @@ export default function MarksCalculator() {
     if (urlToFetch.includes('MOCK.html') || urlToFetch.includes('_MOCK')) {
       try {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise(resolve => setTimeout(resolve, 600));
         const questions = parseAnswerKey(generateSampleHtml());
         setParsedQuestions(questions);
         setIsCalculated(true);
@@ -89,7 +106,7 @@ export default function MarksCalculator() {
       return;
     }
 
-    // Real URL — fetch via server-side proxy
+    // Real URL — try server-side proxy fetch
     try {
       setIsLoading(true);
       const res = await fetch('/api/fetch-response-sheet', {
@@ -100,14 +117,20 @@ export default function MarksCalculator() {
       const data = await res.json();
       if (data.success && data.html) {
         const questions = parseAnswerKey(data.html);
+        if (questions.length === 0) throw new Error('No questions found in fetched page. The link may point to an incorrect or unsupported response sheet.');
         setParsedQuestions(questions);
         setIsCalculated(true);
         setActiveResultTab('summary');
       } else {
-        setErrorMessage(data.error || 'Failed to fetch the URL. Please verify the link is correct and publicly accessible.');
+        // URL fetch failed (IP block / expired) — show helpful fallback message
+        setErrorMessage(
+          '⚠️ Could not auto-fetch from this URL (the exam server may be blocking our server). ' +
+          'Please open the link in your browser, press Ctrl+U (or Cmd+U) to view page source, ' +
+          'press Ctrl+A → Ctrl+C, then paste it in the "Paste HTML" box below.'
+        );
       }
     } catch (err: any) {
-      setErrorMessage('Network error while fetching the response sheet. Please check your connection.');
+      setErrorMessage('Network error. Please paste the page HTML manually in the box below.');
     } finally {
       setIsLoading(false);
     }
@@ -645,24 +668,46 @@ export default function MarksCalculator() {
 
               {/* Response key inputs */}
               <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                {/* URL input */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Response sheet URL (Required)</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Response Sheet URL</label>
                     <button
                       type="button"
                       onClick={handleLoadSample}
                       className="text-[10px] text-blue-600 dark:text-blue-400 font-black hover:underline inline-flex items-center gap-1 cursor-pointer select-none"
                     >
-                      <FileCode className="h-3.5 w-3.5" /> {language === 'hi' ? 'डेमो आंसर की लोड करें' : 'Load Demo Answer Key'}
+                      <FileCode className="h-3.5 w-3.5" /> {language === 'hi' ? 'डेमो लोड करें' : 'Load Demo'}
                     </button>
                   </div>
                   <input
                     type="url"
-                    required
                     value={responseUrl}
-                    onChange={(e) => setResponseUrl(e.target.value)}
+                    onChange={(e) => { setResponseUrl(e.target.value); if (htmlContent) setHtmlContent(''); }}
                     placeholder="https://ssc.digialm.com/EForms/configuredHtml/..."
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-blue-500 placeholder-slate-400 text-slate-800 dark:text-slate-200"
+                  />
+                </div>
+
+                {/* OR divider */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">or paste page source</span>
+                  <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+                </div>
+
+                {/* HTML paste fallback */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Paste HTML Source (Fallback)</label>
+                    <span className="text-[9px] text-slate-400">Open URL in browser → Ctrl+U → Ctrl+A → Ctrl+C</span>
+                  </div>
+                  <textarea
+                    value={htmlContent}
+                    onChange={(e) => { setHtmlContent(e.target.value); if (responseUrl && e.target.value) setResponseUrl(''); }}
+                    placeholder="Paste the full page source of your response sheet here (press Ctrl+U on the response sheet page, then Ctrl+A → Ctrl+C)..."
+                    rows={5}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-3.5 py-3 text-xs font-mono focus:outline-none focus:border-blue-500 placeholder-slate-400 text-slate-800 dark:text-slate-200 leading-relaxed resize-none"
                   />
                 </div>
               </div>
