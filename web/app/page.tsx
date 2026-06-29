@@ -101,19 +101,33 @@ export default function HomeLandingPage() {
   const [calculatorNegMark, setCalculatorNegMark] = useState<number>(0.5);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
+  const dbTestimonials = (noticesList || [])
+    .filter(n => n.category === 'testimonial')
+    .map(n => ({
+      id: n.id,
+      name: n.title,
+      exam: n.date,
+      initials: n.lastDate || n.title.slice(0, 2).toUpperCase(),
+      quote: n.type,
+      gradient: n.url || 'from-blue-600 to-cyan-500',
+      photoUrl: n.imageUrl
+    }));
+
+  const testimonials: any[] = dbTestimonials.length > 0 ? dbTestimonials : SUCCESS_STORIES;
+
   // Auto-slide testimonials every 10 seconds
   React.useEffect(() => {
     const timer = setInterval(() => {
-      setSuccessIndex((prev) => (prev + 1) % SUCCESS_STORIES.length);
+      setSuccessIndex((prev) => (prev + 1) % testimonials.length);
     }, 10000);
     return () => clearInterval(timer);
-  }, []);
+  }, [testimonials.length]);
 
   const { isMobile, isMounted } = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileUpdateTab, setMobileUpdateTab] = useState<'notice' | 'result' | 'admit_card'>('notice');
 
-  const activeTopper = SUCCESS_STORIES[successIndex];
+  const activeTopper = testimonials[successIndex] || testimonials[0] || SUCCESS_STORIES[0];
 
   if (isMounted && isMobile) {
     return (
@@ -300,7 +314,7 @@ export default function HomeLandingPage() {
                 <Trophy className="h-3.5 w-3.5 text-yellow-500" /> Topper Testimonials
               </h3>
               <div className="flex gap-1">
-                {SUCCESS_STORIES.map((_, idx) => (
+                {testimonials.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setSuccessIndex(idx)}
@@ -316,9 +330,13 @@ export default function HomeLandingPage() {
               </p>
               
               <div className="flex items-center gap-2.5">
-                <div className={`h-8 w-8 rounded-full bg-gradient-to-r ${activeTopper.gradient} text-white flex items-center justify-center font-black text-[10px] shadow`}>
-                  {activeTopper.initials}
-                </div>
+                {activeTopper.photoUrl ? (
+                  <img src={activeTopper.photoUrl} alt={activeTopper.name} className="h-8 w-8 rounded-full object-cover border border-slate-200 dark:border-slate-800 shadow" />
+                ) : (
+                  <div className={`h-8 w-8 rounded-full bg-gradient-to-r ${activeTopper.gradient} text-white flex items-center justify-center font-black text-[10px] shadow`}>
+                    {activeTopper.initials}
+                  </div>
+                )}
                 <div>
                   <h4 className="font-extrabold text-[11px] text-slate-900 dark:text-white leading-none">{activeTopper.name}</h4>
                   <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider mt-1">{activeTopper.exam.split(' (')[0]}</p>
@@ -709,7 +727,7 @@ export default function HomeLandingPage() {
               <Trophy className="h-4 w-4 text-yellow-500" /> {t.topperTitle}
             </h3>
             <div className="flex gap-1">
-              {SUCCESS_STORIES.map((_, idx) => (
+              {testimonials.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSuccessIndex(idx)}
@@ -725,9 +743,13 @@ export default function HomeLandingPage() {
             </p>
             
             <div className="flex items-center gap-3">
-              <div className={`h-10 w-10 rounded-full bg-gradient-to-r ${activeTopper.gradient} text-white flex items-center justify-center font-black text-xs shadow-lg`}>
-                {activeTopper.initials}
-              </div>
+              {activeTopper.photoUrl ? (
+                <img src={activeTopper.photoUrl} alt={activeTopper.name} className="h-10 w-10 rounded-full object-cover border border-slate-200 dark:border-slate-800 shadow-lg" />
+              ) : (
+                <div className={`h-10 w-10 rounded-full bg-gradient-to-r ${activeTopper.gradient} text-white flex items-center justify-center font-black text-xs shadow-lg`}>
+                  {activeTopper.initials}
+                </div>
+              )}
               <div>
                 <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">{activeTopper.name}</h4>
                 <p className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5">{activeTopper.exam}</p>

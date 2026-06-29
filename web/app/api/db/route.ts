@@ -182,7 +182,7 @@ async function handleBootstrap() {
     date: n.date,
     publishDate: n.publishDate,
     type: n.type,
-    category: n.category as 'notice' | 'result' | 'admit_card' | 'announcement',
+    category: n.category as 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial',
     url: n.url || undefined,
     lastDate: n.lastDate || undefined,
     imageUrl: n.imageUrl || undefined,

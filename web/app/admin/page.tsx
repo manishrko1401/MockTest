@@ -59,9 +59,9 @@ const scoreVariance = [
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -251,6 +251,15 @@ export default function AdminAnalytics() {
   const [announcementUrl, setAnnouncementUrl] = useState('');
   const [announcementImageUrl, setAnnouncementImageUrl] = useState('');
   const [announcementSearch, setAnnouncementSearch] = useState('');
+
+  // Testimonials states
+  const [testiName, setTestiName] = useState('');
+  const [testiExam, setTestiExam] = useState('');
+  const [testiQuote, setTestiQuote] = useState('');
+  const [testiInitials, setTestiInitials] = useState('');
+  const [testiGradient, setTestiGradient] = useState('from-blue-600 to-cyan-500');
+  const [testiPhotoUrl, setTestiPhotoUrl] = useState('');
+  const [testiSearch, setTestiSearch] = useState('');
 
   // User Management state from context
   const { 
@@ -673,6 +682,46 @@ export default function AdminAnalytics() {
     }
   };
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setTestiPhotoUrl(reader.result as string);
+      showToast("Topper photo uploaded successfully!");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddTestimonialSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testiName || !testiExam || !testiQuote) {
+      alert("Name, Exam details, and Quote are required!");
+      return;
+    }
+
+    const initialsVal = testiInitials.trim() || testiName.slice(0, 2).toUpperCase();
+    
+    addNotice(
+      testiName.trim(),
+      testiQuote.trim(),
+      'testimonial',
+      testiExam.trim(),
+      testiGradient,
+      initialsVal,
+      testiPhotoUrl || undefined
+    );
+
+    setTestiName('');
+    setTestiExam('');
+    setTestiQuote('');
+    setTestiInitials('');
+    setTestiGradient('from-blue-600 to-cyan-500');
+    setTestiPhotoUrl('');
+    showToast("Testimonial created successfully!");
+  };
+
   if (currentUser?.role !== 'ADMIN') {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-950 font-sans text-slate-100 relative overflow-hidden px-4">
@@ -828,6 +877,17 @@ export default function AdminAnalytics() {
               {language === 'hi' ? 'आधिकारिक घोषणाएँ' : 'Manage Announcements'}
             </button>
             <button
+              onClick={() => selectTab('testimonials')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                activeTab === 'testimonials'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Award className="h-4 w-4" />
+              {language === 'hi' ? 'प्रशंसापत्र प्रबंधक' : 'Topper Testimonials'}
+            </button>
+            <button
               onClick={() => selectTab('categories')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
                 activeTab === 'categories'
@@ -934,6 +994,8 @@ export default function AdminAnalytics() {
                 ? (language === 'hi' ? 'उपयोगकर्ता प्रबंधन और पहुँच नियंत्रण' : 'User Management & Access Control')
                 : activeTab === 'notices'
                 ? (language === 'hi' ? 'लाइव अपडेट और नोटिस प्रबंधक' : 'Live Updates & Notices Manager')
+                : activeTab === 'testimonials'
+                ? (language === 'hi' ? 'प्रशंसापत्र प्रबंधक' : 'Toppers Testimonials Manager')
                 : activeTab === 'categories'
                 ? (language === 'hi' ? 'परीक्षा श्रेणियां प्रबंधित करें' : 'Manage Exam Categories')
                 : activeTab === 'subcategories'
@@ -3479,6 +3541,210 @@ export default function AdminAnalytics() {
                   </div>
                 </div>
 
+              </div>
+            </div>
+          )}
+
+          {/* TAB: TESTIMONIALS MANAGER */}
+          {activeTab === 'testimonials' && (
+            <div className="space-y-8 animate-in fade-in duration-200">
+              {/* Testimonial Creation Form */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
+                <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+                  <PlusCircle className="h-4.5 w-4.5 text-blue-600" /> Create New Topper Testimonial
+                </h3>
+
+                <form onSubmit={handleAddTestimonialSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Topper Student Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={testiName}
+                        onChange={(e) => setTestiName(e.target.value)}
+                        placeholder="e.g. Rahul Sharma"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Exam & Selection Title</label>
+                      <input
+                        type="text"
+                        required
+                        value={testiExam}
+                        onChange={(e) => setTestiExam(e.target.value)}
+                        placeholder="e.g. SSC CGL 2025 (Selected: Excise Inspector)"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Student Initials (Optional)</label>
+                      <input
+                        type="text"
+                        value={testiInitials}
+                        onChange={(e) => setTestiInitials(e.target.value)}
+                        placeholder="e.g. RS (Auto-falls back to first letters)"
+                        maxLength={2}
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Background Gradient Scheme</label>
+                      <select
+                        value={testiGradient}
+                        onChange={(e) => setTestiGradient(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                      >
+                        <option value="from-blue-600 to-cyan-500">Ocean Blue (Blue to Cyan)</option>
+                        <option value="from-purple-600 to-pink-500">Neon Orchid (Purple to Pink)</option>
+                        <option value="from-orange-600 to-amber-500">Sunset Fire (Orange to Amber)</option>
+                        <option value="from-emerald-600 to-teal-500">Forest Vitality (Emerald to Teal)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Topper Photo (Optional)</label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          className="hidden"
+                          id="topper-photo-upload"
+                        />
+                        <label
+                          htmlFor="topper-photo-upload"
+                          className="cursor-pointer bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-2"
+                        >
+                          <Upload className="h-4 w-4" /> Choose Photo
+                        </label>
+                        {testiPhotoUrl ? (
+                          <div className="flex items-center gap-2">
+                            <img src={testiPhotoUrl} alt="Topper preview" className="h-10 w-10 rounded-full object-cover border border-slate-205 dark:border-slate-800 shadow" />
+                            <button
+                              type="button"
+                              onClick={() => setTestiPhotoUrl('')}
+                              className="text-red-500 text-xs hover:underline font-bold"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-semibold">No photo selected (initials placeholder will be used)</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Topper Quote / Message Text</label>
+                    <textarea
+                      required
+                      value={testiQuote}
+                      onChange={(e) => setTestiQuote(e.target.value)}
+                      placeholder="e.g. Testbook Pass Pro mock sittings exactly models the live CBT screen. It was key to my success!"
+                      rows={3}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      type="submit"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-xs font-bold shadow-lg shadow-blue-500/25 active:scale-95 transition-all cursor-pointer"
+                    >
+                      Publish Testimonial
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Created Testimonials list table */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800 mb-6">
+                  <div>
+                    <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Active Testimonials Listing</h3>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">Manage topper cards currently displayed in rotation on the home screen.</p>
+                  </div>
+
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                    <input
+                      type="text"
+                      value={testiSearch}
+                      onChange={(e) => setTestiSearch(e.target.value)}
+                      placeholder="Search testimonials..."
+                      className="w-full bg-slate-55 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-700"
+                    />
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                        <th className="py-3 px-4">Topper Profile</th>
+                        <th className="py-3 px-4">Quote Message</th>
+                        <th className="py-3 px-4">Selection Detail</th>
+                        <th className="py-3 px-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {noticesList.filter(n => n.category === 'testimonial').filter(n => 
+                        n.title.toLowerCase().includes(testiSearch.toLowerCase()) ||
+                        n.type.toLowerCase().includes(testiSearch.toLowerCase())
+                      ).length > 0 ? (
+                        noticesList.filter(n => n.category === 'testimonial').filter(n => 
+                          n.title.toLowerCase().includes(testiSearch.toLowerCase()) ||
+                          n.type.toLowerCase().includes(testiSearch.toLowerCase())
+                        ).map((testi) => (
+                          <tr key={testi.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-350">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-3">
+                                {testi.imageUrl ? (
+                                  <img src={testi.imageUrl} alt={testi.title} className="h-10 w-10 rounded-full object-cover border border-slate-205 dark:border-slate-800 shadow" />
+                                ) : (
+                                  <div className={`h-10 w-10 rounded-full bg-gradient-to-r ${testi.url || 'from-blue-600 to-cyan-500'} text-white flex items-center justify-center font-bold text-xs shadow-sm`}>
+                                    {testi.lastDate || testi.title.slice(0, 2).toUpperCase()}
+                                  </div>
+                                )}
+                                <div>
+                                  <h5 className="font-bold text-slate-900 dark:text-white text-xs">{testi.title}</h5>
+                                  <span className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Initials: {testi.lastDate}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 max-w-xs font-semibold text-slate-650 dark:text-slate-300 leading-normal truncate" title={testi.type}>
+                              "{testi.type}"
+                            </td>
+                            <td className="py-3 px-4 font-bold text-slate-700 dark:text-slate-300">{testi.date}</td>
+                            <td className="py-3 px-4 text-right">
+                              <button
+                                onClick={() => {
+                                  deleteNotice(testi.id);
+                                  showToast('Testimonial deleted successfully.');
+                                }}
+                                className="text-red-650 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="py-12 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
+                            No custom testimonials configured in database. (Mock testimonials are active on the home screen as fallback).
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
