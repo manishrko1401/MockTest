@@ -977,28 +977,28 @@ export default function MockTestsCatalog() {
                                 return (
                                   <div
                                     key={test.id}
-                                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4.5 rounded-xl shadow-sm hover:shadow-md hover:border-blue-500/50 dark:hover:border-blue-500/50 transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full"
+                                    className="bg-white/75 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/80 dark:border-slate-800/80 p-4.5 rounded-xl shadow-sm hover:shadow-md hover:border-blue-500/45 dark:hover:border-blue-500/45 transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full hover:scale-[1.01]"
                                   >
                                     <div className="space-y-1.5 flex-1 w-full text-left">
                                       <div className="flex flex-wrap items-center gap-2">
                                         {isTestPremium ? (
-                                          <span className="bg-amber-50 text-amber-700 dark:bg-amber-955 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-250 dark:border-amber-900/60 uppercase tracking-wider">
+                                          <span className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/5 dark:text-amber-405 text-[8px] font-black px-2 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-wider">
                                             {language === 'hi' ? 'प्रो' : 'PRO'}
                                           </span>
                                         ) : (
-                                          <span className="bg-green-50 text-green-700 dark:bg-green-955 dark:text-green-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60 uppercase tracking-wider">
+                                          <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider">
                                             {language === 'hi' ? 'मुफ़्त' : 'FREE'}
                                           </span>
                                         )}
 
                                         {ongoing && (
-                                          <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-955 dark:text-orange-400 border border-orange-250 dark:border-orange-850 px-1.5 py-0.5 rounded font-black uppercase">
+                                          <span className="flex items-center gap-1 text-[8px] bg-orange-500/10 text-orange-700 dark:bg-orange-500/5 dark:text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-md font-black uppercase">
                                             ⏸ {language === 'hi' ? 'रुका हुआ' : 'PAUSED'}
                                           </span>
                                         )}
                                         
                                         {completed && (
-                                          <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-800 dark:bg-green-955/60 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded font-black uppercase">
+                                          <span className="flex items-center gap-1 text-[8px] bg-blue-500/10 text-blue-700 dark:bg-blue-500/5 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-md font-black uppercase">
                                             ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                           </span>
                                         )}
@@ -1101,28 +1101,28 @@ export default function MockTestsCatalog() {
                           return (
                             <div
                               key={test.id}
-                              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4.5 rounded-xl shadow-sm hover:shadow-md hover:border-blue-500/50 dark:hover:border-blue-500/50 transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full"
+                              className="bg-white/75 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/80 dark:border-slate-800/80 p-4.5 rounded-xl shadow-sm hover:shadow-md hover:border-blue-500/45 dark:hover:border-blue-500/45 transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full hover:scale-[1.01]"
                             >
                               <div className="space-y-1.5 flex-1 w-full text-left">
                                 <div className="flex flex-wrap items-center gap-2">
                                   {isTestPremium ? (
-                                    <span className="bg-amber-50 text-amber-700 dark:bg-amber-955 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-250 dark:border-amber-900/60 uppercase tracking-wider">
+                                    <span className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/5 dark:text-amber-405 text-[8px] font-black px-2 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-wider">
                                       {language === 'hi' ? 'प्रो' : 'PRO'}
                                     </span>
                                   ) : (
-                                    <span className="bg-green-50 text-green-700 dark:bg-green-955 dark:text-green-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60 uppercase tracking-wider">
+                                    <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider">
                                       {language === 'hi' ? 'मुफ़्त' : 'FREE'}
                                     </span>
                                   )}
 
                                   {ongoing && (
-                                    <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-955 dark:text-orange-400 border border-orange-250 dark:border-orange-850 px-1.5 py-0.5 rounded font-black uppercase">
+                                    <span className="flex items-center gap-1 text-[8px] bg-orange-500/10 text-orange-700 dark:bg-orange-500/5 dark:text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-md font-black uppercase">
                                       ⏸ {language === 'hi' ? 'रुका हुआ' : 'PAUSED'}
                                     </span>
                                   )}
                                   
                                   {completed && (
-                                    <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-800 dark:bg-green-955/60 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded font-black uppercase">
+                                    <span className="flex items-center gap-1 text-[8px] bg-blue-500/10 text-blue-700 dark:bg-blue-500/5 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-md font-black uppercase">
                                       ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                     </span>
                                   )}
