@@ -418,11 +418,11 @@ function TcsIonEngine({ testId }: { testId: string }) {
                 } catch (e) {
                   console.warn("Exit fullscreen failed:", e);
                 }
-                router.push('/mock-tests');
+                router.push(`/exam/${testId}/analysis`);
               }}
               className="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg shadow hover:bg-blue-750 transition"
             >
-              Go to Test Series
+              {language === 'hi' ? 'विश्लेषण देखें' : 'View Analysis'}
             </button>
           </div>
         </div>
