@@ -1,5 +1,5 @@
-import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { Text, View, StyleSheet, Image } from 'react-native';
 
 interface HtmlTextProps {
   html: string;
@@ -242,6 +242,93 @@ const FractionView: React.FC<FracProps> = ({ num, den, fontSize, color }) => {
       <Text style={[styles.fracPart, { fontSize: fs, color }]}>{num}</Text>
       <View style={[styles.fracLine, { backgroundColor: color }]} />
       <Text style={[styles.fracPart, { fontSize: fs, color }]}>{den}</Text>
+    </View>
+  );
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Remote image helper component with auto-height sizing
+// ──────────────────────────────────────────────────────────────────────────────
+interface HtmlImageProps {
+  src: string;
+  isDark?: boolean;
+}
+const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark }) => {
+  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    Image.getSize(
+      src,
+      (width, height) => {
+        if (width && height) {
+          setAspectRatio(width / height);
+        }
+        setLoading(false);
+      },
+      (error) => {
+        console.warn('Failed to get image size for:', src, error);
+        setLoading(false);
+      }
+    );
+  }, [src]);
+
+  if (loading) {
+    return (
+      <View
+        style={{
+          width: 120,
+          height: 40,
+          backgroundColor: isDark ? '#1E293B' : '#E2E8F0',
+          borderRadius: 4,
+          marginVertical: 6,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ fontSize: 9, color: isDark ? '#94A3B8' : '#64748B' }}>Loading image...</Text>
+      </View>
+    );
+  }
+
+  const containerStyle: any = {
+    marginVertical: 8,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: '#FFFFFF',
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: isDark ? '#334155' : '#E2E8F0',
+  };
+
+  if (aspectRatio) {
+    return (
+      <View style={containerStyle}>
+        <Image
+          source={{ uri: src }}
+          style={{
+            width: '100%',
+            aspectRatio: aspectRatio,
+          }}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  }
+
+  // Fallback if size detection fails
+  return (
+    <View style={containerStyle}>
+      <Image
+        source={{ uri: src }}
+        style={{
+          width: '100%',
+          height: 150,
+        }}
+        resizeMode="contain"
+      />
     </View>
   );
 };
@@ -499,6 +586,21 @@ function renderContent(
         pushText('• ');
       } else if (tag === '</li>') {
         nodes.push(<Text key={keyIdx++} style={textStyle}>{'\n'}</Text>);
+      } else if (tag.startsWith('<img')) {
+        const srcMatch = token.match(/src=["']([^"']+)["']/i);
+        if (srcMatch) {
+          let src = srcMatch[1];
+          if (src.startsWith('//')) {
+            src = 'https:' + src;
+          }
+          nodes.push(
+            <HtmlImage
+              key={keyIdx++}
+              src={src}
+              isDark={isDark}
+            />
+          );
+        }
       }
       // All other tags (span, sub, sup, etc.) are silently ignored
     } else {
