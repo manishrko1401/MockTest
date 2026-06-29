@@ -647,21 +647,7 @@ export default function MarksCalculator() {
               <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Response sheet URL (Optional)</label>
-                    <span className="text-[9px] text-slate-400 font-bold uppercase">e.g. ssc.digialm.com URL</span>
-                  </div>
-                  <input
-                    type="url"
-                    value={responseUrl}
-                    onChange={(e) => setResponseUrl(e.target.value)}
-                    placeholder="https://ssc.digialm.com/EForms/configuredHtml/..."
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-blue-500 placeholder-slate-400 text-slate-800 dark:text-slate-200"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Answer Key HTML Code (Required)</label>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Response sheet URL (Required)</label>
                     <button
                       type="button"
                       onClick={handleLoadSample}
@@ -670,12 +656,13 @@ export default function MarksCalculator() {
                       <FileCode className="h-3.5 w-3.5" /> {language === 'hi' ? 'डेमो आंसर की लोड करें' : 'Load Demo Answer Key'}
                     </button>
                   </div>
-                  <textarea
-                    value={htmlContent}
-                    onChange={(e) => setHtmlContent(e.target.value)}
-                    placeholder="Paste the raw HTML source code of your response page here (Right-click -> View Page Source -> Ctrl+A -> Ctrl+C)..."
-                    rows={8}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-3.5 py-3 text-xs font-mono focus:outline-none focus:border-blue-500 placeholder-slate-400 text-slate-800 dark:text-slate-250 leading-relaxed"
+                  <input
+                    type="url"
+                    required
+                    value={responseUrl}
+                    onChange={(e) => setResponseUrl(e.target.value)}
+                    placeholder="https://ssc.digialm.com/EForms/configuredHtml/..."
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-blue-500 placeholder-slate-400 text-slate-800 dark:text-slate-200"
                   />
                 </div>
               </div>
