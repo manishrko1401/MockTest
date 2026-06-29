@@ -1,51 +1,83 @@
 import { NextResponse } from 'next/server';
 import https from 'https';
 import http from 'http';
-import { URL } from 'url';
 
-// Fetch HTML with automatic redirect following (up to 5 hops) and gzip/encoding support
-function fetchHtmlFollowRedirects(
+// Helper to manually parse protocol, host, port, and raw path preserving all slashes exactly
+function parseUrlRaw(urlStr: string) {
+  const match = urlStr.match(/^(https?):\/\/([^\/]+)(.*)$/);
+  if (!match) {
+    throw new Error('Invalid URL format');
+  }
+  const protocol = match[1];
+  const hostAndPort = match[2];
+  const rawPath = match[3] || '/';
+
+  const [hostname, portStr] = hostAndPort.split(':');
+  const port = portStr ? parseInt(portStr, 10) : (protocol === 'https' ? 443 : 80);
+
+  return {
+    protocol,
+    hostname,
+    port,
+    rawPath
+  };
+}
+
+// Fetch HTML with redirect support preserving raw URL path structure (e.g. double slashes)
+function fetchHtmlFollowRedirectsRaw(
   urlStr: string,
   maxRedirects = 5
 ): Promise<{ status: number; html: string }> {
   return new Promise((resolve, reject) => {
     function doRequest(currentUrl: string, redirectsLeft: number) {
-      let parsed: URL;
+      let parsed;
       try {
-        parsed = new URL(currentUrl);
-      } catch {
-        return reject(new Error(`Invalid URL: ${currentUrl}`));
+        parsed = parseUrlRaw(currentUrl);
+      } catch (err) {
+        return reject(err);
       }
 
-      const lib = parsed.protocol === 'https:' ? https : http;
+      const lib = parsed.protocol === 'https' ? https : http;
       const options = {
         hostname: parsed.hostname,
-        port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
-        path: parsed.pathname + parsed.search,
+        port: parsed.port,
+        path: parsed.rawPath,
         method: 'GET',
         headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          Accept:
-            'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5',
-          Connection: 'keep-alive',
-        },
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'Cache-Control': 'max-age=0'
+        }
       };
 
       const req = lib.request(options, (res) => {
         const { statusCode = 200, headers } = res;
 
-        // Follow 3xx redirects
+        // Follow redirects
         if (
           redirectsLeft > 0 &&
           statusCode >= 300 &&
           statusCode < 400 &&
           headers.location
         ) {
-          res.resume(); // Discard body
-          const nextUrl = new URL(headers.location, currentUrl).toString();
-          doRequest(nextUrl, redirectsLeft - 1);
+          res.resume();
+          // Resolve next URL relative to current location
+          let targetUrl = headers.location;
+          if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+            const origin = `${parsed.protocol}://${parsed.hostname}${parsed.port !== 443 && parsed.port !== 80 ? ':' + parsed.port : ''}`;
+            if (targetUrl.startsWith('/')) {
+              targetUrl = origin + targetUrl;
+            } else {
+              // Relative redirect path
+              const lastSlashIndex = parsed.rawPath.lastIndexOf('/');
+              const basePath = lastSlashIndex !== -1 ? parsed.rawPath.substring(0, lastSlashIndex + 1) : '/';
+              targetUrl = origin + basePath + targetUrl;
+            }
+          }
+          doRequest(targetUrl, redirectsLeft - 1);
           return;
         }
 
@@ -86,13 +118,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await fetchHtmlFollowRedirects(url);
+    const result = await fetchHtmlFollowRedirectsRaw(url);
 
     if (result.status < 200 || result.status >= 400) {
       return NextResponse.json(
         {
           success: false,
-          error: `Remote server responded with HTTP ${result.status}. The URL may be expired or require login. Please open the link in your browser, press Ctrl+A, then Ctrl+C and paste in the text box.`,
+          error: `Remote server responded with HTTP ${result.status}. The URL may be expired or require login. Please open the link in your browser, press Ctrl+U (or Cmd+U) to view page source, press Ctrl+A → Ctrl+C, then paste it in the "Paste HTML" box below.`,
         },
         { status: 200 }
       );
