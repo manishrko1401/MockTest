@@ -62,8 +62,9 @@ export default function App() {
 
         // Check SecureStore for auto-login
         const savedEmail = await SecureStore.getItemAsync('tb_user_email');
-        if (savedEmail) {
-          const authRes = await ApiClient.login(savedEmail);
+        const savedPassword = await SecureStore.getItemAsync('tb_user_password');
+        if (savedEmail && savedPassword) {
+          const authRes = await ApiClient.login(savedEmail, savedPassword);
           if (authRes.success && authRes.user) {
             setCurrentUser(authRes.user);
             setViewMode('dashboard');
@@ -140,7 +141,7 @@ export default function App() {
   // Refresh user data (coins, sessions) to keep in sync with Web/Admin changes
   const refreshUserData = async (userId: string) => {
     if (!currentUser?.email) return;
-    const res = await ApiClient.login(currentUser.email);
+    const res = await ApiClient.login(currentUser.email, currentUser.password);
     if (res.success && res.user) {
       setCurrentUser(res.user);
     }
@@ -180,6 +181,7 @@ export default function App() {
   const handleLoginSuccess = async (user: any) => {
     setCurrentUser(user);
     await SecureStore.setItemAsync('tb_user_email', user.email);
+    await SecureStore.setItemAsync('tb_user_password', user.password);
     
     // Refresh catalog bootstrap data
     const bootRes = await ApiClient.bootstrap();
@@ -194,6 +196,7 @@ export default function App() {
   const handleLogout = async () => {
     setLoading(true);
     await SecureStore.deleteItemAsync('tb_user_email');
+    await SecureStore.deleteItemAsync('tb_user_password');
     setCurrentUser(null);
     setViewMode('auth');
     setLoading(false);

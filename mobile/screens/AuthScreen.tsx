@@ -45,21 +45,25 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async (loginEmail: string) => {
+  const handleLogin = async (loginEmail: string, loginPass: string) => {
     if (!loginEmail.trim()) {
       setError('Please enter your email address');
+      return;
+    }
+    if (!loginPass) {
+      setError('Please enter your password');
       return;
     }
     setLoading(true);
     setError('');
 
-    const res = await ApiClient.login(loginEmail);
+    const res = await ApiClient.login(loginEmail, loginPass);
     setLoading(false);
 
     if (res.success && res.user) {
       onLoginSuccess(res.user);
     } else {
-      setError(res.error || 'Login failed. Account might not exist.');
+      setError(res.error || 'Login failed. Please verify credentials.');
     }
   };
 
@@ -83,7 +87,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
     setLoading(true);
     setError('');
 
-    const res = await ApiClient.signup(name, email, mobile, referralCode);
+    const res = await ApiClient.signup(name, email, mobile, password, referralCode);
     setLoading(false);
 
     if (res.success && res.user) {
@@ -96,7 +100,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
 
   const handleSubmit = () => {
     if (activeTab === 'login') {
-      handleLogin(email);
+      handleLogin(email, password);
     } else {
       handleRegister();
     }

@@ -291,7 +291,7 @@ export default function AdminAnalytics() {
 
     // Hardcoded password verification for the admin panel
     if (adminEmail.trim().toLowerCase() === 'admin@mocktest.com' && adminPassword === 'test@admin123') {
-      const res = await login('admin@mocktest.com');
+      const res = await login('admin@mocktest.com', 'password123');
       if (res.success) {
         showToast('Admin access authorized successfully!');
       } else {

@@ -34,13 +34,13 @@ export const ApiClient = {
   /**
    * Performs user login using email
    */
-  login: (email: string) => postRequest('login', { email }),
+  login: (email: string, password?: string) => postRequest('login', { email, password }),
 
   /**
    * Performs user signup/registration
    */
-  signup: (name: string, email: string, mobile: string, referralCodeInput?: string) => 
-    postRequest('signup', { name, email, mobile, password: 'password123', referralCodeInput }),
+  signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string) => 
+    postRequest('signup', { name, email, mobile, password: password || 'password123', referralCodeInput }),
 
   /**
    * Updates user profile info
