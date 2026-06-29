@@ -35,7 +35,9 @@ import {
   Gift,
   KeyRound,
   Lock,
-  Coins
+  Coins,
+  Search,
+  X
 } from 'lucide-react-native';
 import * as SecureStore from 'expo-secure-store';
 import { ApiClient } from '../api';
@@ -134,6 +136,9 @@ export default function DashboardScreen({
 
   // Notice badges and seen states
   const [seenNoticeIds, setSeenNoticeIds] = useState<string[]>([]);
+
+  // Exam search state (Tests tab)
+  const [examSearchQuery, setExamSearchQuery] = useState('');
 
   useEffect(() => {
     const loadSeenNotices = async () => {
@@ -434,32 +439,74 @@ export default function DashboardScreen({
 
   const renderTestsTab = () => {
     if (selectedCategoryId === null) {
+      // Filter exam categories by search query
+      const filteredCatalog = examSearchQuery.trim()
+        ? examCatalog.filter(cat =>
+            cat.name?.toLowerCase().includes(examSearchQuery.toLowerCase())
+          )
+        : examCatalog;
+
       return (
-        <FlatList
-          data={examCatalog}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item: category }) => (
-            <TouchableOpacity
-              style={[styles.categoryCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}
-              onPress={() => setSelectedCategoryId(category.id)}
-            >
-              <View style={styles.categoryCardLeft}>
-                <View style={[styles.categoryIconCircle, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
-                  <GraduationCap color={isDark ? ThemeColors.dark.text : '#2563EB'} size={20} />
-                </View>
-                <View style={styles.categoryDetails}>
-                  <Text style={[styles.categoryTitle, isDark && { color: ThemeColors.dark.text }]}>{category.name}</Text>
-                  <Text style={[styles.categoryMeta, isDark && { color: ThemeColors.dark.textMuted }]}>
-                    {category.subCategories?.length || 0} Sub-Exam Categories
-                  </Text>
-                </View>
-              </View>
-              <ChevronRight color="#9CA3AF" size={18} />
-            </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          {/* Search Bar */}
+          <View style={[styles.examSearchContainer, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+            <Search size={16} color={isDark ? '#60A5FA' : '#6B7280'} style={{ marginRight: 8 }} />
+            <TextInput
+              style={[styles.examSearchInput, isDark && { color: ThemeColors.dark.text }]}
+              placeholder="Search exam name..."
+              placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+              value={examSearchQuery}
+              onChangeText={setExamSearchQuery}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+              autoCorrect={false}
+            />
+            {examSearchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setExamSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <X size={16} color={isDark ? '#9CA3AF' : '#6B7280'} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {filteredCatalog.length === 0 ? (
+            <View style={styles.examSearchEmpty}>
+              <Search size={36} color={isDark ? '#374151' : '#D1D5DB'} />
+              <Text style={[styles.examSearchEmptyText, isDark && { color: ThemeColors.dark.textMuted }]}>
+                No exams found for "{examSearchQuery}"
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredCatalog}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContainer}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item: category }) => (
+                <TouchableOpacity
+                  style={[styles.categoryCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}
+                  onPress={() => {
+                    setExamSearchQuery('');
+                    setSelectedCategoryId(category.id);
+                  }}
+                >
+                  <View style={styles.categoryCardLeft}>
+                    <View style={[styles.categoryIconCircle, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
+                      <GraduationCap color={isDark ? ThemeColors.dark.text : '#2563EB'} size={20} />
+                    </View>
+                    <View style={styles.categoryDetails}>
+                      <Text style={[styles.categoryTitle, isDark && { color: ThemeColors.dark.text }]}>{category.name}</Text>
+                      <Text style={[styles.categoryMeta, isDark && { color: ThemeColors.dark.textMuted }]}>
+                        {category.subCategories?.length || 0} Sub-Exam Categories
+                      </Text>
+                    </View>
+                  </View>
+                  <ChevronRight color="#9CA3AF" size={18} />
+                </TouchableOpacity>
+              )}
+            />
           )}
-        />
+        </View>
       );
     }
 
@@ -1885,6 +1932,39 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#6B7280',
     marginTop: 2,
+  },
+  examSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+  },
+  examSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#111827',
+    paddingVertical: 0,
+    fontWeight: '400',
+  },
+  examSearchEmpty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    gap: 12,
+  },
+  examSearchEmptyText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    paddingHorizontal: 24,
   },
   backToCatBtn: {
     flexDirection: 'row',
