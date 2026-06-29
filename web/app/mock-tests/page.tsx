@@ -697,7 +697,8 @@ export default function MockTestsCatalog() {
             </nav>
           </div>
 
-          <div className="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl p-4 text-center">
+          {/* Hide Unlock All / Get Pass Pro tab for now */}
+          {/* <div className="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl p-4 text-center">
             <p className="text-[10px] uppercase font-bold text-slate-600 dark:text-slate-400">{t.unlockAll}</p>
             <p className="text-xs text-slate-500 dark:text-slate-500 leading-normal mt-1 mb-3">{t.upgradeDesc}</p>
             <button
@@ -706,7 +707,7 @@ export default function MockTestsCatalog() {
             >
               {t.getPassPro}
             </button>
-          </div>
+          </div> */}
         </aside>
 
         {/* Right Side Content (Tests list/details) */}
