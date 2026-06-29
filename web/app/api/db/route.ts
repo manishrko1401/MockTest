@@ -195,7 +195,11 @@ async function handleBootstrap() {
         include: {
           testSeries: {
             include: {
-              mockTests: true,
+              mockTests: {
+                orderBy: {
+                  createdAt: 'asc',
+                },
+              },
             },
           },
         },
