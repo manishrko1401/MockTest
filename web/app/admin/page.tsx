@@ -59,9 +59,9 @@ const scoreVariance = [
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports' | 'announcements' | 'support'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'mocks' | 'reports' | 'announcements' | 'support') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -271,6 +271,8 @@ export default function AdminAnalytics() {
     deleteCategory,
     addSubCategory,
     deleteSubCategory,
+    addSubSubCategory,
+    deleteSubSubCategory,
     addMockTest,
     deleteMockTest,
     reportedQuestionsList,
@@ -319,10 +321,14 @@ export default function AdminAnalytics() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newSubCategoryParent, setNewSubCategoryParent] = useState('');
   const [newSubCategoryName, setNewSubCategoryName] = useState('');
+  const [newSubSubCategoryParentCategory, setNewSubSubCategoryParentCategory] = useState('');
+  const [newSubSubCategoryParentSubCategory, setNewSubSubCategoryParentSubCategory] = useState('');
+  const [newSubSubCategoryName, setNewSubSubCategoryName] = useState('');
 
   // Mock test management form states
   const [newMockCategoryParent, setNewMockCategoryParent] = useState('');
   const [newMockSubCategoryParent, setNewMockSubCategoryParent] = useState('');
+  const [newMockSubSubCategoryParent, setNewMockSubSubCategoryParent] = useState('');
   const [newMockTitle, setNewMockTitle] = useState('');
   const [newMockQsCount, setNewMockQsCount] = useState(100);
   const [newMockDuration, setNewMockDuration] = useState(60);
@@ -342,9 +348,11 @@ export default function AdminAnalytics() {
   const getCustomQuestionsCount = (testId: string) => {
     for (const cat of examCatalog) {
       for (const sub of cat.subCategories) {
-        const found = sub.tests.find(t => t.id === testId);
-        if (found) {
-          return (found as any).customQuestionsCount || 0;
+        for (const subSub of (sub.subSubCategories || [])) {
+          const found = subSub.tests.find(t => t.id === testId);
+          if (found) {
+            return (found as any).customQuestionsCount || 0;
+          }
         }
       }
     }
@@ -842,6 +850,17 @@ export default function AdminAnalytics() {
               {language === 'hi' ? 'उप-श्रेणियां' : 'Sub Categories'}
             </button>
             <button
+              onClick={() => selectTab('subsubcategories')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                activeTab === 'subsubcategories'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <FileText className="h-4 w-4" />
+              {language === 'hi' ? 'उप-उप-श्रेणियां' : 'Sub Sub Categories'}
+            </button>
+            <button
               onClick={() => selectTab('mocks')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
                 activeTab === 'mocks'
@@ -919,6 +938,8 @@ export default function AdminAnalytics() {
                 ? (language === 'hi' ? 'परीक्षा श्रेणियां प्रबंधित करें' : 'Manage Exam Categories')
                 : activeTab === 'subcategories'
                 ? (language === 'hi' ? 'परीक्षा उप-श्रेणियां प्रबंधित करें' : 'Manage Exam Subcategories')
+                : activeTab === 'subsubcategories'
+                ? (language === 'hi' ? 'परीक्षा उप-उप-श्रेणियां प्रबंधित करें' : 'Manage Exam Sub-Subcategories')
                 : activeTab === 'mocks'
                 ? (language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests')
                 : activeTab === 'announcements'
@@ -1105,12 +1126,14 @@ export default function AdminAnalytics() {
             const allTests: { id: string; title: string; categoryName: string; subCategoryName: string }[] = [];
             examCatalog.forEach(cat => {
               cat.subCategories.forEach(sub => {
-                sub.tests.forEach(t => {
-                  allTests.push({
-                    id: t.id,
-                    title: t.title,
-                    categoryName: cat.name,
-                    subCategoryName: sub.name
+                (sub.subSubCategories || []).forEach(subsub => {
+                  subsub.tests.forEach(t => {
+                    allTests.push({
+                      id: t.id,
+                      title: t.title,
+                      categoryName: cat.name,
+                      subCategoryName: `${sub.name} > ${subsub.name}`
+                    });
                   });
                 });
               });
@@ -2539,6 +2562,140 @@ export default function AdminAnalytics() {
             </div>
           )}
 
+          {/* TAB 6.5: SUB-SUB-CATEGORIES MANAGEMENT */}
+          {activeTab === 'subsubcategories' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Add Sub Sub Category Form */}
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 lg:col-span-1">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+                  <FileText className="h-4.5 w-4.5 text-blue-600" />
+                  {language === 'hi' ? 'नई उप-उप-श्रेणी जोड़ें' : 'Create Sub-Sub Category'}
+                </h3>
+                
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newSubSubCategoryParentCategory || !newSubSubCategoryParentSubCategory || !newSubSubCategoryName.trim()) {
+                      alert('Please select parent category, subcategory and enter a name.');
+                      return;
+                    }
+                    addSubSubCategory(newSubSubCategoryParentCategory, newSubSubCategoryParentSubCategory, newSubSubCategoryName.trim());
+                    setNewSubSubCategoryName('');
+                    showToast('Sub-subcategory created successfully!');
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">
+                      {language === 'hi' ? 'मुख्य परीक्षा श्रेणी' : 'Parent Category'}
+                    </label>
+                    <select
+                      required
+                      value={newSubSubCategoryParentCategory}
+                      onChange={(e) => {
+                        setNewSubSubCategoryParentCategory(e.target.value);
+                        setNewSubSubCategoryParentSubCategory('');
+                      }}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                    >
+                      <option value="">-- Select Parent Category --</option>
+                      {examCatalog.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">
+                      {language === 'hi' ? 'मुख्य उप-श्रेणी' : 'Parent Sub Category'}
+                    </label>
+                    <select
+                      required
+                      value={newSubSubCategoryParentSubCategory}
+                      onChange={(e) => setNewSubSubCategoryParentSubCategory(e.target.value)}
+                      disabled={!newSubSubCategoryParentCategory}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
+                    >
+                      <option value="">-- Select Parent Sub Category --</option>
+                      {examCatalog.find(c => c.id === newSubSubCategoryParentCategory)?.subCategories.map(sub => (
+                        <option key={sub.id} value={sub.id}>{sub.name}</option>
+                      )) || null}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">
+                      {language === 'hi' ? 'उप-उप-श्रेणी का नाम' : 'Sub-Sub Category Name'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newSubSubCategoryName}
+                      onChange={(e) => setNewSubSubCategoryName(e.target.value)}
+                      placeholder="e.g. Quantitative Aptitude, Reasoning"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
+                  >
+                    {language === 'hi' ? 'उप-उप-श्रेणी बनाएं' : 'Create Sub-Sub Category'}
+                  </button>
+                </form>
+              </div>
+
+              {/* Sub-subcategories List Table */}
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 lg:col-span-2 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
+                    {language === 'hi' ? 'सक्रिय उप-उप-श्रेणियां' : 'Active Sub-Sub Categories'}
+                  </h3>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-bold">
+                          <th className="py-3 px-4">Parent Category</th>
+                          <th className="py-3 px-4">Sub Category</th>
+                          <th className="py-3 px-4">Sub-Sub Category Name</th>
+                          <th className="py-3 px-4">Mock Tests Count</th>
+                          <th className="py-3 px-4 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {examCatalog.flatMap(cat => 
+                          cat.subCategories.flatMap(sub => 
+                            (sub.subSubCategories || []).map(subsub => (
+                              <tr key={subsub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                                <td className="py-3.5 px-4 font-bold text-slate-500">{cat.name}</td>
+                                <td className="py-3.5 px-4 font-bold text-slate-500">{sub.name}</td>
+                                <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">{subsub.name}</td>
+                                <td className="py-3.5 px-4 font-semibold text-slate-500">{(subsub.tests || []).length} mock test(s)</td>
+                                <td className="py-3.5 px-4 text-right">
+                                  <button
+                                    onClick={() => {
+                                      deleteSubSubCategory(cat.id, sub.id, subsub.id);
+                                      showToast('Sub-subcategory deleted successfully.');
+                                    }}
+                                    className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                  >
+                                    Delete
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* TAB 7: MOCK TESTS MANAGEMENT */}
           {activeTab === 'mocks' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -2552,11 +2709,11 @@ export default function AdminAnalytics() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    if (!newMockCategoryParent || !newMockSubCategoryParent || !newMockTitle.trim()) {
-                      alert('Please select category, subcategory and enter a test title.');
+                    if (!newMockCategoryParent || !newMockSubCategoryParent || !newMockSubSubCategoryParent || !newMockTitle.trim()) {
+                      alert('Please select category, subcategory, sub-subcategory and enter a test title.');
                       return;
                     }
-                    addMockTest(newMockCategoryParent, newMockSubCategoryParent, {
+                    addMockTest(newMockCategoryParent, newMockSubCategoryParent, newMockSubSubCategoryParent, {
                       title: newMockTitle.trim(),
                       questionsCount: Number(newMockQsCount),
                       durationMinutes: Number(newMockDuration),
@@ -2565,6 +2722,7 @@ export default function AdminAnalytics() {
                       requiredTier: newMockRequiredTier
                     });
                     setNewMockTitle('');
+                    setNewMockSubSubCategoryParent('');
                     showToast('Mock test created successfully!');
                   }}
                   className="space-y-4"
@@ -2577,6 +2735,7 @@ export default function AdminAnalytics() {
                       onChange={(e) => {
                         setNewMockCategoryParent(e.target.value);
                         setNewMockSubCategoryParent('');
+                        setNewMockSubSubCategoryParent('');
                       }}
                       className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                     >
@@ -2592,13 +2751,32 @@ export default function AdminAnalytics() {
                     <select
                       required
                       value={newMockSubCategoryParent}
-                      onChange={(e) => setNewMockSubCategoryParent(e.target.value)}
+                      onChange={(e) => {
+                        setNewMockSubCategoryParent(e.target.value);
+                        setNewMockSubSubCategoryParent('');
+                      }}
                       disabled={!newMockCategoryParent}
                       className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
                     >
                       <option value="">-- Select Sub Category --</option>
                       {examCatalog.find(c => c.id === newMockCategoryParent)?.subCategories.map(sub => (
                         <option key={sub.id} value={sub.id}>{sub.name}</option>
+                      )) || null}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">Sub-Sub Category</label>
+                    <select
+                      required
+                      value={newMockSubSubCategoryParent}
+                      onChange={(e) => setNewMockSubSubCategoryParent(e.target.value)}
+                      disabled={!newMockSubCategoryParent}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
+                    >
+                      <option value="">-- Select Sub-Sub Category --</option>
+                      {examCatalog.find(c => c.id === newMockCategoryParent)?.subCategories.find(s => s.id === newMockSubCategoryParent)?.subSubCategories?.map(subsub => (
+                        <option key={subsub.id} value={subsub.id}>{subsub.name}</option>
                       )) || null}
                     </select>
                   </div>
@@ -2694,46 +2872,53 @@ export default function AdminAnalytics() {
                       <tbody>
                         {examCatalog.flatMap(cat => 
                           cat.subCategories.flatMap(sub => 
-                            sub.tests.map(test => (
-                              <tr key={test.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                                <td className="py-3 px-4 text-slate-500 font-medium">{sub.name}</td>
-                                <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-200 max-w-[200px] truncate" title={test.title}>
-                                  <span>{test.title}</span>
-                                  {getCustomQuestionsCount(test.id) > 0 ? (
-                                    <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-green-950/60 text-green-400 border border-green-800 font-bold uppercase tracking-wider">
-                                      Custom Paper ({getCustomQuestionsCount(test.id)} Qs)
+                            (sub.subSubCategories || []).flatMap(subsub =>
+                              subsub.tests.map(test => (
+                                <tr key={test.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                                  <td className="py-3 px-4 text-slate-500 font-medium">
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] text-slate-400 font-normal">{cat.name} &gt; {sub.name}</span>
+                                      <span className="font-bold">{subsub.name}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-200 max-w-[200px] truncate" title={test.title}>
+                                    <span>{test.title}</span>
+                                    {getCustomQuestionsCount(test.id) > 0 ? (
+                                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-green-950/60 text-green-400 border border-green-800 font-bold uppercase tracking-wider">
+                                        Custom Paper ({getCustomQuestionsCount(test.id)} Qs)
+                                      </span>
+                                    ) : (
+                                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-slate-900 text-slate-500 border border-slate-800 font-bold uppercase tracking-wider">
+                                        Default Qs
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-3 px-4 text-slate-400 font-semibold">{test.questionsCount} Qs • {test.durationMinutes}m • {test.maxMarks}M</td>
+                                  <td className="py-3 px-4">
+                                    <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold ${
+                                      test.requiredTier === 'None'
+                                        ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400'
+                                        : test.requiredTier === 'Testbook Pass'
+                                        ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400'
+                                        : 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400'
+                                    }`}>
+                                      {test.requiredTier === 'None' ? 'Free' : test.requiredTier.replace('Testbook', 'Mock')}
                                     </span>
-                                  ) : (
-                                    <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-slate-900 text-slate-500 border border-slate-800 font-bold uppercase tracking-wider">
-                                      Default Qs
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="py-3 px-4 text-slate-400 font-semibold">{test.questionsCount} Qs • {test.durationMinutes}m • {test.maxMarks}M</td>
-                                <td className="py-3 px-4">
-                                  <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold ${
-                                    test.requiredTier === 'None'
-                                      ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400'
-                                      : test.requiredTier === 'Testbook Pass'
-                                      ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400'
-                                      : 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400'
-                                  }`}>
-                                    {test.requiredTier === 'None' ? 'Free' : test.requiredTier.replace('Testbook', 'Mock')}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4 text-right">
-                                  <button
-                                    onClick={() => {
-                                      deleteMockTest(cat.id, sub.id, test.id);
-                                      showToast('Mock test deleted successfully.');
-                                    }}
-                                    className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                  >
-                                    Delete
-                                  </button>
-                                </td>
-                              </tr>
-                            ))
+                                  </td>
+                                  <td className="py-3 px-4 text-right">
+                                    <button
+                                      onClick={() => {
+                                        deleteMockTest(cat.id, sub.id, test.id);
+                                        showToast('Mock test deleted successfully.');
+                                      }}
+                                      className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                    >
+                                      Delete
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))
+                            )
                           )
                         )}
                       </tbody>

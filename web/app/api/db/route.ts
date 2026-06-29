@@ -57,6 +57,10 @@ export async function POST(request: Request) {
         return await handleAddSubCategory(data);
       case 'delete-subcategory':
         return await handleDeleteSubCategory(data);
+      case 'add-subsubcategory':
+        return await handleAddSubSubCategory(data);
+      case 'delete-subsubcategory':
+        return await handleDeleteSubSubCategory(data);
       case 'add-mocktest':
         return await handleAddMockTest(data);
       case 'delete-mocktest':
@@ -204,8 +208,8 @@ async function handleBootstrap() {
       id: cat.id,
       name: cat.name,
       subCategories: cat.exams.map((exam: any) => {
-        const tests = exam.testSeries.flatMap((ts: any) => {
-          return ts.mockTests.map((t: any) => ({
+        const subSubCategories = exam.testSeries.map((ts: any) => {
+          const tests = ts.mockTests.map((t: any) => ({
             id: t.id,
             title: t.title,
             questionsCount: t.questionsCount,
@@ -215,10 +219,18 @@ async function handleBootstrap() {
             requiredTier: t.requiredTierName as 'None' | 'Testbook Pass' | 'Testbook Pass Pro',
             customQuestionsCount: t.customQuestions ? (t.customQuestions as any[]).length : 0,
           }));
+          return {
+            id: ts.id,
+            name: ts.title,
+            tests,
+          };
         });
+        // Flat map tests for backwards compatibility (e.g. mobile client)
+        const tests = subSubCategories.flatMap((ss: any) => ss.tests);
         return {
           id: exam.id,
           name: exam.name,
+          subSubCategories,
           tests,
         };
       }),
@@ -325,7 +337,7 @@ async function handleSignup(data: any) {
 }
 
 async function handleLogin(data: any) {
-  const { email } = data;
+  const { email, password } = data;
   const trimmedEmail = email.trim().toLowerCase();
 
   const user = await prisma.user.findUnique({
@@ -346,6 +358,10 @@ async function handleLogin(data: any) {
 
   if (user.isBlocked) {
     return NextResponse.json({ success: false, error: 'This user account is blocked by the administrator.' }, { status: 403 });
+  }
+
+  if (!password || user.passwordHash !== password) {
+    return NextResponse.json({ success: false, error: 'Invalid password. Please check your credentials.' }, { status: 401 });
   }
 
   // Format responses & sessions
@@ -775,6 +791,15 @@ async function handleAddSubCategory(data: any) {
     },
   });
 
+  // Automatically create a default test series (sub-subcategory) for this subcategory
+  await prisma.testSeries.create({
+    data: {
+      id: id + '_series',
+      examId: id,
+      title: name + ' Series',
+    },
+  });
+
   return NextResponse.json({ success: true });
 }
 
@@ -788,28 +813,57 @@ async function handleDeleteSubCategory(data: any) {
   return NextResponse.json({ success: true });
 }
 
-async function handleAddMockTest(data: any) {
-  const { categoryId, subCategoryId, id, title, questionsCount, durationMinutes, maxMarks, requiredTier } = data;
+async function handleAddSubSubCategory(data: any) {
+  const { id, subCategoryId, name } = data;
 
-  // Find or create default test series for this subcategory
-  let testSeries = await prisma.testSeries.findFirst({
-    where: { examId: subCategoryId },
+  await prisma.testSeries.create({
+    data: {
+      id,
+      examId: subCategoryId,
+      title: name,
+    },
   });
 
-  if (!testSeries) {
-    testSeries = await prisma.testSeries.create({
-      data: {
-        id: 'ts_' + Math.random().toString(36).substring(2, 9),
-        examId: subCategoryId,
-        title: 'Default Series',
-      },
+  return NextResponse.json({ success: true });
+}
+
+async function handleDeleteSubSubCategory(data: any) {
+  const { subSubCategoryId } = data;
+
+  await prisma.testSeries.delete({
+    where: { id: subSubCategoryId },
+  });
+
+  return NextResponse.json({ success: true });
+}
+
+async function handleAddMockTest(data: any) {
+  const { categoryId, subCategoryId, subSubCategoryId, id, title, questionsCount, durationMinutes, maxMarks, requiredTier } = data;
+
+  let finalTestSeriesId = subSubCategoryId;
+
+  if (!finalTestSeriesId) {
+    // Find or create default test series for this subcategory
+    let testSeries = await prisma.testSeries.findFirst({
+      where: { examId: subCategoryId },
     });
+
+    if (!testSeries) {
+      testSeries = await prisma.testSeries.create({
+        data: {
+          id: 'ts_' + Math.random().toString(36).substring(2, 9),
+          examId: subCategoryId,
+          title: 'Default Series',
+        },
+      });
+    }
+    finalTestSeriesId = testSeries.id;
   }
 
   await prisma.mockTest.create({
     data: {
       id,
-      testSeriesId: testSeries.id,
+      testSeriesId: finalTestSeriesId,
       title,
       durationMinutes,
       questionsCount,
@@ -927,8 +981,21 @@ async function seedDatabase() {
         {
           id: 'ssc_cgl',
           name: 'SSC CGL Exams',
-          tests: [
-            { id: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', questionsCount: 100, durationMinutes: 60, maxMarks: 200, requiredTier: 'None' }
+          subSubCategories: [
+            {
+              id: 'ssc_cgl_tier1_series',
+              name: 'SSC CGL Tier-I Test Series',
+              tests: [
+                { id: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', questionsCount: 100, durationMinutes: 60, maxMarks: 200, requiredTier: 'None' }
+              ]
+            },
+            {
+              id: 'ssc_cgl_tier2_series',
+              name: 'SSC CGL Tier-II Test Series',
+              tests: [
+                { id: 'ssc_cgl_tier2_mock', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-II) Exam', questionsCount: 150, durationMinutes: 120, maxMarks: 300, requiredTier: 'Testbook Pass Pro' }
+              ]
+            }
           ]
         },
         {
@@ -1066,26 +1133,52 @@ async function seedDatabase() {
         },
       });
 
-      const series = await prisma.testSeries.create({
-        data: {
-          id: sub.id + '_series',
-          examId: sub.id,
-          title: sub.name + ' Series',
-        },
-      });
+      if ((sub as any).subSubCategories) {
+        for (const ssub of (sub as any).subSubCategories) {
+          const series = await prisma.testSeries.create({
+            data: {
+              id: ssub.id,
+              examId: sub.id,
+              title: ssub.name,
+            },
+          });
 
-      for (const t of sub.tests) {
-        await prisma.mockTest.create({
+          for (const t of ssub.tests) {
+            await prisma.mockTest.create({
+              data: {
+                id: t.id,
+                testSeriesId: series.id,
+                title: t.title,
+                durationMinutes: t.durationMinutes,
+                questionsCount: t.questionsCount,
+                maxMarks: t.maxMarks,
+                requiredTierName: t.requiredTier,
+              },
+            });
+          }
+        }
+      } else {
+        const series = await prisma.testSeries.create({
           data: {
-            id: t.id,
-            testSeriesId: series.id,
-            title: t.title,
-            durationMinutes: t.durationMinutes,
-            questionsCount: t.questionsCount,
-            maxMarks: t.maxMarks,
-            requiredTierName: t.requiredTier,
+            id: sub.id + '_series',
+            examId: sub.id,
+            title: sub.name + ' Series',
           },
         });
+
+        for (const t of (sub as any).tests) {
+          await prisma.mockTest.create({
+            data: {
+              id: t.id,
+              testSeriesId: series.id,
+              title: t.title,
+              durationMinutes: t.durationMinutes,
+              questionsCount: t.questionsCount,
+              maxMarks: t.maxMarks,
+              requiredTierName: t.requiredTier,
+            },
+          });
+        }
       }
     }
   }

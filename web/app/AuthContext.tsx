@@ -12,9 +12,16 @@ export interface MockTestItem {
   requiredTier: 'None' | 'Testbook Pass' | 'Testbook Pass Pro';
 }
 
+export interface TestSubSubCategory {
+  id: string;
+  name: string;
+  tests: MockTestItem[];
+}
+
 export interface TestSubCategory {
   id: string;
   name: string;
+  subSubCategories: TestSubSubCategory[];
   tests: MockTestItem[];
 }
 
@@ -92,7 +99,7 @@ interface AuthContextType {
   usersList: MockUser[];
   theme: 'light' | 'dark';
   toggleTheme: () => void;
-  login: (email: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (name: string, email: string, mobile: string) => void;
@@ -156,7 +163,9 @@ interface AuthContextType {
   deleteCategory: (categoryId: string) => void;
   addSubCategory: (categoryId: string, name: string) => void;
   deleteSubCategory: (categoryId: string, subCategoryId: string) => void;
-  addMockTest: (categoryId: string, subCategoryId: string, test: Omit<MockTestItem, 'id'>) => void;
+  addSubSubCategory: (categoryId: string, subCategoryId: string, name: string) => void;
+  deleteSubSubCategory: (categoryId: string, subCategoryId: string, subSubCategoryId: string) => void;
+  addMockTest: (categoryId: string, subCategoryId: string, subSubCategoryId: string, test: Omit<MockTestItem, 'id'>) => void;
   deleteMockTest: (categoryId: string, subCategoryId: string, testId: string) => void;
 }
 
@@ -170,13 +179,39 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'ssc_cgl',
         name: 'SSC CGL Exams',
+        subSubCategories: [
+          {
+            id: 'ssc_cgl_tier1_series',
+            name: 'SSC CGL Tier-I Test Series',
+            tests: [
+              { id: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', questionsCount: 100, durationMinutes: 60, maxMarks: 200, isPremium: false, requiredTier: 'None' }
+            ]
+          },
+          {
+            id: 'ssc_cgl_tier2_series',
+            name: 'SSC CGL Tier-II Test Series',
+            tests: [
+              { id: 'ssc_cgl_tier2_mock', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-II) Exam', questionsCount: 150, durationMinutes: 120, maxMarks: 300, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+            ]
+          }
+        ],
         tests: [
-          { id: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', questionsCount: 100, durationMinutes: 60, maxMarks: 200, isPremium: false, requiredTier: 'None' }
+          { id: 'ssc_cgl_tier1', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-I) Exam', questionsCount: 100, durationMinutes: 60, maxMarks: 200, isPremium: false, requiredTier: 'None' },
+          { id: 'ssc_cgl_tier2_mock', title: 'SSC CGL 2026 - Combined Graduate Level (Tier-II) Exam', questionsCount: 150, durationMinutes: 120, maxMarks: 300, isPremium: true, requiredTier: 'Testbook Pass Pro' }
         ]
       },
       {
         id: 'ssc_chsl',
         name: 'SSC CHSL Exams',
+        subSubCategories: [
+          {
+            id: 'ssc_chsl_series',
+            name: 'SSC CHSL Exams Series',
+            tests: [
+              { id: 'ssc_chsl_tier1', title: 'SSC CHSL 2026 - Combined Higher Secondary Level Test', questionsCount: 100, durationMinutes: 60, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass' }
+            ]
+          }
+        ],
         tests: [
           { id: 'ssc_chsl_tier1', title: 'SSC CHSL 2026 - Combined Higher Secondary Level Test', questionsCount: 100, durationMinutes: 60, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass' }
         ]
@@ -184,6 +219,15 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'ssc_mts',
         name: 'SSC MTS Exams',
+        subSubCategories: [
+          {
+            id: 'ssc_mts_series',
+            name: 'SSC MTS Exams Series',
+            tests: [
+              { id: 'ssc_mts_mock', title: 'SSC MTS Full-Length Practice Test Paper', questionsCount: 90, durationMinutes: 90, maxMarks: 270, isPremium: true, requiredTier: 'Testbook Pass' }
+            ]
+          }
+        ],
         tests: [
           { id: 'ssc_mts_mock', title: 'SSC MTS Full-Length Practice Test Paper', questionsCount: 90, durationMinutes: 90, maxMarks: 270, isPremium: true, requiredTier: 'Testbook Pass' }
         ]
@@ -197,6 +241,15 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'rrb_ntpc',
         name: 'RRB NTPC Exams',
+        subSubCategories: [
+          {
+            id: 'rrb_ntpc_series',
+            name: 'RRB NTPC Exams Series',
+            tests: [
+              { id: 'rrb_ntpc_stage1', title: 'RRB NTPC CBT-1 Stage 1 Practice Simulator', questionsCount: 100, durationMinutes: 90, maxMarks: 100, isPremium: false, requiredTier: 'None' }
+            ]
+          }
+        ],
         tests: [
           { id: 'rrb_ntpc_stage1', title: 'RRB NTPC CBT-1 Stage 1 Practice Simulator', questionsCount: 100, durationMinutes: 90, maxMarks: 100, isPremium: false, requiredTier: 'None' }
         ]
@@ -204,6 +257,15 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'rrb_group_d',
         name: 'RRB Group D Exams',
+        subSubCategories: [
+          {
+            id: 'rrb_group_d_series',
+            name: 'RRB Group D Exams Series',
+            tests: [
+              { id: 'rrb_group_d', title: 'RRB Group D Full Length Mock Test', questionsCount: 100, durationMinutes: 90, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass' }
+            ]
+          }
+        ],
         tests: [
           { id: 'rrb_group_d', title: 'RRB Group D Full Length Mock Test', questionsCount: 100, durationMinutes: 90, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass' }
         ]
@@ -217,6 +279,15 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'ugc_net_p1',
         name: 'UGC NET Paper 1',
+        subSubCategories: [
+          {
+            id: 'ugc_net_p1_series',
+            name: 'UGC NET Paper 1 Series',
+            tests: [
+              { id: 'ugc_net_paper1', title: 'UGC NET Paper-1 Teaching & Research Aptitude', questionsCount: 50, durationMinutes: 60, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+            ]
+          }
+        ],
         tests: [
           { id: 'ugc_net_paper1', title: 'UGC NET Paper-1 Teaching & Research Aptitude', questionsCount: 50, durationMinutes: 60, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass Pro' }
         ]
@@ -224,6 +295,15 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'ugc_net_cs',
         name: 'UGC NET Computer Science',
+        subSubCategories: [
+          {
+            id: 'ugc_net_cs_series',
+            name: 'UGC NET Computer Science Series',
+            tests: [
+              { id: 'ugc_net_cs', title: 'UGC NET Computer Science & Applications Paper-II', questionsCount: 100, durationMinutes: 120, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+            ]
+          }
+        ],
         tests: [
           { id: 'ugc_net_cs', title: 'UGC NET Computer Science & Applications Paper-II', questionsCount: 100, durationMinutes: 120, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass Pro' }
         ]
@@ -237,6 +317,15 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'ctet_p1',
         name: 'CTET Paper 1 Exams',
+        subSubCategories: [
+          {
+            id: 'ctet_p1_series',
+            name: 'CTET Paper 1 Exams Series',
+            tests: [
+              { id: 'ctet_paper1', title: 'CTET 2026 Paper-I (Primary Class I-V) Mock Paper', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: false, requiredTier: 'None' }
+            ]
+          }
+        ],
         tests: [
           { id: 'ctet_paper1', title: 'CTET 2026 Paper-I (Primary Class I-V) Mock Paper', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: false, requiredTier: 'None' }
         ]
@@ -244,6 +333,15 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'ctet_p2',
         name: 'CTET Paper 2 Exams',
+        subSubCategories: [
+          {
+            id: 'ctet_p2_series',
+            name: 'CTET Paper 2 Exams Series',
+            tests: [
+              { id: 'ctet_paper2', title: 'CTET 2026 Paper-II (Mathematics & Science)', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: true, requiredTier: 'Testbook Pass' }
+            ]
+          }
+        ],
         tests: [
           { id: 'ctet_paper2', title: 'CTET 2026 Paper-II (Mathematics & Science)', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: true, requiredTier: 'Testbook Pass' }
         ]
@@ -257,6 +355,15 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'uppsc',
         name: 'UPPSC Exams',
+        subSubCategories: [
+          {
+            id: 'uppsc_series',
+            name: 'UPPSC Exams Series',
+            tests: [
+              { id: 'up_psc_prelims', title: 'UPPSC Prelims General Studies (GS Paper 1)', questionsCount: 150, durationMinutes: 120, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+            ]
+          }
+        ],
         tests: [
           { id: 'up_psc_prelims', title: 'UPPSC Prelims General Studies (GS Paper 1)', questionsCount: 150, durationMinutes: 120, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass Pro' }
         ]
@@ -264,6 +371,15 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'bssc',
         name: 'BSSC Exams',
+        subSubCategories: [
+          {
+            id: 'bssc_series',
+            name: 'BSSC Exams Series',
+            tests: [
+              { id: 'bihar_ssc', title: 'BSSC Inter-Level Full Practice Mock Paper', questionsCount: 150, durationMinutes: 135, maxMarks: 600, isPremium: true, requiredTier: 'Testbook Pass' }
+            ]
+          }
+        ],
         tests: [
           { id: 'bihar_ssc', title: 'BSSC Inter-Level Full Practice Mock Paper', questionsCount: 150, durationMinutes: 135, maxMarks: 600, isPremium: true, requiredTier: 'Testbook Pass' }
         ]
@@ -277,6 +393,15 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'sbi_po',
         name: 'SBI PO Exams',
+        subSubCategories: [
+          {
+            id: 'sbi_po_series',
+            name: 'SBI PO Exams Series',
+            tests: [
+              { id: 'sbi_po_prelims', title: 'SBI PO Preliminary Exam Full Length Mock Test', questionsCount: 100, durationMinutes: 60, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+            ]
+          }
+        ],
         tests: [
           { id: 'sbi_po_prelims', title: 'SBI PO Preliminary Exam Full Length Mock Test', questionsCount: 100, durationMinutes: 60, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass Pro' }
         ]
@@ -284,6 +409,15 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
       {
         id: 'ibps_clerk',
         name: 'IBPS Clerk Exams',
+        subSubCategories: [
+          {
+            id: 'ibps_clerk_series',
+            name: 'IBPS Clerk Exams Series',
+            tests: [
+              { id: 'ibps_clerk', title: 'IBPS Clerk Preliminary Practice Mock Paper', questionsCount: 100, durationMinutes: 60, maxMarks: 100, isPremium: false, requiredTier: 'None' }
+            ]
+          }
+        ],
         tests: [
           { id: 'ibps_clerk', title: 'IBPS Clerk Preliminary Practice Mock Paper', questionsCount: 100, durationMinutes: 60, maxMarks: 100, isPremium: false, requiredTier: 'None' }
         ]
@@ -624,9 +758,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addSubCategory = (categoryId: string, name: string) => {
     const newId = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).substring(2, 6);
+    const defaultSubSubId = newId + '_series';
+    const newSubSub: TestSubSubCategory = {
+      id: defaultSubSubId,
+      name: name + ' Series',
+      tests: []
+    };
     const newSub: TestSubCategory = {
       id: newId,
       name,
+      subSubCategories: [newSubSub],
       tests: []
     };
     const updated = examCatalog.map(c => {
@@ -672,7 +813,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).catch(err => console.error("Delete subcategory error:", err));
   };
 
-  const addMockTest = (categoryId: string, subCategoryId: string, test: Omit<MockTestItem, 'id'>) => {
+  const addSubSubCategory = (categoryId: string, subCategoryId: string, name: string) => {
+    const newId = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).substring(2, 6);
+    const newSubSub: TestSubSubCategory = {
+      id: newId,
+      name,
+      tests: []
+    };
+    const updated = examCatalog.map(c => {
+      if (c.id === categoryId) {
+        return {
+          ...c,
+          subCategories: c.subCategories.map(s => {
+            if (s.id === subCategoryId) {
+              return {
+                ...s,
+                subSubCategories: [...(s.subSubCategories || []), newSubSub]
+              };
+            }
+            return s;
+          })
+        };
+      }
+      return c;
+    });
+    setExamCatalog(updated);
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'add-subsubcategory',
+        data: { id: newId, subCategoryId, name }
+      })
+    }).catch(err => console.error("Add sub-subcategory error:", err));
+  };
+
+  const deleteSubSubCategory = (categoryId: string, subCategoryId: string, subSubCategoryId: string) => {
+    const updated = examCatalog.map(c => {
+      if (c.id === categoryId) {
+        return {
+          ...c,
+          subCategories: c.subCategories.map(s => {
+            if (s.id === subCategoryId) {
+              return {
+                ...s,
+                subSubCategories: (s.subSubCategories || []).filter(ss => ss.id !== subSubCategoryId)
+              };
+            }
+            return s;
+          })
+        };
+      }
+      return c;
+    });
+    setExamCatalog(updated);
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete-subsubcategory',
+        data: { subSubCategoryId }
+      })
+    }).catch(err => console.error("Delete sub-subcategory error:", err));
+  };
+
+  const addMockTest = (categoryId: string, subCategoryId: string, subSubCategoryId: string, test: Omit<MockTestItem, 'id'>) => {
     const newId = test.title.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).substring(2, 6);
     const newTest: MockTestItem = {
       ...test,
@@ -686,7 +893,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (s.id === subCategoryId) {
               return {
                 ...s,
-                tests: [...s.tests, newTest]
+                subSubCategories: (s.subSubCategories || []).map(ss => {
+                  if (ss.id === subSubCategoryId) {
+                    return {
+                      ...ss,
+                      tests: [...ss.tests, newTest]
+                    };
+                  }
+                  return ss;
+                }),
+                tests: [...(s.tests || []), newTest]
               };
             }
             return s;
@@ -702,7 +918,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'add-mocktest',
-        data: { categoryId, subCategoryId, id: newId, ...test }
+        data: { categoryId, subCategoryId, subSubCategoryId, id: newId, ...test }
       })
     }).catch(err => console.error("Add mocktest error:", err));
   };
@@ -716,7 +932,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (s.id === subCategoryId) {
               return {
                 ...s,
-                tests: s.tests.filter(t => t.id !== testId)
+                subSubCategories: (s.subSubCategories || []).map(ss => {
+                  return {
+                    ...ss,
+                    tests: ss.tests.filter(t => t.id !== testId)
+                  };
+                }),
+                tests: (s.tests || []).filter(t => t.id !== testId)
               };
             }
             return s;
@@ -742,14 +964,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     document.cookie = "tb_lang=" + lang + ";path=/;max-age=31536000";
   };
 
-  const login = async (email: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password?: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'login',
-          data: { email }
+          data: { email, password }
         })
       });
       const data = await res.json();
@@ -1214,6 +1436,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteCategory,
         addSubCategory,
         deleteSubCategory,
+        addSubSubCategory,
+        deleteSubSubCategory,
         addMockTest,
         deleteMockTest,
         reportedQuestionsList,

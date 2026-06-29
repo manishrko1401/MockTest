@@ -5,8 +5,7 @@ import { useAuth, TestCategory, TestSubCategory, MockTestItem } from '../AuthCon
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu } from 'lucide-react';
-import { generateExamSession } from '../exam/[id]/page';
-import { EXPLANATIONS } from '../exam/[id]/analysis/page';
+import { generateExamSession, EXPLANATIONS } from '../lib/examUtils';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 
@@ -838,9 +837,20 @@ export default function MockTestsCatalog() {
             <>
               {(() => {
                 const activeSubCat = currentCategoryObj?.subCategories.find(s => s.id === selectedSubCategory);
-                const filteredTests = activeSubCat?.tests.filter(t => 
+                // Let's group tests by their sub-subcategory
+                const groups = (activeSubCat?.subSubCategories || []).map(subSub => {
+                  const filtered = subSub.tests.filter(t => 
+                    t.title.toLowerCase().includes(searchQuery.toLowerCase())
+                  );
+                  return {
+                    ...subSub,
+                    tests: filtered
+                  };
+                }).filter(g => g.tests.length > 0);
+
+                const fallbackTests = (activeSubCat?.tests || []).filter(t => 
                   t.title.toLowerCase().includes(searchQuery.toLowerCase())
-                ) || [];
+                );
 
                 return (
                   <div className="space-y-6 animate-in fade-in duration-300">
@@ -862,15 +872,148 @@ export default function MockTestsCatalog() {
                       </button>
                     </div>
 
-                    {filteredTests.length === 0 ? (
+                    {groups.length === 0 && fallbackTests.length === 0 ? (
                       <div className="text-center py-16 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl">
                         <p className="text-slate-500 dark:text-slate-400 text-sm font-bold">
                           {language === 'hi' ? 'कोई मॉक टेस्ट नहीं मिला।' : 'No mock tests found.'}
                         </p>
                       </div>
+                    ) : groups.length > 0 ? (
+                      <div className="space-y-8 animate-in fade-in duration-200">
+                        {groups.map(group => (
+                          <div key={group.id} className="space-y-3">
+                            <h3 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2 border-l-2 border-blue-500 pl-3">
+                              {group.name}
+                              <span className="text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded-full">
+                                {group.tests.length}
+                              </span>
+                            </h3>
+                            <div className="space-y-3">
+                              {group.tests.map(test => {
+                                const hasPass = currentUser && (
+                                  (test.requiredTier === 'None') ||
+                                  (test.requiredTier === 'Testbook Pass' && (currentUser.subscriptionTier === 'Testbook Pass' || currentUser.subscriptionTier === 'Testbook Pass Pro')) ||
+                                  (test.requiredTier === 'Testbook Pass Pro' && currentUser.subscriptionTier === 'Testbook Pass Pro')
+                                );
+
+                                const completed = isCompleted(test.id);
+                                const ongoing = getTestStatus(test.id) === 'ONGOING';
+                                const attempts = getTestAttempts(test.id);
+                                const attemptsCount = attempts.length;
+                                const isTestPremium = test.isPremium;
+
+                                return (
+                                  <div
+                                    key={test.id}
+                                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4.5 rounded-xl shadow-sm hover:shadow-md hover:border-blue-500/50 dark:hover:border-blue-500/50 transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full"
+                                  >
+                                    <div className="space-y-1.5 flex-1 w-full text-left">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        {isTestPremium ? (
+                                          <span className="bg-amber-50 text-amber-700 dark:bg-amber-955 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-250 dark:border-amber-900/60 uppercase tracking-wider">
+                                            {language === 'hi' ? 'प्रो' : 'PRO'}
+                                          </span>
+                                        ) : (
+                                          <span className="bg-green-50 text-green-700 dark:bg-green-955 dark:text-green-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60 uppercase tracking-wider">
+                                            {language === 'hi' ? 'मुफ़्त' : 'FREE'}
+                                          </span>
+                                        )}
+
+                                        {ongoing && (
+                                          <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-955 dark:text-orange-400 border border-orange-250 dark:border-orange-850 px-1.5 py-0.5 rounded font-black uppercase">
+                                            ⏸ {language === 'hi' ? 'रुका हुआ' : 'PAUSED'}
+                                          </span>
+                                        )}
+                                        
+                                        {completed && (
+                                          <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-800 dark:bg-green-955/60 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded font-black uppercase">
+                                            ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">
+                                        {test.title}
+                                      </h4>
+
+                                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
+                                        <span>{test.questionsCount} Qs</span>
+                                        <span>•</span>
+                                        <span>{test.durationMinutes} Mins</span>
+                                        <span>•</span>
+                                        <span>{test.maxMarks} Marks</span>
+                                        <span>•</span>
+                                        <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 English, Hindi</span>
+                                      </div>
+
+                                      {attemptsCount > 0 && (() => {
+                                        const lastAttempt = [...attempts].sort((a, b) => b.date.localeCompare(a.date))[0];
+                                        if (!lastAttempt) return null;
+                                        return (
+                                          <div className="inline-flex items-center gap-2 bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800/80 px-2 py-0.5 rounded text-[8px] font-bold text-slate-600 dark:text-slate-400">
+                                            <span>{language === 'hi' ? 'पिछला प्रयास' : 'Last Attempt'}:</span>
+                                            <span className="text-blue-600 dark:text-blue-400 font-extrabold">
+                                              {lastAttempt.score}/{lastAttempt.maxScore} {language === 'hi' ? 'अंक' : 'marks'}
+                                            </span>
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
+
+                                    <div className="flex items-center gap-2 w-full sm:w-auto border-t sm:border-t-0 border-slate-100 dark:border-slate-800/80 pt-3 sm:pt-0 shrink-0">
+                                      {ongoing ? (
+                                        <>
+                                          <button
+                                            onClick={() => handleStartExam(test)}
+                                            className="flex-1 sm:w-32 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm cursor-pointer"
+                                          >
+                                            Resume Test
+                                          </button>
+                                          <button
+                                            onClick={() => handleReattemptExam(test)}
+                                            className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                          >
+                                            Reset
+                                          </button>
+                                        </>
+                                      ) : completed ? (
+                                        <>
+                                          <Link
+                                            href={`/exam/${test.id}/analysis`}
+                                            className="flex-1 sm:w-32 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm block"
+                                          >
+                                            View Analysis
+                                          </Link>
+                                          <button
+                                            onClick={() => handleReattemptExam(test)}
+                                            className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                          >
+                                            {t.reattempt}
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <button
+                                          onClick={() => handleStartExam(test)}
+                                          className={`w-full sm:w-44 text-white font-bold py-2.5 rounded-lg text-[10px] text-center shadow-sm cursor-pointer ${
+                                            hasPass 
+                                              ? 'bg-[#1C3D5A] hover:bg-slate-800' 
+                                              : 'bg-yellow-600 hover:bg-yellow-700'
+                                          }`}
+                                        >
+                                          {hasPass ? 'Start Practice Test' : (language === 'hi' ? 'पास के साथ अनलॉक करें' : 'Unlock with Pass')}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     ) : (
                       <div className="space-y-3">
-                        {filteredTests.map(test => {
+                        {fallbackTests.map(test => {
                           const hasPass = currentUser && (
                             (test.requiredTier === 'None') ||
                             (test.requiredTier === 'Testbook Pass' && (currentUser.subscriptionTier === 'Testbook Pass' || currentUser.subscriptionTier === 'Testbook Pass Pro')) ||
@@ -907,13 +1050,13 @@ export default function MockTestsCatalog() {
                                   )}
                                   
                                   {completed && (
-                                    <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-805 dark:bg-green-955/60 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded font-black uppercase">
+                                    <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-800 dark:bg-green-955/60 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded font-black uppercase">
                                       ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                     </span>
                                   )}
                                 </div>
 
-                                <h4 className="font-extrabold text-sm text-slate-900 dark:text-slate-105 leading-snug">
+                                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">
                                   {test.title}
                                 </h4>
 

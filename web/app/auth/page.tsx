@@ -36,7 +36,7 @@ export default function AuthPage() {
         setErrorMsg(language === 'hi' ? 'यह खाता ब्लॉक कर दिया गया है। कृपया व्यवस्थापक से संपर्क करें।' : 'This account has been blocked. Please contact the administrator.');
         return;
       }
-      const res = await login(email);
+      const res = await login(email, password);
       if (res.success) {
         setSuccessMsg(t.authLoginSuccess || 'Successfully logged in! Redirecting...');
         setTimeout(() => {

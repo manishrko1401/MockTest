@@ -4,7 +4,8 @@ import {
   View,
   ActivityIndicator,
   Text,
-  StatusBar
+  StatusBar,
+  BackHandler
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
@@ -77,6 +78,59 @@ export default function App() {
 
     initializeApp();
   }, []);
+
+  // System physical BackButton navigation handler
+  useEffect(() => {
+    const onBackPress = () => {
+      if (viewMode === 'auth') {
+        return false;
+      }
+
+      if (viewMode === 'series_detail') {
+        setViewMode('dashboard');
+        return true;
+      }
+
+      if (viewMode === 'exam') {
+        // Trigger same behavior as exam back arrow
+        refreshUserData(currentUser?.id).then(() => {
+          setViewMode(previousViewMode);
+        });
+        return true;
+      }
+
+      if (viewMode === 'analysis') {
+        setViewMode(previousViewMode);
+        return true;
+      }
+
+      if (viewMode === 'support_chat') {
+        setViewMode('dashboard');
+        return true;
+      }
+
+      if (viewMode === 'dashboard') {
+        if (dashboardCategoryId !== null) {
+          setDashboardCategoryId(null);
+          return true;
+        }
+        if (dashboardTab !== 'home') {
+          setDashboardTab('home');
+          return true;
+        }
+        return false; // Exit/minimize app if at home
+      }
+
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress
+    );
+
+    return () => backHandler.remove();
+  }, [viewMode, previousViewMode, dashboardCategoryId, dashboardTab, currentUser]);
 
   const handleToggleTheme = async (dark: boolean) => {
     setIsDark(dark);
