@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -900,7 +900,7 @@ export default function MobileTestScreen({
                 ]}
                 onPress={() => setLang('hi')}
               >
-                <Text style={[styles.langSelectorText, lang === 'hi' && styles.langSelectorTextActive, isDark && lang !== 'hi' && { color: ThemeColors.dark.textMuted }]}>ÃƒÂ Ã‚Â¤Ã‚Â¹ÃƒÂ Ã‚Â¤Ã‚Â¿ÃƒÂ Ã‚Â¤Ã¢â‚¬Å¡ÃƒÂ Ã‚Â¤Ã‚Â¦ÃƒÂ Ã‚Â¥Ã¢â€šÂ¬</Text>
+                <Text style={[styles.langSelectorText, lang === 'hi' && styles.langSelectorTextActive, isDark && lang !== 'hi' && { color: ThemeColors.dark.textMuted }]}>\u0939\u093f\u0902\u0926\u0940</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1020,11 +1020,28 @@ export default function MobileTestScreen({
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Stats Bar ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
       <View style={[styles.statsBar, isDark && { backgroundColor: isDark ? '#0F1729' : '#F9FAFB', borderBottomColor: ThemeColors.dark.border }]}>
         <Text style={[styles.statsText, isDark && { color: ThemeColors.dark.textMuted }]}>
-          Total Questions Answered: <Text style={styles.statsHighlight}>{answeredCount}</Text>
+          Answered: <Text style={styles.statsHighlight}>{answeredCount}</Text>
         </Text>
-        {minutesLeft <= 15 && (
-          <Text style={styles.statsWarning}>Last {minutesLeft} Mins</Text>
-        )}
+        <View style={styles.statsRight}>
+          {minutesLeft <= 15 && (
+            <Text style={[styles.statsWarning, { marginRight: rs(8) }]}>Last {minutesLeft} Mins</Text>
+          )}
+          {/* Language switcher */}
+          <View style={[styles.langToggleRow, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+            <TouchableOpacity
+              style={[styles.langToggleBtn, lang === 'en' && styles.langToggleBtnActive]}
+              onPress={() => setLang('en')}
+            >
+              <Text style={[styles.langToggleTxt, lang === 'en' && styles.langToggleTxtActive]}>EN</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.langToggleBtn, lang === 'hi' && styles.langToggleBtnActive]}
+              onPress={() => setLang('hi')}
+            >
+              <Text style={[styles.langToggleTxt, lang === 'hi' && styles.langToggleTxtActive]}>हि</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Question ScrollView ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
@@ -1038,6 +1055,11 @@ export default function MobileTestScreen({
           {/* Blue number badge */}
           <View style={styles.questionNumBadge}>
             <Text style={styles.questionNumText}>{currentQuestionIdx + 1}</Text>
+          </View>
+          {/* Per-question time spent */}
+          <View style={[styles.qTimerPill, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+            <Text style={[styles.qTimerIcon, isDark && { color: '#94A3B8' }]}>Q Time:</Text>
+            <Text style={[styles.qTimerVal, isDark && { color: '#3B82F6' }]}>{formatTime(activeResp?.elapsedSeconds || 0)}</Text>
           </View>
         </View>
 
@@ -1407,6 +1429,57 @@ const styles = StyleSheet.create({
     fontSize: rs(11),
     color: '#EF4444',
     fontWeight: 'bold',
+  },
+  statsRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(6),
+  },
+  langToggleRow: {
+    flexDirection: 'row',
+    backgroundColor: '#F3F4F6',
+    borderRadius: rs(6),
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    overflow: 'hidden',
+  },
+  langToggleBtn: {
+    paddingHorizontal: rs(10),
+    paddingVertical: vs(3),
+  },
+  langToggleBtnActive: {
+    backgroundColor: '#2563EB',
+    borderRadius: rs(5),
+  },
+  langToggleTxt: {
+    fontSize: rs(11),
+    fontWeight: 'bold',
+    color: '#6B7280',
+  },
+  langToggleTxtActive: {
+    color: '#FFF',
+  },
+  qTimerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F9FF',
+    borderRadius: rs(6),
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    paddingHorizontal: rs(8),
+    paddingVertical: vs(3),
+    gap: rs(4),
+  },
+  qTimerIcon: {
+    fontSize: rs(10),
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  qTimerVal: {
+    fontSize: rs(11),
+    color: '#0369A1',
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
   },
 
   // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Question Area ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
