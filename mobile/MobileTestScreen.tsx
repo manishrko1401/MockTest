@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Globe, AlignJustify } from 'lucide-react-native';
 import { ApiClient } from './api';
 import { ThemeColors } from './theme';
-import { HtmlText } from './HtmlText';
+import { HtmlText, preloadImages } from './HtmlText';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -334,6 +334,16 @@ export default function MobileTestScreen({
 
       setQuestions(list);
       setSections(secs);
+
+      // Pre-fetch all question/option images into expo-image disk cache
+      // so they appear instantly when users reach each question
+      const allHtmlStrings = list.flatMap(q => [
+        q.content?.en?.questionText,
+        q.content?.hi?.questionText,
+        ...(q.content?.en?.options ?? []),
+        ...(q.content?.hi?.options ?? []),
+      ].filter(Boolean) as string[]);
+      preloadImages(allHtmlStrings);
 
       // 2. Initialize responses state dictionary
       const respDict: Record<string, any> = {};

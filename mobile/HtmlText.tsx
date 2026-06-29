@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Text, View, StyleSheet, Image } from 'react-native';
+import { Text, View, StyleSheet, Image as RNImage } from 'react-native';
+import { Image } from 'expo-image';
 
 interface HtmlTextProps {
   html: string;
@@ -258,7 +259,7 @@ const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark }) => {
   const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
-    Image.getSize(
+    RNImage.getSize(
       src,
       (width, height) => {
         if (width && height) {
@@ -312,7 +313,10 @@ const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark }) => {
             width: '100%',
             aspectRatio: aspectRatio,
           }}
-          resizeMode="contain"
+          contentFit="contain"
+          cachePolicy="memory-disk"
+          transition={150}
+          recyclingKey={src}
         />
       </View>
     );
@@ -327,7 +331,10 @@ const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark }) => {
           width: '100%',
           height: 150,
         }}
-        resizeMode="contain"
+        contentFit="contain"
+        cachePolicy="memory-disk"
+        transition={150}
+        recyclingKey={src}
       />
     </View>
   );
@@ -685,3 +692,23 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
 });
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Image pre-fetcher — call this when question data loads to warm the cache
+// so images appear instantly when users reach each question.
+// ──────────────────────────────────────────────────────────────────────────────
+export function preloadImages(htmlStrings: string[]): void {
+  const IMG_REGEX = /src=["']([^"']+)["']/gi;
+  const urls = new Set<string>();
+  for (const html of htmlStrings) {
+    if (!html) continue;
+    let m: RegExpExecArray | null;
+    const re = new RegExp(IMG_REGEX.source, 'gi');
+    while ((m = re.exec(html)) !== null) {
+      if (m[1]?.startsWith('http')) urls.add(m[1]);
+    }
+  }
+  if (urls.size === 0) return;
+  // expo-image prefetch — downloads to disk cache silently in background
+  Image.prefetch([...urls]);
+}
