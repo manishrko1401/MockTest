@@ -31,6 +31,7 @@ export default function MarksCalculator() {
 
   // Result states
   const [isCalculated, setIsCalculated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [parsedQuestions, setParsedQuestions] = useState<any[]>([]);
   const [activeResultTab, setActiveResultTab] = useState<'summary' | 'sections' | 'ranks' | 'questions'>('summary');
@@ -60,15 +61,44 @@ export default function MarksCalculator() {
   };
 
   // Submit and Calculate
-  const handleCalculate = (e: React.FormEvent) => {
+  const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     
     const contentToParse = htmlContent.trim();
+    const urlToFetch = responseUrl.trim();
+
+    // If HTML code is empty but URL is provided, fetch it first
+    if (!contentToParse && urlToFetch) {
+      try {
+        setIsLoading(true);
+        const res = await fetch('/api/fetch-response-sheet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: urlToFetch })
+        });
+        const data = await res.json();
+        if (data.success && data.html) {
+          const questions = parseAnswerKey(data.html);
+          setParsedQuestions(questions);
+          setHtmlContent(data.html); // Populate textarea so user sees the parsed HTML
+          setIsCalculated(true);
+          setActiveResultTab('summary');
+        } else {
+          setErrorMessage(data.error || 'Failed to fetch the URL content. Make sure it is public and correct, or copy/paste the HTML code instead.');
+        }
+      } catch (err: any) {
+        setErrorMessage('Network connection error while fetching link content. Please copy and paste the raw HTML code instead.');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     if (!contentToParse) {
       setErrorMessage(language === 'hi' 
-        ? 'कृपया उत्तर कुंजी का HTML कोड पेस्ट करें या डेमो देखने के लिए "डेमो उत्तर कुंजी लोड करें" पर क्लिक करें।' 
-        : 'Please paste your Answer Key HTML code, or click "Load Demo Answer Key" to test.'
+        ? 'कृपया या तो उत्तर कुंजी का URL दर्ज करें या फिर HTML कोड पेस्ट करें।' 
+        : 'Please enter either the Answer Key URL link, or paste the raw HTML code.'
       );
       return;
     }
@@ -609,9 +639,17 @@ export default function MarksCalculator() {
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
                 <button
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl text-xs font-extrabold shadow-lg shadow-blue-500/25 active:scale-95 transition-all cursor-pointer"
+                  disabled={isLoading}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-450 text-white px-8 py-3.5 rounded-xl text-xs font-extrabold shadow-lg shadow-blue-500/25 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
                 >
-                  Calculate Score & Predict Rank
+                  {isLoading ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>{language === 'hi' ? 'उत्तर कुंजी डाउनलोड हो रही है...' : 'Fetching Answer Key URL...'}</span>
+                    </>
+                  ) : (
+                    <span>Calculate Score & Predict Rank</span>
+                  )}
                 </button>
               </div>
             </form>
