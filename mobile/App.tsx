@@ -21,6 +21,7 @@ import SupportChatScreen from './screens/SupportChatScreen';
 import { Trophy } from 'lucide-react-native';
 import { ThemeColors } from './theme';
 import { requestNotificationPermissions, triggerLocalNotification } from './notifications';
+import { registerBackgroundFetchAsync } from './backgroundTask';
 
 type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis' | 'support_chat';
 
@@ -51,6 +52,9 @@ export default function App() {
       try {
         // Request notifications permissions
         await requestNotificationPermissions();
+
+        // Register background fetch task
+        await registerBackgroundFetchAsync();
 
         // Load saved theme
         const savedTheme = await SecureStore.getItemAsync('app_theme');
