@@ -920,7 +920,12 @@ export default function MobileTestScreen({
               isDark && { borderColor: ThemeColors.dark.border },
               agreed && isDark && { backgroundColor: '#10B981', borderColor: '#10B981' }
             ]}>
-              {agreed && <Text style={styles.checkboxTick}>ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“</Text>}
+              {agreed && (
+                <View style={styles.checkboxTickContainer}>
+                  <View style={styles.checkboxTickShort} />
+                  <View style={styles.checkboxTickLong} />
+                </View>
+              )}
             </View>
             <Text style={[styles.checkboxLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
               {t.disclaimer}
@@ -2132,6 +2137,32 @@ const styles = StyleSheet.create({
   checkboxChecked: {
     backgroundColor: '#10B981',
     borderColor: '#10B981',
+  },
+  checkboxTickContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxTickShort: {
+    position: 'absolute',
+    width: rs(5),
+    height: rs(2),
+    backgroundColor: '#FFF',
+    borderRadius: 1,
+    bottom: rs(5),
+    left: rs(2),
+    transform: [{ rotate: '45deg' }],
+  },
+  checkboxTickLong: {
+    position: 'absolute',
+    width: rs(9),
+    height: rs(2),
+    backgroundColor: '#FFF',
+    borderRadius: 1,
+    bottom: rs(6),
+    right: rs(1),
+    transform: [{ rotate: '-55deg' }],
   },
   checkboxTick: {
     color: '#FFF',
