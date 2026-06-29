@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -40,6 +40,7 @@ export default function TestSeriesDetailScreen({
   onOpenAttemptAnalysis,
   isDark = false
 }: TestSeriesDetailScreenProps) {
+  const [activeSubSubId, setActiveSubSubId] = useState<string | null>(null);
 
   // Helper to check if a user has access to a mock test based on their subscription tier
   const hasAccess = (requiredTier: string) => {
@@ -125,21 +126,61 @@ export default function TestSeriesDetailScreen({
         </View>
       </View>
 
+      {/* Horizontal Tab Navigator for Sub-subcategories (Sticky at the top) */}
+      {series.subSubCategories && series.subSubCategories.length > 0 && (
+        <View style={[styles.tabsWrapper, isDark && { backgroundColor: ThemeColors.dark.bg, borderBottomColor: ThemeColors.dark.border }]}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabsContainer}
+          >
+            {series.subSubCategories.map((subSub: any) => {
+              const isSelected = (activeSubSubId || series.subSubCategories[0]?.id) === subSub.id;
+              return (
+                <TouchableOpacity
+                  key={subSub.id}
+                  activeOpacity={0.8}
+                  style={[
+                    styles.tabItem,
+                    isSelected && styles.tabItemActive,
+                    isDark && isSelected && { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
+                    isDark && !isSelected && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }
+                  ]}
+                  onPress={() => setActiveSubSubId(subSub.id)}
+                >
+                  <Text
+                    style={[
+                      styles.tabItemText,
+                      isSelected && styles.tabItemTextActive,
+                      isDark && !isSelected && { color: '#94A3B8' }
+                    ]}
+                  >
+                    {subSub.name} ({subSub.tests?.length || 0})
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {series.subSubCategories && series.subSubCategories.length > 0 ? (
-          series.subSubCategories.map((subSub: any) => (
-            <View key={subSub.id} style={styles.subSubBlock}>
+        {series.subSubCategories && series.subSubCategories.length > 0 ? (() => {
+          const activeSubSub = series.subSubCategories.find((s: any) => s.id === (activeSubSubId || series.subSubCategories[0]?.id));
+          if (!activeSubSub) return null;
+          return (
+            <View style={styles.subSubBlock}>
               <View style={styles.subSubHeaderRow}>
                 <Text style={[styles.subSubTitle, isDark && { color: ThemeColors.dark.text }]}>
-                  {subSub.name}
+                  {activeSubSub.name}
                 </Text>
                 <View style={styles.subSubBadge}>
-                  <Text style={styles.subSubBadgeText}>{subSub.tests?.length || 0} Papers</Text>
+                  <Text style={styles.subSubBadgeText}>{activeSubSub.tests?.length || 0} Papers</Text>
                 </View>
               </View>
 
-              {subSub.tests && subSub.tests.length > 0 ? (
-                subSub.tests.map((test: any) => {
+              {activeSubSub.tests && activeSubSub.tests.length > 0 ? (
+                activeSubSub.tests.map((test: any) => {
                   const allowed = hasAccess(test.requiredTier);
                   const completedAttempts = (currentUser.testSessions || [])
                     .filter((s: any) => s.testId === test.id && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'))
@@ -238,8 +279,8 @@ export default function TestSeriesDetailScreen({
                 <Text style={styles.noTestsText}>No tests available in this series yet.</Text>
               )}
             </View>
-          ))
-        ) : (
+          );
+        })() : (
           <>
             <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Available Practice Papers</Text>
 
@@ -583,5 +624,36 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: 'bold',
     color: '#2563EB',
+  },
+  tabsWrapper: {
+    maxHeight: 50,
+    marginVertical: 10,
+  },
+  tabsContainer: {
+    paddingHorizontal: 16,
+    gap: 8,
+    alignItems: 'center',
+  },
+  tabItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tabItemActive: {
+    backgroundColor: '#3B82F6',
+    borderColor: '#3B82F6',
+  },
+  tabItemText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#64748B',
+  },
+  tabItemTextActive: {
+    color: '#FFFFFF',
   },
 });

@@ -41,6 +41,12 @@ export default function MockTestsCatalog() {
   });
 
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
+  const [activeSubSubId, setActiveSubSubId] = useState<string | null>(null);
+
+  // Reset active sub-subcategory when subcategory changes
+  React.useEffect(() => {
+    setActiveSubSubId(null);
+  }, [selectedSubCategory]);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -879,17 +885,34 @@ export default function MockTestsCatalog() {
                         </p>
                       </div>
                     ) : groups.length > 0 ? (
-                      <div className="space-y-8 animate-in fade-in duration-200">
-                        {groups.map(group => (
-                          <div key={group.id} className="space-y-3">
-                            <h3 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2 border-l-2 border-blue-500 pl-3">
-                              {group.name}
-                              <span className="text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded-full">
-                                {group.tests.length}
-                              </span>
-                            </h3>
-                            <div className="space-y-3">
-                              {group.tests.map(test => {
+                      <div className="space-y-6">
+                        {/* Horizontal Tab Navigator for Sub-subcategories */}
+                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200 dark:border-slate-800">
+                          {groups.map(group => {
+                            const isSelected = (activeSubSubId || groups[0]?.id) === group.id;
+                            return (
+                              <button
+                                key={group.id}
+                                onClick={() => setActiveSubSubId(group.id)}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border ${
+                                  isSelected
+                                    ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                                    : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
+                                }`}
+                              >
+                                {group.name} ({group.tests.length})
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Selected Group's Tests */}
+                        {(() => {
+                          const activeGroup = groups.find(g => g.id === (activeSubSubId || groups[0]?.id));
+                          if (!activeGroup) return null;
+                          return (
+                            <div className="space-y-3 animate-in fade-in duration-300">
+                              {activeGroup.tests.map(test => {
                                 const hasPass = currentUser && (
                                   (test.requiredTier === 'None') ||
                                   (test.requiredTier === 'Testbook Pass' && (currentUser.subscriptionTier === 'Testbook Pass' || currentUser.subscriptionTier === 'Testbook Pass Pro')) ||
@@ -1008,8 +1031,8 @@ export default function MockTestsCatalog() {
                                 );
                               })}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })()}
                       </div>
                     ) : (
                       <div className="space-y-3">
