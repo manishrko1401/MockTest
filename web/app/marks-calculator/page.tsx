@@ -275,9 +275,9 @@ export default function MarksCalculator() {
         status,
         chosenOption: chosenVal,
         correctOption,
-        isCorrect: chosenVal === correctOption && status === 'Answered' && chosenVal !== '--',
-        isIncorrect: chosenVal !== correctOption && status === 'Answered' && chosenVal !== '--',
-        isUnattempted: status !== 'Answered' || chosenVal === '--'
+        isCorrect: chosenVal !== '--' && chosenVal !== '' && chosenVal === correctOption,
+        isIncorrect: chosenVal !== '--' && chosenVal !== '' && chosenVal !== correctOption,
+        isUnattempted: chosenVal === '--' || chosenVal === ''
       });
     });
 
