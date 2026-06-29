@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,7 +14,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Globe, AlertTriangle, Bookmark, Star, AlignJustify } from 'lucide-react-native';
+import { Globe, AlignJustify } from 'lucide-react-native';
 import { ApiClient } from './api';
 import { ThemeColors } from './theme';
 import { HtmlText } from './HtmlText';
@@ -76,16 +76,16 @@ const instructionTexts = {
     btn: "I am ready to begin"
   },
   hi: {
-    title: "à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¨à¤¿à¤°à¥à¤¦à¥‡à¤¶à¥‹à¤‚ à¤•à¥‹ à¤§à¥à¤¯à¤¾à¤¨ à¤¸à¥‡ à¤ªà¤¢à¤¼à¥‡à¤‚",
-    general: "à¤¸à¤¾à¤®à¤¾à¤¨à¥à¤¯ à¤¨à¤¿à¤°à¥à¤¦à¥‡à¤¶:",
-    gen1: "1. à¤˜à¤¡à¤¼à¥€ à¤¸à¤°à¥à¤µà¤° à¤ªà¤° à¤ªà¤°à¥€à¤•à¥à¤·à¤¾ à¤˜à¤¡à¤¼à¥€ à¤•à¥‡ à¤°à¥‚à¤ª à¤®à¥‡à¤‚ à¤¸à¥‡à¤Ÿ à¤•à¥€ à¤œà¤¾à¤à¤—à¥€à¥¤ à¤¸à¥à¤•à¥à¤°à¥€à¤¨ à¤•à¥‡ à¤¶à¥€à¤°à¥à¤· à¤¦à¤¾à¤à¤‚ à¤•à¥‹à¤¨à¥‡ à¤®à¥‡à¤‚ à¤‰à¤²à¤Ÿà¥€ à¤—à¤¿à¤¨à¤¤à¥€ à¤˜à¤¡à¤¼à¥€ à¤†à¤ªà¤•à¥‡ à¤¦à¥à¤µà¤¾à¤°à¤¾ à¤ªà¤°à¥€à¤•à¥à¤·à¤¾ à¤ªà¥‚à¤°à¥€ à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¶à¥‡à¤· à¤¸à¤®à¤¯ à¤•à¥‹ à¤ªà¥à¤°à¤¦à¤°à¥à¤¶à¤¿à¤¤ à¤•à¤°à¥‡à¤—à¥€à¥¤",
-    gen2: "2. à¤¸à¥à¤•à¥à¤°à¥€à¤¨ à¤•à¥‡ à¤¦à¤¾à¤ˆà¤‚ à¤“à¤° à¤ªà¥à¤°à¤¦à¤°à¥à¤¶à¤¿à¤¤ à¤ªà¥à¤°à¤¶à¥à¤¨ à¤ªà¥ˆà¤²à¥‡à¤Ÿ 5 à¤ªà¥à¤°à¤¤à¥€à¤•à¥‹à¤‚ à¤®à¥‡à¤‚ à¤¸à¥‡ à¤•à¤¿à¤¸à¥€ à¤à¤• à¤•à¤¾ à¤‰à¤ªà¤¯à¥‹à¤— à¤•à¤°à¤•à¥‡ à¤ªà¥à¤°à¤¤à¥à¤¯à¥‡à¤• à¤ªà¥à¤°à¤¶à¥à¤¨ à¤•à¥€ à¤¸à¥à¤¥à¤¿à¤¤à¤¿ à¤•à¥‹ à¤¦à¤°à¥à¤¶à¤¾à¤à¤—à¤¾à¥¤",
-    gen3: "3. à¤ªà¥à¤°à¤¶à¥à¤¨ à¤¦à¥‡à¤–à¤¨à¥‡ à¤•à¥‡ à¤•à¥à¤·à¥‡à¤¤à¥à¤° à¤•à¥‹ à¤…à¤§à¤¿à¤•à¤¤à¤® à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤†à¤ª à¤ªà¥à¤°à¤¶à¥à¤¨ à¤ªà¥ˆà¤²à¥‡à¤Ÿ à¤•à¥‹ à¤¬à¤‚à¤¦ à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ '>' à¤¤à¥€à¤° à¤ªà¤° à¤•à¥à¤²à¤¿à¤• à¤•à¤° à¤¸à¤•à¤¤à¥‡ à¤¹à¥ˆà¤‚à¥¤",
-    answering: "à¤ªà¥à¤°à¤¶à¥à¤¨ à¤ªà¤° à¤¨à¥‡à¤µà¤¿à¤—à¥‡à¤Ÿ à¤•à¤°à¤¨à¤¾:",
-    ans1: "4. à¤•à¤¿à¤¸à¥€ à¤ªà¥à¤°à¤¶à¥à¤¨ à¤•à¤¾ à¤‰à¤¤à¥à¤¤à¤° à¤¦à¥‡à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤, à¤µà¤¿à¤•à¤²à¥à¤ªà¥‹à¤‚ à¤®à¥‡à¤‚ à¤¸à¥‡ à¤•à¤¿à¤¸à¥€ à¤à¤• à¤•à¥‹ à¤šà¥à¤¨à¥‡à¤‚ à¤”à¤° 'Save & Next' à¤ªà¤° à¤•à¥à¤²à¤¿à¤• à¤•à¤°à¥‡à¤‚à¥¤",
-    ans2: "5. à¤…à¤ªà¤¨à¤¾ à¤‰à¤¤à¥à¤¤à¤° à¤¬à¤¦à¤²à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤, à¤šà¤¯à¤¨ à¤•à¥‹ à¤°à¥€à¤¸à¥‡à¤Ÿ à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ 'Clear Response' à¤¬à¤Ÿà¤¨ à¤ªà¤° à¤•à¥à¤²à¤¿à¤• à¤•à¤°à¥‡à¤‚à¥¤",
-    disclaimer: "à¤®à¥ˆà¤‚à¤¨à¥‡ à¤¸à¤­à¥€ à¤¨à¤¿à¤°à¥à¤¦à¥‡à¤¶à¥‹à¤‚ à¤•à¥‹ à¤ªà¤¢à¤¼ à¤”à¤° à¤¸à¤®à¤ à¤²à¤¿à¤¯à¤¾ à¤¹à¥ˆà¥¤ à¤®à¥à¤à¥‡ à¤†à¤µà¤‚à¤Ÿà¤¿à¤¤ à¤¸à¤­à¥€ à¤•à¤‚à¤ªà¥à¤¯à¥‚à¤Ÿà¤° à¤¹à¤¾à¤°à¥à¤¡à¤µà¥‡à¤¯à¤° à¤‰à¤šà¤¿à¤¤ à¤•à¤¾à¤°à¥à¤¯à¤¶à¥€à¤² à¤¸à¥à¤¥à¤¿à¤¤à¤¿ à¤®à¥‡à¤‚ à¤¹à¥ˆà¤‚à¥¤ à¤®à¥ˆà¤‚ à¤¸à¤¹à¤®à¤¤ à¤¹à¥‚à¤‚ à¤•à¤¿ à¤•à¤¿à¤¸à¥€ à¤­à¥€ à¤¨à¤•à¤² à¤¯à¤¾ à¤Ÿà¥ˆà¤¬ à¤¸à¥à¤µà¤¿à¤šà¤¿à¤‚à¤— à¤•à¥‡ à¤®à¤¾à¤®à¤²à¥‡ à¤®à¥‡à¤‚, à¤ªà¤°à¥€à¤•à¥à¤·à¤¾ à¤¸à¥à¤µà¤¤à¤ƒ à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤¹à¥‹ à¤œà¤¾à¤à¤—à¥€à¥¤",
-    btn: "à¤®à¥ˆà¤‚ à¤¤à¥ˆà¤¯à¤¾à¤° à¤¹à¥‚à¤ (I am ready to begin)"
+    title: "Ã Â¤â€¢Ã Â¥Æ’Ã Â¤ÂªÃ Â¤Â¯Ã Â¤Â¾ Ã Â¤Â¨Ã Â¤Â¿Ã Â¤Â°Ã Â¥ÂÃ Â¤Â¦Ã Â¥â€¡Ã Â¤Â¶Ã Â¥â€¹Ã Â¤â€š Ã Â¤â€¢Ã Â¥â€¹ Ã Â¤Â§Ã Â¥ÂÃ Â¤Â¯Ã Â¤Â¾Ã Â¤Â¨ Ã Â¤Â¸Ã Â¥â€¡ Ã Â¤ÂªÃ Â¤Â¢Ã Â¤Â¼Ã Â¥â€¡Ã Â¤â€š",
+    general: "Ã Â¤Â¸Ã Â¤Â¾Ã Â¤Â®Ã Â¤Â¾Ã Â¤Â¨Ã Â¥ÂÃ Â¤Â¯ Ã Â¤Â¨Ã Â¤Â¿Ã Â¤Â°Ã Â¥ÂÃ Â¤Â¦Ã Â¥â€¡Ã Â¤Â¶:",
+    gen1: "1. Ã Â¤ËœÃ Â¤Â¡Ã Â¤Â¼Ã Â¥â‚¬ Ã Â¤Â¸Ã Â¤Â°Ã Â¥ÂÃ Â¤ÂµÃ Â¤Â° Ã Â¤ÂªÃ Â¤Â° Ã Â¤ÂªÃ Â¤Â°Ã Â¥â‚¬Ã Â¤â€¢Ã Â¥ÂÃ Â¤Â·Ã Â¤Â¾ Ã Â¤ËœÃ Â¤Â¡Ã Â¤Â¼Ã Â¥â‚¬ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â°Ã Â¥â€šÃ Â¤Âª Ã Â¤Â®Ã Â¥â€¡Ã Â¤â€š Ã Â¤Â¸Ã Â¥â€¡Ã Â¤Å¸ Ã Â¤â€¢Ã Â¥â‚¬ Ã Â¤Å“Ã Â¤Â¾Ã Â¤ÂÃ Â¤â€”Ã Â¥â‚¬Ã Â¥Â¤ Ã Â¤Â¸Ã Â¥ÂÃ Â¤â€¢Ã Â¥ÂÃ Â¤Â°Ã Â¥â‚¬Ã Â¤Â¨ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â¶Ã Â¥â‚¬Ã Â¤Â°Ã Â¥ÂÃ Â¤Â· Ã Â¤Â¦Ã Â¤Â¾Ã Â¤ÂÃ Â¤â€š Ã Â¤â€¢Ã Â¥â€¹Ã Â¤Â¨Ã Â¥â€¡ Ã Â¤Â®Ã Â¥â€¡Ã Â¤â€š Ã Â¤â€°Ã Â¤Â²Ã Â¤Å¸Ã Â¥â‚¬ Ã Â¤â€”Ã Â¤Â¿Ã Â¤Â¨Ã Â¤Â¤Ã Â¥â‚¬ Ã Â¤ËœÃ Â¤Â¡Ã Â¤Â¼Ã Â¥â‚¬ Ã Â¤â€ Ã Â¤ÂªÃ Â¤â€¢Ã Â¥â€¡ Ã Â¤Â¦Ã Â¥ÂÃ Â¤ÂµÃ Â¤Â¾Ã Â¤Â°Ã Â¤Â¾ Ã Â¤ÂªÃ Â¤Â°Ã Â¥â‚¬Ã Â¤â€¢Ã Â¥ÂÃ Â¤Â·Ã Â¤Â¾ Ã Â¤ÂªÃ Â¥â€šÃ Â¤Â°Ã Â¥â‚¬ Ã Â¤â€¢Ã Â¤Â°Ã Â¤Â¨Ã Â¥â€¡ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â Ã Â¤â€°Ã Â¤ÂªÃ Â¤Â²Ã Â¤Â¬Ã Â¥ÂÃ Â¤Â§ Ã Â¤Â¶Ã Â¥â€¡Ã Â¤Â· Ã Â¤Â¸Ã Â¤Â®Ã Â¤Â¯ Ã Â¤â€¢Ã Â¥â€¹ Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¦Ã Â¤Â°Ã Â¥ÂÃ Â¤Â¶Ã Â¤Â¿Ã Â¤Â¤ Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€”Ã Â¥â‚¬Ã Â¥Â¤",
+    gen2: "2. Ã Â¤Â¸Ã Â¥ÂÃ Â¤â€¢Ã Â¥ÂÃ Â¤Â°Ã Â¥â‚¬Ã Â¤Â¨ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â¦Ã Â¤Â¾Ã Â¤Ë†Ã Â¤â€š Ã Â¤â€œÃ Â¤Â° Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¦Ã Â¤Â°Ã Â¥ÂÃ Â¤Â¶Ã Â¤Â¿Ã Â¤Â¤ Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¶Ã Â¥ÂÃ Â¤Â¨ Ã Â¤ÂªÃ Â¥Ë†Ã Â¤Â²Ã Â¥â€¡Ã Â¤Å¸ 5 Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¤Ã Â¥â‚¬Ã Â¤â€¢Ã Â¥â€¹Ã Â¤â€š Ã Â¤Â®Ã Â¥â€¡Ã Â¤â€š Ã Â¤Â¸Ã Â¥â€¡ Ã Â¤â€¢Ã Â¤Â¿Ã Â¤Â¸Ã Â¥â‚¬ Ã Â¤ÂÃ Â¤â€¢ Ã Â¤â€¢Ã Â¤Â¾ Ã Â¤â€°Ã Â¤ÂªÃ Â¤Â¯Ã Â¥â€¹Ã Â¤â€” Ã Â¤â€¢Ã Â¤Â°Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¤Ã Â¥ÂÃ Â¤Â¯Ã Â¥â€¡Ã Â¤â€¢ Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¶Ã Â¥ÂÃ Â¤Â¨ Ã Â¤â€¢Ã Â¥â‚¬ Ã Â¤Â¸Ã Â¥ÂÃ Â¤Â¥Ã Â¤Â¿Ã Â¤Â¤Ã Â¤Â¿ Ã Â¤â€¢Ã Â¥â€¹ Ã Â¤Â¦Ã Â¤Â°Ã Â¥ÂÃ Â¤Â¶Ã Â¤Â¾Ã Â¤ÂÃ Â¤â€”Ã Â¤Â¾Ã Â¥Â¤",
+    gen3: "3. Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¶Ã Â¥ÂÃ Â¤Â¨ Ã Â¤Â¦Ã Â¥â€¡Ã Â¤â€“Ã Â¤Â¨Ã Â¥â€¡ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤â€¢Ã Â¥ÂÃ Â¤Â·Ã Â¥â€¡Ã Â¤Â¤Ã Â¥ÂÃ Â¤Â° Ã Â¤â€¢Ã Â¥â€¹ Ã Â¤â€¦Ã Â¤Â§Ã Â¤Â¿Ã Â¤â€¢Ã Â¤Â¤Ã Â¤Â® Ã Â¤â€¢Ã Â¤Â°Ã Â¤Â¨Ã Â¥â€¡ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â Ã Â¤â€ Ã Â¤Âª Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¶Ã Â¥ÂÃ Â¤Â¨ Ã Â¤ÂªÃ Â¥Ë†Ã Â¤Â²Ã Â¥â€¡Ã Â¤Å¸ Ã Â¤â€¢Ã Â¥â€¹ Ã Â¤Â¬Ã Â¤â€šÃ Â¤Â¦ Ã Â¤â€¢Ã Â¤Â°Ã Â¤Â¨Ã Â¥â€¡ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â '>' Ã Â¤Â¤Ã Â¥â‚¬Ã Â¤Â° Ã Â¤ÂªÃ Â¤Â° Ã Â¤â€¢Ã Â¥ÂÃ Â¤Â²Ã Â¤Â¿Ã Â¤â€¢ Ã Â¤â€¢Ã Â¤Â° Ã Â¤Â¸Ã Â¤â€¢Ã Â¤Â¤Ã Â¥â€¡ Ã Â¤Â¹Ã Â¥Ë†Ã Â¤â€šÃ Â¥Â¤",
+    answering: "Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¶Ã Â¥ÂÃ Â¤Â¨ Ã Â¤ÂªÃ Â¤Â° Ã Â¤Â¨Ã Â¥â€¡Ã Â¤ÂµÃ Â¤Â¿Ã Â¤â€”Ã Â¥â€¡Ã Â¤Å¸ Ã Â¤â€¢Ã Â¤Â°Ã Â¤Â¨Ã Â¤Â¾:",
+    ans1: "4. Ã Â¤â€¢Ã Â¤Â¿Ã Â¤Â¸Ã Â¥â‚¬ Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¶Ã Â¥ÂÃ Â¤Â¨ Ã Â¤â€¢Ã Â¤Â¾ Ã Â¤â€°Ã Â¤Â¤Ã Â¥ÂÃ Â¤Â¤Ã Â¤Â° Ã Â¤Â¦Ã Â¥â€¡Ã Â¤Â¨Ã Â¥â€¡ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â, Ã Â¤ÂµÃ Â¤Â¿Ã Â¤â€¢Ã Â¤Â²Ã Â¥ÂÃ Â¤ÂªÃ Â¥â€¹Ã Â¤â€š Ã Â¤Â®Ã Â¥â€¡Ã Â¤â€š Ã Â¤Â¸Ã Â¥â€¡ Ã Â¤â€¢Ã Â¤Â¿Ã Â¤Â¸Ã Â¥â‚¬ Ã Â¤ÂÃ Â¤â€¢ Ã Â¤â€¢Ã Â¥â€¹ Ã Â¤Å¡Ã Â¥ÂÃ Â¤Â¨Ã Â¥â€¡Ã Â¤â€š Ã Â¤â€Ã Â¤Â° 'Save & Next' Ã Â¤ÂªÃ Â¤Â° Ã Â¤â€¢Ã Â¥ÂÃ Â¤Â²Ã Â¤Â¿Ã Â¤â€¢ Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€šÃ Â¥Â¤",
+    ans2: "5. Ã Â¤â€¦Ã Â¤ÂªÃ Â¤Â¨Ã Â¤Â¾ Ã Â¤â€°Ã Â¤Â¤Ã Â¥ÂÃ Â¤Â¤Ã Â¤Â° Ã Â¤Â¬Ã Â¤Â¦Ã Â¤Â²Ã Â¤Â¨Ã Â¥â€¡ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â, Ã Â¤Å¡Ã Â¤Â¯Ã Â¤Â¨ Ã Â¤â€¢Ã Â¥â€¹ Ã Â¤Â°Ã Â¥â‚¬Ã Â¤Â¸Ã Â¥â€¡Ã Â¤Å¸ Ã Â¤â€¢Ã Â¤Â°Ã Â¤Â¨Ã Â¥â€¡ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â 'Clear Response' Ã Â¤Â¬Ã Â¤Å¸Ã Â¤Â¨ Ã Â¤ÂªÃ Â¤Â° Ã Â¤â€¢Ã Â¥ÂÃ Â¤Â²Ã Â¤Â¿Ã Â¤â€¢ Ã Â¤â€¢Ã Â¤Â°Ã Â¥â€¡Ã Â¤â€šÃ Â¥Â¤",
+    disclaimer: "Ã Â¤Â®Ã Â¥Ë†Ã Â¤â€šÃ Â¤Â¨Ã Â¥â€¡ Ã Â¤Â¸Ã Â¤Â­Ã Â¥â‚¬ Ã Â¤Â¨Ã Â¤Â¿Ã Â¤Â°Ã Â¥ÂÃ Â¤Â¦Ã Â¥â€¡Ã Â¤Â¶Ã Â¥â€¹Ã Â¤â€š Ã Â¤â€¢Ã Â¥â€¹ Ã Â¤ÂªÃ Â¤Â¢Ã Â¤Â¼ Ã Â¤â€Ã Â¤Â° Ã Â¤Â¸Ã Â¤Â®Ã Â¤Â Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â¯Ã Â¤Â¾ Ã Â¤Â¹Ã Â¥Ë†Ã Â¥Â¤ Ã Â¤Â®Ã Â¥ÂÃ Â¤ÂÃ Â¥â€¡ Ã Â¤â€ Ã Â¤ÂµÃ Â¤â€šÃ Â¤Å¸Ã Â¤Â¿Ã Â¤Â¤ Ã Â¤Â¸Ã Â¤Â­Ã Â¥â‚¬ Ã Â¤â€¢Ã Â¤â€šÃ Â¤ÂªÃ Â¥ÂÃ Â¤Â¯Ã Â¥â€šÃ Â¤Å¸Ã Â¤Â° Ã Â¤Â¹Ã Â¤Â¾Ã Â¤Â°Ã Â¥ÂÃ Â¤Â¡Ã Â¤ÂµÃ Â¥â€¡Ã Â¤Â¯Ã Â¤Â° Ã Â¤â€°Ã Â¤Å¡Ã Â¤Â¿Ã Â¤Â¤ Ã Â¤â€¢Ã Â¤Â¾Ã Â¤Â°Ã Â¥ÂÃ Â¤Â¯Ã Â¤Â¶Ã Â¥â‚¬Ã Â¤Â² Ã Â¤Â¸Ã Â¥ÂÃ Â¤Â¥Ã Â¤Â¿Ã Â¤Â¤Ã Â¤Â¿ Ã Â¤Â®Ã Â¥â€¡Ã Â¤â€š Ã Â¤Â¹Ã Â¥Ë†Ã Â¤â€šÃ Â¥Â¤ Ã Â¤Â®Ã Â¥Ë†Ã Â¤â€š Ã Â¤Â¸Ã Â¤Â¹Ã Â¤Â®Ã Â¤Â¤ Ã Â¤Â¹Ã Â¥â€šÃ Â¤â€š Ã Â¤â€¢Ã Â¤Â¿ Ã Â¤â€¢Ã Â¤Â¿Ã Â¤Â¸Ã Â¥â‚¬ Ã Â¤Â­Ã Â¥â‚¬ Ã Â¤Â¨Ã Â¤â€¢Ã Â¤Â² Ã Â¤Â¯Ã Â¤Â¾ Ã Â¤Å¸Ã Â¥Ë†Ã Â¤Â¬ Ã Â¤Â¸Ã Â¥ÂÃ Â¤ÂµÃ Â¤Â¿Ã Â¤Å¡Ã Â¤Â¿Ã Â¤â€šÃ Â¤â€” Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â®Ã Â¤Â¾Ã Â¤Â®Ã Â¤Â²Ã Â¥â€¡ Ã Â¤Â®Ã Â¥â€¡Ã Â¤â€š, Ã Â¤ÂªÃ Â¤Â°Ã Â¥â‚¬Ã Â¤â€¢Ã Â¥ÂÃ Â¤Â·Ã Â¤Â¾ Ã Â¤Â¸Ã Â¥ÂÃ Â¤ÂµÃ Â¤Â¤Ã Â¤Æ’ Ã Â¤Â¸Ã Â¤Â¬Ã Â¤Â®Ã Â¤Â¿Ã Â¤Å¸ Ã Â¤Â¹Ã Â¥â€¹ Ã Â¤Å“Ã Â¤Â¾Ã Â¤ÂÃ Â¤â€”Ã Â¥â‚¬Ã Â¥Â¤",
+    btn: "Ã Â¤Â®Ã Â¥Ë†Ã Â¤â€š Ã Â¤Â¤Ã Â¥Ë†Ã Â¤Â¯Ã Â¤Â¾Ã Â¤Â° Ã Â¤Â¹Ã Â¥â€šÃ Â¤Â (I am ready to begin)"
   }
 };
 
@@ -283,29 +283,29 @@ export default function MobileTestScreen({
             {
               id: "q_q1", sectionId: "sec_quant", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
               content: {
-                en: { questionText: "If x + 1/x = 5, then find the value of xÂ² + 1/xÂ².", options: ["23", "25", "27", "21"] },
-                hi: { questionText: "à¤¯à¤¦à¤¿ x + 1/x = 5 à¤¹à¥ˆ, à¤¤à¥‹ xÂ² + 1/xÂ² à¤•à¤¾ à¤®à¤¾à¤¨ à¤œà¥à¤žà¤¾à¤¤ à¤•à¥€à¤œà¤¿à¤à¥¤", options: ["23", "25", "27", "21"] }
+                en: { questionText: "If x + 1/x = 5, then find the value of xÃ‚Â² + 1/xÃ‚Â².", options: ["23", "25", "27", "21"] },
+                hi: { questionText: "Ã Â¤Â¯Ã Â¤Â¦Ã Â¤Â¿ x + 1/x = 5 Ã Â¤Â¹Ã Â¥Ë†, Ã Â¤Â¤Ã Â¥â€¹ xÃ‚Â² + 1/xÃ‚Â² Ã Â¤â€¢Ã Â¤Â¾ Ã Â¤Â®Ã Â¤Â¾Ã Â¤Â¨ Ã Â¤Å“Ã Â¥ÂÃ Â¤Å¾Ã Â¤Â¾Ã Â¤Â¤ Ã Â¤â€¢Ã Â¥â‚¬Ã Â¤Å“Ã Â¤Â¿Ã Â¤ÂÃ Â¥Â¤", options: ["23", "25", "27", "21"] }
               }
             },
             {
               id: "q_q2", sectionId: "sec_quant", questionType: "mcq", orderIndex: 1, correctOptionIndex: 0,
               content: {
                 en: { questionText: "The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A's present age?", options: ["20 years", "25 years", "30 years", "15 years"] },
-                hi: { questionText: "A à¤”à¤° B à¤•à¥€ à¤µà¤°à¥à¤¤à¤®à¤¾à¤¨ à¤†à¤¯à¥ à¤•à¤¾ à¤…à¤¨à¥à¤ªà¤¾à¤¤ 4:5 à¤¹à¥ˆà¥¤ 5 à¤µà¤°à¥à¤· à¤¬à¤¾à¤¦ à¤¯à¤¹ à¤…à¤¨à¥à¤ªà¤¾à¤¤ 5:6 à¤¹à¥‹ à¤œà¤¾à¤¤à¤¾ à¤¹à¥ˆà¥¤ A à¤•à¥€ à¤µà¤°à¥à¤¤à¤®à¤¾à¤¨ à¤†à¤¯à¥ à¤•à¥à¤¯à¤¾ à¤¹à¥ˆ?", options: ["20 à¤µà¤°à¥à¤·", "25 à¤µà¤°à¥à¤·", "30 à¤µà¤°à¥à¤·", "15 years"] }
+                hi: { questionText: "A Ã Â¤â€Ã Â¤Â° B Ã Â¤â€¢Ã Â¥â‚¬ Ã Â¤ÂµÃ Â¤Â°Ã Â¥ÂÃ Â¤Â¤Ã Â¤Â®Ã Â¤Â¾Ã Â¤Â¨ Ã Â¤â€ Ã Â¤Â¯Ã Â¥Â Ã Â¤â€¢Ã Â¤Â¾ Ã Â¤â€¦Ã Â¤Â¨Ã Â¥ÂÃ Â¤ÂªÃ Â¤Â¾Ã Â¤Â¤ 4:5 Ã Â¤Â¹Ã Â¥Ë†Ã Â¥Â¤ 5 Ã Â¤ÂµÃ Â¤Â°Ã Â¥ÂÃ Â¤Â· Ã Â¤Â¬Ã Â¤Â¾Ã Â¤Â¦ Ã Â¤Â¯Ã Â¤Â¹ Ã Â¤â€¦Ã Â¤Â¨Ã Â¥ÂÃ Â¤ÂªÃ Â¤Â¾Ã Â¤Â¤ 5:6 Ã Â¤Â¹Ã Â¥â€¹ Ã Â¤Å“Ã Â¤Â¾Ã Â¤Â¤Ã Â¤Â¾ Ã Â¤Â¹Ã Â¥Ë†Ã Â¥Â¤ A Ã Â¤â€¢Ã Â¥â‚¬ Ã Â¤ÂµÃ Â¤Â°Ã Â¥ÂÃ Â¤Â¤Ã Â¤Â®Ã Â¤Â¾Ã Â¤Â¨ Ã Â¤â€ Ã Â¤Â¯Ã Â¥Â Ã Â¤â€¢Ã Â¥ÂÃ Â¤Â¯Ã Â¤Â¾ Ã Â¤Â¹Ã Â¥Ë†?", options: ["20 Ã Â¤ÂµÃ Â¤Â°Ã Â¥ÂÃ Â¤Â·", "25 Ã Â¤ÂµÃ Â¤Â°Ã Â¥ÂÃ Â¤Â·", "30 Ã Â¤ÂµÃ Â¤Â°Ã Â¥ÂÃ Â¤Â·", "15 years"] }
               }
             },
             {
               id: "q_r1", sectionId: "sec_reasoning", questionType: "mcq", orderIndex: 0, correctOptionIndex: 3,
               content: {
                 en: { questionText: "Identify the pattern and choose the next term in the series: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] },
-                hi: { questionText: "à¤ªà¥ˆà¤Ÿà¤°à¥à¤¨ à¤•à¥‹ à¤ªà¤¹à¤šà¤¾à¤¨à¥‡à¤‚ à¤”à¤° à¤¶à¥à¤°à¥ƒà¤‚à¤–à¤²à¤¾ à¤®à¥‡à¤‚ à¤…à¤—à¤²à¤¾ à¤ªà¤¦ à¤šà¥à¤¨à¥‡à¤‚: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] }
+                hi: { questionText: "Ã Â¤ÂªÃ Â¥Ë†Ã Â¤Å¸Ã Â¤Â°Ã Â¥ÂÃ Â¤Â¨ Ã Â¤â€¢Ã Â¥â€¹ Ã Â¤ÂªÃ Â¤Â¹Ã Â¤Å¡Ã Â¤Â¾Ã Â¤Â¨Ã Â¥â€¡Ã Â¤â€š Ã Â¤â€Ã Â¤Â° Ã Â¤Â¶Ã Â¥ÂÃ Â¤Â°Ã Â¥Æ’Ã Â¤â€šÃ Â¤â€“Ã Â¤Â²Ã Â¤Â¾ Ã Â¤Â®Ã Â¥â€¡Ã Â¤â€š Ã Â¤â€¦Ã Â¤â€”Ã Â¤Â²Ã Â¤Â¾ Ã Â¤ÂªÃ Â¤Â¦ Ã Â¤Å¡Ã Â¥ÂÃ Â¤Â¨Ã Â¥â€¡Ã Â¤â€š: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] }
               }
             },
             {
               id: "q_e1", sectionId: "sec_english", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
               content: {
                 en: { questionText: "Select the antonym for the word: OBSTINATE", options: ["Flexible", "Stubborn", "Rigid", "Dogmatic"] },
-                hi: { questionText: "à¤¦à¤¿à¤ à¤—à¤ à¤¶à¤¬à¥à¤¦ à¤•à¤¾ à¤µà¤¿à¤²à¥‹à¤® à¤¶à¤¬à¥à¤¦ à¤šà¥à¤¨à¥‡à¤‚: OBSTINATE (à¤¹à¤ à¥€)", options: ["Flexible (à¤²à¤šà¥€à¤²à¤¾)", "Stubborn (à¤…à¤¡à¤¼à¤¿à¤¯à¤²)", "Rigid (à¤•à¤ à¥‹à¤°)", "Dogmatic (à¤•à¤Ÿà¥à¤Ÿà¤°)"] }
+                hi: { questionText: "Ã Â¤Â¦Ã Â¤Â¿Ã Â¤Â Ã Â¤â€”Ã Â¤Â Ã Â¤Â¶Ã Â¤Â¬Ã Â¥ÂÃ Â¤Â¦ Ã Â¤â€¢Ã Â¤Â¾ Ã Â¤ÂµÃ Â¤Â¿Ã Â¤Â²Ã Â¥â€¹Ã Â¤Â® Ã Â¤Â¶Ã Â¤Â¬Ã Â¥ÂÃ Â¤Â¦ Ã Â¤Å¡Ã Â¥ÂÃ Â¤Â¨Ã Â¥â€¡Ã Â¤â€š: OBSTINATE (Ã Â¤Â¹Ã Â¤Â Ã Â¥â‚¬)", options: ["Flexible (Ã Â¤Â²Ã Â¤Å¡Ã Â¥â‚¬Ã Â¤Â²Ã Â¤Â¾)", "Stubborn (Ã Â¤â€¦Ã Â¤Â¡Ã Â¤Â¼Ã Â¤Â¿Ã Â¤Â¯Ã Â¤Â²)", "Rigid (Ã Â¤â€¢Ã Â¤Â Ã Â¥â€¹Ã Â¤Â°)", "Dogmatic (Ã Â¤â€¢Ã Â¤Å¸Ã Â¥ÂÃ Â¤Å¸Ã Â¤Â°)"] }
               }
             }
           ];
@@ -318,14 +318,14 @@ export default function MobileTestScreen({
               id: "q_gen1", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
               content: {
                 en: { questionText: "What is the unit of electric current?", options: ["Volt", "Ampere", "Ohm", "Watt"] },
-                hi: { questionText: "à¤µà¤¿à¤¦à¥à¤¯à¥à¤¤ à¤§à¤¾à¤°à¤¾ à¤•à¥€ à¤‡à¤•à¤¾à¤ˆ à¤•à¥à¤¯à¤¾ à¤¹à¥ˆ?", options: ["à¤µà¥‹à¤²à¥à¤Ÿ", "à¤à¤®à¥à¤ªà¥€à¤¯à¤°", "à¤“à¤®", "à¤µà¤¾à¤Ÿ"] }
+                hi: { questionText: "Ã Â¤ÂµÃ Â¤Â¿Ã Â¤Â¦Ã Â¥ÂÃ Â¤Â¯Ã Â¥ÂÃ Â¤Â¤ Ã Â¤Â§Ã Â¤Â¾Ã Â¤Â°Ã Â¤Â¾ Ã Â¤â€¢Ã Â¥â‚¬ Ã Â¤â€¡Ã Â¤â€¢Ã Â¤Â¾Ã Â¤Ë† Ã Â¤â€¢Ã Â¥ÂÃ Â¤Â¯Ã Â¤Â¾ Ã Â¤Â¹Ã Â¥Ë†?", options: ["Ã Â¤ÂµÃ Â¥â€¹Ã Â¤Â²Ã Â¥ÂÃ Â¤Å¸", "Ã Â¤ÂÃ Â¤Â®Ã Â¥ÂÃ Â¤ÂªÃ Â¥â‚¬Ã Â¤Â¯Ã Â¤Â°", "Ã Â¤â€œÃ Â¤Â®", "Ã Â¤ÂµÃ Â¤Â¾Ã Â¤Å¸"] }
               }
             },
             {
               id: "q_gen2", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 1, correctOptionIndex: 1,
               content: {
                 en: { questionText: "Which planet is known as the Red Planet?", options: ["Earth", "Mars", "Jupiter", "Saturn"] },
-                hi: { questionText: "à¤•à¤¿à¤¸ à¤—à¥à¤°à¤¹ à¤•à¥‹ à¤²à¤¾à¤² à¤—à¥à¤°à¤¹ à¤•à¥‡ à¤¨à¤¾à¤® à¤¸à¥‡ à¤œà¤¾à¤¨à¤¾ à¤œà¤¾à¤¤à¤¾ à¤¹à¥ˆ?", options: ["à¤ªà¥ƒà¤¥à¥à¤µà¥€", "à¤®à¤‚à¤—à¤²", "à¤¬à¥ƒà¤¹à¤¸à¥à¤ªà¤¤à¤¿", "à¤¶à¤¨à¤¿"] }
+                hi: { questionText: "Ã Â¤â€¢Ã Â¤Â¿Ã Â¤Â¸ Ã Â¤â€”Ã Â¥ÂÃ Â¤Â°Ã Â¤Â¹ Ã Â¤â€¢Ã Â¥â€¹ Ã Â¤Â²Ã Â¤Â¾Ã Â¤Â² Ã Â¤â€”Ã Â¥ÂÃ Â¤Â°Ã Â¤Â¹ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â¨Ã Â¤Â¾Ã Â¤Â® Ã Â¤Â¸Ã Â¥â€¡ Ã Â¤Å“Ã Â¤Â¾Ã Â¤Â¨Ã Â¤Â¾ Ã Â¤Å“Ã Â¤Â¾Ã Â¤Â¤Ã Â¤Â¾ Ã Â¤Â¹Ã Â¥Ë†?", options: ["Ã Â¤ÂªÃ Â¥Æ’Ã Â¤Â¥Ã Â¥ÂÃ Â¤ÂµÃ Â¥â‚¬", "Ã Â¤Â®Ã Â¤â€šÃ Â¤â€”Ã Â¤Â²", "Ã Â¤Â¬Ã Â¥Æ’Ã Â¤Â¹Ã Â¤Â¸Ã Â¥ÂÃ Â¤ÂªÃ Â¤Â¤Ã Â¤Â¿", "Ã Â¤Â¶Ã Â¤Â¨Ã Â¤Â¿"] }
               }
             }
           ];
@@ -784,8 +784,12 @@ export default function MobileTestScreen({
     );
   }
 
-  // Active question details
-  const questionContent = activeQuestion?.content[lang];
+  // Active question details â€” fall back to Hindi if English content is empty (bilingual questions)
+  const questionContentEn = activeQuestion?.content['en'];
+  const questionContentHi = activeQuestion?.content['hi'];
+  const questionContent = lang === 'en'
+    ? (questionContentEn?.questionText ? questionContentEn : questionContentHi)
+    : (questionContentHi?.questionText ? questionContentHi : questionContentEn);
   const questionText = questionContent?.questionText || '';
   const options = questionContent?.options || [];
   const activeResp = activeQuestion ? responses[activeQuestion.id] : null;
@@ -871,10 +875,10 @@ export default function MobileTestScreen({
           <View style={[styles.instLangSelectCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
             <View style={{ flex: 1, marginRight: 10 }}>
               <Text style={[styles.instLangSelectTitle, isDark && { color: '#FFF' }]}>
-                {lang === 'hi' ? 'à¤…à¤ªà¤¨à¥€ à¤¡à¤¿à¤«à¤¼à¥‰à¤²à¥à¤Ÿ à¤ªà¤°à¥€à¤•à¥à¤·à¤¾ à¤­à¤¾à¤·à¤¾ à¤šà¥à¤¨à¥‡à¤‚' : 'Choose your default exam language'}
+                {lang === 'hi' ? 'Ã Â¤â€¦Ã Â¤ÂªÃ Â¤Â¨Ã Â¥â‚¬ Ã Â¤Â¡Ã Â¤Â¿Ã Â¤Â«Ã Â¤Â¼Ã Â¥â€°Ã Â¤Â²Ã Â¥ÂÃ Â¤Å¸ Ã Â¤ÂªÃ Â¤Â°Ã Â¥â‚¬Ã Â¤â€¢Ã Â¥ÂÃ Â¤Â·Ã Â¤Â¾ Ã Â¤Â­Ã Â¤Â¾Ã Â¤Â·Ã Â¤Â¾ Ã Â¤Å¡Ã Â¥ÂÃ Â¤Â¨Ã Â¥â€¡Ã Â¤â€š' : 'Choose your default exam language'}
               </Text>
               <Text style={[styles.instLangSelectSub, isDark && { color: ThemeColors.dark.textMuted }]}>
-                {lang === 'hi' ? 'à¤•à¥ƒà¤ªà¤¯à¤¾ à¤ªà¥à¤°à¤¶à¥à¤¨à¥‹à¤‚ à¤•à¥‹ à¤¹à¤² à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¡à¤¿à¤«à¤¼à¥‰à¤²à¥à¤Ÿ à¤­à¤¾à¤·à¤¾ à¤šà¥à¤¨à¥‡à¤‚' : 'Select the default language for viewing questions'}
+                {lang === 'hi' ? 'Ã Â¤â€¢Ã Â¥Æ’Ã Â¤ÂªÃ Â¤Â¯Ã Â¤Â¾ Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¶Ã Â¥ÂÃ Â¤Â¨Ã Â¥â€¹Ã Â¤â€š Ã Â¤â€¢Ã Â¥â€¹ Ã Â¤Â¹Ã Â¤Â² Ã Â¤â€¢Ã Â¤Â°Ã Â¤Â¨Ã Â¥â€¡ Ã Â¤â€¢Ã Â¥â€¡ Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â Ã Â¤Â¡Ã Â¤Â¿Ã Â¤Â«Ã Â¤Â¼Ã Â¥â€°Ã Â¤Â²Ã Â¥ÂÃ Â¤Å¸ Ã Â¤Â­Ã Â¤Â¾Ã Â¤Â·Ã Â¤Â¾ Ã Â¤Å¡Ã Â¥ÂÃ Â¤Â¨Ã Â¥â€¡Ã Â¤â€š' : 'Select the default language for viewing questions'}
               </Text>
             </View>
             <View style={styles.instSelectorContainer}>
@@ -896,7 +900,7 @@ export default function MobileTestScreen({
                 ]}
                 onPress={() => setLang('hi')}
               >
-                <Text style={[styles.langSelectorText, lang === 'hi' && styles.langSelectorTextActive, isDark && lang !== 'hi' && { color: ThemeColors.dark.textMuted }]}>à¤¹à¤¿à¤‚à¤¦à¥€</Text>
+                <Text style={[styles.langSelectorText, lang === 'hi' && styles.langSelectorTextActive, isDark && lang !== 'hi' && { color: ThemeColors.dark.textMuted }]}>Ã Â¤Â¹Ã Â¤Â¿Ã Â¤â€šÃ Â¤Â¦Ã Â¥â‚¬</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -913,7 +917,7 @@ export default function MobileTestScreen({
               isDark && { borderColor: ThemeColors.dark.border },
               agreed && isDark && { backgroundColor: '#10B981', borderColor: '#10B981' }
             ]}>
-              {agreed && <Text style={styles.checkboxTick}>âœ“</Text>}
+              {agreed && <Text style={styles.checkboxTick}>Ã¢Å“â€œ</Text>}
             </View>
             <Text style={[styles.checkboxLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
               {t.disclaimer}
@@ -965,11 +969,11 @@ export default function MobileTestScreen({
         backgroundColor="#1A1A2E"
       />
 
-      {/* â”€â”€ Header â”€â”€ */}
+      {/* â€” Header â€” */}
       <View style={styles.examHeader}>
         {/* Left: pause + timer + exam name */}
-        <TouchableOpacity style={styles.pauseIconBtn} onPress={handlePauseAndExit}>
-          <Text style={styles.pauseIconText}>â¸</Text>
+        <TouchableOpacity style={styles.pauseTextBtn} onPress={handlePauseAndExit}>
+          <Text style={styles.pauseTextBtnText}>â¸ Pause</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTimer}>{formatTime(timeLeft)}</Text>
@@ -983,7 +987,7 @@ export default function MobileTestScreen({
         </TouchableOpacity>
       </View>
 
-      {/* â”€â”€ Section Tabs â”€â”€ */}
+      {/* Ã¢â€â‚¬Ã¢â€â‚¬ Section Tabs Ã¢â€â‚¬Ã¢â€â‚¬ */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -1013,7 +1017,7 @@ export default function MobileTestScreen({
         ))}
       </ScrollView>
 
-      {/* â”€â”€ Stats Bar â”€â”€ */}
+      {/* Ã¢â€â‚¬Ã¢â€â‚¬ Stats Bar Ã¢â€â‚¬Ã¢â€â‚¬ */}
       <View style={[styles.statsBar, isDark && { backgroundColor: isDark ? '#0F1729' : '#F9FAFB', borderBottomColor: ThemeColors.dark.border }]}>
         <Text style={[styles.statsText, isDark && { color: ThemeColors.dark.textMuted }]}>
           Total Questions Answered: <Text style={styles.statsHighlight}>{answeredCount}</Text>
@@ -1023,7 +1027,7 @@ export default function MobileTestScreen({
         )}
       </View>
 
-      {/* â”€â”€ Question ScrollView â”€â”€ */}
+      {/* Ã¢â€â‚¬Ã¢â€â‚¬ Question ScrollView Ã¢â€â‚¬Ã¢â€â‚¬ */}
       <ScrollView
         style={[styles.questionContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}
         contentContainerStyle={styles.questionContentContainer}
@@ -1034,25 +1038,6 @@ export default function MobileTestScreen({
           {/* Blue number badge */}
           <View style={styles.questionNumBadge}>
             <Text style={styles.questionNumText}>{currentQuestionIdx + 1}</Text>
-          </View>
-          {/* Timer */}
-          <View style={styles.questionTimerPill}>
-            <Text style={[styles.questionTimerIcon, isDark && { color: '#94A3B8' }]}>â±</Text>
-            <Text style={[styles.questionTimerValue, isDark && { color: '#94A3B8' }]}>
-              {formatTime(activeResp?.elapsedSeconds || 0)}
-            </Text>
-          </View>
-          {/* Action icons */}
-          <View style={styles.questionActions}>
-            <TouchableOpacity onPress={handleMarkForReview} style={styles.actionIcon}>
-              <AlertTriangle size={rs(18)} color={isDark ? '#94A3B8' : '#9CA3AF'} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionIcon}>
-              <Bookmark size={rs(18)} color={isDark ? '#94A3B8' : '#9CA3AF'} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionIcon}>
-              <Star size={rs(18)} color={isDark ? '#94A3B8' : '#9CA3AF'} />
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -1098,11 +1083,11 @@ export default function MobileTestScreen({
           })}
         </View>
         {violationsCount > 0 && (
-          <Text style={styles.violationWarning}>âš  Violations: {violationsCount}/3</Text>
+          <Text style={styles.violationWarning}>Ã¢Å¡Â  Violations: {violationsCount}/3</Text>
         )}
       </ScrollView>
 
-      {/* â”€â”€ Bottom Navigation Bar â”€â”€ */}
+      {/* Ã¢â€â‚¬Ã¢â€â‚¬ Bottom Navigation Bar Ã¢â€â‚¬Ã¢â€â‚¬ */}
       <View style={[styles.footer, isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder }]}>
         <TouchableOpacity
           style={[styles.footerBtn, styles.footerBtnOutline, isDark && { borderColor: '#334155' }]}
@@ -1135,7 +1120,7 @@ export default function MobileTestScreen({
         </TouchableOpacity>
       </View>
 
-      {/* â”€â”€ Palette Drawer (right slide-in) â”€â”€ */}
+      {/* Ã¢â€â‚¬Ã¢â€â‚¬ Palette Drawer (right slide-in) Ã¢â€â‚¬Ã¢â€â‚¬ */}
       <Modal
         visible={drawerVisible}
         animationType="slide"
@@ -1151,13 +1136,13 @@ export default function MobileTestScreen({
                 style={[styles.paletteTabBtn, drawerTab === 'symbols' && styles.paletteTabBtnActive]}
                 onPress={() => setDrawerTab('symbols')}
               >
-                <Text style={[styles.paletteTabText, drawerTab === 'symbols' && styles.paletteTabTextActive, isDark && { color: drawerTab === 'symbols' ? '#3B82F6' : '#64748B' }]}>âŠ™ Symbols</Text>
+                <Text style={[styles.paletteTabText, drawerTab === 'symbols' && styles.paletteTabTextActive, isDark && { color: drawerTab === 'symbols' ? '#3B82F6' : '#64748B' }]}>Ã¢Å â„¢ Symbols</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.paletteTabBtn, drawerTab === 'instructions' && styles.paletteTabBtnActive]}
                 onPress={() => setDrawerTab('instructions')}
               >
-                <Text style={[styles.paletteTabText, drawerTab === 'instructions' && styles.paletteTabTextActive, isDark && { color: drawerTab === 'instructions' ? '#3B82F6' : '#64748B' }]}>â“˜ Instructions</Text>
+                <Text style={[styles.paletteTabText, drawerTab === 'instructions' && styles.paletteTabTextActive, isDark && { color: drawerTab === 'instructions' ? '#3B82F6' : '#64748B' }]}>Ã¢â€œËœ Instructions</Text>
               </TouchableOpacity>
             </View>
 
@@ -1250,7 +1235,7 @@ export default function MobileTestScreen({
                       <Text style={[styles.paletteCellText, { color: textColor }]}>{qIdx + 1}</Text>
                       {hasCheck && (
                         <View style={styles.miniCheck}>
-                          <Text style={styles.miniCheckText}>âœ“</Text>
+                          <Text style={styles.miniCheckText}>Ã¢Å“â€œ</Text>
                         </View>
                       )}
                     </TouchableOpacity>
@@ -1288,7 +1273,7 @@ export default function MobileTestScreen({
           <View style={[styles.modalContent, isDark && { backgroundColor: ThemeColors.dark.card }]}>
             {modalConfig.isPauseModal && (
               <View style={styles.pauseIconContainer}>
-                <Text style={styles.pauseIconText}>â¸</Text>
+                <Text style={styles.pauseIconText}>Ã¢ÂÂ¸</Text>
               </View>
             )}
             <Text style={[styles.modalTitle, isDark && { color: ThemeColors.dark.text }]}>{modalConfig.title}</Text>
@@ -1334,7 +1319,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
   },
 
-  // â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Header Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   examHeader: {
     backgroundColor: '#1A1A2E',
     flexDirection: 'row',
@@ -1343,18 +1328,21 @@ const styles = StyleSheet.create({
     paddingVertical: vs(10),
     minHeight: vs(56),
   },
-  pauseIconBtn: {
-    width: rs(36),
-    height: rs(36),
-    borderRadius: rs(18),
-    backgroundColor: 'rgba(255,255,255,0.12)',
+  pauseTextBtn: {
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderRadius: rs(6),
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    paddingVertical: vs(6),
+    paddingHorizontal: rs(12),
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: rs(10),
   },
-  pauseIconText: {
-    fontSize: rs(16),
+  pauseTextBtnText: {
     color: '#FFF',
+    fontSize: rs(12),
+    fontWeight: 'bold',
   },
   headerCenter: {
     flex: 1,
@@ -1380,7 +1368,7 @@ const styles = StyleSheet.create({
     marginLeft: rs(8),
   },
 
-  // â”€â”€ Section Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Section Tabs Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   sectionsRow: {
     maxHeight: vs(44),
     borderBottomWidth: 1,
@@ -1411,7 +1399,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // â”€â”€ Stats Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Stats Bar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   statsBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1436,7 +1424,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // â”€â”€ Question Area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Question Area Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   questionContainer: {
     flex: 1,
     backgroundColor: '#FFF',
@@ -1506,7 +1494,7 @@ const styles = StyleSheet.create({
     marginTop: vs(8),
   },
 
-  // â”€â”€ Options â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Options Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   optionsBlock: {
     gap: vs(10),
   },
@@ -1556,7 +1544,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // â”€â”€ Bottom Nav Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Bottom Nav Bar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1604,7 +1592,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // â”€â”€ Palette Drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Palette Drawer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   paletteOverlay: {
     flex: 1,
     flexDirection: 'row',
@@ -1758,7 +1746,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  // â”€â”€ Custom Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Custom Modal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   customModalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -1794,6 +1782,10 @@ const styles = StyleSheet.create({
     marginBottom: vs(16),
   },
   pauseIconContainer2: {
+    fontSize: rs(24),
+    color: '#3B82F6',
+  },
+  pauseIconText: {
     fontSize: rs(24),
     color: '#3B82F6',
   },
@@ -1848,7 +1840,7 @@ const styles = StyleSheet.create({
     color: '#4B5563',
   },
 
-  // â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Loading Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -1862,7 +1854,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // â”€â”€ Instructions Screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Instructions Screen Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   instContainer: {
     flex: 1,
     backgroundColor: '#F8FAFC',
