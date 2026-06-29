@@ -1021,146 +1021,20 @@ export default function HomeLandingPage() {
         </div>
       </section>
 
-      {/* USEFUL PREPARATION TOOLS & FAQ SECTION */}
+      {/* FAQ SECTION */}
       <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900 space-y-12">
         <div className="text-center max-w-xl mx-auto">
           <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
-            {language === 'hi' ? 'तैयारी उपकरण और सामान्य प्रश्न' : 'Preparation Tools & FAQs'}
+            {language === 'hi' ? 'सामान्यतः पूछे जाने वाले प्रश्न' : 'Frequently Asked Questions'}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">
-            {language === 'hi' ? 'अपनी तैयारी को ट्रैक करें और हमारे प्लेटफ़ॉर्म के बारे में सामान्य प्रश्नों के उत्तर पाएं।' : 'Track your practice metrics and find quick answers about our testing client.'}
+            {language === 'hi' ? 'हमारे प्लेटफ़ॉर्म के बारे में सामान्य प्रश्नों के उत्तर पाएं।' : 'Find quick answers about our testing client.'}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* Practice Score Calculator */}
-          <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md space-y-6">
-            <div>
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                <Trophy className="h-4.5 w-4.5 text-blue-600" />
-                {language === 'hi' ? 'त्वरित स्कोर और सटीकता कैलकुलेटर' : 'CBT Score & Accuracy Calculator'}
-              </h3>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
-                {language === 'hi' ? 'अपने सही/गलत उत्तर दर्ज करें और अपने अंतिम स्कोर की गणना करें।' : 'Enter your mock attempt values to dynamically check marks & sectional accuracy.'}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                    {language === 'hi' ? 'कुल प्रश्न' : 'Total Qs'}
-                  </label>
-                  <input
-                    type="number"
-                    value={calculatorQuestions}
-                    onChange={(e) => setCalculatorQuestions(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                    {language === 'hi' ? 'सही उत्तर' : 'Correct Answers'}
-                  </label>
-                  <input
-                    type="number"
-                    value={calculatorCorrect}
-                    onChange={(e) => setCalculatorCorrect(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                    {language === 'hi' ? 'गलत उत्तर' : 'Incorrect'}
-                  </label>
-                  <input
-                    type="number"
-                    value={calculatorIncorrect}
-                    onChange={(e) => setCalculatorIncorrect(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-bold focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                    {language === 'hi' ? 'सकारात्मक अंक' : 'Positive Mark'}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    value={calculatorPosMark}
-                    onChange={(e) => setCalculatorPosMark(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-bold focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                    {language === 'hi' ? 'नकारात्मक अंक' : 'Negative Mark'}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.25"
-                    value={calculatorNegMark}
-                    onChange={(e) => setCalculatorNegMark(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-bold focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Live Calculation Results */}
-            {(() => {
-              const obtained = (calculatorCorrect * calculatorPosMark) - (calculatorIncorrect * calculatorNegMark);
-              const maxMarks = calculatorQuestions * calculatorPosMark;
-              const totalAttempted = calculatorCorrect + calculatorIncorrect;
-              const accuracy = totalAttempted > 0 ? Math.round((calculatorCorrect / totalAttempted) * 100) : 0;
-              
-              let evaluationText = "";
-              let evaluationColor = "text-slate-500";
-              if (accuracy >= 90) {
-                evaluationText = language === 'hi' ? "शानदार सटीकता! उत्कृष्ट प्रदर्शन।" : "Excellent accuracy! Kept negative marking to minimum.";
-                evaluationColor = "text-emerald-500";
-              } else if (accuracy >= 70) {
-                evaluationText = language === 'hi' ? "अच्छा प्रयास, इसे 85%+ तक ले जाने की कोशिश करें।" : "Good effort. Try to reduce incorrect attempts.";
-                evaluationColor = "text-blue-500";
-              } else if (totalAttempted > 0) {
-                evaluationText = language === 'hi' ? "नकारात्मक अंक अधिक हैं! केवल निश्चित प्रश्नों का उत्तर दें।" : "High negative marks! Avoid guessing answers.";
-                evaluationColor = "text-red-500";
-              }
-
-              return (
-                <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-150 dark:border-slate-800/80 rounded-2xl p-5 grid grid-cols-3 gap-4 text-center items-center">
-                  <div className="space-y-1">
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{language === 'hi' ? 'प्राप्त अंक' : 'Marks Obtained'}</p>
-                    <h4 className="text-base font-black text-blue-600 dark:text-blue-400">{obtained} <span className="text-[10px] text-slate-400">/ {maxMarks}</span></h4>
-                  </div>
-                  <div className="space-y-1 border-x border-slate-200 dark:border-slate-800">
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{language === 'hi' ? 'सटीकता दर' : 'Accuracy'}</p>
-                    <h4 className={`text-base font-black ${accuracy >= 80 ? 'text-green-600' : 'text-amber-600'}`}>{accuracy}%</h4>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{language === 'hi' ? 'उम्मीदवार ग्रेड' : 'Performance'}</p>
-                    <p className={`text-[10px] font-black leading-tight ${evaluationColor}`}>{evaluationText || "N/A"}</p>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
+        <div className="max-w-2xl mx-auto w-full">
           {/* Dynamic FAQ Accordion */}
-          <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md space-y-6">
-            <div>
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                <HelpCircle className="h-4.5 w-4.5 text-blue-600" />
-                {language === 'hi' ? 'सामान्यतः पूछे जाने वाले प्रश्न' : 'Frequently Asked Questions'}
-              </h3>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
-                {language === 'hi' ? 'मॉक टेस्ट हब परीक्षा पैटर्न और सुरक्षा के बारे में जानें।' : 'Read about our CBT simulator capabilities and security guidelines.'}
-              </p>
-            </div>
-
+          <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-8 rounded-3xl shadow-md space-y-6">
             <div className="space-y-3">
               {[
                 {
