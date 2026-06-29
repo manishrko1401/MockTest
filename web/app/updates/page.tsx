@@ -38,12 +38,9 @@ export default function UpdatesCenterPage() {
         <div className="absolute top-10 -left-20 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute top-[50%] -right-20 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        {/* MOBILE HEADER */}
         <header className="h-14 border-b border-slate-202 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
           <Link href="/" className="flex items-center gap-2">
-            <div className="bg-blue-600 p-1.5 rounded-lg shadow">
-              <ShieldCheck className="h-4.5 w-4.5 text-white animate-pulse" />
-            </div>
+            <img src="/logo.png" className="h-8 w-8 object-contain" alt="Logo" />
             <div>
               <h1 className="font-extrabold text-xs leading-none text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
               <p className="text-[7px] text-blue-600 dark:text-blue-400 font-bold tracking-wider uppercase mt-0.5">{t.logoSub}</p>
@@ -269,9 +266,7 @@ export default function UpdatesCenterPage() {
         <div className="flex items-center gap-8">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/25">
-              <ShieldCheck className="h-5 w-5 text-white animate-pulse" />
-            </div>
+            <img src="/logo.png" className="h-10 w-10 object-contain" alt="Logo" />
             <div>
               <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
               <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
