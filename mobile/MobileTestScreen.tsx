@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,12 +14,16 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Globe, Award, AlertCircle, Menu, Eye } from 'lucide-react-native';
+import { Globe, AlertTriangle, Bookmark, Star, AlignJustify } from 'lucide-react-native';
 import { ApiClient } from './api';
 import { ThemeColors } from './theme';
 import { HtmlText } from './HtmlText';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Responsive scale helpers
+const rs = (size: number) => Math.round(size * (SCREEN_WIDTH / 390));
+const vs = (size: number) => Math.round(size * (SCREEN_HEIGHT / 844));
 
 interface MobileTestScreenProps {
   currentUser: any;
@@ -72,16 +76,16 @@ const instructionTexts = {
     btn: "I am ready to begin"
   },
   hi: {
-    title: "कृपया निर्देशों को ध्यान से पढ़ें",
-    general: "सामान्य निर्देश:",
-    gen1: "1. घड़ी सर्वर पर परीक्षा घड़ी के रूप में सेट की जाएगी। स्क्रीन के शीर्ष दाएं कोने में उलटी गिनती घड़ी आपके द्वारा परीक्षा पूरी करने के लिए उपलब्ध शेष समय को प्रदर्शित करेगी।",
-    gen2: "2. स्क्रीन के दाईं ओर प्रदर्शित प्रश्न पैलेट 5 प्रतीकों में से किसी एक का उपयोग करके प्रत्येक प्रश्न की स्थिति को दर्शाएगा।",
-    gen3: "3. प्रश्न देखने के क्षेत्र को अधिकतम करने के लिए आप प्रश्न पैलेट को बंद करने के लिए '>' तीर पर क्लिक कर सकते हैं।",
-    answering: "प्रश्न पर नेविगेट करना:",
-    ans1: "4. किसी प्रश्न का उत्तर देने के लिए, विकल्पों में से किसी एक को चुनें और 'Save & Next' पर क्लिक करें।",
-    ans2: "5. अपना उत्तर बदलने के लिए, चयन को रीसेट करने के लिए 'Clear Response' बटन पर क्लिक करें।",
-    disclaimer: "मैंने सभी निर्देशों को पढ़ और समझ लिया है। मुझे आवंटित सभी कंप्यूटर हार्डवेयर उचित कार्यशील स्थिति में हैं। मैं सहमत हूं कि किसी भी नकल या टैब स्विचिंग के मामले में, परीक्षा स्वतः सबमिट हो जाएगी।",
-    btn: "मैं तैयार हूँ (I am ready to begin)"
+    title: "à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¨à¤¿à¤°à¥à¤¦à¥‡à¤¶à¥‹à¤‚ à¤•à¥‹ à¤§à¥à¤¯à¤¾à¤¨ à¤¸à¥‡ à¤ªà¤¢à¤¼à¥‡à¤‚",
+    general: "à¤¸à¤¾à¤®à¤¾à¤¨à¥à¤¯ à¤¨à¤¿à¤°à¥à¤¦à¥‡à¤¶:",
+    gen1: "1. à¤˜à¤¡à¤¼à¥€ à¤¸à¤°à¥à¤µà¤° à¤ªà¤° à¤ªà¤°à¥€à¤•à¥à¤·à¤¾ à¤˜à¤¡à¤¼à¥€ à¤•à¥‡ à¤°à¥‚à¤ª à¤®à¥‡à¤‚ à¤¸à¥‡à¤Ÿ à¤•à¥€ à¤œà¤¾à¤à¤—à¥€à¥¤ à¤¸à¥à¤•à¥à¤°à¥€à¤¨ à¤•à¥‡ à¤¶à¥€à¤°à¥à¤· à¤¦à¤¾à¤à¤‚ à¤•à¥‹à¤¨à¥‡ à¤®à¥‡à¤‚ à¤‰à¤²à¤Ÿà¥€ à¤—à¤¿à¤¨à¤¤à¥€ à¤˜à¤¡à¤¼à¥€ à¤†à¤ªà¤•à¥‡ à¤¦à¥à¤µà¤¾à¤°à¤¾ à¤ªà¤°à¥€à¤•à¥à¤·à¤¾ à¤ªà¥‚à¤°à¥€ à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¶à¥‡à¤· à¤¸à¤®à¤¯ à¤•à¥‹ à¤ªà¥à¤°à¤¦à¤°à¥à¤¶à¤¿à¤¤ à¤•à¤°à¥‡à¤—à¥€à¥¤",
+    gen2: "2. à¤¸à¥à¤•à¥à¤°à¥€à¤¨ à¤•à¥‡ à¤¦à¤¾à¤ˆà¤‚ à¤“à¤° à¤ªà¥à¤°à¤¦à¤°à¥à¤¶à¤¿à¤¤ à¤ªà¥à¤°à¤¶à¥à¤¨ à¤ªà¥ˆà¤²à¥‡à¤Ÿ 5 à¤ªà¥à¤°à¤¤à¥€à¤•à¥‹à¤‚ à¤®à¥‡à¤‚ à¤¸à¥‡ à¤•à¤¿à¤¸à¥€ à¤à¤• à¤•à¤¾ à¤‰à¤ªà¤¯à¥‹à¤— à¤•à¤°à¤•à¥‡ à¤ªà¥à¤°à¤¤à¥à¤¯à¥‡à¤• à¤ªà¥à¤°à¤¶à¥à¤¨ à¤•à¥€ à¤¸à¥à¤¥à¤¿à¤¤à¤¿ à¤•à¥‹ à¤¦à¤°à¥à¤¶à¤¾à¤à¤—à¤¾à¥¤",
+    gen3: "3. à¤ªà¥à¤°à¤¶à¥à¤¨ à¤¦à¥‡à¤–à¤¨à¥‡ à¤•à¥‡ à¤•à¥à¤·à¥‡à¤¤à¥à¤° à¤•à¥‹ à¤…à¤§à¤¿à¤•à¤¤à¤® à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤†à¤ª à¤ªà¥à¤°à¤¶à¥à¤¨ à¤ªà¥ˆà¤²à¥‡à¤Ÿ à¤•à¥‹ à¤¬à¤‚à¤¦ à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ '>' à¤¤à¥€à¤° à¤ªà¤° à¤•à¥à¤²à¤¿à¤• à¤•à¤° à¤¸à¤•à¤¤à¥‡ à¤¹à¥ˆà¤‚à¥¤",
+    answering: "à¤ªà¥à¤°à¤¶à¥à¤¨ à¤ªà¤° à¤¨à¥‡à¤µà¤¿à¤—à¥‡à¤Ÿ à¤•à¤°à¤¨à¤¾:",
+    ans1: "4. à¤•à¤¿à¤¸à¥€ à¤ªà¥à¤°à¤¶à¥à¤¨ à¤•à¤¾ à¤‰à¤¤à¥à¤¤à¤° à¤¦à¥‡à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤, à¤µà¤¿à¤•à¤²à¥à¤ªà¥‹à¤‚ à¤®à¥‡à¤‚ à¤¸à¥‡ à¤•à¤¿à¤¸à¥€ à¤à¤• à¤•à¥‹ à¤šà¥à¤¨à¥‡à¤‚ à¤”à¤° 'Save & Next' à¤ªà¤° à¤•à¥à¤²à¤¿à¤• à¤•à¤°à¥‡à¤‚à¥¤",
+    ans2: "5. à¤…à¤ªà¤¨à¤¾ à¤‰à¤¤à¥à¤¤à¤° à¤¬à¤¦à¤²à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤, à¤šà¤¯à¤¨ à¤•à¥‹ à¤°à¥€à¤¸à¥‡à¤Ÿ à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ 'Clear Response' à¤¬à¤Ÿà¤¨ à¤ªà¤° à¤•à¥à¤²à¤¿à¤• à¤•à¤°à¥‡à¤‚à¥¤",
+    disclaimer: "à¤®à¥ˆà¤‚à¤¨à¥‡ à¤¸à¤­à¥€ à¤¨à¤¿à¤°à¥à¤¦à¥‡à¤¶à¥‹à¤‚ à¤•à¥‹ à¤ªà¤¢à¤¼ à¤”à¤° à¤¸à¤®à¤ à¤²à¤¿à¤¯à¤¾ à¤¹à¥ˆà¥¤ à¤®à¥à¤à¥‡ à¤†à¤µà¤‚à¤Ÿà¤¿à¤¤ à¤¸à¤­à¥€ à¤•à¤‚à¤ªà¥à¤¯à¥‚à¤Ÿà¤° à¤¹à¤¾à¤°à¥à¤¡à¤µà¥‡à¤¯à¤° à¤‰à¤šà¤¿à¤¤ à¤•à¤¾à¤°à¥à¤¯à¤¶à¥€à¤² à¤¸à¥à¤¥à¤¿à¤¤à¤¿ à¤®à¥‡à¤‚ à¤¹à¥ˆà¤‚à¥¤ à¤®à¥ˆà¤‚ à¤¸à¤¹à¤®à¤¤ à¤¹à¥‚à¤‚ à¤•à¤¿ à¤•à¤¿à¤¸à¥€ à¤­à¥€ à¤¨à¤•à¤² à¤¯à¤¾ à¤Ÿà¥ˆà¤¬ à¤¸à¥à¤µà¤¿à¤šà¤¿à¤‚à¤— à¤•à¥‡ à¤®à¤¾à¤®à¤²à¥‡ à¤®à¥‡à¤‚, à¤ªà¤°à¥€à¤•à¥à¤·à¤¾ à¤¸à¥à¤µà¤¤à¤ƒ à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤¹à¥‹ à¤œà¤¾à¤à¤—à¥€à¥¤",
+    btn: "à¤®à¥ˆà¤‚ à¤¤à¥ˆà¤¯à¤¾à¤° à¤¹à¥‚à¤ (I am ready to begin)"
   }
 };
 
@@ -106,6 +110,8 @@ export default function MobileTestScreen({
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [violationsCount, setViolationsCount] = useState(0);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [drawerTab, setDrawerTab] = useState<'symbols' | 'instructions'>('symbols');
+  const [drawerSectionIdx, setDrawerSectionIdx] = useState(0);
   const [showInstructions, setShowInstructions] = useState(true);
   const [agreed, setAgreed] = useState(false);
   const activeQuestionIdRef = useRef<string | null>(null);
@@ -277,29 +283,29 @@ export default function MobileTestScreen({
             {
               id: "q_q1", sectionId: "sec_quant", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
               content: {
-                en: { questionText: "If x + 1/x = 5, then find the value of x² + 1/x².", options: ["23", "25", "27", "21"] },
-                hi: { questionText: "यदि x + 1/x = 5 है, तो x² + 1/x² का मान ज्ञात कीजिए।", options: ["23", "25", "27", "21"] }
+                en: { questionText: "If x + 1/x = 5, then find the value of xÂ² + 1/xÂ².", options: ["23", "25", "27", "21"] },
+                hi: { questionText: "à¤¯à¤¦à¤¿ x + 1/x = 5 à¤¹à¥ˆ, à¤¤à¥‹ xÂ² + 1/xÂ² à¤•à¤¾ à¤®à¤¾à¤¨ à¤œà¥à¤žà¤¾à¤¤ à¤•à¥€à¤œà¤¿à¤à¥¤", options: ["23", "25", "27", "21"] }
               }
             },
             {
               id: "q_q2", sectionId: "sec_quant", questionType: "mcq", orderIndex: 1, correctOptionIndex: 0,
               content: {
                 en: { questionText: "The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A's present age?", options: ["20 years", "25 years", "30 years", "15 years"] },
-                hi: { questionText: "A और B की वर्तमान आयु का अनुपात 4:5 है। 5 वर्ष बाद यह अनुपात 5:6 हो जाता है। A की वर्तमान आयु क्या है?", options: ["20 वर्ष", "25 वर्ष", "30 वर्ष", "15 years"] }
+                hi: { questionText: "A à¤”à¤° B à¤•à¥€ à¤µà¤°à¥à¤¤à¤®à¤¾à¤¨ à¤†à¤¯à¥ à¤•à¤¾ à¤…à¤¨à¥à¤ªà¤¾à¤¤ 4:5 à¤¹à¥ˆà¥¤ 5 à¤µà¤°à¥à¤· à¤¬à¤¾à¤¦ à¤¯à¤¹ à¤…à¤¨à¥à¤ªà¤¾à¤¤ 5:6 à¤¹à¥‹ à¤œà¤¾à¤¤à¤¾ à¤¹à¥ˆà¥¤ A à¤•à¥€ à¤µà¤°à¥à¤¤à¤®à¤¾à¤¨ à¤†à¤¯à¥ à¤•à¥à¤¯à¤¾ à¤¹à¥ˆ?", options: ["20 à¤µà¤°à¥à¤·", "25 à¤µà¤°à¥à¤·", "30 à¤µà¤°à¥à¤·", "15 years"] }
               }
             },
             {
               id: "q_r1", sectionId: "sec_reasoning", questionType: "mcq", orderIndex: 0, correctOptionIndex: 3,
               content: {
                 en: { questionText: "Identify the pattern and choose the next term in the series: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] },
-                hi: { questionText: "पैटर्न को पहचानें और श्रृंखला में अगला पद चुनें: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] }
+                hi: { questionText: "à¤ªà¥ˆà¤Ÿà¤°à¥à¤¨ à¤•à¥‹ à¤ªà¤¹à¤šà¤¾à¤¨à¥‡à¤‚ à¤”à¤° à¤¶à¥à¤°à¥ƒà¤‚à¤–à¤²à¤¾ à¤®à¥‡à¤‚ à¤…à¤—à¤²à¤¾ à¤ªà¤¦ à¤šà¥à¤¨à¥‡à¤‚: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] }
               }
             },
             {
               id: "q_e1", sectionId: "sec_english", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
               content: {
                 en: { questionText: "Select the antonym for the word: OBSTINATE", options: ["Flexible", "Stubborn", "Rigid", "Dogmatic"] },
-                hi: { questionText: "दिए गए शब्द का विलोम शब्द चुनें: OBSTINATE (हठी)", options: ["Flexible (लचीला)", "Stubborn (अड़ियल)", "Rigid (कठोर)", "Dogmatic (कट्टर)"] }
+                hi: { questionText: "à¤¦à¤¿à¤ à¤—à¤ à¤¶à¤¬à¥à¤¦ à¤•à¤¾ à¤µà¤¿à¤²à¥‹à¤® à¤¶à¤¬à¥à¤¦ à¤šà¥à¤¨à¥‡à¤‚: OBSTINATE (à¤¹à¤ à¥€)", options: ["Flexible (à¤²à¤šà¥€à¤²à¤¾)", "Stubborn (à¤…à¤¡à¤¼à¤¿à¤¯à¤²)", "Rigid (à¤•à¤ à¥‹à¤°)", "Dogmatic (à¤•à¤Ÿà¥à¤Ÿà¤°)"] }
               }
             }
           ];
@@ -312,14 +318,14 @@ export default function MobileTestScreen({
               id: "q_gen1", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
               content: {
                 en: { questionText: "What is the unit of electric current?", options: ["Volt", "Ampere", "Ohm", "Watt"] },
-                hi: { questionText: "विद्युत धारा की इकाई क्या है?", options: ["वोल्ट", "एम्पीयर", "ओम", "वाट"] }
+                hi: { questionText: "à¤µà¤¿à¤¦à¥à¤¯à¥à¤¤ à¤§à¤¾à¤°à¤¾ à¤•à¥€ à¤‡à¤•à¤¾à¤ˆ à¤•à¥à¤¯à¤¾ à¤¹à¥ˆ?", options: ["à¤µà¥‹à¤²à¥à¤Ÿ", "à¤à¤®à¥à¤ªà¥€à¤¯à¤°", "à¤“à¤®", "à¤µà¤¾à¤Ÿ"] }
               }
             },
             {
               id: "q_gen2", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 1, correctOptionIndex: 1,
               content: {
                 en: { questionText: "Which planet is known as the Red Planet?", options: ["Earth", "Mars", "Jupiter", "Saturn"] },
-                hi: { questionText: "किस ग्रह को लाल ग्रह के नाम से जाना जाता है?", options: ["पृथ्वी", "मंगल", "बृहस्पति", "शनि"] }
+                hi: { questionText: "à¤•à¤¿à¤¸ à¤—à¥à¤°à¤¹ à¤•à¥‹ à¤²à¤¾à¤² à¤—à¥à¤°à¤¹ à¤•à¥‡ à¤¨à¤¾à¤® à¤¸à¥‡ à¤œà¤¾à¤¨à¤¾ à¤œà¤¾à¤¤à¤¾ à¤¹à¥ˆ?", options: ["à¤ªà¥ƒà¤¥à¥à¤µà¥€", "à¤®à¤‚à¤—à¤²", "à¤¬à¥ƒà¤¹à¤¸à¥à¤ªà¤¤à¤¿", "à¤¶à¤¨à¤¿"] }
               }
             }
           ];
@@ -865,10 +871,10 @@ export default function MobileTestScreen({
           <View style={[styles.instLangSelectCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
             <View style={{ flex: 1, marginRight: 10 }}>
               <Text style={[styles.instLangSelectTitle, isDark && { color: '#FFF' }]}>
-                {lang === 'hi' ? 'अपनी डिफ़ॉल्ट परीक्षा भाषा चुनें' : 'Choose your default exam language'}
+                {lang === 'hi' ? 'à¤…à¤ªà¤¨à¥€ à¤¡à¤¿à¤«à¤¼à¥‰à¤²à¥à¤Ÿ à¤ªà¤°à¥€à¤•à¥à¤·à¤¾ à¤­à¤¾à¤·à¤¾ à¤šà¥à¤¨à¥‡à¤‚' : 'Choose your default exam language'}
               </Text>
               <Text style={[styles.instLangSelectSub, isDark && { color: ThemeColors.dark.textMuted }]}>
-                {lang === 'hi' ? 'कृपया प्रश्नों को हल करने के लिए डिफ़ॉल्ट भाषा चुनें' : 'Select the default language for viewing questions'}
+                {lang === 'hi' ? 'à¤•à¥ƒà¤ªà¤¯à¤¾ à¤ªà¥à¤°à¤¶à¥à¤¨à¥‹à¤‚ à¤•à¥‹ à¤¹à¤² à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¡à¤¿à¤«à¤¼à¥‰à¤²à¥à¤Ÿ à¤­à¤¾à¤·à¤¾ à¤šà¥à¤¨à¥‡à¤‚' : 'Select the default language for viewing questions'}
               </Text>
             </View>
             <View style={styles.instSelectorContainer}>
@@ -890,7 +896,7 @@ export default function MobileTestScreen({
                 ]}
                 onPress={() => setLang('hi')}
               >
-                <Text style={[styles.langSelectorText, lang === 'hi' && styles.langSelectorTextActive, isDark && lang !== 'hi' && { color: ThemeColors.dark.textMuted }]}>हिंदी</Text>
+                <Text style={[styles.langSelectorText, lang === 'hi' && styles.langSelectorTextActive, isDark && lang !== 'hi' && { color: ThemeColors.dark.textMuted }]}>à¤¹à¤¿à¤‚à¤¦à¥€</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -907,7 +913,7 @@ export default function MobileTestScreen({
               isDark && { borderColor: ThemeColors.dark.border },
               agreed && isDark && { backgroundColor: '#10B981', borderColor: '#10B981' }
             ]}>
-              {agreed && <Text style={styles.checkboxTick}>✓</Text>}
+              {agreed && <Text style={styles.checkboxTick}>âœ“</Text>}
             </View>
             <Text style={[styles.checkboxLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
               {t.disclaimer}
@@ -942,39 +948,54 @@ export default function MobileTestScreen({
     );
   }
 
+  // Stats for stats bar
+  const answeredCount = Object.values(responses).filter(r => r.state === 3 || r.state === 5).length;
+  const currentSecQs = questions.filter(q => q.sectionId === sections[currentSectionIdx]?.id);
+  const drawerSecQs = questions
+    .filter(q => q.sectionId === sections[drawerSectionIdx]?.id)
+    .sort((a, b) => a.orderIndex - b.orderIndex);
+  const drawerSecAnswered = drawerSecQs.filter(q => responses[q.id]?.state === 3 || responses[q.id]?.state === 5).length;
+  const drawerSecUnanswered = drawerSecQs.length - drawerSecAnswered;
+  const minutesLeft = Math.floor(timeLeft / 60);
+
   return (
     <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
       <StatusBar 
-        barStyle={isDark ? 'light-content' : 'dark-content'} 
-        backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
+        barStyle="light-content"
+        backgroundColor="#1A1A2E"
       />
 
-      {/* CBT Header */}
-      <View style={[styles.examHeader, isDark && { backgroundColor: ThemeColors.dark.headerBg }]}>
-        <TouchableOpacity style={styles.pauseBtn} onPress={handlePauseAndExit}>
-          <Text style={styles.pauseBtnText}>⏸ Pause</Text>
+      {/* â”€â”€ Header â”€â”€ */}
+      <View style={styles.examHeader}>
+        {/* Left: pause + timer + exam name */}
+        <TouchableOpacity style={styles.pauseIconBtn} onPress={handlePauseAndExit}>
+          <Text style={styles.pauseIconText}>â¸</Text>
         </TouchableOpacity>
-
-        <View style={styles.timerBlock}>
-          <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTimer}>{formatTime(timeLeft)}</Text>
+          <Text style={styles.headerExamName} numberOfLines={1}>
+            {sections[currentSectionIdx]?.name || 'Mock Test'}
+          </Text>
         </View>
-
-        <TouchableOpacity style={styles.langBtn} onPress={() => setLang(lang === 'en' ? 'hi' : 'en')}>
-          <Globe size={14} color="#FFF" />
-          <Text style={styles.langText}>{lang === 'en' ? 'Hindi' : 'English'}</Text>
+        {/* Right: hamburger to open palette */}
+        <TouchableOpacity style={styles.hamburgerBtn} onPress={() => setDrawerVisible(true)}>
+          <AlignJustify size={rs(22)} color="#FFF" />
         </TouchableOpacity>
       </View>
 
-      {/* Section Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.sectionsRow, isDark && { backgroundColor: ThemeColors.dark.card, borderBottomColor: ThemeColors.dark.border }]}>
+      {/* â”€â”€ Section Tabs â”€â”€ */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={[styles.sectionsRow, isDark && { backgroundColor: ThemeColors.dark.card, borderBottomColor: ThemeColors.dark.border }]}
+        contentContainerStyle={styles.sectionsRowContent}
+      >
         {sections.map((sec, idx) => (
           <TouchableOpacity
             key={sec.id}
             style={[
-              styles.sectionTab, 
-              isDark && { borderRightColor: ThemeColors.dark.border },
+              styles.sectionTab,
               currentSectionIdx === idx && styles.sectionTabActive,
-              currentSectionIdx === idx && isDark && { backgroundColor: '#16223F', borderBottomColor: '#60A5FA' }
             ]}
             onPress={() => {
               setCurrentSectionIdx(idx);
@@ -982,10 +1003,9 @@ export default function MobileTestScreen({
             }}
           >
             <Text style={[
-              styles.sectionTabText, 
+              styles.sectionTabText,
               isDark && { color: ThemeColors.dark.textMuted },
               currentSectionIdx === idx && styles.sectionTabTextActive,
-              currentSectionIdx === idx && isDark && { color: '#60A5FA' }
             ]}>
               {sec.name}
             </Text>
@@ -993,50 +1013,83 @@ export default function MobileTestScreen({
         ))}
       </ScrollView>
 
-      {/* Question Panel */}
-      <ScrollView style={[styles.questionContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
-        <View style={styles.questionMetaRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={[styles.questionIndexText, isDark && { color: '#60A5FA' }]}>QUESTION NO. {currentQuestionIdx + 1}</Text>
-            <View style={[
-              styles.questionTimerBadge,
-              isDark ? { backgroundColor: '#16223F', borderColor: '#1F2E54' } : { backgroundColor: '#F3F4F6', borderColor: '#E5E7EB' }
-            ]}>
-              <Text style={[styles.questionTimerText, isDark ? { color: '#94A3B8' } : { color: '#4B5563' }]}>
-                ⏱ {formatTime(activeResp?.elapsedSeconds || 0)}
-              </Text>
-            </View>
+      {/* â”€â”€ Stats Bar â”€â”€ */}
+      <View style={[styles.statsBar, isDark && { backgroundColor: isDark ? '#0F1729' : '#F9FAFB', borderBottomColor: ThemeColors.dark.border }]}>
+        <Text style={[styles.statsText, isDark && { color: ThemeColors.dark.textMuted }]}>
+          Total Questions Answered: <Text style={styles.statsHighlight}>{answeredCount}</Text>
+        </Text>
+        {minutesLeft <= 15 && (
+          <Text style={styles.statsWarning}>Last {minutesLeft} Mins</Text>
+        )}
+      </View>
+
+      {/* â”€â”€ Question ScrollView â”€â”€ */}
+      <ScrollView
+        style={[styles.questionContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}
+        contentContainerStyle={styles.questionContentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Question number header row */}
+        <View style={styles.questionHeaderRow}>
+          {/* Blue number badge */}
+          <View style={styles.questionNumBadge}>
+            <Text style={styles.questionNumText}>{currentQuestionIdx + 1}</Text>
           </View>
-          {violationsCount > 0 && (
-            <Text style={styles.violationWarning}>Violations: {violationsCount}/3</Text>
-          )}
+          {/* Timer */}
+          <View style={styles.questionTimerPill}>
+            <Text style={[styles.questionTimerIcon, isDark && { color: '#94A3B8' }]}>â±</Text>
+            <Text style={[styles.questionTimerValue, isDark && { color: '#94A3B8' }]}>
+              {formatTime(activeResp?.elapsedSeconds || 0)}
+            </Text>
+          </View>
+          {/* Action icons */}
+          <View style={styles.questionActions}>
+            <TouchableOpacity onPress={handleMarkForReview} style={styles.actionIcon}>
+              <AlertTriangle size={rs(18)} color={isDark ? '#94A3B8' : '#9CA3AF'} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionIcon}>
+              <Bookmark size={rs(18)} color={isDark ? '#94A3B8' : '#9CA3AF'} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionIcon}>
+              <Star size={rs(18)} color={isDark ? '#94A3B8' : '#9CA3AF'} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <HtmlText style={styles.questionBody} isDark={isDark} html={questionText} />
+        {/* Question text */}
+        <HtmlText
+          style={[styles.questionBody, isDark && { color: ThemeColors.dark.text }]}
+          isDark={isDark}
+          html={questionText}
+        />
 
-        {/* Options Radio Grid */}
+        {/* Options as numbered cards */}
         <View style={styles.optionsBlock}>
           {options.map((opt, i) => {
             const isSelected = activeResp?.tempOptionIndex === i;
             return (
               <TouchableOpacity
                 key={i}
+                activeOpacity={0.75}
                 style={[
-                  styles.optionItem, 
+                  styles.optionCard,
                   isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border },
-                  isSelected && styles.optionItemActive,
-                  isSelected && isDark && { borderColor: '#60A5FA', backgroundColor: '#1E3A8A' }
+                  isSelected && styles.optionCardSelected,
+                  isSelected && isDark && { borderColor: '#3B82F6', backgroundColor: '#1E3A8A' },
                 ]}
                 onPress={() => handleSelectOption(i)}
               >
                 <View style={[
-                  styles.optionDot, 
-                  isDark && { borderColor: ThemeColors.dark.border },
-                  isSelected && styles.optionDotActive,
-                  isSelected && isDark && { borderColor: '#60A5FA', backgroundColor: '#60A5FA' }
-                ]} />
+                  styles.optionNumCircle,
+                  isDark && { borderColor: '#475569' },
+                  isSelected && styles.optionNumCircleSelected,
+                ]}>
+                  <Text style={[styles.optionNumText, isSelected && styles.optionNumTextSelected]}>
+                    {i + 1}
+                  </Text>
+                </View>
                 <HtmlText
-                  style={styles.optionText}
+                  style={[styles.optionText, isDark && { color: ThemeColors.dark.text }, isSelected && styles.optionTextSelected]}
                   isDark={isDark}
                   html={opt}
                 />
@@ -1044,116 +1097,174 @@ export default function MobileTestScreen({
             );
           })}
         </View>
+        {violationsCount > 0 && (
+          <Text style={styles.violationWarning}>âš  Violations: {violationsCount}/3</Text>
+        )}
       </ScrollView>
 
-      {/* Control Footer */}
+      {/* â”€â”€ Bottom Navigation Bar â”€â”€ */}
       <View style={[styles.footer, isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder }]}>
-        <TouchableOpacity style={[styles.secondaryBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]} onPress={handleMarkForReview}>
-          <Text style={[styles.secondaryBtnText, isDark && { color: ThemeColors.dark.text }]}>Mark Review</Text>
+        <TouchableOpacity
+          style={[styles.footerBtn, styles.footerBtnOutline, isDark && { borderColor: '#334155' }]}
+          onPress={() => {
+            if (currentQuestionIdx > 0) {
+              setCurrentQuestionIdx(prev => prev - 1);
+            } else if (currentSectionIdx > 0) {
+              const prevSecIdx = currentSectionIdx - 1;
+              const prevSecQs = questions.filter(q => q.sectionId === sections[prevSecIdx].id);
+              setCurrentSectionIdx(prevSecIdx);
+              setCurrentQuestionIdx(prevSecQs.length - 1);
+            }
+          }}
+        >
+          <Text style={[styles.footerBtnOutlineText, isDark && { color: '#94A3B8' }]}>Previous</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.secondaryBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]} onPress={handleClearResponse}>
-          <Text style={[styles.secondaryBtnText, isDark && { color: ThemeColors.dark.text }]}>Clear</Text>
+        <TouchableOpacity
+          style={[styles.footerBtn, styles.footerBtnMarkReview, isDark && { borderColor: '#334155' }]}
+          onPress={handleMarkForReview}
+        >
+          <Text style={styles.footerBtnMarkReviewText}>Mark For Review</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.primaryBtn} onPress={handleSaveAndNext}>
-          <Text style={styles.primaryBtnText}>Save & Next</Text>
+        <TouchableOpacity
+          style={[styles.footerBtn, styles.footerBtnPrimary]}
+          onPress={handleSaveAndNext}
+        >
+          <Text style={styles.footerBtnPrimaryText}>Save & Next</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Floating Palette Trigger */}
-      <TouchableOpacity style={styles.fab} onPress={() => setDrawerVisible(true)}>
-        <Menu size={16} color="#FFF" />
-        <Text style={styles.fabText}>Palette</Text>
-      </TouchableOpacity>
-
-      {/* TCS Palette Drawer Overlay */}
+      {/* â”€â”€ Palette Drawer (right slide-in) â”€â”€ */}
       <Modal
         visible={drawerVisible}
         animationType="slide"
         transparent={true}
         onRequestClose={() => setDrawerVisible(false)}
       >
-        <View style={[styles.modalOverlay, isDark && { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
-          <View style={[styles.drawerSheet, isDark && { backgroundColor: ThemeColors.dark.card }]}>
-            <View style={[styles.drawerHeader, isDark && { borderBottomColor: ThemeColors.dark.border }]}>
-              <Text style={[styles.drawerTitle, isDark && { color: ThemeColors.dark.text }]}>TCS iON Question Palette</Text>
-              <TouchableOpacity style={[styles.closeBtn, isDark && { backgroundColor: '#0B1329' }]} onPress={() => setDrawerVisible(false)}>
-                <Text style={[styles.closeBtnText, isDark && { color: ThemeColors.dark.text }]}>✕ Close</Text>
+        <View style={styles.paletteOverlay}>
+          <TouchableOpacity style={styles.paletteOverlayBg} activeOpacity={1} onPress={() => setDrawerVisible(false)} />
+          <View style={[styles.paletteDrawer, isDark && { backgroundColor: '#0F1729' }]}>
+            {/* Top tabs: Symbols | Instructions */}
+            <View style={[styles.paletteTabRow, isDark && { borderBottomColor: '#1E293B' }]}>
+              <TouchableOpacity
+                style={[styles.paletteTabBtn, drawerTab === 'symbols' && styles.paletteTabBtnActive]}
+                onPress={() => setDrawerTab('symbols')}
+              >
+                <Text style={[styles.paletteTabText, drawerTab === 'symbols' && styles.paletteTabTextActive, isDark && { color: drawerTab === 'symbols' ? '#3B82F6' : '#64748B' }]}>âŠ™ Symbols</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.paletteTabBtn, drawerTab === 'instructions' && styles.paletteTabBtnActive]}
+                onPress={() => setDrawerTab('instructions')}
+              >
+                <Text style={[styles.paletteTabText, drawerTab === 'instructions' && styles.paletteTabTextActive, isDark && { color: drawerTab === 'instructions' ? '#3B82F6' : '#64748B' }]}>â“˜ Instructions</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Shape palette list */}
-            <ScrollView contentContainerStyle={styles.drawerScroll}>
-              {sections.map((sec, secIdx) => {
-                const secQs = questions
-                  .filter((q) => q.sectionId === sec.id)
-                  .sort((a, b) => a.orderIndex - b.orderIndex);
-
-                return (
-                  <View key={sec.id} style={styles.drawerSecGroup}>
-                    <Text style={[styles.drawerSecName, isDark && { backgroundColor: '#0B1329', color: '#60A5FA' }]}>{sec.name}</Text>
-                    <View style={styles.paletteGrid}>
-                      {secQs.map((q, qIdx) => {
-                        const resp = responses[q.id];
-                        const qState = resp ? resp.state : 1;
-
-                        let stateStyle: any = styles.pNotVisited;
-                        let textStyle: any = styles.pTextDark;
-                        let hasCheck = false;
-
-                        switch (qState) {
-                          case 2: // Not Answered
-                            stateStyle = isDark ? [styles.pNotAnswered, { backgroundColor: '#7F1D1D' }] : styles.pNotAnswered;
-                            textStyle = isDark ? [styles.pTextLight, { color: '#FFF' }] : styles.pTextLight;
-                            break;
-                          case 3: // Answered
-                            stateStyle = isDark ? [styles.pAnswered, { backgroundColor: '#064E3B' }] : styles.pAnswered;
-                            textStyle = isDark ? [styles.pTextLight, { color: '#FFF' }] : styles.pTextLight;
-                            break;
-                          case 4: // Marked
-                            stateStyle = isDark ? [styles.pMarked, { backgroundColor: '#581C87' }] : styles.pMarked;
-                            textStyle = isDark ? [styles.pTextLight, { color: '#FFF' }] : styles.pTextLight;
-                            break;
-                          case 5: // Answered & Marked
-                            stateStyle = isDark ? [styles.pMarkedAnswered, { backgroundColor: '#581C87' }] : styles.pMarkedAnswered;
-                            textStyle = isDark ? [styles.pTextLight, { color: '#FFF' }] : styles.pTextLight;
-                            hasCheck = true;
-                            break;
-                          default:
-                            stateStyle = isDark ? [styles.pNotVisited, { backgroundColor: '#334155' }] : styles.pNotVisited;
-                            textStyle = isDark ? [styles.pTextDark, { color: '#94A3B8' }] : styles.pTextDark;
-                        }
-
-                        const isActive = currentSectionIdx === secIdx && currentQuestionIdx === qIdx;
-
-                        return (
-                          <TouchableOpacity
-                            key={q.id}
-                            style={[
-                              styles.paletteCell,
-                              stateStyle,
-                              isActive && { borderWidth: 2, borderColor: '#007AFF' }
-                            ]}
-                            onPress={() => handleJumpToQuestion(secIdx, qIdx)}
-                          >
-                            <Text style={[styles.paletteCellText, textStyle]}>{qIdx + 1}</Text>
-                            {hasCheck && (
-                              <View style={styles.miniCheck}>
-                                <Text style={styles.miniCheckText}>✓</Text>
-                              </View>
-                            )}
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  </View>
-                );
-              })}
+            {/* Section part buttons */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.partScrollRow} contentContainerStyle={{ paddingHorizontal: rs(12), gap: rs(8) }}>
+              {sections.map((sec, idx) => (
+                <TouchableOpacity
+                  key={sec.id}
+                  style={[
+                    styles.partBtn,
+                    drawerSectionIdx === idx && styles.partBtnActive,
+                    isDark && { borderColor: drawerSectionIdx === idx ? '#3B82F6' : '#334155' }
+                  ]}
+                  onPress={() => setDrawerSectionIdx(idx)}
+                >
+                  <Text style={[styles.partBtnText, drawerSectionIdx === idx && styles.partBtnTextActive, isDark && { color: drawerSectionIdx === idx ? '#3B82F6' : '#94A3B8' }]}>
+                    PART - {String.fromCharCode(65 + idx)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </ScrollView>
 
-            <TouchableOpacity style={styles.submitPaperBtn} onPress={() => handleExamSubmit(false)}>
-              <Text style={styles.submitPaperBtnText}>Submit Complete Paper</Text>
+            {/* Section name + stats */}
+            <View style={[styles.paletteSecHeader, isDark && { borderBottomColor: '#1E293B' }]}>
+              <Text style={[styles.paletteSecTitle, isDark && { color: '#F1F5F9' }]}>
+                {sections[drawerSectionIdx]?.name || ''}
+              </Text>
+              <View style={styles.paletteStatRow}>
+                <View style={styles.paletteStat}>
+                  <View style={[styles.paletteStatDot, { backgroundColor: '#22C55E' }]} />
+                  <Text style={[styles.paletteStatLabel, isDark && { color: '#94A3B8' }]}>Answered Qs</Text>
+                  <Text style={[styles.paletteStatValue, isDark && { color: '#F1F5F9' }]}>{drawerSecAnswered}</Text>
+                </View>
+                <View style={styles.paletteStat}>
+                  <View style={[styles.paletteStatDot, { backgroundColor: '#3B82F6' }]} />
+                  <Text style={[styles.paletteStatLabel, isDark && { color: '#94A3B8' }]}>Unanswered Qs</Text>
+                  <Text style={[styles.paletteStatValue, isDark && { color: '#F1F5F9' }]}>{drawerSecUnanswered}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Question grid */}
+            <ScrollView contentContainerStyle={styles.paletteGridContainer} showsVerticalScrollIndicator={false}>
+              <View style={styles.paletteGrid}>
+                {drawerSecQs.map((q, qIdx) => {
+                  const resp = responses[q.id];
+                  const qState = resp ? resp.state : 1;
+                  const isActive = currentSectionIdx === drawerSectionIdx && currentQuestionIdx === qIdx;
+
+                  let cellBg = '#3B82F6'; // unanswered / default blue
+                  let cellBorder = 'transparent';
+                  let textColor = '#FFF';
+                  let hasCheck = false;
+
+                  switch (qState) {
+                    case 1: // Not visited
+                      cellBg = '#3B82F6';
+                      break;
+                    case 2: // Not answered (visited but no selection)
+                      cellBg = '#3B82F6';
+                      break;
+                    case 3: // Answered
+                      cellBg = '#22C55E';
+                      break;
+                    case 4: // Marked for review
+                      cellBg = '#8B5CF6';
+                      break;
+                    case 5: // Answered & Marked
+                      cellBg = '#8B5CF6';
+                      hasCheck = true;
+                      break;
+                  }
+
+                  if (isActive) {
+                    cellBorder = '#FFF';
+                  }
+
+                  return (
+                    <TouchableOpacity
+                      key={q.id}
+                      style={[
+                        styles.paletteCell,
+                        { backgroundColor: cellBg, borderColor: cellBorder },
+                      ]}
+                      onPress={() => {
+                        handleJumpToQuestion(drawerSectionIdx, qIdx);
+                        setDrawerVisible(false);
+                      }}
+                    >
+                      <Text style={[styles.paletteCellText, { color: textColor }]}>{qIdx + 1}</Text>
+                      {hasCheck && (
+                        <View style={styles.miniCheck}>
+                          <Text style={styles.miniCheckText}>âœ“</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+
+            {/* Submit button */}
+            <TouchableOpacity
+              style={styles.paletteSubmitBtn}
+              onPress={() => { setDrawerVisible(false); handleExamSubmit(false); }}
+            >
+              <Text style={styles.paletteSubmitText}>SUBMIT TEST</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1177,7 +1288,7 @@ export default function MobileTestScreen({
           <View style={[styles.modalContent, isDark && { backgroundColor: ThemeColors.dark.card }]}>
             {modalConfig.isPauseModal && (
               <View style={styles.pauseIconContainer}>
-                <Text style={styles.pauseIconText}>⏸</Text>
+                <Text style={styles.pauseIconText}>â¸</Text>
               </View>
             )}
             <Text style={[styles.modalTitle, isDark && { color: ThemeColors.dark.text }]}>{modalConfig.title}</Text>
@@ -1222,346 +1333,437 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFF',
   },
-  loadingContainer: {
+
+  // â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  examHeader: {
+    backgroundColor: '#1A1A2E',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: rs(16),
+    paddingVertical: vs(10),
+    minHeight: vs(56),
+  },
+  pauseIconBtn: {
+    width: rs(36),
+    height: rs(36),
+    borderRadius: rs(18),
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: rs(10),
+  },
+  pauseIconText: {
+    fontSize: rs(16),
+    color: '#FFF',
+  },
+  headerCenter: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
   },
-  loadingText: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginTop: 10,
-    fontWeight: '600',
-  },
-  examHeader: {
-    backgroundColor: '#0F2942',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  pauseBtn: {
-    backgroundColor: '#1E293B',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#4B5563',
-  },
-  pauseBtnText: {
+  headerTimer: {
     color: '#FFF',
-    fontSize: 11,
+    fontSize: rs(17),
     fontWeight: 'bold',
-  },
-  timerBlock: {
-    backgroundColor: '#1E3A8A',
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  timerText: {
-    color: '#FBBF24',
     fontFamily: 'monospace',
-    fontWeight: 'bold',
-    fontSize: 15,
+    letterSpacing: 1,
   },
-  langBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#1E293B',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#4B5563',
+  headerExamName: {
+    color: 'rgba(255,255,255,0.65)',
+    fontSize: rs(11),
+    marginTop: 2,
   },
-  langText: {
-    color: '#FFF',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  sectionsRow: {
-    maxHeight: 44,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    backgroundColor: '#F9FAFB',
-  },
-  sectionTab: {
-    paddingHorizontal: 16,
+  hamburgerBtn: {
+    width: rs(36),
+    height: rs(36),
     justifyContent: 'center',
     alignItems: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#E5E7EB',
+    marginLeft: rs(8),
+  },
+
+  // â”€â”€ Section Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  sectionsRow: {
+    maxHeight: vs(44),
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+  },
+  sectionsRowContent: {
+    alignItems: 'center',
+    paddingHorizontal: rs(4),
+  },
+  sectionTab: {
+    paddingHorizontal: rs(16),
+    paddingVertical: vs(10),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sectionTabActive: {
-    backgroundColor: '#EFF6FF',
-    borderBottomWidth: 3,
-    borderBottomColor: '#2563EB',
+    borderBottomWidth: 2,
+    borderBottomColor: '#1A1A2E',
   },
   sectionTabText: {
-    fontSize: 12,
-    color: '#4B5563',
+    fontSize: rs(13),
+    color: '#9CA3AF',
     fontWeight: '600',
   },
   sectionTabTextActive: {
-    color: '#2563EB',
+    color: '#111827',
     fontWeight: 'bold',
   },
-  questionContainer: {
-    flex: 1,
-    padding: 16,
-  },
-  questionMetaRow: {
+
+  // â”€â”€ Stats Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  statsBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    paddingHorizontal: rs(14),
+    paddingVertical: vs(6),
+    backgroundColor: '#F9FAFB',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-  questionIndexText: {
-    fontSize: 11,
-    color: '#2563EB',
-    fontWeight: 'bold',
-    letterSpacing: 1,
+  statsText: {
+    fontSize: rs(11),
+    color: '#374151',
   },
-  violationWarning: {
-    fontSize: 11,
-    color: '#DC2626',
+  statsHighlight: {
+    color: '#F97316',
     fontWeight: 'bold',
+  },
+  statsWarning: {
+    fontSize: rs(11),
+    color: '#EF4444',
+    fontWeight: 'bold',
+  },
+
+  // â”€â”€ Question Area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  questionContainer: {
+    flex: 1,
+    backgroundColor: '#FFF',
+  },
+  questionContentContainer: {
+    padding: rs(16),
+    paddingBottom: vs(24),
+  },
+  questionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: vs(14),
+    gap: rs(8),
+  },
+  questionNumBadge: {
+    width: rs(36),
+    height: rs(36),
+    borderRadius: rs(6),
+    backgroundColor: '#2563EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  questionNumText: {
+    color: '#FFF',
+    fontSize: rs(14),
+    fontWeight: 'bold',
+  },
+  questionTimerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(4),
+    backgroundColor: '#F3F4F6',
+    borderRadius: rs(20),
+    paddingHorizontal: rs(10),
+    paddingVertical: vs(4),
+  },
+  questionTimerIcon: {
+    fontSize: rs(12),
+    color: '#6B7280',
+  },
+  questionTimerValue: {
+    fontSize: rs(12),
+    color: '#4B5563',
+    fontFamily: 'monospace',
+    fontWeight: '600',
+  },
+  questionActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
+    gap: rs(12),
+  },
+  actionIcon: {
+    padding: rs(4),
   },
   questionBody: {
-    fontSize: 15,
-    color: '#1F2937',
-    lineHeight: 22,
-    fontWeight: '600',
-    marginBottom: 20,
+    fontSize: rs(15),
+    color: '#111827',
+    lineHeight: rs(22),
+    fontWeight: '500',
+    marginBottom: vs(18),
   },
+  violationWarning: {
+    fontSize: rs(11),
+    color: '#DC2626',
+    fontWeight: 'bold',
+    marginTop: vs(8),
+  },
+
+  // â”€â”€ Options â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   optionsBlock: {
-    gap: 10,
-    marginBottom: 40,
+    gap: vs(10),
   },
-  optionItem: {
+  optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: rs(10),
+    padding: rs(12),
     backgroundColor: '#FFF',
+    gap: rs(12),
   },
-  optionItemActive: {
+  optionCardSelected: {
     borderColor: '#2563EB',
     backgroundColor: '#EFF6FF',
   },
-  optionDot: {
-    height: 14,
-    width: 14,
-    borderRadius: 7,
-    borderWidth: 1,
-    borderColor: '#9CA3AF',
-    marginRight: 10,
+  optionNumCircle: {
+    width: rs(28),
+    height: rs(28),
+    borderRadius: rs(14),
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
   },
-  optionDotActive: {
+  optionNumCircleSelected: {
     borderColor: '#2563EB',
     backgroundColor: '#2563EB',
   },
+  optionNumText: {
+    fontSize: rs(12),
+    color: '#4B5563',
+    fontWeight: 'bold',
+  },
+  optionNumTextSelected: {
+    color: '#FFF',
+  },
   optionText: {
-    fontSize: 13,
+    flex: 1,
+    fontSize: rs(13),
     color: '#374151',
   },
-  optionTextActive: {
+  optionTextSelected: {
     color: '#1E40AF',
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
+
+  // â”€â”€ Bottom Nav Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   footer: {
-    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: rs(12),
+    paddingVertical: vs(8),
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
     backgroundColor: '#FFF',
+    gap: rs(8),
   },
-  secondaryBtn: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  secondaryBtnText: {
-    fontSize: 11,
-    color: '#4B5563',
-    fontWeight: 'bold',
-  },
-  primaryBtn: {
-    backgroundColor: '#10B981',
-    borderRadius: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  primaryBtnText: {
-    fontSize: 11,
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 76,
-    right: 16,
-    backgroundColor: '#0F2942',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  fabText: {
-    color: '#FFF',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  modalOverlay: {
+  footerBtn: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  drawerSheet: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 16,
-    maxHeight: SCREEN_HEIGHT * 0.7,
-  },
-  drawerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    paddingVertical: vs(10),
+    borderRadius: rs(8),
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footerBtnOutline: {
+    borderWidth: 1.5,
+    borderColor: '#2563EB',
+    backgroundColor: 'transparent',
+  },
+  footerBtnOutlineText: {
+    color: '#2563EB',
+    fontSize: rs(12),
+    fontWeight: '700',
+  },
+  footerBtnMarkReview: {
+    borderWidth: 1.5,
+    borderColor: '#2563EB',
+    backgroundColor: 'transparent',
+  },
+  footerBtnMarkReviewText: {
+    color: '#2563EB',
+    fontSize: rs(12),
+    fontWeight: '700',
+  },
+  footerBtnPrimary: {
+    backgroundColor: '#2563EB',
+  },
+  footerBtnPrimaryText: {
+    color: '#FFF',
+    fontSize: rs(12),
+    fontWeight: '700',
+  },
+
+  // â”€â”€ Palette Drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  paletteOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  paletteOverlayBg: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  paletteDrawer: {
+    width: SCREEN_WIDTH * 0.82,
+    backgroundColor: '#FFF',
+    flexDirection: 'column',
+  },
+  paletteTabRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  paletteTabBtn: {
+    flex: 1,
+    paddingVertical: vs(12),
+    alignItems: 'center',
+  },
+  paletteTabBtnActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#2563EB',
+  },
+  paletteTabText: {
+    fontSize: rs(13),
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+  paletteTabTextActive: {
+    color: '#2563EB',
+    fontWeight: '700',
+  },
+  partScrollRow: {
+    maxHeight: vs(52),
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
-    paddingBottom: 10,
   },
-  drawerTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#0F2942',
+  partBtn: {
+    paddingHorizontal: rs(12),
+    paddingVertical: vs(8),
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: rs(6),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: vs(8),
   },
-  closeBtn: {
-    backgroundColor: '#F3F4F6',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-  },
-  closeBtnText: {
-    fontSize: 11,
-    color: '#4B5563',
-    fontWeight: 'bold',
-  },
-  drawerScroll: {
-    paddingVertical: 14,
-  },
-  drawerSecGroup: {
-    marginBottom: 16,
-  },
-  drawerSecName: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#3B82F6',
-    marginBottom: 8,
+  partBtnActive: {
+    borderColor: '#2563EB',
     backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+  },
+  partBtnText: {
+    fontSize: rs(11),
+    color: '#6B7280',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  partBtnTextActive: {
+    color: '#2563EB',
+  },
+  paletteSecHeader: {
+    paddingHorizontal: rs(14),
+    paddingTop: vs(10),
+    paddingBottom: vs(8),
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  paletteSecTitle: {
+    fontSize: rs(14),
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: vs(8),
+  },
+  paletteStatRow: {
+    gap: vs(4),
+  },
+  paletteStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(8),
+  },
+  paletteStatDot: {
+    width: rs(10),
+    height: rs(10),
+    borderRadius: rs(5),
+  },
+  paletteStatLabel: {
+    flex: 1,
+    fontSize: rs(12),
+    color: '#374151',
+  },
+  paletteStatValue: {
+    fontSize: rs(13),
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  paletteGridContainer: {
+    paddingHorizontal: rs(14),
+    paddingTop: vs(10),
+    paddingBottom: vs(10),
   },
   paletteGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: rs(8),
   },
   paletteCell: {
-    height: SCREEN_WIDTH * 0.12,
-    width: SCREEN_WIDTH * 0.12,
+    width: rs(42),
+    height: rs(42),
+    borderRadius: rs(6),
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
+    borderWidth: 2,
     position: 'relative',
   },
   paletteCellText: {
-    fontSize: 11,
+    fontSize: rs(13),
     fontWeight: 'bold',
-  },
-  pNotVisited: {
-    backgroundColor: '#E5E7EB',
-  },
-  pNotAnswered: {
-    backgroundColor: '#FEE2E2',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  },
-  pAnswered: {
-    backgroundColor: '#D1FAE5',
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
-  },
-  pMarked: {
-    backgroundColor: '#F3E8FF',
-    borderRadius: 24,
-  },
-  pMarkedAnswered: {
-    backgroundColor: '#F3E8FF',
-    borderRadius: 24,
-  },
-  pTextDark: {
-    color: '#374151',
-  },
-  pTextLight: {
-    color: '#1F2937',
+    color: '#FFF',
   },
   miniCheck: {
     position: 'absolute',
     bottom: -2,
     right: -2,
     backgroundColor: '#10B981',
-    height: 12,
-    width: 12,
-    borderRadius: 6,
+    height: rs(12),
+    width: rs(12),
+    borderRadius: rs(6),
     justifyContent: 'center',
     alignItems: 'center',
   },
   miniCheckText: {
     color: '#FFF',
-    fontSize: 8,
+    fontSize: rs(8),
     fontWeight: 'bold',
   },
-  submitPaperBtn: {
-    backgroundColor: '#10B981',
-    paddingVertical: 12,
-    borderRadius: 8,
+  paletteSubmitBtn: {
+    backgroundColor: '#64748B',
+    paddingVertical: vs(14),
     alignItems: 'center',
-    marginVertical: 10,
+    marginTop: 'auto',
   },
-  submitPaperBtnText: {
+  paletteSubmitText: {
     color: '#FFF',
-    fontSize: 13,
+    fontSize: rs(13),
     fontWeight: 'bold',
+    letterSpacing: 1,
   },
-  // Modern Custom Modal Styles
+
+  // â”€â”€ Custom Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   customModalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: rs(24),
   },
   customModalOverlayStandard: {
     backgroundColor: 'rgba(15, 23, 42, 0.6)',
@@ -1571,10 +1773,10 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#FFF',
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: rs(20),
+    padding: rs(24),
     width: '100%',
-    maxWidth: 340,
+    maxWidth: rs(340),
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
@@ -1583,44 +1785,44 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   pauseIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: rs(60),
+    height: rs(60),
+    borderRadius: rs(30),
     backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: vs(16),
   },
-  pauseIconText: {
-    fontSize: 24,
+  pauseIconContainer2: {
+    fontSize: rs(24),
     color: '#3B82F6',
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: rs(18),
     fontWeight: 'bold',
     color: '#0F2942',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: vs(8),
   },
   modalMessage: {
-    fontSize: 13,
+    fontSize: rs(13),
     color: '#4B5563',
     textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: 24,
+    lineHeight: vs(18),
+    marginBottom: vs(24),
   },
   modalButtonsContainer: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 12,
+    gap: rs(12),
     flexWrap: 'wrap',
   },
   modalButton: {
     flex: 1,
-    minWidth: 120,
-    paddingVertical: 12,
-    borderRadius: 10,
+    minWidth: rs(120),
+    paddingVertical: vs(12),
+    borderRadius: rs(10),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1636,7 +1838,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
   },
   modalButtonText: {
-    fontSize: 13,
+    fontSize: rs(13),
     fontWeight: 'bold',
   },
   modalButtonTextDefault: {
@@ -1645,74 +1847,90 @@ const styles = StyleSheet.create({
   modalButtonTextCancel: {
     color: '#4B5563',
   },
+
+  // â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+  },
+  loadingText: {
+    fontSize: rs(13),
+    color: '#6B7280',
+    marginTop: vs(10),
+    fontWeight: '600',
+  },
+
+  // â”€â”€ Instructions Screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   instContainer: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
   instHeader: {
-    height: 56,
+    height: vs(56),
     backgroundColor: '#0F2942',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: rs(16),
   },
   instHeaderTitle: {
-    fontSize: 15,
+    fontSize: rs(15),
     fontWeight: 'bold',
     color: '#FFF',
   },
   instLangBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: rs(6),
     backgroundColor: '#FFF',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 6,
+    paddingVertical: vs(5),
+    paddingHorizontal: rs(10),
+    borderRadius: rs(6),
   },
   instLangText: {
-    fontSize: 11,
+    fontSize: rs(11),
     color: '#4B5563',
     fontWeight: 'bold',
   },
   instScrollContent: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: rs(16),
+    paddingBottom: vs(40),
   },
   instExamName: {
-    fontSize: 16,
+    fontSize: rs(16),
     fontWeight: 'bold',
     color: '#0F2942',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: vs(16),
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   instMetaRow: {
     flexDirection: 'row',
     backgroundColor: '#FFF',
-    borderRadius: 12,
+    borderRadius: rs(12),
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    paddingVertical: 14,
-    marginBottom: 16,
+    paddingVertical: vs(14),
+    marginBottom: vs(16),
   },
   instMetaItem: {
     flex: 1,
     alignItems: 'center',
   },
   instMetaValue: {
-    fontSize: 15,
+    fontSize: rs(15),
     fontWeight: 'bold',
     color: '#2563EB',
   },
   instMetaLabel: {
-    fontSize: 10,
+    fontSize: rs(10),
     color: '#6B7280',
-    marginTop: 4,
+    marginTop: vs(4),
     fontWeight: '600',
   },
   instMetaDivider: {
@@ -1721,65 +1939,65 @@ const styles = StyleSheet.create({
   },
   instTextBox: {
     backgroundColor: '#FFF',
-    borderRadius: 12,
+    borderRadius: rs(12),
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    padding: 16,
-    marginBottom: 16,
+    padding: rs(16),
+    marginBottom: vs(16),
   },
   instTextTitle: {
-    fontSize: 13,
+    fontSize: rs(13),
     fontWeight: 'bold',
     color: '#2563EB',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
-    paddingBottom: 8,
-    marginBottom: 10,
+    paddingBottom: vs(8),
+    marginBottom: vs(10),
   },
   instTextHeading: {
-    fontSize: 11,
+    fontSize: rs(11),
     fontWeight: 'bold',
     color: '#1F2937',
-    marginBottom: 6,
+    marginBottom: vs(6),
   },
   instTextBody: {
-    fontSize: 11,
+    fontSize: rs(11),
     color: '#4B5563',
-    lineHeight: 16,
-    marginBottom: 8,
-    paddingLeft: 4,
+    lineHeight: rs(16),
+    marginBottom: vs(8),
+    paddingLeft: rs(4),
   },
   instLangSelectCard: {
     backgroundColor: '#FFF',
-    borderRadius: 12,
+    borderRadius: rs(12),
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    padding: 14,
+    padding: rs(14),
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: vs(10),
   },
   instLangSelectTitle: {
-    fontSize: 12,
+    fontSize: rs(12),
     fontWeight: 'bold',
     color: '#1F2937',
   },
   instLangSelectSub: {
-    fontSize: 9,
+    fontSize: rs(9),
     color: '#6B7280',
-    marginTop: 2,
+    marginTop: vs(2),
     fontWeight: '600',
   },
   instSelectorContainer: {
     flexDirection: 'row',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 8,
+    borderRadius: rs(8),
     overflow: 'hidden',
   },
   langSelectorOption: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: vs(6),
+    paddingHorizontal: rs(12),
     backgroundColor: '#F9FAFB',
     borderRightWidth: 1,
     borderRightColor: '#E5E7EB',
@@ -1788,7 +2006,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B82F6',
   },
   langSelectorText: {
-    fontSize: 11,
+    fontSize: rs(11),
     color: '#4B5563',
     fontWeight: 'bold',
   },
@@ -1798,19 +2016,19 @@ const styles = StyleSheet.create({
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
-    marginVertical: 20,
-    paddingHorizontal: 4,
+    gap: rs(12),
+    marginVertical: vs(20),
+    paddingHorizontal: rs(4),
   },
   checkbox: {
-    height: 18,
-    width: 18,
-    borderRadius: 4,
+    height: rs(18),
+    width: rs(18),
+    borderRadius: rs(4),
     borderWidth: 1.5,
     borderColor: '#9CA3AF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: vs(2),
   },
   checkboxChecked: {
     backgroundColor: '#10B981',
@@ -1818,42 +2036,42 @@ const styles = StyleSheet.create({
   },
   checkboxTick: {
     color: '#FFF',
-    fontSize: 10,
+    fontSize: rs(10),
     fontWeight: 'bold',
   },
   checkboxLabel: {
     flex: 1,
-    fontSize: 12,
+    fontSize: rs(12),
     color: '#4B5563',
-    lineHeight: 18,
+    lineHeight: rs(18),
   },
   instFooter: {
-    height: 56,
+    height: vs(56),
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: rs(16),
     backgroundColor: '#FFF',
   },
   instCancelBtn: {
     borderWidth: 1,
     borderColor: '#D1D5DB',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    borderRadius: rs(8),
+    paddingVertical: vs(10),
+    paddingHorizontal: rs(20),
   },
   instCancelText: {
-    fontSize: 12,
+    fontSize: rs(12),
     color: '#4B5563',
     fontWeight: 'bold',
   },
   instStartBtn: {
     backgroundColor: '#10B981',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
+    borderRadius: rs(8),
+    paddingVertical: vs(10),
+    paddingHorizontal: rs(24),
     shadowColor: '#10B981',
     shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 2 },
@@ -1866,21 +2084,42 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   instStartText: {
-    fontSize: 12,
+    fontSize: rs(12),
     color: '#FFF',
     fontWeight: 'bold',
   },
-  questionTimerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  questionTimerText: {
-    fontSize: 10,
-    fontWeight: '600',
-    fontFamily: 'monospace',
-  },
+
+  // Keep legacy props to avoid TS errors in modal render
+  modalOverlay: { flex: 1 },
+  drawerSheet: {},
+  drawerHeader: {},
+  drawerTitle: {},
+  closeBtn: {},
+  closeBtnText: {},
+  drawerScroll: {},
+  drawerSecGroup: {},
+  drawerSecName: {},
+  submitPaperBtn: {},
+  submitPaperBtnText: {},
+  fab: {},
+  fabText: {},
+  questionMetaRow: {},
+  questionIndexText: {},
+  questionTimerBadge: {},
+  questionTimerText: {},
+  secondaryBtn: {},
+  secondaryBtnText: {},
+  primaryBtn: {},
+  primaryBtnText: {},
+  optionItem: {},
+  optionItemActive: {},
+  optionDot: {},
+  optionDotActive: {},
+  pNotVisited: {},
+  pNotAnswered: {},
+  pAnswered: {},
+  pMarked: {},
+  pMarkedAnswered: {},
+  pTextDark: {},
+  pTextLight: {},
 });
