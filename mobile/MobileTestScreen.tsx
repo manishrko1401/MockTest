@@ -900,7 +900,7 @@ export default function MobileTestScreen({
                 ]}
                 onPress={() => setLang('hi')}
               >
-                <Text style={[styles.langSelectorText, lang === 'hi' && styles.langSelectorTextActive, isDark && lang !== 'hi' && { color: ThemeColors.dark.textMuted }]}>\u0939\u093f\u0902\u0926\u0940</Text>
+                <Text style={[styles.langSelectorText, lang === 'hi' && styles.langSelectorTextActive, isDark && lang !== 'hi' && { color: ThemeColors.dark.textMuted }]}>{'हिंदी'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1038,7 +1038,7 @@ export default function MobileTestScreen({
               style={[styles.langToggleBtn, lang === 'hi' && styles.langToggleBtnActive]}
               onPress={() => setLang('hi')}
             >
-              <Text style={[styles.langToggleTxt, lang === 'hi' && styles.langToggleTxtActive]}>हि</Text>
+              <Text style={[styles.langToggleTxt, lang === 'hi' && styles.langToggleTxtActive]}>{'हि'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1280,7 +1280,10 @@ export default function MobileTestScreen({
           <View style={[styles.modalContent, isDark && { backgroundColor: ThemeColors.dark.card }]}>
             {modalConfig.isPauseModal && (
               <View style={styles.pauseIconContainer}>
-                <Text style={styles.pauseIconText}>ÃƒÂ¢Ã‚ÂÃ‚Â¸</Text>
+                <View style={styles.pauseBarsRow}>
+                  <View style={styles.pauseBar} />
+                  <View style={styles.pauseBar} />
+                </View>
               </View>
             )}
             <Text style={[styles.modalTitle, isDark && { color: ThemeColors.dark.text }]}>{modalConfig.title}</Text>
@@ -1846,6 +1849,18 @@ const styles = StyleSheet.create({
   pauseIconText: {
     fontSize: rs(24),
     color: '#3B82F6',
+  },
+  pauseBarsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: rs(5),
+  },
+  pauseBar: {
+    width: rs(8),
+    height: rs(26),
+    borderRadius: rs(3),
+    backgroundColor: '#3B82F6',
   },
   modalTitle: {
     fontSize: rs(18),

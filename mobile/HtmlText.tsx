@@ -357,7 +357,17 @@ function decodeEntities(text: string): string {
     .replace(/&mdash;/g, '—').replace(/&ndash;/g, '–').replace(/&middot;/g, '·')
     .replace(/&hellip;/g, '…').replace(/&bull;/g, '•').replace(/&frac12;/g, '½')
     .replace(/&frac14;/g, '¼').replace(/&frac34;/g, '¾').replace(/&prime;/g, '′')
-    .replace(/&laquo;/g, '«').replace(/&raquo;/g, '»');
+    .replace(/&laquo;/g, '«').replace(/&raquo;/g, '»')
+    .replace(/&ang;/g, '\u2220').replace(/&perp;/g, '\u22a5').replace(/&cong;/g, '\u2245')
+    .replace(/&sim;/g, '\u223c').replace(/&asymp;/g, '\u2248').replace(/&equiv;/g, '\u2261')
+    .replace(/&prop;/g, '\u221d').replace(/&forall;/g, '\u2200').replace(/&exist;/g, '\u2203')
+    .replace(/&empty;/g, '\u2205').replace(/&isin;/g, '\u2208').replace(/&notin;/g, '\u2209')
+    .replace(/&sub;/g, '\u2282').replace(/&sup;/g, '\u2283').replace(/&sube;/g, '\u2286')
+    .replace(/&and;/g, '\u2227').replace(/&or;/g, '\u2228').replace(/&cap;/g, '\u2229')
+    .replace(/&cup;/g, '\u222a').replace(/&sdot;/g, '\u22c5').replace(/&lowast;/g, '\u2217')
+    .replace(/&Aring;/g, '\u00c5').replace(/&aring;/g, '\u00e5')
+    .replace(/&rsquo;/g, '\u2019').replace(/&lsquo;/g, '\u2018')
+    .replace(/&rdquo;/g, '\u201d').replace(/&ldquo;/g, '\u201c');
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
