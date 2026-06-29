@@ -318,7 +318,7 @@ export default function App() {
               const existingSessionIds = new Set((currentUser?.testSessions || []).map((s: any) => s.id));
               
               // Login once to refresh all user data and get attempts
-              const res = await ApiClient.login(currentUser.email);
+              const res = await ApiClient.login(currentUser.email, currentUser.password);
               if (res.success && res.user) {
                 setCurrentUser(res.user);
                 
