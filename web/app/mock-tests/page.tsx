@@ -59,6 +59,7 @@ export default function MockTestsCatalog() {
   }, []);
 
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [categorySearchQuery, setCategorySearchQuery] = useState<string>('');
   const [upgradePopupOpen, setUpgradePopupOpen] = useState(false);
   const [requiredTierInfo, setRequiredTierInfo] = useState<string>('');
 
@@ -161,6 +162,25 @@ export default function MockTestsCatalog() {
     clearOngoingSession(test.id);
     router.push(`/exam/${test.id}`);
   };
+
+  const filteredSidebarCategories = examCatalog.filter(category => {
+    const query = categorySearchQuery.toLowerCase().trim();
+    if (!query) return true;
+    
+    if (category.name.toLowerCase().includes(query)) return true;
+    
+    return category.subCategories.some(sub => {
+      if (sub.name.toLowerCase().includes(query)) return true;
+      
+      const matchSubSub = sub.subSubCategories?.some(subsub => 
+        subsub.name.toLowerCase().includes(query) ||
+        subsub.tests?.some(t => t.title.toLowerCase().includes(query))
+      );
+      if (matchSubSub) return true;
+      
+      return sub.tests?.some(t => t.title.toLowerCase().includes(query));
+    });
+  });
 
   const { isMobile, isMounted } = useIsMobile();
 
@@ -624,28 +644,56 @@ export default function MockTestsCatalog() {
           <div>
             <h3 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-4 font-sans">{t.examCategories}</h3>
             
-            <nav className="space-y-1">
-              {examCatalog.map((category) => (
+            {/* Category Search Input */}
+            <div className="relative mb-4">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                <Search className="h-3.5 w-3.5" />
+              </div>
+              <input
+                type="text"
+                value={categorySearchQuery}
+                onChange={(e) => setCategorySearchQuery(e.target.value)}
+                placeholder={language === 'hi' ? 'श्रेणी खोजें...' : 'Search categories...'}
+                className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-7 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium"
+              />
+              {categorySearchQuery && (
                 <button
-                  key={category.id}
-                  onClick={() => {
-                    setSelectedCategory(category.id);
-                    setSelectedSubCategory(null);
-                    setShowBookmarks(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                    selectedCategory === category.id && !showBookmarks
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
-                  }`}
+                  onClick={() => setCategorySearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-605 dark:hover:text-slate-300 focus:outline-none text-[10px] font-bold"
                 >
-                  <span className="flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4" />
-                    {category.name}
-                  </span>
-                  <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                  ✕
                 </button>
-              ))}
+              )}
+            </div>
+
+            <nav className="space-y-1 max-h-[350px] lg:max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin">
+              {filteredSidebarCategories.length > 0 ? (
+                filteredSidebarCategories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => {
+                      setSelectedCategory(category.id);
+                      setSelectedSubCategory(null);
+                      setShowBookmarks(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                      selectedCategory === category.id && !showBookmarks
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      {category.name}
+                    </span>
+                    <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                  </button>
+                ))
+              ) : (
+                <div className="text-center py-6 text-slate-400 text-xs font-semibold">
+                  {language === 'hi' ? 'कोई श्रेणी नहीं मिली' : 'No categories found'}
+                </div>
+              )}
             </nav>
           </div>
 
