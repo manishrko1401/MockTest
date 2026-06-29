@@ -23,7 +23,6 @@ export default function MarksCalculator() {
   const [gender, setGender] = useState('Male');
   const [state, setState] = useState('Delhi');
   const [responseUrl, setResponseUrl] = useState('');
-  const [htmlContent, setHtmlContent] = useState('');
   
   // Custom marking states
   const [posMark, setPosMark] = useState(2);
@@ -55,8 +54,6 @@ export default function MarksCalculator() {
   // Load sample answer key data
   const handleLoadSample = () => {
     setErrorMessage('');
-    const sampleHtml = generateSampleHtml();
-    setHtmlContent(sampleHtml);
     setResponseUrl('https://ssc.digialm.com/EForms/configuredHtml/2207/98711/Response_Sheet_SSC_CGL_2025_MOCK.html');
   };
 
@@ -64,52 +61,55 @@ export default function MarksCalculator() {
   const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
-    
-    const contentToParse = htmlContent.trim();
+
     const urlToFetch = responseUrl.trim();
 
-    // If HTML code is empty but URL is provided, fetch it first
-    if (!contentToParse && urlToFetch) {
+    if (!urlToFetch) {
+      setErrorMessage(language === 'hi'
+        ? 'कृपया उत्तर कुंजी का URL दर्ज करें।'
+        : 'Please enter the Response Sheet URL.'
+      );
+      return;
+    }
+
+    // Demo / mock URL — parse locally without network call
+    if (urlToFetch.includes('MOCK.html') || urlToFetch.includes('_MOCK')) {
       try {
         setIsLoading(true);
-        const res = await fetch('/api/fetch-response-sheet', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: urlToFetch })
-        });
-        const data = await res.json();
-        if (data.success && data.html) {
-          const questions = parseAnswerKey(data.html);
-          setParsedQuestions(questions);
-          setHtmlContent(data.html); // Populate textarea so user sees the parsed HTML
-          setIsCalculated(true);
-          setActiveResultTab('summary');
-        } else {
-          setErrorMessage(data.error || 'Failed to fetch the URL content. Make sure it is public and correct, or copy/paste the HTML code instead.');
-        }
+        await new Promise(resolve => setTimeout(resolve, 800));
+        const questions = parseAnswerKey(generateSampleHtml());
+        setParsedQuestions(questions);
+        setIsCalculated(true);
+        setActiveResultTab('summary');
       } catch (err: any) {
-        setErrorMessage('Network connection error while fetching link content. Please copy and paste the raw HTML code instead.');
+        setErrorMessage(err.message || 'Failed to generate demo result.');
       } finally {
         setIsLoading(false);
       }
       return;
     }
 
-    if (!contentToParse) {
-      setErrorMessage(language === 'hi' 
-        ? 'कृपया या तो उत्तर कुंजी का URL दर्ज करें या फिर HTML कोड पेस्ट करें।' 
-        : 'Please enter either the Answer Key URL link, or paste the raw HTML code.'
-      );
-      return;
-    }
-
+    // Real URL — fetch via server-side proxy
     try {
-      const questions = parseAnswerKey(contentToParse);
-      setParsedQuestions(questions);
-      setIsCalculated(true);
-      setActiveResultTab('summary');
+      setIsLoading(true);
+      const res = await fetch('/api/fetch-response-sheet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: urlToFetch })
+      });
+      const data = await res.json();
+      if (data.success && data.html) {
+        const questions = parseAnswerKey(data.html);
+        setParsedQuestions(questions);
+        setIsCalculated(true);
+        setActiveResultTab('summary');
+      } else {
+        setErrorMessage(data.error || 'Failed to fetch the URL. Please verify the link is correct and publicly accessible.');
+      }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Failed to parse the response sheet HTML. Make sure the pasted content is correct.');
+      setErrorMessage('Network error while fetching the response sheet. Please check your connection.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
