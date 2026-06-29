@@ -442,6 +442,28 @@ export default function MobileTestScreen({
 
   const activeQuestion = sectionQuestions[currentQuestionIdx];
 
+  // All useMemo hooks MUST be before any conditional returns (Rules of Hooks)
+  const answeredCount = useMemo(
+    () => Object.values(responses).filter(r => r.state === 3 || r.state === 5).length,
+    [responses]
+  );
+  const currentSecQs = useMemo(
+    () => questions.filter(q => q.sectionId === sections[currentSectionIdx]?.id),
+    [questions, sections, currentSectionIdx]
+  );
+  const drawerSecQs = useMemo(
+    () => questions
+      .filter(q => q.sectionId === sections[drawerSectionIdx]?.id)
+      .sort((a, b) => a.orderIndex - b.orderIndex),
+    [questions, sections, drawerSectionIdx]
+  );
+  const drawerSecAnswered = useMemo(
+    () => drawerSecQs.filter(q => responses[q.id]?.state === 3 || responses[q.id]?.state === 5).length,
+    [drawerSecQs, responses]
+  );
+  const drawerSecUnanswered = drawerSecQs.length - drawerSecAnswered;
+  const minutesLeft = Math.floor(timeLeft / 60);
+
   // Sync activeQuestion.id with the ref to avoid stale closures in timer interval
   useEffect(() => {
     if (activeQuestion) {
@@ -959,28 +981,6 @@ export default function MobileTestScreen({
       </SafeAreaView>
     );
   }
-
-  // Stats for stats bar — all memoized to avoid re-computation every render
-  const answeredCount = useMemo(
-    () => Object.values(responses).filter(r => r.state === 3 || r.state === 5).length,
-    [responses]
-  );
-  const currentSecQs = useMemo(
-    () => questions.filter(q => q.sectionId === sections[currentSectionIdx]?.id),
-    [questions, sections, currentSectionIdx]
-  );
-  const drawerSecQs = useMemo(
-    () => questions
-      .filter(q => q.sectionId === sections[drawerSectionIdx]?.id)
-      .sort((a, b) => a.orderIndex - b.orderIndex),
-    [questions, sections, drawerSectionIdx]
-  );
-  const drawerSecAnswered = useMemo(
-    () => drawerSecQs.filter(q => responses[q.id]?.state === 3 || responses[q.id]?.state === 5).length,
-    [drawerSecQs, responses]
-  );
-  const drawerSecUnanswered = drawerSecQs.length - drawerSecAnswered;
-  const minutesLeft = Math.floor(timeLeft / 60);
 
   return (
     <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
