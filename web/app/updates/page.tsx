@@ -40,7 +40,9 @@ export default function UpdatesCenterPage() {
 
         <header className="h-14 border-b border-slate-202 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" className="h-8 w-8 object-contain" alt="Logo" />
+            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 rounded-full shadow-sm flex items-center justify-center h-8 w-8 border border-blue-200/50 dark:border-slate-700 shrink-0">
+              <Trophy className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
+            </div>
             <div>
               <h1 className="font-extrabold text-xs leading-none text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
               <p className="text-[7px] text-blue-600 dark:text-blue-400 font-bold tracking-wider uppercase mt-0.5">{t.logoSub}</p>
@@ -266,7 +268,9 @@ export default function UpdatesCenterPage() {
         <div className="flex items-center gap-8">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <img src="/logo.png" className="h-10 w-10 object-contain" alt="Logo" />
+            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
+              <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
+            </div>
             <div>
               <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
               <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
