@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 import { ApiClient } from './api';
 import AuthScreen from './screens/AuthScreen';
 import DashboardScreen from './screens/DashboardScreen';
@@ -18,6 +20,7 @@ import AnalysisScreen from './screens/AnalysisScreen';
 import SupportChatScreen from './screens/SupportChatScreen';
 import { Trophy } from 'lucide-react-native';
 import { ThemeColors } from './theme';
+import { requestNotificationPermissions, triggerLocalNotification } from './notifications';
 
 type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis' | 'support_chat';
 
@@ -46,6 +49,9 @@ export default function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // Request notifications permissions
+        await requestNotificationPermissions();
+
         // Load saved theme
         const savedTheme = await SecureStore.getItemAsync('app_theme');
         if (savedTheme === 'dark') {
@@ -58,6 +64,13 @@ export default function App() {
           setNotices(bootRes.noticesList || []);
           setExamCatalog(bootRes.examCatalog || []);
           setUsersList(bootRes.usersList || []);
+
+          // Seed seen notices if they don't exist yet
+          const storedNotices = await AsyncStorage.getItem('seen_notices');
+          if (!storedNotices && bootRes.noticesList) {
+            const initialIds = bootRes.noticesList.map((n: any) => n.id);
+            await AsyncStorage.setItem('seen_notices', JSON.stringify(initialIds));
+          }
         }
 
         // Check SecureStore for auto-login
@@ -132,6 +145,153 @@ export default function App() {
 
     return () => backHandler.remove();
   }, [viewMode, previousViewMode, dashboardCategoryId, dashboardTab, currentUser]);
+
+  // 1b. Listen to notification taps/clicks to route the user
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data;
+      if (data?.type === 'notice') {
+        setDashboardTab('notices');
+        setViewMode('dashboard');
+      } else if (data?.type === 'support') {
+        setViewMode('support_chat');
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  // 1c. Background Polling for Notices & Support Messages
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    let isMounted = true;
+
+    // Check for new notices and notify
+    const checkNewNotices = async (newNoticesList: any[]) => {
+      try {
+        const stored = await AsyncStorage.getItem('seen_notices');
+        let seenIds: string[] = stored ? JSON.parse(stored) : [];
+
+        // If no seen notices yet, seed it with the currently loaded notices to avoid spamming
+        if (seenIds.length === 0) {
+          seenIds = newNoticesList.map((n: any) => n.id);
+          await AsyncStorage.setItem('seen_notices', JSON.stringify(seenIds));
+          return;
+        }
+
+        const newAlerts: any[] = [];
+        const updatedSeenIds = [...seenIds];
+
+        for (const notice of newNoticesList) {
+          if (!seenIds.includes(notice.id)) {
+            newAlerts.push(notice);
+            updatedSeenIds.push(notice.id);
+          }
+        }
+
+        if (newAlerts.length > 0) {
+          await AsyncStorage.setItem('seen_notices', JSON.stringify(updatedSeenIds));
+          for (const notice of newAlerts) {
+            let notificationTitle = 'New Announcement';
+            if (notice.category === 'admit_card') {
+              notificationTitle = 'New Admit Card Notice!';
+            } else if (notice.category === 'result') {
+              notificationTitle = 'New Exam Result Notice!';
+            } else if (notice.category === 'notice') {
+              notificationTitle = 'New Notice & Alert!';
+            }
+
+            await triggerLocalNotification(
+              notificationTitle,
+              notice.title,
+              { type: 'notice', id: notice.id }
+            );
+          }
+        }
+      } catch (err) {
+        console.error("Error checking new notices:", err);
+      }
+    };
+
+    // Check for new support messages from admin
+    const checkNewSupportMessages = async () => {
+      // Don't show notifications if user is already chatting
+      if (viewMode === 'support_chat') return;
+
+      try {
+        // Fetch support messages but don't mark them as read yet (markAsRead = false)
+        const res = await ApiClient.getSupportMessages(currentUser.id, false);
+        if (!isMounted) return;
+
+        if (res.success && res.messages) {
+          const messagesList = res.messages;
+          const storageKey = `seen_messages_${currentUser.id}`;
+          const stored = await AsyncStorage.getItem(storageKey);
+          let seenIds: string[] = stored ? JSON.parse(stored) : [];
+
+          // If no messages stored yet, seed them
+          if (seenIds.length === 0) {
+            seenIds = messagesList.map((m: any) => m.id);
+            await AsyncStorage.setItem(storageKey, JSON.stringify(seenIds));
+            return;
+          }
+
+          const newAlerts: any[] = [];
+          const updatedSeenIds = [...seenIds];
+
+          for (const msg of messagesList) {
+            if (msg.sender === 'ADMIN' && !seenIds.includes(msg.id)) {
+              newAlerts.push(msg);
+              updatedSeenIds.push(msg.id);
+            }
+          }
+
+          if (newAlerts.length > 0) {
+            await AsyncStorage.setItem(storageKey, JSON.stringify(updatedSeenIds));
+            for (const msg of newAlerts) {
+              await triggerLocalNotification(
+                'Support Team Response',
+                msg.message,
+                { type: 'support', id: msg.id }
+              );
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error checking support messages:", err);
+      }
+    };
+
+    // Execute first checks immediately
+    checkNewSupportMessages();
+
+    // Poll notices (bootstrap) every 10 seconds
+    const noticesInterval = setInterval(async () => {
+      try {
+        const bootRes = await ApiClient.bootstrap();
+        if (bootRes.success && isMounted) {
+          setNotices(bootRes.noticesList || []);
+          setExamCatalog(bootRes.examCatalog || []);
+          setUsersList(bootRes.usersList || []);
+          checkNewNotices(bootRes.noticesList || []);
+        }
+      } catch (err) {
+        console.error("Notices background polling error:", err);
+      }
+    }, 10000);
+
+    // Poll support messages every 8 seconds
+    const supportInterval = setInterval(() => {
+      checkNewSupportMessages();
+    }, 8000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(noticesInterval);
+      clearInterval(supportInterval);
+    };
+  }, [currentUser, viewMode]);
 
   const handleToggleTheme = async (dark: boolean) => {
     setIsDark(dark);

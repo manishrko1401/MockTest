@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Send } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
 
@@ -37,6 +38,29 @@ export default function SupportChatScreen({
     const res = await ApiClient.getSupportMessages(currentUser.id, true);
     if (res.success) {
       setMessages(res.messages || []);
+      
+      // Update AsyncStorage seen list so background polling in App.tsx doesn't trigger duplicate notifications
+      try {
+        const messageIds = (res.messages || []).map((m: any) => m.id);
+        if (messageIds.length > 0) {
+          const storageKey = `seen_messages_${currentUser.id}`;
+          const stored = await AsyncStorage.getItem(storageKey);
+          let seenIds: string[] = stored ? JSON.parse(stored) : [];
+          
+          let changed = false;
+          for (const id of messageIds) {
+            if (!seenIds.includes(id)) {
+              seenIds.push(id);
+              changed = true;
+            }
+          }
+          if (changed) {
+            await AsyncStorage.setItem(storageKey, JSON.stringify(seenIds));
+          }
+        }
+      } catch (err) {
+        console.error("Error updating seen messages in chat screen:", err);
+      }
     }
     if (showLoading) setLoading(false);
   };
