@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -433,11 +433,12 @@ export default function MobileTestScreen({
   }, [loading, isTimerRunning, currentSectionIdx, currentQuestionIdx, responses, timeLeft, violationsCount]);
 
   const activeSection = sections[currentSectionIdx];
-  const sectionQuestions = activeSection
-    ? questions
-        .filter((q) => q.sectionId === activeSection.id)
-        .sort((a, b) => a.orderIndex - b.orderIndex)
-    : [];
+  const sectionQuestions = useMemo(
+    () => activeSection
+      ? questions.filter((q) => q.sectionId === activeSection.id).sort((a, b) => a.orderIndex - b.orderIndex)
+      : [],
+    [questions, activeSection?.id]
+  );
 
   const activeQuestion = sectionQuestions[currentQuestionIdx];
 
@@ -461,16 +462,17 @@ export default function MobileTestScreen({
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleSelectOption = (optIdx: number) => {
-    if (!activeQuestion) return;
+  const handleSelectOption = useCallback((optIdx: number) => {
+    if (!activeQuestionIdRef.current) return;
+    const qId = activeQuestionIdRef.current;
     setResponses((prev) => ({
       ...prev,
-      [activeQuestion.id]: {
-        ...prev[activeQuestion.id],
+      [qId]: {
+        ...prev[qId],
         tempOptionIndex: optIdx
       }
     }));
-  };
+  }, []);
 
   const handleSaveAndNext = () => {
     if (!activeQuestion) return;
@@ -523,18 +525,19 @@ export default function MobileTestScreen({
     }
   };
 
-  const handleClearResponse = () => {
-    if (!activeQuestion) return;
+  const handleClearResponse = useCallback(() => {
+    const qId = activeQuestionIdRef.current;
+    if (!qId) return;
     setResponses((prev) => ({
       ...prev,
-      [activeQuestion.id]: {
-        ...prev[activeQuestion.id],
+      [qId]: {
+        ...prev[qId],
         tempOptionIndex: null,
         selectedOptionIndex: null,
         state: 2 // Visited, but not answered
       }
     }));
-  };
+  }, []);
 
   const handleMarkForReview = () => {
     if (!activeQuestion) return;
@@ -952,13 +955,25 @@ export default function MobileTestScreen({
     );
   }
 
-  // Stats for stats bar
-  const answeredCount = Object.values(responses).filter(r => r.state === 3 || r.state === 5).length;
-  const currentSecQs = questions.filter(q => q.sectionId === sections[currentSectionIdx]?.id);
-  const drawerSecQs = questions
-    .filter(q => q.sectionId === sections[drawerSectionIdx]?.id)
-    .sort((a, b) => a.orderIndex - b.orderIndex);
-  const drawerSecAnswered = drawerSecQs.filter(q => responses[q.id]?.state === 3 || responses[q.id]?.state === 5).length;
+  // Stats for stats bar — all memoized to avoid re-computation every render
+  const answeredCount = useMemo(
+    () => Object.values(responses).filter(r => r.state === 3 || r.state === 5).length,
+    [responses]
+  );
+  const currentSecQs = useMemo(
+    () => questions.filter(q => q.sectionId === sections[currentSectionIdx]?.id),
+    [questions, sections, currentSectionIdx]
+  );
+  const drawerSecQs = useMemo(
+    () => questions
+      .filter(q => q.sectionId === sections[drawerSectionIdx]?.id)
+      .sort((a, b) => a.orderIndex - b.orderIndex),
+    [questions, sections, drawerSectionIdx]
+  );
+  const drawerSecAnswered = useMemo(
+    () => drawerSecQs.filter(q => responses[q.id]?.state === 3 || responses[q.id]?.state === 5).length,
+    [drawerSecQs, responses]
+  );
   const drawerSecUnanswered = drawerSecQs.length - drawerSecAnswered;
   const minutesLeft = Math.floor(timeLeft / 60);
 
@@ -1105,7 +1120,10 @@ export default function MobileTestScreen({
           })}
         </View>
         {violationsCount > 0 && (
-          <Text style={styles.violationWarning}>ÃƒÂ¢Ã…Â¡Ã‚Â  Violations: {violationsCount}/3</Text>
+          <View style={styles.violationWarningRow}>
+            <View style={styles.violationTriangle} />
+            <Text style={styles.violationWarning}> Violations: {violationsCount}/3</Text>
+          </View>
         )}
       </ScrollView>
 
@@ -1548,11 +1566,27 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: vs(18),
   },
+  violationWarningRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: vs(8),
+    marginHorizontal: rs(4),
+  },
+  violationTriangle: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: rs(6),
+    borderRightWidth: rs(6),
+    borderBottomWidth: rs(10),
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#DC2626',
+    marginRight: rs(5),
+  },
   violationWarning: {
     fontSize: rs(11),
     color: '#DC2626',
     fontWeight: 'bold',
-    marginTop: vs(8),
   },
 
   // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Options ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
