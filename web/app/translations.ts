@@ -18,7 +18,7 @@ export const TRANSLATIONS = {
     langSelect: "Language",
 
     // Home Page
-    heroBadge: "🏆 India's #1 Exam Prep Portal",
+    heroBadge: "🏆 India's Exam Prep Portal",
     heroTitlePrefix: "Unlock Success In Your ",
     heroTitleSuffix: "Govt Exams",
     heroDesc: "Join 5.1 Crore+ registered aspirants. Get comprehensive CBT mock sittings, instant accuracy graphs, tab-blur security alerts, and full access passes mapped to SSC, Banking, Railways, and State Exams.",
@@ -232,7 +232,7 @@ export const TRANSLATIONS = {
     langSelect: "भाषा",
 
     // Home Page
-    heroBadge: "🏆 भारत का नंबर 1 एग्जाम प्रेप पोर्टल",
+    heroBadge: "🏆 भारत का एग्जाम प्रेप पोर्टल",
     heroTitlePrefix: "अपनी सरकारी परीक्षाओं में ",
     heroTitleSuffix: "सफलता अनलॉक करें",
     heroDesc: "5.1 करोड़+ पंजीकृत उम्मीदवारों में शामिल हों। व्यापक सीबीटी मॉक सेटिंग्स, त्वरित सटीकता ग्राफ, टैब-ब्लर सुरक्षा अलर्ट और एसएससी, बैंकिंग, रेलवे और राज्य परीक्षाओं के लिए पूर्ण पास प्राप्त करें।",
