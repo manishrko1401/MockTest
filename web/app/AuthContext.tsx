@@ -54,7 +54,7 @@ export interface Notice {
   date: string;
   publishDate: string; // YYYY-MM-DD
   type: string;
-  category: 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial';
+  category: 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial' | 'answer_key';
   url?: string;
   lastDate?: string; // e.g. "10 July 2026"
   imageUrl?: string;
