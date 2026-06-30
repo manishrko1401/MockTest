@@ -28,7 +28,7 @@ export default function UpdatesCenterPage() {
   
   const { isMobile, isMounted } = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [activeMobileTab, setActiveMobileTab] = React.useState<'notice' | 'result' | 'admit_card'>('notice');
+  const [activeMobileTab, setActiveMobileTab] = React.useState<'notice' | 'result' | 'admit_card' | 'answer_key'>('notice');
 
   if (isMounted && isMobile) {
     return (
@@ -183,6 +183,16 @@ export default function UpdatesCenterPage() {
             >
               Admit Cards
             </button>
+            <button
+              onClick={() => setActiveMobileTab('answer_key')}
+              className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
+                activeMobileTab === 'answer_key' 
+                  ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Answer Keys
+            </button>
           </div>
 
           {/* RENDER SELECTED LIST */}
@@ -191,6 +201,7 @@ export default function UpdatesCenterPage() {
               {activeMobileTab === 'notice' && <><Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> {t.liveNotices}</>}
               {activeMobileTab === 'result' && <><Trophy className="h-4.5 w-4.5 text-yellow-500" /> {t.resultsMerits}</>}
               {activeMobileTab === 'admit_card' && <><FileText className="h-4.5 w-4.5 text-green-550" /> {t.admitCards}</>}
+              {activeMobileTab === 'answer_key' && <><ShieldCheck className="h-4.5 w-4.5 text-purple-500" /> Answer Keys</>}
             </h3>
 
             <div className="space-y-3.5 max-h-[500px] overflow-y-auto pr-1">
@@ -208,7 +219,8 @@ export default function UpdatesCenterPage() {
                         <span className={`text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase ${
                           activeMobileTab === 'notice' ? 'bg-blue-105 text-blue-700 dark:bg-blue-955 dark:text-blue-400' :
                           activeMobileTab === 'result' ? 'bg-yellow-105 text-yellow-750 dark:bg-yellow-955/50 dark:text-yellow-400' :
-                          'bg-green-100 text-green-700 dark:bg-green-955 dark:text-green-400'
+                          activeMobileTab === 'admit_card' ? 'bg-green-100 text-green-700 dark:bg-green-955 dark:text-green-400' :
+                          'bg-purple-100 text-purple-700 dark:bg-purple-955 dark:text-purple-400'
                         }`}>
                           {notice.type}
                         </span>
@@ -363,8 +375,8 @@ export default function UpdatesCenterPage() {
           </Link>
         </div>
 
-        {/* 3-Column Updates Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* 4-Column Updates Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Column 1: Notices & Announcements */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
@@ -523,6 +535,55 @@ export default function UpdatesCenterPage() {
               ) : (
                 <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs">
                   {language === 'hi' ? 'कोई सक्रिय प्रवेश पत्र नहीं।' : 'No active admit cards.'}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Column 4: Live Answer Keys Section */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+              <ShieldCheck className="h-4.5 w-4.5 text-purple-500 animate-pulse" /> Answer Keys
+            </h3>
+            
+            <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[1000px] scrollbar-thin">
+              {noticesList.filter(n => n.category === 'answer_key').length > 0 ? (
+                [...noticesList]
+                  .filter(n => n.category === 'answer_key')
+                  .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                  .map(notice => (
+                  <div
+                    key={notice.id}
+                    className="p-4 rounded-2xl bg-slate-55 dark:bg-slate-955/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-955/70 transition flex flex-col gap-2"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-block bg-purple-100 dark:bg-purple-955 border border-purple-300 dark:border-purple-900 text-purple-700 dark:text-purple-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
+                          {notice.type || 'ANSWER KEY'}
+                        </span>
+                        {isNewlyPublished(notice.publishDate) && (
+                          <span className="animate-pulse bg-red-650 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
+                            {t.newBadge}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[8px] text-slate-404 dark:text-slate-500 font-bold whitespace-nowrap">{notice.date}</span>
+                    </div>
+                    <h5 className="font-bold text-xs text-slate-805 dark:text-slate-202 leading-snug">
+                      {notice.url ? (
+                        <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:text-purple-600 dark:hover:text-purple-450 hover:underline flex items-center gap-1.5">
+                          {notice.title}
+                          <ChevronRight className="h-3 w-3 inline shrink-0 animate-pulse text-purple-500" />
+                        </a>
+                      ) : (
+                        notice.title
+                      )}
+                    </h5>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-20 text-slate-404 dark:text-slate-500 text-xs">
+                  {language === 'hi' ? 'कोई सक्रिय उत्तर कुंजी नहीं।' : 'No active answer keys.'}
                 </div>
               )}
             </div>

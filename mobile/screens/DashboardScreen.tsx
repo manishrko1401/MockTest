@@ -182,7 +182,7 @@ export default function DashboardScreen({
   const [showReferredFriends, setShowReferredFriends] = useState(false);
 
   // Form and tab states
-  const [activeNoticeTab, setActiveNoticeTab] = useState<'notice' | 'result' | 'admit_card'>('notice');
+  const [activeNoticeTab, setActiveNoticeTab] = useState<'notice' | 'result' | 'admit_card' | 'answer_key'>('notice');
 
   const [profileName, setProfileName] = useState(currentUser?.name || '');
   const [profileEmail, setProfileEmail] = useState(currentUser?.email || '');
@@ -492,7 +492,7 @@ export default function DashboardScreen({
                 >
                   <View style={styles.categoryCardLeft}>
                     <View style={[styles.categoryIconCircle, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
-                      <GraduationCap color={isDark ? ThemeColors.dark.text : '#2563EB'} size={20} />
+                      <GraduationCap color={isDark ? ThemeColors.dark.text : '#2563EB'} size={24} />
                     </View>
                     <View style={styles.categoryDetails}>
                       <Text style={[styles.categoryTitle, isDark && { color: ThemeColors.dark.text }]}>{category.name}</Text>
@@ -599,6 +599,19 @@ export default function DashboardScreen({
               Admit Cards
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.noticeFilterTab, activeNoticeTab === 'answer_key' && styles.noticeTabAnswerActive]}
+            onPress={() => setActiveNoticeTab('answer_key')}
+          >
+            <Text style={[
+              styles.noticeFilterText,
+              activeNoticeTab === 'answer_key' && styles.noticeTabTextActive,
+              isDark && activeNoticeTab === 'answer_key' && { color: '#60A5FA' },
+              isDark && activeNoticeTab !== 'answer_key' && { color: ThemeColors.dark.textMuted }
+            ]}>
+              Answer Key
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Group Header */}
@@ -606,6 +619,7 @@ export default function DashboardScreen({
           {activeNoticeTab === 'notice' && <Text style={[styles.noticeGroupTitle, isDark && { color: ThemeColors.dark.text }]}>🔔 Live Notices & Advisories</Text>}
           {activeNoticeTab === 'result' && <Text style={[styles.noticeGroupTitle, isDark && { color: ThemeColors.dark.text }]}>🏆 Results & Merit Lists</Text>}
           {activeNoticeTab === 'admit_card' && <Text style={[styles.noticeGroupTitle, isDark && { color: ThemeColors.dark.text }]}>📄 Admit Cards & Call Letters</Text>}
+          {activeNoticeTab === 'answer_key' && <Text style={[styles.noticeGroupTitle, isDark && { color: ThemeColors.dark.text }]}>🔑 Answer Keys & Solutions</Text>}
         </View>
 
         <FlatList
@@ -617,6 +631,7 @@ export default function DashboardScreen({
             let catColor = '#2563EB';
             if (notice.category === 'result') catColor = '#10B981';
             if (notice.category === 'admit_card') catColor = '#F59E0B';
+            if (notice.category === 'answer_key') catColor = '#8B5CF6';
 
             return (
               <View style={[styles.noticeCard, { borderLeftColor: catColor }, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
@@ -1569,6 +1584,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
+  noticeTabAnswerActive: {
+    backgroundColor: '#FFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
   noticeFilterText: {
     fontSize: 11,
     fontWeight: 'bold',
@@ -1901,19 +1926,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
     borderRadius: 12,
-    padding: 14,
+    padding: 16,
     marginBottom: 10,
   },
   categoryCardLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
     flex: 1,
   },
   categoryIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#EFF6FF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1924,14 +1949,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoryTitle: {
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#1F2937',
   },
   categoryMeta: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#6B7280',
-    marginTop: 2,
+    marginTop: 4,
   },
   examSearchContainer: {
     flexDirection: 'row',

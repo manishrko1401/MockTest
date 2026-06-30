@@ -5,12 +5,14 @@ import {
   ActivityIndicator,
   Text,
   StatusBar,
-  BackHandler
+  BackHandler,
+  Alert
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import * as Updates from 'expo-updates';
 import { ApiClient } from './api';
 import AuthScreen from './screens/AuthScreen';
 import DashboardScreen from './screens/DashboardScreen';
@@ -50,6 +52,26 @@ export default function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // Check for OTA Updates in production
+        if (!__DEV__) {
+          try {
+            const update = await Updates.checkForUpdateAsync();
+            if (update.isAvailable) {
+              await Updates.fetchUpdateAsync();
+              Alert.alert(
+                "Update Available",
+                "A new version of the app is available. Restart the app to apply the update?",
+                [
+                  { text: "Later" },
+                  { text: "Restart Now", onPress: async () => await Updates.reloadAsync() }
+                ]
+              );
+            }
+          } catch (updateErr) {
+            console.warn("OTA Update check failed:", updateErr);
+          }
+        }
+
         // Request notifications permissions
         await requestNotificationPermissions();
 
@@ -204,6 +226,8 @@ export default function App() {
               notificationTitle = 'New Exam Result Notice!';
             } else if (notice.category === 'notice') {
               notificationTitle = 'New Notice & Alert!';
+            } else if (notice.category === 'answer_key') {
+              notificationTitle = 'New Answer Key Notice!';
             }
 
             await triggerLocalNotification(

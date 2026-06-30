@@ -10,6 +10,7 @@
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": [
+          "fetch",
           "fetch"
         ]
       }
@@ -29,6 +30,18 @@
     },
     "plugins": [
       "expo-image"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3198adcc-154c-4fb3-93e2-2e1bc64587ac"
+      }
+    },
+    "owner": "leo_2047",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/3198adcc-154c-4fb3-93e2-2e1bc64587ac"
+    }
   }
 }
