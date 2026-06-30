@@ -240,14 +240,30 @@ export default function MobileTestScreen({
           }
         });
 
+        let parsedTimings: number[] = [];
+        if (catalogTest?.sectionalTimings) {
+          if (Array.isArray(catalogTest.sectionalTimings)) {
+            parsedTimings = catalogTest.sectionalTimings.map((t: any) => Number(t));
+          } else if (typeof catalogTest.sectionalTimings === 'string') {
+            try {
+              const parsed = JSON.parse(catalogTest.sectionalTimings);
+              if (Array.isArray(parsed)) {
+                parsedTimings = parsed.map((t: any) => Number(t));
+              }
+            } catch (e) {
+              console.error("Failed to parse sectional timings:", e);
+            }
+          }
+        }
+
         secs = sectionNames.map((name, idx) => ({
           id: `sec_custom_${idx}`,
           name,
           orderIndex: idx,
           positiveMark: posMark,
           negativeMark: negMark,
-          durationSeconds: catalogTest?.hasSectionalTiming && Array.isArray(catalogTest.sectionalTimings)
-            ? (catalogTest.sectionalTimings[idx] ?? 0) * 60
+          durationSeconds: catalogTest?.hasSectionalTiming && parsedTimings.length > idx
+            ? (parsedTimings[idx] ?? 0) * 60
             : undefined,
         }));
 
@@ -409,7 +425,7 @@ export default function MobileTestScreen({
     };
 
     loadExamData();
-  }, [testId, currentUser, examCatalog]);
+  }, [testId]);
 
   // Timer Tick hook
   useEffect(() => {
