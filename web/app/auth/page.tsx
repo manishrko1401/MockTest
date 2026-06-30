@@ -62,6 +62,7 @@ export default function AuthPage() {
       const res = await signup(name, email, mobile.trim(), password, referralCodeInput.trim() || undefined);
       if (res.success) {
         setSuccessMsg(t.authSignupSuccess || 'Account registered successfully! Redirecting...');
+        localStorage.setItem('show_signup_congrats_popup', 'true');
         setTimeout(() => {
           router.push('/');
         }, 1500);
