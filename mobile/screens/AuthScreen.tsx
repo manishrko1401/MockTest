@@ -77,6 +77,10 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
       setError('Please enter your email address.');
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError('Email is incorrect.');
+      return;
+    }
     if (!mobile.trim()) {
       setError('Please enter your mobile number.');
       return;

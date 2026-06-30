@@ -55,7 +55,7 @@ export default function AuthPage() {
         return;
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-        setErrorMsg(language === 'hi' ? 'कृपया एक वैध ईमेल पता दर्ज करें।' : 'Please enter a valid email address.');
+        setErrorMsg(language === 'hi' ? 'ईमेल गलत है।' : 'Email is incorrect.');
         return;
       }
       if (!mobile.trim()) {
