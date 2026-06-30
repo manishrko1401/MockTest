@@ -10,6 +10,8 @@ export interface MockTestItem {
   maxMarks: number;
   isPremium: boolean;
   requiredTier: 'None' | 'Testbook Pass' | 'Testbook Pass Pro';
+  hasSectionalTiming?: boolean;
+  sectionalTimings?: number[]; // minutes per section, e.g. [20, 20, 20]
 }
 
 export interface TestSubSubCategory {
@@ -923,7 +925,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'add-mocktest',
-        data: { categoryId, subCategoryId, subSubCategoryId, id: newId, ...test }
+        data: {
+          categoryId,
+          subCategoryId,
+          subSubCategoryId,
+          id: newId,
+          ...test,
+          hasSectionalTiming: test.hasSectionalTiming ?? false,
+          sectionalTimings: test.sectionalTimings ?? null
+        }
       })
     }).catch(err => console.error("Add mocktest error:", err));
   };

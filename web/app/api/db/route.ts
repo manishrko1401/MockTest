@@ -222,6 +222,8 @@ async function handleBootstrap() {
             isPremium: t.requiredTierName !== 'None',
             requiredTier: t.requiredTierName as 'None' | 'Testbook Pass' | 'Testbook Pass Pro',
             customQuestionsCount: t.customQuestions ? (t.customQuestions as any[]).length : 0,
+            hasSectionalTiming: t.hasSectionalTiming ?? false,
+            sectionalTimings: t.sectionalTimings ?? null,
           }));
           return {
             id: ts.id,
@@ -842,7 +844,7 @@ async function handleDeleteSubSubCategory(data: any) {
 }
 
 async function handleAddMockTest(data: any) {
-  const { categoryId, subCategoryId, subSubCategoryId, id, title, questionsCount, durationMinutes, maxMarks, requiredTier } = data;
+  const { categoryId, subCategoryId, subSubCategoryId, id, title, questionsCount, durationMinutes, maxMarks, requiredTier, hasSectionalTiming, sectionalTimings } = data;
 
   let finalTestSeriesId = subSubCategoryId;
 
@@ -874,6 +876,8 @@ async function handleAddMockTest(data: any) {
       maxMarks,
       requiredTierName: requiredTier,
       passingCutoff: 0.0,
+      hasSectionalTiming: hasSectionalTiming ?? false,
+      sectionalTimings: sectionalTimings ?? undefined,
     },
   });
 

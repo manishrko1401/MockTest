@@ -140,6 +140,8 @@ model MockTest {
   maxMarks            Int                @default(200)
   requiredTierName    String             @default("None")
   customQuestions     Json?
+  hasSectionalTiming  Boolean            @default(false)
+  sectionalTimings    Json?
 
   @@map("mock_tests")
 }

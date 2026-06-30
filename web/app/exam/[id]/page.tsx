@@ -298,7 +298,9 @@ function TcsIonEngine({ testId }: { testId: string }) {
         {/* Dynamic Countdown Clock & Pause button */}
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           <div className="flex items-center gap-1 sm:gap-2 bg-[#1C3D5A] px-2 sm:px-3 py-1 sm:py-1.5 rounded border border-[#2E587A]">
-            <span className="text-gray-300 text-[9px] sm:text-[10px] uppercase hidden xs:inline sm:inline">Time Left:</span>
+            <span className="text-gray-300 text-[9px] sm:text-[10px] uppercase hidden xs:inline sm:inline">
+              {session.hasSectionalTiming ? `${currentSection.name} Time:` : 'Time Left:'}
+            </span>
             <span className="font-mono text-sm sm:text-base font-bold text-yellow-400 tracking-wider">
               {formatTime(timeRemaining)}
             </span>
@@ -430,19 +432,28 @@ function TcsIonEngine({ testId }: { testId: string }) {
         <div className="flex flex-col flex-1 overflow-y-auto relative bg-white pb-20">
           {/* 2. SUBJECTS TABS SWITCHER FOR MOBILE */}
           <div className="flex h-10 border-b border-slate-200 bg-[#E9ECF2] overflow-x-auto shrink-0 scrollbar-none">
-            {session.sections.map((sec, idx) => (
-              <button
-                key={sec.id}
-                onClick={() => switchSection(idx)}
-                className={`flex items-center px-4 font-bold border-r border-slate-200 whitespace-nowrap text-[11px] transition-colors shrink-0 ${
-                  idx === currentSectionIndex
-                    ? 'bg-white text-blue-800 border-t-2 border-t-orange-500 font-extrabold'
-                    : 'text-slate-600 hover:bg-[#DEE3EC]'
-                }`}
-              >
-                {sec.name}
-              </button>
-            ))}
+            {session.sections.map((sec, idx) => {
+              const isActive = idx === currentSectionIndex;
+              const isLocked = session.hasSectionalTiming && !isActive;
+              return (
+                <button
+                  key={sec.id}
+                  onClick={() => !isLocked && switchSection(idx)}
+                  disabled={isLocked}
+                  title={isLocked ? 'Section locked — complete current section first' : undefined}
+                  className={`flex items-center px-4 font-bold border-r border-slate-200 whitespace-nowrap text-[11px] transition-colors shrink-0 ${
+                    isActive
+                      ? 'bg-white text-blue-800 border-t-2 border-t-orange-500 font-extrabold'
+                      : isLocked
+                      ? 'text-slate-400 bg-[#E9ECF2] cursor-not-allowed opacity-50'
+                      : 'text-slate-600 hover:bg-[#DEE3EC] cursor-pointer'
+                  }`}
+                >
+                  {isLocked && <span className="mr-1 text-[9px]">🔒</span>}
+                  {sec.name}
+                </button>
+              );
+            })}
           </div>
 
           {/* 3. QUESTION HEADER BAR */}
@@ -729,19 +740,28 @@ function TcsIonEngine({ testId }: { testId: string }) {
             
             {/* Subject Tabs Switcher */}
             <div className="flex h-10 border-b border-slate-200 bg-[#E9ECF2]">
-              {session.sections.map((sec, idx) => (
-                <button
-                  key={sec.id}
-                  onClick={() => switchSection(idx)}
-                  className={`flex items-center px-4 font-bold border-r border-slate-200 transition-colors ${
-                    idx === currentSectionIndex
-                      ? 'bg-white text-blue-800 border-t-2 border-t-orange-500 font-extrabold'
-                      : 'text-slate-600 hover:bg-[#DEE3EC]'
-                  }`}
-                >
-                  {sec.name}
-                </button>
-              ))}
+              {session.sections.map((sec, idx) => {
+                const isActive = idx === currentSectionIndex;
+                const isLocked = session.hasSectionalTiming && !isActive;
+                return (
+                  <button
+                    key={sec.id}
+                    onClick={() => !isLocked && switchSection(idx)}
+                    disabled={isLocked}
+                    title={isLocked ? 'Section locked — complete current section first' : undefined}
+                    className={`flex items-center px-4 font-bold border-r border-slate-200 transition-colors ${
+                      isActive
+                        ? 'bg-white text-blue-800 border-t-2 border-t-orange-500 font-extrabold'
+                        : isLocked
+                        ? 'text-slate-400 bg-[#E9ECF2] cursor-not-allowed opacity-50'
+                        : 'text-slate-600 hover:bg-[#DEE3EC] cursor-pointer'
+                    }`}
+                  >
+                    {isLocked && <span className="mr-1 text-[9px]">🔒</span>}
+                    {sec.name}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Question Header Bar */}

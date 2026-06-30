@@ -343,6 +343,8 @@ export default function AdminAnalytics() {
   const [newMockDuration, setNewMockDuration] = useState(60);
   const [newMockMaxMarks, setNewMockMaxMarks] = useState(200);
   const [newMockRequiredTier, setNewMockRequiredTier] = useState<'None' | 'Testbook Pass' | 'Testbook Pass Pro'>('None');
+  const [newMockHasSectionalTiming, setNewMockHasSectionalTiming] = useState(false);
+  const [newMockSectionalTimingsStr, setNewMockSectionalTimingsStr] = useState(''); // comma-separated minutes
   const [editReferralsCount, setEditReferralsCount] = useState<number>(0);
   const [editRole, setEditRole] = useState<'STUDENT' | 'ADMIN' | 'CONTENT_CREATOR'>('STUDENT');
   const [editTier, setEditTier] = useState<'None' | 'Testbook Pass' | 'Testbook Pass Pro'>('None');
@@ -2775,16 +2777,27 @@ export default function AdminAnalytics() {
                       alert('Please select category, subcategory, sub-subcategory and enter a test title.');
                       return;
                     }
+                    // Parse sectional timings
+                    let sectionalTimings: number[] | undefined = undefined;
+                    let finalDuration = Number(newMockDuration);
+                    if (newMockHasSectionalTiming && newMockSectionalTimingsStr.trim()) {
+                      sectionalTimings = newMockSectionalTimingsStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
+                      finalDuration = sectionalTimings.reduce((a, b) => a + b, 0);
+                    }
                     addMockTest(newMockCategoryParent, newMockSubCategoryParent, newMockSubSubCategoryParent, {
                       title: newMockTitle.trim(),
                       questionsCount: Number(newMockQsCount),
-                      durationMinutes: Number(newMockDuration),
+                      durationMinutes: finalDuration,
                       maxMarks: Number(newMockMaxMarks),
                       isPremium: newMockRequiredTier !== 'None',
-                      requiredTier: newMockRequiredTier
+                      requiredTier: newMockRequiredTier,
+                      hasSectionalTiming: newMockHasSectionalTiming,
+                      sectionalTimings: newMockHasSectionalTiming ? sectionalTimings : undefined
                     });
                     setNewMockTitle('');
                     setNewMockSubSubCategoryParent('');
+                    setNewMockHasSectionalTiming(false);
+                    setNewMockSectionalTimingsStr('');
                     showToast('Mock test created successfully!');
                   }}
                   className="space-y-4"
@@ -2904,6 +2917,44 @@ export default function AdminAnalytics() {
                     </select>
                   </div>
 
+                  {/* Sectional Timing Toggle */}
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newMockHasSectionalTiming}
+                        onChange={(e) => {
+                          setNewMockHasSectionalTiming(e.target.checked);
+                          if (!e.target.checked) setNewMockSectionalTimingsStr('');
+                        }}
+                        className="w-4 h-4 accent-blue-600 cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Enable Sectional Timing</span>
+                      <span className="text-[9px] font-normal text-slate-400">(Lock users per section)</span>
+                    </label>
+                    {newMockHasSectionalTiming && (
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Section Durations (minutes, comma-separated)</label>
+                        <input
+                          type="text"
+                          value={newMockSectionalTimingsStr}
+                          onChange={(e) => setNewMockSectionalTimingsStr(e.target.value)}
+                          placeholder="e.g. 20, 20, 20"
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                        />
+                        {newMockSectionalTimingsStr.trim() && (() => {
+                          const timings = newMockSectionalTimingsStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
+                          const total = timings.reduce((a, b) => a + b, 0);
+                          return total > 0 ? (
+                            <p className="text-[9px] text-blue-500 mt-1">
+                              {timings.length} section(s) • Total: <strong>{total} min</strong> (overrides Duration field)
+                            </p>
+                          ) : null;
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
                   <button
                     type="submit"
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
@@ -2955,7 +3006,12 @@ export default function AdminAnalytics() {
                                       </span>
                                     )}
                                   </td>
-                                  <td className="py-3 px-4 text-slate-400 font-semibold">{test.questionsCount} Qs • {test.durationMinutes}m • {test.maxMarks}M</td>
+                                  <td className="py-3 px-4 text-slate-400 font-semibold">
+                                    <span>{test.questionsCount} Qs • {test.durationMinutes}m • {test.maxMarks}M</span>
+                                    {(test as any).hasSectionalTiming && (
+                                      <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded text-[8px] bg-purple-950/60 text-purple-400 border border-purple-800 font-bold uppercase tracking-wider">Sectional</span>
+                                    )}
+                                  </td>
                                   <td className="py-3 px-4">
                                     <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold ${
                                       test.requiredTier === 'None'

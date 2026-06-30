@@ -60,6 +60,7 @@ interface MobileSection {
   orderIndex: number;
   positiveMark: number;
   negativeMark: number;
+  durationSeconds?: number; // Set when sectional timing is enabled
 }
 
 const instructionTexts = {
@@ -100,6 +101,7 @@ export default function MobileTestScreen({
   const [loading, setLoading] = useState(true);
   const [loadingText, setLoadingText] = useState('Syncing sitting session...');
   const [totalDuration, setTotalDuration] = useState(3600);
+  const [hasSectionalTiming, setHasSectionalTiming] = useState(false);
   const [questions, setQuestions] = useState<MobileQuestion[]>([]);
   const [sections, setSections] = useState<MobileSection[]>([]);
   const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
@@ -217,6 +219,9 @@ export default function MobileTestScreen({
       }
 
       setTotalDuration(durationSeconds);
+      if (catalogTest?.hasSectionalTiming) {
+        setHasSectionalTiming(true);
+      }
 
       const testTitle = testId.includes('ssc') ? 'SSC' : testId.includes('rrb') ? 'RRB' : 'Mock';
 
@@ -240,7 +245,10 @@ export default function MobileTestScreen({
           name,
           orderIndex: idx,
           positiveMark: posMark,
-          negativeMark: negMark
+          negativeMark: negMark,
+          durationSeconds: catalogTest?.hasSectionalTiming && Array.isArray(catalogTest.sectionalTimings)
+            ? (catalogTest.sectionalTimings[idx] ?? 0) * 60
+            : undefined,
         }));
 
         const sectionCounters: Record<string, number> = {};
@@ -378,7 +386,12 @@ export default function MobileTestScreen({
           });
         }
       } else {
-        setTimeLeft(durationSeconds);
+        // For sectional timing: start with section 0's duration; else full test duration
+        if (catalogTest?.hasSectionalTiming && secs.length > 0 && secs[0].durationSeconds) {
+          setTimeLeft(secs[0].durationSeconds);
+        } else {
+          setTimeLeft(durationSeconds);
+        }
       }
 
       // Mark the starting question as visited
@@ -406,8 +419,26 @@ export default function MobileTestScreen({
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          handleExamSubmit(true); // Auto-submit when time expires
-          return 0;
+          if (hasSectionalTiming) {
+            // Auto-advance to next section on section timer expiry
+            setCurrentSectionIdx(prevSecIdx => {
+              const nextSecIdx = prevSecIdx + 1;
+              if (nextSecIdx < sections.length) {
+                setCurrentQuestionIdx(0);
+                const nextSec = sections[nextSecIdx];
+                const nextDuration = nextSec?.durationSeconds ?? totalDuration;
+                setTimeout(() => setTimeLeft(nextDuration), 0);
+                return nextSecIdx;
+              } else {
+                handleExamSubmit(true);
+                return prevSecIdx;
+              }
+            });
+            return 0;
+          } else {
+            handleExamSubmit(true);
+            return 0;
+          }
         }
         return prev - 1;
       });
@@ -429,7 +460,7 @@ export default function MobileTestScreen({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [loading, isTimerRunning]);
+  }, [loading, isTimerRunning, hasSectionalTiming, sections, totalDuration]);
 
   // Trigger auto-save every 15 seconds to sync state with shared database
   useEffect(() => {
@@ -531,8 +562,9 @@ export default function MobileTestScreen({
       }
       setCurrentQuestionIdx(currentQuestionIdx + 1);
     } else {
-      // End of section, move to next section if available
-      if (currentSectionIdx < sections.length - 1) {
+      // End of section
+      if (!hasSectionalTiming && currentSectionIdx < sections.length - 1) {
+        // Only auto-advance sections when not in sectional timing mode
         const nextSec = sections[currentSectionIdx + 1];
         const nextSecQs = questions.filter(q => q.sectionId === nextSec.id).sort((a,b)=>a.orderIndex - b.orderIndex);
         if (nextSecQs.length > 0 && updatedResponses[nextSecQs[0].id].state === 1) {
@@ -543,8 +575,10 @@ export default function MobileTestScreen({
       } else {
         setModalConfig({
           visible: true,
-          title: 'Section Complete',
-          message: 'You are on the last question. Open the palette drawer to submit or review.',
+          title: hasSectionalTiming ? 'Section Complete' : 'Section Complete',
+          message: hasSectionalTiming
+            ? 'You have reached the end of this section. Wait for the section timer to expire to move to the next section.'
+            : 'You are on the last question. Open the palette drawer to submit or review.',
           buttons: [
             {
               text: 'OK',
@@ -594,13 +628,15 @@ export default function MobileTestScreen({
         updatedResponses[nextQ.id].state = 2;
       }
       setCurrentQuestionIdx(currentQuestionIdx + 1);
-    } else if (currentSectionIdx < sections.length - 1) {
+    } else if (!hasSectionalTiming && currentSectionIdx < sections.length - 1) {
       setCurrentSectionIdx(currentSectionIdx + 1);
       setCurrentQuestionIdx(0);
     }
   };
 
   const handleJumpToQuestion = (secIdx: number, qIdx: number) => {
+    // Block cross-section navigation in sectional timing mode
+    if (hasSectionalTiming && secIdx !== currentSectionIdx) return;
     const targetSection = sections[secIdx];
     const targetQs = questions
       .filter((q) => q.sectionId === targetSection.id)
@@ -1024,27 +1060,34 @@ export default function MobileTestScreen({
         style={[styles.sectionsRow, isDark && { backgroundColor: ThemeColors.dark.card, borderBottomColor: ThemeColors.dark.border }]}
         contentContainerStyle={styles.sectionsRowContent}
       >
-        {sections.map((sec, idx) => (
-          <TouchableOpacity
-            key={sec.id}
-            style={[
-              styles.sectionTab,
-              currentSectionIdx === idx && styles.sectionTabActive,
-            ]}
-            onPress={() => {
-              setCurrentSectionIdx(idx);
-              setCurrentQuestionIdx(0);
-            }}
-          >
-            <Text style={[
-              styles.sectionTabText,
-              isDark && { color: ThemeColors.dark.textMuted },
-              currentSectionIdx === idx && styles.sectionTabTextActive,
-            ]}>
-              {sec.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {sections.map((sec, idx) => {
+          const isActiveSec = currentSectionIdx === idx;
+          const isLocked = hasSectionalTiming && !isActiveSec;
+          return (
+            <TouchableOpacity
+              key={sec.id}
+              style={[
+                styles.sectionTab,
+                isActiveSec && styles.sectionTabActive,
+                isLocked && { opacity: 0.45 },
+              ]}
+              onPress={() => {
+                if (isLocked) return;
+                setCurrentSectionIdx(idx);
+                setCurrentQuestionIdx(0);
+              }}
+              disabled={isLocked}
+            >
+              <Text style={[
+                styles.sectionTabText,
+                isDark && { color: ThemeColors.dark.textMuted },
+                isActiveSec && styles.sectionTabTextActive,
+              ]}>
+                {isLocked ? '🔒 ' : ''}{sec.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
 
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Stats Bar ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
@@ -1054,7 +1097,9 @@ export default function MobileTestScreen({
         </Text>
         <View style={styles.statsRight}>
           {minutesLeft <= 15 && (
-            <Text style={[styles.statsWarning, { marginRight: rs(8) }]}>Last {minutesLeft} Mins</Text>
+            <Text style={[styles.statsWarning, { marginRight: rs(8) }]}>
+              Last {minutesLeft} Mins{hasSectionalTiming ? ' (Section)' : ''}
+            </Text>
           )}
           {/* Language switcher */}
           <View style={[styles.langToggleRow, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>

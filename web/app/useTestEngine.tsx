@@ -39,6 +39,7 @@ export interface Section {
   orderIndex: number;
   positiveMark: number;
   negativeMark: number;
+  durationSeconds?: number; // Set when sectional timing is enabled
 }
 
 export interface ActiveSession {
@@ -48,6 +49,7 @@ export interface ActiveSession {
   totalDurationSeconds: number;
   sections: Section[];
   questions: Question[];
+  hasSectionalTiming?: boolean; // When true, lock users per section with per-section countdown
 }
 
 /**
@@ -136,7 +138,10 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
     case 'INIT_SESSION': {
       const { session, maxViolations = 3, defaultLanguage = 'en', resumeData } = action.payload;
       let initialResponses: Record<string, QuestionResponse> = {};
-      let initialTimeRemaining = session.totalDurationSeconds;
+      // For sectional timing: start with Section 0's duration; otherwise full test duration
+      let initialTimeRemaining = session.hasSectionalTiming && session.sections[0]?.durationSeconds
+        ? session.sections[0].durationSeconds
+        : session.totalDurationSeconds;
       let initialViolationsCount = 0;
       let initialSectionIndex = 0;
       let initialQuestionIndex = 0;
@@ -213,14 +218,41 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         };
       }
 
-      // Automatically submit when timer hits zero
+      // When timer hits zero:
       if (nextTimeRemaining === 0) {
+        // Sectional timing: auto-advance to next section or submit if last
+        if (session.hasSectionalTiming) {
+          const nextSectionIndex = state.currentSectionIndex + 1;
+          if (nextSectionIndex < session.sections.length) {
+            // Advance to next section, reset timer to next section's duration
+            const nextSection = session.sections[nextSectionIndex];
+            const nextSectionDuration = nextSection.durationSeconds ?? session.totalDurationSeconds;
+            const nextSectionQuestions = getSectionQuestions(session, nextSectionIndex);
+            // Mark first question of next section as visited
+            if (nextSectionQuestions.length > 0) {
+              const firstQ = nextSectionQuestions[0];
+              if (updatedResponses[firstQ.id]?.state === 1) {
+                updatedResponses[firstQ.id] = { ...updatedResponses[firstQ.id], state: 2 };
+              }
+            }
+            return {
+              ...state,
+              currentSectionIndex: nextSectionIndex,
+              currentQuestionIndex: 0,
+              timeRemaining: nextSectionDuration,
+              responses: updatedResponses,
+            };
+          } else {
+            // Last section done, submit
+            return engineReducer(
+              { ...state, timeRemaining: 0, responses: updatedResponses },
+              { type: 'SUBMIT_EXAM' }
+            );
+          }
+        }
+        // Non-sectional: submit on global timer expiry
         return engineReducer(
-          {
-            ...state,
-            timeRemaining: 0,
-            responses: updatedResponses,
-          },
+          { ...state, timeRemaining: 0, responses: updatedResponses },
           { type: 'SUBMIT_EXAM' }
         );
       }
@@ -379,6 +411,12 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
     case 'JUMP_TO_QUESTION': {
       const { sectionIndex, questionIndex } = action.payload;
+
+      // Block cross-section navigation if sectional timing is active
+      if (session.hasSectionalTiming && sectionIndex !== state.currentSectionIndex) {
+        return state;
+      }
+
       const targetQuestions = getSectionQuestions(session, sectionIndex);
       const targetQuestion = targetQuestions[questionIndex];
       if (!targetQuestion) return state;
@@ -417,6 +455,8 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
     case 'SWITCH_SECTION': {
       const { sectionIndex } = action.payload;
+      // Block section switching if sectional timing is active
+      if (session.hasSectionalTiming) return state;
       return engineReducer(state, {
         type: 'JUMP_TO_QUESTION',
         payload: { sectionIndex, questionIndex: 0 },

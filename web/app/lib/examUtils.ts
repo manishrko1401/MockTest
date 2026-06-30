@@ -40,6 +40,8 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
   let title = "Government Prep Mock Test Simulator";
   let duration = 3600; // 60 mins
   let catalogTest: MockTestItem | null = null;
+  let hasSectionalTiming = false;
+  let sectionalTimingsMins: number[] = [];
 
   if (examCatalog) {
     for (const cat of examCatalog) {
@@ -68,6 +70,8 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
   if (catalogTest) {
     title = catalogTest.title;
     duration = catalogTest.durationMinutes * 60;
+    hasSectionalTiming = catalogTest.hasSectionalTiming ?? false;
+    sectionalTimingsMins = (catalogTest.sectionalTimings as number[] | undefined) ?? [];
   }
 
   let sections = [
@@ -97,7 +101,8 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
       name,
       orderIndex: idx,
       positiveMark,
-      negativeMark
+      negativeMark,
+      durationSeconds: hasSectionalTiming && sectionalTimingsMins[idx] ? sectionalTimingsMins[idx] * 60 : undefined,
     }));
 
     const sectionCounters: Record<string, number> = {};
@@ -145,9 +150,12 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
         : "SSC MTS Full-Length Practice Test";
       duration = 3600;
       sections = [
-        { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 },
-        { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 2, negativeMark: 0.5 },
-        { id: "sec_english", name: "English Comprehension", orderIndex: 2, positiveMark: 2, negativeMark: 0.5 }
+        { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 0, positiveMark: 2, negativeMark: 0.5,
+          durationSeconds: hasSectionalTiming && sectionalTimingsMins[0] ? sectionalTimingsMins[0] * 60 : undefined },
+        { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 2, negativeMark: 0.5,
+          durationSeconds: hasSectionalTiming && sectionalTimingsMins[1] ? sectionalTimingsMins[1] * 60 : undefined },
+        { id: "sec_english", name: "English Comprehension", orderIndex: 2, positiveMark: 2, negativeMark: 0.5,
+          durationSeconds: hasSectionalTiming && sectionalTimingsMins[2] ? sectionalTimingsMins[2] * 60 : undefined },
       ];
       questions = [
         {
@@ -183,9 +191,12 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
       title = "RRB NTPC CBT-1 Mock Assessment Paper";
       duration = 5400; // 90 minutes
       sections = [
-        { id: "sec_math", name: "Mathematics", orderIndex: 0, positiveMark: 1, negativeMark: 0.33 },
-        { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 1, negativeMark: 0.33 },
-        { id: "sec_general", name: "General Awareness", orderIndex: 2, positiveMark: 1, negativeMark: 0.33 }
+        { id: "sec_math", name: "Mathematics", orderIndex: 0, positiveMark: 1, negativeMark: 0.33,
+          durationSeconds: hasSectionalTiming && sectionalTimingsMins[0] ? sectionalTimingsMins[0] * 60 : undefined },
+        { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 1, negativeMark: 0.33,
+          durationSeconds: hasSectionalTiming && sectionalTimingsMins[1] ? sectionalTimingsMins[1] * 60 : undefined },
+        { id: "sec_general", name: "General Awareness", orderIndex: 2, positiveMark: 1, negativeMark: 0.33,
+          durationSeconds: hasSectionalTiming && sectionalTimingsMins[2] ? sectionalTimingsMins[2] * 60 : undefined },
       ];
       questions = [
         {
@@ -207,7 +218,8 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
       title = "Mock Test Assessment Series - General Mock Test";
       duration = 3600;
       sections = [
-        { id: "sec_paper1", name: "Aptitude & General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 }
+        { id: "sec_paper1", name: "Aptitude & General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5,
+          durationSeconds: hasSectionalTiming && sectionalTimingsMins[0] ? sectionalTimingsMins[0] * 60 : undefined },
       ];
       questions = [
         {
@@ -234,6 +246,7 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
     testTitle: title,
     totalDurationSeconds: duration,
     sections,
-    questions
+    questions,
+    hasSectionalTiming,
   };
 };
