@@ -115,3 +115,22 @@ body {
   scrollbar-width: none;  /* Firefox */
 }
 
+/* Reading Comprehension Container Style */
+.comprehension-container {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.dark .comprehension-container {
+  background-color: #0f172a;
+  border-color: #1e293b;
+  border-left-color: #3b82f6;
+  color: #e2e8f0;
+}
+
+

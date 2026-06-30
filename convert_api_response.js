@@ -202,8 +202,24 @@ try {
       // 1. Question Text
       const rawTextEn = q.en ? (q.en.value || "") : "";
       const rawTextHi = q.hn ? (q.hn.value || "") : "";
-      const cleanTextEn = cleanHtml(rawTextEn);
-      const cleanTextHi = cleanHtml(rawTextHi);
+      
+      let cleanTextEn = cleanHtml(rawTextEn);
+      let cleanTextHi = cleanHtml(rawTextHi);
+
+      // Prepend comprehension passages if present
+      if (q.en && q.en.comp && q.en.comp.trim()) {
+        const cleanCompEn = cleanHtml(q.en.comp.trim());
+        if (cleanCompEn) {
+          cleanTextEn = `<div class="comprehension-container">${cleanCompEn}</div>` + cleanTextEn;
+        }
+      }
+      if (q.hn && q.hn.comp && q.hn.comp.trim()) {
+        const cleanCompHi = cleanHtml(q.hn.comp.trim());
+        if (cleanCompHi) {
+          cleanTextHi = `<div class="comprehension-container">${cleanCompHi}</div>` + cleanTextHi;
+        }
+      }
+
       
       // Extract image URL from question HTML if present (starts with // or http/https)
       let imageUrlEn = "";
