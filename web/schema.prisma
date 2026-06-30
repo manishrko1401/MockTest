@@ -91,6 +91,7 @@ model Category {
   name              String             @unique
   exams             Exam[]
   createdAt         DateTime           @default(now())
+  orderIndex        Int                @default(0)
 
   @@map("categories")
 }
@@ -103,6 +104,7 @@ model Exam {
   name              String
   testSeries        TestSeries[]
   createdAt         DateTime           @default(now())
+  orderIndex        Int                @default(0)
 
   @@map("exams")
 }
@@ -117,6 +119,7 @@ model TestSeries {
   mockTests         MockTest[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  orderIndex        Int                @default(0)
 
   @@map("test_series")
 }
@@ -142,6 +145,7 @@ model MockTest {
   customQuestions     Json?
   hasSectionalTiming  Boolean            @default(false)
   sectionalTimings    Json?
+  orderIndex          Int                @default(0)
 
   @@map("mock_tests")
 }

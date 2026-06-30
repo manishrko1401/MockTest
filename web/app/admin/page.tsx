@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 
 // ============================================================================
@@ -288,6 +288,10 @@ export default function AdminAnalytics() {
     addMockTest,
     editMockTestTitle,
     deleteMockTest,
+    reorderCategories,
+    reorderSubCategories,
+    reorderSubSubCategories,
+    reorderMockTests,
     reportedQuestionsList,
     deleteReportedQuestion
   } = useAuth();
@@ -2546,6 +2550,38 @@ export default function AdminAnalytics() {
                               ) : (
                                 <>
                                   <button
+                                    disabled={examCatalog.indexOf(cat) === 0}
+                                    onClick={() => {
+                                      const idx = examCatalog.indexOf(cat);
+                                      if (idx > 0) {
+                                        const newCatalog = [...examCatalog];
+                                        [newCatalog[idx], newCatalog[idx - 1]] = [newCatalog[idx - 1], newCatalog[idx]];
+                                        reorderCategories(newCatalog);
+                                        showToast('Category moved up successfully.');
+                                      }
+                                    }}
+                                    className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                    title="Move Up"
+                                  >
+                                    <ArrowUp className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    disabled={examCatalog.indexOf(cat) === examCatalog.length - 1}
+                                    onClick={() => {
+                                      const idx = examCatalog.indexOf(cat);
+                                      if (idx < examCatalog.length - 1) {
+                                        const newCatalog = [...examCatalog];
+                                        [newCatalog[idx], newCatalog[idx + 1]] = [newCatalog[idx + 1], newCatalog[idx]];
+                                        reorderCategories(newCatalog);
+                                        showToast('Category moved down successfully.');
+                                      }
+                                    }}
+                                    className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                    title="Move Down"
+                                  >
+                                    <ArrowDown className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
                                     onClick={() => {
                                       setEditingCategoryId(cat.id);
                                       setEditingCategoryName(cat.name);
@@ -2698,6 +2734,38 @@ export default function AdminAnalytics() {
                                   </>
                                 ) : (
                                   <>
+                                    <button
+                                      disabled={cat.subCategories.indexOf(sub) === 0}
+                                      onClick={() => {
+                                        const idx = cat.subCategories.indexOf(sub);
+                                        if (idx > 0) {
+                                          const newSubs = [...cat.subCategories];
+                                          [newSubs[idx], newSubs[idx - 1]] = [newSubs[idx - 1], newSubs[idx]];
+                                          reorderSubCategories(cat.id, newSubs);
+                                          showToast('Subcategory moved up successfully.');
+                                        }
+                                      }}
+                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                      title="Move Up"
+                                    >
+                                      <ArrowUp className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      disabled={cat.subCategories.indexOf(sub) === cat.subCategories.length - 1}
+                                      onClick={() => {
+                                        const idx = cat.subCategories.indexOf(sub);
+                                        if (idx < cat.subCategories.length - 1) {
+                                          const newSubs = [...cat.subCategories];
+                                          [newSubs[idx], newSubs[idx + 1]] = [newSubs[idx + 1], newSubs[idx]];
+                                          reorderSubCategories(cat.id, newSubs);
+                                          showToast('Subcategory moved down successfully.');
+                                        }
+                                      }}
+                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                      title="Move Down"
+                                    >
+                                      <ArrowDown className="w-3.5 h-3.5" />
+                                    </button>
                                     <button
                                       onClick={() => {
                                         setEditingSubCategoryId(sub.id);
@@ -2876,6 +2944,38 @@ export default function AdminAnalytics() {
                                     </>
                                   ) : (
                                     <>
+                                      <button
+                                        disabled={(sub.subSubCategories || []).indexOf(subsub) === 0}
+                                        onClick={() => {
+                                          const idx = (sub.subSubCategories || []).indexOf(subsub);
+                                          if (idx > 0) {
+                                            const newSubSubs = [...(sub.subSubCategories || [])];
+                                            [newSubSubs[idx], newSubSubs[idx - 1]] = [newSubSubs[idx - 1], newSubSubs[idx]];
+                                            reorderSubSubCategories(cat.id, sub.id, newSubSubs);
+                                            showToast('Sub-subcategory moved up successfully.');
+                                          }
+                                        }}
+                                        className="text-slate-555 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                        title="Move Up"
+                                      >
+                                        <ArrowUp className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        disabled={(sub.subSubCategories || []).indexOf(subsub) === (sub.subSubCategories || []).length - 1}
+                                        onClick={() => {
+                                          const idx = (sub.subSubCategories || []).indexOf(subsub);
+                                          if (idx < (sub.subSubCategories || []).length - 1) {
+                                            const newSubSubs = [...(sub.subSubCategories || [])];
+                                            [newSubSubs[idx], newSubSubs[idx + 1]] = [newSubSubs[idx + 1], newSubSubs[idx]];
+                                            reorderSubSubCategories(cat.id, sub.id, newSubSubs);
+                                            showToast('Sub-subcategory moved down successfully.');
+                                          }
+                                        }}
+                                        className="text-slate-555 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                        title="Move Down"
+                                      >
+                                        <ArrowDown className="w-3.5 h-3.5" />
+                                      </button>
                                       <button
                                         onClick={() => {
                                           setEditingSubSubCategoryId(subsub.id);
@@ -3211,6 +3311,38 @@ export default function AdminAnalytics() {
                                             </>
                                           ) : (
                                             <>
+                                              <button
+                                                disabled={subsub.tests.indexOf(test) === 0}
+                                                onClick={() => {
+                                                  const idx = subsub.tests.indexOf(test);
+                                                  if (idx > 0) {
+                                                    const newTests = [...subsub.tests];
+                                                    [newTests[idx], newTests[idx - 1]] = [newTests[idx - 1], newTests[idx]];
+                                                    reorderMockTests(cat.id, sub.id, subsub.id, newTests);
+                                                    showToast('Mock test moved up successfully.');
+                                                  }
+                                                }}
+                                                className="text-slate-555 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                                title="Move Up"
+                                              >
+                                                <ArrowUp className="w-3.5 h-3.5" />
+                                              </button>
+                                              <button
+                                                disabled={subsub.tests.indexOf(test) === subsub.tests.length - 1}
+                                                onClick={() => {
+                                                  const idx = subsub.tests.indexOf(test);
+                                                  if (idx < subsub.tests.length - 1) {
+                                                    const newTests = [...subsub.tests];
+                                                    [newTests[idx], newTests[idx + 1]] = [newTests[idx + 1], newTests[idx]];
+                                                    reorderMockTests(cat.id, sub.id, subsub.id, newTests);
+                                                    showToast('Mock test moved down successfully.');
+                                                  }
+                                                }}
+                                                className="text-slate-555 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                                title="Move Down"
+                                              >
+                                                <ArrowDown className="w-3.5 h-3.5" />
+                                              </button>
                                               <button
                                                 onClick={() => {
                                                   setEditingMockTestId(test.id);

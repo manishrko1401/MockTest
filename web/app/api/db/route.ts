@@ -77,6 +77,14 @@ export async function POST(request: Request) {
         return await handleSaveCustomQuestions(data);
       case 'get-custom-questions':
         return await handleGetCustomQuestions(data);
+      case 'reorder-categories':
+        return await handleReorderCategories(data);
+      case 'reorder-subcategories':
+        return await handleReorderSubCategories(data);
+      case 'reorder-subsubcategories':
+        return await handleReorderSubSubCategories(data);
+      case 'reorder-mocktests':
+        return await handleReorderMockTests(data);
       case 'report-question':
         return await handleReportQuestion(data);
       case 'delete-reported-question':
@@ -198,14 +206,23 @@ async function handleBootstrap() {
 
   // Fetch Exam Catalog
   const categories = await prisma.category.findMany({
+    orderBy: {
+      orderIndex: 'asc',
+    },
     include: {
       exams: {
+        orderBy: {
+          orderIndex: 'asc',
+        },
         include: {
           testSeries: {
+            orderBy: {
+              orderIndex: 'asc',
+            },
             include: {
               mockTests: {
                 orderBy: {
-                  title: 'asc',
+                  orderIndex: 'asc',
                 },
               },
             },
@@ -953,6 +970,50 @@ async function handleEditMockTestTitle(data: any) {
     data: { title },
   });
 
+  return NextResponse.json({ success: true });
+}
+
+async function handleReorderCategories(data: any) {
+  const { orderedIds } = data;
+  for (let i = 0; i < orderedIds.length; i++) {
+    await prisma.category.update({
+      where: { id: orderedIds[i] },
+      data: { orderIndex: i },
+    });
+  }
+  return NextResponse.json({ success: true });
+}
+
+async function handleReorderSubCategories(data: any) {
+  const { orderedIds } = data;
+  for (let i = 0; i < orderedIds.length; i++) {
+    await prisma.exam.update({
+      where: { id: orderedIds[i] },
+      data: { orderIndex: i },
+    });
+  }
+  return NextResponse.json({ success: true });
+}
+
+async function handleReorderSubSubCategories(data: any) {
+  const { orderedIds } = data;
+  for (let i = 0; i < orderedIds.length; i++) {
+    await prisma.testSeries.update({
+      where: { id: orderedIds[i] },
+      data: { orderIndex: i },
+    });
+  }
+  return NextResponse.json({ success: true });
+}
+
+async function handleReorderMockTests(data: any) {
+  const { orderedIds } = data;
+  for (let i = 0; i < orderedIds.length; i++) {
+    await prisma.mockTest.update({
+      where: { id: orderedIds[i] },
+      data: { orderIndex: i },
+    });
+  }
   return NextResponse.json({ success: true });
 }
 

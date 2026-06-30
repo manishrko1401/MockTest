@@ -173,6 +173,10 @@ interface AuthContextType {
   addMockTest: (categoryId: string, subCategoryId: string, subSubCategoryId: string, test: Omit<MockTestItem, 'id'>) => void;
   editMockTestTitle: (categoryId: string, subCategoryId: string, subSubCategoryId: string, testId: string, title: string) => void;
   deleteMockTest: (categoryId: string, subCategoryId: string, testId: string) => void;
+  reorderCategories: (orderedCategories: TestCategory[]) => void;
+  reorderSubCategories: (categoryId: string, orderedSubCategories: TestSubCategory[]) => void;
+  reorderSubSubCategories: (categoryId: string, subCategoryId: string, orderedSubSubCategories: TestSubSubCategory[]) => void;
+  reorderMockTests: (categoryId: string, subCategoryId: string, subSubCategoryId: string, orderedTests: MockTestItem[]) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -1083,6 +1087,121 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).catch(err => console.error("Edit mocktest title error:", err));
   };
 
+  const reorderCategories = (orderedCategories: TestCategory[]) => {
+    setExamCatalog(orderedCategories);
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'reorder-categories',
+        data: {
+          orderedIds: orderedCategories.map(c => c.id)
+        }
+      })
+    }).catch(err => console.error("Reorder categories error:", err));
+  };
+
+  const reorderSubCategories = (categoryId: string, orderedSubCategories: TestSubCategory[]) => {
+    const updated = examCatalog.map(c => {
+      if (c.id === categoryId) {
+        return {
+          ...c,
+          subCategories: orderedSubCategories
+        };
+      }
+      return c;
+    });
+    setExamCatalog(updated);
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'reorder-subcategories',
+        data: {
+          orderedIds: orderedSubCategories.map(s => s.id)
+        }
+      })
+    }).catch(err => console.error("Reorder subcategories error:", err));
+  };
+
+  const reorderSubSubCategories = (categoryId: string, subCategoryId: string, orderedSubSubCategories: TestSubSubCategory[]) => {
+    const updated = examCatalog.map(c => {
+      if (c.id === categoryId) {
+        return {
+          ...c,
+          subCategories: c.subCategories.map(s => {
+            if (s.id === subCategoryId) {
+              return {
+                ...s,
+                subSubCategories: orderedSubSubCategories
+              };
+            }
+            return s;
+          })
+        };
+      }
+      return c;
+    });
+    setExamCatalog(updated);
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'reorder-subsubcategories',
+        data: {
+          orderedIds: orderedSubSubCategories.map(ss => ss.id)
+        }
+      })
+    }).catch(err => console.error("Reorder sub-subcategories error:", err));
+  };
+
+  const reorderMockTests = (categoryId: string, subCategoryId: string, subSubCategoryId: string, orderedTests: MockTestItem[]) => {
+    const updated = examCatalog.map(c => {
+      if (c.id === categoryId) {
+        return {
+          ...c,
+          subCategories: c.subCategories.map(s => {
+            if (s.id === subCategoryId) {
+              return {
+                ...s,
+                subSubCategories: (s.subSubCategories || []).map(ss => {
+                  if (ss.id === subSubCategoryId) {
+                    return {
+                      ...ss,
+                      tests: orderedTests
+                    };
+                  }
+                  return ss;
+                }),
+                tests: s.tests ? s.tests.map(t => {
+                  const matchingNew = orderedTests.find(nt => nt.id === t.id);
+                  return matchingNew || t;
+                }).sort((a, b) => orderedTests.findIndex(ot => ot.id === a.id) - orderedTests.findIndex(ot => ot.id === b.id)) : []
+              };
+            }
+            return s;
+          })
+        };
+      }
+      return c;
+    });
+    setExamCatalog(updated);
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'reorder-mocktests',
+        data: {
+          orderedIds: orderedTests.map(t => t.id)
+        }
+      })
+    }).catch(err => console.error("Reorder mocktests error:", err));
+  };
+
   const setLanguage = (lang: 'en' | 'hi') => {
     setLanguageState(lang);
     document.cookie = "tb_lang=" + lang + ";path=/;max-age=31536000";
@@ -1568,6 +1687,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addMockTest,
         editMockTestTitle,
         deleteMockTest,
+        reorderCategories,
+        reorderSubCategories,
+        reorderSubSubCategories,
+        reorderMockTests,
         reportedQuestionsList,
         reportQuestion,
         deleteReportedQuestion
