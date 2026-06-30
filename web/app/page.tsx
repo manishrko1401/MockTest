@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
 import { useIsMobile } from './useIsMobile';
@@ -88,6 +89,7 @@ const isNewlyPublished = (publishDateStr?: string) => {
 
 export default function HomeLandingPage() {
   const { currentUser, logout, theme, toggleTheme, noticesList, language, setLanguage, saveUserProfileByAdmin } = useAuth();
+  const router = useRouter();
   const t = TRANSLATIONS[language];
   
   const [successIndex, setSuccessIndex] = useState(0);
@@ -119,6 +121,7 @@ export default function HomeLandingPage() {
 
       alert(language === 'hi' ? 'बधाई हो! आपका 1 वर्ष का मॉक टेस्ट पास प्रो सफलतापूर्वक सक्रिय कर दिया गया है।' : 'Success! Your 1-Year Mock Test Pass Pro has been claimed and activated.');
       setShowCongratsPopup(false);
+      router.push('/profile');
     } catch (err) {
       console.error(err);
       alert('Claim failed. Please try again.');
@@ -160,8 +163,11 @@ export default function HomeLandingPage() {
     if (typeof window !== 'undefined') {
       const isNewSignup = localStorage.getItem('show_signup_congrats_popup');
       if (isNewSignup === 'true') {
-        setShowCongratsPopup(true);
-        localStorage.removeItem('show_signup_congrats_popup');
+        const timer = setTimeout(() => {
+          setShowCongratsPopup(true);
+          localStorage.removeItem('show_signup_congrats_popup');
+        }, 7000); // 7 seconds delay
+        return () => clearTimeout(timer);
       }
     }
   }, []);
