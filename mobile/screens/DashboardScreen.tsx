@@ -12,7 +12,9 @@ import {
   Linking,
   TextInput,
   Image,
-  Share
+  Share,
+  Modal,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -37,8 +39,10 @@ import {
   Lock,
   Coins,
   Search,
-  X
+  X,
+  Sparkles
 } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
@@ -106,6 +110,66 @@ export default function DashboardScreen({
 }: DashboardScreenProps) {
 
   const [refreshing, setRefreshing] = useState(false);
+  const [showCongratsPopup, setShowCongratsPopup] = useState(false);
+  const [claiming, setClaiming] = useState(false);
+
+  useEffect(() => {
+    let timer: any;
+    const checkNewSignup = async () => {
+      try {
+        const isNew = await AsyncStorage.getItem('show_signup_congrats_popup');
+        if (isNew === 'true') {
+          timer = setTimeout(() => {
+            setShowCongratsPopup(true);
+            AsyncStorage.removeItem('show_signup_congrats_popup');
+          }, 7000); // 7 seconds delay
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    checkNewSignup();
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
+  const handleClaimPassPro = async () => {
+    if (!currentUser) return;
+    setClaiming(true);
+    try {
+      const expiry = new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0];
+      const purchasedAt = new Date().toISOString().split('T')[0];
+
+      const res = await ApiClient.saveProfileAdmin({
+        userId: currentUser.id,
+        name: currentUser.name || currentUser.fullName,
+        email: currentUser.email,
+        mobile: currentUser.mobile,
+        referralCode: currentUser.referralCode,
+        referredBy: currentUser.referredBy,
+        referralsCount: currentUser.referralsCount,
+        role: currentUser.role,
+        tier: 'Testbook Pass Pro',
+        purchasedAt,
+        expiry
+      });
+
+      if (res.success) {
+        await onRefreshUser(currentUser.id);
+        Alert.alert('Success', 'Your 1-Year Mock Test Pass Pro has been claimed and activated!');
+        setShowCongratsPopup(false);
+        setActiveTab('profile'); // Redirect to profile
+      } else {
+        Alert.alert('Error', res.error || 'Claim failed.');
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Claim failed. Please try again.');
+    } finally {
+      setClaiming(false);
+    }
+  };
 
   // Announcement auto-sliding states & refs
   const announcementScrollRef = React.useRef<ScrollView>(null);
@@ -1161,8 +1225,106 @@ export default function DashboardScreen({
           ]}>Me</Text>
         </TouchableOpacity>
       </View>
+      
+      {/* Welcome Congrats Popup Modal */}
+      {showCongratsPopup && renderCongratsModal()}
     </SafeAreaView>
   );
+
+  function renderCongratsModal() {
+    return (
+      <Modal
+        visible={showCongratsPopup}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowCongratsPopup(false)}
+      >
+        <View style={modalStyles.modalContainer}>
+          <View style={[modalStyles.modalContent, isDark && { backgroundColor: '#0F172A', borderColor: '#1F2E54' }]}>
+            {/* Top Close Button */}
+            <TouchableOpacity 
+              style={[modalStyles.closeCross, isDark && { backgroundColor: '#1E293B' }]} 
+              onPress={() => setShowCongratsPopup(false)}
+            >
+              <X size={16} color={isDark ? '#94A3B8' : '#9CA3AF'} />
+            </TouchableOpacity>
+
+            {/* Gift Icon */}
+            <View style={[modalStyles.iconContainer, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+              <Gift size={32} color={isDark ? '#38BDF8' : '#2563EB'} />
+              <View style={[modalStyles.sparkleBadge, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+                <Sparkles size={12} color="#F59E0B" />
+              </View>
+            </View>
+
+            {/* Header Details */}
+            <Text style={[modalStyles.modalTitle, isDark && { color: '#FFF' }]}>
+              Congratulations! 🎉
+            </Text>
+            <Text style={modalStyles.modalSubtitle}>
+              Gift from Mock Test Hub Team
+            </Text>
+            <Text style={[modalStyles.modalDesc, isDark && { color: ThemeColors.dark.textMuted }]}>
+              A 1-Year Mock Test Pass Pro subscription has been credited to your account! Explore all features and premium tests immediately.
+            </Text>
+
+            {/* Benefits List */}
+            <ScrollView 
+              style={modalStyles.benefitsList}
+              contentContainerStyle={{ gap: 12, paddingBottom: 10 }}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={modalStyles.benefitItem}>
+                <View style={[modalStyles.benefitEmoji, isDark && { backgroundColor: '#16223F' }]}>
+                  <Text style={{ fontSize: 14 }}>🔓</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[modalStyles.benefitTitle, isDark && { color: '#E2E8F0' }]}>Unlimited Premium Tests</Text>
+                  <Text style={[modalStyles.benefitDesc, isDark && { color: ThemeColors.dark.textMuted }]}>Access all SSC, Banking, Railways & State level exams without restriction.</Text>
+                </View>
+              </View>
+
+              <View style={modalStyles.benefitItem}>
+                <View style={[modalStyles.benefitEmoji, isDark && { backgroundColor: '#16223F' }]}>
+                  <Text style={{ fontSize: 14 }}>📝</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[modalStyles.benefitTitle, isDark && { color: '#E2E8F0' }]}>Custom Paper Creator</Text>
+                  <Text style={[modalStyles.benefitDesc, isDark && { color: ThemeColors.dark.textMuted }]}>Build customizable exam papers focused on your weak subjects.</Text>
+                </View>
+              </View>
+
+              <View style={modalStyles.benefitItem}>
+                <View style={[modalStyles.benefitEmoji, isDark && { backgroundColor: '#16223F' }]}>
+                  <Text style={{ fontSize: 14 }}>📊</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[modalStyles.benefitTitle, isDark && { color: '#E2E8F0' }]}>Advanced Speed Analytics</Text>
+                  <Text style={[modalStyles.benefitDesc, isDark && { color: ThemeColors.dark.textMuted }]}>Track sectional timing averages and topper comparative speed details.</Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Claim button */}
+            <TouchableOpacity 
+              style={[modalStyles.claimBtn, claiming && { opacity: 0.7 }]} 
+              onPress={handleClaimPassPro}
+              disabled={claiming}
+            >
+              {claiming ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Gift size={16} color="#FFF" />
+                  <Text style={modalStyles.claimBtnText}>Claim 1 Year Pass Pro 🎁</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
@@ -2141,5 +2303,134 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: '#10B981',
     fontWeight: 'bold',
+  },
+});
+
+const modalStyles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    maxHeight: '80%',
+    alignItems: 'center',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  closeCross: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: '#F8FAFC',
+  },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    position: 'relative',
+  },
+  sparkleBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    padding: 2,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#0F172A',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  modalSubtitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#2563EB',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginTop: 2,
+  },
+  modalDesc: {
+    fontSize: 11,
+    color: '#4B5563',
+    textAlign: 'center',
+    lineHeight: 16,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  benefitsList: {
+    width: '100%',
+    flexGrow: 0,
+    marginBottom: 16,
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  benefitEmoji: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  benefitTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#1F2937',
+  },
+  benefitDesc: {
+    fontSize: 9,
+    color: '#6B7280',
+    marginTop: 1,
+    lineHeight: 12,
+  },
+  claimBtn: {
+    width: '100%',
+    backgroundColor: '#2563EB',
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  claimBtnText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

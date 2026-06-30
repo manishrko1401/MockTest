@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   StyleSheet,
   Text,
@@ -91,6 +92,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
     setLoading(false);
 
     if (res.success && res.user) {
+      await AsyncStorage.setItem('show_signup_congrats_popup', 'true');
       Alert.alert('Registration Successful', `Welcome, ${res.user.name}!`);
       onLoginSuccess(res.user);
     } else {
