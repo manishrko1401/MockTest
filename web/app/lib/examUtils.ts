@@ -1,4 +1,4 @@
-import { ActiveSession, Question } from '../useTestEngine';
+import { ActiveSession, Question, Section } from '../useTestEngine';
 import { TestCategory, MockTestItem } from '../AuthContext';
 
 export const EXPLANATIONS: Record<string, { en: string; hi: string }> = {
@@ -74,7 +74,7 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
     sectionalTimingsMins = (catalogTest.sectionalTimings as number[] | undefined) ?? [];
   }
 
-  let sections = [
+  let sections: Section[] = [
     { id: "sec_gs", name: "General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 },
     { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 1, positiveMark: 2, negativeMark: 0.5 }
   ];
