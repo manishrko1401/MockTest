@@ -301,12 +301,6 @@ async function handleSignup(data: any) {
     }
   }
 
-  const now = new Date();
-  const purchasedAt = now.toISOString().substring(0, 10);
-  const oneYearLater = new Date(now);
-  oneYearLater.setFullYear(now.getFullYear() + 1);
-  const expiry = oneYearLater.toISOString().substring(0, 10);
-
   const newUser = await prisma.user.create({
     data: {
       candidateCode: 'CGL_' + Math.floor(1000 + Math.random() * 9000),
@@ -318,9 +312,9 @@ async function handleSignup(data: any) {
       referredBy: referredByCode,
       referralsCount: 0,
       role: 'STUDENT',
-      subscriptionTier: 'Testbook Pass Pro',
-      subscriptionPurchasedAt: purchasedAt,
-      subscriptionExpiresAt: expiry,
+      subscriptionTier: 'None',
+      subscriptionPurchasedAt: null,
+      subscriptionExpiresAt: null,
       isBlocked: false,
     },
   });

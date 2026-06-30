@@ -87,13 +87,45 @@ const isNewlyPublished = (publishDateStr?: string) => {
 };
 
 export default function HomeLandingPage() {
-  const { currentUser, logout, theme, toggleTheme, noticesList, language, setLanguage } = useAuth();
+  const { currentUser, logout, theme, toggleTheme, noticesList, language, setLanguage, saveUserProfileByAdmin } = useAuth();
   const t = TRANSLATIONS[language];
   
   const [successIndex, setSuccessIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedModalCategory, setSelectedModalCategory] = useState<string | null>(null);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
+  const [claiming, setClaiming] = useState(false);
+
+  const handleClaimPassPro = async () => {
+    if (!currentUser) return;
+    setClaiming(true);
+    try {
+      const expiry = new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0];
+      const purchasedAt = new Date().toISOString().split('T')[0];
+
+      await saveUserProfileByAdmin(
+        currentUser.id,
+        currentUser.name,
+        currentUser.email,
+        currentUser.mobile,
+        currentUser.referralCode,
+        currentUser.referredBy,
+        currentUser.referralsCount,
+        currentUser.role,
+        'Testbook Pass Pro',
+        purchasedAt,
+        expiry
+      );
+
+      alert(language === 'hi' ? 'बधाई हो! आपका 1 वर्ष का मॉक टेस्ट पास प्रो सफलतापूर्वक सक्रिय कर दिया गया है।' : 'Success! Your 1-Year Mock Test Pass Pro has been claimed and activated.');
+      setShowCongratsPopup(false);
+    } catch (err) {
+      console.error(err);
+      alert('Claim failed. Please try again.');
+    } finally {
+      setClaiming(false);
+    }
+  };
   
   const [calculatorQuestions, setCalculatorQuestions] = useState<number>(100);
   const [calculatorCorrect, setCalculatorCorrect] = useState<number>(75);
@@ -1218,13 +1250,21 @@ export default function HomeLandingPage() {
               </div>
             </div>
 
-            {/* Action button */}
+             {/* Action button */}
             <div className="mt-6">
               <button
-                onClick={() => setShowCongratsPopup(false)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3 rounded-2xl text-xs transition active:scale-95 cursor-pointer shadow-md shadow-blue-500/10 uppercase tracking-wider"
+                onClick={handleClaimPassPro}
+                disabled={claiming}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold py-3.5 rounded-2xl text-xs transition active:scale-95 cursor-pointer shadow-lg shadow-blue-500/20 uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {language === 'hi' ? 'तैयारी शुरू करें 🚀' : 'Start Practice Now 🚀'}
+                {claiming ? (
+                  <span>{language === 'hi' ? 'प्रोसेसिंग...' : 'Processing...'}</span>
+                ) : (
+                  <>
+                    <Gift className="h-4.5 w-4.5 animate-pulse" />
+                    <span>{language === 'hi' ? '1 वर्ष का पास प्रो दावा करें (Claim Now) 🎁' : 'Claim 1 Year Pass Pro 🎁'}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
