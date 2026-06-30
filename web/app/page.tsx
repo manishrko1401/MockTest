@@ -294,7 +294,7 @@ export default function HomeLandingPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.searchPlaceholder}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-202 dark:border-slate-800 rounded-2xl pl-10 pr-24 py-3 text-[11px] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 shadow-sm"
+                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-24 py-3 text-[11px] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 shadow-sm"
               />
               <Link
                 href={`/mock-tests?q=${searchQuery}`}
@@ -429,7 +429,7 @@ export default function HomeLandingPage() {
                   {mobileUpdateTab === 'admit_card' && <><FileText className="h-4 w-4 text-green-550" /> {t.admitCards}</>}
                 </h3>
                 
-                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                <div className="space-y-3 max-h-[350px] overflow-y-auto no-scrollbar">
                   {noticesList.filter(n => n.category === mobileUpdateTab).length > 0 ? (
                     [...noticesList]
                       .filter(n => n.category === mobileUpdateTab)
@@ -803,13 +803,13 @@ export default function HomeLandingPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Tile 1: Live Notices & Announcements */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
             <div>
-              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 px-2">
                 <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> {t.liveNotices}
               </h3>
               
-              <div className="space-y-3 overflow-y-auto max-h-[442px] pr-1 scrollbar-thin">
+              <div className="space-y-3 overflow-y-auto max-h-[442px] no-scrollbar">
                 {noticesList.filter(n => n.category === 'notice').length > 0 ? (
                   [...noticesList]
                     .filter(n => n.category === 'notice')
@@ -817,7 +817,7 @@ export default function HomeLandingPage() {
                     .map(notice => (
                     <div
                       key={notice.id}
-                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
+                      className="w-[95%] mx-auto p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
@@ -843,7 +843,7 @@ export default function HomeLandingPage() {
                         )}
                       </h5>
                       {notice.lastDate && (
-                        <p className="text-[10px] text-red-505 font-extrabold mt-1 uppercase tracking-wider">
+                        <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
                           {t.lastDate} {notice.lastDate}
                         </p>
                       )}
@@ -865,13 +865,13 @@ export default function HomeLandingPage() {
           </div>
 
           {/* Tile 2: Live Result Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
             <div>
-              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 px-2">
                 <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-pulse" /> {t.resultsMerits}
               </h3>
               
-              <div className="space-y-3 overflow-y-auto max-h-[442px] pr-1 scrollbar-thin">
+              <div className="space-y-3 overflow-y-auto max-h-[442px] no-scrollbar">
                 {noticesList.filter(n => n.category === 'result').length > 0 ? (
                   [...noticesList]
                     .filter(n => n.category === 'result')
@@ -879,7 +879,7 @@ export default function HomeLandingPage() {
                     .map(notice => (
                     <div
                       key={notice.id}
-                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
+                      className="w-[95%] mx-auto p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
@@ -905,7 +905,7 @@ export default function HomeLandingPage() {
                         )}
                       </h5>
                       {notice.lastDate && (
-                        <p className="text-[10px] text-red-505 font-extrabold mt-1 uppercase tracking-wider">
+                        <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
                           {t.lastDate} {notice.lastDate}
                         </p>
                       )}
@@ -927,13 +927,13 @@ export default function HomeLandingPage() {
           </div>
 
           {/* Tile 3: Live Admit Card Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
             <div>
-              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 px-2">
                 <FileText className="h-4.5 w-4.5 text-green-550" /> {t.admitCards}
               </h3>
               
-              <div className="space-y-3 overflow-y-auto max-h-[442px] pr-1 scrollbar-thin">
+              <div className="space-y-3 overflow-y-auto max-h-[442px] no-scrollbar">
                 {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
                   [...noticesList]
                     .filter(n => n.category === 'admit_card')
@@ -941,7 +941,7 @@ export default function HomeLandingPage() {
                     .map(notice => (
                     <div
                       key={notice.id}
-                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
+                      className="w-[95%] mx-auto p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
@@ -967,7 +967,7 @@ export default function HomeLandingPage() {
                         )}
                       </h5>
                       {notice.lastDate && (
-                        <p className="text-[10px] text-red-505 font-extrabold mt-1 uppercase tracking-wider">
+                        <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
                           {t.lastDate} {notice.lastDate}
                         </p>
                       )}

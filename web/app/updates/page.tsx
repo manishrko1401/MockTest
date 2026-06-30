@@ -38,7 +38,7 @@ export default function UpdatesCenterPage() {
         <div className="absolute top-10 -left-20 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute top-[50%] -right-20 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <header className="h-14 border-b border-slate-202 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
+        <header className="h-14 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
           <Link href="/" className="flex items-center gap-2">
             <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 rounded-full shadow-sm flex items-center justify-center h-8 w-8 border border-blue-200/50 dark:border-slate-700 shrink-0">
               <Trophy className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
@@ -52,7 +52,7 @@ export default function UpdatesCenterPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-905 text-slate-600 dark:text-slate-355 border border-slate-202 dark:border-slate-800 active:scale-95"
+              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-905 text-slate-600 dark:text-slate-355 border border-slate-200 dark:border-slate-800 active:scale-95"
             >
               {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
             </button>
@@ -89,7 +89,7 @@ export default function UpdatesCenterPage() {
                 <span className="text-xs font-bold text-slate-500">Theme:</span>
                 <button
                   onClick={toggleTheme}
-                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-202 dark:border-slate-800 text-xs font-bold flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold flex items-center gap-1.5"
                 >
                   {theme === 'light' ? <><Moon className="h-3.5 w-3.5" /> Dark</> : <><Sun className="h-3.5 w-3.5" /> Light</>}
                 </button>
@@ -104,7 +104,7 @@ export default function UpdatesCenterPage() {
                       {currentUser.name[0]}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-805 dark:text-slate-200">{currentUser.name}</p>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{currentUser.name}</p>
                       <p className="text-[9px] text-slate-400 font-bold uppercase">{currentUser.candidateCode}</p>
                     </div>
                   </div>
@@ -123,7 +123,7 @@ export default function UpdatesCenterPage() {
                   <Link
                     href="/auth"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="py-2.5 rounded-xl border border-slate-202 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs text-center"
+                    className="py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs text-center"
                   >
                     {t.logIn}
                   </Link>
@@ -193,6 +193,7 @@ export default function UpdatesCenterPage() {
             >
               Answer Keys
             </button>
+          </div>
                   {/* RENDER SELECTED LIST */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm space-y-4">
             <h3 className="font-extrabold text-[10px] text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center gap-1.5 px-2">
@@ -210,32 +211,32 @@ export default function UpdatesCenterPage() {
                   .map((notice) => (
                   <div
                     key={notice.id}
-                    className="w-[95%] mx-auto p-3.5 rounded-xl bg-slate-55 dark:bg-slate-955/40 border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5"
-                  >           >
+                    className="w-[95%] mx-auto p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5"
+                  >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
                         <span className={`text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase ${
                           activeMobileTab === 'notice' ? 'bg-blue-105 text-blue-700 dark:bg-blue-955 dark:text-blue-400' :
                           activeMobileTab === 'result' ? 'bg-yellow-105 text-yellow-750 dark:bg-yellow-955/50 dark:text-yellow-400' :
                           activeMobileTab === 'admit_card' ? 'bg-green-100 text-green-700 dark:bg-green-955 dark:text-green-400' :
-                          'bg-purple-100 text-purple-700 dark:bg-purple-955 dark:text-purple-400'
+                          'bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400'
                         }`}>
                           {notice.type}
                         </span>
                         {isNewlyPublished(notice.publishDate) && (
-                          <span className="animate-pulse bg-red-650 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
+                          <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
                             {t.newBadge}
                           </span>
                         )}
                       </div>
-                      <span className="text-[7px] text-slate-404 font-bold">{notice.date}</span>
+                      <span className="text-[7px] text-slate-400 font-bold">{notice.date}</span>
                     </div>
 
-                    <h5 className="font-bold text-xs text-slate-805 dark:text-slate-202 leading-normal">
+                    <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-normal">
                       {notice.url ? (
                         <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-0.5">
                           {notice.title}
-                          <ChevronRight className="h-3 w-3 inline shrink-0 text-slate-404" />
+                          <ChevronRight className="h-3 w-3 inline shrink-0 text-slate-400" />
                         </a>
                       ) : (
                         notice.title
@@ -259,7 +260,7 @@ export default function UpdatesCenterPage() {
         </main>
 
         {/* FOOTER */}
-        <footer className="bg-white dark:bg-slate-950 border-t border-slate-202 dark:border-slate-900 py-6 px-4 text-center text-[10px] text-slate-500 transition-colors duration-200">
+        <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-6 px-4 text-center text-[10px] text-slate-500 transition-colors duration-200">
           <p className="font-bold">© 2026 Mock Test CBT Portal. All rights reserved.</p>
         </footer>
       </div>
@@ -377,12 +378,12 @@ export default function UpdatesCenterPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Column 1: Notices & Announcements */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-2">
               <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> {t.liveNotices}
             </h3>
             
-            <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[1000px] scrollbar-thin">
+            <div className="space-y-4 overflow-y-auto flex-1 max-h-[1000px] no-scrollbar">
               {noticesList.filter(n => n.category === 'notice').length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === 'notice')
@@ -390,7 +391,7 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
+                    className="w-[95%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
@@ -431,12 +432,12 @@ export default function UpdatesCenterPage() {
           </div>
 
           {/* Column 2: Live Result Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-2">
               <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-pulse" /> {t.resultsMerits}
             </h3>
             
-            <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[1000px] scrollbar-thin">
+            <div className="space-y-4 overflow-y-auto flex-1 max-h-[1000px] no-scrollbar">
               {noticesList.filter(n => n.category === 'result').length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === 'result')
@@ -444,7 +445,7 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
+                    className="w-[95%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
@@ -485,12 +486,12 @@ export default function UpdatesCenterPage() {
           </div>
 
           {/* Column 3: Live Admit Card Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-2">
               <FileText className="h-4.5 w-4.5 text-green-550" /> {t.admitCards}
             </h3>
             
-            <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[1000px] scrollbar-thin">
+            <div className="space-y-4 overflow-y-auto flex-1 max-h-[1000px] no-scrollbar">
               {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === 'admit_card')
@@ -498,7 +499,7 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
+                    className="w-[95%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
@@ -532,7 +533,12 @@ export default function UpdatesCenterPage() {
                 ))
               ) : (
                 <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs">
-                  {language === 'hi' ? '�          {/* Column 4: Live Answer Keys Section */}
+                  {language === 'hi' ? 'कोई सक्रिय प्रवेश पत्र नहीं।' : 'No active admit cards.'}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-2">
               <ShieldCheck className="h-4.5 w-4.5 text-purple-500 animate-pulse" /> Answer Keys
@@ -546,23 +552,22 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="w-[95%] mx-auto p-4 rounded-2xl bg-slate-55 dark:bg-slate-955/40 border border-slate-202 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-955/70 transition flex flex-col gap-2"
-                  >unded-2xl bg-slate-55 dark:bg-slate-955/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-955/70 transition flex flex-col gap-2"
+                    className="w-[95%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
-                        <span className="inline-block bg-purple-100 dark:bg-purple-955 border border-purple-300 dark:border-purple-900 text-purple-700 dark:text-purple-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
+                        <span className="inline-block bg-purple-100 dark:bg-purple-950/50 border border-purple-300 dark:border-purple-900 text-purple-700 dark:text-purple-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
                           {notice.type || 'ANSWER KEY'}
                         </span>
                         {isNewlyPublished(notice.publishDate) && (
-                          <span className="animate-pulse bg-red-650 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
+                          <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
                             {t.newBadge}
                           </span>
                         )}
                       </div>
-                      <span className="text-[8px] text-slate-404 dark:text-slate-500 font-bold whitespace-nowrap">{notice.date}</span>
+                      <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold whitespace-nowrap">{notice.date}</span>
                     </div>
-                    <h5 className="font-bold text-xs text-slate-805 dark:text-slate-202 leading-snug">
+                    <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-snug">
                       {notice.url ? (
                         <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:text-purple-600 dark:hover:text-purple-450 hover:underline flex items-center gap-1.5">
                           {notice.title}
@@ -575,7 +580,7 @@ export default function UpdatesCenterPage() {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-20 text-slate-404 dark:text-slate-500 text-xs">
+                <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs">
                   {language === 'hi' ? 'कोई सक्रिय उत्तर कुंजी नहीं।' : 'No active answer keys.'}
                 </div>
               )}
