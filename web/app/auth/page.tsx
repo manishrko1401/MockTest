@@ -50,6 +50,14 @@ export default function AuthPage() {
         setErrorMsg(language === 'hi' ? 'कृपया अपना पूरा नाम दर्ज करें।' : 'Please enter your full name.');
         return;
       }
+      if (!email.trim()) {
+        setErrorMsg(language === 'hi' ? 'कृपया अपना ईमेल पता दर्ज करें।' : 'Please enter your email address.');
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        setErrorMsg(language === 'hi' ? 'कृपया एक वैध ईमेल पता दर्ज करें।' : 'Please enter a valid email address.');
+        return;
+      }
       if (!mobile.trim()) {
         setErrorMsg(language === 'hi' ? 'कृपया अपना मोबाइल नंबर दर्ज करें।' : 'Please enter your mobile number.');
         return;
@@ -59,7 +67,7 @@ export default function AuthPage() {
         return;
       }
       
-      const res = await signup(name, email, mobile.trim(), password, referralCodeInput.trim() || undefined);
+      const res = await signup(name, email.trim(), mobile.trim(), password, referralCodeInput.trim() || undefined);
       if (res.success) {
         setSuccessMsg(t.authSignupSuccess || 'Account registered successfully! Redirecting...');
         localStorage.setItem('show_signup_congrats_popup', 'true');

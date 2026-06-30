@@ -273,6 +273,14 @@ async function handleBootstrap() {
 
 async function handleSignup(data: any) {
   const { name, email, mobile, password, referralCodeInput } = data;
+
+  if (!email || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    return NextResponse.json({ success: false, error: 'Please provide a valid email address.' }, { status: 400 });
+  }
+  if (!mobile || !mobile.trim() || !/^\d{10}$/.test(mobile.trim())) {
+    return NextResponse.json({ success: false, error: 'Please provide a valid 10-digit mobile number.' }, { status: 400 });
+  }
+
   const trimmedEmail = email.trim().toLowerCase();
 
   // Check duplication
