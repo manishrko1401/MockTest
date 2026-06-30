@@ -51,18 +51,26 @@ export async function POST(request: Request) {
         return await handleDeleteNotice(data);
       case 'add-category':
         return await handleAddCategory(data);
+      case 'edit-category':
+        return await handleEditCategory(data);
       case 'delete-category':
         return await handleDeleteCategory(data);
       case 'add-subcategory':
         return await handleAddSubCategory(data);
+      case 'edit-subcategory':
+        return await handleEditSubCategory(data);
       case 'delete-subcategory':
         return await handleDeleteSubCategory(data);
       case 'add-subsubcategory':
         return await handleAddSubSubCategory(data);
+      case 'edit-subsubcategory':
+        return await handleEditSubSubCategory(data);
       case 'delete-subsubcategory':
         return await handleDeleteSubSubCategory(data);
       case 'add-mocktest':
         return await handleAddMockTest(data);
+      case 'edit-mocktest-title':
+        return await handleEditMockTestTitle(data);
       case 'delete-mocktest':
         return await handleDeleteMockTest(data);
       case 'save-custom-questions':
@@ -899,6 +907,50 @@ async function handleDeleteMockTest(data: any) {
 
   await prisma.mockTest.delete({
     where: { id: testId },
+  });
+
+  return NextResponse.json({ success: true });
+}
+
+async function handleEditCategory(data: any) {
+  const { categoryId, name } = data;
+
+  await prisma.category.update({
+    where: { id: categoryId },
+    data: { name },
+  });
+
+  return NextResponse.json({ success: true });
+}
+
+async function handleEditSubCategory(data: any) {
+  const { subCategoryId, name } = data;
+
+  await prisma.exam.update({
+    where: { id: subCategoryId },
+    data: { name },
+  });
+
+  return NextResponse.json({ success: true });
+}
+
+async function handleEditSubSubCategory(data: any) {
+  const { subSubCategoryId, name } = data;
+
+  await prisma.testSeries.update({
+    where: { id: subSubCategoryId },
+    data: { title: name },
+  });
+
+  return NextResponse.json({ success: true });
+}
+
+async function handleEditMockTestTitle(data: any) {
+  const { testId, title } = data;
+
+  await prisma.mockTest.update({
+    where: { id: testId },
+    data: { title },
   });
 
   return NextResponse.json({ success: true });

@@ -277,12 +277,16 @@ export default function AdminAnalytics() {
     setLanguage,
     examCatalog,
     addCategory,
+    editCategory,
     deleteCategory,
     addSubCategory,
+    editSubCategory,
     deleteSubCategory,
     addSubSubCategory,
+    editSubSubCategory,
     deleteSubSubCategory,
     addMockTest,
+    editMockTestTitle,
     deleteMockTest,
     reportedQuestionsList,
     deleteReportedQuestion
@@ -333,6 +337,16 @@ export default function AdminAnalytics() {
   const [newSubSubCategoryParentCategory, setNewSubSubCategoryParentCategory] = useState('');
   const [newSubSubCategoryParentSubCategory, setNewSubSubCategoryParentSubCategory] = useState('');
   const [newSubSubCategoryName, setNewSubSubCategoryName] = useState('');
+
+  // Category/subcategory/mock edit states
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [editingSubCategoryId, setEditingSubCategoryId] = useState<string | null>(null);
+  const [editingSubCategoryName, setEditingSubCategoryName] = useState('');
+  const [editingSubSubCategoryId, setEditingSubSubCategoryId] = useState<string | null>(null);
+  const [editingSubSubCategoryName, setEditingSubSubCategoryName] = useState('');
+  const [editingMockTestId, setEditingMockTestId] = useState<string | null>(null);
+  const [editingMockTestTitle, setEditingMockTestTitle] = useState('');
 
   // Mock test management form states
   const [newMockCategoryParent, setNewMockCategoryParent] = useState('');
@@ -2494,18 +2508,63 @@ export default function AdminAnalytics() {
                         {examCatalog.map(cat => (
                           <tr key={cat.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                             <td className="py-3.5 px-4 font-mono font-bold text-slate-400">{cat.id}</td>
-                            <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">{cat.name}</td>
+                            <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
+                              {editingCategoryId === cat.id ? (
+                                <input
+                                  type="text"
+                                  value={editingCategoryName}
+                                  onChange={(e) => setEditingCategoryName(e.target.value)}
+                                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                                />
+                              ) : (
+                                <span>{cat.name}</span>
+                              )}
+                            </td>
                             <td className="py-3.5 px-4 font-semibold text-slate-500">{cat.subCategories.length} Sub-cat(s)</td>
-                            <td className="py-3.5 px-4 text-right">
-                              <button
-                                onClick={() => {
-                                  deleteCategory(cat.id);
-                                  showToast('Category deleted successfully.');
-                                }}
-                                className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
-                              >
-                                Delete
-                              </button>
+                            <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
+                              {editingCategoryId === cat.id ? (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      if (editingCategoryName.trim()) {
+                                        editCategory(cat.id, editingCategoryName.trim());
+                                        setEditingCategoryId(null);
+                                        showToast('Category renamed successfully.');
+                                      }
+                                    }}
+                                    className="text-green-500 hover:text-green-600 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingCategoryId(null)}
+                                    className="text-slate-550 hover:text-slate-700 font-bold bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                  >
+                                    Cancel
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setEditingCategoryId(cat.id);
+                                      setEditingCategoryName(cat.name);
+                                    }}
+                                    className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      deleteCategory(cat.id);
+                                      showToast('Category deleted successfully.');
+                                    }}
+                                    className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                  >
+                                    Delete
+                                  </button>
+                                </>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -2602,18 +2661,63 @@ export default function AdminAnalytics() {
                           cat.subCategories.map(sub => (
                             <tr key={sub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                               <td className="py-3.5 px-4 font-bold text-slate-500">{cat.name}</td>
-                              <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">{sub.name}</td>
+                              <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
+                                {editingSubCategoryId === sub.id ? (
+                                  <input
+                                    type="text"
+                                    value={editingSubCategoryName}
+                                    onChange={(e) => setEditingSubCategoryName(e.target.value)}
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                                  />
+                                ) : (
+                                  <span>{sub.name}</span>
+                                )}
+                              </td>
                               <td className="py-3.5 px-4 font-semibold text-slate-500">{sub.tests.length} mock test(s)</td>
-                              <td className="py-3.5 px-4 text-right">
-                                <button
-                                  onClick={() => {
-                                    deleteSubCategory(cat.id, sub.id);
-                                    showToast('Subcategory deleted successfully.');
-                                  }}
-                                  className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                >
-                                  Delete
-                                </button>
+                              <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
+                                {editingSubCategoryId === sub.id ? (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        if (editingSubCategoryName.trim()) {
+                                          editSubCategory(cat.id, sub.id, editingSubCategoryName.trim());
+                                          setEditingSubCategoryId(null);
+                                          showToast('Subcategory renamed successfully.');
+                                        }
+                                      }}
+                                      className="text-green-500 hover:text-green-600 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingSubCategoryId(null)}
+                                      className="text-slate-555 hover:text-slate-700 font-bold bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        setEditingSubCategoryId(sub.id);
+                                        setEditingSubCategoryName(sub.name);
+                                      }}
+                                      className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        deleteSubCategory(cat.id, sub.id);
+                                        showToast('Subcategory deleted successfully.');
+                                      }}
+                                      className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                    >
+                                      Delete
+                                    </button>
+                                  </>
+                                )}
                               </td>
                             </tr>
                           ))
@@ -2735,18 +2839,63 @@ export default function AdminAnalytics() {
                               <tr key={subsub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                                 <td className="py-3.5 px-4 font-bold text-slate-500">{cat.name}</td>
                                 <td className="py-3.5 px-4 font-bold text-slate-500">{sub.name}</td>
-                                <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">{subsub.name}</td>
+                                <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
+                                  {editingSubSubCategoryId === subsub.id ? (
+                                    <input
+                                      type="text"
+                                      value={editingSubSubCategoryName}
+                                      onChange={(e) => setEditingSubSubCategoryName(e.target.value)}
+                                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                                    />
+                                  ) : (
+                                    <span>{subsub.name}</span>
+                                  )}
+                                </td>
                                 <td className="py-3.5 px-4 font-semibold text-slate-500">{(subsub.tests || []).length} mock test(s)</td>
-                                <td className="py-3.5 px-4 text-right">
-                                  <button
-                                    onClick={() => {
-                                      deleteSubSubCategory(cat.id, sub.id, subsub.id);
-                                      showToast('Sub-subcategory deleted successfully.');
-                                    }}
-                                    className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                  >
-                                    Delete
-                                  </button>
+                                <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
+                                  {editingSubSubCategoryId === subsub.id ? (
+                                    <>
+                                      <button
+                                        onClick={() => {
+                                          if (editingSubSubCategoryName.trim()) {
+                                            editSubSubCategory(cat.id, sub.id, subsub.id, editingSubSubCategoryName.trim());
+                                            setEditingSubSubCategoryId(null);
+                                            showToast('Sub-subcategory renamed successfully.');
+                                          }
+                                        }}
+                                        className="text-green-500 hover:text-green-600 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingSubSubCategoryId(null)}
+                                        className="text-slate-555 hover:text-slate-700 font-bold bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button
+                                        onClick={() => {
+                                          setEditingSubSubCategoryId(subsub.id);
+                                          setEditingSubSubCategoryName(subsub.name);
+                                        }}
+                                        className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          deleteSubSubCategory(cat.id, sub.id, subsub.id);
+                                          showToast('Sub-subcategory deleted successfully.');
+                                        }}
+                                        className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                      >
+                                        Delete
+                                      </button>
+                                    </>
+                                  )}
                                 </td>
                               </tr>
                             ))
@@ -3000,14 +3149,23 @@ export default function AdminAnalytics() {
                                             <span className="font-bold">{subsub.name}</span>
                                           </div>
                                         </td>
-                                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-200 max-w-[200px] truncate" title={test.title}>
-                                          <span>{test.title}</span>
+                                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-200 max-w-[200px]" title={test.title}>
+                                          {editingMockTestId === test.id ? (
+                                            <input
+                                              type="text"
+                                              value={editingMockTestTitle}
+                                              onChange={(e) => setEditingMockTestTitle(e.target.value)}
+                                              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full"
+                                            />
+                                          ) : (
+                                            <span className="truncate block max-w-[200px]">{test.title}</span>
+                                          )}
                                           {getCustomQuestionsCount(test.id) > 0 ? (
-                                            <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-green-950/60 text-green-400 border border-green-800 font-bold uppercase tracking-wider">
+                                            <span className="mt-1 inline-block px-1.5 py-0.5 rounded text-[8px] bg-green-950/60 text-green-400 border border-green-800 font-bold uppercase tracking-wider">
                                               Custom Paper ({getCustomQuestionsCount(test.id)} Qs)
                                             </span>
                                           ) : (
-                                            <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-slate-900 text-slate-500 border border-slate-800 font-bold uppercase tracking-wider">
+                                            <span className="mt-1 inline-block px-1.5 py-0.5 rounded text-[8px] bg-slate-900 text-slate-500 border border-slate-800 font-bold uppercase tracking-wider">
                                               Default Qs
                                             </span>
                                           )}
@@ -3029,16 +3187,50 @@ export default function AdminAnalytics() {
                                             {test.requiredTier === 'None' ? 'Free' : test.requiredTier.replace('Testbook', 'Mock')}
                                           </span>
                                         </td>
-                                        <td className="py-3 px-4 text-right">
-                                          <button
-                                            onClick={() => {
-                                              deleteMockTest(cat.id, sub.id, test.id);
-                                              showToast('Mock test deleted successfully.');
-                                            }}
-                                            className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                          >
-                                            Delete
-                                          </button>
+                                        <td className="py-3 px-4 text-right flex items-center justify-end gap-2 min-h-[44px]">
+                                          {editingMockTestId === test.id ? (
+                                            <>
+                                              <button
+                                                onClick={() => {
+                                                  if (editingMockTestTitle.trim()) {
+                                                    editMockTestTitle(cat.id, sub.id, subsub.id, test.id, editingMockTestTitle.trim());
+                                                    setEditingMockTestId(null);
+                                                    showToast('Mock test renamed successfully.');
+                                                  }
+                                                }}
+                                                className="text-green-500 hover:text-green-600 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                              >
+                                                Save
+                                              </button>
+                                              <button
+                                                onClick={() => setEditingMockTestId(null)}
+                                                className="text-slate-555 hover:text-slate-700 font-bold bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                              >
+                                                Cancel
+                                              </button>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <button
+                                                onClick={() => {
+                                                  setEditingMockTestId(test.id);
+                                                  setEditingMockTestTitle(test.title);
+                                                }}
+                                                className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                              >
+                                                Edit
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  deleteMockTest(cat.id, sub.id, test.id);
+                                                  showToast('Mock test deleted successfully.');
+                                                }}
+                                                className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                              >
+                                                Delete
+                                              </button>
+                                            </>
+                                          )}
                                         </td>
                                       </tr>
                                     ))

@@ -162,12 +162,16 @@ interface AuthContextType {
   setLanguage: (lang: 'en' | 'hi') => void;
   examCatalog: TestCategory[];
   addCategory: (name: string) => void;
+  editCategory: (categoryId: string, name: string) => void;
   deleteCategory: (categoryId: string) => void;
   addSubCategory: (categoryId: string, name: string) => void;
+  editSubCategory: (categoryId: string, subCategoryId: string, name: string) => void;
   deleteSubCategory: (categoryId: string, subCategoryId: string) => void;
   addSubSubCategory: (categoryId: string, subCategoryId: string, name: string) => void;
+  editSubSubCategory: (categoryId: string, subCategoryId: string, subSubCategoryId: string, name: string) => void;
   deleteSubSubCategory: (categoryId: string, subCategoryId: string, subSubCategoryId: string) => void;
   addMockTest: (categoryId: string, subCategoryId: string, subSubCategoryId: string, test: Omit<MockTestItem, 'id'>) => void;
+  editMockTestTitle: (categoryId: string, subCategoryId: string, subSubCategoryId: string, testId: string, title: string) => void;
   deleteMockTest: (categoryId: string, subCategoryId: string, testId: string) => void;
 }
 
@@ -763,6 +767,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).catch(err => console.error("Delete category error:", err));
   };
 
+  const editCategory = (categoryId: string, name: string) => {
+    const updated = examCatalog.map(c => c.id === categoryId ? { ...c, name } : c);
+    setExamCatalog(updated);
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'edit-category',
+        data: { categoryId, name }
+      })
+    }).catch(err => console.error("Edit category error:", err));
+  };
+
   const addSubCategory = (categoryId: string, name: string) => {
     const newId = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).substring(2, 6);
     const defaultSubSubId = newId + '_series';
@@ -818,6 +836,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data: { subCategoryId }
       })
     }).catch(err => console.error("Delete subcategory error:", err));
+  };
+
+  const editSubCategory = (categoryId: string, subCategoryId: string, name: string) => {
+    const updated = examCatalog.map(c => {
+      if (c.id === categoryId) {
+        return {
+          ...c,
+          subCategories: c.subCategories.map(s => s.id === subCategoryId ? { ...s, name } : s)
+        };
+      }
+      return c;
+    });
+    setExamCatalog(updated);
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'edit-subcategory',
+        data: { subCategoryId, name }
+      })
+    }).catch(err => console.error("Edit subcategory error:", err));
   };
 
   const addSubSubCategory = (categoryId: string, subCategoryId: string, name: string) => {
@@ -884,6 +924,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data: { subSubCategoryId }
       })
     }).catch(err => console.error("Delete sub-subcategory error:", err));
+  };
+
+  const editSubSubCategory = (categoryId: string, subCategoryId: string, subSubCategoryId: string, name: string) => {
+    const updated = examCatalog.map(c => {
+      if (c.id === categoryId) {
+        return {
+          ...c,
+          subCategories: c.subCategories.map(s => {
+            if (s.id === subCategoryId) {
+              return {
+                ...s,
+                subSubCategories: (s.subSubCategories || []).map(ss => ss.id === subSubCategoryId ? { ...ss, name } : ss)
+              };
+            }
+            return s;
+          })
+        };
+      }
+      return c;
+    });
+    setExamCatalog(updated);
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'edit-subsubcategory',
+        data: { subSubCategoryId, name }
+      })
+    }).catch(err => console.error("Edit sub-subcategory error:", err));
   };
 
   const addMockTest = (categoryId: string, subCategoryId: string, subSubCategoryId: string, test: Omit<MockTestItem, 'id'>) => {
@@ -972,6 +1042,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data: { testId }
       })
     }).catch(err => console.error("Delete mocktest error:", err));
+  };
+
+  const editMockTestTitle = (categoryId: string, subCategoryId: string, subSubCategoryId: string, testId: string, title: string) => {
+    const updated = examCatalog.map(c => {
+      if (c.id === categoryId) {
+        return {
+          ...c,
+          subCategories: c.subCategories.map(s => {
+            if (s.id === subCategoryId) {
+              return {
+                ...s,
+                subSubCategories: (s.subSubCategories || []).map(ss => {
+                  if (ss.id === subSubCategoryId) {
+                    return {
+                      ...ss,
+                      tests: ss.tests.map(t => t.id === testId ? { ...t, title } : t)
+                    };
+                  }
+                  return ss;
+                }),
+                tests: (s.tests || []).map(t => t.id === testId ? { ...t, title } : t)
+              };
+            }
+            return s;
+          })
+        };
+      }
+      return c;
+    });
+    setExamCatalog(updated);
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'edit-mocktest-title',
+        data: { testId, title }
+      })
+    }).catch(err => console.error("Edit mocktest title error:", err));
   };
 
   const setLanguage = (lang: 'en' | 'hi') => {
@@ -1448,12 +1557,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         saveUserProfileByAdmin,
         examCatalog,
         addCategory,
+        editCategory,
         deleteCategory,
         addSubCategory,
+        editSubCategory,
         deleteSubCategory,
         addSubSubCategory,
+        editSubSubCategory,
         deleteSubSubCategory,
         addMockTest,
+        editMockTestTitle,
         deleteMockTest,
         reportedQuestionsList,
         reportQuestion,
