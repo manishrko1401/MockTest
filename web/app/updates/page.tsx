@@ -211,7 +211,7 @@ export default function UpdatesCenterPage() {
                   .map((notice) => (
                   <div
                     key={notice.id}
-                    className="w-[95%] mx-auto p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5"
+                    className="w-[98%] mx-auto p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
@@ -378,8 +378,8 @@ export default function UpdatesCenterPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Column 1: Notices & Announcements */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-1.5 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-3">
               <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> {t.liveNotices}
             </h3>
             
@@ -391,7 +391,7 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="w-[95%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
+                    className="w-[98%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
@@ -432,8 +432,8 @@ export default function UpdatesCenterPage() {
           </div>
 
           {/* Column 2: Live Result Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-1.5 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-3">
               <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-pulse" /> {t.resultsMerits}
             </h3>
             
@@ -445,7 +445,7 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="w-[95%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
+                    className="w-[98%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
@@ -486,8 +486,8 @@ export default function UpdatesCenterPage() {
           </div>
 
           {/* Column 3: Live Admit Card Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-1.5 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-3">
               <FileText className="h-4.5 w-4.5 text-green-550" /> {t.admitCards}
             </h3>
             
@@ -499,7 +499,7 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="w-[95%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
+                    className="w-[98%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
@@ -539,8 +539,8 @@ export default function UpdatesCenterPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-1.5 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-3">
               <ShieldCheck className="h-4.5 w-4.5 text-purple-500 animate-pulse" /> Answer Keys
             </h3>
             
@@ -552,7 +552,7 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="w-[95%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
+                    className="w-[98%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
