@@ -245,6 +245,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
     let markedAndAnswered = 0;
 
     session.questions.forEach((q) => {
+      if (session.hasSectionalTiming && q.sectionId !== currentSection.id) return;
       const resp = responses[q.id];
       if (resp) {
         if (resp.state === 1) notVisited++;

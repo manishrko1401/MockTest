@@ -1064,7 +1064,7 @@ export default function MobileTestScreen({
           </Text>
         </View>
         {/* Right: hamburger to open palette */}
-        <TouchableOpacity style={styles.hamburgerBtn} onPress={() => setDrawerVisible(true)}>
+        <TouchableOpacity style={styles.hamburgerBtn} onPress={() => { setDrawerSectionIdx(currentSectionIdx); setDrawerVisible(true); }}>
           <AlignJustify size={rs(22)} color="#FFF" />
         </TouchableOpacity>
       </View>
@@ -1249,21 +1249,26 @@ export default function MobileTestScreen({
 
             {/* Section part buttons */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.partScrollRow} contentContainerStyle={{ paddingHorizontal: rs(12), gap: rs(8) }}>
-              {sections.map((sec, idx) => (
-                <TouchableOpacity
-                  key={sec.id}
-                  style={[
-                    styles.partBtn,
-                    drawerSectionIdx === idx && styles.partBtnActive,
-                    isDark && { borderColor: drawerSectionIdx === idx ? '#3B82F6' : '#334155' }
-                  ]}
-                  onPress={() => setDrawerSectionIdx(idx)}
-                >
-                  <Text style={[styles.partBtnText, drawerSectionIdx === idx && styles.partBtnTextActive, isDark && { color: drawerSectionIdx === idx ? '#3B82F6' : '#94A3B8' }]}>
-                    PART - {String.fromCharCode(65 + idx)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {sections.map((sec, idx) => {
+                const isLocked = hasSectionalTiming && idx !== currentSectionIdx;
+                return (
+                  <TouchableOpacity
+                    key={sec.id}
+                    disabled={isLocked}
+                    style={[
+                      styles.partBtn,
+                      drawerSectionIdx === idx && styles.partBtnActive,
+                      isLocked && { opacity: 0.45 },
+                      isDark && { borderColor: drawerSectionIdx === idx ? '#3B82F6' : '#334155' }
+                    ]}
+                    onPress={() => setDrawerSectionIdx(idx)}
+                  >
+                    <Text style={[styles.partBtnText, drawerSectionIdx === idx && styles.partBtnTextActive, isDark && { color: drawerSectionIdx === idx ? '#3B82F6' : '#94A3B8' }]}>
+                      {isLocked ? '🔒 ' : ''}PART - {String.fromCharCode(65 + idx)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
 
             {/* Section name + stats */}

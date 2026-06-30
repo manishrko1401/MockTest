@@ -303,7 +303,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
       if (nextQuestionIndex >= activeSectionQuestions.length) {
         // Move to next section if available
-        if (nextSectionIndex + 1 < session.sections.length) {
+        if (!session.hasSectionalTiming && nextSectionIndex + 1 < session.sections.length) {
           nextSectionIndex += 1;
           nextQuestionIndex = 0;
         } else {
@@ -379,7 +379,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       let nextSectionIndex = state.currentSectionIndex;
 
       if (nextQuestionIndex >= activeSectionQuestions.length) {
-        if (nextSectionIndex + 1 < session.sections.length) {
+        if (!session.hasSectionalTiming && nextSectionIndex + 1 < session.sections.length) {
           nextSectionIndex += 1;
           nextQuestionIndex = 0;
         } else {
