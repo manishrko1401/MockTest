@@ -99,6 +99,8 @@ export async function POST(request: Request) {
         return await handleDeleteSupportConversation(data);
       case 'edit-support-message':
         return await handleEditSupportMessage(data);
+      case 'catalog-sync':
+        return await handleCatalogSync(data);
       default:
         return NextResponse.json({ success: false, error: `Invalid action: ${action}` }, { status: 400 });
     }
@@ -293,6 +295,187 @@ async function handleBootstrap() {
     noticesList,
     examCatalog,
     reportedQuestionsList,
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Catalog Sync — returns only items added/updated since lastSyncedAt
+// Mobile app calls this on every launch to get only the delta (new/updated)
+// -----------------------------------------------------------------------------
+async function handleCatalogSync(data: { lastSyncedAt?: string }) {
+  const syncedAt = new Date().toISOString();
+  const since = data?.lastSyncedAt ? new Date(data.lastSyncedAt) : null;
+
+  // If no previous sync timestamp, return full catalog (first-time sync)
+  if (!since) {
+    // Return the full catalog in the same format as bootstrap
+    const categories = await prisma.category.findMany({
+      orderBy: { orderIndex: 'asc' },
+      include: {
+        exams: {
+          orderBy: { orderIndex: 'asc' },
+          include: {
+            testSeries: {
+              orderBy: { orderIndex: 'asc' },
+              include: {
+                mockTests: { orderBy: { orderIndex: 'asc' } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const notices = await prisma.notice.findMany({ orderBy: { createdAt: 'desc' } });
+
+    const examCatalog = categories.map((cat: any) => ({
+      id: cat.id,
+      name: cat.name,
+      orderIndex: cat.orderIndex,
+      subCategories: cat.exams.map((exam: any) => {
+        const subSubCategories = exam.testSeries.map((ts: any) => ({
+          id: ts.id,
+          name: ts.title,
+          orderIndex: ts.orderIndex,
+          tests: ts.mockTests.map((t: any) => ({
+            id: t.id,
+            title: t.title,
+            questionsCount: t.questionsCount,
+            durationMinutes: t.durationMinutes,
+            maxMarks: t.maxMarks,
+            isPremium: t.requiredTierName !== 'None',
+            requiredTier: t.requiredTierName,
+            customQuestionsCount: t.customQuestions ? (t.customQuestions as any[]).length : 0,
+            hasSectionalTiming: t.hasSectionalTiming ?? false,
+            sectionalTimings: t.sectionalTimings ?? null,
+            orderIndex: t.orderIndex,
+            testSeriesId: ts.id,
+            updatedAt: t.updatedAt.toISOString(),
+          })),
+        }));
+        const tests = subSubCategories.flatMap((ss: any) => ss.tests);
+        return {
+          id: exam.id,
+          name: exam.name,
+          orderIndex: exam.orderIndex,
+          subSubCategories,
+          tests,
+        };
+      }),
+    }));
+
+    const noticesList = notices.map((n: any) => ({
+      id: n.id,
+      title: n.title,
+      date: n.date,
+      publishDate: n.publishDate,
+      type: n.type,
+      category: n.category,
+      url: n.url || undefined,
+      lastDate: n.lastDate || undefined,
+      imageUrl: n.imageUrl || undefined,
+    }));
+
+    return NextResponse.json({
+      success: true,
+      isFullSync: true,
+      hasNewData: true,
+      examCatalog,
+      noticesList,
+      deletedTestIds: [],
+      syncedAt,
+    });
+  }
+
+  // Delta sync — only fetch items changed since lastSyncedAt
+  const [updatedCategories, updatedExams, updatedSeries, updatedTests, newNotices] = await Promise.all([
+    prisma.category.findMany({
+      where: { createdAt: { gt: since } },
+      orderBy: { orderIndex: 'asc' },
+    }),
+    prisma.exam.findMany({
+      where: { createdAt: { gt: since } },
+      orderBy: { orderIndex: 'asc' },
+    }),
+    prisma.testSeries.findMany({
+      where: { updatedAt: { gt: since } },
+      orderBy: { orderIndex: 'asc' },
+    }),
+    prisma.mockTest.findMany({
+      where: { updatedAt: { gt: since } },
+      orderBy: { orderIndex: 'asc' },
+      select: {
+        id: true,
+        title: true,
+        questionsCount: true,
+        durationMinutes: true,
+        maxMarks: true,
+        requiredTierName: true,
+        hasSectionalTiming: true,
+        sectionalTimings: true,
+        orderIndex: true,
+        testSeriesId: true,
+        updatedAt: true,
+        // NOTE: customQuestions is intentionally excluded — fetched per-test separately
+      },
+    }),
+    prisma.notice.findMany({
+      where: { createdAt: { gt: since } },
+      orderBy: { createdAt: 'desc' },
+    }),
+  ]);
+
+  const hasNewData =
+    updatedCategories.length > 0 ||
+    updatedExams.length > 0 ||
+    updatedSeries.length > 0 ||
+    updatedTests.length > 0 ||
+    newNotices.length > 0;
+
+  // Map updated tests to mobile-friendly format
+  const mappedNewTests = updatedTests.map((t: any) => ({
+    id: t.id,
+    title: t.title,
+    questionsCount: t.questionsCount,
+    durationMinutes: t.durationMinutes,
+    maxMarks: t.maxMarks,
+    isPremium: t.requiredTierName !== 'None',
+    requiredTier: t.requiredTierName,
+    hasSectionalTiming: t.hasSectionalTiming ?? false,
+    sectionalTimings: t.sectionalTimings ?? null,
+    orderIndex: t.orderIndex,
+    testSeriesId: t.testSeriesId,
+    updatedAt: t.updatedAt.toISOString(),
+  }));
+
+  const mappedNewNotices = newNotices.map((n: any) => ({
+    id: n.id,
+    title: n.title,
+    date: n.date,
+    publishDate: n.publishDate,
+    type: n.type,
+    category: n.category,
+    url: n.url || undefined,
+    lastDate: n.lastDate || undefined,
+    imageUrl: n.imageUrl || undefined,
+  }));
+
+  // For invalidating question caches: if a test was updated, its questions may have changed
+  // Return the list of updated test IDs so mobile can clear their question cache
+  const updatedTestIds = updatedTests.map((t: any) => t.id);
+
+  return NextResponse.json({
+    success: true,
+    isFullSync: false,
+    hasNewData,
+    newCategories: updatedCategories.map((c: any) => ({ id: c.id, name: c.name, orderIndex: c.orderIndex })),
+    newExams: updatedExams.map((e: any) => ({ id: e.id, name: e.name, categoryId: e.categoryId, orderIndex: e.orderIndex })),
+    newSeries: updatedSeries.map((s: any) => ({ id: s.id, title: s.title, examId: s.examId, orderIndex: s.orderIndex })),
+    newTests: mappedNewTests,
+    newNotices: mappedNewNotices,
+    updatedTestIds,   // Mobile should invalidate question cache for these testIds
+    deletedTestIds: [], // Future: track soft-deleted tests
+    syncedAt,
   });
 }
 

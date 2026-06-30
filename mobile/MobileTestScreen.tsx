@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Globe, AlignJustify } from 'lucide-react-native';
 import { ApiClient } from './api';
+import { getCachedQuestions, saveQuestionsToCache } from './cache';
 import { ThemeColors } from './theme';
 import { HtmlText, preloadImages } from './HtmlText';
 
@@ -119,6 +120,12 @@ export default function MobileTestScreen({
   const activeQuestionIdRef = useRef<string | null>(null);
   const isExitingRef = useRef(false);
 
+  // Refs to avoid stale closures inside the timer setInterval
+  const sectionsRef = useRef<MobileSection[]>([]);
+  const totalDurationRef = useRef<number>(3600);
+  const hasSectionalTimingRef = useRef<boolean>(false);
+  const currentSectionIdxRef = useRef<number>(0);
+
   // Modern custom modal state
   const [modalConfig, setModalConfig] = useState<{
     visible: boolean;
@@ -180,64 +187,50 @@ export default function MobileTestScreen({
     const loadExamData = async () => {
       if (isExitingRef.current) return;
       setLoading(true);
-      setLoadingText('Syncing sitting session...');
-      
-      // 1. Fetch questions from database
-      const res = await ApiClient.getCustomQuestions(testId);
-      let list: MobileQuestion[] = [];
-      let secs: MobileSection[] = [];
-      let durationSeconds = 3600;
+      setLoadingText('Loading test...');
 
-      // Find test details in catalog to get correct duration
-      let catalogTest: any = null;
-      if (examCatalog && examCatalog.length > 0) {
-        for (const cat of examCatalog) {
-          for (const sub of cat.subCategories || []) {
-            const found = (sub.tests || []).find((t: any) => t.id === testId);
-            if (found) {
-              catalogTest = found;
-              break;
+      // ──────────────────────────────────────────────────────────────────
+      // Shared builder: turns raw API questions into screen state
+      // ──────────────────────────────────────────────────────────────────
+      const buildScreenFromApiQuestions = (rawQuestions: any[]) => {
+        // Find test details in catalog to get correct duration & timing config
+        let catalogTest: any = null;
+        if (examCatalog && examCatalog.length > 0) {
+          for (const cat of examCatalog) {
+            for (const sub of cat.subCategories || []) {
+              const found = (sub.tests || []).find((t: any) => t.id === testId);
+              if (found) { catalogTest = found; break; }
             }
+            if (catalogTest) break;
           }
-          if (catalogTest) break;
         }
-      }
 
-      if (catalogTest && catalogTest.durationMinutes) {
-        durationSeconds = catalogTest.durationMinutes * 60;
-      } else {
-        // Fallbacks
-        if (testId.includes('ssc')) {
-          durationSeconds = 3600; // 60 mins
-        } else if (testId.includes('rrb')) {
-          durationSeconds = 5400; // 90 mins
-        } else if (testId.includes('ctet')) {
-          durationSeconds = 9000; // 150 mins
-        } else if (testId.includes('ugc_net')) {
-          durationSeconds = testId.includes('paper1') ? 3600 : 7200; // 60 or 120 mins
+        let durationSeconds = 3600;
+        if (catalogTest?.durationMinutes) {
+          durationSeconds = catalogTest.durationMinutes * 60;
+        } else {
+          if (testId.includes('ssc'))         durationSeconds = 3600;
+          else if (testId.includes('rrb'))    durationSeconds = 5400;
+          else if (testId.includes('ctet'))   durationSeconds = 9000;
+          else if (testId.includes('ugc_net')) durationSeconds = testId.includes('paper1') ? 3600 : 7200;
         }
-      }
 
-      setTotalDuration(durationSeconds);
-      if (catalogTest?.hasSectionalTiming) {
-        setHasSectionalTiming(true);
-      }
+        setTotalDuration(durationSeconds);
+        totalDurationRef.current = durationSeconds;
 
-      const testTitle = testId.includes('ssc') ? 'SSC' : testId.includes('rrb') ? 'RRB' : 'Mock';
+        if (catalogTest?.hasSectionalTiming) {
+          setHasSectionalTiming(true);
+          hasSectionalTimingRef.current = true;
+        }
 
-      if (res.success && res.questions && Array.isArray(res.questions) && res.questions.length > 0) {
-        // Custom Questions
         const isRRB = testId.includes('rrb');
         const posMark = isRRB ? 1 : 2;
         const negMark = isRRB ? 0.33 : 0.5;
 
-        // Dynamically build sections based on unique question section fields
         const sectionNames: string[] = [];
-        res.questions.forEach((q: any) => {
-          const sec = q.section || "General Studies";
-          if (!sectionNames.includes(sec)) {
-            sectionNames.push(sec);
-          }
+        rawQuestions.forEach((q: any) => {
+          const sec = q.section || 'General Studies';
+          if (!sectionNames.includes(sec)) sectionNames.push(sec);
         });
 
         let parsedTimings: number[] = [];
@@ -247,16 +240,14 @@ export default function MobileTestScreen({
           } else if (typeof catalogTest.sectionalTimings === 'string') {
             try {
               const parsed = JSON.parse(catalogTest.sectionalTimings);
-              if (Array.isArray(parsed)) {
-                parsedTimings = parsed.map((t: any) => Number(t));
-              }
+              if (Array.isArray(parsed)) parsedTimings = parsed.map((t: any) => Number(t));
             } catch (e) {
-              console.error("Failed to parse sectional timings:", e);
+              console.error('Failed to parse sectional timings:', e);
             }
           }
         }
 
-        secs = sectionNames.map((name, idx) => ({
+        const builtSecs: MobileSection[] = sectionNames.map((name, idx) => ({
           id: `sec_custom_${idx}`,
           name,
           orderIndex: idx,
@@ -268,15 +259,12 @@ export default function MobileTestScreen({
         }));
 
         const sectionCounters: Record<string, number> = {};
-        sectionNames.forEach(name => {
-          sectionCounters[name] = 0;
-        });
+        sectionNames.forEach(name => { sectionCounters[name] = 0; });
 
-        list = res.questions.map((q: any, idx: number) => {
-          const secName = q.section || "General Studies";
+        const builtList: MobileQuestion[] = rawQuestions.map((q: any, idx: number) => {
+          const secName = q.section || 'General Studies';
           const secId = `sec_custom_${sectionNames.indexOf(secName)}`;
           const qOrder = sectionCounters[secName]++;
-
           return {
             id: q.id || `q_custom_${idx}`,
             sectionId: secId,
@@ -295,170 +283,185 @@ export default function MobileTestScreen({
             }
           };
         });
+
+        return { builtList, builtSecs, durationSeconds, catalogTest };
+      };
+
+      // ──────────────────────────────────────────────────────────────────
+      // Shared finalizer: applies built data to screen state
+      // ──────────────────────────────────────────────────────────────────
+      const applyToScreen = (
+        list: MobileQuestion[],
+        secs: MobileSection[],
+        durationSeconds: number,
+        catalogTest: any
+      ) => {
+        setQuestions(list);
+        setSections(secs);
+        sectionsRef.current = secs;
+        totalDurationRef.current = durationSeconds;
+        hasSectionalTimingRef.current = catalogTest?.hasSectionalTiming ?? false;
+
+        // Pre-warm expo-image disk cache for all question/option images
+        const allHtmlStrings = list.flatMap(q => [
+          q.content?.en?.questionText,
+          q.content?.hi?.questionText,
+          ...(q.content?.en?.options ?? []),
+          ...(q.content?.hi?.options ?? []),
+        ].filter(Boolean) as string[]);
+        preloadImages(allHtmlStrings);
+
+        // Initialise response state dictionary
+        const respDict: Record<string, any> = {};
+        list.forEach((q) => {
+          respDict[q.id] = {
+            selectedOptionIndex: null,
+            tempOptionIndex: null,
+            state: 1 as PaletteState,
+            elapsedSeconds: 0
+          };
+        });
+
+        // Resume from backend ongoing session if present
+        const ongoing = currentUser.testSessions?.find(
+          (s: any) => s.testId === testId && s.status === 'ONGOING'
+        );
+
+        if (ongoing) {
+          setTimeLeft(ongoing.timeRemaining ?? durationSeconds);
+          setViolationsCount(ongoing.violations ?? 0);
+          setCurrentSectionIdx(ongoing.currentSectionIndex ?? 0);
+          setCurrentQuestionIdx(ongoing.currentQuestionIndex ?? 0);
+          if (ongoing.responses) {
+            Object.entries(ongoing.responses).forEach(([qId, val]: any) => {
+              if (respDict[qId]) {
+                respDict[qId].selectedOptionIndex = val.selectedOptionIndex;
+                respDict[qId].tempOptionIndex = val.selectedOptionIndex;
+                respDict[qId].state = val.selectedOptionIndex !== null ? 3 : 2;
+                respDict[qId].elapsedSeconds = val.elapsedSeconds ?? 0;
+              }
+            });
+          }
+        } else {
+          if (catalogTest?.hasSectionalTiming && secs.length > 0 && secs[0].durationSeconds) {
+            setTimeLeft(secs[0].durationSeconds);
+          } else {
+            setTimeLeft(durationSeconds);
+          }
+        }
+
+        // Mark starting question as visited
+        const activeSecQ = list
+          .filter(q => q.sectionId === secs[0]?.id)
+          .sort((a, b) => a.orderIndex - b.orderIndex);
+        if (activeSecQ.length > 0) {
+          const firstQId = activeSecQ[0].id;
+          if (respDict[firstQId]?.state === 1) respDict[firstQId].state = 2;
+        }
+
+        if (!isExitingRef.current) {
+          setResponses(respDict);
+          setLoading(false);
+        }
+      };
+
+      // ──────────────────────────────────────────────────────────────────
+      // STEP 1 — Try device cache first (instant, no network needed)
+      // ──────────────────────────────────────────────────────────────────
+      const cachedRaw = await getCachedQuestions(testId);
+      if (cachedRaw && cachedRaw.length > 0) {
+        // Serve from device immediately
+        const { builtList, builtSecs, durationSeconds, catalogTest } = buildScreenFromApiQuestions(cachedRaw);
+        applyToScreen(builtList, builtSecs, durationSeconds, catalogTest);
+
+        // Silently refresh cache in background (no UI update unless questions changed)
+        ApiClient.getCustomQuestions(testId).then(res => {
+          if (res.success && res.questions && res.questions.length > 0) {
+            saveQuestionsToCache(testId, res.questions);
+          }
+        }).catch(() => { /* silent — cache will refresh next open */ });
+        return;
+      }
+
+      // ──────────────────────────────────────────────────────────────────
+      // STEP 2 — No cache: fetch from Vercel, then save to device
+      // ──────────────────────────────────────────────────────────────────
+      setLoadingText('Downloading questions...');
+      const res = await ApiClient.getCustomQuestions(testId);
+
+      if (res.success && res.questions && Array.isArray(res.questions) && res.questions.length > 0) {
+        // Save to device for next time
+        saveQuestionsToCache(testId, res.questions);
+        const { builtList, builtSecs, durationSeconds, catalogTest } = buildScreenFromApiQuestions(res.questions);
+        applyToScreen(builtList, builtSecs, durationSeconds, catalogTest);
       } else {
-        // Fallback static question bank mirroring useTestEngine seeds
+        // ── Fallback static bank (mirrors useTestEngine seeds) ─────────────
+        // Find test config from catalog for duration/timing even if no custom Qs
+        let catalogTest: any = null;
+        if (examCatalog && examCatalog.length > 0) {
+          for (const cat of examCatalog) {
+            for (const sub of cat.subCategories || []) {
+              const found = (sub.tests || []).find((t: any) => t.id === testId);
+              if (found) { catalogTest = found; break; }
+            }
+            if (catalogTest) break;
+          }
+        }
+        let durationSeconds = catalogTest?.durationMinutes
+          ? catalogTest.durationMinutes * 60
+          : testId.includes('rrb') ? 5400 : testId.includes('ctet') ? 9000 : 3600;
+        setTotalDuration(durationSeconds);
+        totalDurationRef.current = durationSeconds;
+
+        let list: MobileQuestion[] = [];
+        let secs: MobileSection[] = [];
         if (testId.includes('ssc')) {
           secs = [
-            { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 },
-            { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 2, negativeMark: 0.5 },
-            { id: "sec_english", name: "English Comprehension", orderIndex: 2, positiveMark: 2, negativeMark: 0.5 }
+            { id: 'sec_quant',     name: 'Quantitative Aptitude',              orderIndex: 0, positiveMark: 2, negativeMark: 0.5 },
+            { id: 'sec_reasoning', name: 'General Intelligence & Reasoning',   orderIndex: 1, positiveMark: 2, negativeMark: 0.5 },
+            { id: 'sec_english',   name: 'English Comprehension',              orderIndex: 2, positiveMark: 2, negativeMark: 0.5 },
           ];
           list = [
-            {
-              id: "q_q1", sectionId: "sec_quant", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
-              content: {
-                en: { questionText: "If x + 1/x = 5, then find the value of xÃƒâ€šÃ‚Â² + 1/xÃƒâ€šÃ‚Â².", options: ["23", "25", "27", "21"] },
-                hi: { questionText: "\u092f\u0926\u093f x + 1/x = 5 \u0939\u0948, \u0924\u094b x\u00b2 + 1/x\u00b2 \u0915\u093e \u092e\u093e\u0928 \u091c\u094d\u091e\u093e\u0924 \u0915\u0940\u091c\u093f\u090f\u0964", options: ["23", "25", "27", "21"] },
-              }
-            },
-            {
-              id: "q_q2", sectionId: "sec_quant", questionType: "mcq", orderIndex: 1, correctOptionIndex: 0,
-              content: {
-                en: { questionText: "The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A's present age?", options: ["20 years", "25 years", "30 years", "15 years"] },
-                hi: { questionText: "A \u0914\u0930 B \u0915\u0940 \u0935\u0930\u094d\u0924\u092e\u093e\u0928 \u0906\u092f\u0941 \u0915\u093e \u0905\u0928\u0941\u092a\u093e\u0924 4:5 \u0939\u0948\u0964 5 \u0935\u0930\u094d\u0937 \u092c\u093e\u0926 \u092f\u0939 \u0905\u0928\u0941\u092a\u093e\u0924 5:6 \u0939\u094b \u091c\u093e\u0924\u093e \u0939\u0948\u0964 A \u0915\u0940 \u0935\u0930\u094d\u0924\u092e\u093e\u0928 \u0906\u092f\u0941 \u0915\u094d\u092f\u093e \u0939\u0948?", options: ["20 \u0935\u0930\u094d\u0937", "25 \u0935\u0930\u094d\u0937", "30 \u0935\u0930\u094d\u0937", "15 years"] },
-              }
-            },
-            {
-              id: "q_r1", sectionId: "sec_reasoning", questionType: "mcq", orderIndex: 0, correctOptionIndex: 3,
-              content: {
-                en: { questionText: "Identify the pattern and choose the next term in the series: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] },
-                hi: { questionText: "\u092a\u0948\u091f\u0930\u094d\u0928 \u092a\u0939\u091a\u093e\u0928\u0947\u0902 \u0914\u0930 \u0936\u094d\u0930\u0943\u0902\u0916\u0932\u093e \u092e\u0947\u0902 \u0905\u0917\u0932\u093e \u092a\u0926 \u091a\u0941\u0928\u0947\u0902: 3, 7, 15, 31, 63, ?", options: ["125", "126", "128", "127"] },
-              }
-            },
-            {
-              id: "q_e1", sectionId: "sec_english", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
-              content: {
-                en: { questionText: "Select the antonym for the word: OBSTINATE", options: ["Flexible", "Stubborn", "Rigid", "Dogmatic"] },
-                hi: { questionText: "\u0926\u093f\u090f \u0917\u090f \u0936\u092c\u094d\u0926 \u0915\u093e \u0935\u093f\u0932\u094b\u092e \u0936\u092c\u094d\u0926 \u091a\u0941\u0928\u0947\u0902: OBSTINATE (\u0939\u0920\u0940)", options: ["Flexible (\u0932\u091a\u0940\u0932\u093e)", "Stubborn (\u0905\u0921\u093c\u093f\u092f\u0932)", "Rigid (\u0915\u0920\u094b\u0930)", "Dogmatic (\u0915\u091f\u094d\u091f\u0930)"] },
-              }
-            }
+            { id: 'q_q1', sectionId: 'sec_quant',     questionType: 'mcq', orderIndex: 0, correctOptionIndex: 1, content: { en: { questionText: 'If x + 1/x = 5, then find the value of x² + 1/x².', options: ['23', '25', '27', '21'] }, hi: { questionText: 'यदि x + 1/x = 5 है, तो x² + 1/x² का मान ज्ञात कीजिए।', options: ['23', '25', '27', '21'] } } },
+            { id: 'q_q2', sectionId: 'sec_quant',     questionType: 'mcq', orderIndex: 1, correctOptionIndex: 0, content: { en: { questionText: 'The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A’s present age?', options: ['20 years', '25 years', '30 years', '15 years'] }, hi: { questionText: 'A और B की वर्तमान आयु का अनुपात 4:5 है।', options: ['20 वर्ष', '25 वर्ष', '30 वर्ष', '15 वर्ष'] } } },
+            { id: 'q_r1', sectionId: 'sec_reasoning', questionType: 'mcq', orderIndex: 0, correctOptionIndex: 3, content: { en: { questionText: 'Identify the pattern and choose the next term: 3, 7, 15, 31, 63, ?', options: ['125', '126', '128', '127'] }, hi: { questionText: 'पैटर्न पहचानें और श्रृंखला में अगला पद चुनें: 3, 7, 15, 31, 63, ?', options: ['125', '126', '128', '127'] } } },
+            { id: 'q_e1', sectionId: 'sec_english',   questionType: 'mcq', orderIndex: 0, correctOptionIndex: 0, content: { en: { questionText: 'Select the antonym for the word: OBSTINATE', options: ['Flexible', 'Stubborn', 'Rigid', 'Dogmatic'] }, hi: { questionText: 'दिए गए शब्द का विलोम शब्द चुनें: OBSTINATE', options: ['Flexible', 'Stubborn', 'Rigid', 'Dogmatic'] } } },
           ];
         } else {
-          secs = [
-            { id: "sec_paper1", name: "Aptitude & General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5 }
-          ];
+          secs = [{ id: 'sec_paper1', name: 'Aptitude & General Studies', orderIndex: 0, positiveMark: 2, negativeMark: 0.5 }];
           list = [
-            {
-              id: "q_gen1", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 0, correctOptionIndex: 1,
-              content: {
-                en: { questionText: "What is the unit of electric current?", options: ["Volt", "Ampere", "Ohm", "Watt"] },
-                hi: { questionText: "\u0935\u093f\u0926\u094d\u092f\u0941\u0924 \u0927\u093e\u0930\u093e \u0915\u0940 \u0907\u0915\u093e\u0908 \u0915\u094d\u092f\u093e \u0939\u0948?", options: ["\u0935\u094b\u0932\u094d\u091f", "\u090f\u092e\u094d\u092a\u0940\u092f\u0930", "\u0913\u092e", "\u0935\u093e\u091f"] },
-              }
-            },
-            {
-              id: "q_gen2", sectionId: "sec_paper1", questionType: "mcq", orderIndex: 1, correctOptionIndex: 1,
-              content: {
-                en: { questionText: "Which planet is known as the Red Planet?", options: ["Earth", "Mars", "Jupiter", "Saturn"] },
-                hi: { questionText: "\u0915\u093f\u0938 \u0917\u094d\u0930\u0939 \u0915\u094b \u0932\u093e\u0932 \u0917\u094d\u0930\u0939 \u0915\u0947 \u0928\u093e\u092e \u0938\u0947 \u091c\u093e\u0928\u093e \u091c\u093e\u0924\u093e \u0939\u0948?", options: ["\u092a\u0943\u0925\u094d\u0935\u0940", "\u092e\u0902\u0917\u0932", "\u092c\u0943\u0939\u0938\u094d\u092a\u0924\u093f", "\u0936\u0928\u093f"] },
-              }
-            }
+            { id: 'q_gen1', sectionId: 'sec_paper1', questionType: 'mcq', orderIndex: 0, correctOptionIndex: 1, content: { en: { questionText: 'What is the unit of electric current?', options: ['Volt', 'Ampere', 'Ohm', 'Watt'] }, hi: { questionText: 'विद्युत धारा की इकाई क्या है?', options: ['वोल्ट', 'एम्पीयर', 'ओम', 'वाट'] } } },
+            { id: 'q_gen2', sectionId: 'sec_paper1', questionType: 'mcq', orderIndex: 1, correctOptionIndex: 1, content: { en: { questionText: 'Which planet is known as the Red Planet?', options: ['Earth', 'Mars', 'Jupiter', 'Saturn'] }, hi: { questionText: 'किस ग्रह को लाल ग्रह कहा जाता है?', options: ['पृथ्वी', 'मंगल', 'बृहस्पति', 'शनि'] } } },
           ];
         }
+        applyToScreen(list, secs, durationSeconds, catalogTest);
       }
-
-      setQuestions(list);
-      setSections(secs);
-
-      // Pre-fetch all question/option images into expo-image disk cache
-      // so they appear instantly when users reach each question
-      const allHtmlStrings = list.flatMap(q => [
-        q.content?.en?.questionText,
-        q.content?.hi?.questionText,
-        ...(q.content?.en?.options ?? []),
-        ...(q.content?.hi?.options ?? []),
-      ].filter(Boolean) as string[]);
-      preloadImages(allHtmlStrings);
-
-      // 2. Initialize responses state dictionary
-      const respDict: Record<string, any> = {};
-      list.forEach((q) => {
-        respDict[q.id] = {
-          selectedOptionIndex: null,
-          tempOptionIndex: null,
-          state: 1 as PaletteState,
-          elapsedSeconds: 0
-        };
-      });
-
-      // 3. Try to resume from backend ongoing sessions
-      const ongoing = currentUser.testSessions?.find(
-        (s: any) => s.testId === testId && s.status === 'ONGOING'
-      );
-
-      if (ongoing) {
-        setTimeLeft(ongoing.timeRemaining ?? durationSeconds);
-        setViolationsCount(ongoing.violations ?? 0);
-        setCurrentSectionIdx(ongoing.currentSectionIndex ?? 0);
-        setCurrentQuestionIdx(ongoing.currentQuestionIndex ?? 0);
-
-        if (ongoing.responses) {
-          Object.entries(ongoing.responses).forEach(([qId, val]: any) => {
-            if (respDict[qId]) {
-              respDict[qId].selectedOptionIndex = val.selectedOptionIndex;
-              respDict[qId].tempOptionIndex = val.selectedOptionIndex;
-              respDict[qId].state = val.selectedOptionIndex !== null ? 3 : 2;
-              respDict[qId].elapsedSeconds = val.elapsedSeconds ?? 0;
-            }
-          });
-        }
-      } else {
-        // For sectional timing: start with section 0's duration; else full test duration
-        if (catalogTest?.hasSectionalTiming && secs.length > 0 && secs[0].durationSeconds) {
-          setTimeLeft(secs[0].durationSeconds);
-        } else {
-          setTimeLeft(durationSeconds);
-        }
-      }
-
-      // Mark the starting question as visited
-      const activeSecQ = list.filter(q => q.sectionId === secs[0].id).sort((a,b)=>a.orderIndex - b.orderIndex);
-      if (activeSecQ.length > 0) {
-        const firstQId = activeSecQ[0].id;
-        if (respDict[firstQId].state === 1) {
-          respDict[firstQId].state = 2; // Visited (Not Answered)
-        }
-      }
-
-      if (isExitingRef.current) return;
-      setResponses(respDict);
       setLoading(false);
     };
 
     loadExamData();
   }, [testId]);
 
-  // Timer Tick hook
+  // Keep refs in sync with state so the timer interval always reads fresh values
+  useEffect(() => {
+    sectionsRef.current = sections;
+  }, [sections]);
+  useEffect(() => {
+    totalDurationRef.current = totalDuration;
+  }, [totalDuration]);
+  useEffect(() => {
+    hasSectionalTimingRef.current = hasSectionalTiming;
+  }, [hasSectionalTiming]);
+  useEffect(() => {
+    currentSectionIdxRef.current = currentSectionIdx;
+  }, [currentSectionIdx]);
+
+  // Timer Tick hook — uses refs to avoid stale closure bugs with sectional timing
   useEffect(() => {
     if (loading || !isTimerRunning) return;
 
     const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          if (hasSectionalTiming) {
-            // Auto-advance to next section on section timer expiry
-            setCurrentSectionIdx(prevSecIdx => {
-              const nextSecIdx = prevSecIdx + 1;
-              if (nextSecIdx < sections.length) {
-                setCurrentQuestionIdx(0);
-                const nextSec = sections[nextSecIdx];
-                const nextDuration = nextSec?.durationSeconds ?? totalDuration;
-                setTimeout(() => setTimeLeft(nextDuration), 0);
-                return nextSecIdx;
-              } else {
-                handleExamSubmit(true);
-                return prevSecIdx;
-              }
-            });
-            return 0;
-          } else {
-            handleExamSubmit(true);
-            return 0;
-          }
-        }
-        return prev - 1;
-      });
-
+      // Update per-question elapsed time
       const qId = activeQuestionIdRef.current;
       if (qId) {
         setResponses((prev) => {
@@ -473,10 +476,59 @@ export default function MobileTestScreen({
           };
         });
       }
+
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Read fresh values from refs to avoid stale closures
+          const isSectional = hasSectionalTimingRef.current;
+          const allSections = sectionsRef.current;
+          const currentSecIdx = currentSectionIdxRef.current;
+
+          if (isSectional) {
+            const nextSecIdx = currentSecIdx + 1;
+            if (nextSecIdx < allSections.length) {
+              // Advance to next section: update section index, reset question, restart timer
+              setCurrentSectionIdx(nextSecIdx);
+              setCurrentQuestionIdx(0);
+              const nextSec = allSections[nextSecIdx];
+              const nextDuration = nextSec?.durationSeconds ?? totalDurationRef.current;
+              // Show section transition notification
+              setModalConfig({
+                visible: true,
+                title: `Section Time Up — Moving to Section ${nextSecIdx + 1}`,
+                message: `Time for "${allSections[currentSecIdx]?.name}" has expired.\nNow starting: "${nextSec?.name}"\nTime allotted: ${Math.round(nextDuration / 60)} minutes.`,
+                buttons: [
+                  {
+                    text: 'Start Next Section',
+                    onPress: () => setModalConfig((prevVal) => ({ ...prevVal, visible: false })),
+                    style: 'default'
+                  }
+                ]
+              });
+              // Restart the timer for the next section duration
+              setTimeout(() => {
+                setTimeLeft(nextDuration);
+                setIsTimerRunning(false);
+                setIsTimerRunning(true);
+              }, 50);
+              return 0;
+            } else {
+              // Last section expired — force submit
+              handleExamSubmit(true);
+              return 0;
+            }
+          } else {
+            // Non-sectional: global timer expired
+            handleExamSubmit(true);
+            return 0;
+          }
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [loading, isTimerRunning, hasSectionalTiming, sections, totalDuration]);
+  }, [loading, isTimerRunning]);
 
   // Trigger auto-save every 15 seconds to sync state with shared database
   useEffect(() => {
@@ -1058,7 +1110,17 @@ export default function MobileTestScreen({
           <Text style={styles.pauseTextBtnText}>|| Pause</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTimer}>{formatTime(timeLeft)}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: rs(4) }}>
+            {hasSectionalTiming && (
+              <View style={styles.sectionTimerBadge}>
+                <Text style={styles.sectionTimerBadgeText}>⏱ SEC</Text>
+              </View>
+            )}
+            <Text style={[
+              styles.headerTimer,
+              hasSectionalTiming && timeLeft <= 120 && styles.headerTimerUrgent
+            ]}>{formatTime(timeLeft)}</Text>
+          </View>
           <Text style={styles.headerExamName} numberOfLines={1}>
             {sections[currentSectionIdx]?.name || 'Mock Test'}
           </Text>
@@ -1468,6 +1530,23 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.65)',
     fontSize: rs(11),
     marginTop: 2,
+  },
+  sectionTimerBadge: {
+    backgroundColor: '#F59E0B',
+    borderRadius: rs(4),
+    paddingHorizontal: rs(5),
+    paddingVertical: vs(2),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionTimerBadgeText: {
+    color: '#FFF',
+    fontSize: rs(9),
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  headerTimerUrgent: {
+    color: '#FCA5A5',
   },
   hamburgerBtn: {
     width: rs(36),

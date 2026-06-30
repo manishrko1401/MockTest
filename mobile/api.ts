@@ -32,6 +32,14 @@ export const ApiClient = {
   bootstrap: () => postRequest('bootstrap'),
 
   /**
+   * Smart catalog sync — returns only categories/tests added or updated since
+   * the device's last sync. On first run (no lastSyncedAt), returns the full catalog.
+   * Much lighter than bootstrap() for repeat launches.
+   */
+  catalogSync: (lastSyncedAt?: string | null) =>
+    postRequest('catalog-sync', { lastSyncedAt: lastSyncedAt ?? null }),
+
+  /**
    * Performs user login using email
    */
   login: (email: string, password?: string) => postRequest('login', { email, password }),

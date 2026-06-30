@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as Updates from 'expo-updates';
 import { ApiClient } from './api';
+import { getCachedCatalog, saveCatalogToCache, clearAllCache, getLastSyncTimestamp, setLastSyncTimestamp, mergeCatalogDelta, invalidateQuestionsCache } from './cache';
 import AuthScreen from './screens/AuthScreen';
 import DashboardScreen from './screens/DashboardScreen';
 import TestSeriesDetailScreen from './screens/TestSeriesDetailScreen';
@@ -84,17 +85,65 @@ export default function App() {
           setIsDark(true);
         }
 
-        // Bootstrap notices & exams catalog from database
-        const bootRes = await ApiClient.bootstrap();
-        if (bootRes.success) {
-          setNotices(bootRes.noticesList || []);
-          setExamCatalog(bootRes.examCatalog || []);
-          setUsersList(bootRes.usersList || []);
+        // ── Step 1: Serve cached catalog instantly (zero network wait) ──────
+        const cachedCatalog = await getCachedCatalog();
+        if (cachedCatalog) {
+          setNotices(cachedCatalog.noticesList || []);
+          setExamCatalog(cachedCatalog.examCatalog || []);
+          setUsersList(cachedCatalog.usersList || []);
+        }
+
+        // ── Step 2: Smart delta sync — only download what's new ─────────────
+        const lastSyncedAt = await getLastSyncTimestamp();
+        const syncRes = await ApiClient.catalogSync(lastSyncedAt);
+
+        if (syncRes.success) {
+          let updatedCatalog: typeof cachedCatalog;
+
+          if (syncRes.isFullSync || !cachedCatalog) {
+            // First ever sync — server sent full catalog, save it as-is
+            updatedCatalog = {
+              examCatalog: syncRes.examCatalog || [],
+              noticesList: syncRes.noticesList || [],
+              usersList: [],
+            };
+          } else if (syncRes.hasNewData) {
+            // Delta sync — merge new/updated items into existing local catalog
+            updatedCatalog = mergeCatalogDelta(cachedCatalog, {
+              newCategories: syncRes.newCategories || [],
+              newExams: syncRes.newExams || [],
+              newSeries: syncRes.newSeries || [],
+              newTests: syncRes.newTests || [],
+              newNotices: syncRes.newNotices || [],
+              updatedTestIds: syncRes.updatedTestIds || [],
+            });
+
+            // Invalidate question cache for any tests whose content was updated
+            if (syncRes.updatedTestIds?.length > 0) {
+              for (const testId of syncRes.updatedTestIds) {
+                await invalidateQuestionsCache(testId);
+              }
+              console.log(`[Sync] Invalidated question cache for ${syncRes.updatedTestIds.length} updated test(s)`);
+            }
+          } else {
+            // No new data — nothing to update
+            updatedCatalog = cachedCatalog;
+          }
+
+          if (updatedCatalog) {
+            setNotices(updatedCatalog.noticesList || []);
+            setExamCatalog(updatedCatalog.examCatalog || []);
+            await saveCatalogToCache(updatedCatalog);
+          }
+
+          // Save sync timestamp so next launch only fetches new delta
+          await setLastSyncTimestamp(syncRes.syncedAt);
 
           // Seed seen notices if they don't exist yet
           const storedNotices = await AsyncStorage.getItem('seen_notices');
-          if (!storedNotices && bootRes.noticesList) {
-            const initialIds = bootRes.noticesList.map((n: any) => n.id);
+          if (!storedNotices) {
+            const allNotices = updatedCatalog?.noticesList || [];
+            const initialIds = allNotices.map((n: any) => n.id);
             await AsyncStorage.setItem('seen_notices', JSON.stringify(initialIds));
           }
         }
@@ -294,25 +343,47 @@ export default function App() {
     // Execute first checks immediately
     checkNewSupportMessages();
 
-    // Poll notices (bootstrap) every 10 seconds
+    // Poll for catalog updates every 90 seconds using lightweight delta sync
     const noticesInterval = setInterval(async () => {
       try {
-        const bootRes = await ApiClient.bootstrap();
-        if (bootRes.success && isMounted) {
-          setNotices(bootRes.noticesList || []);
-          setExamCatalog(bootRes.examCatalog || []);
-          setUsersList(bootRes.usersList || []);
-          checkNewNotices(bootRes.noticesList || []);
+        const lastSyncedAt = await getLastSyncTimestamp();
+        const syncRes = await ApiClient.catalogSync(lastSyncedAt);
+        if (syncRes.success && isMounted && syncRes.hasNewData) {
+          const existing = await getCachedCatalog();
+          if (existing) {
+            let updated;
+            if (syncRes.isFullSync) {
+              updated = { examCatalog: syncRes.examCatalog || [], noticesList: syncRes.noticesList || [], usersList: existing.usersList };
+            } else {
+              updated = mergeCatalogDelta(existing, {
+                newCategories: syncRes.newCategories || [],
+                newExams: syncRes.newExams || [],
+                newSeries: syncRes.newSeries || [],
+                newTests: syncRes.newTests || [],
+                newNotices: syncRes.newNotices || [],
+                updatedTestIds: syncRes.updatedTestIds || [],
+              });
+              // Invalidate question cache for updated tests
+              for (const testId of (syncRes.updatedTestIds || [])) {
+                await invalidateQuestionsCache(testId);
+              }
+            }
+            setNotices(updated.noticesList);
+            setExamCatalog(updated.examCatalog);
+            await saveCatalogToCache(updated);
+            await setLastSyncTimestamp(syncRes.syncedAt);
+            checkNewNotices(updated.noticesList);
+          }
         }
       } catch (err) {
-        console.error("Notices background polling error:", err);
+        console.error('Catalog sync polling error:', err);
       }
-    }, 10000);
+    }, 90000);
 
-    // Poll support messages every 8 seconds
+    // Poll support messages every 60 seconds (down from 8s)
     const supportInterval = setInterval(() => {
       checkNewSupportMessages();
-    }, 8000);
+    }, 60000);
 
     return () => {
       isMounted = false;
@@ -385,6 +456,8 @@ export default function App() {
     setLoading(true);
     await SecureStore.deleteItemAsync('tb_user_email');
     await SecureStore.deleteItemAsync('tb_user_password');
+    // Clear device cache so a different login doesn't see stale data
+    await clearAllCache();
     setCurrentUser(null);
     setViewMode('auth');
     setLoading(false);
