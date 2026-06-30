@@ -2983,62 +2983,69 @@ export default function AdminAnalytics() {
                         </tr>
                       </thead>
                       <tbody>
-                        {examCatalog.flatMap(cat => 
-                          cat.subCategories.flatMap(sub => 
-                            (sub.subSubCategories || []).flatMap(subsub =>
-                              subsub.tests.map(test => (
-                                <tr key={test.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                                  <td className="py-3 px-4 text-slate-500 font-medium">
-                                    <div className="flex flex-col">
-                                      <span className="text-[10px] text-slate-400 font-normal">{cat.name} &gt; {sub.name}</span>
-                                      <span className="font-bold">{subsub.name}</span>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-200 max-w-[200px] truncate" title={test.title}>
-                                    <span>{test.title}</span>
-                                    {getCustomQuestionsCount(test.id) > 0 ? (
-                                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-green-950/60 text-green-400 border border-green-800 font-bold uppercase tracking-wider">
-                                        Custom Paper ({getCustomQuestionsCount(test.id)} Qs)
-                                      </span>
-                                    ) : (
-                                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-slate-900 text-slate-500 border border-slate-800 font-bold uppercase tracking-wider">
-                                        Default Qs
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="py-3 px-4 text-slate-400 font-semibold">
-                                    <span>{test.questionsCount} Qs • {test.durationMinutes}m • {test.maxMarks}M</span>
-                                    {(test as any).hasSectionalTiming && (
-                                      <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded text-[8px] bg-purple-950/60 text-purple-400 border border-purple-800 font-bold uppercase tracking-wider">Sectional</span>
-                                    )}
-                                  </td>
-                                  <td className="py-3 px-4">
-                                    <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold ${
-                                      test.requiredTier === 'None'
-                                        ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400'
-                                        : test.requiredTier === 'Testbook Pass'
-                                        ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400'
-                                        : 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400'
-                                    }`}>
-                                      {test.requiredTier === 'None' ? 'Free' : test.requiredTier.replace('Testbook', 'Mock')}
-                                    </span>
-                                  </td>
-                                  <td className="py-3 px-4 text-right">
-                                    <button
-                                      onClick={() => {
-                                        deleteMockTest(cat.id, sub.id, test.id);
-                                        showToast('Mock test deleted successfully.');
-                                      }}
-                                      className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                    >
-                                      Delete
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))
-                            )
+                        {examCatalog
+                          .filter(cat => !newMockCategoryParent || cat.id === newMockCategoryParent)
+                          .flatMap(cat => 
+                            cat.subCategories
+                              .filter(sub => !newMockSubCategoryParent || sub.id === newMockSubCategoryParent)
+                              .flatMap(sub => 
+                                (sub.subSubCategories || [])
+                                  .filter(subsub => !newMockSubSubCategoryParent || subsub.id === newMockSubSubCategoryParent)
+                                  .flatMap(subsub =>
+                                    subsub.tests.map(test => (
+                                      <tr key={test.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                                        <td className="py-3 px-4 text-slate-500 font-medium">
+                                          <div className="flex flex-col">
+                                            <span className="text-[10px] text-slate-400 font-normal">{cat.name} &gt; {sub.name}</span>
+                                            <span className="font-bold">{subsub.name}</span>
+                                          </div>
+                                        </td>
+                                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-200 max-w-[200px] truncate" title={test.title}>
+                                          <span>{test.title}</span>
+                                          {getCustomQuestionsCount(test.id) > 0 ? (
+                                            <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-green-950/60 text-green-400 border border-green-800 font-bold uppercase tracking-wider">
+                                              Custom Paper ({getCustomQuestionsCount(test.id)} Qs)
+                                            </span>
+                                          ) : (
+                                            <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[8px] bg-slate-900 text-slate-500 border border-slate-800 font-bold uppercase tracking-wider">
+                                              Default Qs
+                                            </span>
+                                          )}
+                                        </td>
+                                        <td className="py-3 px-4 text-slate-400 font-semibold">
+                                          <span>{test.questionsCount} Qs • {test.durationMinutes}m • {test.maxMarks}M</span>
+                                          {(test as any).hasSectionalTiming && (
+                                            <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded text-[8px] bg-purple-950/60 text-purple-400 border border-purple-800 font-bold uppercase tracking-wider">Sectional</span>
+                                          )}
+                                        </td>
+                                        <td className="py-3 px-4">
+                                          <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold ${
+                                            test.requiredTier === 'None'
+                                              ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400'
+                                              : test.requiredTier === 'Testbook Pass'
+                                              ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400'
+                                              : 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400'
+                                          }`}>
+                                            {test.requiredTier === 'None' ? 'Free' : test.requiredTier.replace('Testbook', 'Mock')}
+                                          </span>
+                                        </td>
+                                        <td className="py-3 px-4 text-right">
+                                          <button
+                                            onClick={() => {
+                                              deleteMockTest(cat.id, sub.id, test.id);
+                                              showToast('Mock test deleted successfully.');
+                                            }}
+                                            className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                          >
+                                            Delete
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    ))
+                                  )
+                              )
                           )
-                        )}
+                        }
                       </tbody>
                     </table>
                   </div>
