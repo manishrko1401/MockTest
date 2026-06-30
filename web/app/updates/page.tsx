@@ -193,18 +193,16 @@ export default function UpdatesCenterPage() {
             >
               Answer Keys
             </button>
-          </div>
-
-          {/* RENDER SELECTED LIST */}
+                  {/* RENDER SELECTED LIST */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm space-y-4">
-            <h3 className="font-extrabold text-[10px] text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center gap-1.5">
+            <h3 className="font-extrabold text-[10px] text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center gap-1.5 px-2">
               {activeMobileTab === 'notice' && <><Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> {t.liveNotices}</>}
               {activeMobileTab === 'result' && <><Trophy className="h-4.5 w-4.5 text-yellow-500" /> {t.resultsMerits}</>}
-              {activeMobileTab === 'admit_card' && <><FileText className="h-4.5 w-4.5 text-green-550" /> {t.admitCards}</>}
+              {activeMobileTab === 'admit_card' && <><FileText className="h-4.5 w-4.5 text-green-555" /> {t.admitCards}</>}
               {activeMobileTab === 'answer_key' && <><ShieldCheck className="h-4.5 w-4.5 text-purple-500" /> Answer Keys</>}
             </h3>
 
-            <div className="space-y-3.5 max-h-[500px] overflow-y-auto pr-1">
+            <div className="space-y-3.5 max-h-[500px] overflow-y-auto no-scrollbar">
               {noticesList.filter(n => n.category === activeMobileTab).length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === activeMobileTab)
@@ -212,8 +210,8 @@ export default function UpdatesCenterPage() {
                   .map((notice) => (
                   <div
                     key={notice.id}
-                    className="p-3.5 rounded-xl bg-slate-55 dark:bg-slate-955/40 border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5"
-                  >
+                    className="w-[95%] mx-auto p-3.5 rounded-xl bg-slate-55 dark:bg-slate-955/40 border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5"
+                  >           >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
                         <span className={`text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase ${
@@ -534,19 +532,13 @@ export default function UpdatesCenterPage() {
                 ))
               ) : (
                 <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs">
-                  {language === 'hi' ? 'कोई सक्रिय प्रवेश पत्र नहीं।' : 'No active admit cards.'}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Column 4: Live Answer Keys Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+                  {language === 'hi' ? '�          {/* Column 4: Live Answer Keys Section */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-3 rounded-3xl shadow-sm flex flex-col lg:min-h-[600px] min-h-0">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 px-2">
               <ShieldCheck className="h-4.5 w-4.5 text-purple-500 animate-pulse" /> Answer Keys
             </h3>
             
-            <div className="space-y-4 overflow-y-auto pr-1 flex-1 max-h-[1000px] scrollbar-thin">
+            <div className="space-y-4 overflow-y-auto flex-1 max-h-[1000px] no-scrollbar">
               {noticesList.filter(n => n.category === 'answer_key').length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === 'answer_key')
@@ -554,7 +546,8 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="p-4 rounded-2xl bg-slate-55 dark:bg-slate-955/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-955/70 transition flex flex-col gap-2"
+                    className="w-[95%] mx-auto p-4 rounded-2xl bg-slate-55 dark:bg-slate-955/40 border border-slate-202 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-955/70 transition flex flex-col gap-2"
+                  >unded-2xl bg-slate-55 dark:bg-slate-955/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-955/70 transition flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
