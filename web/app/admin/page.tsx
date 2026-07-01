@@ -20,6 +20,8 @@ import {
 } from 'recharts';
 import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
+import { BulkQuestionImporter } from './components/BulkQuestionImporter';
+import { MockTestManager } from './components/MockTestManager';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -1212,598 +1214,69 @@ export default function AdminAnalytics() {
           )}
 
           {/* TAB 2: BULK QUESTION UPLOADER PORTAL */}
-          {activeTab === 'upload' && (() => {
-            const allTests: { id: string; title: string; categoryName: string; subCategoryName: string }[] = [];
-            examCatalog.forEach(cat => {
-              cat.subCategories.forEach(sub => {
-                (sub.subSubCategories || []).forEach(subsub => {
-                  subsub.tests.forEach(t => {
-                    allTests.push({
-                      id: t.id,
-                      title: t.title,
-                      categoryName: cat.name,
-                      subCategoryName: `${sub.name} > ${subsub.name}`
-                    });
-                  });
-                });
-              });
-            });
-
-            return (
-              <div className="grid grid-cols-3 gap-8">
-                
-                {/* Form Upload Input */}
-                <div className="col-span-2 bg-slate-950 border border-slate-800 p-6 rounded-xl">
-                  
-                  {/* Mode switcher tab bar */}
-                  <div className="flex border-b border-slate-800 pb-3 mb-6 justify-between items-center">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setImporterMode('json')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          importerMode === 'json'
-                            ? 'bg-blue-600 text-white shadow-md'
-                            : 'bg-slate-900 text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        Paste JSON Array
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setImporterMode('form')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          importerMode === 'form'
-                            ? 'bg-blue-600 text-white shadow-md'
-                            : 'bg-slate-900 text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        Interactive Form Builder
-                      </button>
-                    </div>
-
-                    {importerMode === 'json' ? (
-                      <button
-                        type="button"
-                        onClick={loadTemplate}
-                        className="text-xs text-blue-400 font-bold hover:underline cursor-pointer"
-                      >
-                        Load Sample Template
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleClearFormQuestions}
-                        className="text-xs text-red-400 font-bold hover:underline cursor-pointer"
-                      >
-                        Clear Built Questions ({formQuestionsList.length})
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Target Mock Test Selector (Always visible) */}
-                  <div className="mb-6">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Target Mock Test</label>
-                    <select
-                      required
-                      value={selectedUploadTestId}
-                      onChange={(e) => setSelectedUploadTestId(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-355 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
-                    >
-                      <option value="">-- Select Target Mock Test --</option>
-                      {allTests.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.categoryName} &gt; {t.subCategoryName} &gt; {t.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {importerMode === 'json' ? (
-                    <form onSubmit={handleBulkUploadSubmit}>
-                      <textarea
-                        rows={12}
-                        value={jsonInput}
-                        onChange={(e) => setJsonInput(e.target.value)}
-                        placeholder="Enter valid JSON questions schema..."
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg p-4 text-xs font-mono text-slate-300 focus:outline-none focus:border-blue-500 mb-4"
-                      />
-
-                      {uploadStatus && (
-                        <div className={`p-4 rounded-lg flex items-start gap-3 mb-4 border ${
-                          uploadStatus.type === 'success'
-                            ? 'bg-green-950/30 border-green-800 text-green-400'
-                            : 'bg-red-950/30 border-red-800 text-red-400'
-                        }`}>
-                          <AlertCircle className="h-5 w-5 mt-0.5" />
-                          <span className="text-xs leading-relaxed">{uploadStatus.message}</span>
-                        </div>
-                      )}
-
-                      <div className="flex gap-4 items-center">
-                        <button
-                          type="submit"
-                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-755 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition cursor-pointer"
-                        >
-                          <Database className="h-4 w-4" />
-                          Verify JSON & Load Preview
-                        </button>
-
-                        {parsedQuestions.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={handleConfirmIngestCustomQuestions}
-                            className="flex items-center gap-2 bg-green-600 hover:bg-green-755 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-green-700 active:scale-95 transition cursor-pointer shadow-lg shadow-green-900/10"
-                          >
-                            <CheckCircle2 className="h-4 w-4" />
-                            Confirm & Ingest Question Paper
-                          </button>
-                        )}
-                      </div>
-                    </form>
-                  ) : (
-                    <form onSubmit={handleAddFormQuestion} className="space-y-6 text-xs text-slate-300">
-                      
-                      {/* Question Section Selector */}
-                      <div className="bg-slate-900/40 p-4 border border-slate-800 rounded-lg space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Question Section</label>
-                            <select
-                              value={selectedSection}
-                              onChange={(e) => {
-                                setSelectedSection(e.target.value);
-                                if (e.target.value !== 'create_new') {
-                                  setCustomSectionName('');
-                                }
-                              }}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-350 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
-                            >
-                              {getAvailableSections().map((sec) => (
-                                <option key={sec} value={sec}>{sec}</option>
-                              ))}
-                              <option value="create_new" className="text-blue-400 font-bold">+ Create New Section...</option>
-                            </select>
-                          </div>
-                          {selectedSection === 'create_new' && (
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Custom Section Name</label>
-                              <input
-                                type="text"
-                                required
-                                value={customSectionName}
-                                onChange={(e) => setCustomSectionName(e.target.value)}
-                                placeholder="Enter custom section name..."
-                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium animate-fadeIn"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Bilingual Questions Input Grid */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Question Text (English)</label>
-                          <textarea
-                            value={formTextEn}
-                            onChange={(e) => setFormTextEn(e.target.value)}
-                            placeholder="Type question in English..."
-                            rows={3}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500 resize-none font-medium"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">प्रश्न पाठ (Hindi)</label>
-                          <textarea
-                            value={formTextHi}
-                            onChange={(e) => setFormTextHi(e.target.value)}
-                            placeholder="Type question in Hindi..."
-                            rows={3}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500 resize-none font-medium"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Options Grid */}
-                      <div className="space-y-3">
-                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-800/60 pb-1.5 mb-2">Option Choices (1-4 required, 5 optional)</h4>
-                        
-                        {/* Option 1 */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <input
-                            type="text"
-                            value={opt1En}
-                            onChange={(e) => setOpt1En(e.target.value)}
-                            placeholder="Option 1 (English)"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
-                          />
-                          <input
-                            type="text"
-                            value={opt1Hi}
-                            onChange={(e) => setOpt1Hi(e.target.value)}
-                            placeholder="विकल्प 1 (Hindi)"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
-                          />
-                        </div>
-
-                        {/* Option 2 */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <input
-                            type="text"
-                            value={opt2En}
-                            onChange={(e) => setOpt2En(e.target.value)}
-                            placeholder="Option 2 (English)"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
-                          />
-                          <input
-                            type="text"
-                            value={opt2Hi}
-                            onChange={(e) => setOpt2Hi(e.target.value)}
-                            placeholder="विकल्प 2 (Hindi)"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
-                          />
-                        </div>
-
-                        {/* Option 3 */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <input
-                            type="text"
-                            value={opt3En}
-                            onChange={(e) => setOpt3En(e.target.value)}
-                            placeholder="Option 3 (English)"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
-                          />
-                          <input
-                            type="text"
-                            value={opt3Hi}
-                            onChange={(e) => setOpt3Hi(e.target.value)}
-                            placeholder="विकल्प 3 (Hindi)"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
-                          />
-                        </div>
-
-                        {/* Option 4 */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <input
-                            type="text"
-                            value={opt4En}
-                            onChange={(e) => setOpt4En(e.target.value)}
-                            placeholder="Option 4 (English)"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
-                          />
-                          <input
-                            type="text"
-                            value={opt4Hi}
-                            onChange={(e) => setOpt4Hi(e.target.value)}
-                            placeholder="विकल्प 4 (Hindi)"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
-                          />
-                        </div>
-
-                        {/* Option 5 (Optional) */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <input
-                            type="text"
-                            value={opt5En}
-                            onChange={(e) => setOpt5En(e.target.value)}
-                            placeholder="Option 5 (Optional) (English)"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
-                          />
-                          <input
-                            type="text"
-                            value={opt5Hi}
-                            onChange={(e) => setOpt5Hi(e.target.value)}
-                            placeholder="विकल्प 5 (वैकल्पिक) (Hindi)"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-medium"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Correct Option index & Explanations */}
-                      <div className="grid grid-cols-1 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Right Option / Correct Choice</label>
-                          <select
-                            value={formCorrectIndex}
-                            onChange={(e) => setFormCorrectIndex(Number(e.target.value))}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-350 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
-                          >
-                            <option value={0}>Option 1</option>
-                            <option value={1}>Option 2</option>
-                            <option value={2}>Option 3</option>
-                            <option value={3}>Option 4</option>
-                            {opt5En.trim() && <option value={4}>Option 5</option>}
-                          </select>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Explanation (English)</label>
-                            <textarea
-                              value={formExplanationEn}
-                              onChange={(e) => setFormExplanationEn(e.target.value)}
-                              placeholder="Explanation in English..."
-                              rows={2.5}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500 resize-none font-medium"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">व्याख्या (Hindi)</label>
-                            <textarea
-                              value={formExplanationHi}
-                              onChange={(e) => setFormExplanationHi(e.target.value)}
-                              placeholder="Explanation in Hindi..."
-                              rows={2.5}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-blue-500 resize-none font-medium"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-4 items-center border-t border-slate-800/80 pt-4 mt-2">
-                        <button
-                          type="submit"
-                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-755 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition cursor-pointer shadow-lg shadow-blue-900/20"
-                        >
-                          {editingQuestionIndex !== null ? (
-                            <>
-                              <Edit className="h-4 w-4" />
-                              Update Question #{editingQuestionIndex + 1}
-                            </>
-                          ) : (
-                            <>
-                              <PlusCircle className="h-4 w-4" />
-                              Add Question to List
-                            </>
-                          )}
-                        </button>
-
-                        {editingQuestionIndex !== null && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingQuestionIndex(null);
-                              // Clear form inputs
-                              setFormTextEn('');
-                              setFormTextHi('');
-                              setOpt1En('');
-                              setOpt1Hi('');
-                              setOpt2En('');
-                              setOpt2Hi('');
-                              setOpt3En('');
-                              setOpt3Hi('');
-                              setOpt4En('');
-                              setOpt4Hi('');
-                              setOpt5En('');
-                              setOpt5Hi('');
-                              setFormCorrectIndex(0);
-                              setFormExplanationEn('');
-                              setFormExplanationHi('');
-                              setSelectedSection('General Studies');
-                              setCustomSectionName('');
-                              showToast("Edit cancelled.");
-                            }}
-                            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-350 font-bold py-2.5 px-6 rounded-lg text-xs active:scale-95 transition cursor-pointer"
-                          >
-                            Cancel Edit
-                          </button>
-                        )}
-
-                        {parsedQuestions.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={handleConfirmIngestCustomQuestions}
-                            className="flex items-center gap-2 bg-green-600 hover:bg-green-755 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-green-700 active:scale-95 transition cursor-pointer shadow-lg shadow-green-900/10"
-                          >
-                            <CheckCircle2 className="h-4 w-4" />
-                            Confirm & Ingest Question Paper ({parsedQuestions.length})
-                          </button>
-                        )}
-                      </div>
-                    </form>
-                  )}
-
-                </div>
-
-              {/* Parsing results tracker */}
-              <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-center pb-3 border-b border-slate-800 mb-4">
-                    <h3 className="font-bold text-xs text-white uppercase tracking-wider">Live Preview Terminal</h3>
-                    {parsedQuestions.length > 0 && (
-                      <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded px-1.5 py-0.5">
-                        <Globe className="h-3 w-3 text-slate-400" />
-                        <select
-                          value={previewLanguage}
-                          onChange={(e) => setPreviewLanguage(e.target.value as 'en' | 'hi')}
-                          className="bg-transparent border-0 outline-none text-[10px] font-bold text-slate-200 cursor-pointer"
-                        >
-                          <option value="en" className="bg-slate-950">EN</option>
-                          <option value="hi" className="bg-slate-950">HI</option>
-                        </select>
-                      </div>
-                    )}
-                  </div>
-
-                  {parsedQuestions.length > 0 ? (
-                    (() => {
-                      const activeQ = parsedQuestions[previewQuestionIndex];
-                      if (!activeQ) return null;
-
-                      const qText = previewLanguage === 'en' ? activeQ.textEn : activeQ.textHi;
-                      const qOptions = previewLanguage === 'en' ? activeQ.optionsEn : activeQ.optionsHi;
-                      const qImg = previewLanguage === 'en' ? (activeQ.imageUrlEn || activeQ.imageUrl) : (activeQ.imageUrlHi || activeQ.imageUrl);
-                      const qExp = previewLanguage === 'en' ? activeQ.explanationEn : activeQ.explanationHi;
-
-                      return (
-                        <div className="space-y-4">
-                          
-                          {/* Question Navigator */}
-                          <div>
-                            <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2">Select Question ({parsedQuestions.length} Total)</p>
-                            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
-                              {parsedQuestions.map((_, idx) => (
-                                <button
-                                  key={idx}
-                                  type="button"
-                                  onClick={() => setPreviewQuestionIndex(idx)}
-                                  className={`h-6 min-w-[24px] px-1.5 rounded text-[10px] font-bold font-mono transition active:scale-95 cursor-pointer flex items-center justify-center border ${
-                                    previewQuestionIndex === idx
-                                      ? 'bg-blue-600 border-blue-500 text-white font-extrabold'
-                                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
-                                  }`}
-                                >
-                                  {idx + 1}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* EXACT USER VIEW PREVIEW BOX */}
-                          <div className="border border-slate-800 bg-[#0f172a] rounded-xl p-4 space-y-4 text-left">
-                            
-                            {/* Question Header */}
-                            <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-slate-500 pb-2 border-b border-slate-800/60">
-                              <span>Question No. {previewQuestionIndex + 1}</span>
-                              {activeQ.section && (
-                                <span className="text-yellow-500 font-extrabold px-1.5 py-0.5 bg-slate-900 border border-slate-800 rounded">
-                                  Section: {activeQ.section}
-                                </span>
-                              )}
-                              <span className="text-blue-400 font-extrabold">MCQ PREVIEW</span>
-                            </div>
-
-                            {/* Question Text */}
-                            <div
-                              className="text-xs text-slate-200 font-semibold leading-relaxed markup-content"
-                              dangerouslySetInnerHTML={{ __html: qText || "" }}
-                            />
-
-                            {/* Image Visualizer */}
-                            {qImg && (
-                              <div className="flex justify-center bg-white p-2 rounded-lg border border-slate-700 max-w-full overflow-hidden">
-                                <img
-                                  src={qImg}
-                                  alt="Preview Visual"
-                                  className="max-h-40 object-contain"
-                                />
-                              </div>
-                            )}
-
-                            {/* Options */}
-                            <div className="space-y-2">
-                              {Array.isArray(qOptions) && qOptions.map((opt, idx) => {
-                                const isCorrect = idx === activeQ.correctIndex;
-                                return (
-                                  <div
-                                    key={idx}
-                                    className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-[11px] font-semibold ${
-                                      isCorrect
-                                        ? 'bg-green-950/40 border-green-700 text-green-400 font-extrabold'
-                                        : 'bg-slate-900 border-slate-800 text-slate-400'
-                                    }`}
-                                  >
-                                    <span className={`h-4.5 w-4.5 rounded-full flex items-center justify-center font-bold text-[9px] ${
-                                      isCorrect ? 'bg-green-600 text-white font-extrabold' : 'bg-slate-800 text-slate-500'
-                                    }`}>
-                                      {String.fromCharCode(65 + idx)}
-                                    </span>
-                                    <span className="flex-1 font-sans" dangerouslySetInnerHTML={{ __html: opt || "" }} />
-                                    {isCorrect && <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />}
-                                  </div>
-                                );
-                              })}
-                            </div>
-
-                            {/* EXACT USER SOLUTION/EXPLANATION VIEW */}
-                            <div className="bg-slate-900/60 border border-slate-805 p-3 rounded-lg space-y-1.5 text-left">
-                              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Step-by-Step Solution</p>
-                              <div
-                                className="text-slate-300 text-[11px] leading-relaxed font-normal markup-content"
-                                dangerouslySetInnerHTML={{ __html: qExp || "No bilingual explanation provided for this question." }}
-                              />
-                            </div>
-
-                            {importerMode === 'form' && (
-                              <div className="flex justify-between items-center pt-3 border-t border-slate-850 mt-4">
-                                <span className="text-[10px] text-slate-500 font-medium">Modify this question:</span>
-                                <div className="flex gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const q = parsedQuestions[previewQuestionIndex];
-                                      setEditingQuestionIndex(previewQuestionIndex);
-                                      setFormTextEn(q.textEn || '');
-                                      setFormTextHi(q.textHi || '');
-                                      setOpt1En(q.optionsEn?.[0] || '');
-                                      setOpt1Hi(q.optionsHi?.[0] || '');
-                                      setOpt2En(q.optionsEn?.[1] || '');
-                                      setOpt2Hi(q.optionsHi?.[1] || '');
-                                      setOpt3En(q.optionsEn?.[2] || '');
-                                      setOpt3Hi(q.optionsHi?.[2] || '');
-                                      setOpt4En(q.optionsEn?.[3] || '');
-                                      setOpt4Hi(q.optionsHi?.[3] || '');
-                                      setOpt5En(q.optionsEn?.[4] || '');
-                                      setOpt5Hi(q.optionsHi?.[4] || '');
-                                      setFormCorrectIndex(Number(q.correctIndex) || 0);
-                                      setFormExplanationEn(q.explanationEn || '');
-                                      setFormExplanationHi(q.explanationHi || '');
-
-                                      const sectionName = q.section || 'General Studies';
-                                      if (defaultSections.includes(sectionName)) {
-                                        setSelectedSection(sectionName);
-                                        setCustomSectionName('');
-                                      } else {
-                                        setSelectedSection('create_new');
-                                        setCustomSectionName(sectionName);
-                                      }
-
-                                      showToast(`Question #${previewQuestionIndex + 1} loaded into form builder.`);
-                                    }}
-                                    className="flex items-center gap-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition active:scale-95"
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                    Edit
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (window.confirm(`Are you sure you want to delete Question #${previewQuestionIndex + 1} from this list?`)) {
-                                        const updatedList = formQuestionsList.filter((_, idx) => idx !== previewQuestionIndex);
-                                        setFormQuestionsList(updatedList);
-                                        setJsonInput(JSON.stringify(updatedList, null, 2));
-                                        setParsedQuestions(updatedList);
-                                        setPreviewQuestionIndex(Math.max(0, previewQuestionIndex - 1));
-                                        showToast("Question deleted from list.");
-                                      }
-                                    }}
-                                    className="flex items-center gap-1 bg-red-650/10 hover:bg-red-655/20 text-red-400 border border-red-500/20 px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition active:scale-95"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                    Delete
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-
-                          </div>
-
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <div className="text-center py-20 border border-dashed border-slate-800 rounded-lg text-slate-500 text-xs">
-                      <Upload className="h-10 w-10 mx-auto text-slate-700 mb-3" />
-                      No verified questions loaded. Paste your JSON array in the left workspace and click verify to preview the exact user simulator layout here.
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+          {activeTab === 'upload' && (
+            <BulkQuestionImporter
+              examCatalog={examCatalog}
+              selectedUploadTestId={selectedUploadTestId}
+              setSelectedUploadTestId={setSelectedUploadTestId}
+              importerMode={importerMode}
+              setImporterMode={setImporterMode}
+              loadTemplate={loadTemplate}
+              jsonInput={jsonInput}
+              setJsonInput={setJsonInput}
+              uploadStatus={uploadStatus}
+              handleBulkUploadSubmit={handleBulkUploadSubmit}
+              parsedQuestions={parsedQuestions}
+              formQuestionsList={formQuestionsList}
+              handleClearFormQuestions={handleClearFormQuestions}
+              editingQuestionIndex={editingQuestionIndex}
+              setEditingQuestionIndex={setEditingQuestionIndex}
+              getAvailableSections={getAvailableSections}
+              customSectionName={customSectionName}
+              setCustomSectionName={setCustomSectionName}
+              selectedSection={selectedSection}
+              setSelectedSection={setSelectedSection}
+              formTextEn={formTextEn}
+              setFormTextEn={setFormTextEn}
+              formTextHi={formTextHi}
+              setFormTextHi={setFormTextHi}
+              opt1En={opt1En}
+              setOpt1En={setOpt1En}
+              opt1Hi={opt1Hi}
+              setOpt1Hi={setOpt1Hi}
+              opt2En={opt2En}
+              setOpt2En={setOpt2En}
+              opt2Hi={opt2Hi}
+              setOpt2Hi={setOpt2Hi}
+              opt3En={opt3En}
+              setOpt3En={setOpt3En}
+              opt3Hi={opt3Hi}
+              setOpt3Hi={setOpt3Hi}
+              opt4En={opt4En}
+              setOpt4En={setOpt4En}
+              opt4Hi={opt4Hi}
+              setOpt4Hi={setOpt4Hi}
+              opt5En={opt5En}
+              setOpt5En={setOpt5En}
+              opt5Hi={opt5Hi}
+              setOpt5Hi={setOpt5Hi}
+              formCorrectIndex={formCorrectIndex}
+              setFormCorrectIndex={setFormCorrectIndex}
+              formExplanationEn={formExplanationEn}
+              setFormExplanationEn={setFormExplanationEn}
+              formExplanationHi={formExplanationHi}
+              setFormExplanationHi={setFormExplanationHi}
+              handleAddFormQuestion={handleAddFormQuestion}
+              previewLanguage={previewLanguage}
+              setPreviewLanguage={setPreviewLanguage}
+              previewQuestionIndex={previewQuestionIndex}
+              setPreviewQuestionIndex={setPreviewQuestionIndex}
+              handleConfirmIngestCustomQuestions={handleConfirmIngestCustomQuestions}
+              showToast={showToast}
+              setFormQuestionsList={setFormQuestionsList}
+              setParsedQuestions={setParsedQuestions}
+            />
+          )}
 
           {/* TAB 3: USER MANAGEMENT PORTAL */}
           {activeTab === 'users' && (
@@ -3019,498 +2492,55 @@ export default function AdminAnalytics() {
 
           {/* TAB 7: MOCK TESTS MANAGEMENT */}
           {activeTab === 'mocks' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Add Mock Test Form */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 lg:col-span-1">
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-                  <PlusCircle className="h-4.5 w-4.5 text-blue-600" />
-                  {language === 'hi' ? 'नया मॉक टेस्ट जोड़ें' : 'Create Mock Test'}
-                </h3>
-                
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!newMockCategoryParent || !newMockSubCategoryParent || !newMockSubSubCategoryParent || !newMockTitle.trim()) {
-                      alert('Please select category, subcategory, sub-subcategory and enter a test title.');
-                      return;
-                    }
-                    // Parse sectional timings
-                    let sectionalTimings: number[] | undefined = undefined;
-                    let finalDuration = Number(newMockDuration);
-                    if (newMockHasSectionalTiming && newMockSectionalTimingsStr.trim()) {
-                      sectionalTimings = newMockSectionalTimingsStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
-                      finalDuration = sectionalTimings.reduce((a, b) => a + b, 0);
-                    }
-                    addMockTest(newMockCategoryParent, newMockSubCategoryParent, newMockSubSubCategoryParent, {
-                      title: newMockTitle.trim(),
-                      questionsCount: Number(newMockQsCount),
-                      durationMinutes: finalDuration,
-                      maxMarks: Number(newMockMaxMarks),
-                      isPremium: newMockRequiredTier !== 'None',
-                      requiredTier: newMockRequiredTier,
-                      hasSectionalTiming: newMockHasSectionalTiming,
-                      sectionalTimings: newMockHasSectionalTiming ? sectionalTimings : undefined,
-                      testbookTotalUsers: Number(newMockTestbookTotalUsers),
-                      testbookTopperScore: Number(newMockTestbookTopperScore),
-                      testbookAverageScore: Number(newMockTestbookAverageScore),
-                      testbookCutoffScore: Number(newMockTestbookCutoffScore),
-                    } as any);
-                    setNewMockTitle('');
-                    setNewMockSubSubCategoryParent('');
-                    setNewMockHasSectionalTiming(false);
-                    setNewMockSectionalTimingsStr('');
-                    setNewMockTestbookTotalUsers(0);
-                    setNewMockTestbookTopperScore(0.0);
-                    setNewMockTestbookAverageScore(0.0);
-                    setNewMockTestbookCutoffScore(0.0);
-                    showToast('Mock test created successfully!');
-                  }}
-                  className="space-y-4"
-                >
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">Category</label>
-                    <select
-                      required
-                      value={newMockCategoryParent}
-                      onChange={(e) => {
-                        setNewMockCategoryParent(e.target.value);
-                        setNewMockSubCategoryParent('');
-                        setNewMockSubSubCategoryParent('');
-                      }}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                    >
-                      <option value="">-- Select Category --</option>
-                      {examCatalog.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">Sub Category</label>
-                    <select
-                      required
-                      value={newMockSubCategoryParent}
-                      onChange={(e) => {
-                        setNewMockSubCategoryParent(e.target.value);
-                        setNewMockSubSubCategoryParent('');
-                      }}
-                      disabled={!newMockCategoryParent}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
-                    >
-                      <option value="">-- Select Sub Category --</option>
-                      {examCatalog.find(c => c.id === newMockCategoryParent)?.subCategories.map(sub => (
-                        <option key={sub.id} value={sub.id}>{sub.name}</option>
-                      )) || null}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">Sub-Sub Category</label>
-                    <select
-                      required
-                      value={newMockSubSubCategoryParent}
-                      onChange={(e) => setNewMockSubSubCategoryParent(e.target.value)}
-                      disabled={!newMockSubCategoryParent}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
-                    >
-                      <option value="">-- Select Sub-Sub Category --</option>
-                      {examCatalog.find(c => c.id === newMockCategoryParent)?.subCategories.find(s => s.id === newMockSubCategoryParent)?.subSubCategories?.map(subsub => (
-                        <option key={subsub.id} value={subsub.id}>{subsub.name}</option>
-                      )) || null}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">Test Title</label>
-                    <input
-                      type="text"
-                      required
-                      value={newMockTitle}
-                      onChange={(e) => setNewMockTitle(e.target.value)}
-                      placeholder="e.g. SSC CGL 2026 - Math Mock 1"
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Duration (Min)</label>
-                      <input
-                        type="number"
-                        required
-                        min={1}
-                        value={newMockDuration}
-                        onChange={(e) => setNewMockDuration(Number(e.target.value))}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Questions</label>
-                      <input
-                        type="number"
-                        required
-                        min={1}
-                        value={newMockQsCount}
-                        onChange={(e) => setNewMockQsCount(Number(e.target.value))}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Max Marks</label>
-                      <input
-                        type="number"
-                        required
-                        min={1}
-                        value={newMockMaxMarks}
-                        onChange={(e) => setNewMockMaxMarks(Number(e.target.value))}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">Required Pass Access Tier</label>
-                    <select
-                      value={newMockRequiredTier}
-                      onChange={(e) => setNewMockRequiredTier(e.target.value as any)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                    >
-                      <option value="None">None (Free Mock Test)</option>
-                      <option value="Testbook Pass">Mock Test Pass (Standard)</option>
-                      <option value="Testbook Pass Pro">Mock Test Pass Pro (Premium)</option>
-                    </select>
-                  </div>
-
-                  {/* Testbook Statistics Benchmarking (Optional) */}
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-3 bg-slate-50/50 dark:bg-slate-950/30">
-                    <h4 className="text-[10px] font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                      Testbook Statistics Benchmarks (Optional)
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Total Users</label>
-                        <input
-                          type="number"
-                          value={newMockTestbookTotalUsers}
-                          onChange={(e) => setNewMockTestbookTotalUsers(Number(e.target.value))}
-                          placeholder="e.g. 15000"
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Topper Score</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={newMockTestbookTopperScore}
-                          onChange={(e) => setNewMockTestbookTopperScore(Number(e.target.value))}
-                          placeholder="e.g. 185.5"
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Average Score</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={newMockTestbookAverageScore}
-                          onChange={(e) => setNewMockTestbookAverageScore(Number(e.target.value))}
-                          placeholder="e.g. 94.2"
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Cutoff Score</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={newMockTestbookCutoffScore}
-                          onChange={(e) => setNewMockTestbookCutoffScore(Number(e.target.value))}
-                          placeholder="e.g. 112.5"
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Sectional Timing Toggle */}
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-3">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={newMockHasSectionalTiming}
-                        onChange={(e) => {
-                          setNewMockHasSectionalTiming(e.target.checked);
-                          if (!e.target.checked) setNewMockSectionalTimingsStr('');
-                        }}
-                        className="w-4 h-4 accent-blue-600 cursor-pointer"
-                      />
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Enable Sectional Timing</span>
-                      <span className="text-[9px] font-normal text-slate-400">(Lock users per section)</span>
-                    </label>
-                    {newMockHasSectionalTiming && (
-                      <div>
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Section Durations (minutes, comma-separated)</label>
-                        <input
-                          type="text"
-                          value={newMockSectionalTimingsStr}
-                          onChange={(e) => setNewMockSectionalTimingsStr(e.target.value)}
-                          placeholder="e.g. 20, 20, 20"
-                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                        />
-                        {newMockSectionalTimingsStr.trim() && (() => {
-                          const timings = newMockSectionalTimingsStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
-                          const total = timings.reduce((a, b) => a + b, 0);
-                          return total > 0 ? (
-                            <p className="text-[9px] text-blue-500 mt-1">
-                              {timings.length} section(s) • Total: <strong>{total} min</strong> (overrides Duration field)
-                            </p>
-                          ) : null;
-                        })()}
-                      </div>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
-                  >
-                    {language === 'hi' ? 'मॉक टेस्ट बनाएं' : 'Create Mock Test'}
-                  </button>
-                </form>
-              </div>
-
-              {/* Mocks List Table */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 lg:col-span-2 flex flex-col justify-between overflow-hidden">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
-                    {language === 'hi' ? 'सक्रिय मॉक टेस्ट' : 'Active Mock Tests'}
-                  </h3>
-                  
-                  <div className="overflow-x-auto max-h-[500px] overflow-y-auto pr-1">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead className="sticky top-0 bg-white dark:bg-slate-950 z-10">
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-bold">
-                          <th className="py-3 px-4">Sub Category</th>
-                          <th className="py-3 px-4">Title</th>
-                          <th className="py-3 px-4">Settings</th>
-                          <th className="py-3 px-4">Tier</th>
-                          <th className="py-3 px-4 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {examCatalog
-                          .filter(cat => !newMockCategoryParent || cat.id === newMockCategoryParent)
-                          .flatMap(cat => 
-                            cat.subCategories
-                              .filter(sub => !newMockSubCategoryParent || sub.id === newMockSubCategoryParent)
-                              .flatMap(sub => 
-                                (sub.subSubCategories || [])
-                                  .filter(subsub => !newMockSubSubCategoryParent || subsub.id === newMockSubSubCategoryParent)
-                                  .flatMap(subsub =>
-                                    subsub.tests.map(test => (
-                                      <tr key={test.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                                        <td className="py-3 px-4 text-slate-500 font-medium">
-                                          <div className="flex flex-col">
-                                            <span className="text-[10px] text-slate-400 font-normal">{cat.name} &gt; {sub.name}</span>
-                                            <span className="font-bold">{subsub.name}</span>
-                                          </div>
-                                        </td>
-                                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-200 max-w-[200px]" title={test.title}>
-                                          {editingMockTestId === test.id ? (
-                                            <div className="space-y-1 w-full min-w-[240px]">
-                                              <input
-                                                type="text"
-                                                value={editingMockTestTitle}
-                                                onChange={(e) => setEditingMockTestTitle(e.target.value)}
-                                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full"
-                                              />
-                                              <div className="grid grid-cols-2 gap-1 mt-1.5 p-1.5 bg-slate-100/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-850 rounded">
-                                                <div>
-                                                  <label className="text-[7px] text-slate-400 font-bold uppercase">Pool</label>
-                                                  <input
-                                                    type="number"
-                                                    value={editingMockTestbookTotalUsers}
-                                                    onChange={(e) => setEditingMockTestbookTotalUsers(Number(e.target.value))}
-                                                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-1 py-0.5 text-[10px] text-slate-800 dark:text-slate-200"
-                                                  />
-                                                </div>
-                                                <div>
-                                                  <label className="text-[7px] text-slate-400 font-bold uppercase">Topper</label>
-                                                  <input
-                                                    type="number"
-                                                    step="0.1"
-                                                    value={editingMockTestbookTopperScore}
-                                                    onChange={(e) => setEditingMockTestbookTopperScore(Number(e.target.value))}
-                                                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-1 py-0.5 text-[10px] text-slate-800 dark:text-slate-200"
-                                                  />
-                                                </div>
-                                                <div>
-                                                  <label className="text-[7px] text-slate-400 font-bold uppercase">Avg</label>
-                                                  <input
-                                                    type="number"
-                                                    step="0.1"
-                                                    value={editingMockTestbookAverageScore}
-                                                    onChange={(e) => setEditingMockTestbookAverageScore(Number(e.target.value))}
-                                                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-1 py-0.5 text-[10px] text-slate-800 dark:text-slate-200"
-                                                  />
-                                                </div>
-                                                <div>
-                                                  <label className="text-[7px] text-slate-400 font-bold uppercase">Cutoff</label>
-                                                  <input
-                                                    type="number"
-                                                    step="0.1"
-                                                    value={editingMockTestbookCutoffScore}
-                                                    onChange={(e) => setEditingMockTestbookCutoffScore(Number(e.target.value))}
-                                                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-1 py-0.5 text-[10px] text-slate-800 dark:text-slate-200"
-                                                  />
-                                                </div>
-                                              </div>
-                                            </div>
-                                          ) : (
-                                            <div className="flex flex-col">
-                                              <span className="truncate block max-w-[200px] font-bold text-slate-900 dark:text-white">{test.title}</span>
-                                              {(test.testbookTotalUsers ?? 0) > 0 && (
-                                                <div className="flex flex-wrap gap-1 mt-1.5">
-                                                  <span className="px-1 py-0.5 rounded text-[8px] bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 font-bold">
-                                                    Pool: {test.testbookTotalUsers?.toLocaleString()}
-                                                  </span>
-                                                  <span className="px-1 py-0.5 rounded text-[8px] bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-900/50 font-bold">
-                                                    Top: {test.testbookTopperScore}
-                                                  </span>
-                                                  <span className="px-1 py-0.5 rounded text-[8px] bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/50 font-bold">
-                                                    Avg: {test.testbookAverageScore}
-                                                  </span>
-                                                </div>
-                                              )}
-                                            </div>
-                                          )}
-                                          {getCustomQuestionsCount(test.id) > 0 ? (
-                                            <span className="mt-1 inline-block px-1.5 py-0.5 rounded text-[8px] bg-green-950/60 text-green-400 border border-green-800 font-bold uppercase tracking-wider">
-                                              Custom Paper ({getCustomQuestionsCount(test.id)} Qs)
-                                            </span>
-                                          ) : (
-                                            <span className="mt-1 inline-block px-1.5 py-0.5 rounded text-[8px] bg-slate-900 text-slate-500 border border-slate-800 font-bold uppercase tracking-wider">
-                                              Default Qs
-                                            </span>
-                                          )}
-                                        </td>
-                                        <td className="py-3 px-4 text-slate-400 font-semibold">
-                                          <span>{test.questionsCount} Qs • {test.durationMinutes}m • {test.maxMarks}M</span>
-                                          {(test as any).hasSectionalTiming && (
-                                            <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded text-[8px] bg-purple-950/60 text-purple-400 border border-purple-800 font-bold uppercase tracking-wider">Sectional</span>
-                                          )}
-                                        </td>
-                                        <td className="py-3 px-4">
-                                          <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold ${
-                                            test.requiredTier === 'None'
-                                              ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400'
-                                              : test.requiredTier === 'Testbook Pass'
-                                              ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400'
-                                              : 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400'
-                                          }`}>
-                                            {test.requiredTier === 'None' ? 'Free' : test.requiredTier.replace('Testbook', 'Mock')}
-                                          </span>
-                                        </td>
-                                        <td className="py-3 px-4 text-right flex items-center justify-end gap-2 min-h-[44px]">
-                                          {editingMockTestId === test.id ? (
-                                            <>
-                                              <button
-                                                onClick={() => {
-                                                  if (editingMockTestTitle.trim()) {
-                                                    editMockTestTitle(cat.id, sub.id, subsub.id, test.id, editingMockTestTitle.trim(), {
-                                                      testbookTotalUsers: Number(editingMockTestbookTotalUsers),
-                                                      testbookTopperScore: Number(editingMockTestbookTopperScore),
-                                                      testbookAverageScore: Number(editingMockTestbookAverageScore),
-                                                      testbookCutoffScore: Number(editingMockTestbookCutoffScore),
-                                                    });
-                                                    setEditingMockTestId(null);
-                                                    showToast('Mock test updated successfully.');
-                                                  }
-                                                }}
-                                                className="text-green-500 hover:text-green-600 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                              >
-                                                Save
-                                              </button>
-                                              <button
-                                                onClick={() => setEditingMockTestId(null)}
-                                                className="text-slate-555 hover:text-slate-700 font-bold bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                              >
-                                                Cancel
-                                              </button>
-                                            </>
-                                          ) : (
-                                            <>
-                                              <button
-                                                disabled={subsub.tests.indexOf(test) === 0}
-                                                onClick={() => {
-                                                  const idx = subsub.tests.indexOf(test);
-                                                  if (idx > 0) {
-                                                    const newTests = [...subsub.tests];
-                                                    [newTests[idx], newTests[idx - 1]] = [newTests[idx - 1], newTests[idx]];
-                                                    reorderMockTests(cat.id, sub.id, subsub.id, newTests);
-                                                    showToast('Mock test moved up successfully.');
-                                                  }
-                                                }}
-                                                className="text-slate-555 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
-                                                title="Move Up"
-                                              >
-                                                <ArrowUp className="w-3.5 h-3.5" />
-                                              </button>
-                                              <button
-                                                disabled={subsub.tests.indexOf(test) === subsub.tests.length - 1}
-                                                onClick={() => {
-                                                  const idx = subsub.tests.indexOf(test);
-                                                  if (idx < subsub.tests.length - 1) {
-                                                    const newTests = [...subsub.tests];
-                                                    [newTests[idx], newTests[idx + 1]] = [newTests[idx + 1], newTests[idx]];
-                                                    reorderMockTests(cat.id, sub.id, subsub.id, newTests);
-                                                    showToast('Mock test moved down successfully.');
-                                                  }
-                                                }}
-                                                className="text-slate-555 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
-                                                title="Move Down"
-                                              >
-                                                <ArrowDown className="w-3.5 h-3.5" />
-                                              </button>
-                                              <button
-                                                onClick={() => {
-                                                  setEditingMockTestId(test.id);
-                                                  setEditingMockTestTitle(test.title);
-                                                  setEditingMockTestbookTotalUsers((test as any).testbookTotalUsers ?? 0);
-                                                  setEditingMockTestbookTopperScore((test as any).testbookTopperScore ?? 0.0);
-                                                  setEditingMockTestbookAverageScore((test as any).testbookAverageScore ?? 0.0);
-                                                  setEditingMockTestbookCutoffScore((test as any).testbookCutoffScore ?? 0.0);
-                                                }}
-                                                className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                              >
-                                                Edit
-                                              </button>
-                                              <button
-                                                onClick={() => {
-                                                  deleteMockTest(cat.id, sub.id, test.id);
-                                                  showToast('Mock test deleted successfully.');
-                                                }}
-                                                className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                              >
-                                                Delete
-                                              </button>
-                                            </>
-                                          )}
-                                        </td>
-                                      </tr>
-                                    ))
-                                  )
-                              )
-                          )
-                        }
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <MockTestManager
+              examCatalog={examCatalog}
+              newMockCategoryParent={newMockCategoryParent}
+              setNewMockCategoryParent={setNewMockCategoryParent}
+              newMockSubCategoryParent={newMockSubCategoryParent}
+              setNewMockSubCategoryParent={setNewMockSubCategoryParent}
+              newMockSubSubCategoryParent={newMockSubSubCategoryParent}
+              setNewMockSubSubCategoryParent={setNewMockSubSubCategoryParent}
+              editingMockTestId={editingMockTestId}
+              setEditingMockTestId={setEditingMockTestId}
+              newMockTitle={newMockTitle}
+              setNewMockTitle={setNewMockTitle}
+              newMockDuration={newMockDuration}
+              setNewMockDuration={setNewMockDuration}
+              newMockQsCount={newMockQsCount}
+              setNewMockQsCount={setNewMockQsCount}
+              newMockMaxMarks={newMockMaxMarks}
+              setNewMockMaxMarks={setNewMockMaxMarks}
+              newMockRequiredTier={newMockRequiredTier}
+              setNewMockRequiredTier={setNewMockRequiredTier}
+              newMockHasSectionalTiming={newMockHasSectionalTiming}
+              setNewMockHasSectionalTiming={setNewMockHasSectionalTiming}
+              newMockSectionalTimingsStr={newMockSectionalTimingsStr}
+              setNewMockSectionalTimingsStr={setNewMockSectionalTimingsStr}
+              newMockTestbookTotalUsers={newMockTestbookTotalUsers}
+              setNewMockTestbookTotalUsers={setNewMockTestbookTotalUsers}
+              newMockTestbookTopperScore={newMockTestbookTopperScore}
+              setNewMockTestbookTopperScore={setNewMockTestbookTopperScore}
+              newMockTestbookAverageScore={newMockTestbookAverageScore}
+              setNewMockTestbookAverageScore={setNewMockTestbookAverageScore}
+              newMockTestbookCutoffScore={newMockTestbookCutoffScore}
+              setNewMockTestbookCutoffScore={setNewMockTestbookCutoffScore}
+              addMockTest={addMockTest}
+              showToast={showToast}
+              getCustomQuestionsCount={getCustomQuestionsCount}
+              reorderMockTests={reorderMockTests}
+              deleteMockTest={deleteMockTest}
+              editingMockTestTitle={editingMockTestTitle}
+              setEditingMockTestTitle={setEditingMockTestTitle}
+              editingMockTestbookTotalUsers={editingMockTestbookTotalUsers}
+              setEditingMockTestbookTotalUsers={setEditingMockTestbookTotalUsers}
+              editingMockTestbookTopperScore={editingMockTestbookTopperScore}
+              setEditingMockTestbookTopperScore={setEditingMockTestbookTopperScore}
+              editingMockTestbookAverageScore={editingMockTestbookAverageScore}
+              setEditingMockTestbookAverageScore={setEditingMockTestbookAverageScore}
+              editingMockTestbookCutoffScore={editingMockTestbookCutoffScore}
+              setEditingMockTestbookCutoffScore={setEditingMockTestbookCutoffScore}
+              editMockTestTitle={editMockTestTitle}
+            />
           )}
 
           {/* TAB 8: REPORTED QUESTIONS */}
