@@ -1,6 +1,23 @@
 import React from 'react';
 import { Database, Edit, FileText, CheckCircle2, AlertCircle, PlusCircle, X, Globe } from 'lucide-react';
 
+function decodeHtml(text: string): string {
+  if (!text) return "";
+  let decoded = text;
+  for (let i = 0; i < 3; i++) {
+    const temp = decoded
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ');
+    if (temp === decoded) break;
+    decoded = temp;
+  }
+  return decoded;
+}
+
 interface BulkQuestionImporterProps {
   examCatalog: any[];
   selectedUploadTestId: string;
@@ -577,12 +594,12 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                   </div>
                 </div>
                 <div className="p-4 space-y-3">
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-205 leading-relaxed">{qText}</p>
+                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-205 leading-relaxed markup-content font-sans animate-fadeIn" dangerouslySetInnerHTML={{ __html: decodeHtml(qText) }} />
                   <div className="space-y-1.5">
                     {(qOptions || []).map((opt: string, i: number) => (
                       <div
                         key={i}
-                        className={`flex items-start gap-2.5 px-3 py-2 rounded-lg text-xs font-medium border ${
+                        className={`flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium border ${
                           i === activeQ.correctIndex
                             ? 'bg-green-50 dark:bg-green-955/30 border-green-200 dark:border-green-800 text-green-705 dark:text-green-405'
                             : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400'
@@ -591,15 +608,15 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                         <span className={`font-black text-[10px] w-4 shrink-0 ${i === activeQ.correctIndex ? 'text-green-600 dark:text-green-400' : 'text-slate-450'}`}>
                           {String.fromCharCode(65 + i)}
                         </span>
-                        {opt}
+                        <div className="flex-1 markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(opt) }} />
                         {i === activeQ.correctIndex && <CheckCircle2 className="h-3.5 w-3.5 text-green-500 ml-auto shrink-0" />}
                       </div>
                     ))}
                   </div>
                   {qExp && (
-                    <div className="bg-amber-50 dark:bg-amber-955/20 border border-amber-200 dark:border-amber-900/50 rounded-lg p-3">
-                      <p className="text-[10px] font-extrabold text-amber-600 dark:text-amber-505 uppercase tracking-wider mb-1">Explanation</p>
-                      <p className="text-xs text-amber-705 dark:text-amber-305 leading-relaxed">{qExp}</p>
+                    <div className="bg-amber-50 dark:bg-amber-955/20 border border-amber-200 dark:border-amber-900/50 rounded-lg p-3.5">
+                      <p className="text-[10px] font-extrabold text-amber-600 dark:text-amber-505 uppercase tracking-wider mb-1.5">Explanation</p>
+                      <div className="text-xs text-amber-705 dark:text-amber-305 leading-relaxed markup-content font-semibold" dangerouslySetInnerHTML={{ __html: decodeHtml(qExp) }} />
                     </div>
                   )}
                 </div>
