@@ -1110,6 +1110,11 @@ export default function DashboardScreen({
         (sub.tests || []).forEach((t: any) => {
           catalogTestsMap.set(t.id, t);
         });
+        (sub.subSubCategories || []).forEach((subsub: any) => {
+          (subsub.tests || []).forEach((t: any) => {
+            catalogTestsMap.set(t.id, t);
+          });
+        });
       });
     });
 
