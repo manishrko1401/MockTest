@@ -141,4 +141,10 @@ export const ApiClient = {
    */
   sendSupportMessage: (userId: string, sender: 'STUDENT' | 'ADMIN', message: string) => 
     postRequest('send-support-message', { userId, sender, message }),
+
+  /**
+   * Fetches referred friends for the current user
+   */
+  getReferredFriends: (referralCode: string) => 
+    postRequest('get-referred-friends', { referralCode }),
 };

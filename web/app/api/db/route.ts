@@ -101,6 +101,8 @@ export async function POST(request: Request) {
         return await handleEditSupportMessage(data);
       case 'catalog-sync':
         return await handleCatalogSync(data);
+      case 'get-referred-friends':
+        return await handleGetReferredFriends(data);
       default:
         return NextResponse.json({ success: false, error: `Invalid action: ${action}` }, { status: 400 });
     }
@@ -658,6 +660,46 @@ async function handleLogin(data: any) {
   };
 
   return NextResponse.json({ success: true, user: mappedUser });
+}
+
+async function handleGetReferredFriends(data: any) {
+  const { referralCode } = data;
+  if (!referralCode) {
+    return NextResponse.json({ success: false, error: 'Referral code is required' }, { status: 400 });
+  }
+
+  const friends = await prisma.user.findMany({
+    where: {
+      referredBy: {
+        equals: referralCode.trim(),
+        mode: 'insensitive'
+      }
+    },
+    include: {
+      testSessions: {
+        select: {
+          id: true
+        }
+      }
+    },
+    orderBy: {
+      createdAt: 'desc'
+    }
+  });
+
+  const formattedFriends = friends.map((f: any) => ({
+    id: f.id,
+    name: f.fullName,
+    email: f.email,
+    candidateCode: f.candidateCode,
+    registeredDate: formatDateTime(f.createdAt),
+    hasCompletedTest: f.testSessions.length > 0
+  }));
+
+  return NextResponse.json({
+    success: true,
+    referredFriends: formattedFriends
+  });
 }
 
 async function handleUpdateProfile(data: any) {

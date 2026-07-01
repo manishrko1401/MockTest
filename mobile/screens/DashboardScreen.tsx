@@ -244,6 +244,8 @@ export default function DashboardScreen({
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showReferralRules, setShowReferralRules] = useState(false);
   const [showReferredFriends, setShowReferredFriends] = useState(false);
+  const [referredFriends, setReferredFriends] = useState<any[]>([]);
+  const [loadingReferredFriends, setLoadingReferredFriends] = useState(false);
 
   // Form and tab states
   const [activeNoticeTab, setActiveNoticeTab] = useState<'notice' | 'result' | 'admit_card' | 'answer_key'>('notice');
@@ -280,6 +282,25 @@ export default function DashboardScreen({
       setProfileMobile(currentUser.mobile || '');
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (showReferredFriends && currentUser?.referralCode) {
+      const fetchReferredFriends = async () => {
+        setLoadingReferredFriends(true);
+        try {
+          const res = await ApiClient.getReferredFriends(currentUser.referralCode);
+          if (res.success && res.referredFriends) {
+            setReferredFriends(res.referredFriends);
+          }
+        } catch (err) {
+          console.error("Failed to fetch referred friends:", err);
+        } finally {
+          setLoadingReferredFriends(false);
+        }
+      };
+      fetchReferredFriends();
+    }
+  }, [showReferredFriends, currentUser?.referralCode]);
 
   const handleUpdateProfile = async () => {
     if (!profileName.trim() || !profileEmail.trim() || !profileMobile.trim()) {
@@ -881,7 +902,7 @@ export default function DashboardScreen({
               <Text style={[styles.formCardTitle, { fontSize: 12 }, isDark && { color: ThemeColors.dark.text }]}>👥 Referred Friends Tracker</Text>
               <View style={styles.referredCountBadge}>
                 <Text style={styles.referredCountBadgeText}>
-                  {usersList.filter((u: any) => u.referredBy && u.referredBy.trim().toLowerCase() === currentUser.referralCode.trim().toLowerCase()).length}
+                  {currentUser.referralsCount}
                 </Text>
               </View>
             </View>
@@ -889,11 +910,15 @@ export default function DashboardScreen({
           </TouchableOpacity>
 
           {showReferredFriends && (() => {
-            const referredFriendsList = usersList.filter(
-              (u: any) => u.referredBy && u.referredBy.trim().toLowerCase() === currentUser.referralCode.trim().toLowerCase()
-            );
+            if (loadingReferredFriends) {
+              return (
+                <View style={{ marginTop: 16, padding: 16, alignItems: 'center', justifyContent: 'center' }}>
+                  <ActivityIndicator size="small" color="#2563EB" />
+                </View>
+              );
+            }
 
-            if (referredFriendsList.length === 0) {
+            if (referredFriends.length === 0) {
               return (
                 <View style={{ marginTop: 10, padding: 16, alignItems: 'center', backgroundColor: isDark ? '#0B1329' : '#F9FAFB', borderRadius: 8 }}>
                   <Text style={{ fontSize: 11, color: isDark ? '#94A3B8' : '#6B7280', fontStyle: 'italic' }}>
@@ -905,8 +930,8 @@ export default function DashboardScreen({
 
             return (
               <View style={{ marginTop: 10, gap: 10 }}>
-                {referredFriendsList.map((friend: any) => {
-                  const hasCompletedTest = friend.testSessions && friend.testSessions.length > 0;
+                {referredFriends.map((friend: any) => {
+                  const hasCompletedTest = friend.hasCompletedTest;
                   
                   return (
                     <View key={friend.id} style={[styles.friendTrackerCard, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
