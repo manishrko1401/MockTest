@@ -1120,7 +1120,23 @@ async function handleDeleteSubSubCategory(data: any) {
 }
 
 async function handleAddMockTest(data: any) {
-  const { categoryId, subCategoryId, subSubCategoryId, id, title, questionsCount, durationMinutes, maxMarks, requiredTier, hasSectionalTiming, sectionalTimings } = data;
+  const {
+    categoryId,
+    subCategoryId,
+    subSubCategoryId,
+    id,
+    title,
+    questionsCount,
+    durationMinutes,
+    maxMarks,
+    requiredTier,
+    hasSectionalTiming,
+    sectionalTimings,
+    testbookTotalUsers,
+    testbookTopperScore,
+    testbookAverageScore,
+    testbookCutoffScore
+  } = data;
 
   let finalTestSeriesId = subSubCategoryId;
 
@@ -1154,6 +1170,10 @@ async function handleAddMockTest(data: any) {
       passingCutoff: 0.0,
       hasSectionalTiming: hasSectionalTiming ?? false,
       sectionalTimings: sectionalTimings ?? undefined,
+      testbookTotalUsers: testbookTotalUsers !== undefined ? Number(testbookTotalUsers) : 0,
+      testbookTopperScore: testbookTopperScore !== undefined ? Number(testbookTopperScore) : 0.0,
+      testbookAverageScore: testbookAverageScore !== undefined ? Number(testbookAverageScore) : 0.0,
+      testbookCutoffScore: testbookCutoffScore !== undefined ? Number(testbookCutoffScore) : 0.0,
     },
   });
 
@@ -1204,11 +1224,17 @@ async function handleEditSubSubCategory(data: any) {
 }
 
 async function handleEditMockTestTitle(data: any) {
-  const { testId, title } = data;
+  const { testId, title, testbookTotalUsers, testbookTopperScore, testbookAverageScore, testbookCutoffScore } = data;
 
   await prisma.mockTest.update({
     where: { id: testId },
-    data: { title },
+    data: {
+      title,
+      testbookTotalUsers: testbookTotalUsers !== undefined ? Number(testbookTotalUsers) : undefined,
+      testbookTopperScore: testbookTopperScore !== undefined ? Number(testbookTopperScore) : undefined,
+      testbookAverageScore: testbookAverageScore !== undefined ? Number(testbookAverageScore) : undefined,
+      testbookCutoffScore: testbookCutoffScore !== undefined ? Number(testbookCutoffScore) : undefined,
+    },
   });
 
   return NextResponse.json({ success: true });

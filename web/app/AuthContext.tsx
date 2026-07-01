@@ -12,6 +12,10 @@ export interface MockTestItem {
   requiredTier: 'None' | 'Testbook Pass' | 'Testbook Pass Pro';
   hasSectionalTiming?: boolean;
   sectionalTimings?: number[]; // minutes per section, e.g. [20, 20, 20]
+  testbookTotalUsers?: number;
+  testbookTopperScore?: number;
+  testbookAverageScore?: number;
+  testbookCutoffScore?: number;
 }
 
 export interface TestSubSubCategory {
@@ -174,7 +178,19 @@ interface AuthContextType {
   editSubSubCategory: (categoryId: string, subCategoryId: string, subSubCategoryId: string, name: string) => void;
   deleteSubSubCategory: (categoryId: string, subCategoryId: string, subSubCategoryId: string) => void;
   addMockTest: (categoryId: string, subCategoryId: string, subSubCategoryId: string, test: Omit<MockTestItem, 'id'>) => void;
-  editMockTestTitle: (categoryId: string, subCategoryId: string, subSubCategoryId: string, testId: string, title: string) => void;
+  editMockTestTitle: (
+    categoryId: string,
+    subCategoryId: string,
+    subSubCategoryId: string,
+    testId: string,
+    title: string,
+    stats?: {
+      testbookTotalUsers?: number;
+      testbookTopperScore?: number;
+      testbookAverageScore?: number;
+      testbookCutoffScore?: number;
+    }
+  ) => void;
   deleteMockTest: (categoryId: string, subCategoryId: string, testId: string) => void;
   reorderCategories: (orderedCategories: TestCategory[]) => void;
   reorderSubCategories: (categoryId: string, orderedSubCategories: TestSubCategory[]) => void;
@@ -1051,7 +1067,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).catch(err => console.error("Delete mocktest error:", err));
   };
 
-  const editMockTestTitle = (categoryId: string, subCategoryId: string, subSubCategoryId: string, testId: string, title: string) => {
+  const editMockTestTitle = (
+    categoryId: string,
+    subCategoryId: string,
+    subSubCategoryId: string,
+    testId: string,
+    title: string,
+    stats?: {
+      testbookTotalUsers?: number;
+      testbookTopperScore?: number;
+      testbookAverageScore?: number;
+      testbookCutoffScore?: number;
+    }
+  ) => {
     const updated = examCatalog.map(c => {
       if (c.id === categoryId) {
         return {
@@ -1064,12 +1092,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   if (ss.id === subSubCategoryId) {
                     return {
                       ...ss,
-                      tests: ss.tests.map(t => t.id === testId ? { ...t, title } : t)
+                      tests: ss.tests.map(t => t.id === testId ? { ...t, title, ...(stats || {}) } : t)
                     };
                   }
                   return ss;
                 }),
-                tests: (s.tests || []).map(t => t.id === testId ? { ...t, title } : t)
+                tests: (s.tests || []).map(t => t.id === testId ? { ...t, title, ...(stats || {}) } : t)
               };
             }
             return s;
@@ -1085,7 +1113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'edit-mocktest-title',
-        data: { testId, title }
+        data: { testId, title, ...(stats || {}) }
       })
     }).catch(err => console.error("Edit mocktest title error:", err));
   };

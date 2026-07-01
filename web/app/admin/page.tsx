@@ -351,8 +351,16 @@ export default function AdminAnalytics() {
   const [editingSubSubCategoryName, setEditingSubSubCategoryName] = useState('');
   const [editingMockTestId, setEditingMockTestId] = useState<string | null>(null);
   const [editingMockTestTitle, setEditingMockTestTitle] = useState('');
+  const [editingMockTestbookTotalUsers, setEditingMockTestbookTotalUsers] = useState(0);
+  const [editingMockTestbookTopperScore, setEditingMockTestbookTopperScore] = useState(0.0);
+  const [editingMockTestbookAverageScore, setEditingMockTestbookAverageScore] = useState(0.0);
+  const [editingMockTestbookCutoffScore, setEditingMockTestbookCutoffScore] = useState(0.0);
 
   // Mock test management form states
+  const [newMockTestbookTotalUsers, setNewMockTestbookTotalUsers] = useState(0);
+  const [newMockTestbookTopperScore, setNewMockTestbookTopperScore] = useState(0.0);
+  const [newMockTestbookAverageScore, setNewMockTestbookAverageScore] = useState(0.0);
+  const [newMockTestbookCutoffScore, setNewMockTestbookCutoffScore] = useState(0.0);
   const [newMockCategoryParent, setNewMockCategoryParent] = useState('');
   const [newMockSubCategoryParent, setNewMockSubCategoryParent] = useState('');
   const [newMockSubSubCategoryParent, setNewMockSubSubCategoryParent] = useState('');
@@ -3041,12 +3049,20 @@ export default function AdminAnalytics() {
                       isPremium: newMockRequiredTier !== 'None',
                       requiredTier: newMockRequiredTier,
                       hasSectionalTiming: newMockHasSectionalTiming,
-                      sectionalTimings: newMockHasSectionalTiming ? sectionalTimings : undefined
-                    });
+                      sectionalTimings: newMockHasSectionalTiming ? sectionalTimings : undefined,
+                      testbookTotalUsers: Number(newMockTestbookTotalUsers),
+                      testbookTopperScore: Number(newMockTestbookTopperScore),
+                      testbookAverageScore: Number(newMockTestbookAverageScore),
+                      testbookCutoffScore: Number(newMockTestbookCutoffScore),
+                    } as any);
                     setNewMockTitle('');
                     setNewMockSubSubCategoryParent('');
                     setNewMockHasSectionalTiming(false);
                     setNewMockSectionalTimingsStr('');
+                    setNewMockTestbookTotalUsers(0);
+                    setNewMockTestbookTopperScore(0.0);
+                    setNewMockTestbookAverageScore(0.0);
+                    setNewMockTestbookCutoffScore(0.0);
                     showToast('Mock test created successfully!');
                   }}
                   className="space-y-4"
@@ -3166,6 +3182,58 @@ export default function AdminAnalytics() {
                     </select>
                   </div>
 
+                  {/* Testbook Statistics Benchmarking (Optional) */}
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-3 bg-slate-50/50 dark:bg-slate-950/30">
+                    <h4 className="text-[10px] font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+                      Testbook Statistics Benchmarks (Optional)
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Total Users</label>
+                        <input
+                          type="number"
+                          value={newMockTestbookTotalUsers}
+                          onChange={(e) => setNewMockTestbookTotalUsers(Number(e.target.value))}
+                          placeholder="e.g. 15000"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Topper Score</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={newMockTestbookTopperScore}
+                          onChange={(e) => setNewMockTestbookTopperScore(Number(e.target.value))}
+                          placeholder="e.g. 185.5"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Average Score</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={newMockTestbookAverageScore}
+                          onChange={(e) => setNewMockTestbookAverageScore(Number(e.target.value))}
+                          placeholder="e.g. 94.2"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Cutoff Score</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={newMockTestbookCutoffScore}
+                          onChange={(e) => setNewMockTestbookCutoffScore(Number(e.target.value))}
+                          placeholder="e.g. 112.5"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Sectional Timing Toggle */}
                   <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-3">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -3251,14 +3319,72 @@ export default function AdminAnalytics() {
                                         </td>
                                         <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-200 max-w-[200px]" title={test.title}>
                                           {editingMockTestId === test.id ? (
-                                            <input
-                                              type="text"
-                                              value={editingMockTestTitle}
-                                              onChange={(e) => setEditingMockTestTitle(e.target.value)}
-                                              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full"
-                                            />
+                                            <div className="space-y-1 w-full min-w-[240px]">
+                                              <input
+                                                type="text"
+                                                value={editingMockTestTitle}
+                                                onChange={(e) => setEditingMockTestTitle(e.target.value)}
+                                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full"
+                                              />
+                                              <div className="grid grid-cols-2 gap-1 mt-1.5 p-1.5 bg-slate-100/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-850 rounded">
+                                                <div>
+                                                  <label className="text-[7px] text-slate-400 font-bold uppercase">Pool</label>
+                                                  <input
+                                                    type="number"
+                                                    value={editingMockTestbookTotalUsers}
+                                                    onChange={(e) => setEditingMockTestbookTotalUsers(Number(e.target.value))}
+                                                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-1 py-0.5 text-[10px] text-slate-800 dark:text-slate-200"
+                                                  />
+                                                </div>
+                                                <div>
+                                                  <label className="text-[7px] text-slate-400 font-bold uppercase">Topper</label>
+                                                  <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    value={editingMockTestbookTopperScore}
+                                                    onChange={(e) => setEditingMockTestbookTopperScore(Number(e.target.value))}
+                                                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-1 py-0.5 text-[10px] text-slate-800 dark:text-slate-200"
+                                                  />
+                                                </div>
+                                                <div>
+                                                  <label className="text-[7px] text-slate-400 font-bold uppercase">Avg</label>
+                                                  <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    value={editingMockTestbookAverageScore}
+                                                    onChange={(e) => setEditingMockTestbookAverageScore(Number(e.target.value))}
+                                                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-1 py-0.5 text-[10px] text-slate-800 dark:text-slate-200"
+                                                  />
+                                                </div>
+                                                <div>
+                                                  <label className="text-[7px] text-slate-400 font-bold uppercase">Cutoff</label>
+                                                  <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    value={editingMockTestbookCutoffScore}
+                                                    onChange={(e) => setEditingMockTestbookCutoffScore(Number(e.target.value))}
+                                                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-1 py-0.5 text-[10px] text-slate-800 dark:text-slate-200"
+                                                  />
+                                                </div>
+                                              </div>
+                                            </div>
                                           ) : (
-                                            <span className="truncate block max-w-[200px]">{test.title}</span>
+                                            <div className="flex flex-col">
+                                              <span className="truncate block max-w-[200px] font-bold text-slate-900 dark:text-white">{test.title}</span>
+                                              {(test.testbookTotalUsers ?? 0) > 0 && (
+                                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                                  <span className="px-1 py-0.5 rounded text-[8px] bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 font-bold">
+                                                    Pool: {test.testbookTotalUsers?.toLocaleString()}
+                                                  </span>
+                                                  <span className="px-1 py-0.5 rounded text-[8px] bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-900/50 font-bold">
+                                                    Top: {test.testbookTopperScore}
+                                                  </span>
+                                                  <span className="px-1 py-0.5 rounded text-[8px] bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/50 font-bold">
+                                                    Avg: {test.testbookAverageScore}
+                                                  </span>
+                                                </div>
+                                              )}
+                                            </div>
                                           )}
                                           {getCustomQuestionsCount(test.id) > 0 ? (
                                             <span className="mt-1 inline-block px-1.5 py-0.5 rounded text-[8px] bg-green-950/60 text-green-400 border border-green-800 font-bold uppercase tracking-wider">
@@ -3293,9 +3419,14 @@ export default function AdminAnalytics() {
                                               <button
                                                 onClick={() => {
                                                   if (editingMockTestTitle.trim()) {
-                                                    editMockTestTitle(cat.id, sub.id, subsub.id, test.id, editingMockTestTitle.trim());
+                                                    editMockTestTitle(cat.id, sub.id, subsub.id, test.id, editingMockTestTitle.trim(), {
+                                                      testbookTotalUsers: Number(editingMockTestbookTotalUsers),
+                                                      testbookTopperScore: Number(editingMockTestbookTopperScore),
+                                                      testbookAverageScore: Number(editingMockTestbookAverageScore),
+                                                      testbookCutoffScore: Number(editingMockTestbookCutoffScore),
+                                                    });
                                                     setEditingMockTestId(null);
-                                                    showToast('Mock test renamed successfully.');
+                                                    showToast('Mock test updated successfully.');
                                                   }
                                                 }}
                                                 className="text-green-500 hover:text-green-600 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2 py-1 rounded cursor-pointer"
@@ -3347,6 +3478,10 @@ export default function AdminAnalytics() {
                                                 onClick={() => {
                                                   setEditingMockTestId(test.id);
                                                   setEditingMockTestTitle(test.title);
+                                                  setEditingMockTestbookTotalUsers((test as any).testbookTotalUsers ?? 0);
+                                                  setEditingMockTestbookTopperScore((test as any).testbookTopperScore ?? 0.0);
+                                                  setEditingMockTestbookAverageScore((test as any).testbookAverageScore ?? 0.0);
+                                                  setEditingMockTestbookCutoffScore((test as any).testbookCutoffScore ?? 0.0);
                                                 }}
                                                 className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2 py-1 rounded cursor-pointer"
                                               >
