@@ -153,15 +153,15 @@ export default function App() {
         const savedPassword = await SecureStore.getItemAsync('tb_user_password');
         
         if (savedEmail && savedPassword) {
-          // Serve cached user profile instantly if available
+          // Serve cached user profile instantly if available (zero delay)
           const cachedUser = await getCachedUser();
           if (cachedUser) {
             setCurrentUser(cachedUser);
             setViewMode('dashboard');
-            setLoading(false); // Disable spinner immediately
+            // Don't stop loading here — background sync below will call setLoading(false) via finally()
           }
 
-          // Fetch fresh user profile in background
+          // Fetch fresh user profile in background (always runs, finally() stops the spinner)
           ApiClient.login(savedEmail, savedPassword).then(async (authRes) => {
             if (authRes.success && authRes.user) {
               setCurrentUser(authRes.user);
@@ -170,7 +170,7 @@ export default function App() {
           }).catch(err => {
             console.warn('[Sync] Background user sync failed:', err);
           }).finally(() => {
-            setLoading(false);
+            setLoading(false); // ← single authoritative place to stop the spinner
           });
         } else {
           setLoading(false);
@@ -416,7 +416,10 @@ export default function App() {
   // Refresh user data (coins, sessions) to keep in sync with Web/Admin changes
   const refreshUserData = async (userId: string) => {
     if (!currentUser?.email) return;
-    const res = await ApiClient.login(currentUser.email, currentUser.password);
+    // ✅ Use SecureStore password — NOT the stale currentUser.password from DB response
+    const savedPassword = await SecureStore.getItemAsync('tb_user_password');
+    if (!savedPassword) return;
+    const res = await ApiClient.login(currentUser.email, savedPassword);
     if (res.success && res.user) {
       setCurrentUser(res.user);
       await saveUserToCache(res.user);

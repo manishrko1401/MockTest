@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -1103,7 +1103,7 @@ export default function DashboardScreen({
     );
   };
 
-  const totalTestsGiven = (() => {
+  const totalTestsGiven = useMemo(() => {
     const catalogTestsMap = new Map<string, any>();
     (examCatalog || []).forEach(cat => {
       (cat.subCategories || []).forEach((sub: any) => {
@@ -1142,7 +1142,7 @@ export default function DashboardScreen({
       const spentSec = s.durationSeconds || 0;
       return spentSec >= totalSec * 0.75;
     }).length;
-  })();
+  }, [examCatalog, currentUser.testSessions]);
 
   return (
     <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
