@@ -441,6 +441,112 @@ export default function ExamSolutionAnalysisPage() {
         </div>
       </section>
 
+      {/* Testbook Equivalent Benchmarking Card */}
+      {sessionRecord.testbookRank && sessionRecord.mockTest && (
+        <section className="max-w-6xl w-full mx-auto px-6 mt-6">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900/30 dark:to-indigo-950/10 border border-blue-100 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              
+              <div className="flex items-center gap-4">
+                <div className="bg-blue-600 text-white p-3 rounded-2xl shadow-lg shadow-blue-500/20">
+                  <Award className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+                    {lang === 'hi' ? 'टेस्टबुक समकक्ष रैंक' : 'Equivalent Testbook Rank'}
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {lang === 'hi' 
+                      ? 'टेस्टबुक के परीक्षणकर्ताओं के डेटा के आधार पर सांख्यिकीय अनुमान।' 
+                      : 'Statistical projection based on Testbook performance parameters.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-6 items-center flex-wrap">
+                <div className="bg-white dark:bg-slate-950 px-5 py-3 rounded-xl border border-slate-200/60 dark:border-slate-850 shadow-sm text-center min-w-[120px]">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{lang === 'hi' ? 'अनुमानित रैंक' : 'EST. RANK'}</span>
+                  <h3 className="text-lg font-black text-blue-600 dark:text-blue-400 mt-0.5">
+                    #{sessionRecord.testbookRank} <span className="text-[11px] text-slate-400 font-normal">/ {sessionRecord.mockTest.testbookTotalUsers}</span>
+                  </h3>
+                </div>
+
+                <div className="bg-white dark:bg-slate-950 px-5 py-3 rounded-xl border border-slate-200/60 dark:border-slate-850 shadow-sm text-center min-w-[120px]">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{lang === 'hi' ? 'प्रतिशतक (Percentile)' : 'PERCENTILE'}</span>
+                  <h3 className="text-lg font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
+                    {sessionRecord.testbookPercentile}%
+                  </h3>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Benchmarking Scale */}
+            <div className="mt-6 border-t border-slate-200/60 dark:border-slate-800/80 pt-6">
+              <h5 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-widest mb-3">
+                {lang === 'hi' ? 'प्रदर्शन बेंचमार्किंग' : 'PERFORMANCE BENCHMARKING'}
+              </h5>
+              
+              <div className="relative pt-6 pb-2">
+                {/* Horizontal progress bar */}
+                <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full relative">
+                  {/* Fill range from average to topper */}
+                  <div 
+                    className="absolute h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full"
+                    style={{
+                      left: `${Math.max(0, Math.min(100, (sessionRecord.mockTest.testbookAverageScore / sessionRecord.maxScore) * 100))}%`,
+                      right: `${Math.max(0, Math.min(100, 100 - (sessionRecord.mockTest.testbookTopperScore / sessionRecord.maxScore) * 100))}%`
+                    }}
+                  />
+                  
+                  {/* Mark: Average Score */}
+                  <div 
+                    className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
+                    style={{ left: `${(sessionRecord.mockTest.testbookAverageScore / sessionRecord.maxScore) * 100}%` }}
+                  >
+                    <span className="text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                      {lang === 'hi' ? 'औसत: ' : 'Avg: '} {sessionRecord.mockTest.testbookAverageScore}
+                    </span>
+                    <div className="w-[1.5px] h-6 bg-slate-400 mt-1"></div>
+                  </div>
+
+                  {/* Mark: User Score */}
+                  <div 
+                    className="absolute top-[-30px] transform -translate-x-1/2 flex flex-col items-center z-10"
+                    style={{ left: `${(sessionRecord.score / sessionRecord.maxScore) * 100}%` }}
+                  >
+                    <span className="text-[9px] font-black text-white bg-blue-600 px-2 py-0.5 rounded-full shadow-md shadow-blue-500/20">
+                      {lang === 'hi' ? 'आपका स्कोर: ' : 'You: '} {sessionRecord.score}
+                    </span>
+                    <div className="w-2 h-2 rounded-full bg-blue-600 border border-white dark:border-slate-900 mt-0.5"></div>
+                    <div className="w-[1.5px] h-3.5 bg-blue-600"></div>
+                  </div>
+
+                  {/* Mark: Topper Score */}
+                  <div 
+                    className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
+                    style={{ left: `${(sessionRecord.mockTest.testbookTopperScore / sessionRecord.maxScore) * 100}%` }}
+                  >
+                    <span className="text-[9px] font-bold text-green-600 bg-green-50 dark:bg-green-950/40 px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/50">
+                      {lang === 'hi' ? 'टॉपर: ' : 'Topper: '} {sessionRecord.mockTest.testbookTopperScore}
+                    </span>
+                    <div className="w-[1.5px] h-6 bg-green-500 mt-1"></div>
+                  </div>
+
+                </div>
+                
+                {/* Scale helper texts */}
+                <div className="flex justify-between mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider font-sans">
+                  <span>0 {lang === 'hi' ? 'अंक' : 'Marks'}</span>
+                  <span>{sessionRecord.maxScore} {lang === 'hi' ? 'अंक' : 'Marks'}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+      )}
+
       {/* Attempt Selector and Comparison Dashboard */}
       {attempts.length >= 1 && (
         <section className="max-w-6xl w-full mx-auto px-6 mt-6">

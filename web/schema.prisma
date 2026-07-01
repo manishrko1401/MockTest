@@ -146,6 +146,10 @@ model MockTest {
   hasSectionalTiming  Boolean            @default(false)
   sectionalTimings    Json?
   orderIndex          Int                @default(0)
+  testbookTotalUsers   Int                @default(0)
+  testbookTopperScore  Float              @default(0.0)
+  testbookAverageScore Float              @default(0.0)
+  testbookCutoffScore  Float              @default(0.0)
 
   @@map("mock_tests")
 }
@@ -206,6 +210,8 @@ model UserTestSession {
   createdAt                  DateTime                @default(now())
   currentSectionIndex        Int                     @default(0)
   currentQuestionIndex       Int                     @default(0)
+  testbookRank               Int?
+  testbookPercentile         Float?
 
   @@map("user_test_sessions")
 }

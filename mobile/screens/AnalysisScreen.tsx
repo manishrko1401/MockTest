@@ -23,7 +23,8 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  Bookmark
+  Bookmark,
+  Award
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { getCachedQuestions, saveQuestionsToCache } from '../cache';
@@ -358,6 +359,125 @@ export default function AnalysisScreen({
             </View>
           </View>
         </View>
+
+        {/* Testbook Equivalent Benchmarking Card */}
+        {activeAttempt.testbookRank !== null && activeAttempt.testbookRank !== undefined && activeAttempt.mockTest && (
+          <View style={[
+            styles.rankCard,
+            isDark ? { backgroundColor: '#1A2035', borderColor: '#2E3856' } : { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }
+          ]}>
+            <View style={styles.rankCardHeader}>
+              <View style={[styles.rankIconBg, isDark ? { backgroundColor: '#2E3856' } : { backgroundColor: '#3B82F6' }]}>
+                <Award color="#FFF" size={20} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={[styles.rankTitle, isDark && { color: '#FFF' }]}>
+                  {lang === 'hi' ? 'समकक्ष टेस्टबुक रैंक' : 'Equivalent Testbook Rank'}
+                </Text>
+                <Text style={[styles.rankSubtitle, isDark && { color: '#9CA3AF' }]}>
+                  {lang === 'hi'
+                    ? 'टेस्टबुक के 10,000+ छात्रों के डेटा पर आधारित अनुमान।'
+                    : 'Estimated ranking based on Testbook exam stats.'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.rankMetricsRow}>
+              <View style={[styles.rankMetricItem, isDark ? { backgroundColor: '#111827', borderColor: '#2E3856' } : { backgroundColor: '#FFFFFF', borderColor: '#DBEAFE' }]}>
+                <Text style={styles.rankMetricLabel}>{lang === 'hi' ? 'अनुमानित रैंक' : 'EST. RANK'}</Text>
+                <Text style={[styles.rankMetricVal, { color: '#2563EB' }, isDark && { color: '#60A5FA' }]}>
+                  #{activeAttempt.testbookRank}
+                  <Text style={{ fontSize: 10, fontWeight: '400', color: '#6B7280' }}>
+                    /{activeAttempt.mockTest.testbookTotalUsers}
+                  </Text>
+                </Text>
+              </View>
+
+              <View style={[styles.rankMetricItem, isDark ? { backgroundColor: '#111827', borderColor: '#2E3856' } : { backgroundColor: '#FFFFFF', borderColor: '#DBEAFE' }]}>
+                <Text style={styles.rankMetricLabel}>{lang === 'hi' ? 'प्रतिशतक (Percentile)' : 'PERCENTILE'}</Text>
+                <Text style={[styles.rankMetricVal, { color: '#4F46E5' }, isDark && { color: '#818CF8' }]}>
+                  {activeAttempt.testbookPercentile}%
+                </Text>
+              </View>
+            </View>
+
+            {/* Benchmarking Slider */}
+            <View style={[styles.scaleContainer, { borderTopColor: isDark ? '#2E3856' : '#DBEAFE' }]}>
+              <Text style={[styles.scaleTitle, isDark && { color: '#9CA3AF' }]}>
+                {lang === 'hi' ? 'प्रदर्शन बेंचमार्किंग (अंक)' : 'PERFORMANCE BENCHMARKING (MARKS)'}
+              </Text>
+
+              {(() => {
+                const max = activeAttempt.maxScore || 200;
+                const avg = activeAttempt.mockTest.testbookAverageScore || 0;
+                const topper = activeAttempt.mockTest.testbookTopperScore || 0;
+                const score = activeAttempt.score || 0;
+
+                const avgPct = Math.max(0, Math.min(100, (avg / max) * 100));
+                const topperPct = Math.max(0, Math.min(100, (topper / max) * 100));
+                const youPct = Math.max(0, Math.min(100, (score / max) * 100));
+
+                return (
+                  <View style={{ paddingTop: 34, pb: 10 }}>
+                    <View style={[styles.scaleSliderLine, isDark ? { backgroundColor: '#374151' } : { backgroundColor: '#D1D5DB' }]}>
+                      {/* Highlight range from average to topper */}
+                      <View
+                        style={[
+                          styles.scaleSliderFill,
+                          {
+                            left: `${avgPct}%`,
+                            width: `${Math.max(0, topperPct - avgPct)}%`
+                          }
+                        ]}
+                      />
+
+                      {/* Average Marker */}
+                      <View style={[styles.scaleMarker, { left: `${avgPct}%` }]}>
+                        <View style={[styles.scaleMarkerLine, isDark ? { backgroundColor: '#9CA3AF' } : { backgroundColor: '#6B7280' }]} />
+                        <View style={[styles.scaleMarkerLabelContainer, { top: -32 }]}>
+                          <Text style={[styles.scaleMarkerText, isDark && { color: '#9CA3AF' }]}>
+                            {lang === 'hi' ? 'औसत: ' : 'Avg: '}
+                            {avg.toFixed(1)}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* User Marker (stands out higher) */}
+                      <View style={[styles.scaleMarker, { left: `${youPct}%`, zIndex: 10 }]}>
+                        <View style={styles.scaleMarkerYouLine} />
+                        <View style={[styles.scaleMarkerLabelContainer, { top: -42 }]}>
+                          <View style={styles.scaleMarkerYouBadge}>
+                            <Text style={styles.scaleMarkerYouText}>
+                              {lang === 'hi' ? 'आप: ' : 'You: '}
+                              {score.toFixed(1)}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Topper Marker */}
+                      <View style={[styles.scaleMarker, { left: `${topperPct}%` }]}>
+                        <View style={[styles.scaleMarkerLine, { backgroundColor: '#10B981' }]} />
+                        <View style={[styles.scaleMarkerLabelContainer, { top: -32 }]}>
+                          <Text style={[styles.scaleMarkerText, { color: '#10B981', fontWeight: 'bold' }]}>
+                            {lang === 'hi' ? 'टॉपर: ' : 'Topper: '}
+                            {topper.toFixed(1)}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Scale Ends */}
+                    <View style={styles.scaleEndsRow}>
+                      <Text style={styles.scaleEndsText}>0</Text>
+                      <Text style={styles.scaleEndsText}>{max.toFixed(0)}</Text>
+                    </View>
+                  </View>
+                );
+              })()}
+            </View>
+          </View>
+        )}
 
         {/* Slide Navigator Category Filter (Pills) */}
         <View style={[styles.categoryContainer, isDark && { backgroundColor: 'transparent', borderBottomColor: ThemeColors.dark.border }]}>
@@ -1082,5 +1202,151 @@ const styles = StyleSheet.create({
   },
   categoryPillTextUnselected: {
     color: '#4A5568',
+  },
+  rankCard: {
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  rankCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rankIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1E293B',
+  },
+  rankSubtitle: {
+    fontSize: 10,
+    color: '#64748B',
+    marginTop: 2,
+    lineHeight: 12,
+  },
+  rankMetricsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  rankMetricItem: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.02,
+    shadowRadius: 2,
+    elevation: 0.5,
+  },
+  rankMetricLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  rankMetricVal: {
+    fontSize: 15,
+    fontWeight: '900',
+    marginTop: 4,
+  },
+  scaleContainer: {
+    marginTop: 16,
+    borderTopWidth: 1,
+    paddingTop: 14,
+  },
+  scaleTitle: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#64748B',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  scaleSliderLine: {
+    height: 6,
+    borderRadius: 3,
+    width: '100%',
+    position: 'relative',
+  },
+  scaleSliderFill: {
+    height: '100%',
+    position: 'absolute',
+    backgroundColor: '#3B82F6',
+    opacity: 0.25,
+    borderRadius: 3,
+  },
+  scaleMarker: {
+    position: 'absolute',
+    width: 2,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scaleMarkerLine: {
+    width: 1.5,
+    height: 16,
+    position: 'absolute',
+    top: -5,
+  },
+  scaleMarkerYouLine: {
+    width: 2,
+    height: 22,
+    position: 'absolute',
+    top: -8,
+    backgroundColor: '#3B82F6',
+  },
+  scaleMarkerLabelContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    width: 100,
+  },
+  scaleMarkerText: {
+    fontSize: 8,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  scaleMarkerYouBadge: {
+    backgroundColor: '#3B82F6',
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  scaleMarkerYouText: {
+    fontSize: 8,
+    color: '#FFFFFF',
+    fontWeight: '900',
+  },
+  scaleEndsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  scaleEndsText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#94A3B8',
   },
 });

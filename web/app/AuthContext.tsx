@@ -48,6 +48,9 @@ export interface MockTestRecord {
   timeRemaining?: number;
   currentSectionIndex?: number;
   currentQuestionIndex?: number;
+  testbookRank?: number | null;
+  testbookPercentile?: number | null;
+  mockTest?: any;
 }
 
 export interface Notice {

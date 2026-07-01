@@ -182,6 +182,8 @@ async function handleBootstrap() {
           timeRemaining: session.remainingSeconds,
           currentSectionIndex: session.currentSectionIndex,
           currentQuestionIndex: session.currentQuestionIndex,
+          testbookRank: session.testbookRank ?? null,
+          testbookPercentile: session.testbookPercentile ?? null,
         };
       }),
     };
@@ -251,6 +253,10 @@ async function handleBootstrap() {
             customQuestionsCount: t.customQuestions ? (t.customQuestions as any[]).length : 0,
             hasSectionalTiming: t.hasSectionalTiming ?? false,
             sectionalTimings: t.sectionalTimings ?? null,
+            testbookTotalUsers: t.testbookTotalUsers ?? 0,
+            testbookTopperScore: t.testbookTopperScore ?? 0.0,
+            testbookAverageScore: t.testbookAverageScore ?? 0.0,
+            testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
           }));
           return {
             id: ts.id,
@@ -351,6 +357,10 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
             orderIndex: t.orderIndex,
             testSeriesId: ts.id,
             updatedAt: t.updatedAt.toISOString(),
+            testbookTotalUsers: t.testbookTotalUsers ?? 0,
+            testbookTopperScore: t.testbookTopperScore ?? 0.0,
+            testbookAverageScore: t.testbookAverageScore ?? 0.0,
+            testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
           })),
         }));
         const tests = subSubCategories.flatMap((ss: any) => ss.tests);
@@ -416,6 +426,10 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
         orderIndex: true,
         testSeriesId: true,
         updatedAt: true,
+        testbookTotalUsers: true,
+        testbookTopperScore: true,
+        testbookAverageScore: true,
+        testbookCutoffScore: true,
         // NOTE: customQuestions is intentionally excluded — fetched per-test separately
       },
     }),
@@ -446,6 +460,10 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
     orderIndex: t.orderIndex,
     testSeriesId: t.testSeriesId,
     updatedAt: t.updatedAt.toISOString(),
+    testbookTotalUsers: t.testbookTotalUsers ?? 0,
+    testbookTopperScore: t.testbookTopperScore ?? 0.0,
+    testbookAverageScore: t.testbookAverageScore ?? 0.0,
+    testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
   }));
 
   const mappedNewNotices = newNotices.map((n: any) => ({
@@ -633,6 +651,8 @@ async function handleLogin(data: any) {
         timeRemaining: session.remainingSeconds,
         currentSectionIndex: session.currentSectionIndex,
         currentQuestionIndex: session.currentQuestionIndex,
+        testbookRank: session.testbookRank ?? null,
+        testbookPercentile: session.testbookPercentile ?? null,
       };
     }),
   };
@@ -733,6 +753,42 @@ async function handleAddAttempt(data: any) {
     },
   });
 
+  // Calculate estimated rank and percentile using Testbook Normal CDF model
+  let testbookRank: number | null = null;
+  let testbookPercentile: number | null = null;
+
+  try {
+    const testInfo = await prisma.mockTest.findUnique({
+      where: { id: testId },
+      select: {
+        testbookTotalUsers: true,
+        testbookTopperScore: true,
+        testbookAverageScore: true,
+      }
+    });
+
+    if (testInfo && testInfo.testbookTotalUsers > 0) {
+      const N = testInfo.testbookTotalUsers;
+      const topper = testInfo.testbookTopperScore;
+      const avg = testInfo.testbookAverageScore;
+
+      // Estimate standard deviation (minimum width 5.0)
+      const sigma = Math.max(5.0, (topper - avg) / 2.0);
+      const z = (score - avg) / sigma;
+
+      // Abramowitz and Stegun Normal CDF approximation formula
+      const t = 1 / (1 + 0.2316419 * Math.abs(z));
+      const d = 0.3989422804 * Math.exp(-z * z / 2);
+      const p = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+      const cdf = z >= 0 ? 1 - p : p;
+
+      testbookPercentile = Number((cdf * 100).toFixed(2));
+      testbookRank = Math.max(1, Math.min(N, Math.round((1 - cdf) * N)));
+    }
+  } catch (err) {
+    console.error("Failed to estimate Testbook rank on attempt:", err);
+  }
+
   // Create completed session
   const session = await prisma.userTestSession.create({
     data: {
@@ -745,6 +801,8 @@ async function handleAddAttempt(data: any) {
       violationsCount: violations,
       remainingSeconds: 0,
       completedAt: new Date(),
+      testbookRank,
+      testbookPercentile,
     },
   });
 
