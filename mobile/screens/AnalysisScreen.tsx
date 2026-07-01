@@ -31,9 +31,8 @@ import {
   Sun,
   ClipboardList,
   Filter,
-  CheckCircle2,
-  XCircle,
-  HelpCircle
+  CircleCheck,
+  CircleX
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { getCachedQuestions, saveQuestionsToCache } from '../cache';
@@ -643,10 +642,10 @@ export default function AnalysisScreen({
                             html={optText} 
                           />
                           {isSolutionRevealed && isCorrectOpt && (
-                            <CheckCircle2 size={16} color="#22C55E" style={{ marginLeft: 'auto' }} />
+                            <CircleCheck size={16} color="#22C55E" style={{ marginLeft: 'auto' }} />
                           )}
                           {isSolutionRevealed && !isCorrectOpt && (reattemptMode ? isTempSelected : isSubmittedSelected) && (
-                            <XCircle size={16} color="#EF4444" style={{ marginLeft: 'auto' }} />
+                            <CircleX size={16} color="#EF4444" style={{ marginLeft: 'auto' }} />
                           )}
                         </TouchableOpacity>
                       );
