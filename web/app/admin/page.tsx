@@ -358,6 +358,14 @@ export default function AdminAnalytics() {
   const [editingMockTestbookAverageScore, setEditingMockTestbookAverageScore] = useState(0.0);
   const [editingMockTestbookCutoffScore, setEditingMockTestbookCutoffScore] = useState(0.0);
 
+  // Redesign Collapsible Open/Closed States
+  const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
+  const [isCreateSubCategoryOpen, setIsCreateSubCategoryOpen] = useState(false);
+  const [isCreateSubSubCategoryOpen, setIsCreateSubSubCategoryOpen] = useState(false);
+  const [isCreateNoticeOpen, setIsCreateNoticeOpen] = useState(false);
+  const [isCreateAnnouncementOpen, setIsCreateAnnouncementOpen] = useState(false);
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+
   // Mock test management form states
   const [newMockTestbookTotalUsers, setNewMockTestbookTotalUsers] = useState(0);
   const [newMockTestbookTopperScore, setNewMockTestbookTopperScore] = useState(0.0);
@@ -1278,79 +1286,308 @@ export default function AdminAnalytics() {
             />
           )}
 
-          {/* TAB 3: USER MANAGEMENT PORTAL */}
-          {activeTab === 'users' && (
-            <div className="flex flex-col gap-6 lg:flex-row">
+          {/* TAB 3: USER MANAGEMENT PORTAL */}\n          {activeTab === 'users' && (
+            <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
-              {/* Left Pane: Users List & Search */}
-              <div className="flex-1 bg-slate-950 border border-slate-800 p-6 rounded-xl min-w-0 md:min-w-[350px] lg:max-w-[450px] w-full">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between mb-6">
-                  <h3 className="font-bold text-xs text-white uppercase tracking-wider">Registered Users</h3>
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">User Management Portal</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage user credentials, passes, roles, referral data, and view attempt histories</p>
+                </div>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                  {usersList.length} user{usersList.length !== 1 ? 's' : ''} registered
+                </span>
+              </div>
+
+              {/* Collapsible Edit Profile Form */}
+              <div className="bg-slate-950 border border-slate-805 rounded-2xl shadow-sm overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsEditUserOpen(!isEditUserOpen)}
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-900/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                      <Users className="h-4 w-4" />
+                    </div>
+                    <div>
+                      {selectedUserId ? (
+                        (() => {
+                          const activeUser = usersList.find(u => u.id === selectedUserId);
+                          return (
+                            <>
+                              <p className="font-extrabold text-sm text-slate-900 dark:text-white">
+                                Edit Profile: {activeUser?.name || 'Loading...'}
+                              </p>
+                              <p className="text-[11px] text-blue-400 font-bold">Roll Code: {activeUser?.candidateCode || 'None'}</p>
+                            </>
+                          );
+                        })()
+                      ) : (
+                        <>
+                          <p className="font-extrabold text-sm text-slate-900 dark:text-white">Profile Editor (No User Selected)</p>
+                          <p className="text-[11px] text-slate-400">Select a user from the table below to edit details</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className={`transition-transform duration-200 ${isEditUserOpen ? 'rotate-180' : ''}`}>
+                    <ArrowDown className="h-4 w-4 text-slate-505" />
+                  </div>
+                </button>
+
+                {isEditUserOpen && (
+                  <div className="border-t border-slate-800 p-6 bg-slate-950">
+                    {selectedUserId ? (
+                      (() => {
+                        const activeUser = usersList.find(u => u.id === selectedUserId);
+                        if (!activeUser) return null;
+
+                        return (
+                          <form onSubmit={handleSaveProfile} className="space-y-5">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={editName}
+                                  onChange={(e) => setEditName(e.target.value)}
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-505"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+                                <input
+                                  type="email"
+                                  required
+                                  value={editEmail}
+                                  onChange={(e) => setEditEmail(e.target.value)}
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Mobile Number</label>
+                                <input
+                                  type="text"
+                                  required
+                                  maxLength={10}
+                                  value={editMobile}
+                                  onChange={(e) => setEditMobile(e.target.value.replace(/\D/g, ''))}
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Referral Code</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={editReferralCode}
+                                  onChange={(e) => setEditReferralCode(e.target.value.toUpperCase())}
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Referred By (Code)</label>
+                                <input
+                                  type="text"
+                                  value={editReferredBy}
+                                  onChange={(e) => setEditReferredBy(e.target.value.toUpperCase())}
+                                  placeholder="None"
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Referrals Count</label>
+                                <input
+                                  type="number"
+                                  required
+                                  value={editReferralsCount}
+                                  onChange={(e) => setEditReferralsCount(Number(e.target.value))}
+                                  className="w-full bg-slate-900 border border-slate-805 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-550"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">System Role</label>
+                                <select
+                                  value={editRole}
+                                  onChange={(e) => setEditRole(e.target.value as any)}
+                                  className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                >
+                                  <option value="STUDENT">Student (Candidate)</option>
+                                  <option value="CONTENT_CREATOR">Content Creator</option>
+                                  <option value="ADMIN">System Administrator</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Subscription Pass Tier</label>
+                                <select
+                                  value={editTier}
+                                  onChange={(e) => setEditTier(e.target.value as any)}
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-550 cursor-pointer"
+                                >
+                                  <option value="None">None (No Pass)</option>
+                                  <option value="Testbook Pass">Mock Test Pass (Basic)</option>
+                                  <option value="Testbook Pass Pro">Mock Test Pass Pro (Full Gating Access)</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Account Password</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={editPassword}
+                                  onChange={(e) => setEditPassword(e.target.value)}
+                                  placeholder="User password"
+                                  className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-550"
+                                />
+                              </div>
+
+                              {editTier !== 'None' && (
+                                <>
+                                  <div>
+                                    <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Pass Purchased Date</label>
+                                    <input
+                                      type="date"
+                                      required
+                                      value={editPurchasedAt}
+                                      onChange={(e) => setEditPurchasedAt(e.target.value)}
+                                      className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Pass Expiry Date</label>
+                                    <input
+                                      type="date"
+                                      required
+                                      value={editExpiry}
+                                      onChange={(e) => setEditExpiry(e.target.value)}
+                                      className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-550 cursor-pointer"
+                                    />
+                                  </div>
+                                </>
+                              )}
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Account Status</label>
+                                <select
+                                  value={editIsBlocked ? 'true' : 'false'}
+                                  onChange={(e) => setEditIsBlocked(e.target.value === 'true')}
+                                  className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                >
+                                  <option value="false">Active (Unblocked)</option>
+                                  <option value="true">Suspended (Blocked)</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Coins Balance</label>
+                                <div className="relative flex items-center">
+                                  <span className="absolute left-3 text-amber-400">
+                                    <Coins className="h-3.5 w-3.5 text-amber-400" />
+                                  </span>
+                                  <input
+                                    type="number"
+                                    required
+                                    value={editCoins}
+                                    onChange={(e) => setEditCoins(Number(e.target.value))}
+                                    className="w-full bg-slate-900 border border-slate-808 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 border-t border-slate-800 pt-4">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedUserId(null)}
+                                className="bg-slate-900 hover:bg-slate-800 border border-slate-808 text-slate-400 font-bold py-2 px-5 rounded-lg text-xs transition cursor-pointer"
+                              >
+                                Deselect
+                              </button>
+                              <button
+                                type="submit"
+                                className="flex items-center gap-2 bg-blue-600 text-white font-bold py-2 px-5 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md cursor-pointer"
+                              >
+                                <UserCheck className="h-4 w-4" />
+                                Save Changes
+                              </button>
+                            </div>
+                          </form>
+                        );
+                      })()
+                    ) : (
+                      <p className="text-xs text-slate-505 font-medium text-center py-6">No user selected. Click the "Edit Profile" button on any user in the table below to load details here.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Users List & Search Card — Full Width */}
+              <div className="bg-slate-950 border border-slate-808 p-6 rounded-2xl shadow-sm">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                  <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">Registered Users Directory</h3>
                   
-                  {/* Filters and search info */}
-                  <div className="flex gap-2">
-                    <span className="text-[10px] bg-slate-900 border border-slate-800 px-2 py-1 rounded text-slate-400">
-                      Total: {usersList.length}
-                    </span>
+                  {/* Search and Filters */}
+                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                    <div className="relative w-full sm:w-64">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
+                        <Search className="h-3.5 w-3.5" />
+                      </div>
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search name, email, roll code..."
+                        className="w-full bg-slate-900 border border-slate-808 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <select
+                      value={roleFilter}
+                      onChange={(e) => setRoleFilter(e.target.value)}
+                      className="bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-303 focus:outline-none focus:border-blue-505 cursor-pointer w-full sm:w-auto"
+                    >
+                      <option value="ALL">All Roles</option>
+                      <option value="STUDENT">Student</option>
+                      <option value="CONTENT_CREATOR">Creator</option>
+                      <option value="ADMIN">Admin</option>
+                    </select>
+
+                    <select
+                      value={tierFilter}
+                      onChange={(e) => setTierFilter(e.target.value)}
+                      className="bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-303 focus:outline-none focus:border-blue-550 cursor-pointer w-full sm:w-auto"
+                    >
+                      <option value="ALL">All Passes</option>
+                      <option value="None">No Pass</option>
+                      <option value="Testbook Pass">Pass</option>
+                      <option value="Testbook Pass Pro">Pass Pro</option>
+                    </select>
                   </div>
                 </div>
 
-                {/* Search / Filter Controls */}
-                <div className="grid grid-cols-1 gap-3 mb-6">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                      <Search className="h-3.5 w-3.5" />
-                    </div>
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search name/email/roll code..."
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <select
-                        value={roleFilter}
-                        onChange={(e) => setRoleFilter(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500 cursor-pointer"
-                      >
-                        <option value="ALL">All Roles</option>
-                        <option value="STUDENT">Student</option>
-                        <option value="CONTENT_CREATOR">Creator</option>
-                        <option value="ADMIN">Admin</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <select
-                        value={tierFilter}
-                        onChange={(e) => setTierFilter(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500 cursor-pointer"
-                      >
-                        <option value="ALL">All Passes</option>
-                        <option value="None">No Pass</option>
-                        <option value="Testbook Pass">Pass</option>
-                        <option value="Testbook Pass Pro">Pass Pro</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Users List Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                        <th className="pb-3 pr-2">User Details</th>
-                        <th className="pb-3 px-2">Role</th>
-                        <th className="pb-3 px-2">Access Pass</th>
-                        <th className="pb-3 pl-2 text-right">Attempts</th>
+                      <tr className="border-b border-slate-800 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                        <th className="pb-3 px-4">User Details</th>
+                        <th className="pb-3 px-4">System Role</th>
+                        <th className="pb-3 px-4">Access Pass</th>
+                        <th className="pb-3 px-4 text-center">Attempts</th>
+                        <th className="pb-3 px-4 text-right">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/50">
+                    <tbody className="divide-y divide-slate-850">
                       {[...usersList]
                         .filter(u => {
                           const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -1365,56 +1602,67 @@ export default function AdminAnalytics() {
                           return (
                             <tr
                               key={user.id}
-                              onClick={() => handleSelectUser(user)}
-                              className={`cursor-pointer hover:bg-slate-900/60 transition-colors ${
-                                isSelected ? 'bg-slate-800/80 border-l-2 border-blue-500' : ''
+                              className={`hover:bg-slate-900/40 transition-colors ${
+                                isSelected ? 'bg-slate-900/60 border-l-2 border-blue-500' : ''
                               }`}
                             >
-                              <td className="py-3.5 pr-2">
+                              <td className="py-3.5 px-4">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <p className="font-bold text-white text-xs">{user.name}</p>
                                   {user.isBlocked && (
-                                    <span className="bg-red-950/45 border border-red-800 text-red-400 text-[8px] font-extrabold px-1 rounded uppercase tracking-wider">
+                                    <span className="bg-red-955/45 border border-red-808 text-red-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
                                       Blocked
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[10px] text-slate-500">{user.email}</p>
+                                <p className="text-[10px] text-slate-505">{user.email}</p>
                                 {user.candidateCode && (
                                   <p className="text-[10px] text-blue-400 font-extrabold mt-0.5">
-                                    Roll Code: <span className="font-mono bg-slate-950 px-1 py-0.5 rounded text-[9px] border border-slate-800 text-white">{user.candidateCode}</span>
+                                    Roll Code: <span className="font-mono bg-slate-900 px-1 py-0.5 rounded text-[9px] border border-slate-808 text-white">{user.candidateCode}</span>
                                   </p>
                                 )}
-                                <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Joined: {user.registeredDate}</p>
+                                <p className="text-[9px] text-slate-505 mt-0.5">Joined: {user.registeredDate}</p>
                                 <div className="flex items-center gap-1 text-amber-400 text-[10px] font-black mt-1">
                                   <Coins className="h-3.5 w-3.5 text-amber-400" />
                                   <span>{user.coins || 0} Coins</span>
                                 </div>
                               </td>
-                              <td className="py-3.5 px-2">
+                              <td className="py-3.5 px-4">
                                 <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
                                   user.role === 'ADMIN' 
-                                    ? 'bg-red-950/40 border border-red-800 text-red-400' 
+                                    ? 'bg-red-955/40 border border-red-805 text-red-405' 
                                     : user.role === 'CONTENT_CREATOR' 
-                                    ? 'bg-purple-950/40 border border-purple-800 text-purple-400' 
-                                    : 'bg-blue-950/40 border border-blue-800 text-blue-400'
+                                    ? 'bg-purple-955/40 border border-purple-800 text-purple-400' 
+                                    : 'bg-blue-955/40 border border-blue-800 text-blue-400'
                                 }`}>
                                   {user.role}
                                 </span>
                               </td>
-                              <td className="py-3.5 px-2">
+                              <td className="py-3.5 px-4">
                                 <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
                                   user.subscriptionTier === 'Testbook Pass Pro'
-                                    ? 'bg-yellow-950/40 border border-yellow-700 text-yellow-400 font-extrabold'
+                                    ? 'bg-yellow-955/40 border border-yellow-700 text-yellow-405 font-extrabold'
                                     : user.subscriptionTier === 'Testbook Pass'
-                                    ? 'bg-green-950/40 border border-green-700 text-green-400'
-                                    : 'bg-slate-900 border border-slate-800 text-slate-500'
+                                    ? 'bg-green-955/40 border border-green-700 text-green-400'
+                                    : 'bg-slate-900 border border-slate-800 text-slate-550'
                                 }`}>
                                   {user.subscriptionTier === 'None' ? 'No Pass' : user.subscriptionTier.replace('Testbook', 'Mock Test')}
                                 </span>
                               </td>
-                              <td className="py-3.5 pl-2 text-right font-mono text-slate-300">
+                              <td className="py-3.5 px-4 text-center font-mono text-slate-300">
                                 {user.testSessions.length}
+                              </td>
+                              <td className="py-3.5 px-4 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleSelectUser(user);
+                                    setIsEditUserOpen(true); // Auto-expand form
+                                  }}
+                                  className="text-blue-400 hover:text-blue-300 font-bold bg-blue-955/20 border border-blue-900/30 hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                >
+                                  Edit Profile
+                                </button>
                               </td>
                             </tr>
                           );
@@ -1424,606 +1672,681 @@ export default function AdminAnalytics() {
                 </div>
               </div>
 
-              {/* Right Pane: Selected User Profile & Exam Sitting details */}
-              <div className="flex-1 flex flex-col gap-6">
-                
-                {selectedUserId ? (
-                  (() => {
-                    const activeUser = usersList.find(u => u.id === selectedUserId);
-                    if (!activeUser) return null;
+              {/* Exam Sitting attempts logs — Full Width */}
+              {selectedUserId && (
+                (() => {
+                  const activeUser = usersList.find(u => u.id === selectedUserId);
+                  if (!activeUser) return null;
 
-                    return (
-                      <div className="space-y-6">
-                        
-                        {/* Profile & Subscriptions Editor */}
-                        <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl">
-                          <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-                            <div>
-                              <h3 className="font-bold text-xs text-white uppercase tracking-wider">Edit User Profile</h3>
-                              <p className="text-[10px] text-slate-500 mt-1">Code: {activeUser.candidateCode} • Registered on {activeUser.registeredDate}</p>
-                            </div>
-                            <span className="text-[10px] text-slate-400 font-bold bg-slate-900 border border-slate-800 px-2 py-0.5 rounded">
-                              ID: {activeUser.id}
-                            </span>
-                          </div>
-
-                          <form onSubmit={handleSaveProfile} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Full Name</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={editName}
-                                  onChange={(e) => setEditName(e.target.value)}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Email Address</label>
-                                <input
-                                  type="email"
-                                  required
-                                  value={editEmail}
-                                  onChange={(e) => setEditEmail(e.target.value)}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Mobile Number</label>
-                                <input
-                                  type="text"
-                                  required
-                                  maxLength={10}
-                                  value={editMobile}
-                                  onChange={(e) => setEditMobile(e.target.value.replace(/\D/g, ''))}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Referral Code</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={editReferralCode}
-                                  onChange={(e) => setEditReferralCode(e.target.value.toUpperCase())}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Referred By (Code)</label>
-                                <input
-                                  type="text"
-                                  value={editReferredBy}
-                                  onChange={(e) => setEditReferredBy(e.target.value.toUpperCase())}
-                                  placeholder="None"
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Referrals Count</label>
-                                <input
-                                  type="number"
-                                  required
-                                  value={editReferralsCount}
-                                  onChange={(e) => setEditReferralsCount(Number(e.target.value))}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">System Role</label>
-                                <select
-                                  value={editRole}
-                                  onChange={(e) => setEditRole(e.target.value as any)}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                                >
-                                  <option value="STUDENT">Student (Candidate)</option>
-                                  <option value="CONTENT_CREATOR">Content Creator</option>
-                                  <option value="ADMIN">System Administrator</option>
-                                </select>
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Subscription Pass Tier</label>
-                                <select
-                                  value={editTier}
-                                  onChange={(e) => setEditTier(e.target.value as any)}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                                >
-                                  <option value="None">None (No Pass)</option>
-                                  <option value="Testbook Pass">Mock Test Pass (Basic)</option>
-                                  <option value="Testbook Pass Pro">Mock Test Pass Pro (Full Gating Access)</option>
-                                </select>
-                              </div>
-
-                              {editTier !== 'None' && (
-                                <>
-                                  <div>
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Pass Purchased Date</label>
-                                    <input
-                                      type="date"
-                                      required
-                                      value={editPurchasedAt}
-                                      onChange={(e) => setEditPurchasedAt(e.target.value)}
-                                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold cursor-pointer"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Pass Expiry Date</label>
-                                    <input
-                                      type="date"
-                                      required
-                                      value={editExpiry}
-                                      onChange={(e) => setEditExpiry(e.target.value)}
-                                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold cursor-pointer"
-                                    />
-                                  </div>
-                                </>
-                              )}
-
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Account Password</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={editPassword}
-                                  onChange={(e) => setEditPassword(e.target.value)}
-                                  placeholder="User password"
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Account Block Status</label>
-                                <select
-                                  value={editIsBlocked ? 'true' : 'false'}
-                                  onChange={(e) => setEditIsBlocked(e.target.value === 'true')}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold cursor-pointer"
-                                >
-                                  <option value="false">Active (Unblocked)</option>
-                                  <option value="true">Suspended (Blocked)</option>
-                                </select>
-                              </div>
-
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Coins Balance</label>
-                                <div className="relative flex items-center">
-                                  <span className="absolute left-3 text-amber-400">
-                                    <Coins className="h-3.5 w-3.5 text-amber-400" />
-                                  </span>
-                                  <input
-                                    type="number"
-                                    required
-                                    value={editCoins}
-                                    onChange={(e) => setEditCoins(Number(e.target.value))}
-                                    className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-colors font-bold"
-                                  />
-                                </div>
-                              </div>
-
-                            </div>
-
-                            <div className="flex justify-end gap-3 border-t border-slate-800/80 pt-4 mt-6">
-                              <button
-                                type="submit"
-                                className="flex items-center gap-2 bg-blue-600 text-white font-bold py-2 px-5 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md shadow-blue-900/20"
-                              >
-                                <UserCheck className="h-4 w-4" />
-                                Save Changes
-                              </button>
-                            </div>
-                          </form>
-                        </div>
-
-                        {/* Exam Sitting attempts logs */}
-                        <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl">
-                          <h3 className="font-bold text-xs text-white uppercase tracking-wider mb-4">Exam Sitting History</h3>
-                          
-                          {activeUser.testSessions.length > 0 ? (
-                            <div className="space-y-4">
-                              {activeUser.testSessions.map(session => (
-                                <div key={session.id} className="border border-slate-800 bg-slate-900/40 rounded-lg p-4 text-xs">
-                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-3">
-                                    <div>
-                                      <p className="font-bold text-slate-100">{session.title}</p>
-                                      <p className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-1">
-                                        <Calendar className="h-3 w-3" /> Attempted on {session.date}
-                                      </p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                        session.status === 'COMPLETED'
-                                          ? 'bg-green-950/40 border border-green-800 text-green-400'
-                                          : session.status === 'AUTO_SUBMITTED'
-                                          ? 'bg-yellow-950/40 border border-yellow-800 text-yellow-400'
-                                          : 'bg-blue-950/40 border border-blue-800 text-blue-400 animate-pulse'
-                                      }`}>
-                                        {session.status}
-                                      </span>
-                                      
-                                      <button
-                                        onClick={() => {
-                                          setResetTarget({
-                                            userId: activeUser.id,
-                                            sessionId: session.id,
-                                            userName: activeUser.name,
-                                            sessionTitle: session.title
-                                          });
-                                          setResetConfirmOpen(true);
-                                        }}
-                                        className="text-red-400 hover:text-red-300 font-bold flex items-center gap-1 bg-red-950/20 border border-red-900/40 hover:bg-red-950/40 transition px-2 py-1 rounded"
-                                      >
-                                        <RefreshCw className="h-3 w-3" /> Reset Attempt
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
-                                    <div>
-                                      <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Score Obtained</p>
-                                      <p className="text-sm font-bold text-blue-400 mt-0.5">{session.score} / {session.maxScore}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Accuracy Rank</p>
-                                      <p className="text-sm font-bold text-green-400 mt-0.5">{session.accuracy}%</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Time Spent</p>
-                                      <p className="text-sm font-bold text-yellow-400 mt-0.5">
-                                        {Math.floor(session.durationSeconds / 60)}m {session.durationSeconds % 60}s
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Cheat Violations</p>
-                                      <p className={`text-sm font-bold mt-0.5 ${session.violations > 0 ? 'text-red-400 font-extrabold' : 'text-slate-300'}`}>
-                                        {session.violations} Tab Blur{session.violations === 1 ? '' : 's'}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-center py-8 border border-dashed border-slate-800 rounded-lg text-slate-500 text-xs">
-                              <FileText className="h-8 w-8 mx-auto text-slate-700 mb-2" />
-                              This user has not sat for any exam sessions yet.
-                            </div>
-                          )}
-
-                        </div>
-
+                  return (
+                    <div className="bg-slate-955 border border-slate-808 p-6 rounded-2xl shadow-sm animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-800">
+                        <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">Exam Sitting History: {activeUser.name}</h3>
+                        <span className="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-lg border border-slate-808 font-bold">
+                          {activeUser.testSessions.length} sessions logged
+                        </span>
                       </div>
-                    );
-                  })()
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center bg-slate-950 border border-slate-800 border-dashed p-10 rounded-xl text-center text-slate-500 text-xs min-h-[300px]">
-                    <Users className="h-12 w-12 text-slate-700 mb-3" />
-                    <p className="font-bold text-slate-400 text-sm mb-1">No Candidate Selected</p>
-                    <p className="max-w-xs text-slate-500 leading-relaxed">Select a user profile from the registered accounts table in the left pane to view, edit access rights, and manage sitting test history logs.</p>
-                  </div>
-                )}
+                      
+                      {activeUser.testSessions.length > 0 ? (
+                        <div className="space-y-4">
+                          {activeUser.testSessions.map(session => (
+                            <div key={session.id} className="border border-slate-850 bg-slate-900/20 rounded-xl p-4 text-xs">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-850 pb-3 mb-3">
+                                <div>
+                                  <p className="font-extrabold text-slate-105 text-sm">{session.title}</p>
+                                  <p className="text-[10px] text-slate-505 flex items-center gap-1.5 mt-1 font-semibold">
+                                    <Calendar className="h-3 w-3" /> Attempted on {session.date}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                    session.status === 'COMPLETED'
+                                      ? 'bg-green-955/40 border border-green-800 text-green-400'
+                                      : session.status === 'AUTO_SUBMITTED'
+                                      ? 'bg-yellow-955/40 border border-yellow-805 text-yellow-405'
+                                      : 'bg-blue-955/40 border border-blue-800 text-blue-400'
+                                  }`}>
+                                    {session.status}
+                                  </span>
+                                  
+                                  <button
+                                    onClick={() => {
+                                      setResetTarget({
+                                        userId: activeUser.id,
+                                        sessionId: session.id,
+                                        userName: activeUser.name,
+                                        sessionTitle: session.title
+                                      });
+                                      setResetConfirmOpen(true);
+                                    }}
+                                    className="text-red-400 hover:text-red-300 font-bold flex items-center gap-1 bg-red-955/20 border border-red-900/40 hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                  >
+                                    <RefreshCw className="h-3.5 w-3.5" /> Reset Attempt
+                                  </button>
+                                </div>
+                              </div>
 
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
+                                <div>
+                                  <p className="text-slate-550 text-[10px] uppercase font-extrabold tracking-wider">Score Obtained</p>
+                                  <p className="text-sm font-black text-blue-400 mt-0.5">{session.score.toFixed(1)} / {session.maxScore}</p>
+                                </div>
+                                <div>
+                                  <p className="text-slate-550 text-[10px] uppercase font-extrabold tracking-wider">Accuracy Percentage</p>
+                                  <p className="text-sm font-black text-green-400 mt-0.5">{session.accuracy.toFixed(1)}%</p>
+                                </div>
+                                <div>
+                                  <p className="text-slate-550 text-[10px] uppercase font-extrabold tracking-wider">Time Spent</p>
+                                  <p className="text-sm font-black text-yellow-400 mt-0.5">
+                                    {Math.floor(session.durationSeconds / 60)}m {session.durationSeconds % 60}s
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-slate-555 text-[10px] uppercase font-extrabold tracking-wider">Cheat Violations</p>
+                                  <p className={`text-sm font-black mt-0.5 ${session.violations > 0 ? 'text-red-450' : 'text-slate-300'}`}>
+                                    {session.violations} Focus Alert{session.violations === 1 ? '' : 's'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-10 border border-dashed border-slate-808 rounded-xl text-slate-500 text-xs">
+                          <FileText className="h-8 w-8 mx-auto text-slate-705 mb-2" />
+                          This user has not sat for any exam sittings yet.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()
+              )}
+            </div>
+          )}\n                    {/* TAB 4: NOTICES & ANNOUNCEMENTS MANAGER */}\n          {activeTab === 'notices' && (
+            <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Live Notices & Updates Manager</h2>
+                  <p className="text-xs text-slate-505 dark:text-slate-400 mt-0.5">Publish and manage live notices, results, and admit cards visible on client home screens</p>
+                </div>
+                <span className="text-xs font-bold text-slate-505 dark:text-slate-400 bg-slate-105 dark:bg-slate-900 border border-slate-200 dark:border-slate-805 px-3 py-1.5 rounded-lg">
+                  {noticesList.length} total alert{noticesList.length !== 1 ? 's' : ''} active
+                </span>
               </div>
 
-            </div>
-          )}
-
-          {/* TAB 4: NOTICES & ANNOUNCEMENTS MANAGER */}
-          {activeTab === 'notices' && (
-            <div className="space-y-8 animate-in fade-in duration-200">
-              
               {/* Info alert */}
-              <div className="bg-blue-500/10 border border-blue-500/25 p-4 rounded-xl flex items-start gap-3">
+              <div className="bg-blue-500/10 border border-blue-500/25 p-4 rounded-2xl flex items-start gap-3">
                 <Bell className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                 <div className="text-xs">
-                  <p className="font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Live Updates Manager</p>
+                  <p className="font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Live Updates Engine</p>
                   <p className="text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
                     Publish exam alerts, admit card download releases, and result sheets directly to the homepage updates grid. All additions will update client dashboards instantly via context state.
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {/* Form column (1/3) */}
-                <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl h-fit">
-                  <h3 className="font-extrabold text-xs text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-                    <PlusCircle className="h-4.5 w-4.5 text-blue-500" /> Publish New Update
-                  </h3>
-                  
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!noticeTitle.trim()) return;
-                    addNotice(noticeTitle, noticeType, noticeCategory, noticeDate, noticeUrl, noticeLastDate);
-                    setNoticeTitle('');
-                    setNoticeUrl('');
-                    setNoticeLastDate('');
-                    showToast('Notice published successfully!');
-                  }} className="space-y-4 text-xs">
-                    
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Update Category</label>
-                      <select
-                        value={noticeCategory}
-                        onChange={(e) => setNoticeCategory(e.target.value as any)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                      >
-                        <option value="notice">Live Notices & Announcements</option>
-                        <option value="result">Live Result Section</option>
-                        <option value="admit_card">Live Admit Card Section</option>
-                      </select>
+              {/* Collapsible Publish Card */}
+              <div className="bg-slate-950 border border-slate-808 rounded-2xl shadow-sm overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateNoticeOpen(!isCreateNoticeOpen)}
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-900/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                      <PlusCircle className="h-4 w-4" />
                     </div>
-
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Label Tag (e.g. EXAM DATE, MERIT LIST)</label>
-                      <input
-                        type="text"
-                        required
-                        value={noticeType}
-                        onChange={(e) => setNoticeType(e.target.value)}
-                        placeholder="EXAM DATE, RESULT, ADMISSION, etc."
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Publish Date</label>
-                      <input
-                        type="date"
-                        required
-                        value={noticeDate}
-                        onChange={(e) => setNoticeDate(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                      />
-                    </div>
-
-                    {noticeCategory === 'notice' && (
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Application Last Date (Optional)</label>
-                        <input
-                          type="date"
-                          value={noticeLastDate}
-                          onChange={(e) => setNoticeLastDate(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                        />
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Attachment URL (Optional)</label>
-                      <input
-                        type="url"
-                        value={noticeUrl}
-                        onChange={(e) => setNoticeUrl(e.target.value)}
-                        placeholder="https://example.com/advisory"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Update Heading Title</label>
-                      <textarea
-                        required
-                        value={noticeTitle}
-                        onChange={(e) => setNoticeTitle(e.target.value)}
-                        placeholder="Type notice title..."
-                        rows={3}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-2.5 rounded-lg text-xs hover:bg-blue-750 active:scale-95 transition-all shadow-md cursor-pointer"
-                    >
-                      Publish Alert
-                    </button>
-                  </form>
-                </div>
-
-                {/* Notices list column (2/3) */}
-                <div className="lg:col-span-2 bg-slate-950 border border-slate-800 p-6 rounded-xl">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                    <h3 className="font-extrabold text-xs text-white uppercase tracking-wider flex items-center gap-2">
-                      <Bell className="h-4.5 w-4.5 text-blue-500" /> Active Updates Board
-                    </h3>
-                    
-                    {/* Search bar */}
-                    <div className="relative w-full sm:w-64">
-                      <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
-                      <input
-                        type="text"
-                        value={noticeSearch}
-                        onChange={(e) => setNoticeSearch(e.target.value)}
-                        placeholder="Search updates..."
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-slate-700"
-                      />
+                      <p className="font-extrabold text-sm text-slate-900 dark:text-white">Publish New Update / Alert</p>
+                      <p className="text-[11px] text-slate-400">Click to expand the alert publication form</p>
                     </div>
                   </div>
+                  <div className={`transition-transform duration-205 ${isCreateNoticeOpen ? 'rotate-180' : ''}`}>
+                    <ArrowDown className="h-4 w-4 text-slate-500" />
+                  </div>
+                </button>
 
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-800 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
-                          <th className="py-3 px-4">Heading Title</th>
-                          <th className="py-3 px-4">Category</th>
-                          <th className="py-3 px-4">Label Tag</th>
-                          <th className="py-3 px-4">Publish Date</th>
-                          <th className="py-3 px-4 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {noticesList.filter(n => 
+                {isCreateNoticeOpen && (
+                  <div className="border-t border-slate-808 p-6 bg-slate-950">
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!noticeTitle.trim()) return;
+                      addNotice(noticeTitle, noticeType, noticeCategory, noticeDate, noticeUrl, noticeLastDate);
+                      setNoticeTitle('');
+                      setNoticeUrl('');
+                      setNoticeLastDate('');
+                      setIsCreateNoticeOpen(false);
+                      showToast('Notice published successfully!');
+                    }} className="space-y-5 text-xs">
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Update Category</label>
+                          <select
+                            value={noticeCategory}
+                            onChange={(e) => setNoticeCategory(e.target.value as any)}
+                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                          >
+                            <option value="notice">Live Notices & Announcements</option>
+                            <option value="result">Live Result Section</option>
+                            <option value="admit_card">Live Admit Card Section</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Label Tag (e.g. EXAM DATE, MERIT LIST)</label>
+                          <input
+                            type="text"
+                            required
+                            value={noticeType}
+                            onChange={(e) => setNoticeType(e.target.value)}
+                            placeholder="EXAM DATE, RESULT, ADMISSION, etc."
+                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
+                          <input
+                            type="date"
+                            required
+                            value={noticeDate}
+                            onChange={(e) => setNoticeDate(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {noticeCategory === 'notice' && (
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Application Last Date (Optional)</label>
+                            <input
+                              type="date"
+                              value={noticeLastDate}
+                              onChange={(e) => setNoticeLastDate(e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            />
+                          </div>
+                        )}
+
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Attachment URL (Optional)</label>
+                          <input
+                            type="url"
+                            value={noticeUrl}
+                            onChange={(e) => setNoticeUrl(e.target.value)}
+                            placeholder="https://example.com/advisory"
+                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Update Heading Title</label>
+                        <textarea
+                          required
+                          value={noticeTitle}
+                          onChange={(e) => setNoticeTitle(e.target.value)}
+                          placeholder="Type notice title description..."
+                          rows={3}
+                          className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505 resize-none"
+                        />
+                      </div>
+
+                      <div className="flex justify-end pt-3">
+                        <button
+                          type="submit"
+                          className="flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md cursor-pointer"
+                        >
+                          Publish Alert
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
+
+              {/* Active Board List — Full Width */}
+              <div className="bg-slate-955 border border-slate-808 p-6 rounded-2xl shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <h3 className="font-extrabold text-xs text-white uppercase tracking-wider flex items-center gap-2">
+                    <Bell className="h-4.5 w-4.5 text-blue-505" /> Active Updates Board
+                  </h3>
+                  
+                  {/* Search bar */}
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-505" />
+                    <input
+                      type="text"
+                      value={noticeSearch}
+                      onChange={(e) => setNoticeSearch(e.target.value)}
+                      placeholder="Search updates..."
+                      className="w-full bg-slate-900 border border-slate-808 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-slate-700"
+                    />
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-808 text-slate-404 font-extrabold uppercase tracking-wider text-[10px]">
+                        <th className="py-3 px-4">Heading Title</th>
+                        <th className="py-3 px-4">Category</th>
+                        <th className="py-3 px-4">Label Tag</th>
+                        <th className="py-3 px-4">Publish Date</th>
+                        <th className="py-3 px-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {noticesList.filter(n => 
+                        n.title.toLowerCase().includes(noticeSearch.toLowerCase()) ||
+                        n.type.toLowerCase().includes(noticeSearch.toLowerCase()) ||
+                        n.category.toLowerCase().includes(noticeSearch.toLowerCase())
+                      ).length > 0 ? (
+                        noticesList.filter(n => 
                           n.title.toLowerCase().includes(noticeSearch.toLowerCase()) ||
                           n.type.toLowerCase().includes(noticeSearch.toLowerCase()) ||
                           n.category.toLowerCase().includes(noticeSearch.toLowerCase())
-                        ).length > 0 ? (
-                          noticesList.filter(n => 
-                            n.title.toLowerCase().includes(noticeSearch.toLowerCase()) ||
-                            n.type.toLowerCase().includes(noticeSearch.toLowerCase()) ||
-                            n.category.toLowerCase().includes(noticeSearch.toLowerCase())
-                          ).map((notice) => (
-                            <tr key={notice.id} className="border-b border-slate-800 hover:bg-slate-900/30 transition text-slate-300">
-                              <td className="py-3 px-4 font-bold text-slate-100 max-w-xs">
-                                {notice.url ? (
-                                  <a href={notice.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-350 hover:underline flex items-center gap-1 mb-1">
-                                    {notice.title}
-                                    <ChevronRight className="h-3 w-3 inline animate-pulse" />
-                                  </a>
-                                ) : (
-                                  <span className="block mb-1">{notice.title}</span>
-                                )}
-                                {notice.lastDate && (
-                                  <span className="block text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
-                                    Last Date: {notice.lastDate}
-                                  </span>
-                                )}
-                              </td>
-                              <td className="py-3 px-4 capitalize">
-                                <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                                  notice.category === 'notice'
-                                    ? 'bg-blue-950/40 text-blue-400 border border-blue-900'
-                                    : notice.category === 'result'
-                                    ? 'bg-yellow-950/40 text-yellow-400 border border-yellow-900'
-                                    : 'bg-green-950/40 text-green-400 border border-green-900'
-                                }`}>
-                                  {notice.category === 'notice' ? 'Announcement' : notice.category === 'result' ? 'Result' : 'Admit Card'}
+                        ).map((notice) => (
+                          <tr key={notice.id} className="border-b border-slate-808 hover:bg-slate-900/30 transition text-slate-300">
+                            <td className="py-3 px-4 font-bold text-slate-100 max-w-md">
+                              {notice.url ? (
+                                <a href={notice.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-350 hover:underline flex items-center gap-1 mb-1">
+                                  {notice.title}
+                                  <ChevronRight className="h-3 w-3 inline animate-pulse" />
+                                </a>
+                              ) : (
+                                <span className="block mb-1">{notice.title}</span>
+                              )}
+                              {notice.lastDate && (
+                                <span className="block text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
+                                  Last Date: {notice.lastDate}
                                 </span>
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className="bg-slate-800 text-slate-300 font-bold px-1.5 py-0.5 rounded text-[10px]">{notice.type}</span>
-                              </td>
-                              <td className="py-3 px-4 font-semibold text-[11px] text-slate-400">{notice.date}</td>
-                              <td className="py-3 px-4 text-right">
+                              )}
+                            </td>
+                            <td className="py-3 px-4 capitalize">
+                              <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
+                                notice.category === 'notice'
+                                  ? 'bg-blue-955/40 text-blue-400 border border-blue-900'
+                                  : notice.category === 'result'
+                                  ? 'bg-yellow-955/40 text-yellow-405 border border-yellow-900'
+                                  : 'bg-green-955/40 text-green-400 border border-green-900'
+                              }`}>
+                                {notice.category === 'notice' ? 'Announcement' : notice.category === 'result' ? 'Result' : 'Admit Card'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="bg-slate-800 text-slate-300 font-bold px-1.5 py-0.5 rounded text-[10px]">{notice.type}</span>
+                            </td>
+                            <td className="py-3 px-4 font-semibold text-[11px] text-slate-405">{notice.date}</td>
+                            <td className="py-3 px-4 text-right">
+                              <button
+                                onClick={() => {
+                                  deleteNotice(notice.id);
+                                  showToast('Notice deleted successfully.');
+                                }}
+                                className="text-red-400 hover:text-red-300 font-bold bg-red-955/20 border border-red-900/30 hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="text-center py-10 text-slate-500 font-semibold">
+                            No updates match the search filters.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}\n                    {/* TAB 5: CATEGORIES MANAGEMENT */}\n          {activeTab === 'categories' && (
+            <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Exam Categories</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete main exam categories</p>
+                </div>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                  {examCatalog.length} categor{examCatalog.length !== 1 ? 'ies' : 'y'} active
+                </span>
+              </div>
+
+              {/* Collapsible Add Category Card */}
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateCategoryOpen(!isCreateCategoryOpen)}
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                      <FolderPlus className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create New Category</p>
+                      <p className="text-[11px] text-slate-400">Click to expand the category creation form</p>
+                    </div>
+                  </div>
+                  <div className={`transition-transform duration-200 ${isCreateCategoryOpen ? 'rotate-180' : ''}`}>
+                    <ArrowDown className="h-4 w-4 text-slate-505" />
+                  </div>
+                </button>
+
+                {isCreateCategoryOpen && (
+                  <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-950">
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!newCategoryName.trim()) return;
+                        addCategory(newCategoryName.trim());
+                        setNewCategoryName('');
+                        setIsCreateCategoryOpen(false);
+                        showToast('Category created successfully!');
+                      }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                          Category Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          placeholder="e.g. UPSC Exams, SSC Exams"
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <button
+                          type="submit"
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
+                        >
+                          Create Category
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
+
+              {/* Categories Table Card — Full Width */}
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
+                  Active Exam Categories
+                </h3>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
+                        <th className="py-3 px-4">ID</th>
+                        <th className="py-3 px-4">Name</th>
+                        <th className="py-3 px-4">Sub Categories</th>
+                        <th className="py-3 px-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {examCatalog.map(cat => (
+                        <tr key={cat.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                          <td className="py-3.5 px-4 font-mono font-bold text-slate-400">{cat.id}</td>
+                          <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
+                            {editingCategoryId === cat.id ? (
+                              <input
+                                type="text"
+                                value={editingCategoryName}
+                                onChange={(e) => setEditingCategoryName(e.target.value)}
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                              />
+                            ) : (
+                              <span>{cat.name}</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 font-semibold text-slate-500">{cat.subCategories.length} Sub-cat(s)</td>
+                          <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
+                            {editingCategoryId === cat.id ? (
+                              <>
                                 <button
                                   onClick={() => {
-                                    deleteNotice(notice.id);
-                                    showToast('Notice deleted successfully.');
+                                    if (editingCategoryName.trim()) {
+                                      editCategory(cat.id, editingCategoryName.trim());
+                                      setEditingCategoryId(null);
+                                      showToast('Category renamed successfully.');
+                                    }
                                   }}
-                                  className="text-red-400 hover:text-red-300 font-bold bg-red-950/20 border border-red-900/30 hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                  className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingCategoryId(null)}
+                                  className="text-slate-550 dark:text-slate-405 font-bold bg-slate-50 dark:bg-slate-955/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  disabled={examCatalog.indexOf(cat) === 0}
+                                  onClick={() => {
+                                    const idx = examCatalog.indexOf(cat);
+                                    if (idx > 0) {
+                                      const newCatalog = [...examCatalog];
+                                      [newCatalog[idx], newCatalog[idx - 1]] = [newCatalog[idx - 1], newCatalog[idx]];
+                                      reorderCategories(newCatalog);
+                                      showToast('Category moved up successfully.');
+                                    }
+                                  }}
+                                  className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                  title="Move Up"
+                                >
+                                  <ArrowUp className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  disabled={examCatalog.indexOf(cat) === examCatalog.length - 1}
+                                  onClick={() => {
+                                    const idx = examCatalog.indexOf(cat);
+                                    if (idx < examCatalog.length - 1) {
+                                      const newCatalog = [...examCatalog];
+                                      [newCatalog[idx], newCatalog[idx + 1]] = [newCatalog[idx + 1], newCatalog[idx]];
+                                      reorderCategories(newCatalog);
+                                      showToast('Category moved down successfully.');
+                                    }
+                                  }}
+                                  className="text-slate-500 hover:text-slate-705 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                  title="Move Down"
+                                >
+                                  <ArrowDown className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingCategoryId(cat.id);
+                                    setEditingCategoryName(cat.name);
+                                  }}
+                                  className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    deleteCategory(cat.id);
+                                    showToast('Category deleted successfully.');
+                                  }}
+                                  className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-105 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                 >
                                   Delete
                                 </button>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={5} className="text-center py-10 text-slate-500 font-semibold">
-                              No updates match the search filters.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-
               </div>
             </div>
-          )}
-
-          {/* TAB 5: CATEGORIES MANAGEMENT */}
-          {activeTab === 'categories' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Add Category Form */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 lg:col-span-1">
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-                  <FolderPlus className="h-4.5 w-4.5 text-blue-600" />
-                  {language === 'hi' ? 'नई श्रेणी जोड़ें' : 'Create New Category'}
-                </h3>
-                
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!newCategoryName.trim()) return;
-                    addCategory(newCategoryName.trim());
-                    setNewCategoryName('');
-                    showToast('Category created successfully!');
-                  }}
-                  className="space-y-4"
-                >
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">
-                      {language === 'hi' ? 'श्रेणी का नाम' : 'Category Name'}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="e.g. UPSC Exams, SSC Exams"
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
-                  >
-                    {language === 'hi' ? 'श्रेणी बनाएं' : 'Create Category'}
-                  </button>
-                </form>
+          )}\n                    {/* TAB 6: SUB-CATEGORIES MANAGEMENT */}\n          {activeTab === 'subcategories' && (
+            <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Sub-Categories</h2>
+                  <p className="text-xs text-slate-505 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete exam sub-categories under main categories</p>
+                </div>
+                <span className="text-xs font-bold text-slate-505 dark:text-slate-400 bg-slate-105 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 px-3 py-1.5 rounded-lg">
+                  {examCatalog.reduce((acc, cat) => acc + cat.subCategories.length, 0)} sub-categor{examCatalog.reduce((acc, cat) => acc + cat.subCategories.length, 0) !== 1 ? 'ies' : 'y'} active
+                </span>
               </div>
 
-              {/* Categories List Table */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 lg:col-span-2 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
-                    {language === 'hi' ? 'सक्रिय परीक्षा श्रेणियां' : 'Active Exam Categories'}
-                  </h3>
-                  
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-bold">
-                          <th className="py-3 px-4">ID</th>
-                          <th className="py-3 px-4">Name</th>
-                          <th className="py-3 px-4">Sub Categories</th>
-                          <th className="py-3 px-4 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {examCatalog.map(cat => (
-                          <tr key={cat.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                            <td className="py-3.5 px-4 font-mono font-bold text-slate-400">{cat.id}</td>
-                            <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
-                              {editingCategoryId === cat.id ? (
+              {/* Collapsible Add Card */}
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateSubCategoryOpen(!isCreateSubCategoryOpen)}
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                      <Layers className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create Sub-Category</p>
+                      <p className="text-[11px] text-slate-400">Click to expand the subcategory creation form</p>
+                    </div>
+                  </div>
+                  <div className={`transition-transform duration-200 ${isCreateSubCategoryOpen ? 'rotate-180' : ''}`}>
+                    <ArrowDown className="h-4 w-4 text-slate-505" />
+                  </div>
+                </button>
+
+                {isCreateSubCategoryOpen && (
+                  <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-955">
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!newSubCategoryParent || !newSubCategoryName.trim()) {
+                          alert('Please select a parent category and enter a name.');
+                          return;
+                        }
+                        addSubCategory(newSubCategoryParent, newSubCategoryName.trim());
+                        setNewSubCategoryName('');
+                        setIsCreateSubCategoryOpen(false);
+                        showToast('Subcategory created successfully!');
+                      }}
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            Parent Category
+                          </label>
+                          <select
+                            required
+                            value={newSubCategoryParent}
+                            onChange={(e) => setNewSubCategoryParent(e.target.value)}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                          >
+                            <option value="">-- Select Parent Category --</option>
+                            {examCatalog.map(cat => (
+                              <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            Sub Category Name
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={newSubCategoryName}
+                            onChange={(e) => setNewSubCategoryName(e.target.value)}
+                            placeholder="e.g. SSC CGL, IBPS RRB PO"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <button
+                          type="submit"
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
+                        >
+                          Create Sub Category
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
+
+              {/* Subcategories Table Card — Full Width */}
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-sm p-6">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
+                  Active Sub Categories
+                </h3>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 dark:border-slate-808 text-slate-404 uppercase text-[9px] tracking-wider font-extrabold">
+                        <th className="py-3 px-4">Parent Category</th>
+                        <th className="py-3 px-4">Sub Category Name</th>
+                        <th className="py-3 px-4">Mock Tests Count</th>
+                        <th className="py-3 px-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {examCatalog.flatMap(cat => 
+                        cat.subCategories.map(sub => (
+                          <tr key={sub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                            <td className="py-3.5 px-4 font-bold text-slate-500">{cat.name}</td>
+                            <td className="py-3.5 px-4 font-bold text-slate-909 dark:text-slate-202">
+                              {editingSubCategoryId === sub.id ? (
                                 <input
                                   type="text"
-                                  value={editingCategoryName}
-                                  onChange={(e) => setEditingCategoryName(e.target.value)}
-                                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                                  value={editingSubCategoryName}
+                                  onChange={(e) => setEditingSubCategoryName(e.target.value)}
+                                  className="bg-slate-50 dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-505 font-bold w-full max-w-xs"
                                 />
                               ) : (
-                                <span>{cat.name}</span>
+                                <span>{sub.name}</span>
                               )}
                             </td>
-                            <td className="py-3.5 px-4 font-semibold text-slate-500">{cat.subCategories.length} Sub-cat(s)</td>
+                            <td className="py-3.5 px-4 font-semibold text-slate-505">{sub.tests.length} mock test(s)</td>
                             <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
-                              {editingCategoryId === cat.id ? (
+                              {editingSubCategoryId === sub.id ? (
                                 <>
                                   <button
                                     onClick={() => {
-                                      if (editingCategoryName.trim()) {
-                                        editCategory(cat.id, editingCategoryName.trim());
-                                        setEditingCategoryId(null);
-                                        showToast('Category renamed successfully.');
+                                      if (editingSubCategoryName.trim()) {
+                                        editSubCategory(cat.id, sub.id, editingSubCategoryName.trim());
+                                        setEditingSubCategoryId(null);
+                                        showToast('Subcategory renamed successfully.');
                                       }
                                     }}
-                                    className="text-green-500 hover:text-green-600 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                    className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-909/30 hover:bg-green-105 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                   >
                                     Save
                                   </button>
                                   <button
-                                    onClick={() => setEditingCategoryId(null)}
-                                    className="text-slate-550 hover:text-slate-700 font-bold bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                    onClick={() => setEditingSubCategoryId(null)}
+                                    className="text-slate-550 dark:text-slate-405 font-bold bg-slate-50 dark:bg-slate-955/20 border border-slate-202 dark:border-slate-808/30 hover:bg-slate-105 dark:hover:bg-slate-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                   >
                                     Cancel
                                   </button>
@@ -2031,52 +2354,52 @@ export default function AdminAnalytics() {
                               ) : (
                                 <>
                                   <button
-                                    disabled={examCatalog.indexOf(cat) === 0}
+                                    disabled={cat.subCategories.indexOf(sub) === 0}
                                     onClick={() => {
-                                      const idx = examCatalog.indexOf(cat);
+                                      const idx = cat.subCategories.indexOf(sub);
                                       if (idx > 0) {
-                                        const newCatalog = [...examCatalog];
-                                        [newCatalog[idx], newCatalog[idx - 1]] = [newCatalog[idx - 1], newCatalog[idx]];
-                                        reorderCategories(newCatalog);
-                                        showToast('Category moved up successfully.');
+                                        const newSubs = [...cat.subCategories];
+                                        [newSubs[idx], newSubs[idx - 1]] = [newSubs[idx - 1], newSubs[idx]];
+                                        reorderSubCategories(cat.id, newSubs);
+                                        showToast('Subcategory moved up successfully.');
                                       }
                                     }}
-                                    className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                    className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-202 dark:border-slate-800 cursor-pointer"
                                     title="Move Up"
                                   >
                                     <ArrowUp className="w-3.5 h-3.5" />
                                   </button>
                                   <button
-                                    disabled={examCatalog.indexOf(cat) === examCatalog.length - 1}
+                                    disabled={cat.subCategories.indexOf(sub) === cat.subCategories.length - 1}
                                     onClick={() => {
-                                      const idx = examCatalog.indexOf(cat);
-                                      if (idx < examCatalog.length - 1) {
-                                        const newCatalog = [...examCatalog];
-                                        [newCatalog[idx], newCatalog[idx + 1]] = [newCatalog[idx + 1], newCatalog[idx]];
-                                        reorderCategories(newCatalog);
-                                        showToast('Category moved down successfully.');
+                                      const idx = cat.subCategories.indexOf(sub);
+                                      if (idx < cat.subCategories.length - 1) {
+                                        const newSubs = [...cat.subCategories];
+                                        [newSubs[idx], newSubs[idx + 1]] = [newSubs[idx + 1], newSubs[idx]];
+                                        reorderSubCategories(cat.id, newSubs);
+                                        showToast('Subcategory moved down successfully.');
                                       }
                                     }}
-                                    className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                    className="text-slate-500 hover:text-slate-705 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-55 dark:bg-slate-909 border border-slate-202 dark:border-slate-800 cursor-pointer"
                                     title="Move Down"
                                   >
                                     <ArrowDown className="w-3.5 h-3.5" />
                                   </button>
                                   <button
                                     onClick={() => {
-                                      setEditingCategoryId(cat.id);
-                                      setEditingCategoryName(cat.name);
+                                      setEditingSubCategoryId(sub.id);
+                                      setEditingSubCategoryName(sub.name);
                                     }}
-                                    className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                    className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                   >
                                     Edit
                                   </button>
                                   <button
                                     onClick={() => {
-                                      deleteCategory(cat.id);
-                                      showToast('Category deleted successfully.');
+                                      deleteSubCategory(cat.id, sub.id);
+                                      showToast('Subcategory deleted successfully.');
                                     }}
-                                    className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                    className="text-red-500 hover:text-red-655 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-105 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                   >
                                     Delete
                                   </button>
@@ -2084,131 +2407,186 @@ export default function AdminAnalytics() {
                               )}
                             </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
-          )}
-
-          {/* TAB 6: SUB-CATEGORIES MANAGEMENT */}
-          {activeTab === 'subcategories' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Add Sub Category Form */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 lg:col-span-1">
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-                  <Layers className="h-4.5 w-4.5 text-blue-600" />
-                  {language === 'hi' ? 'नई उप-श्रेणी जोड़ें' : 'Create Sub Category'}
-                </h3>
-                
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!newSubCategoryParent || !newSubCategoryName.trim()) {
-                      alert('Please select a parent category and enter a name.');
-                      return;
-                    }
-                    addSubCategory(newSubCategoryParent, newSubCategoryName.trim());
-                    setNewSubCategoryName('');
-                    showToast('Subcategory created successfully!');
-                  }}
-                  className="space-y-4"
-                >
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">
-                      {language === 'hi' ? 'मुख्य परीक्षा श्रेणी' : 'Parent Category'}
-                    </label>
-                    <select
-                      required
-                      value={newSubCategoryParent}
-                      onChange={(e) => setNewSubCategoryParent(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                    >
-                      <option value="">-- Select Parent Category --</option>
-                      {examCatalog.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">
-                      {language === 'hi' ? 'उप-श्रेणी का नाम' : 'Sub Category Name'}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={newSubCategoryName}
-                      onChange={(e) => setNewSubCategoryName(e.target.value)}
-                      placeholder="e.g. SSC CGL, IBPS RRB PO"
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-                  
-                  <button
-                    type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
-                  >
-                    {language === 'hi' ? 'उप-श्रेणी बनाएं' : 'Create Sub Category'}
-                  </button>
-                </form>
+          )}\n                    {/* TAB 6.5: SUB-SUB-CATEGORIES MANAGEMENT */}\n          {activeTab === 'subsubcategories' && (
+            <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Sub-Sub-Categories</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete subject sub-subcategories nested under sub-categories</p>
+                </div>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                  {examCatalog.reduce((acc, cat) => acc + cat.subCategories.reduce((subAcc, sub) => subAcc + (sub.subSubCategories || []).length, 0), 0)} sub-sub-categor{examCatalog.reduce((acc, cat) => acc + cat.subCategories.reduce((subAcc, sub) => subAcc + (sub.subSubCategories || []).length, 0), 0) !== 1 ? 'ies' : 'y'} active
+                </span>
               </div>
 
-              {/* Subcategories List Table */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 lg:col-span-2 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
-                    {language === 'hi' ? 'सक्रिय उप-श्रेणियां' : 'Active Sub Categories'}
-                  </h3>
-                  
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-bold">
-                          <th className="py-3 px-4">Parent Category</th>
-                          <th className="py-3 px-4">Sub Category Name</th>
-                          <th className="py-3 px-4">Mock Tests Count</th>
-                          <th className="py-3 px-4 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {examCatalog.flatMap(cat => 
-                          cat.subCategories.map(sub => (
-                            <tr key={sub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+              {/* Collapsible Add Card */}
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateSubSubCategoryOpen(!isCreateSubSubCategoryOpen)}
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                      <FileText className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create Sub-Sub Category</p>
+                      <p className="text-[11px] text-slate-400">Click to expand the sub-subcategory creation form</p>
+                    </div>
+                  </div>
+                  <div className={`transition-transform duration-200 ${isCreateSubSubCategoryOpen ? 'rotate-180' : ''}`}>
+                    <ArrowDown className="h-4 w-4 text-slate-505" />
+                  </div>
+                </button>
+
+                {isCreateSubSubCategoryOpen && (
+                  <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-950">
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!newSubSubCategoryParentCategory || !newSubSubCategoryParentSubCategory || !newSubSubCategoryName.trim()) {
+                          alert('Please select parent category, subcategory and enter a name.');
+                          return;
+                        }
+                        addSubSubCategory(newSubSubCategoryParentCategory, newSubSubCategoryParentSubCategory, newSubSubCategoryName.trim());
+                        setNewSubSubCategoryName('');
+                        setIsCreateSubSubCategoryOpen(false);
+                        showToast('Sub-subcategory created successfully!');
+                      }}
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            Parent Category
+                          </label>
+                          <select
+                            required
+                            value={newSubSubCategoryParentCategory}
+                            onChange={(e) => {
+                              setNewSubSubCategoryParentCategory(e.target.value);
+                              setNewSubSubCategoryParentSubCategory('');
+                            }}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                          >
+                            <option value="">-- Select Parent Category --</option>
+                            {examCatalog.map(cat => (
+                              <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            Parent Sub Category
+                          </label>
+                          <select
+                            required
+                            value={newSubSubCategoryParentSubCategory}
+                            onChange={(e) => setNewSubSubCategoryParentSubCategory(e.target.value)}
+                            disabled={!newSubSubCategoryParentCategory}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
+                          >
+                            <option value="">-- Select Parent Sub Category --</option>
+                            {examCatalog.find(c => c.id === newSubSubCategoryParentCategory)?.subCategories.map(sub => (
+                              <option key={sub.id} value={sub.id}>{sub.name}</option>
+                            )) || null}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            Sub-Sub Category Name
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={newSubSubCategoryName}
+                            onChange={(e) => setNewSubSubCategoryName(e.target.value)}
+                            placeholder="e.g. Quantitative Aptitude, Reasoning"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <button
+                          type="submit"
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
+                        >
+                          Create Sub-Sub Category
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
+
+              {/* Sub-subcategories Table Card — Full Width */}
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
+                  Active Sub-Sub Categories
+                </h3>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 dark:border-slate-808 text-slate-404 uppercase text-[9px] tracking-wider font-extrabold">
+                        <th className="py-3 px-4">Parent Category</th>
+                        <th className="py-3 px-4">Sub Category</th>
+                        <th className="py-3 px-4">Sub-Sub Category Name</th>
+                        <th className="py-3 px-4">Mock Tests Count</th>
+                        <th className="py-3 px-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {examCatalog.flatMap(cat => 
+                        cat.subCategories.flatMap(sub => 
+                          (sub.subSubCategories || []).map(subsub => (
+                            <tr key={subsub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                               <td className="py-3.5 px-4 font-bold text-slate-500">{cat.name}</td>
-                              <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
-                                {editingSubCategoryId === sub.id ? (
+                              <td className="py-3.5 px-4 font-bold text-slate-500">{sub.name}</td>
+                              <td className="py-3.5 px-4 font-bold text-slate-909 dark:text-slate-202">
+                                {editingSubSubCategoryId === subsub.id ? (
                                   <input
                                     type="text"
-                                    value={editingSubCategoryName}
-                                    onChange={(e) => setEditingSubCategoryName(e.target.value)}
-                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                                    value={editingSubSubCategoryName}
+                                    onChange={(e) => setEditingSubSubCategoryName(e.target.value)}
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-205 dark:border-slate-808 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
                                   />
                                 ) : (
-                                  <span>{sub.name}</span>
+                                  <span>{subsub.name}</span>
                                 )}
                               </td>
-                              <td className="py-3.5 px-4 font-semibold text-slate-500">{sub.tests.length} mock test(s)</td>
+                              <td className="py-3.5 px-4 font-semibold text-slate-505">{subsub.tests.length} mock test(s)</td>
                               <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
-                                {editingSubCategoryId === sub.id ? (
+                                {editingSubSubCategoryId === subsub.id ? (
                                   <>
                                     <button
                                       onClick={() => {
-                                        if (editingSubCategoryName.trim()) {
-                                          editSubCategory(cat.id, sub.id, editingSubCategoryName.trim());
-                                          setEditingSubCategoryId(null);
-                                          showToast('Subcategory renamed successfully.');
+                                        if (editingSubSubCategoryName.trim()) {
+                                          editSubSubCategory(cat.id, sub.id, subsub.id, editingSubSubCategoryName.trim());
+                                          setEditingSubSubCategoryId(null);
+                                          showToast('Sub-subcategory renamed successfully.');
                                         }
                                       }}
-                                      className="text-green-500 hover:text-green-600 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                      className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-909/30 hover:bg-green-105 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Save
                                     </button>
                                     <button
-                                      onClick={() => setEditingSubCategoryId(null)}
-                                      className="text-slate-555 hover:text-slate-700 font-bold bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                      onClick={() => setEditingSubSubCategoryId(null)}
+                                      className="text-slate-550 dark:text-slate-405 font-bold bg-slate-50 dark:bg-slate-955/20 border border-slate-202 dark:border-slate-808/30 hover:bg-slate-105 dark:hover:bg-slate-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Cancel
                                     </button>
@@ -2216,52 +2594,52 @@ export default function AdminAnalytics() {
                                 ) : (
                                   <>
                                     <button
-                                      disabled={cat.subCategories.indexOf(sub) === 0}
+                                      disabled={sub.subSubCategories.indexOf(subsub) === 0}
                                       onClick={() => {
-                                        const idx = cat.subCategories.indexOf(sub);
+                                        const idx = sub.subSubCategories.indexOf(subsub);
                                         if (idx > 0) {
-                                          const newSubs = [...cat.subCategories];
-                                          [newSubs[idx], newSubs[idx - 1]] = [newSubs[idx - 1], newSubs[idx]];
-                                          reorderSubCategories(cat.id, newSubs);
-                                          showToast('Subcategory moved up successfully.');
+                                          const newSubSubs = [...sub.subSubCategories];
+                                          [newSubSubs[idx], newSubSubs[idx - 1]] = [newSubSubs[idx - 1], newSubSubs[idx]];
+                                          reorderSubSubCategories(cat.id, sub.id, newSubSubs);
+                                          showToast('Sub-subcategory moved up successfully.');
                                         }
                                       }}
-                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-202 dark:border-slate-800 cursor-pointer"
                                       title="Move Up"
                                     >
                                       <ArrowUp className="w-3.5 h-3.5" />
                                     </button>
                                     <button
-                                      disabled={cat.subCategories.indexOf(sub) === cat.subCategories.length - 1}
+                                      disabled={sub.subSubCategories.indexOf(subsub) === sub.subSubCategories.length - 1}
                                       onClick={() => {
-                                        const idx = cat.subCategories.indexOf(sub);
-                                        if (idx < cat.subCategories.length - 1) {
-                                          const newSubs = [...cat.subCategories];
-                                          [newSubs[idx], newSubs[idx + 1]] = [newSubs[idx + 1], newSubs[idx]];
-                                          reorderSubCategories(cat.id, newSubs);
-                                          showToast('Subcategory moved down successfully.');
+                                        const idx = sub.subSubCategories.indexOf(subsub);
+                                        if (idx < sub.subSubCategories.length - 1) {
+                                          const newSubSubs = [...sub.subSubCategories];
+                                          [newSubSubs[idx], newSubSubs[idx + 1]] = [newSubSubs[idx + 1], newSubSubs[idx]];
+                                          reorderSubSubCategories(cat.id, sub.id, newSubSubs);
+                                          showToast('Sub-subcategory moved down successfully.');
                                         }
                                       }}
-                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                      className="text-slate-500 hover:text-slate-705 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-55 dark:bg-slate-909 border border-slate-202 dark:border-slate-800 cursor-pointer"
                                       title="Move Down"
                                     >
                                       <ArrowDown className="w-3.5 h-3.5" />
                                     </button>
                                     <button
                                       onClick={() => {
-                                        setEditingSubCategoryId(sub.id);
-                                        setEditingSubCategoryName(sub.name);
+                                        setEditingSubSubCategoryId(subsub.id);
+                                        setEditingSubSubCategoryName(subsub.name);
                                       }}
-                                      className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                      className="text-blue-500 hover:text-blue-655 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Edit
                                     </button>
                                     <button
                                       onClick={() => {
-                                        deleteSubCategory(cat.id, sub.id);
-                                        showToast('Subcategory deleted successfully.');
+                                        deleteSubSubCategory(cat.id, sub.id, subsub.id);
+                                        showToast('Sub-subcategory deleted successfully.');
                                       }}
-                                      className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                      className="text-red-500 hover:text-red-655 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-105 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Delete
                                     </button>
@@ -2270,227 +2648,14 @@ export default function AdminAnalytics() {
                               </td>
                             </tr>
                           ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                        )
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
-          )}
-
-          {/* TAB 6.5: SUB-SUB-CATEGORIES MANAGEMENT */}
-          {activeTab === 'subsubcategories' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Add Sub Sub Category Form */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 lg:col-span-1">
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-                  <FileText className="h-4.5 w-4.5 text-blue-600" />
-                  {language === 'hi' ? 'नई उप-उप-श्रेणी जोड़ें' : 'Create Sub-Sub Category'}
-                </h3>
-                
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!newSubSubCategoryParentCategory || !newSubSubCategoryParentSubCategory || !newSubSubCategoryName.trim()) {
-                      alert('Please select parent category, subcategory and enter a name.');
-                      return;
-                    }
-                    addSubSubCategory(newSubSubCategoryParentCategory, newSubSubCategoryParentSubCategory, newSubSubCategoryName.trim());
-                    setNewSubSubCategoryName('');
-                    showToast('Sub-subcategory created successfully!');
-                  }}
-                  className="space-y-4"
-                >
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">
-                      {language === 'hi' ? 'मुख्य परीक्षा श्रेणी' : 'Parent Category'}
-                    </label>
-                    <select
-                      required
-                      value={newSubSubCategoryParentCategory}
-                      onChange={(e) => {
-                        setNewSubSubCategoryParentCategory(e.target.value);
-                        setNewSubSubCategoryParentSubCategory('');
-                      }}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                    >
-                      <option value="">-- Select Parent Category --</option>
-                      {examCatalog.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">
-                      {language === 'hi' ? 'मुख्य उप-श्रेणी' : 'Parent Sub Category'}
-                    </label>
-                    <select
-                      required
-                      value={newSubSubCategoryParentSubCategory}
-                      onChange={(e) => setNewSubSubCategoryParentSubCategory(e.target.value)}
-                      disabled={!newSubSubCategoryParentCategory}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
-                    >
-                      <option value="">-- Select Parent Sub Category --</option>
-                      {examCatalog.find(c => c.id === newSubSubCategoryParentCategory)?.subCategories.map(sub => (
-                        <option key={sub.id} value={sub.id}>{sub.name}</option>
-                      )) || null}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">
-                      {language === 'hi' ? 'उप-उप-श्रेणी का नाम' : 'Sub-Sub Category Name'}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={newSubSubCategoryName}
-                      onChange={(e) => setNewSubSubCategoryName(e.target.value)}
-                      placeholder="e.g. Quantitative Aptitude, Reasoning"
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-                  
-                  <button
-                    type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
-                  >
-                    {language === 'hi' ? 'उप-उप-श्रेणी बनाएं' : 'Create Sub-Sub Category'}
-                  </button>
-                </form>
-              </div>
-
-              {/* Sub-subcategories List Table */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 lg:col-span-2 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
-                    {language === 'hi' ? 'सक्रिय उप-उप-श्रेणियां' : 'Active Sub-Sub Categories'}
-                  </h3>
-                  
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-bold">
-                          <th className="py-3 px-4">Parent Category</th>
-                          <th className="py-3 px-4">Sub Category</th>
-                          <th className="py-3 px-4">Sub-Sub Category Name</th>
-                          <th className="py-3 px-4">Mock Tests Count</th>
-                          <th className="py-3 px-4 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {examCatalog.flatMap(cat => 
-                          cat.subCategories.flatMap(sub => 
-                            (sub.subSubCategories || []).map(subsub => (
-                              <tr key={subsub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                                <td className="py-3.5 px-4 font-bold text-slate-500">{cat.name}</td>
-                                <td className="py-3.5 px-4 font-bold text-slate-500">{sub.name}</td>
-                                <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
-                                  {editingSubSubCategoryId === subsub.id ? (
-                                    <input
-                                      type="text"
-                                      value={editingSubSubCategoryName}
-                                      onChange={(e) => setEditingSubSubCategoryName(e.target.value)}
-                                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
-                                    />
-                                  ) : (
-                                    <span>{subsub.name}</span>
-                                  )}
-                                </td>
-                                <td className="py-3.5 px-4 font-semibold text-slate-500">{(subsub.tests || []).length} mock test(s)</td>
-                                <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
-                                  {editingSubSubCategoryId === subsub.id ? (
-                                    <>
-                                      <button
-                                        onClick={() => {
-                                          if (editingSubSubCategoryName.trim()) {
-                                            editSubSubCategory(cat.id, sub.id, subsub.id, editingSubSubCategoryName.trim());
-                                            setEditingSubSubCategoryId(null);
-                                            showToast('Sub-subcategory renamed successfully.');
-                                          }
-                                        }}
-                                        className="text-green-500 hover:text-green-600 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                      >
-                                        Save
-                                      </button>
-                                      <button
-                                        onClick={() => setEditingSubSubCategoryId(null)}
-                                        className="text-slate-555 hover:text-slate-700 font-bold bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                      >
-                                        Cancel
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <button
-                                        disabled={(sub.subSubCategories || []).indexOf(subsub) === 0}
-                                        onClick={() => {
-                                          const idx = (sub.subSubCategories || []).indexOf(subsub);
-                                          if (idx > 0) {
-                                            const newSubSubs = [...(sub.subSubCategories || [])];
-                                            [newSubSubs[idx], newSubSubs[idx - 1]] = [newSubSubs[idx - 1], newSubSubs[idx]];
-                                            reorderSubSubCategories(cat.id, sub.id, newSubSubs);
-                                            showToast('Sub-subcategory moved up successfully.');
-                                          }
-                                        }}
-                                        className="text-slate-555 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
-                                        title="Move Up"
-                                      >
-                                        <ArrowUp className="w-3.5 h-3.5" />
-                                      </button>
-                                      <button
-                                        disabled={(sub.subSubCategories || []).indexOf(subsub) === (sub.subSubCategories || []).length - 1}
-                                        onClick={() => {
-                                          const idx = (sub.subSubCategories || []).indexOf(subsub);
-                                          if (idx < (sub.subSubCategories || []).length - 1) {
-                                            const newSubSubs = [...(sub.subSubCategories || [])];
-                                            [newSubSubs[idx], newSubSubs[idx + 1]] = [newSubSubs[idx + 1], newSubSubs[idx]];
-                                            reorderSubSubCategories(cat.id, sub.id, newSubSubs);
-                                            showToast('Sub-subcategory moved down successfully.');
-                                          }
-                                        }}
-                                        className="text-slate-555 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
-                                        title="Move Down"
-                                      >
-                                        <ArrowDown className="w-3.5 h-3.5" />
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          setEditingSubSubCategoryId(subsub.id);
-                                          setEditingSubSubCategoryName(subsub.name);
-                                        }}
-                                        className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                      >
-                                        Edit
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          deleteSubSubCategory(cat.id, sub.id, subsub.id);
-                                          showToast('Sub-subcategory deleted successfully.');
-                                        }}
-                                        className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                      >
-                                        Delete
-                                      </button>
-                                    </>
-                                  )}
-                                </td>
-                              </tr>
-                            ))
-                          )
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 7: MOCK TESTS MANAGEMENT */}
+          )}\n                    {/* TAB 7: MOCK TESTS MANAGEMENT */}
           {activeTab === 'mocks' && (
             <MockTestManager
               examCatalog={examCatalog}
@@ -2904,200 +3069,228 @@ export default function AdminAnalytics() {
             </div>
           )}
 
-          {/* TAB 9: ANNOUNCEMENTS MANAGER */}
-          {activeTab === 'announcements' && (
-            <div className="space-y-8 animate-in fade-in duration-200">
+          {/* TAB 9: ANNOUNCEMENTS MANAGER */}\n          {activeTab === 'announcements' && (
+            <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Official Announcements Publisher</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Publish special alerts and visual news banner cards that slide horizontally on the mobile app home screen</p>
+                </div>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                  {noticesList.filter(n => n.category === 'announcement').length} announcement{noticesList.filter(n => n.category === 'announcement').length !== 1 ? 's' : ''} active
+                </span>
+              </div>
+
               {/* Info alert */}
-              <div className="bg-blue-500/10 border border-blue-500/25 p-4 rounded-xl flex items-start gap-3">
+              <div className="bg-blue-500/10 border border-blue-500/25 p-4 rounded-2xl flex items-start gap-3">
                 <Megaphone className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                 <div className="text-xs">
-                  <p className="font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Official Announcements Publisher</p>
+                  <p className="font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Mobile Banner Engine</p>
                   <p className="text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
                     Create and publish official announcements that will appear as a swipable horizontal carousel on the mobile app home screen. Announcements are saved as a special category of notices.
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {/* Form column (1/3) */}
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-xl h-fit">
-                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-                    <PlusCircle className="h-4.5 w-4.5 text-blue-500" /> Publish Announcement
+              {/* Collapsible Publish Card */}
+              <div className="bg-slate-950 border border-slate-808 rounded-2xl shadow-sm overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateAnnouncementOpen(!isCreateAnnouncementOpen)}
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-900/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                      <Megaphone className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="font-extrabold text-sm text-slate-900 dark:text-white">Publish Announcement</p>
+                      <p className="text-[11px] text-slate-400">Click to expand the announcement editor</p>
+                    </div>
+                  </div>
+                  <div className={`transition-transform duration-200 ${isCreateAnnouncementOpen ? 'rotate-180' : ''}`}>
+                    <ArrowDown className="h-4 w-4 text-slate-500" />
+                  </div>
+                </button>
+
+                {isCreateAnnouncementOpen && (
+                  <div className="border-t border-slate-808 p-6 bg-slate-950">
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!announcementTitle.trim()) return;
+                      addNotice(announcementTitle, announcementType, 'announcement', announcementDate, announcementUrl, undefined, announcementImageUrl);
+                      setAnnouncementTitle('');
+                      setAnnouncementUrl('');
+                      setAnnouncementImageUrl('');
+                      setIsCreateAnnouncementOpen(false);
+                      showToast('Announcement published successfully!');
+                    }} className="space-y-5 text-xs">
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Announcement Type / Tag</label>
+                          <input
+                            type="text"
+                            required
+                            value={announcementType}
+                            onChange={(e) => setAnnouncementType(e.target.value)}
+                            placeholder="e.g., PROMOTION, ALERT, NEWS, SOCIAL"
+                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
+                          <input
+                            type="date"
+                            required
+                            value={announcementDate}
+                            onChange={(e) => setAnnouncementDate(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-550 cursor-pointer"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Details Link / URL (Optional)</label>
+                          <input
+                            type="url"
+                            value={announcementUrl}
+                            onChange={(e) => setAnnouncementUrl(e.target.value)}
+                            placeholder="https://example.com/details"
+                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Image URL (Optional)</label>
+                        <input
+                          type="url"
+                          value={announcementImageUrl}
+                          onChange={(e) => setAnnouncementImageUrl(e.target.value)}
+                          placeholder="https://example.com/image.png"
+                          className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505"
+                        />
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">
+                          💡 Perfect size for tile view is 1200x600 (aspect ratio 2:1) for clean coverage.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Announcement Content</label>
+                        <textarea
+                          required
+                          value={announcementTitle}
+                          onChange={(e) => setAnnouncementTitle(e.target.value)}
+                          placeholder="Type announcement description content..."
+                          rows={4}
+                          className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505 resize-none"
+                        />
+                      </div>
+
+                      <div className="flex justify-end pt-3">
+                        <button
+                          type="submit"
+                          className="flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md cursor-pointer"
+                        >
+                          Publish Announcement
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
+
+              {/* Active Announcements List Card — Full Width */}
+              <div className="bg-slate-950 border border-slate-808 p-6 rounded-2xl shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <h3 className="font-extrabold text-xs text-white uppercase tracking-wider flex items-center gap-2">
+                    <Megaphone className="h-4.5 w-4.5 text-blue-505" /> Active Announcements Banners
                   </h3>
                   
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!announcementTitle.trim()) return;
-                    addNotice(announcementTitle, announcementType, 'announcement', announcementDate, announcementUrl, undefined, announcementImageUrl);
-                    setAnnouncementTitle('');
-                    setAnnouncementUrl('');
-                    setAnnouncementImageUrl('');
-                    showToast('Announcement published successfully!');
-                  }} className="space-y-4 text-xs">
-                    
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Announcement Type / Tag</label>
-                      <input
-                        type="text"
-                        required
-                        value={announcementType}
-                        onChange={(e) => setAnnouncementType(e.target.value)}
-                        placeholder="e.g., PROMOTION, ALERT, NEWS, SOCIAL"
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Publish Date</label>
-                      <input
-                        type="date"
-                        required
-                        value={announcementDate}
-                        onChange={(e) => setAnnouncementDate(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Details Link / URL (Optional)</label>
-                      <input
-                        type="url"
-                        value={announcementUrl}
-                        onChange={(e) => setAnnouncementUrl(e.target.value)}
-                        placeholder="https://example.com/details"
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Image URL (Optional)</label>
-                      <input
-                        type="url"
-                        value={announcementImageUrl}
-                        onChange={(e) => setAnnouncementImageUrl(e.target.value)}
-                        placeholder="https://example.com/image.png"
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-855 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                      />
-                      <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">
-                        💡 Perfect size for tile view is 1200x600 (aspect ratio 2:1) for clean coverage.
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Announcement Content</label>
-                      <textarea
-                        required
-                        value={announcementTitle}
-                        onChange={(e) => setAnnouncementTitle(e.target.value)}
-                        placeholder="Type announcement description..."
-                        rows={4}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-855 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs active:scale-95 transition-all shadow-md cursor-pointer"
-                    >
-                      Publish Announcement
-                    </button>
-                  </form>
+                  {/* Search bar */}
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-505" />
+                    <input
+                      type="text"
+                      value={announcementSearch}
+                      onChange={(e) => setAnnouncementSearch(e.target.value)}
+                      placeholder="Search announcements..."
+                      className="w-full bg-slate-900 border border-slate-808 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-slate-700"
+                    />
+                  </div>
                 </div>
 
-                {/* List column (2/3) */}
-                <div className="lg:col-span-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-xl">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                    <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                      <Megaphone className="h-4.5 w-4.5 text-blue-500" /> Active Announcements
-                    </h3>
-                    
-                    {/* Search bar */}
-                    <div className="relative w-full sm:w-64">
-                      <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
-                      <input
-                        type="text"
-                        value={announcementSearch}
-                        onChange={(e) => setAnnouncementSearch(e.target.value)}
-                        placeholder="Search announcements..."
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-700"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
-                          <th className="py-3 px-4">Content</th>
-                          <th className="py-3 px-4">Tag</th>
-                          <th className="py-3 px-4">Date</th>
-                          <th className="py-3 px-4 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {noticesList.filter(n => n.category === 'announcement').filter(n => 
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-808 text-slate-440 font-extrabold uppercase tracking-wider text-[10px]">
+                        <th className="py-3 px-4">Content</th>
+                        <th className="py-3 px-4">Tag</th>
+                        <th className="py-3 px-4">Date</th>
+                        <th className="py-3 px-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {noticesList.filter(n => n.category === 'announcement').filter(n => 
+                        n.title.toLowerCase().includes(announcementSearch.toLowerCase()) ||
+                        n.type.toLowerCase().includes(announcementSearch.toLowerCase())
+                      ).length > 0 ? (
+                        noticesList.filter(n => n.category === 'announcement').filter(n => 
                           n.title.toLowerCase().includes(announcementSearch.toLowerCase()) ||
                           n.type.toLowerCase().includes(announcementSearch.toLowerCase())
-                        ).length > 0 ? (
-                          noticesList.filter(n => n.category === 'announcement').filter(n => 
-                            n.title.toLowerCase().includes(announcementSearch.toLowerCase()) ||
-                            n.type.toLowerCase().includes(announcementSearch.toLowerCase())
-                          ).map((ann) => (
-                            <tr key={ann.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-350">
-                              <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 max-w-sm">
-                                {ann.url ? (
-                                  <a href={ann.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-                                    {ann.title}
-                                    <ChevronRight className="h-3 w-3 inline animate-pulse" />
+                        ).map((ann) => (
+                          <tr key={ann.id} className="border-b border-slate-808 hover:bg-slate-900/30 transition text-slate-350">
+                            <td className="py-3 px-4 font-bold text-slate-100 max-w-sm">
+                              {ann.url ? (
+                                <a href={ann.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline flex items-center gap-1">
+                                  {ann.title}
+                                  <ChevronRight className="h-3 w-3 inline animate-pulse" />
+                                </a>
+                              ) : (
+                                <span>{ann.title}</span>
+                              )}
+                              {ann.imageUrl && (
+                                <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-400 font-semibold">
+                                  <span>🖼️ Image:</span>
+                                  <a href={ann.imageUrl} target="_blank" rel="noopener noreferrer" className="underline truncate max-w-[200px] inline-block font-normal">
+                                    {ann.imageUrl}
                                   </a>
-                                ) : (
-                                  <span>{ann.title}</span>
-                                )}
-                                {ann.imageUrl && (
-                                  <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                    <span>🖼️ Image:</span>
-                                    <a href={ann.imageUrl} target="_blank" rel="noopener noreferrer" className="underline truncate max-w-[200px] inline-block font-normal">
-                                      {ann.imageUrl}
-                                    </a>
-                                  </div>
-                                )}
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded text-[10px]">{ann.type}</span>
-                              </td>
-                              <td className="py-3 px-4 font-semibold text-[11px] text-slate-550 dark:text-slate-400">{ann.date}</td>
-                              <td className="py-3 px-4 text-right">
-                                <button
-                                  onClick={() => {
-                                    deleteNotice(ann.id);
-                                    showToast('Announcement deleted successfully.');
-                                  }}
-                                  className="text-red-650 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
-                                >
-                                  Delete
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="py-8 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
-                              No matching announcements found.
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="bg-slate-800 text-slate-300 font-bold px-1.5 py-0.5 rounded text-[10px]">{ann.type}</span>
+                            </td>
+                            <td className="py-3 px-4 font-semibold text-[11px] text-slate-400">{ann.date}</td>
+                            <td className="py-3 px-4 text-right">
+                              <button
+                                onClick={() => {
+                                  deleteNotice(ann.id);
+                                  showToast('Announcement deleted successfully.');
+                                }}
+                                className="text-red-400 hover:text-red-300 font-bold bg-red-955/20 border border-red-900/30 hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                              >
+                                Delete
+                              </button>
                             </td>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="py-8 text-center text-slate-500 font-semibold italic">
+                            No matching announcements found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-
               </div>
             </div>
-          )}
-
-          {/* TAB: TESTIMONIALS MANAGER */}
+          )}\n                    {/* TAB: TESTIMONIALS MANAGER */}
           {activeTab === 'testimonials' && (
             <div className="space-y-8 animate-in fade-in duration-200">
               {/* Testimonial Creation Form */}
