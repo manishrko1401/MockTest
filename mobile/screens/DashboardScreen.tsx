@@ -693,10 +693,10 @@ export default function DashboardScreen({
         </View>
 
         {/* Search Bar — filters the active page */}
-        <View style={[styles.noticeSearchWrapper, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-          <Search size={16} color={isDark ? '#9CA3AF' : '#6B7280'} style={{ marginRight: 8 }} />
+        <View style={[styles.examSearchContainer, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+          <Search size={16} color={isDark ? '#60A5FA' : '#6B7280'} style={{ marginRight: 8 }} />
           <TextInput
-            style={[styles.noticeSearchInput, isDark && { color: ThemeColors.dark.text }]}
+            style={[styles.examSearchInput, isDark && { color: ThemeColors.dark.text }]}
             placeholder={
               activeNoticeTab === 'notice' ? 'Search live notices...'
               : activeNoticeTab === 'result' ? 'Search results...'
@@ -708,6 +708,7 @@ export default function DashboardScreen({
             onChangeText={setNoticeSearchQuery}
             returnKeyType="search"
             clearButtonMode="never"
+            autoCorrect={false}
           />
           {noticeSearchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setNoticeSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -2471,24 +2472,5 @@ const modalStyles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-  },
-  noticeSearchWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  noticeSearchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: '#111827',
-    padding: 0,
   },
 });
