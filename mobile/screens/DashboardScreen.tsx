@@ -247,6 +247,19 @@ export default function DashboardScreen({
 
   // Form and tab states
   const [activeNoticeTab, setActiveNoticeTab] = useState<'notice' | 'result' | 'admit_card' | 'answer_key'>('notice');
+  const [noticeSearchQuery, setNoticeSearchQuery] = useState('');
+
+  // Swipe pager ref for the notices screen
+  const noticeScrollRef = React.useRef<ScrollView>(null);
+  const NOTICE_TABS: Array<'notice' | 'result' | 'admit_card' | 'answer_key'> = ['notice', 'result', 'admit_card', 'answer_key'];
+
+  const scrollNoticeToTab = (tab: 'notice' | 'result' | 'admit_card' | 'answer_key') => {
+    const idx = NOTICE_TABS.indexOf(tab);
+    const pageWidth = Dimensions.get('window').width;
+    noticeScrollRef.current?.scrollTo({ x: idx * pageWidth, animated: true });
+    setActiveNoticeTab(tab);
+    setNoticeSearchQuery('');
+  };
 
   const [profileName, setProfileName] = useState(currentUser?.name || '');
   const [profileEmail, setProfileEmail] = useState(currentUser?.email || '');
@@ -617,114 +630,140 @@ export default function DashboardScreen({
     );
   };
 
+  const renderNoticeCard = (notice: any) => {
+    let catColor = '#2563EB';
+    if (notice.category === 'result') catColor = '#10B981';
+    if (notice.category === 'admit_card') catColor = '#F59E0B';
+    if (notice.category === 'answer_key') catColor = '#8B5CF6';
+
+    return (
+      <View key={notice.id} style={[styles.noticeCard, { borderLeftColor: catColor }, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+        <View style={styles.noticeHeader}>
+          <Text style={[styles.noticeBadge, { color: catColor, borderColor: catColor }]}>
+            {notice.type || notice.category.toUpperCase()}
+          </Text>
+          <Text style={styles.noticeDate}>{notice.date}</Text>
+        </View>
+        <Text style={[styles.noticeTitle, isDark && { color: ThemeColors.dark.text }]}>{notice.title}</Text>
+        {notice.lastDate && (
+          <Text style={[styles.noticeSubText, isDark && { color: ThemeColors.dark.textMuted }]}>Last Date: {notice.lastDate}</Text>
+        )}
+        {notice.url && (
+          <TouchableOpacity style={styles.noticeLinkBtn} onPress={() => Linking.openURL(notice.url)}>
+            <Text style={[styles.noticeLinkText, isDark && { color: '#60A5FA' }]}>Official Link</Text>
+            <ExternalLink size={12} color={isDark ? '#60A5FA' : '#2563EB'} />
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
   const renderNoticesTab = () => {
-    const filteredNotices = notices.filter(n => n.category === activeNoticeTab);
+    const pageWidth = Dimensions.get('window').width;
 
     return (
       <View style={{ flex: 1 }}>
-        {/* Notice Tabs Switcher (Web-identical tabs) */}
+        {/* Tab Switcher — tapping scrolls pager to that page */}
         <View style={[styles.noticeFilterTabs, isDark && { backgroundColor: ThemeColors.dark.card, borderBottomColor: ThemeColors.dark.border }]}>
-          <TouchableOpacity
-            style={[styles.noticeFilterTab, activeNoticeTab === 'notice' && styles.noticeTabNoticeActive]}
-            onPress={() => setActiveNoticeTab('notice')}
-          >
-            <Text style={[
-              styles.noticeFilterText,
-              activeNoticeTab === 'notice' && styles.noticeTabTextActive,
-              isDark && activeNoticeTab === 'notice' && { color: '#60A5FA' },
-              isDark && activeNoticeTab !== 'notice' && { color: ThemeColors.dark.textMuted }
-            ]}>
-              Notices
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.noticeFilterTab, activeNoticeTab === 'result' && styles.noticeTabResultActive]}
-            onPress={() => setActiveNoticeTab('result')}
-          >
-            <Text style={[
-              styles.noticeFilterText,
-              activeNoticeTab === 'result' && styles.noticeTabTextActive,
-              isDark && activeNoticeTab === 'result' && { color: '#60A5FA' },
-              isDark && activeNoticeTab !== 'result' && { color: ThemeColors.dark.textMuted }
-            ]}>
-              Results
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.noticeFilterTab, activeNoticeTab === 'admit_card' && styles.noticeTabAdmitActive]}
-            onPress={() => setActiveNoticeTab('admit_card')}
-          >
-            <Text style={[
-              styles.noticeFilterText,
-              activeNoticeTab === 'admit_card' && styles.noticeTabTextActive,
-              isDark && activeNoticeTab === 'admit_card' && { color: '#60A5FA' },
-              isDark && activeNoticeTab !== 'admit_card' && { color: ThemeColors.dark.textMuted }
-            ]}>
-              Admit Cards
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.noticeFilterTab, activeNoticeTab === 'answer_key' && styles.noticeTabAnswerActive]}
-            onPress={() => setActiveNoticeTab('answer_key')}
-          >
-            <Text style={[
-              styles.noticeFilterText,
-              activeNoticeTab === 'answer_key' && styles.noticeTabTextActive,
-              isDark && activeNoticeTab === 'answer_key' && { color: '#60A5FA' },
-              isDark && activeNoticeTab !== 'answer_key' && { color: ThemeColors.dark.textMuted }
-            ]}>
-              Answer Key
-            </Text>
-          </TouchableOpacity>
+          {NOTICE_TABS.map((tab) => {
+            const label = tab === 'notice' ? 'Notices' : tab === 'result' ? 'Results' : tab === 'admit_card' ? 'Admit Cards' : 'Answer Key';
+            const activeStyle =
+              tab === 'notice' ? styles.noticeTabNoticeActive
+              : tab === 'result' ? styles.noticeTabResultActive
+              : tab === 'admit_card' ? styles.noticeTabAdmitActive
+              : styles.noticeTabAnswerActive;
+            const isActive = activeNoticeTab === tab;
+            return (
+              <TouchableOpacity
+                key={tab}
+                style={[styles.noticeFilterTab, isActive && activeStyle]}
+                onPress={() => scrollNoticeToTab(tab)}
+              >
+                <Text style={[
+                  styles.noticeFilterText,
+                  isActive && styles.noticeTabTextActive,
+                  isDark && isActive && { color: '#60A5FA' },
+                  isDark && !isActive && { color: ThemeColors.dark.textMuted }
+                ]}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
-        {/* Group Header */}
-        <View style={styles.noticeGroupHeader}>
-          {activeNoticeTab === 'notice' && <Text style={[styles.noticeGroupTitle, isDark && { color: ThemeColors.dark.text }]}>🔔 Live Notices & Advisories</Text>}
-          {activeNoticeTab === 'result' && <Text style={[styles.noticeGroupTitle, isDark && { color: ThemeColors.dark.text }]}>🏆 Results & Merit Lists</Text>}
-          {activeNoticeTab === 'admit_card' && <Text style={[styles.noticeGroupTitle, isDark && { color: ThemeColors.dark.text }]}>📄 Admit Cards & Call Letters</Text>}
-          {activeNoticeTab === 'answer_key' && <Text style={[styles.noticeGroupTitle, isDark && { color: ThemeColors.dark.text }]}>🔑 Answer Keys & Solutions</Text>}
+        {/* Search Bar — filters the active page */}
+        <View style={[styles.noticeSearchWrapper, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+          <Search size={16} color={isDark ? '#9CA3AF' : '#6B7280'} style={{ marginRight: 8 }} />
+          <TextInput
+            style={[styles.noticeSearchInput, isDark && { color: ThemeColors.dark.text }]}
+            placeholder={
+              activeNoticeTab === 'notice' ? 'Search live notices...'
+              : activeNoticeTab === 'result' ? 'Search results...'
+              : activeNoticeTab === 'admit_card' ? 'Search admit cards...'
+              : 'Search answer keys...'
+            }
+            placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+            value={noticeSearchQuery}
+            onChangeText={setNoticeSearchQuery}
+            returnKeyType="search"
+            clearButtonMode="never"
+          />
+          {noticeSearchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setNoticeSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <X size={16} color={isDark ? '#9CA3AF' : '#6B7280'} />
+            </TouchableOpacity>
+          )}
         </View>
 
-        <FlatList
-          data={filteredNotices}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item: notice }) => {
-            let catColor = '#2563EB';
-            if (notice.category === 'result') catColor = '#10B981';
-            if (notice.category === 'admit_card') catColor = '#F59E0B';
-            if (notice.category === 'answer_key') catColor = '#8B5CF6';
+        {/* Swipeable pager — one page per tab category */}
+        <ScrollView
+          ref={noticeScrollRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={16}
+          decelerationRate="fast"
+          bounces={false}
+          keyboardShouldPersistTaps="handled"
+          onMomentumScrollEnd={(e) => {
+            const pageIndex = Math.round(e.nativeEvent.contentOffset.x / pageWidth);
+            const newTab = NOTICE_TABS[pageIndex];
+            if (newTab && newTab !== activeNoticeTab) {
+              setActiveNoticeTab(newTab);
+              setNoticeSearchQuery('');
+            }
+          }}
+          style={{ flex: 1 }}
+        >
+          {NOTICE_TABS.map((tab) => {
+            const tabNotices = notices
+              .filter(n => n.category === tab)
+              .filter(n =>
+                activeNoticeTab !== tab || noticeSearchQuery.trim() === '' ||
+                (n.title || '').toLowerCase().includes(noticeSearchQuery.toLowerCase())
+              );
 
             return (
-              <View style={[styles.noticeCard, { borderLeftColor: catColor }, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-                <View style={styles.noticeHeader}>
-                  <Text style={[styles.noticeBadge, { color: catColor, borderColor: catColor }]}>
-                    {notice.type || notice.category.toUpperCase()}
-                  </Text>
-                  <Text style={styles.noticeDate}>{notice.date}</Text>
-                </View>
-                <Text style={[styles.noticeTitle, isDark && { color: ThemeColors.dark.text }]}>{notice.title}</Text>
-                {notice.lastDate && (
-                  <Text style={[styles.noticeSubText, isDark && { color: ThemeColors.dark.textMuted }]}>Last Date: {notice.lastDate}</Text>
-                )}
-                {notice.url && (
-                  <TouchableOpacity
-                    style={styles.noticeLinkBtn}
-                    onPress={() => Linking.openURL(notice.url)}
-                  >
-                    <Text style={[styles.noticeLinkText, isDark && { color: '#60A5FA' }]}>Official Link</Text>
-                    <ExternalLink size={12} color={isDark ? '#60A5FA' : '#2563EB'} />
-                  </TouchableOpacity>
-                )}
+              <View key={tab} style={{ width: pageWidth, flex: 1 }}>
+                <FlatList
+                  data={tabNotices}
+                  keyExtractor={(item) => item.id}
+                  contentContainerStyle={styles.listContainer}
+                  showsVerticalScrollIndicator={false}
+                  renderItem={({ item }) => renderNoticeCard(item)}
+                  ListEmptyComponent={
+                    <Text style={[styles.noNoticesText, isDark && { color: ThemeColors.dark.textMuted }]}>
+                      {noticeSearchQuery.trim() !== '' && activeNoticeTab === tab
+                        ? 'No results match your search.'
+                        : 'No announcements in this category.'}
+                    </Text>
+                  }
+                />
               </View>
             );
-          }}
-          ListEmptyComponent={
-            <Text style={[styles.noNoticesText, isDark && { color: ThemeColors.dark.textMuted }]}>No announcements in this category.</Text>
-          }
-        />
+          })}
+        </ScrollView>
       </View>
     );
   };
@@ -2432,5 +2471,24 @@ const modalStyles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  noticeSearchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  noticeSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#111827',
+    padding: 0,
   },
 });
