@@ -780,7 +780,7 @@ export default function DashboardScreen({
           <Text style={[styles.profileName, isDark && { color: ThemeColors.dark.text }]}>{currentUser.name}</Text>
           <Text style={[styles.profileEmail, isDark && { color: ThemeColors.dark.textMuted }]}>{currentUser.email}</Text>
           <View style={styles.badgeRow}>
-            <Text style={[styles.profileCodeBadge, isDark && { backgroundColor: '#0B1329', color: ThemeColors.dark.text }]}>Roll Code: {currentUser.candidateCode}</Text>
+            <Text style={[styles.profileCodeBadge, isDark && { backgroundColor: '#0B1329', color: ThemeColors.dark.text }]}>Roll Code: {currentUser.candidateCode?.replace('CGL', 'HUB-id')}</Text>
             <Text style={[styles.profileCoinsBadge, isDark && { backgroundColor: '#0B1329', color: ThemeColors.dark.text }]}>🪙 {currentUser.coins || 0} Coins</Text>
           </View>
         </View>
@@ -1124,22 +1124,28 @@ export default function DashboardScreen({
       }
 
       const test = catalogTestsMap.get(s.testId);
-      let totalSec = 3600;
-      if (test && test.durationMinutes) {
-        totalSec = test.durationMinutes * 60;
+      let durationMinutes = 60;
+      if (s.mockTest && typeof s.mockTest.durationMinutes === 'number') {
+        durationMinutes = s.mockTest.durationMinutes;
+      } else if (test && typeof test.durationMinutes === 'number') {
+        durationMinutes = test.durationMinutes;
+      } else if (typeof s.durationMinutes === 'number') {
+        durationMinutes = s.durationMinutes;
       } else {
-        if (s.testId.includes('ssc')) {
-          totalSec = 3600;
-        } else if (s.testId.includes('rrb')) {
-          totalSec = 5400;
-        } else if (s.testId.includes('ctet')) {
-          totalSec = 9000;
-        } else if (s.testId.includes('ugc_net')) {
-          totalSec = s.testId.includes('paper1') ? 3600 : 7200;
+        const tid = (s.testId || '').toLowerCase();
+        if (tid.includes('ssc')) {
+          durationMinutes = 60;
+        } else if (tid.includes('rrb')) {
+          durationMinutes = 90;
+        } else if (tid.includes('ctet')) {
+          durationMinutes = 150;
+        } else if (tid.includes('ugc_net')) {
+          durationMinutes = tid.includes('paper1') ? 60 : 120;
         }
       }
 
-      const spentSec = s.durationSeconds || 0;
+      const totalSec = durationMinutes * 60;
+      const spentSec = s.durationSeconds ?? s.timeSpentSeconds ?? 0;
       return spentSec >= totalSec * 0.75;
     }).length;
   }, [examCatalog, currentUser.testSessions]);

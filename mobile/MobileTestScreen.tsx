@@ -16,6 +16,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Globe, AlignJustify } from 'lucide-react-native';
+import NetInfo from '@react-native-community/netinfo';
 import { ApiClient } from './api';
 import { getCachedQuestions, saveQuestionsToCache } from './cache';
 import { ThemeColors } from './theme';
@@ -127,6 +128,17 @@ export default function MobileTestScreen({
   const hasSectionalTimingRef = useRef<boolean>(false);
   const currentSectionIdxRef = useRef<number>(0);
 
+  // Live refs for AppState handler (avoids stale closure — always reflects latest state)
+  const responsesRef = useRef<Record<string, any>>({});
+  const timeLeftRef = useRef<number>(3600);
+  const violationsCountRef = useRef<number>(0);
+  const currentSectionIdxLiveRef = useRef<number>(0);
+  const currentQuestionIdxLiveRef = useRef<number>(0);
+
+  // Network connectivity tracking
+  const isOnlineRef = useRef<boolean>(true);
+  const [isOnline, setIsOnline] = useState<boolean>(true);
+
   // Modern custom modal state
   const [modalConfig, setModalConfig] = useState<{
     visible: boolean;
@@ -152,29 +164,67 @@ export default function MobileTestScreen({
   // AppState monitoring for anti-cheat focus loss
   const appState = useRef(AppState.currentState);
 
+  // Subscribe to network state changes
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const online = state.isConnected === true && state.isInternetReachable !== false;
+      isOnlineRef.current = online;
+      setIsOnline(online);
+    });
+    // Initial check
+    NetInfo.fetch().then(state => {
+      const online = state.isConnected === true && state.isInternetReachable !== false;
+      isOnlineRef.current = online;
+      setIsOnline(online);
+    });
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
-        // App went to background (cheating violation)
-        setViolationsCount((prev) => {
-          const next = prev + 1;
-          setModalConfig({
-            visible: true,
-            title: 'Exam Warning',
-            message: `Leaving the app is a focus violation! This has been reported to the administrator. (Violations: ${next}/3)`,
-            buttons: [
-              {
-                text: 'Understand',
-                onPress: () => setModalConfig((prevVal) => ({ ...prevVal, visible: false })),
-                style: 'default'
-              }
-            ]
+        // ── App went to background: immediately save exam progress ─────────
+        // Always save locally to AsyncStorage (works offline)
+        const snap = {
+          testId,
+          status: 'ONGOING',
+          timeRemaining: timeLeftRef.current,
+          violations: violationsCountRef.current,
+          currentSectionIndex: currentSectionIdxLiveRef.current,
+          currentQuestionIndex: currentQuestionIdxLiveRef.current,
+          responses: Object.fromEntries(
+            Object.entries(responsesRef.current).map(([qId, val]) => [
+              qId,
+              { selectedOptionIndex: val.selectedOptionIndex, elapsedSeconds: val.elapsedSeconds }
+            ])
+          ),
+        };
+        AsyncStorage.setItem(`ongoing_test_${testId}`, JSON.stringify(snap)).catch(() => {});
+
+        // Also sync to server if online
+        if (isOnlineRef.current) {
+          ApiClient.saveOngoingSession({
+            userId: currentUser.id,
+            testId,
+            timeRemaining: timeLeftRef.current,
+            violations: violationsCountRef.current,
+            currentSectionIndex: currentSectionIdxLiveRef.current,
+            currentQuestionIndex: currentQuestionIdxLiveRef.current,
+            responses: snap.responses as any,
+          }).catch(() => {});
+        }
+
+        // Count as a focus violation if exam was active
+        if (!isExitingRef.current) {
+          setViolationsCount((prev) => {
+            const next = prev + 1;
+            violationsCountRef.current = next;
+            if (next >= 3) {
+              handleExamSubmit(true); // Force submit on 3 violations
+            }
+            return next;
           });
-          if (next >= 3) {
-            handleExamSubmit(true); // Force submit on 3 violations
-          }
-          return next;
-        });
+        }
       }
       appState.current = nextAppState;
     });
@@ -182,7 +232,8 @@ export default function MobileTestScreen({
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [testId, currentUser?.id]);
+
 
   useEffect(() => {
     const loadExamData = async () => {
@@ -458,18 +509,17 @@ export default function MobileTestScreen({
   }, [testId]);
 
   // Keep refs in sync with state so the timer interval always reads fresh values
-  useEffect(() => {
-    sectionsRef.current = sections;
-  }, [sections]);
-  useEffect(() => {
-    totalDurationRef.current = totalDuration;
-  }, [totalDuration]);
-  useEffect(() => {
-    hasSectionalTimingRef.current = hasSectionalTiming;
-  }, [hasSectionalTiming]);
-  useEffect(() => {
-    currentSectionIdxRef.current = currentSectionIdx;
-  }, [currentSectionIdx]);
+  useEffect(() => { sectionsRef.current = sections; }, [sections]);
+  useEffect(() => { totalDurationRef.current = totalDuration; }, [totalDuration]);
+  useEffect(() => { hasSectionalTimingRef.current = hasSectionalTiming; }, [hasSectionalTiming]);
+  useEffect(() => { currentSectionIdxRef.current = currentSectionIdx; }, [currentSectionIdx]);
+
+  // Live refs for AppState crash-save handler (always reflects latest exam state)
+  useEffect(() => { responsesRef.current = responses; }, [responses]);
+  useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
+  useEffect(() => { violationsCountRef.current = violationsCount; }, [violationsCount]);
+  useEffect(() => { currentSectionIdxLiveRef.current = currentSectionIdx; }, [currentSectionIdx]);
+  useEffect(() => { currentQuestionIdxLiveRef.current = currentQuestionIdx; }, [currentQuestionIdx]);
 
   // Timer Tick hook — uses refs to avoid stale closure bugs with sectional timing
   useEffect(() => {
@@ -545,12 +595,16 @@ export default function MobileTestScreen({
     return () => clearInterval(interval);
   }, [loading, isTimerRunning]);
 
-  // Trigger auto-save every 15 seconds to sync state with shared database
+  // Trigger auto-save every 15 seconds to sync state with shared database (skip when offline)
   useEffect(() => {
     if (loading || !isTimerRunning) return;
 
     const autoSaveInterval = setInterval(() => {
-      saveOngoingSessionState();
+      if (isOnlineRef.current) {
+        saveOngoingSessionState();
+      }
+      // Always save locally regardless of network state
+      saveOngoingSessionStateLocally();
     }, 15000);
 
     return () => clearInterval(autoSaveInterval);
@@ -855,15 +909,15 @@ export default function MobileTestScreen({
     });
   };
 
-  // Submit assessment sittings
+  // Submit assessment sittings (works fully offline — queues result and syncs later)
   const handleExamSubmit = async (forced = false) => {
     setIsTimerRunning(false);
 
     const performSubmission = async () => {
       setLoading(true);
-      setLoadingText('Submitting your answers...');
+      setLoadingText('Processing your answers...');
 
-      // Compute stats
+      // Compute stats locally — no network needed
       let correctCount = 0;
       let incorrectCount = 0;
       let unattemptedCount = 0;
@@ -901,7 +955,7 @@ export default function MobileTestScreen({
         };
       });
 
-      const res = await ApiClient.addAttempt({
+      const attemptPayload = {
         userId: currentUser.id,
         testId,
         score: totalMarks,
@@ -910,13 +964,50 @@ export default function MobileTestScreen({
         durationSeconds: totalDuration - timeLeft,
         violations: violationsCount,
         responses: formattedResponses
-      });
+      };
+
+      // ── OFFLINE BRANCH: queue the result locally for later sync ─────────
+      if (!isOnlineRef.current) {
+        try {
+          await AsyncStorage.setItem(
+            `pending_submit_${testId}`,
+            JSON.stringify({ ...attemptPayload, queuedAt: Date.now(), correctCount, incorrectCount, totalQs, unattemptedCount })
+          );
+          await AsyncStorage.removeItem(`ongoing_test_${testId}`);
+        } catch (err) {
+          console.warn('[Offline] Failed to queue result locally:', err);
+        }
+
+        setLoading(false);
+        setModalConfig({
+          visible: true,
+          title: forced ? '⏱ Time Up — Result Saved Offline' : '✅ Result Saved Offline',
+          message: `You are currently offline. Your result has been saved on this device.\n\nMarks scored: ${totalMarks.toFixed(1)}\nCorrect answers: ${correctCount}/${totalQs}\nAccuracy: ${accuracy.toFixed(1)}%\n\n📡 Your result will automatically sync to the server when internet is restored.`,
+          buttons: [
+            {
+              text: 'Back to Home',
+              onPress: () => {
+                setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
+                onBack();
+              },
+              style: 'default'
+            }
+          ]
+        });
+        return;
+      }
+
+      // ── ONLINE BRANCH: submit directly to server ─────────────────────────
+      setLoadingText('Submitting your answers...');
+      const res = await ApiClient.addAttempt(attemptPayload);
 
       setLoading(false);
 
       if (res.success) {
         try {
           await AsyncStorage.removeItem(`ongoing_test_${testId}`);
+          // Clear any pending offline queue for this test if it existed
+          await AsyncStorage.removeItem(`pending_submit_${testId}`);
         } catch {}
         setModalConfig({
           visible: true,
@@ -936,16 +1027,24 @@ export default function MobileTestScreen({
           ]
         });
       } else {
+        // Server returned error — queue offline as fallback
+        try {
+          await AsyncStorage.setItem(
+            `pending_submit_${testId}`,
+            JSON.stringify({ ...attemptPayload, queuedAt: Date.now(), correctCount, incorrectCount, totalQs, unattemptedCount })
+          );
+          await AsyncStorage.removeItem(`ongoing_test_${testId}`);
+        } catch {}
         setModalConfig({
           visible: true,
-          title: 'Submission Error',
-          message: res.error || 'Check network connection.',
+          title: 'Saved — Will Sync Later',
+          message: `Server returned an error but your result was saved locally.\n\nMarks scored: ${totalMarks.toFixed(1)}\nCorrect: ${correctCount}/${totalQs} | Accuracy: ${accuracy.toFixed(1)}%\n\n📡 Result will sync automatically when connection is restored.`,
           buttons: [
             {
-              text: 'OK',
+              text: 'Back to Home',
               onPress: () => {
                 setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
-                setIsTimerRunning(true);
+                onBack();
               },
               style: 'default'
             }
@@ -960,7 +1059,9 @@ export default function MobileTestScreen({
       setModalConfig({
         visible: true,
         title: 'Submit Mock Paper?',
-        message: 'Are you sure you want to finish and submit your exam sheet now?',
+        message: isOnlineRef.current
+          ? 'Are you sure you want to finish and submit your exam sheet now?'
+          : '⚠️ You are offline. Your result will be saved on this device and synced automatically when internet is available.',
         buttons: [
           {
             text: 'Cancel',
@@ -971,7 +1072,7 @@ export default function MobileTestScreen({
             style: 'cancel'
           },
           {
-            text: 'Submit Paper',
+            text: isOnlineRef.current ? 'Submit Paper' : 'Save & Exit',
             onPress: () => {
               setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
               performSubmission();
@@ -1199,6 +1300,16 @@ export default function MobileTestScreen({
           <AlignJustify size={rs(22)} color="#FFF" />
         </TouchableOpacity>
       </View>
+
+
+      {/* Offline indicator banner */}
+      {!isOnline && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineBannerText}>
+            Offline - answers are saved locally and will sync when internet is restored
+          </Text>
+        </View>
+      )}
 
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Section Tabs ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
       <ScrollView
@@ -2441,6 +2552,21 @@ const styles = StyleSheet.create({
     fontSize: rs(12),
     color: '#FFF',
     fontWeight: 'bold',
+  },
+
+  offlineBanner: {
+    backgroundColor: '#7F1D1D',
+    paddingVertical: vs(5),
+    paddingHorizontal: rs(12),
+    borderBottomWidth: 1,
+    borderBottomColor: '#991B1B',
+  },
+  offlineBannerText: {
+    color: '#FEE2E2',
+    fontSize: rs(10),
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 0.2,
   },
 
   // Keep legacy props to avoid TS errors in modal render

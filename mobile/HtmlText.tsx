@@ -256,6 +256,7 @@ interface HtmlImageProps {
 }
 const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark }) => {
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
@@ -263,6 +264,7 @@ const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark }) => {
       src,
       (width, height) => {
         if (width && height) {
+          setDimensions({ width, height });
           setAspectRatio(width / height);
         }
         setLoading(false);
@@ -274,7 +276,24 @@ const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark }) => {
     );
   }, [src]);
 
+  const isIcon = dimensions && dimensions.width < 150 && dimensions.height < 150;
+
   if (loading) {
+    const isUrlLikelyIcon = src.toLowerCase().includes('icon') || src.toLowerCase().includes('bullet') || src.toLowerCase().includes('key') || src.toLowerCase().includes('info');
+    if (isUrlLikelyIcon) {
+      return (
+        <View
+          style={{
+            width: 20,
+            height: 20,
+            backgroundColor: isDark ? '#1E293B' : '#E2E8F0',
+            borderRadius: 4,
+            marginHorizontal: 4,
+            alignSelf: 'center',
+          }}
+        />
+      );
+    }
     return (
       <View
         style={{
@@ -289,6 +308,26 @@ const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark }) => {
       >
         <Text style={{ fontSize: 9, color: isDark ? '#94A3B8' : '#64748B' }}>Loading image...</Text>
       </View>
+    );
+  }
+
+  if (isIcon && aspectRatio) {
+    const targetHeight = 20;
+    const targetWidth = targetHeight * aspectRatio;
+    return (
+      <Image
+        source={{ uri: src }}
+        style={{
+          width: targetWidth,
+          height: targetHeight,
+          marginHorizontal: 4,
+          alignSelf: 'center',
+        }}
+        contentFit="contain"
+        cachePolicy="memory-disk"
+        transition={150}
+        recyclingKey={src}
+      />
     );
   }
 

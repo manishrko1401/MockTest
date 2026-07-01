@@ -280,7 +280,7 @@ export default function HomeLandingPage() {
                     </div>
                     <div>
                       <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{currentUser.name}</p>
-                      <p className="text-[9px] text-slate-400 font-bold uppercase">{currentUser.candidateCode}</p>
+                      <p className="text-[9px] text-slate-400 font-bold uppercase">{currentUser.candidateCode?.replace('CGL', 'HUB-id')}</p>
                     </div>
                   </div>
                   <button

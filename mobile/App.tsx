@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as Updates from 'expo-updates';
 import { ApiClient } from './api';
+import NetInfo from '@react-native-community/netinfo';
 import { getCachedCatalog, saveCatalogToCache, clearAllCache, getLastSyncTimestamp, setLastSyncTimestamp, mergeCatalogDelta, invalidateQuestionsCache, getCachedUser, saveUserToCache } from './cache';
 import AuthScreen from './screens/AuthScreen';
 import DashboardScreen from './screens/DashboardScreen';
@@ -48,6 +49,82 @@ export default function App() {
   const [activeTestId, setActiveTestId] = useState<string>('');
   const [dashboardTab, setDashboardTab] = useState<'home' | 'tests' | 'notices' | 'profile'>('home');
   const [dashboardCategoryId, setDashboardCategoryId] = useState<string | null>(null);
+
+  // Helper to prefetch questions for completed/ongoing test sessions so they load instantly offline
+  const prefetchCompletedTests = async (user: any) => {
+    if (!user || !user.testSessions || !Array.isArray(user.testSessions)) return;
+    
+    const uniqueTestIds = Array.from(
+      new Set(
+        user.testSessions
+          .filter((s: any) => s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED')
+          .map((s: any) => s.testId)
+      )
+    ) as string[];
+
+    for (const testId of uniqueTestIds) {
+      try {
+        const cached = await AsyncStorage.getItem(`qs_v2_${testId}`);
+        if (!cached) {
+          console.log(`[Cache] Prefetching custom questions for ${testId}`);
+          const res = await ApiClient.getCustomQuestions(testId);
+          if (res.success && res.questions && Array.isArray(res.questions)) {
+            await AsyncStorage.setItem(
+              `qs_v2_${testId}`,
+              JSON.stringify({ questions: res.questions, savedAt: Date.now() })
+            );
+            console.log(`[Cache] Successfully pre-cached questions for ${testId}`);
+          }
+        }
+      } catch (err) {
+        console.warn(`[Cache] Failed to pre-cache questions for ${testId}:`, err);
+      }
+    }
+  };
+
+  // Retry any pending offline exam submissions when device comes back online
+  const flushPendingSubmits = async () => {
+    try {
+      const allKeys = await AsyncStorage.getAllKeys();
+      const pendingKeys = allKeys.filter(k => k.startsWith('pending_submit_'));
+      if (pendingKeys.length === 0) return;
+
+      console.log(`[Offline Sync] Found ${pendingKeys.length} pending submission(s) to flush`);
+
+      for (const key of pendingKeys) {
+        try {
+          const raw = await AsyncStorage.getItem(key);
+          if (!raw) continue;
+          const payload = JSON.parse(raw);
+          const { queuedAt, correctCount, incorrectCount, totalQs, unattemptedCount, ...attemptPayload } = payload;
+
+          const res = await ApiClient.addAttempt(attemptPayload);
+          if (res.success) {
+            await AsyncStorage.removeItem(key);
+            console.log(`[Offline Sync] Successfully uploaded queued result for testId: ${attemptPayload.testId}`);
+          } else {
+            console.warn(`[Offline Sync] Server rejected queued result for ${attemptPayload.testId}:`, res.error);
+          }
+        } catch (err) {
+          console.warn(`[Offline Sync] Failed to flush pending submit for key ${key}:`, err);
+        }
+      }
+
+      // Refresh user data after syncing so sessions update
+      if (currentUser?.email) {
+        const savedPassword = await SecureStore.getItemAsync('tb_user_password');
+        if (savedPassword) {
+          const authRes = await ApiClient.login(currentUser.email, savedPassword);
+          if (authRes.success && authRes.user) {
+            setCurrentUser(authRes.user);
+            await saveUserToCache(authRes.user);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[Offline Sync] Error during pending submit flush:', err);
+    }
+  };
 
   // 1. Initial mounting check for saved credentials & bootstrap catalogs
   useEffect(() => {
@@ -157,6 +234,7 @@ export default function App() {
           const cachedUser = await getCachedUser();
           if (cachedUser) {
             setCurrentUser(cachedUser);
+            prefetchCompletedTests(cachedUser);
             setViewMode('dashboard');
             // Don't stop loading here — background sync below will call setLoading(false) via finally()
           }
@@ -165,7 +243,10 @@ export default function App() {
           ApiClient.login(savedEmail, savedPassword).then(async (authRes) => {
             if (authRes.success && authRes.user) {
               setCurrentUser(authRes.user);
+              prefetchCompletedTests(authRes.user);
               await saveUserToCache(authRes.user);
+              // Flush any offline-queued submissions from a previous session
+              flushPendingSubmits();
             }
           }).catch(err => {
             console.warn('[Sync] Background user sync failed:', err);
@@ -183,6 +264,23 @@ export default function App() {
 
     initializeApp();
   }, []);
+
+  // Listen for network reconnection and flush any queued offline submissions
+  useEffect(() => {
+    let wasOffline = false;
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const online = state.isConnected === true && state.isInternetReachable !== false;
+      if (!online) {
+        wasOffline = true;
+      } else if (wasOffline && online) {
+        // Just reconnected — flush queued submissions
+        wasOffline = false;
+        console.log('[Offline Sync] Internet restored — flushing pending submissions...');
+        flushPendingSubmits();
+      }
+    });
+    return () => unsubscribe();
+  }, [currentUser]);
 
   // System physical BackButton navigation handler
   useEffect(() => {
@@ -422,6 +520,7 @@ export default function App() {
     const res = await ApiClient.login(currentUser.email, savedPassword);
     if (res.success && res.user) {
       setCurrentUser(res.user);
+      prefetchCompletedTests(res.user);
       await saveUserToCache(res.user);
     }
     
@@ -460,6 +559,7 @@ export default function App() {
 
   const handleLoginSuccess = async (user: any) => {
     setCurrentUser(user);
+    prefetchCompletedTests(user);
     await saveUserToCache(user);
     await SecureStore.setItemAsync('tb_user_email', user.email);
     await SecureStore.setItemAsync('tb_user_password', user.password);
@@ -604,6 +704,7 @@ export default function App() {
               const res = await ApiClient.login(currentUser.email, currentUser.password);
               if (res.success && res.user) {
                 setCurrentUser(res.user);
+                prefetchCompletedTests(res.user);
                 
                 // Find the new session (the one that is not in the set of pre-existing session IDs)
                 const newSession = res.user.testSessions.find((s: any) => !existingSessionIds.has(s.id));

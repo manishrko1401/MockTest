@@ -124,17 +124,34 @@ function TcsIonEngine({ testId }: { testId: string }) {
       }
 
       const examSession = generateExamSession(testId, examCatalog, customQs);
+
+      // 1. Check server for an ongoing session first
       const ongoingRecord = currentUser?.testSessions?.find(
-        s => s.testId === testId && s.status === 'ONGOING'
+        (s: any) => s.testId === testId && s.status === 'ONGOING'
       );
 
-      if (ongoingRecord && ongoingRecord.responses) {
+      // 2. Fallback: check localStorage for a locally-saved snapshot (works offline)
+      let localSnap: any = null;
+      if (!ongoingRecord) {
+        try {
+          const raw = localStorage.getItem(`ongoing_web_${testId}`);
+          if (raw) {
+            localSnap = JSON.parse(raw);
+            // Only use if it's actually an ongoing session
+            if (localSnap?.status !== 'ONGOING') localSnap = null;
+          }
+        } catch {}
+      }
+
+      const resumeSource = ongoingRecord || localSnap;
+
+      if (resumeSource && resumeSource.responses) {
         initSession(examSession, 3, {
-          responses: ongoingRecord.responses as any,
-          timeRemaining: ongoingRecord.timeRemaining ?? examSession.totalDurationSeconds,
-          violationsCount: ongoingRecord.violations ?? 0,
-          currentSectionIndex: ongoingRecord.currentSectionIndex ?? 0,
-          currentQuestionIndex: ongoingRecord.currentQuestionIndex ?? 0,
+          responses: resumeSource.responses as any,
+          timeRemaining: resumeSource.timeRemaining ?? examSession.totalDurationSeconds,
+          violationsCount: resumeSource.violations ?? 0,
+          currentSectionIndex: resumeSource.currentSectionIndex ?? 0,
+          currentQuestionIndex: resumeSource.currentQuestionIndex ?? 0,
         }, authLanguage);
       } else {
         initSession(examSession, 3, undefined, authLanguage); // 3 violations allowed
@@ -144,12 +161,27 @@ function TcsIonEngine({ testId }: { testId: string }) {
     initialize();
   }, [initSession, testId, authLanguage, examCatalog, currentUser]);
 
-  // Save state on unload/unmount
+  // Save state to localStorage (instant, works offline) and server on unload/unmount
   useEffect(() => {
     const handleSave = () => {
       const currentState = stateRef.current;
-      // Save only if exam is active and not submitted yet
       if (currentState.session && !currentState.isExamSubmitted) {
+        // Always save to localStorage immediately (works offline, zero latency)
+        const localSnap = {
+          testId,
+          status: 'ONGOING',
+          timeRemaining: currentState.timeRemaining,
+          violations: currentState.violationsCount,
+          currentSectionIndex: currentState.currentSectionIndex,
+          currentQuestionIndex: currentState.currentQuestionIndex,
+          responses: currentState.responses,
+          savedAt: Date.now(),
+        };
+        try {
+          localStorage.setItem(`ongoing_web_${testId}`, JSON.stringify(localSnap));
+        } catch {}
+
+        // Also sync to server (may fail if offline — localStorage already has it)
         saveOngoingSessionRef.current(
           testId,
           currentState.session.testTitle,
@@ -193,6 +225,9 @@ function TcsIonEngine({ testId }: { testId: string }) {
         state.violationsCount,
         savedResponses
       );
+
+      // Clear local ongoing snapshot now that exam is submitted
+      try { localStorage.removeItem(`ongoing_web_${testId}`); } catch {}
     }
   }, [state.isExamSubmitted, state.score, currentUser, addAttempt, testId, attemptSaved, state.responses, state.session, state.timeRemaining, state.violationsCount]);
 

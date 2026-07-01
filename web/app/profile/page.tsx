@@ -173,7 +173,7 @@ export default function StudentProfilePage() {
             </div>
             
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-slate-100">{currentUser.name}</h3>
-            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-1">{t.candidateCode}: {currentUser.candidateCode}</p>
+            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-1">{t.candidateCode}: {currentUser.candidateCode?.replace('CGL', 'HUB-id')}</p>
             <p className="text-[10px] text-slate-600 mt-1 truncate">{currentUser.email}</p>
 
             <div className="border-t border-slate-100 dark:border-slate-800 mt-4 pt-4 text-left space-y-2.5">
@@ -446,7 +446,7 @@ export default function StudentProfilePage() {
             </div>
             
             <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">{currentUser.name}</h3>
-            <p className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-wider mt-1">{t.candidateCode}: {currentUser.candidateCode}</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-505 font-bold uppercase tracking-wider mt-1">{t.candidateCode}: {currentUser.candidateCode?.replace('CGL', 'HUB-id')}</p>
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 truncate">{currentUser.email}</p>
 
             <div className="border-t border-slate-200 dark:border-slate-800 mt-5 pt-5 text-left space-y-3.5">

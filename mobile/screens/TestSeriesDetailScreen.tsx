@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface TestSeriesDetailScreenProps {
   currentUser: any;
@@ -44,6 +45,33 @@ export default function TestSeriesDetailScreen({
   const { width: SCREEN_WIDTH } = Dimensions.get('window');
   const horizontalScrollRef = useRef<ScrollView>(null);
   const [activeSubSubId, setActiveSubSubId] = useState<string | null>(null);
+
+  // Load locally-cached ongoing sessions so Resume button shows correctly even when offline
+  const [localOngoingIds, setLocalOngoingIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const loadLocalOngoing = async () => {
+      try {
+        const allKeys = await AsyncStorage.getAllKeys();
+        const ongoingKeys = allKeys.filter(k => k.startsWith('ongoing_test_'));
+        const ids = new Set<string>();
+        for (const key of ongoingKeys) {
+          const raw = await AsyncStorage.getItem(key);
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw);
+              if (parsed?.testId && parsed?.status === 'ONGOING') {
+                ids.add(parsed.testId);
+              }
+            } catch {}
+          }
+        }
+        setLocalOngoingIds(ids);
+      } catch (err) {
+        console.warn('[Resume] Failed to load local ongoing sessions:', err);
+      }
+    };
+    loadLocalOngoing();
+  }, []);
 
   // Helper to check if a user has access to a mock test based on their subscription tier
   const hasAccess = (requiredTier: string) => {
@@ -211,7 +239,7 @@ export default function TestSeriesDetailScreen({
                           });
                         const attempt = completedAttempts[0];
                         const isCompleted = completedAttempts.length > 0;
-                        const isPaused = (currentUser.testSessions || []).some(
+                        const isPaused = localOngoingIds.has(test.id) || (currentUser.testSessions || []).some(
                           (s: any) => s.testId === test.id && s.status === 'ONGOING'
                         );
 
@@ -320,7 +348,7 @@ export default function TestSeriesDetailScreen({
                 });
               const attempt = completedAttempts[0];
               const isCompleted = completedAttempts.length > 0;
-              const isPaused = (currentUser.testSessions || []).some(
+              const isPaused = localOngoingIds.has(test.id) || (currentUser.testSessions || []).some(
                 (s: any) => s.testId === test.id && s.status === 'ONGOING'
               );
 

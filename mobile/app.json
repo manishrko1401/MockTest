@@ -37,11 +37,12 @@
       }
     },
     "owner": "leo_2047",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
-      "url": "https://u.expo.dev/3198adcc-154c-4fb3-93e2-2e1bc64587ac"
+      "url": "https://u.expo.dev/3198adcc-154c-4fb3-93e2-2e1bc64587ac",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     }
   }
 }

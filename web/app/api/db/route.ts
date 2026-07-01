@@ -537,7 +537,7 @@ async function handleSignup(data: any) {
 
   const newUser = await prisma.user.create({
     data: {
-      candidateCode: 'CGL_' + Math.floor(1000 + Math.random() * 9000),
+      candidateCode: 'HUB-id_' + Math.floor(1000 + Math.random() * 9000),
       fullName: name.trim(),
       email: trimmedEmail,
       mobile: mobile.trim(),

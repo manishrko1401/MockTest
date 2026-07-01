@@ -54,18 +54,55 @@ export default function AnalysisScreen({
   onToggleBookmark,
   isDark = false
 }: AnalysisScreenProps) {
-  // Navigation / Tabs state: 'analysis' | 'solutions' | 'leaderboard'
-  const [activeTab, setActiveTab] = useState<'analysis' | 'solutions' | 'leaderboard'>('analysis');
+  // Navigation / Tabs state: 'analysis' | 'solutions'
+  const [activeTab, setActiveTab] = useState<'analysis' | 'solutions'>('analysis');
   const [questions, setQuestions] = useState<any[]>([]);
   const [loadingQs, setLoadingQs] = useState(true);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   
   // Re-attempt Mode states (Solutions Tab)
-  const [reattemptMode, setReattemptMode] = useState(true);
+  const [reattemptMode, setReattemptMode] = useState(false);
   const [revealedSolutions, setRevealedSolutions] = useState<Record<string, boolean>>({});
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
   const [selectedSection, setSelectedSection] = useState<string>('All Sections');
+
+  // Swipe gesture detection refs and handlers
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+
+  const handleTouchStart = (e: any) => {
+    touchStartX.current = e.nativeEvent.pageX;
+    touchStartY.current = e.nativeEvent.pageY;
+  };
+
+  const handleTouchEnd = (e: any) => {
+    const diffX = e.nativeEvent.pageX - touchStartX.current;
+    const diffY = e.nativeEvent.pageY - touchStartY.current;
+
+    // Check if it is a horizontal swipe (X movement is significant, and greater than Y movement)
+    if (Math.abs(diffX) > 50 && Math.abs(diffY) < 40) {
+      if (diffX > 0) {
+        // Swipe right -> Go to previous question
+        if (activeQuestionIdx > 0) {
+          setActiveQuestionIdx(activeQuestionIdx - 1);
+        }
+      } else {
+        // Swipe left -> Go to next question
+        if (activeQuestionIdx < filteredQuestions.length - 1) {
+          setActiveQuestionIdx(activeQuestionIdx + 1);
+        }
+      }
+    }
+  };
+
+  // Abramowitz and Stegun Normal CDF approximation helper
+  const calculateNormalCDF = (z: number): number => {
+    const t = 1 / (1 + 0.2316419 * Math.abs(z));
+    const d = 0.3989422804 * Math.exp(-z * z / 2);
+    const p = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    return z >= 0 ? 1 - p : p;
+  };
 
   // Filter section modal/dropdown states
   const [sectionDropdownVisible, setSectionDropdownVisible] = useState(false);
@@ -98,14 +135,31 @@ export default function AnalysisScreen({
   const totalQs = activeAttempt.questionsCount || activeAttempt.maxQuestions || 200;
   const maxScore = activeAttempt.maxScore || 200;
   
-  // High fidelity fallback matching the screenshot
-  const testbookRank = activeAttempt.testbookRank ?? 4886;
-  const testbookTotalUsers = activeAttempt.mockTest?.testbookTotalUsers ?? activeAttempt.testbookTotalUsers ?? 5968;
   const scoreVal = activeAttempt.score ?? 0;
+  const testbookTotalUsers = activeAttempt.mockTest?.testbookTotalUsers ?? activeAttempt.testbookTotalUsers ?? 5968;
   const averageScore = activeAttempt.mockTest?.testbookAverageScore ?? activeAttempt.testbookAverageScore ?? 46.07;
   const bestScore = activeAttempt.mockTest?.testbookTopperScore ?? activeAttempt.testbookTopperScore ?? 188.75;
   const cutoffScoreStr = activeAttempt.mockTest?.testbookCutoffScore ? `${activeAttempt.mockTest.testbookCutoffScore}-${activeAttempt.mockTest.testbookCutoffScore + 3}` : '126-129';
-  const percentileVal = activeAttempt.testbookPercentile ?? 18.15;
+
+  // Calculate dynamic rank and percentile using the normal CDF formula
+  const calculatedRankData = useMemo(() => {
+    const N = testbookTotalUsers;
+    const topper = bestScore;
+    const avg = averageScore;
+    const score = scoreVal;
+
+    const sigma = Math.max(5.0, (topper - avg) / 2.0);
+    const z = (score - avg) / sigma;
+
+    const cdf = calculateNormalCDF(z);
+    const calculatedPercentile = Number((cdf * 100).toFixed(2));
+    const calculatedRank = Math.max(1, Math.min(N, Math.round((1 - cdf) * N)));
+
+    return { rank: calculatedRank, percentile: calculatedPercentile };
+  }, [testbookTotalUsers, bestScore, averageScore, scoreVal]);
+
+  const testbookRank = calculatedRankData.rank;
+  const percentileVal = calculatedRankData.percentile;
   const accuracyVal = activeAttempt.accuracy ?? 0;
 
   // Reconstruct deterministic student responses seed to align with website timers
@@ -286,12 +340,6 @@ export default function AnalysisScreen({
               <Text style={styles.langIconText}>{lang === 'en' ? 'E' : 'अ'}</Text>
             </View>
           </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.menuBtn} onPress={onBack}>
-            <View style={styles.menuLine} />
-            <View style={[styles.menuLine, { marginVertical: 4 }]} />
-            <View style={styles.menuLine} />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -299,8 +347,7 @@ export default function AnalysisScreen({
       <View style={styles.tabBar}>
         {[
           { id: 'analysis', label: 'Analysis' },
-          { id: 'solutions', label: 'Solutions' },
-          { id: 'leaderboard', label: 'Leaderboard' }
+          { id: 'solutions', label: 'Solutions' }
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -327,19 +374,7 @@ export default function AnalysisScreen({
             contentContainerStyle={styles.analysisContentContainer}
             showsVerticalScrollIndicator={false}
           >
-            {/* Reattempt Test Banner */}
-            <TouchableOpacity 
-              style={styles.reattemptBanner} 
-              onPress={() => {
-                setReattemptMode(true);
-                setActiveTab('solutions');
-              }}
-            >
-              <Text style={styles.reattemptText}>Reattempt Test  →</Text>
-              <View style={styles.reattemptIllustration}>
-                <ClipboardList size={28} color="#DCE7FD" />
-              </View>
-            </TouchableOpacity>
+
 
             {/* Quick Summary Header with Section Switcher & Cutoff */}
             <View style={styles.sectionHeaderRow}>
@@ -446,16 +481,7 @@ export default function AnalysisScreen({
 
             </View>
 
-            {/* Challenge Friends Banner */}
-            <View style={styles.challengeCard}>
-              <View style={styles.challengeLeft}>
-                <Text style={styles.challengeTitle}>Challenge Friends!</Text>
-                <Text style={styles.challengeSub}>Invite your friends for a challenge & compare scores!</Text>
-              </View>
-              <View style={styles.highFiveBg}>
-                <Award size={36} color="#FBBF24" />
-              </View>
-            </View>
+
           </ScrollView>
         )}
 
@@ -542,11 +568,13 @@ export default function AnalysisScreen({
               )}
             </View>
 
-            {/* Question Workspace Panel */}
+             {/* Question Workspace Panel */}
             <ScrollView 
               style={styles.qWorkspace} 
               contentContainerStyle={styles.qWorkspaceContent}
               showsVerticalScrollIndicator={false}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
             >
               {activeQuestion ? (
                 <View style={styles.questionCard}>
@@ -687,84 +715,40 @@ export default function AnalysisScreen({
               )}
             </ScrollView>
 
-            {/* Bottom Panel: Reattempt Mode toggle, Next arrow */}
+            {/* Bottom Panel: Arrow navigation keys on the left, question count on the right */}
             <View style={styles.solBottomBar}>
-              <View style={styles.toggleRow}>
-                <Text style={styles.toggleLabel}>Reattempt Mode</Text>
-                <Switch
-                  value={reattemptMode}
-                  onValueChange={(val) => {
-                    setReattemptMode(val);
-                    if (!val) {
-                      setRevealedSolutions({});
+              <View style={styles.arrowKeysContainer}>
+                <TouchableOpacity 
+                  style={[styles.arrowKeyBtn, activeQuestionIdx === 0 && styles.arrowKeyBtnDisabled]}
+                  disabled={activeQuestionIdx === 0}
+                  onPress={() => {
+                    if (activeQuestionIdx > 0) {
+                      setActiveQuestionIdx(activeQuestionIdx - 1);
                     }
                   }}
-                  trackColor={{ false: '#CBD5E1', true: '#BFDBFE' }}
-                  thumbColor={reattemptMode ? '#2563EB' : '#F4F3F4'}
-                />
+                >
+                  <ChevronLeft size={22} color={activeQuestionIdx === 0 ? "#94A3B8" : "#1E293B"} />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.arrowKeyBtn, activeQuestionIdx === filteredQuestions.length - 1 && styles.arrowKeyBtnDisabled]}
+                  disabled={activeQuestionIdx === filteredQuestions.length - 1}
+                  onPress={() => {
+                    if (activeQuestionIdx < filteredQuestions.length - 1) {
+                      setActiveQuestionIdx(activeQuestionIdx + 1);
+                    }
+                  }}
+                >
+                  <ChevronRight size={22} color={activeQuestionIdx === filteredQuestions.length - 1 ? "#94A3B8" : "#1E293B"} />
+                </TouchableOpacity>
               </View>
 
-              <TouchableOpacity 
-                style={styles.nextArrowBtn}
-                onPress={() => {
-                  if (activeQuestionIdx < filteredQuestions.length - 1) {
-                    setActiveQuestionIdx(activeQuestionIdx + 1);
-                  }
-                }}
-              >
-                <ChevronRight size={22} color="#FFFFFF" />
-              </TouchableOpacity>
+              <Text style={styles.questionCountText}>
+                {filteredQuestions.length > 0 ? `Question ${activeQuestionIdx + 1} of ${filteredQuestions.length}` : '0 of 0'}
+              </Text>
             </View>
           </View>
         )}
 
-        {/* ==================== TAB 3: LEADERBOARD ==================== */}
-        {activeTab === 'leaderboard' && (
-          <ScrollView 
-            style={styles.leaderboardScrollView} 
-            contentContainerStyle={styles.leaderboardContentContainer}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.leaderboardCard}>
-              <View style={styles.leaderboardHeader}>
-                <Trophy size={28} color="#FBBF24" />
-                <Text style={styles.leaderboardTitle}>Rankings & Leaderboard</Text>
-                <Text style={styles.leaderboardSub}>Compare your results with other students taking the test</Text>
-              </View>
-              
-              {/* Dummy High-Fidelity Competitor rankings matching test statistics */}
-              {[
-                { name: 'Rohan Sharma', score: bestScore, rank: 1, isYou: false },
-                { name: 'Ankita Verma', score: Math.round(bestScore * 0.95), rank: 2, isYou: false },
-                { name: 'Kumar Gaurav', score: Math.round(bestScore * 0.90), rank: 3, isYou: false },
-                { name: `${currentUser?.name || 'You'} (Self)`, score: scoreVal, rank: testbookRank, isYou: true },
-                { name: 'Average Student', score: averageScore, rank: Math.round(testbookTotalUsers / 2), isYou: false }
-              ].sort((a,b) => a.rank - b.rank).map((entry, idx) => (
-                <View 
-                  key={idx} 
-                  style={[
-                    styles.leaderboardRow, 
-                    entry.isYou ? styles.leaderboardYouRow : null
-                  ]}
-                >
-                  <Text style={[styles.leaderboardRankText, entry.rank <= 3 ? styles.topRankText : null]}>
-                    #{entry.rank}
-                  </Text>
-                  
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={[styles.leaderboardNameText, entry.isYou ? { fontWeight: '900', color: '#1E3A8A' } : null]}>
-                      {entry.name}
-                    </Text>
-                  </View>
-                  
-                  <Text style={styles.leaderboardScoreText}>
-                    {entry.score.toFixed(1)} <Text style={{ fontSize: 10, color: '#64748B' }}>marks</Text>
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </ScrollView>
-        )}
 
       </View>
 
@@ -1404,23 +1388,30 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16
   },
-  toggleRow: {
+  arrowKeysContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8
+    gap: 12
   },
-  toggleLabel: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#1E293B'
-  },
-  nextArrowBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#3B82F6',
+  arrowKeyBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
+  },
+  arrowKeyBtnDisabled: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#F1F5F9',
+    opacity: 0.5
+  },
+  questionCountText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748B'
   },
   // Tab 3: Leaderboard Styles
   leaderboardScrollView: {
