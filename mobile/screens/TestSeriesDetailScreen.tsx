@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
   TouchableOpacity,
-  Alert
+  Alert,
+  Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -40,6 +41,8 @@ export default function TestSeriesDetailScreen({
   onOpenAttemptAnalysis,
   isDark = false
 }: TestSeriesDetailScreenProps) {
+  const { width: SCREEN_WIDTH } = Dimensions.get('window');
+  const horizontalScrollRef = useRef<ScrollView>(null);
   const [activeSubSubId, setActiveSubSubId] = useState<string | null>(null);
 
   // Helper to check if a user has access to a mock test based on their subscription tier
@@ -134,7 +137,7 @@ export default function TestSeriesDetailScreen({
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.tabsContainer}
           >
-            {series.subSubCategories.map((subSub: any) => {
+            {series.subSubCategories.map((subSub: any, index: number) => {
               const isSelected = (activeSubSubId || series.subSubCategories[0]?.id) === subSub.id;
               return (
                 <TouchableOpacity
@@ -146,7 +149,10 @@ export default function TestSeriesDetailScreen({
                     isDark && isSelected && { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
                     isDark && !isSelected && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }
                   ]}
-                  onPress={() => setActiveSubSubId(subSub.id)}
+                  onPress={() => {
+                    setActiveSubSubId(subSub.id);
+                    horizontalScrollRef.current?.scrollTo({ x: index * SCREEN_WIDTH, animated: true });
+                  }}
                 >
                   <Text
                     style={[
@@ -164,228 +170,245 @@ export default function TestSeriesDetailScreen({
         </View>
       )}
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {series.subSubCategories && series.subSubCategories.length > 0 ? (() => {
-          const activeSubSub = series.subSubCategories.find((s: any) => s.id === (activeSubSubId || series.subSubCategories[0]?.id));
-          if (!activeSubSub) return null;
-          return (
-            <View style={styles.subSubBlock}>
-              <View style={styles.subSubHeaderRow}>
-                <Text style={[styles.subSubTitle, isDark && { color: ThemeColors.dark.text }]}>
-                  {activeSubSub.name}
-                </Text>
-                <View style={styles.subSubBadge}>
-                  <Text style={styles.subSubBadgeText}>{activeSubSub.tests?.length || 0} Papers</Text>
-                </View>
-              </View>
-
-              {activeSubSub.tests && activeSubSub.tests.length > 0 ? (
-                activeSubSub.tests.map((test: any) => {
-                  const allowed = hasAccess(test.requiredTier);
-                  const completedAttempts = (currentUser.testSessions || [])
-                    .filter((s: any) => s.testId === test.id && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'))
-                    .sort((a: any, b: any) => {
-                      const timeA = a.startedAt ? new Date(a.startedAt).getTime() : 0;
-                      const timeB = b.startedAt ? new Date(b.startedAt).getTime() : 0;
-                      return timeB - timeA;
-                    });
-                  const attempt = completedAttempts[0];
-                  const isCompleted = completedAttempts.length > 0;
-                  const isPaused = (currentUser.testSessions || []).some(
-                    (s: any) => s.testId === test.id && s.status === 'ONGOING'
-                  );
-
-                  return (
-                    <View key={test.id} style={[styles.testCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-                      <View style={styles.testCardHeader}>
-                        <Text style={[styles.testTitle, isDark && { color: ThemeColors.dark.text }]}>{test.title}</Text>
-                        {test.requiredTier !== 'None' ? (
-                          <Text style={[styles.badge, styles.proBadge]}>PRO</Text>
-                        ) : (
-                          <Text style={[styles.badge, styles.freeBadge]}>FREE</Text>
-                        )}
+      {series.subSubCategories && series.subSubCategories.length > 0 ? (
+        <ScrollView
+          ref={horizontalScrollRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={(e) => {
+            const offsetX = e.nativeEvent.contentOffset.x;
+            const index = Math.round(offsetX / SCREEN_WIDTH);
+            if (series.subSubCategories && series.subSubCategories[index]) {
+              setActiveSubSubId(series.subSubCategories[index].id);
+            }
+          }}
+          style={{ flex: 1 }}
+        >
+          {series.subSubCategories.map((subSub: any) => {
+            return (
+              <View key={subSub.id} style={{ width: SCREEN_WIDTH }}>
+                <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+                  <View style={styles.subSubBlock}>
+                    <View style={styles.subSubHeaderRow}>
+                      <Text style={[styles.subSubTitle, isDark && { color: ThemeColors.dark.text }]}>
+                        {subSub.name}
+                      </Text>
+                      <View style={styles.subSubBadge}>
+                        <Text style={styles.subSubBadgeText}>{subSub.tests?.length || 0} Papers</Text>
                       </View>
+                    </View>
 
-                      {/* Test Parameters */}
-                      <View style={styles.metaRow}>
-                        <View style={styles.metaItem}>
-                          <HelpCircle size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
-                          <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.questionsCount} Questions</Text>
-                        </View>
-                        <View style={styles.metaItem}>
-                          <Clock size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
-                          <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.durationMinutes} Mins</Text>
-                        </View>
-                        <View style={styles.metaItem}>
-                          <Coins size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
-                          <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.maxMarks} Marks</Text>
-                        </View>
-                      </View>
+                    {subSub.tests && subSub.tests.length > 0 ? (
+                      subSub.tests.map((test: any) => {
+                        const allowed = hasAccess(test.requiredTier);
+                        const completedAttempts = (currentUser.testSessions || [])
+                          .filter((s: any) => s.testId === test.id && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'))
+                          .sort((a: any, b: any) => {
+                            const timeA = a.startedAt ? new Date(a.startedAt).getTime() : 0;
+                            const timeB = b.startedAt ? new Date(b.startedAt).getTime() : 0;
+                            return timeB - timeA;
+                          });
+                        const attempt = completedAttempts[0];
+                        const isCompleted = completedAttempts.length > 0;
+                        const isPaused = (currentUser.testSessions || []).some(
+                          (s: any) => s.testId === test.id && s.status === 'ONGOING'
+                        );
 
-                      {/* Subtitle / Status */}
-                      {isCompleted && attempt && (
-                        <View style={styles.statusCompletedRow}>
-                          <CheckCircle size={14} color="#10B981" />
-                          <Text style={styles.statusCompletedText}>
-                            Attempted & Completed (Last Score: {attempt.score.toFixed(1)}/{attempt.maxScore.toFixed(0)})
-                          </Text>
-                        </View>
-                      )}
-                      {isPaused && (
-                        <Text style={[styles.statusPausedText, isDark && { color: '#60A5FA' }]}>⏸ Test attempt in-progress (paused)</Text>
-                      )}
+                        return (
+                          <View key={test.id} style={[styles.testCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+                            <View style={styles.testCardHeader}>
+                              <Text style={[styles.testTitle, isDark && { color: ThemeColors.dark.text }]}>{test.title}</Text>
+                              {test.requiredTier !== 'None' ? (
+                                <Text style={[styles.badge, styles.proBadge]}>PRO</Text>
+                              ) : (
+                                <Text style={[styles.badge, styles.freeBadge]}>FREE</Text>
+                              )}
+                            </View>
 
-                      {/* Actions */}
-                      {allowed ? (
-                        <View style={{ gap: 8 }}>
-                          {isCompleted && attempt && (
-                            <TouchableOpacity
-                              style={[styles.analysisBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
-                              onPress={() => onOpenAttemptAnalysis(attempt)}
-                            >
-                              <Eye size={14} color={isDark ? ThemeColors.dark.text : '#475569'} />
-                              <Text style={[styles.analysisBtnText, isDark && { color: ThemeColors.dark.text }]}>Solution & Analysis</Text>
-                            </TouchableOpacity>
-                          )}
-                          <TouchableOpacity
-                            style={[styles.actionBtn, isPaused && { backgroundColor: '#3B82F6' }]}
-                            onPress={() => onOpenExam(test.id)}
-                          >
-                            <Play size={14} color="#FFF" />
-                            <Text style={styles.actionBtnText}>
-                              {isPaused ? 'Resume Test sitting' : isCompleted ? 'Re-attempt Test' : 'Start Test Now'}
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      ) : (
-                        <View style={[styles.lockBlock, isDark && { borderTopColor: ThemeColors.dark.border }]}>
-                          <View style={styles.lockMsg}>
-                            <Lock size={14} color="#DC2626" />
-                            <Text style={styles.lockMsgText}>Requires {test.requiredTier}</Text>
+                            {/* Test Parameters */}
+                            <View style={styles.metaRow}>
+                              <View style={styles.metaItem}>
+                                <HelpCircle size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
+                                <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.questionsCount} Questions</Text>
+                              </View>
+                              <View style={styles.metaItem}>
+                                <Clock size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
+                                <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.durationMinutes} Mins</Text>
+                              </View>
+                              <View style={styles.metaItem}>
+                                <Coins size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
+                                <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.maxMarks} Marks</Text>
+                              </View>
+                            </View>
+
+                            {/* Subtitle / Status */}
+                            {isCompleted && attempt && (
+                              <View style={styles.statusCompletedRow}>
+                                <CheckCircle size={14} color="#10B981" />
+                                <Text style={styles.statusCompletedText}>
+                                  Attempted & Completed (Last Score: {attempt.score.toFixed(1)}/{attempt.maxScore.toFixed(0)})
+                                </Text>
+                              </View>
+                            )}
+                            {isPaused && (
+                              <Text style={[styles.statusPausedText, isDark && { color: '#60A5FA' }]}>⏸ Test attempt in-progress (paused)</Text>
+                            )}
+
+                            {/* Actions */}
+                            {allowed ? (
+                              <View style={{ gap: 8 }}>
+                                {isCompleted && attempt && (
+                                  <TouchableOpacity
+                                    style={[styles.analysisBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
+                                    onPress={() => onOpenAttemptAnalysis(attempt)}
+                                  >
+                                    <Eye size={14} color={isDark ? ThemeColors.dark.text : '#475569'} />
+                                    <Text style={[styles.analysisBtnText, isDark && { color: ThemeColors.dark.text }]}>Solution & Analysis</Text>
+                                  </TouchableOpacity>
+                                )}
+                                <TouchableOpacity
+                                  style={[styles.actionBtn, isPaused && { backgroundColor: '#3B82F6' }]}
+                                  onPress={() => onOpenExam(test.id)}
+                                >
+                                  <Play size={14} color="#FFF" />
+                                  <Text style={styles.actionBtnText}>
+                                    {isPaused ? 'Resume Test sitting' : isCompleted ? 'Re-attempt Test' : 'Start Test Now'}
+                                  </Text>
+                                </TouchableOpacity>
+                              </View>
+                            ) : (
+                              <View style={[styles.lockBlock, isDark && { borderTopColor: ThemeColors.dark.border }]}>
+                                <View style={styles.lockMsg}>
+                                  <Lock size={14} color="#DC2626" />
+                                  <Text style={styles.lockMsgText}>Requires {test.requiredTier}</Text>
+                                </View>
+                                <TouchableOpacity
+                                  style={[styles.unlockBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
+                                  onPress={() => handleUnlockWithCoins(test.title, test.requiredTier)}
+                                >
+                                  <Coins size={14} color="#D97706" />
+                                  <Text style={[styles.unlockBtnText, isDark && { color: '#FBBF24' }]}>Unlock (20 Coins)</Text>
+                                </TouchableOpacity>
+                              </View>
+                            )}
                           </View>
-                          <TouchableOpacity
-                            style={[styles.unlockBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
-                            onPress={() => handleUnlockWithCoins(test.title, test.requiredTier)}
-                          >
-                            <Coins size={14} color="#D97706" />
-                            <Text style={[styles.unlockBtnText, isDark && { color: '#FBBF24' }]}>Unlock (20 Coins)</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                    </View>
-                  );
-                })
-              ) : (
-                <Text style={styles.noTestsText}>No tests available in this series yet.</Text>
-              )}
-            </View>
-          );
-        })() : (
-          <>
-            <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Available Practice Papers</Text>
-
-            {series.tests && series.tests.length > 0 ? (
-              series.tests.map((test: any) => {
-                const allowed = hasAccess(test.requiredTier);
-                const completedAttempts = (currentUser.testSessions || [])
-                  .filter((s: any) => s.testId === test.id && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'))
-                  .sort((a: any, b: any) => {
-                    const timeA = a.startedAt ? new Date(a.startedAt).getTime() : 0;
-                    const timeB = b.startedAt ? new Date(b.startedAt).getTime() : 0;
-                    return timeB - timeA;
-                  });
-                const attempt = completedAttempts[0];
-                const isCompleted = completedAttempts.length > 0;
-                const isPaused = (currentUser.testSessions || []).some(
-                  (s: any) => s.testId === test.id && s.status === 'ONGOING'
-                );
-
-                return (
-                  <View key={test.id} style={[styles.testCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-                    <View style={styles.testCardHeader}>
-                      <Text style={[styles.testTitle, isDark && { color: ThemeColors.dark.text }]}>{test.title}</Text>
-                      {test.requiredTier !== 'None' ? (
-                        <Text style={[styles.badge, styles.proBadge]}>PRO</Text>
-                      ) : (
-                        <Text style={[styles.badge, styles.freeBadge]}>FREE</Text>
-                      )}
-                    </View>
-
-                    {/* Test Parameters */}
-                    <View style={styles.metaRow}>
-                      <View style={styles.metaItem}>
-                        <HelpCircle size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
-                        <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.questionsCount} Questions</Text>
-                      </View>
-                      <View style={styles.metaItem}>
-                        <Clock size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
-                        <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.durationMinutes} Mins</Text>
-                      </View>
-                      <View style={styles.metaItem}>
-                        <Coins size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
-                        <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.maxMarks} Marks</Text>
-                      </View>
-                    </View>
-
-                    {/* Subtitle / Status */}
-                    {isCompleted && attempt && (
-                      <View style={styles.statusCompletedRow}>
-                        <CheckCircle size={14} color="#10B981" />
-                        <Text style={styles.statusCompletedText}>
-                          Attempted & Completed (Last Score: {attempt.score.toFixed(1)}/{attempt.maxScore.toFixed(0)})
-                        </Text>
-                      </View>
-                    )}
-                    {isPaused && (
-                      <Text style={[styles.statusPausedText, isDark && { color: '#60A5FA' }]}>⏸ Test attempt in-progress (paused)</Text>
-                    )}
-
-                    {/* Actions */}
-                    {allowed ? (
-                      <View style={{ gap: 8 }}>
-                        {isCompleted && attempt && (
-                          <TouchableOpacity
-                            style={[styles.analysisBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
-                            onPress={() => onOpenAttemptAnalysis(attempt)}
-                          >
-                            <Eye size={14} color={isDark ? ThemeColors.dark.text : '#475569'} />
-                            <Text style={[styles.analysisBtnText, isDark && { color: ThemeColors.dark.text }]}>Solution & Analysis</Text>
-                          </TouchableOpacity>
-                        )}
-                        <TouchableOpacity
-                          style={[styles.actionBtn, isPaused && { backgroundColor: '#3B82F6' }]}
-                          onPress={() => onOpenExam(test.id)}
-                        >
-                          <Play size={14} color="#FFF" />
-                          <Text style={styles.actionBtnText}>
-                            {isPaused ? 'Resume Test sitting' : isCompleted ? 'Re-attempt Test' : 'Start Test Now'}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
+                        );
+                      })
                     ) : (
-                      <View style={[styles.lockBlock, isDark && { borderTopColor: ThemeColors.dark.border }]}>
-                        <View style={styles.lockMsg}>
-                          <Lock size={14} color="#DC2626" />
-                          <Text style={styles.lockMsgText}>Requires {test.requiredTier}</Text>
-                        </View>
-                        <TouchableOpacity
-                          style={[styles.unlockBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
-                          onPress={() => handleUnlockWithCoins(test.title, test.requiredTier)}
-                        >
-                          <Coins size={14} color="#D97706" />
-                          <Text style={[styles.unlockBtnText, isDark && { color: '#FBBF24' }]}>Unlock (20 Coins)</Text>
-                        </TouchableOpacity>
-                      </View>
+                      <Text style={styles.noTestsText}>No tests available in this series yet.</Text>
                     )}
                   </View>
-                );
-              })
-            ) : (
-              <Text style={styles.noTestsText}>No tests available in this series yet.</Text>
-            )}
-          </>
-        )}
-      </ScrollView>
+                </ScrollView>
+              </View>
+            );
+          })}
+        </ScrollView>
+      ) : (
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Available Practice Papers</Text>
+
+          {series.tests && series.tests.length > 0 ? (
+            series.tests.map((test: any) => {
+              const allowed = hasAccess(test.requiredTier);
+              const completedAttempts = (currentUser.testSessions || [])
+                .filter((s: any) => s.testId === test.id && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'))
+                .sort((a: any, b: any) => {
+                  const timeA = a.startedAt ? new Date(a.startedAt).getTime() : 0;
+                  const timeB = b.startedAt ? new Date(b.startedAt).getTime() : 0;
+                  return timeB - timeA;
+                });
+              const attempt = completedAttempts[0];
+              const isCompleted = completedAttempts.length > 0;
+              const isPaused = (currentUser.testSessions || []).some(
+                (s: any) => s.testId === test.id && s.status === 'ONGOING'
+              );
+
+              return (
+                <View key={test.id} style={[styles.testCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+                  <View style={styles.testCardHeader}>
+                    <Text style={[styles.testTitle, isDark && { color: ThemeColors.dark.text }]}>{test.title}</Text>
+                    {test.requiredTier !== 'None' ? (
+                      <Text style={[styles.badge, styles.proBadge]}>PRO</Text>
+                    ) : (
+                      <Text style={[styles.badge, styles.freeBadge]}>FREE</Text>
+                    )}
+                  </View>
+
+                  {/* Test Parameters */}
+                  <View style={styles.metaRow}>
+                    <View style={styles.metaItem}>
+                      <HelpCircle size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
+                      <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.questionsCount} Questions</Text>
+                    </View>
+                    <View style={styles.metaItem}>
+                      <Clock size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
+                      <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.durationMinutes} Mins</Text>
+                    </View>
+                    <View style={styles.metaItem}>
+                      <Coins size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
+                      <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.maxMarks} Marks</Text>
+                    </View>
+                  </View>
+
+                  {/* Subtitle / Status */}
+                  {isCompleted && attempt && (
+                    <View style={styles.statusCompletedRow}>
+                      <CheckCircle size={14} color="#10B981" />
+                      <Text style={styles.statusCompletedText}>
+                        Attempted & Completed (Last Score: {attempt.score.toFixed(1)}/{attempt.maxScore.toFixed(0)})
+                      </Text>
+                    </View>
+                  )}
+                  {isPaused && (
+                    <Text style={[styles.statusPausedText, isDark && { color: '#60A5FA' }]}>⏸ Test attempt in-progress (paused)</Text>
+                  )}
+
+                  {/* Actions */}
+                  {allowed ? (
+                    <View style={{ gap: 8 }}>
+                      {isCompleted && attempt && (
+                        <TouchableOpacity
+                          style={[styles.analysisBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
+                          onPress={() => onOpenAttemptAnalysis(attempt)}
+                        >
+                          <Eye size={14} color={isDark ? ThemeColors.dark.text : '#475569'} />
+                          <Text style={[styles.analysisBtnText, isDark && { color: ThemeColors.dark.text }]}>Solution & Analysis</Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity
+                        style={[styles.actionBtn, isPaused && { backgroundColor: '#3B82F6' }]}
+                        onPress={() => onOpenExam(test.id)}
+                      >
+                        <Play size={14} color="#FFF" />
+                        <Text style={styles.actionBtnText}>
+                          {isPaused ? 'Resume Test sitting' : isCompleted ? 'Re-attempt Test' : 'Start Test Now'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={[styles.lockBlock, isDark && { borderTopColor: ThemeColors.dark.border }]}>
+                      <View style={styles.lockMsg}>
+                        <Lock size={14} color="#DC2626" />
+                        <Text style={styles.lockMsgText}>Requires {test.requiredTier}</Text>
+                      </View>
+                      <TouchableOpacity
+                        style={[styles.unlockBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
+                        onPress={() => handleUnlockWithCoins(test.title, test.requiredTier)}
+                      >
+                        <Coins size={14} color="#D97706" />
+                        <Text style={[styles.unlockBtnText, isDark && { color: '#FBBF24' }]}>Unlock (20 Coins)</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              );
+            })
+          ) : (
+            <Text style={styles.noTestsText}>No tests available in this series yet.</Text>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
