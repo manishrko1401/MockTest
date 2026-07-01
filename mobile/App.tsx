@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as Updates from 'expo-updates';
 import { ApiClient } from './api';
-import { getCachedCatalog, saveCatalogToCache, clearAllCache, getLastSyncTimestamp, setLastSyncTimestamp, mergeCatalogDelta, invalidateQuestionsCache } from './cache';
+import { getCachedCatalog, saveCatalogToCache, clearAllCache, getLastSyncTimestamp, setLastSyncTimestamp, mergeCatalogDelta, invalidateQuestionsCache, getCachedUser, saveUserToCache } from './cache';
 import AuthScreen from './screens/AuthScreen';
 import DashboardScreen from './screens/DashboardScreen';
 import TestSeriesDetailScreen from './screens/TestSeriesDetailScreen';
@@ -148,19 +148,35 @@ export default function App() {
           }
         }
 
-        // Check SecureStore for auto-login
+        // Check SecureStore for auto-login and cached profile
         const savedEmail = await SecureStore.getItemAsync('tb_user_email');
         const savedPassword = await SecureStore.getItemAsync('tb_user_password');
+        
         if (savedEmail && savedPassword) {
-          const authRes = await ApiClient.login(savedEmail, savedPassword);
-          if (authRes.success && authRes.user) {
-            setCurrentUser(authRes.user);
+          // Serve cached user profile instantly if available
+          const cachedUser = await getCachedUser();
+          if (cachedUser) {
+            setCurrentUser(cachedUser);
             setViewMode('dashboard');
+            setLoading(false); // Disable spinner immediately
           }
+
+          // Fetch fresh user profile in background
+          ApiClient.login(savedEmail, savedPassword).then(async (authRes) => {
+            if (authRes.success && authRes.user) {
+              setCurrentUser(authRes.user);
+              await saveUserToCache(authRes.user);
+            }
+          }).catch(err => {
+            console.warn('[Sync] Background user sync failed:', err);
+          }).finally(() => {
+            setLoading(false);
+          });
+        } else {
+          setLoading(false);
         }
       } catch (err) {
         console.error("Initialization error:", err);
-      } finally {
         setLoading(false);
       }
     };
@@ -403,6 +419,7 @@ export default function App() {
     const res = await ApiClient.login(currentUser.email, currentUser.password);
     if (res.success && res.user) {
       setCurrentUser(res.user);
+      await saveUserToCache(res.user);
     }
     
     // Refresh notices list and exam catalog to fetch newly uploaded notices
@@ -429,6 +446,7 @@ export default function App() {
 
     const updatedUser = { ...currentUser, bookmarkedQuestions: updatedBookmarks };
     setCurrentUser(updatedUser);
+    await saveUserToCache(updatedUser);
 
     try {
       await ApiClient.toggleBookmark(currentUser.id, updatedBookmarks);
@@ -439,6 +457,7 @@ export default function App() {
 
   const handleLoginSuccess = async (user: any) => {
     setCurrentUser(user);
+    await saveUserToCache(user);
     await SecureStore.setItemAsync('tb_user_email', user.email);
     await SecureStore.setItemAsync('tb_user_password', user.password);
     

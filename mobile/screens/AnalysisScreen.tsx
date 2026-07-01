@@ -418,7 +418,7 @@ export default function AnalysisScreen({
                 const youPct = Math.max(0, Math.min(100, (score / max) * 100));
 
                 return (
-                  <View style={{ paddingTop: 34, pb: 10 }}>
+                  <View style={{ paddingTop: 34, paddingBottom: 10 }}>
                     <View style={[styles.scaleSliderLine, isDark ? { backgroundColor: '#374151' } : { backgroundColor: '#D1D5DB' }]}>
                       {/* Highlight range from average to topper */}
                       <View

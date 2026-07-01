@@ -13,6 +13,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // ── Cache version prefix (bump this string if question data shape changes) ─
 const Q_KEY_PREFIX = 'qs_v2_';   // "v2" auto-busts any old v1 cache
 const CAT_KEY      = 'catalog_v2';
+const USER_KEY     = 'user_profile_cache';
+const SYNC_TS_KEY  = 'catalog_last_synced_at';
 
 // ── TTL settings ───────────────────────────────────────────────────────────
 const QUESTIONS_TTL_MS = 48 * 60 * 60 * 1000;  // 48 hours
@@ -119,21 +121,49 @@ export async function saveCatalogToCache(data: {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  USER PROFILE & SESSIONS CACHE
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function getCachedUser(): Promise<any | null> {
+  try {
+    const raw = await AsyncStorage.getItem(USER_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export async function saveUserToCache(user: any): Promise<void> {
+  try {
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  } catch (err) {
+    console.warn('[Cache] Failed to save user cache:', err);
+  }
+}
+
+export async function invalidateUserCache(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(USER_KEY);
+  } catch {}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  HOUSEKEEPING
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Clears ALL cached questions and catalog from the device.
+ * Clears ALL cached questions, catalog, and user details from the device.
  * Call this on logout so a different account doesn't see stale data.
  */
 export async function clearAllCache(): Promise<void> {
   try {
     const allKeys = await AsyncStorage.getAllKeys();
     const cacheKeys = allKeys.filter(
-      k => k.startsWith(Q_KEY_PREFIX) || k === CAT_KEY
+      k => k.startsWith(Q_KEY_PREFIX) || k === CAT_KEY || k === USER_KEY || k === SYNC_TS_KEY
     );
     if (cacheKeys.length > 0) {
-      await AsyncStorage.multiRemove(cacheKeys);
+      await (AsyncStorage as any).multiRemove(cacheKeys);
     }
     console.log(`[Cache] Cleared ${cacheKeys.length} cached item(s).`);
   } catch (err) {
@@ -168,8 +198,6 @@ export async function getCacheStats(): Promise<{ testCount: number; estimatedKB:
 // ═══════════════════════════════════════════════════════════════════════════
 //  SYNC TIMESTAMP  (track when we last synced with the server)
 // ═══════════════════════════════════════════════════════════════════════════
-
-const SYNC_TS_KEY = 'catalog_last_synced_at';
 
 /**
  * Returns the ISO timestamp of the last successful catalog sync,

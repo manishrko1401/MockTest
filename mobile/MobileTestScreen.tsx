@@ -13,6 +13,7 @@ import {
   AppState,
   ActivityIndicator
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Globe, AlignJustify } from 'lucide-react-native';
 import { ApiClient } from './api';
@@ -290,7 +291,7 @@ export default function MobileTestScreen({
       // ──────────────────────────────────────────────────────────────────
       // Shared finalizer: applies built data to screen state
       // ──────────────────────────────────────────────────────────────────
-      const applyToScreen = (
+      const applyToScreen = async (
         list: MobileQuestion[],
         secs: MobileSection[],
         durationSeconds: number,
@@ -322,10 +323,24 @@ export default function MobileTestScreen({
           };
         });
 
-        // Resume from backend ongoing session if present
-        const ongoing = currentUser.testSessions?.find(
-          (s: any) => s.testId === testId && s.status === 'ONGOING'
-        );
+        // Resume from local ongoing session cache first (zero latency)
+        let ongoing: any = null;
+        try {
+          const localOngoing = await AsyncStorage.getItem(`ongoing_test_${testId}`);
+          if (localOngoing) {
+            ongoing = JSON.parse(localOngoing);
+            console.log(`[Cache] Resumed ongoing test ${testId} from local storage`);
+          }
+        } catch (err) {
+          console.warn('[Cache] Failed to load local ongoing session:', err);
+        }
+
+        if (!ongoing) {
+          // Resume from backend ongoing session if present
+          ongoing = currentUser.testSessions?.find(
+            (s: any) => s.testId === testId && s.status === 'ONGOING'
+          );
+        }
 
         if (ongoing) {
           setTimeLeft(ongoing.timeRemaining ?? durationSeconds);
@@ -372,7 +387,7 @@ export default function MobileTestScreen({
       if (cachedRaw && cachedRaw.length > 0) {
         // Serve from device immediately
         const { builtList, builtSecs, durationSeconds, catalogTest } = buildScreenFromApiQuestions(cachedRaw);
-        applyToScreen(builtList, builtSecs, durationSeconds, catalogTest);
+        await applyToScreen(builtList, builtSecs, durationSeconds, catalogTest);
 
         // Silently refresh cache in background (no UI update unless questions changed)
         ApiClient.getCustomQuestions(testId).then(res => {
@@ -393,7 +408,7 @@ export default function MobileTestScreen({
         // Save to device for next time
         saveQuestionsToCache(testId, res.questions);
         const { builtList, builtSecs, durationSeconds, catalogTest } = buildScreenFromApiQuestions(res.questions);
-        applyToScreen(builtList, builtSecs, durationSeconds, catalogTest);
+        await applyToScreen(builtList, builtSecs, durationSeconds, catalogTest);
       } else {
         // ── Fallback static bank (mirrors useTestEngine seeds) ─────────────
         // Find test config from catalog for duration/timing even if no custom Qs
@@ -434,7 +449,7 @@ export default function MobileTestScreen({
             { id: 'q_gen2', sectionId: 'sec_paper1', questionType: 'mcq', orderIndex: 1, correctOptionIndex: 1, content: { en: { questionText: 'Which planet is known as the Red Planet?', options: ['Earth', 'Mars', 'Jupiter', 'Saturn'] }, hi: { questionText: 'किस ग्रह को लाल ग्रह कहा जाता है?', options: ['पृथ्वी', 'मंगल', 'बृहस्पति', 'शनि'] } } },
           ];
         }
-        applyToScreen(list, secs, durationSeconds, catalogTest);
+        await applyToScreen(list, secs, durationSeconds, catalogTest);
       }
       setLoading(false);
     };
@@ -623,12 +638,15 @@ export default function MobileTestScreen({
     setResponses(updatedResponses);
 
     // Navigate to next question in section
+    let nextSecIdx = currentSectionIdx;
+    let nextQIdx = currentQuestionIdx;
     if (currentQuestionIdx < sectionQuestions.length - 1) {
       const nextQ = sectionQuestions[currentQuestionIdx + 1];
       if (updatedResponses[nextQ.id].state === 1) {
         updatedResponses[nextQ.id].state = 2; // mark visited
       }
-      setCurrentQuestionIdx(currentQuestionIdx + 1);
+      nextQIdx = currentQuestionIdx + 1;
+      setCurrentQuestionIdx(nextQIdx);
     } else {
       // End of section
       if (!hasSectionalTiming && currentSectionIdx < sections.length - 1) {
@@ -638,8 +656,10 @@ export default function MobileTestScreen({
         if (nextSecQs.length > 0 && updatedResponses[nextSecQs[0].id].state === 1) {
           updatedResponses[nextSecQs[0].id].state = 2;
         }
-        setCurrentSectionIdx(currentSectionIdx + 1);
-        setCurrentQuestionIdx(0);
+        nextSecIdx = currentSectionIdx + 1;
+        nextQIdx = 0;
+        setCurrentSectionIdx(nextSecIdx);
+        setCurrentQuestionIdx(nextQIdx);
       } else {
         setModalConfig({
           visible: true,
@@ -657,21 +677,26 @@ export default function MobileTestScreen({
         });
       }
     }
+    saveOngoingSessionStateLocally(updatedResponses, timeLeft, violationsCount, nextSecIdx, nextQIdx);
   };
 
   const handleClearResponse = useCallback(() => {
     const qId = activeQuestionIdRef.current;
     if (!qId) return;
-    setResponses((prev) => ({
-      ...prev,
-      [qId]: {
-        ...prev[qId],
-        tempOptionIndex: null,
-        selectedOptionIndex: null,
-        state: 2 // Visited, but not answered
-      }
-    }));
-  }, []);
+    setResponses((prev) => {
+      const updated = {
+        ...prev,
+        [qId]: {
+          ...prev[qId],
+          tempOptionIndex: null,
+          selectedOptionIndex: null,
+          state: 2 as PaletteState
+        }
+      };
+      saveOngoingSessionStateLocally(updated);
+      return updated;
+    });
+  }, [currentSectionIdx, currentQuestionIdx, timeLeft, violationsCount]);
 
   const handleMarkForReview = () => {
     if (!activeQuestion) return;
@@ -690,16 +715,22 @@ export default function MobileTestScreen({
 
     setResponses(updatedResponses);
 
+    let nextSecIdx = currentSectionIdx;
+    let nextQIdx = currentQuestionIdx;
     if (currentQuestionIdx < sectionQuestions.length - 1) {
       const nextQ = sectionQuestions[currentQuestionIdx + 1];
       if (updatedResponses[nextQ.id].state === 1) {
         updatedResponses[nextQ.id].state = 2;
       }
-      setCurrentQuestionIdx(currentQuestionIdx + 1);
+      nextQIdx = currentQuestionIdx + 1;
+      setCurrentQuestionIdx(nextQIdx);
     } else if (!hasSectionalTiming && currentSectionIdx < sections.length - 1) {
-      setCurrentSectionIdx(currentSectionIdx + 1);
-      setCurrentQuestionIdx(0);
+      nextSecIdx = currentSectionIdx + 1;
+      nextQIdx = 0;
+      setCurrentSectionIdx(nextSecIdx);
+      setCurrentQuestionIdx(nextQIdx);
     }
+    saveOngoingSessionStateLocally(updatedResponses, timeLeft, violationsCount, nextSecIdx, nextQIdx);
   };
 
   const handleJumpToQuestion = (secIdx: number, qIdx: number) => {
@@ -722,6 +753,40 @@ export default function MobileTestScreen({
     setCurrentSectionIdx(secIdx);
     setCurrentQuestionIdx(qIdx);
     setDrawerVisible(false);
+  };
+
+  // Save progress locally to AsyncStorage (Auto-save)
+  const saveOngoingSessionStateLocally = async (
+    currentResps = responses,
+    currTime = timeLeft,
+    currViolations = violationsCount,
+    currSec = currentSectionIdx,
+    currQ = currentQuestionIdx
+  ) => {
+    try {
+      const formattedResponses: Record<string, any> = {};
+      Object.entries(currentResps).forEach(([qId, val]) => {
+        formattedResponses[qId] = {
+          selectedOptionIndex: val.selectedOptionIndex,
+          elapsedSeconds: val.elapsedSeconds
+        };
+      });
+
+      await AsyncStorage.setItem(
+        `ongoing_test_${testId}`,
+        JSON.stringify({
+          testId,
+          status: 'ONGOING',
+          timeRemaining: currTime,
+          violations: currViolations,
+          currentSectionIndex: currSec,
+          currentQuestionIndex: currQ,
+          responses: formattedResponses
+        })
+      );
+    } catch (err) {
+      console.warn('[Cache] Failed to save ongoing progress locally:', err);
+    }
   };
 
   // Sync state with database
@@ -750,6 +815,7 @@ export default function MobileTestScreen({
     setLoading(true);
     setLoadingText('Cancelling exam sitting...');
     try {
+      await AsyncStorage.removeItem(`ongoing_test_${testId}`);
       await ApiClient.clearOngoingSession(currentUser.id, testId);
     } catch (err) {
       console.error("Failed to clear ongoing session:", err);
@@ -849,6 +915,9 @@ export default function MobileTestScreen({
       setLoading(false);
 
       if (res.success) {
+        try {
+          await AsyncStorage.removeItem(`ongoing_test_${testId}`);
+        } catch {}
         setModalConfig({
           visible: true,
           title: forced ? 'Exam Submitted (Violation Limit)' : 'Exam Submitted Successfully',
