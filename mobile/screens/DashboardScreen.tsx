@@ -244,8 +244,21 @@ export default function DashboardScreen({
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showReferralRules, setShowReferralRules] = useState(false);
   const [showReferredFriends, setShowReferredFriends] = useState(false);
-  const [referredFriends, setReferredFriends] = useState<any[]>([]);
-  const [loadingReferredFriends, setLoadingReferredFriends] = useState(false);
+
+  const referredFriends = useMemo(() => {
+    if (!currentUser?.referralCode || !usersList) return [];
+    const lowerReferral = currentUser.referralCode.trim().toLowerCase();
+    return usersList
+      .filter((u: any) => u.referredBy && u.referredBy.trim().toLowerCase() === lowerReferral)
+      .map((u: any) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        candidateCode: u.candidateCode,
+        registeredDate: u.registeredDate,
+        hasCompletedTest: u.testSessions && u.testSessions.length > 0
+      }));
+  }, [usersList, currentUser?.referralCode]);
 
   // Form and tab states
   const [activeNoticeTab, setActiveNoticeTab] = useState<'notice' | 'result' | 'admit_card' | 'answer_key'>('notice');
@@ -283,24 +296,7 @@ export default function DashboardScreen({
     }
   }, [currentUser]);
 
-  useEffect(() => {
-    if (showReferredFriends && currentUser?.referralCode) {
-      const fetchReferredFriends = async () => {
-        setLoadingReferredFriends(true);
-        try {
-          const res = await ApiClient.getReferredFriends(currentUser.referralCode);
-          if (res.success && res.referredFriends) {
-            setReferredFriends(res.referredFriends);
-          }
-        } catch (err) {
-          console.error("Failed to fetch referred friends:", err);
-        } finally {
-          setLoadingReferredFriends(false);
-        }
-      };
-      fetchReferredFriends();
-    }
-  }, [showReferredFriends, currentUser?.referralCode]);
+
 
   const handleUpdateProfile = async () => {
     if (!profileName.trim() || !profileEmail.trim() || !profileMobile.trim()) {
@@ -910,14 +906,6 @@ export default function DashboardScreen({
           </TouchableOpacity>
 
           {showReferredFriends && (() => {
-            if (loadingReferredFriends) {
-              return (
-                <View style={{ marginTop: 16, padding: 16, alignItems: 'center', justifyContent: 'center' }}>
-                  <ActivityIndicator size="small" color="#2563EB" />
-                </View>
-              );
-            }
-
             if (referredFriends.length === 0) {
               return (
                 <View style={{ marginTop: 10, padding: 16, alignItems: 'center', backgroundColor: isDark ? '#0B1329' : '#F9FAFB', borderRadius: 8 }}>

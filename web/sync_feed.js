@@ -120,124 +120,141 @@ function mapCategoryAndType(xmlCategoriesStr, url, title) {
 }
 
 async function syncFeed() {
-  console.log("Checking RSS feed for updates...");
-  let feedXml = '';
-  try {
-    feedXml = await fetchUrl('https://rojgarresult.com/feed/');
-  } catch (err) {
-    console.error("Failed to fetch RSS feed:", err.message);
-    return;
-  }
+  console.log("Starting full Rojgar Result sync from category pages...");
   
-  // Extract all <item> tags
-  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-  let match;
-  const feedItems = [];
-  
-  while ((match = itemRegex.exec(feedXml)) !== null) {
-    const itemXml = match[1];
-    
-    const titleMatch = /<title>([\s\S]*?)<\/title>/.exec(itemXml);
-    const linkMatch = /<link>([\s\S]*?)<\/link>/.exec(itemXml);
-    const dateMatch = /<pubDate>([\s\S]*?)<\/pubDate>/.exec(itemXml);
-    
-    // Extract categories
-    const catRegex = /<category>[\s\S]*?<!\[CDATA\[([\s\S]*?)\]\]>[\s\S]*?<\/category>/gi;
-    let catMatch;
-    const itemCats = [];
-    while ((catMatch = catRegex.exec(itemXml)) !== null) {
-      itemCats.push(catMatch[1]);
+  const targets = [
+    {
+      name: 'Result',
+      url: 'https://rojgarresult.com/result/',
+      category: 'result',
+      type: 'RESULT',
+      prefix: 'res_'
+    },
+    {
+      name: 'Admit Card',
+      url: 'https://rojgarresult.com/admit-card/',
+      category: 'admit_card',
+      type: 'ADMIT CARD',
+      prefix: 'ac_'
+    },
+    {
+      name: 'Answer Key',
+      url: 'https://rojgarresult.com/answer-key/',
+      category: 'answer_key',
+      type: 'ANSWER KEY',
+      prefix: 'ak_'
+    },
+    {
+      name: 'Latest Jobs',
+      url: 'https://rojgarresult.com/recruitments/',
+      category: 'notice',
+      type: 'JOB',
+      prefix: 'job_'
     }
-    
-    if (linkMatch) {
-      const title = titleMatch ? titleMatch[1].replace(/<!\[CDATA\[/g, '').replace(/\]\]>/g, '').trim() : '';
-      const link = linkMatch[1].replace(/<!\[CDATA\[/g, '').replace(/\]\]>/g, '').trim();
-      const pubDate = dateMatch ? dateMatch[1].replace(/<!\[CDATA\[/g, '').replace(/\]\]>/g, '').trim() : '';
-      feedItems.push({ title, link, pubDate, categories: itemCats.join(', ') });
-    }
-  }
-  
-  console.log(`Parsed ${feedItems.length} items from RSS feed.`);
-  
+  ];
+
   let newNoticesCount = 0;
-  
-  for (let i = feedItems.length - 1; i >= 0; i--) {
-    const item = feedItems[i];
-    
-    // Map categories & type
-    const { category, type, prefix } = mapCategoryAndType(item.categories, item.link, item.title);
-    
-    // Generate clean ID from link hash
-    const hash = crypto.createHash('md5').update(item.link).digest('hex').substring(0, 10);
-    const id = `${prefix}${hash}`;
-    
-    // Check if notice already exists in database
-    const existing = await prisma.notice.findUnique({
-      where: { id }
-    });
-    
-    if (existing) {
-      // Notice already imported, skip
+  let importedIndex = 0;
+
+  for (const target of targets) {
+    console.log(`Fetching listing for ${target.name} from ${target.url}...`);
+    let html = '';
+    try {
+      html = await fetchUrl(target.url);
+    } catch (err) {
+      console.error(`Failed to fetch category listing for ${target.name}:`, err.message);
       continue;
     }
-    
-    console.log(`Found NEW notice: "${item.title}"`);
-    console.log(`  Link: ${item.link}`);
-    console.log(`  Mapped Category: ${category}, Type: ${type}`);
-    
-    // Fetch detail page HTML to extract direct link & publish date
-    let dateObj = item.pubDate ? new Date(item.pubDate) : new Date();
-    let directUrl = item.link;
-    let lastDate = null;
-    
-    try {
-      const pageHtml = await fetchUrl(item.link);
+
+    const parts = html.split('class="gb-loop-item');
+    const parsedItems = [];
+    for (let i = 1; i < parts.length; i++) {
+      const part = parts[i];
+      const h2Match = /<h2[^>]*>([\s\S]+?)<\/h2>/i.exec(part);
+      const hrefMatch = /href="([^"]+)"/i.exec(part);
       
-      // Extract direct link
-      directUrl = extractDirectLink(pageHtml, item.link, category);
-      
-      // Extract specific last date for jobs
-      if (category === 'notice') {
-        const lastDateMatch = /Last Date:\s*([0-9\/]+)/i.exec(pageHtml);
-        if (lastDateMatch) lastDate = lastDateMatch[1].trim();
+      if (h2Match && hrefMatch) {
+        const title = h2Match[1]
+          .replace(/<[^>]*>/g, '')
+          .replace(/&amp;/g, '&')
+          .replace(/&#038;/g, '&')
+          .replace(/&#8211;/g, '-')
+          .replace(/\s+/g, ' ')
+          .trim();
+        const url = hrefMatch[1].trim();
+        parsedItems.push({ title, url });
       }
-      
-      // Fallback/verify publish date from details page schema
-      const schemaMatch = /"datePublished"\s*:\s*"([^"]*)"/i.exec(pageHtml);
-      if (schemaMatch) {
-        dateObj = new Date(schemaMatch[1]);
-      }
-    } catch (err) {
-      console.error(`  Warning: Failed to fetch detail page for ${item.link}. Using feed metadata.`);
     }
+
+    console.log(`Parsed ${parsedItems.length} items from ${target.name} page.`);
     
-    // Format dates
-    const dateStr = formatPublishDate(dateObj);
-    const publishDateStr = dateObj.toISOString().split('T')[0];
-    
-    // Use the actual publish time as createdAt timestamp, offset by index to ensure sorting
-    const createdAtTimestamp = new Date(dateObj.getTime() - (i * 1000));
-    
-    // Insert into database
-    await prisma.notice.create({
-      data: {
-        id,
-        title: item.title,
-        date: dateStr,
-        publishDate: publishDateStr,
-        type,
-        category,
-        url: directUrl,
-        lastDate,
-        createdAt: createdAtTimestamp
+    // Process the latest 40 items in reverse (oldest first)
+    const itemsToCheck = parsedItems.slice(0, 40);
+    itemsToCheck.reverse();
+
+    for (const item of itemsToCheck) {
+      // Hash URL for unique ID
+      const hash = crypto.createHash('md5').update(item.url).digest('hex').substring(0, 10);
+      const id = `${target.prefix}${hash}`;
+
+      // Check if already exists in DB
+      const existing = await prisma.notice.findUnique({
+        where: { id }
+      });
+
+      if (existing) {
+        continue;
       }
-    });
-    
-    console.log(`  Successfully imported: "${item.title}" -> Direct Link: ${directUrl}`);
-    newNoticesCount++;
+
+      console.log(`Found NEW notice in ${target.name}: "${item.title}"`);
+      console.log(`  Link: ${item.url}`);
+
+      let dateObj = new Date();
+      let directUrl = item.url;
+      let lastDate = null;
+
+      try {
+        const pageHtml = await fetchUrl(item.url);
+        directUrl = extractDirectLink(pageHtml, item.url, target.category);
+
+        if (target.category === 'notice') {
+          const lastDateMatch = /Last Date:\s*([0-9\/]+)/i.exec(pageHtml);
+          if (lastDateMatch) lastDate = lastDateMatch[1].trim();
+        }
+
+        const schemaMatch = /"datePublished"\s*:\s*"([^"]*)"/i.exec(pageHtml);
+        if (schemaMatch) {
+          dateObj = new Date(schemaMatch[1]);
+        }
+      } catch (err) {
+        console.error(`  Warning: Failed to fetch detail page for ${item.url}. Using default date metadata.`);
+      }
+
+      const dateStr = formatPublishDate(dateObj);
+      const publishDateStr = dateObj.toISOString().split('T')[0];
+      const createdAtTimestamp = new Date(dateObj.getTime() - (importedIndex * 1000));
+
+      await prisma.notice.create({
+        data: {
+          id,
+          title: item.title,
+          date: dateStr,
+          publishDate: publishDateStr,
+          type: target.type,
+          category: target.category,
+          url: directUrl,
+          lastDate,
+          createdAt: createdAtTimestamp
+        }
+      });
+
+      console.log(`  Successfully imported: "${item.title}" -> Direct Link: ${directUrl}`);
+      newNoticesCount++;
+      importedIndex++;
+    }
   }
-  
-  console.log(`Sync complete. Imported ${newNoticesCount} new notices.`);
+
+  console.log(`Sync complete. Mapped and imported ${newNoticesCount} new notices.`);
 }
 
 if (require.main === module) {

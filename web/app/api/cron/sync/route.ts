@@ -102,7 +102,6 @@ async function fetchUrl(url: string): Promise<string> {
 
 export async function GET(request: Request) {
   try {
-    // Basic auth check to prevent random triggers (optional)
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get('secret');
     if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
@@ -110,97 +109,133 @@ export async function GET(request: Request) {
     }
 
     console.log("Cron Sync started...");
-    const feedXml = await fetchUrl('https://rojgarresult.com/feed/');
     
-    // Extract all <item> tags
-    const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-    let match;
-    const feedItems: { title: string; link: string; pubDate: string; categories: string }[] = [];
-    
-    while ((match = itemRegex.exec(feedXml)) !== null) {
-      const itemXml = match[1];
-      
-      const titleMatch = /<title>([\s\S]*?)<\/title>/.exec(itemXml);
-      const linkMatch = /<link>([\s\S]*?)<\/link>/.exec(itemXml);
-      const dateMatch = /<pubDate>([\s\S]*?)<\/pubDate>/.exec(itemXml);
-      
-      const catRegex = /<category>[\s\S]*?<!\[CDATA\[([\s\S]*?)\]\]>[\s\S]*?<\/category>/gi;
-      let catMatch;
-      const itemCats: string[] = [];
-      while ((catMatch = catRegex.exec(itemXml)) !== null) {
-        itemCats.push(catMatch[1]);
+    const targets = [
+      {
+        name: 'Result',
+        url: 'https://rojgarresult.com/result/',
+        category: 'result',
+        type: 'RESULT',
+        prefix: 'res_'
+      },
+      {
+        name: 'Admit Card',
+        url: 'https://rojgarresult.com/admit-card/',
+        category: 'admit_card',
+        type: 'ADMIT CARD',
+        prefix: 'ac_'
+      },
+      {
+        name: 'Answer Key',
+        url: 'https://rojgarresult.com/answer-key/',
+        category: 'answer_key',
+        type: 'ANSWER KEY',
+        prefix: 'ak_'
+      },
+      {
+        name: 'Latest Jobs',
+        url: 'https://rojgarresult.com/recruitments/',
+        category: 'notice',
+        type: 'JOB',
+        prefix: 'job_'
       }
-      
-      if (linkMatch) {
-        const title = titleMatch ? titleMatch[1].replace(/<!\[CDATA\[/g, '').replace(/\]\]>/g, '').trim() : '';
-        const link = linkMatch[1].replace(/<!\[CDATA\[/g, '').replace(/\]\]>/g, '').trim();
-        const pubDate = dateMatch ? dateMatch[1].replace(/<!\[CDATA\[/g, '').replace(/\]\]>/g, '').trim() : '';
-        feedItems.push({ title, link, pubDate, categories: itemCats.join(', ') });
-      }
-    }
-    
+    ];
+
     let newNoticesCount = 0;
     const importedTitles: string[] = [];
-    
-    // Process items in reverse (oldest first) so order is preserved
-    for (let i = feedItems.length - 1; i >= 0; i--) {
-      const item = feedItems[i];
-      const { category, type, prefix } = mapCategoryAndType(item.categories, item.link, item.title);
-      
-      const hash = crypto.createHash('md5').update(item.link).digest('hex').substring(0, 10);
-      const id = `${prefix}${hash}`;
-      
-      // Check duplicate
-      const existing = await prisma.notice.findUnique({
-        where: { id }
-      });
-      
-      if (existing) continue;
-      
-      // Fetch detail page
-      let dateObj = item.pubDate ? new Date(item.pubDate) : new Date();
-      let directUrl = item.link;
-      let lastDate: string | null = null;
-      
+    let importedIndex = 0;
+
+    for (const target of targets) {
+      console.log(`Cron: Fetching listing for ${target.name}...`);
+      let html = '';
       try {
-        const pageHtml = await fetchUrl(item.link);
-        directUrl = extractDirectLink(pageHtml, item.link, category);
-        
-        if (category === 'notice') {
-          const lastDateMatch = /Last Date:\s*([0-9\/]+)/i.exec(pageHtml);
-          if (lastDateMatch) lastDate = lastDateMatch[1].trim();
-        }
-        
-        const schemaMatch = /"datePublished"\s*:\s*"([^"]*)"/i.exec(pageHtml);
-        if (schemaMatch) {
-          dateObj = new Date(schemaMatch[1]);
-        }
-      } catch (err) {
-        console.error(`Cron Warning: Failed to fetch detail page for ${item.link}`);
+        html = await fetchUrl(target.url);
+      } catch (err: any) {
+        console.error(`Cron: Failed to fetch listing for ${target.name}:`, err.message);
+        continue;
       }
-      
-      const dateStr = formatPublishDate(dateObj);
-      const publishDateStr = dateObj.toISOString().split('T')[0];
-      const createdAtTimestamp = new Date(dateObj.getTime() - (i * 1000));
-      
-      await prisma.notice.create({
-        data: {
-          id,
-          title: item.title,
-          date: dateStr,
-          publishDate: publishDateStr,
-          type,
-          category,
-          url: directUrl,
-          lastDate,
-          createdAt: createdAtTimestamp
+
+      const parts = html.split('class="gb-loop-item');
+      const parsedItems: { title: string; url: string }[] = [];
+      for (let i = 1; i < parts.length; i++) {
+        const part = parts[i];
+        const h2Match = /<h2[^>]*>([\s\S]+?)<\/h2>/i.exec(part);
+        const hrefMatch = /href="([^"]+)"/i.exec(part);
+        
+        if (h2Match && hrefMatch) {
+          const title = h2Match[1]
+            .replace(/<[^>]*>/g, '')
+            .replace(/&amp;/g, '&')
+            .replace(/&#038;/g, '&')
+            .replace(/&#8211;/g, '-')
+            .replace(/\s+/g, ' ')
+            .trim();
+          const url = hrefMatch[1].trim();
+          parsedItems.push({ title, url });
         }
-      });
+      }
+
+      console.log(`Cron: Parsed ${parsedItems.length} items from ${target.name}`);
       
-      newNoticesCount++;
-      importedTitles.push(item.title);
+      const itemsToCheck = parsedItems.slice(0, 40);
+      itemsToCheck.reverse();
+
+      for (const item of itemsToCheck) {
+        const hash = crypto.createHash('md5').update(item.url).digest('hex').substring(0, 10);
+        const id = `${target.prefix}${hash}`;
+
+        const existing = await prisma.notice.findUnique({
+          where: { id }
+        });
+
+        if (existing) continue;
+
+        console.log(`Cron: Found NEW ${target.name}: "${item.title}"`);
+        let dateObj = new Date();
+        let directUrl = item.url;
+        let lastDate: string | null = null;
+
+        try {
+          const pageHtml = await fetchUrl(item.url);
+          directUrl = extractDirectLink(pageHtml, item.url, target.category);
+
+          if (target.category === 'notice') {
+            const lastDateMatch = /Last Date:\s*([0-9\/]+)/i.exec(pageHtml);
+            if (lastDateMatch) lastDate = lastDateMatch[1].trim();
+          }
+
+          const schemaMatch = /"datePublished"\s*:\s*"([^"]*)"/i.exec(pageHtml);
+          if (schemaMatch) {
+            dateObj = new Date(schemaMatch[1]);
+          }
+        } catch (err) {
+          console.error(`Cron: Warning: Failed to fetch detail page for ${item.url}`);
+        }
+
+        const dateStr = formatPublishDate(dateObj);
+        const publishDateStr = dateObj.toISOString().split('T')[0];
+        const createdAtTimestamp = new Date(dateObj.getTime() - (importedIndex * 1000));
+
+        await prisma.notice.create({
+          data: {
+            id,
+            title: item.title,
+            date: dateStr,
+            publishDate: publishDateStr,
+            type: target.type,
+            category: target.category,
+            url: directUrl,
+            lastDate,
+            createdAt: createdAtTimestamp
+          }
+        });
+
+        newNoticesCount++;
+        importedTitles.push(item.title);
+        importedIndex++;
+      }
     }
-    
+
     return NextResponse.json({
       success: true,
       message: `Sync complete. Imported ${newNoticesCount} new notices.`,
