@@ -232,7 +232,7 @@ async function syncFeed() {
 
       const dateStr = formatPublishDate(dateObj);
       const publishDateStr = dateObj.toISOString().split('T')[0];
-      const createdAtTimestamp = new Date(dateObj.getTime() - (importedIndex * 1000));
+      const createdAtTimestamp = new Date(Date.now() + (importedIndex * 1000));
 
       await prisma.notice.create({
         data: {
