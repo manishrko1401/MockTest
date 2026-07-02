@@ -1295,17 +1295,17 @@ export default function AdminAnalytics() {
                   <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">User Management Portal</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage user credentials, passes, roles, referral data, and view attempt histories</p>
                 </div>
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                <span className="text-xs font-bold text-slate-550 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
                   {usersList.length} user{usersList.length !== 1 ? 's' : ''} registered
                 </span>
               </div>
 
               {/* Collapsible Edit Profile Form */}
-              <div className="bg-slate-950 border border-slate-805 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setIsEditUserOpen(!isEditUserOpen)}
-                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-900/50 transition-colors"
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
@@ -1320,25 +1320,25 @@ export default function AdminAnalytics() {
                               <p className="font-extrabold text-sm text-slate-900 dark:text-white">
                                 Edit Profile: {activeUser?.name || 'Loading...'}
                               </p>
-                              <p className="text-[11px] text-blue-400 font-bold">Roll Code: {activeUser?.candidateCode || 'None'}</p>
+                              <p className="text-[11px] text-blue-650 dark:text-blue-400 font-bold">Roll Code: {activeUser?.candidateCode || 'None'}</p>
                             </>
                           );
                         })()
                       ) : (
                         <>
                           <p className="font-extrabold text-sm text-slate-900 dark:text-white">Profile Editor (No User Selected)</p>
-                          <p className="text-[11px] text-slate-400">Select a user from the table below to edit details</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">Select a user from the table below to edit details</p>
                         </>
                       )}
                     </div>
                   </div>
                   <div className={`transition-transform duration-200 ${isEditUserOpen ? 'rotate-180' : ''}`}>
-                    <ArrowDown className="h-4 w-4 text-slate-505" />
+                    <ArrowDown className="h-4 w-4 text-slate-500" />
                   </div>
                 </button>
 
                 {isEditUserOpen && (
-                  <div className="border-t border-slate-800 p-6 bg-slate-950">
+                  <div className="border-t border-slate-200 dark:border-slate-808 p-6 bg-white dark:bg-slate-955">
                     {selectedUserId ? (
                       (() => {
                         const activeUser = usersList.find(u => u.id === selectedUserId);
@@ -1348,78 +1348,78 @@ export default function AdminAnalytics() {
                           <form onSubmit={handleSaveProfile} className="space-y-5">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
                                 <input
                                   type="text"
                                   required
                                   value={editName}
                                   onChange={(e) => setEditName(e.target.value)}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-505"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
                                 <input
                                   type="email"
                                   required
                                   value={editEmail}
                                   onChange={(e) => setEditEmail(e.target.value)}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Mobile Number</label>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Mobile Number</label>
                                 <input
                                   type="text"
                                   required
                                   maxLength={10}
                                   value={editMobile}
                                   onChange={(e) => setEditMobile(e.target.value.replace(/\D/g, ''))}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Referral Code</label>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Referral Code</label>
                                 <input
                                   type="text"
                                   required
                                   value={editReferralCode}
                                   onChange={(e) => setEditReferralCode(e.target.value.toUpperCase())}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Referred By (Code)</label>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Referred By (Code)</label>
                                 <input
                                   type="text"
                                   value={editReferredBy}
                                   onChange={(e) => setEditReferredBy(e.target.value.toUpperCase())}
                                   placeholder="None"
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Referrals Count</label>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Referrals Count</label>
                                 <input
                                   type="number"
                                   required
                                   value={editReferralsCount}
                                   onChange={(e) => setEditReferralsCount(Number(e.target.value))}
-                                  className="w-full bg-slate-900 border border-slate-805 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-550"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">System Role</label>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">System Role</label>
                                 <select
                                   value={editRole}
                                   onChange={(e) => setEditRole(e.target.value as any)}
-                                  className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                                 >
                                   <option value="STUDENT">Student (Candidate)</option>
                                   <option value="CONTENT_CREATOR">Content Creator</option>
@@ -1428,11 +1428,11 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Subscription Pass Tier</label>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Subscription Pass Tier</label>
                                 <select
                                   value={editTier}
                                   onChange={(e) => setEditTier(e.target.value as any)}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-550 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                                 >
                                   <option value="None">None (No Pass)</option>
                                   <option value="Testbook Pass">Mock Test Pass (Basic)</option>
@@ -1441,48 +1441,48 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Account Password</label>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Account Password</label>
                                 <input
                                   type="text"
                                   required
                                   value={editPassword}
                                   onChange={(e) => setEditPassword(e.target.value)}
                                   placeholder="User password"
-                                  className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-550"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               {editTier !== 'None' && (
                                 <>
                                   <div>
-                                    <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Pass Purchased Date</label>
+                                    <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Purchased Date</label>
                                     <input
                                       type="date"
                                       required
                                       value={editPurchasedAt}
                                       onChange={(e) => setEditPurchasedAt(e.target.value)}
-                                      className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                      className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                                     />
                                   </div>
                                   <div>
-                                    <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Pass Expiry Date</label>
+                                    <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Expiry Date</label>
                                     <input
                                       type="date"
                                       required
                                       value={editExpiry}
                                       onChange={(e) => setEditExpiry(e.target.value)}
-                                      className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-550 cursor-pointer"
+                                      className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                                     />
                                   </div>
                                 </>
                               )}
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Account Status</label>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Account Status</label>
                                 <select
                                   value={editIsBlocked ? 'true' : 'false'}
                                   onChange={(e) => setEditIsBlocked(e.target.value === 'true')}
-                                  className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                                 >
                                   <option value="false">Active (Unblocked)</option>
                                   <option value="true">Suspended (Blocked)</option>
@@ -1490,7 +1490,7 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Coins Balance</label>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Coins Balance</label>
                                 <div className="relative flex items-center">
                                   <span className="absolute left-3 text-amber-400">
                                     <Coins className="h-3.5 w-3.5 text-amber-400" />
@@ -1500,17 +1500,17 @@ export default function AdminAnalytics() {
                                     required
                                     value={editCoins}
                                     onChange={(e) => setEditCoins(Number(e.target.value))}
-                                    className="w-full bg-slate-900 border border-slate-808 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                                   />
                                 </div>
                               </div>
                             </div>
 
-                            <div className="flex justify-end gap-3 border-t border-slate-800 pt-4">
+                            <div className="flex justify-end gap-3 border-t border-slate-200 dark:border-slate-808 pt-4">
                               <button
                                 type="button"
                                 onClick={() => setSelectedUserId(null)}
-                                className="bg-slate-900 hover:bg-slate-800 border border-slate-808 text-slate-400 font-bold py-2 px-5 rounded-lg text-xs transition cursor-pointer"
+                                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-808 text-slate-650 dark:text-slate-400 font-bold py-2 px-5 rounded-lg text-xs transition cursor-pointer"
                               >
                                 Deselect
                               </button>
@@ -1526,21 +1526,21 @@ export default function AdminAnalytics() {
                         );
                       })()
                     ) : (
-                      <p className="text-xs text-slate-505 font-medium text-center py-6">No user selected. Click the "Edit Profile" button on any user in the table below to load details here.</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium text-center py-6">No user selected. Click the "Edit Profile" button on any user in the table below to load details here.</p>
                     )}
                   </div>
                 )}
               </div>
 
               {/* Users List & Search Card — Full Width */}
-              <div className="bg-slate-950 border border-slate-808 p-6 rounded-2xl shadow-sm">
+              <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                  <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">Registered Users Directory</h3>
+                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Registered Users Directory</h3>
                   
                   {/* Search and Filters */}
                   <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
                     <div className="relative w-full sm:w-64">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                         <Search className="h-3.5 w-3.5" />
                       </div>
                       <input
@@ -1548,14 +1548,14 @@ export default function AdminAnalytics() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Search name, email, roll code..."
-                        className="w-full bg-slate-900 border border-slate-808 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-blue-500"
                       />
                     </div>
                     
                     <select
                       value={roleFilter}
                       onChange={(e) => setRoleFilter(e.target.value)}
-                      className="bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-303 focus:outline-none focus:border-blue-505 cursor-pointer w-full sm:w-auto"
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto"
                     >
                       <option value="ALL">All Roles</option>
                       <option value="STUDENT">Student</option>
@@ -1566,7 +1566,7 @@ export default function AdminAnalytics() {
                     <select
                       value={tierFilter}
                       onChange={(e) => setTierFilter(e.target.value)}
-                      className="bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-303 focus:outline-none focus:border-blue-550 cursor-pointer w-full sm:w-auto"
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto"
                     >
                       <option value="ALL">All Passes</option>
                       <option value="None">No Pass</option>
@@ -1579,7 +1579,7 @@ export default function AdminAnalytics() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
                         <th className="pb-3 px-4">User Details</th>
                         <th className="pb-3 px-4">System Role</th>
                         <th className="pb-3 px-4">Access Pass</th>
@@ -1587,7 +1587,7 @@ export default function AdminAnalytics() {
                         <th className="pb-3 px-4 text-right">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-850">
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                       {[...usersList]
                         .filter(u => {
                           const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -1602,38 +1602,38 @@ export default function AdminAnalytics() {
                           return (
                             <tr
                               key={user.id}
-                              className={`hover:bg-slate-900/40 transition-colors ${
-                                isSelected ? 'bg-slate-900/60 border-l-2 border-blue-500' : ''
+                              className={`hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors ${
+                                isSelected ? 'bg-slate-100 dark:bg-slate-900/60 border-l-2 border-blue-500' : ''
                               }`}
                             >
                               <td className="py-3.5 px-4">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="font-bold text-white text-xs">{user.name}</p>
+                                  <p className="font-bold text-slate-905 dark:text-white text-xs">{user.name}</p>
                                   {user.isBlocked && (
-                                    <span className="bg-red-955/45 border border-red-808 text-red-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                    <span className="bg-red-50 dark:bg-red-955/45 border border-red-200 dark:border-red-808 text-red-650 dark:text-red-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
                                       Blocked
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[10px] text-slate-505">{user.email}</p>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400">{user.email}</p>
                                 {user.candidateCode && (
-                                  <p className="text-[10px] text-blue-400 font-extrabold mt-0.5">
-                                    Roll Code: <span className="font-mono bg-slate-900 px-1 py-0.5 rounded text-[9px] border border-slate-808 text-white">{user.candidateCode}</span>
+                                  <p className="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold mt-0.5">
+                                    Roll Code: <span className="font-mono bg-slate-100 dark:bg-slate-900 px-1 py-0.5 rounded text-[9px] border border-slate-200 dark:border-slate-808 text-slate-800 dark:text-white">{user.candidateCode}</span>
                                   </p>
                                 )}
-                                <p className="text-[9px] text-slate-505 mt-0.5">Joined: {user.registeredDate}</p>
-                                <div className="flex items-center gap-1 text-amber-400 text-[10px] font-black mt-1">
-                                  <Coins className="h-3.5 w-3.5 text-amber-400" />
+                                <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">Joined: {user.registeredDate}</p>
+                                <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-[10px] font-black mt-1">
+                                  <Coins className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
                                   <span>{user.coins || 0} Coins</span>
                                 </div>
                               </td>
                               <td className="py-3.5 px-4">
                                 <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
                                   user.role === 'ADMIN' 
-                                    ? 'bg-red-955/40 border border-red-805 text-red-405' 
+                                    ? 'bg-red-50 dark:bg-red-955/40 border border-red-200 dark:border-red-808 text-red-700 dark:text-red-400' 
                                     : user.role === 'CONTENT_CREATOR' 
-                                    ? 'bg-purple-955/40 border border-purple-800 text-purple-400' 
-                                    : 'bg-blue-955/40 border border-blue-800 text-blue-400'
+                                    ? 'bg-purple-50 dark:bg-purple-955/40 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400' 
+                                    : 'bg-blue-50 dark:bg-blue-955/40 border border-blue-200 dark:border-blue-800 text-blue-750 dark:text-blue-450'
                                 }`}>
                                   {user.role}
                                 </span>
@@ -1641,15 +1641,15 @@ export default function AdminAnalytics() {
                               <td className="py-3.5 px-4">
                                 <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
                                   user.subscriptionTier === 'Testbook Pass Pro'
-                                    ? 'bg-yellow-955/40 border border-yellow-700 text-yellow-405 font-extrabold'
+                                    ? 'bg-yellow-50 dark:bg-yellow-955/40 border border-yellow-200 dark:border-yellow-700 text-yellow-750 dark:text-yellow-405 font-extrabold'
                                     : user.subscriptionTier === 'Testbook Pass'
-                                    ? 'bg-green-955/40 border border-green-700 text-green-400'
-                                    : 'bg-slate-900 border border-slate-800 text-slate-550'
+                                    ? 'bg-green-50 dark:bg-green-955/40 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-400'
+                                    : 'bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
                                 }`}>
                                   {user.subscriptionTier === 'None' ? 'No Pass' : user.subscriptionTier.replace('Testbook', 'Mock Test')}
                                 </span>
                               </td>
-                              <td className="py-3.5 px-4 text-center font-mono text-slate-300">
+                              <td className="py-3.5 px-4 text-center font-mono text-slate-800 dark:text-slate-300">
                                 {user.testSessions.length}
                               </td>
                               <td className="py-3.5 px-4 text-right">
@@ -1659,7 +1659,7 @@ export default function AdminAnalytics() {
                                     handleSelectUser(user);
                                     setIsEditUserOpen(true); // Auto-expand form
                                   }}
-                                  className="text-blue-400 hover:text-blue-300 font-bold bg-blue-955/20 border border-blue-900/30 hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                  className="text-blue-650 hover:text-blue-750 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                 >
                                   Edit Profile
                                 </button>
@@ -1679,10 +1679,10 @@ export default function AdminAnalytics() {
                   if (!activeUser) return null;
 
                   return (
-                    <div className="bg-slate-955 border border-slate-808 p-6 rounded-2xl shadow-sm animate-in fade-in duration-200">
-                      <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-800">
-                        <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">Exam Sitting History: {activeUser.name}</h3>
-                        <span className="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-lg border border-slate-808 font-bold">
+                    <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-200 dark:border-slate-800">
+                        <h3 className="font-extrabold text-xs text-slate-905 dark:text-white uppercase tracking-wider">Exam Sitting History: {activeUser.name}</h3>
+                        <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-808 font-bold">
                           {activeUser.testSessions.length} sessions logged
                         </span>
                       </div>
@@ -1690,21 +1690,21 @@ export default function AdminAnalytics() {
                       {activeUser.testSessions.length > 0 ? (
                         <div className="space-y-4">
                           {activeUser.testSessions.map(session => (
-                            <div key={session.id} className="border border-slate-850 bg-slate-900/20 rounded-xl p-4 text-xs">
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-850 pb-3 mb-3">
+                            <div key={session.id} className="border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-4 text-xs">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 mb-3">
                                 <div>
-                                  <p className="font-extrabold text-slate-105 text-sm">{session.title}</p>
-                                  <p className="text-[10px] text-slate-505 flex items-center gap-1.5 mt-1 font-semibold">
+                                  <p className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">{session.title}</p>
+                                  <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 font-semibold">
                                     <Calendar className="h-3 w-3" /> Attempted on {session.date}
                                   </p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
                                     session.status === 'COMPLETED'
-                                      ? 'bg-green-955/40 border border-green-800 text-green-400'
+                                      ? 'bg-green-50 dark:bg-green-955/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
                                       : session.status === 'AUTO_SUBMITTED'
-                                      ? 'bg-yellow-955/40 border border-yellow-805 text-yellow-405'
-                                      : 'bg-blue-955/40 border border-blue-800 text-blue-400'
+                                      ? 'bg-yellow-50 dark:bg-yellow-955/40 border border-yellow-200 dark:border-yellow-805 text-yellow-750 dark:text-yellow-405'
+                                      : 'bg-blue-50 dark:bg-blue-955/40 border border-blue-200 dark:border-blue-800 text-blue-750 dark:text-blue-400'
                                   }`}>
                                     {session.status}
                                   </span>
@@ -1719,7 +1719,7 @@ export default function AdminAnalytics() {
                                       });
                                       setResetConfirmOpen(true);
                                     }}
-                                    className="text-red-400 hover:text-red-300 font-bold flex items-center gap-1 bg-red-955/20 border border-red-900/40 hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-bold flex items-center gap-1 bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/45 hover:bg-red-100 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                   >
                                     <RefreshCw className="h-3.5 w-3.5" /> Reset Attempt
                                   </button>
@@ -1728,22 +1728,22 @@ export default function AdminAnalytics() {
 
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
                                 <div>
-                                  <p className="text-slate-550 text-[10px] uppercase font-extrabold tracking-wider">Score Obtained</p>
-                                  <p className="text-sm font-black text-blue-400 mt-0.5">{session.score.toFixed(1)} / {session.maxScore}</p>
+                                  <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Score Obtained</p>
+                                  <p className="text-sm font-black text-blue-600 dark:text-blue-400 mt-0.5">{session.score.toFixed(1)} / {session.maxScore}</p>
                                 </div>
                                 <div>
-                                  <p className="text-slate-550 text-[10px] uppercase font-extrabold tracking-wider">Accuracy Percentage</p>
-                                  <p className="text-sm font-black text-green-400 mt-0.5">{session.accuracy.toFixed(1)}%</p>
+                                  <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Accuracy Percentage</p>
+                                  <p className="text-sm font-black text-green-600 dark:text-green-400 mt-0.5">{session.accuracy.toFixed(1)}%</p>
                                 </div>
                                 <div>
-                                  <p className="text-slate-550 text-[10px] uppercase font-extrabold tracking-wider">Time Spent</p>
-                                  <p className="text-sm font-black text-yellow-400 mt-0.5">
+                                  <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Time Spent</p>
+                                  <p className="text-sm font-black text-yellow-600 dark:text-yellow-405 mt-0.5">
                                     {Math.floor(session.durationSeconds / 60)}m {session.durationSeconds % 60}s
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-slate-555 text-[10px] uppercase font-extrabold tracking-wider">Cheat Violations</p>
-                                  <p className={`text-sm font-black mt-0.5 ${session.violations > 0 ? 'text-red-450' : 'text-slate-300'}`}>
+                                  <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Cheat Violations</p>
+                                  <p className={`text-sm font-black mt-0.5 ${session.violations > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-slate-300'}`}>
                                     {session.violations} Focus Alert{session.violations === 1 ? '' : 's'}
                                   </p>
                                 </div>
@@ -1752,8 +1752,8 @@ export default function AdminAnalytics() {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-10 border border-dashed border-slate-808 rounded-xl text-slate-500 text-xs">
-                          <FileText className="h-8 w-8 mx-auto text-slate-705 mb-2" />
+                        <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-808 rounded-xl text-slate-500 text-xs">
+                          <FileText className="h-8 w-8 mx-auto text-slate-400 dark:text-slate-600 mb-2" />
                           This user has not sat for any exam sittings yet.
                         </div>
                       )}
@@ -1769,30 +1769,30 @@ export default function AdminAnalytics() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Live Notices & Updates Manager</h2>
-                  <p className="text-xs text-slate-505 dark:text-slate-400 mt-0.5">Publish and manage live notices, results, and admit cards visible on client home screens</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Publish and manage live notices, results, and admit cards visible on client home screens</p>
                 </div>
-                <span className="text-xs font-bold text-slate-505 dark:text-slate-400 bg-slate-105 dark:bg-slate-900 border border-slate-200 dark:border-slate-805 px-3 py-1.5 rounded-lg">
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
                   {noticesList.length} total alert{noticesList.length !== 1 ? 's' : ''} active
                 </span>
               </div>
 
               {/* Info alert */}
-              <div className="bg-blue-500/10 border border-blue-500/25 p-4 rounded-2xl flex items-start gap-3">
-                <Bell className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+              <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-500/25 p-4 rounded-2xl flex items-start gap-3">
+                <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                 <div className="text-xs">
-                  <p className="font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Live Updates Engine</p>
-                  <p className="text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
+                  <p className="font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-1">Live Updates Engine</p>
+                  <p className="text-slate-655 dark:text-slate-400 font-semibold leading-relaxed">
                     Publish exam alerts, admit card download releases, and result sheets directly to the homepage updates grid. All additions will update client dashboards instantly via context state.
                   </p>
                 </div>
               </div>
 
               {/* Collapsible Publish Card */}
-              <div className="bg-slate-950 border border-slate-808 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setIsCreateNoticeOpen(!isCreateNoticeOpen)}
-                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-900/50 transition-colors"
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
@@ -1800,16 +1800,16 @@ export default function AdminAnalytics() {
                     </div>
                     <div>
                       <p className="font-extrabold text-sm text-slate-900 dark:text-white">Publish New Update / Alert</p>
-                      <p className="text-[11px] text-slate-400">Click to expand the alert publication form</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Click to expand the alert publication form</p>
                     </div>
                   </div>
-                  <div className={`transition-transform duration-205 ${isCreateNoticeOpen ? 'rotate-180' : ''}`}>
+                  <div className={`transition-transform duration-200 ${isCreateNoticeOpen ? 'rotate-180' : ''}`}>
                     <ArrowDown className="h-4 w-4 text-slate-500" />
                   </div>
                 </button>
 
                 {isCreateNoticeOpen && (
-                  <div className="border-t border-slate-808 p-6 bg-slate-950">
+                  <div className="border-t border-slate-200 dark:border-slate-808 p-6 bg-white dark:bg-slate-950">
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (!noticeTitle.trim()) return;
@@ -1823,11 +1823,11 @@ export default function AdminAnalytics() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Update Category</label>
+                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Update Category</label>
                           <select
                             value={noticeCategory}
                             onChange={(e) => setNoticeCategory(e.target.value as any)}
-                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                           >
                             <option value="notice">Live Notices & Announcements</option>
                             <option value="result">Live Result Section</option>
@@ -1836,25 +1836,25 @@ export default function AdminAnalytics() {
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Label Tag (e.g. EXAM DATE, MERIT LIST)</label>
+                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Label Tag (e.g. EXAM DATE, MERIT LIST)</label>
                           <input
                             type="text"
                             required
                             value={noticeType}
                             onChange={(e) => setNoticeType(e.target.value)}
                             placeholder="EXAM DATE, RESULT, ADMISSION, etc."
-                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
+                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
                           <input
                             type="date"
                             required
                             value={noticeDate}
                             onChange={(e) => setNoticeDate(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                           />
                         </div>
                       </div>
@@ -1862,37 +1862,37 @@ export default function AdminAnalytics() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {noticeCategory === 'notice' && (
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Application Last Date (Optional)</label>
+                            <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Application Last Date (Optional)</label>
                             <input
                               type="date"
                               value={noticeLastDate}
                               onChange={(e) => setNoticeLastDate(e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                             />
                           </div>
                         )}
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Attachment URL (Optional)</label>
+                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Attachment URL (Optional)</label>
                           <input
                             type="url"
                             value={noticeUrl}
                             onChange={(e) => setNoticeUrl(e.target.value)}
                             placeholder="https://example.com/advisory"
-                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Update Heading Title</label>
+                        <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Update Heading Title</label>
                         <textarea
                           required
                           value={noticeTitle}
                           onChange={(e) => setNoticeTitle(e.target.value)}
                           placeholder="Type notice title description..."
                           rows={3}
-                          className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505 resize-none"
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
                         />
                       </div>
 
@@ -1910,21 +1910,21 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Active Board List — Full Width */}
-              <div className="bg-slate-955 border border-slate-808 p-6 rounded-2xl shadow-sm">
+              <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                  <h3 className="font-extrabold text-xs text-white uppercase tracking-wider flex items-center gap-2">
-                    <Bell className="h-4.5 w-4.5 text-blue-505" /> Active Updates Board
+                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <Bell className="h-4.5 w-4.5 text-blue-500" /> Active Updates Board
                   </h3>
                   
                   {/* Search bar */}
                   <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-505" />
+                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
                     <input
                       type="text"
                       value={noticeSearch}
                       onChange={(e) => setNoticeSearch(e.target.value)}
                       placeholder="Search updates..."
-                      className="w-full bg-slate-900 border border-slate-808 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-slate-700"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -1932,7 +1932,7 @@ export default function AdminAnalytics() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-808 text-slate-404 font-extrabold uppercase tracking-wider text-[10px]">
+                      <tr className="border-b border-slate-200 dark:border-slate-808 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
                         <th className="py-3 px-4">Heading Title</th>
                         <th className="py-3 px-4">Category</th>
                         <th className="py-3 px-4">Label Tag</th>
@@ -1951,10 +1951,10 @@ export default function AdminAnalytics() {
                           n.type.toLowerCase().includes(noticeSearch.toLowerCase()) ||
                           n.category.toLowerCase().includes(noticeSearch.toLowerCase())
                         ).map((notice) => (
-                          <tr key={notice.id} className="border-b border-slate-808 hover:bg-slate-900/30 transition text-slate-300">
-                            <td className="py-3 px-4 font-bold text-slate-100 max-w-md">
+                          <tr key={notice.id} className="border-b border-slate-200 dark:border-slate-808 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-300">
+                            <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 max-w-md">
                               {notice.url ? (
-                                <a href={notice.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-350 hover:underline flex items-center gap-1 mb-1">
+                                <a href={notice.url} target="_blank" rel="noopener noreferrer" className="text-blue-650 hover:text-blue-750 dark:text-blue-400 dark:hover:text-blue-350 hover:underline flex items-center gap-1 mb-1">
                                   {notice.title}
                                   <ChevronRight className="h-3 w-3 inline animate-pulse" />
                                 </a>
@@ -1962,7 +1962,7 @@ export default function AdminAnalytics() {
                                 <span className="block mb-1">{notice.title}</span>
                               )}
                               {notice.lastDate && (
-                                <span className="block text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
+                                <span className="block text-[10px] text-red-650 dark:text-red-500 font-extrabold mt-1 uppercase tracking-wider">
                                   Last Date: {notice.lastDate}
                                 </span>
                               )}
@@ -1970,25 +1970,25 @@ export default function AdminAnalytics() {
                             <td className="py-3 px-4 capitalize">
                               <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
                                 notice.category === 'notice'
-                                  ? 'bg-blue-955/40 text-blue-400 border border-blue-900'
+                                  ? 'bg-blue-50 dark:bg-blue-955/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
                                   : notice.category === 'result'
-                                  ? 'bg-yellow-955/40 text-yellow-405 border border-yellow-900'
-                                  : 'bg-green-955/40 text-green-400 border border-green-900'
+                                  ? 'bg-yellow-50 dark:bg-yellow-955/40 text-yellow-750 dark:text-yellow-405 border border-yellow-200 dark:border-yellow-900'
+                                  : 'bg-green-50 dark:bg-green-955/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900'
                               }`}>
                                 {notice.category === 'notice' ? 'Announcement' : notice.category === 'result' ? 'Result' : 'Admit Card'}
                               </span>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="bg-slate-800 text-slate-300 font-bold px-1.5 py-0.5 rounded text-[10px]">{notice.type}</span>
+                              <span className="bg-slate-105 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-[10px]">{notice.type}</span>
                             </td>
-                            <td className="py-3 px-4 font-semibold text-[11px] text-slate-405">{notice.date}</td>
+                            <td className="py-3 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400">{notice.date}</td>
                             <td className="py-3 px-4 text-right">
                               <button
                                 onClick={() => {
                                   deleteNotice(notice.id);
                                   showToast('Notice deleted successfully.');
                                 }}
-                                className="text-red-400 hover:text-red-300 font-bold bg-red-955/20 border border-red-900/30 hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                className="text-red-600 hover:text-red-700 dark:text-red-405 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                               >
                                 Delete
                               </button>
@@ -3078,28 +3078,28 @@ export default function AdminAnalytics() {
                   <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Official Announcements Publisher</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Publish special alerts and visual news banner cards that slide horizontally on the mobile app home screen</p>
                 </div>
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-105 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
                   {noticesList.filter(n => n.category === 'announcement').length} announcement{noticesList.filter(n => n.category === 'announcement').length !== 1 ? 's' : ''} active
                 </span>
               </div>
 
               {/* Info alert */}
-              <div className="bg-blue-500/10 border border-blue-500/25 p-4 rounded-2xl flex items-start gap-3">
-                <Megaphone className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+              <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-500/25 p-4 rounded-2xl flex items-start gap-3">
+                <Megaphone className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                 <div className="text-xs">
-                  <p className="font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Mobile Banner Engine</p>
-                  <p className="text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
+                  <p className="font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-1">Mobile Banner Engine</p>
+                  <p className="text-slate-650 dark:text-slate-400 font-semibold leading-relaxed">
                     Create and publish official announcements that will appear as a swipable horizontal carousel on the mobile app home screen. Announcements are saved as a special category of notices.
                   </p>
                 </div>
               </div>
 
               {/* Collapsible Publish Card */}
-              <div className="bg-slate-950 border border-slate-808 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setIsCreateAnnouncementOpen(!isCreateAnnouncementOpen)}
-                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-900/50 transition-colors"
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
@@ -3107,7 +3107,7 @@ export default function AdminAnalytics() {
                     </div>
                     <div>
                       <p className="font-extrabold text-sm text-slate-900 dark:text-white">Publish Announcement</p>
-                      <p className="text-[11px] text-slate-400">Click to expand the announcement editor</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Click to expand the announcement editor</p>
                     </div>
                   </div>
                   <div className={`transition-transform duration-200 ${isCreateAnnouncementOpen ? 'rotate-180' : ''}`}>
@@ -3116,7 +3116,7 @@ export default function AdminAnalytics() {
                 </button>
 
                 {isCreateAnnouncementOpen && (
-                  <div className="border-t border-slate-808 p-6 bg-slate-950">
+                  <div className="border-t border-slate-200 dark:border-slate-808 p-6 bg-white dark:bg-slate-955">
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (!announcementTitle.trim()) return;
@@ -3130,63 +3130,63 @@ export default function AdminAnalytics() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Announcement Type / Tag</label>
+                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Type / Tag</label>
                           <input
                             type="text"
                             required
                             value={announcementType}
                             onChange={(e) => setAnnouncementType(e.target.value)}
                             placeholder="e.g., PROMOTION, ALERT, NEWS, SOCIAL"
-                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
+                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
                           <input
                             type="date"
                             required
                             value={announcementDate}
                             onChange={(e) => setAnnouncementDate(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-550 cursor-pointer"
+                            className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Details Link / URL (Optional)</label>
+                          <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Details Link / URL (Optional)</label>
                           <input
                             type="url"
                             value={announcementUrl}
                             onChange={(e) => setAnnouncementUrl(e.target.value)}
                             placeholder="https://example.com/details"
-                            className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Image URL (Optional)</label>
+                        <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Image URL (Optional)</label>
                         <input
                           type="url"
                           value={announcementImageUrl}
                           onChange={(e) => setAnnouncementImageUrl(e.target.value)}
                           placeholder="https://example.com/image.png"
-                          className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505"
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                         />
-                        <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">
+                        <p className="text-[9px] text-slate-500 dark:text-slate-500 mt-1 font-semibold">
                           💡 Perfect size for tile view is 1200x600 (aspect ratio 2:1) for clean coverage.
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Announcement Content</label>
+                        <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Content</label>
                         <textarea
                           required
                           value={announcementTitle}
                           onChange={(e) => setAnnouncementTitle(e.target.value)}
                           placeholder="Type announcement description content..."
                           rows={4}
-                          className="w-full bg-slate-900 border border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-202 focus:outline-none focus:border-blue-505 resize-none"
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
                         />
                       </div>
 
@@ -3204,21 +3204,21 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Active Announcements List Card — Full Width */}
-              <div className="bg-slate-950 border border-slate-808 p-6 rounded-2xl shadow-sm">
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                  <h3 className="font-extrabold text-xs text-white uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                     <Megaphone className="h-4.5 w-4.5 text-blue-505" /> Active Announcements Banners
                   </h3>
                   
                   {/* Search bar */}
                   <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-505" />
+                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
                     <input
                       type="text"
                       value={announcementSearch}
                       onChange={(e) => setAnnouncementSearch(e.target.value)}
                       placeholder="Search announcements..."
-                      className="w-full bg-slate-900 border border-slate-808 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-slate-700"
+                      className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -3226,7 +3226,7 @@ export default function AdminAnalytics() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-808 text-slate-440 font-extrabold uppercase tracking-wider text-[10px]">
+                      <tr className="border-b border-slate-200 dark:border-slate-808 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
                         <th className="py-3 px-4">Content</th>
                         <th className="py-3 px-4">Tag</th>
                         <th className="py-3 px-4">Date</th>
@@ -3242,10 +3242,10 @@ export default function AdminAnalytics() {
                           n.title.toLowerCase().includes(announcementSearch.toLowerCase()) ||
                           n.type.toLowerCase().includes(announcementSearch.toLowerCase())
                         ).map((ann) => (
-                          <tr key={ann.id} className="border-b border-slate-808 hover:bg-slate-900/30 transition text-slate-350">
-                            <td className="py-3 px-4 font-bold text-slate-100 max-w-sm">
+                          <tr key={ann.id} className="border-b border-slate-200 dark:border-slate-808 hover:bg-slate-55 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-300">
+                            <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 max-w-sm">
                               {ann.url ? (
-                                <a href={ann.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline flex items-center gap-1">
+                                <a href={ann.url} target="_blank" rel="noopener noreferrer" className="text-blue-650 hover:text-blue-750 dark:text-blue-400 dark:hover:text-blue-350 hover:underline flex items-center gap-1">
                                   {ann.title}
                                   <ChevronRight className="h-3 w-3 inline animate-pulse" />
                                 </a>
@@ -3253,7 +3253,7 @@ export default function AdminAnalytics() {
                                 <span>{ann.title}</span>
                               )}
                               {ann.imageUrl && (
-                                <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-400 font-semibold">
+                                <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
                                   <span>🖼️ Image:</span>
                                   <a href={ann.imageUrl} target="_blank" rel="noopener noreferrer" className="underline truncate max-w-[200px] inline-block font-normal">
                                     {ann.imageUrl}
@@ -3262,16 +3262,16 @@ export default function AdminAnalytics() {
                               )}
                             </td>
                             <td className="py-3 px-4">
-                              <span className="bg-slate-800 text-slate-300 font-bold px-1.5 py-0.5 rounded text-[10px]">{ann.type}</span>
+                              <span className="bg-slate-105 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-[10px]">{ann.type}</span>
                             </td>
-                            <td className="py-3 px-4 font-semibold text-[11px] text-slate-400">{ann.date}</td>
+                            <td className="py-3 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400">{ann.date}</td>
                             <td className="py-3 px-4 text-right">
                               <button
                                 onClick={() => {
                                   deleteNotice(ann.id);
                                   showToast('Announcement deleted successfully.');
                                 }}
-                                className="text-red-400 hover:text-red-300 font-bold bg-red-955/20 border border-red-900/30 hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                className="text-red-600 hover:text-red-700 dark:text-red-405 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                               >
                                 Delete
                               </button>
@@ -3280,7 +3280,7 @@ export default function AdminAnalytics() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="py-8 text-center text-slate-500 font-semibold italic">
+                          <td colSpan={4} className="py-8 text-center text-slate-500 dark:text-slate-400 font-semibold italic">
                             No matching announcements found.
                           </td>
                         </tr>
