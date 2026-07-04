@@ -45,6 +45,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleLogin = async (loginEmail: string, loginPass: string) => {
     if (!loginEmail.trim()) {
@@ -57,13 +58,18 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
     }
     setLoading(true);
     setError('');
+    setSuccess('');
 
     const res = await ApiClient.login(loginEmail, loginPass);
-    setLoading(false);
 
     if (res.success && res.user) {
-      onLoginSuccess(res.user);
+      setSuccess('Logged in successfully!');
+      setTimeout(() => {
+        setLoading(false);
+        onLoginSuccess(res.user);
+      }, 1500);
     } else {
+      setLoading(false);
       setError(res.error || 'Login failed. Please verify credentials.');
     }
   };
@@ -91,15 +97,19 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
     }
     setLoading(true);
     setError('');
+    setSuccess('');
 
     const res = await ApiClient.signup(name, email, mobile, password, referralCode);
-    setLoading(false);
 
     if (res.success && res.user) {
       await AsyncStorage.setItem('show_signup_congrats_popup', 'true');
-      Alert.alert('Registration Successful', `Welcome, ${res.user.name}!`);
-      onLoginSuccess(res.user);
+      setSuccess('Signed up successfully!');
+      setTimeout(() => {
+        setLoading(false);
+        onLoginSuccess(res.user);
+      }, 1500);
     } else {
+      setLoading(false);
       setError(res.error || 'Registration failed. Email might already be taken.');
     }
   };
@@ -165,6 +175,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
               onPress={() => {
                 setActiveTab('login');
                 setError('');
+                setSuccess('');
               }}
             >
               <Text style={[
@@ -184,6 +195,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
               onPress={() => {
                 setActiveTab('signup');
                 setError('');
+                setSuccess('');
               }}
             >
               <Text style={[
@@ -200,6 +212,13 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
             <View style={[styles.errorBox, isDark && { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: '#7F1D1D' }]}>
               <AlertCircle size={16} color="#EF4444" style={styles.errorIcon} />
               <Text style={[styles.errorText, isDark && { color: '#FCA5A5' }]}>{error}</Text>
+            </View>
+          ) : null}
+
+          {success ? (
+            <View style={[styles.successBox, isDark && { backgroundColor: 'rgba(34, 197, 94, 0.1)', borderColor: '#14532D' }]}>
+              <ShieldCheck size={16} color="#22C55E" style={styles.successIcon} />
+              <Text style={[styles.successText, isDark && { color: '#86EFAC' }]}>{success}</Text>
             </View>
           ) : null}
 
@@ -500,6 +519,27 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     color: '#B91C1C',
+    fontSize: 12,
+    fontWeight: 'bold',
+    lineHeight: 16,
+  },
+  successBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    borderColor: '#DCFCE7',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+  },
+  successIcon: {
+    marginRight: 8,
+  },
+  successText: {
+    flex: 1,
+    color: '#15803D',
     fontSize: 12,
     fontWeight: 'bold',
     lineHeight: 16,
