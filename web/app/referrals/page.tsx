@@ -197,7 +197,15 @@ export default function ReferralsTrackerPage() {
           ) : (
             <div className="space-y-4">
               {referredUsers.map((user) => {
-                const hasCompletedTest = user.testSessions && user.testSessions.length > 0;
+                const hasCompletedTest = user.testSessions && user.testSessions.some((s: any) => {
+                  if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') {
+                    return false;
+                  }
+                  const durationMinutes = s.durationMinutes ?? 60;
+                  const totalSec = durationMinutes * 60;
+                  const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
+                  return spentSec >= totalSec * 0.75;
+                });
                 
                 return (
                   <div 

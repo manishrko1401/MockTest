@@ -256,7 +256,15 @@ export default function DashboardScreen({
         email: u.email,
         candidateCode: u.candidateCode,
         registeredDate: u.registeredDate,
-        hasCompletedTest: u.testSessions && u.testSessions.length > 0
+        hasCompletedTest: u.testSessions && u.testSessions.some((s: any) => {
+          if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') {
+            return false;
+          }
+          const durationMinutes = s.durationMinutes ?? 60;
+          const totalSec = durationMinutes * 60;
+          const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
+          return spentSec >= totalSec * 0.75;
+        })
       }));
   }, [usersList, currentUser?.referralCode]);
 

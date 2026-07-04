@@ -1650,7 +1650,13 @@ export default function AdminAnalytics() {
                                 </span>
                               </td>
                               <td className="py-3.5 px-4 text-center font-mono text-slate-800 dark:text-slate-300">
-                                {user.testSessions.length}
+                                {user.testSessions.filter((s: any) => {
+                                  if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') return false;
+                                  const durationMinutes = s.durationMinutes ?? 60;
+                                  const totalSec = durationMinutes * 60;
+                                  const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
+                                  return spentSec >= totalSec * 0.75;
+                                }).length}
                               </td>
                               <td className="py-3.5 px-4 text-right">
                                 <button

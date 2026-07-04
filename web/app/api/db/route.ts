@@ -680,7 +680,14 @@ async function handleGetReferredFriends(data: any) {
     include: {
       testSessions: {
         select: {
-          id: true
+          id: true,
+          status: true,
+          timeSpentSeconds: true,
+          mockTest: {
+            select: {
+              durationMinutes: true
+            }
+          }
         }
       }
     },
@@ -689,14 +696,25 @@ async function handleGetReferredFriends(data: any) {
     }
   });
 
-  const formattedFriends = friends.map((f: any) => ({
-    id: f.id,
-    name: f.fullName,
-    email: f.email,
-    candidateCode: f.candidateCode,
-    registeredDate: formatDateTime(f.createdAt),
-    hasCompletedTest: f.testSessions.length > 0
-  }));
+  const formattedFriends = friends.map((f: any) => {
+    const hasCompletedTest = f.testSessions.some((s: any) => {
+      if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') {
+        return false;
+      }
+      const durationMinutes = s.mockTest?.durationMinutes || 60;
+      const totalSec = durationMinutes * 60;
+      return s.timeSpentSeconds >= totalSec * 0.75;
+    });
+
+    return {
+      id: f.id,
+      name: f.fullName,
+      email: f.email,
+      candidateCode: f.candidateCode,
+      registeredDate: formatDateTime(f.createdAt),
+      hasCompletedTest
+    };
+  });
 
   return NextResponse.json({
     success: true,
@@ -858,14 +876,23 @@ async function handleAddAttempt(data: any) {
     });
 
     if (userObj && userObj.referredBy && !userObj.referralCoinsCredited) {
-      const completedSessionsCount = await prisma.userTestSession.count({
+      const completedSessions = await prisma.userTestSession.findMany({
         where: {
           userId,
           status: { in: ['COMPLETED', 'AUTO_SUBMITTED'] }
+        },
+        include: {
+          mockTest: true
         }
       });
 
-      if (completedSessionsCount === 1) {
+      const validSessionsCount = completedSessions.filter((s: any) => {
+        const durationMinutes = s.mockTest?.durationMinutes || 60;
+        const totalSec = durationMinutes * 60;
+        return s.timeSpentSeconds >= totalSec * 0.75;
+      }).length;
+
+      if (validSessionsCount === 1) {
         // 1. Credit 10 coins to the referred user and set referralCoinsCredited: true
         await prisma.user.update({
           where: { id: userId },
