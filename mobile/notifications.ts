@@ -1,21 +1,31 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-// Configure notification behavior for when the app is in the foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Set to false to temporarily disable all notifications (e.g. for Expo Go testing)
+// Set to true to resume notifications later
+const ENABLE_NOTIFICATIONS = false;
+
+if (ENABLE_NOTIFICATIONS) {
+  // Configure notification behavior for when the app is in the foreground
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 /**
  * Requests permissions for showing notifications and sets up Android channels.
  */
 export async function requestNotificationPermissions(): Promise<boolean> {
+  if (!ENABLE_NOTIFICATIONS) {
+    console.log('[Notifications] Permission request skipped (disabled for Expo Go)');
+    return false;
+  }
   if (Platform.OS === 'web') return false;
   
   try {
@@ -56,6 +66,10 @@ export async function triggerLocalNotification(
   body: string,
   data: Record<string, any> = {}
 ): Promise<void> {
+  if (!ENABLE_NOTIFICATIONS) {
+    console.log('[Notifications] Trigger skipped (disabled for Expo Go):', title);
+    return;
+  }
   try {
     await Notifications.scheduleNotificationAsync({
       content: {
@@ -70,3 +84,4 @@ export async function triggerLocalNotification(
     console.error('Error triggering local notification:', error);
   }
 }
+
