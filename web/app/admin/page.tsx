@@ -1602,7 +1602,8 @@ export default function AdminAnalytics() {
                           return (
                             <tr
                               key={user.id}
-                              className={`hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors ${
+                              onClick={() => handleSelectUser(user)}
+                              className={`hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors cursor-pointer ${
                                 isSelected ? 'bg-slate-100 dark:bg-slate-900/60 border-l-2 border-blue-500' : ''
                               }`}
                             >
@@ -1661,7 +1662,8 @@ export default function AdminAnalytics() {
                               <td className="py-3.5 px-4 text-right">
                                 <button
                                   type="button"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     handleSelectUser(user);
                                     setIsEditUserOpen(true); // Auto-expand form
                                   }}
