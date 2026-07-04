@@ -1286,7 +1286,8 @@ export default function AdminAnalytics() {
             />
           )}
 
-          {/* TAB 3: USER MANAGEMENT PORTAL */}\n          {activeTab === 'users' && (
+          {/* TAB 3: USER MANAGEMENT PORTAL */}
+          {activeTab === 'users' && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -1770,7 +1771,9 @@ export default function AdminAnalytics() {
                 })()
               )}
             </div>
-          )}\n                    {/* TAB 4: NOTICES & ANNOUNCEMENTS MANAGER */}\n          {activeTab === 'notices' && (
+          )}
+                    {/* TAB 4: NOTICES & ANNOUNCEMENTS MANAGER */}
+          {activeTab === 'notices' && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -2015,7 +2018,9 @@ export default function AdminAnalytics() {
                 </div>
               </div>
             </div>
-          )}\n                    {/* TAB 5: CATEGORIES MANAGEMENT */}\n          {activeTab === 'categories' && (
+          )}
+                    {/* TAB 5: CATEGORIES MANAGEMENT */}
+          {activeTab === 'categories' && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -2206,7 +2211,9 @@ export default function AdminAnalytics() {
                 </div>
               </div>
             </div>
-          )}\n                    {/* TAB 6: SUB-CATEGORIES MANAGEMENT */}\n          {activeTab === 'subcategories' && (
+          )}
+                    {/* TAB 6: SUB-CATEGORIES MANAGEMENT */}
+          {activeTab === 'subcategories' && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -2422,7 +2429,9 @@ export default function AdminAnalytics() {
                 </div>
               </div>
             </div>
-          )}\n                    {/* TAB 6.5: SUB-SUB-CATEGORIES MANAGEMENT */}\n          {activeTab === 'subsubcategories' && (
+          )}
+                    {/* TAB 6.5: SUB-SUB-CATEGORIES MANAGEMENT */}
+          {activeTab === 'subsubcategories' && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -2663,7 +2672,8 @@ export default function AdminAnalytics() {
                 </div>
               </div>
             </div>
-          )}\n                    {/* TAB 7: MOCK TESTS MANAGEMENT */}
+          )}
+                    {/* TAB 7: MOCK TESTS MANAGEMENT */}
           {activeTab === 'mocks' && (
             <MockTestManager
               examCatalog={examCatalog}
@@ -3077,7 +3087,8 @@ export default function AdminAnalytics() {
             </div>
           )}
 
-          {/* TAB 9: ANNOUNCEMENTS MANAGER */}\n          {activeTab === 'announcements' && (
+          {/* TAB 9: ANNOUNCEMENTS MANAGER */}
+          {activeTab === 'announcements' && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -3298,7 +3309,8 @@ export default function AdminAnalytics() {
                 </div>
               </div>
             </div>
-          )}\n                    {/* TAB: TESTIMONIALS MANAGER */}
+          )}
+                    {/* TAB: TESTIMONIALS MANAGER */}
           {activeTab === 'testimonials' && (
             <div className="space-y-8 animate-in fade-in duration-200">
               {/* Testimonial Creation Form */}
