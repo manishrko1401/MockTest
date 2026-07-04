@@ -11,7 +11,6 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
 import * as Updates from 'expo-updates';
 import { ApiClient } from './api';
 import NetInfo from '@react-native-community/netinfo';
@@ -24,7 +23,7 @@ import AnalysisScreen from './screens/AnalysisScreen';
 import SupportChatScreen from './screens/SupportChatScreen';
 import { Trophy } from 'lucide-react-native';
 import { ThemeColors } from './theme';
-import { requestNotificationPermissions, triggerLocalNotification } from './notifications';
+import { requestNotificationPermissions, triggerLocalNotification, addNotificationResponseListener } from './notifications';
 import { registerBackgroundFetchAsync } from './backgroundTask';
 
 type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis' | 'support_chat';
@@ -337,8 +336,7 @@ export default function App() {
 
   // 1b. Listen to notification taps/clicks to route the user
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-      const data = response.notification.request.content.data;
+    const unsubscribe = addNotificationResponseListener((data) => {
       if (data?.type === 'notice') {
         setDashboardTab('notices');
         setViewMode('dashboard');
@@ -347,7 +345,7 @@ export default function App() {
       }
     });
 
-    return () => subscription.remove();
+    return () => unsubscribe();
   }, []);
 
   // 1c. Background Polling for Notices & Support Messages
