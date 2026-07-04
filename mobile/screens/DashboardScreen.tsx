@@ -1136,29 +1136,32 @@ export default function DashboardScreen({
         return false;
       }
 
-      const test = catalogTestsMap.get(s.testId);
+      // Prioritize durationMinutes from the session object, then catalog, then guess, then fallback
       let durationMinutes = 60;
-      if (s.mockTest && typeof s.mockTest.durationMinutes === 'number') {
-        durationMinutes = s.mockTest.durationMinutes;
-      } else if (test && typeof test.durationMinutes === 'number') {
-        durationMinutes = test.durationMinutes;
-      } else if (typeof s.durationMinutes === 'number') {
+      if (typeof s.durationMinutes === 'number') {
         durationMinutes = s.durationMinutes;
+      } else if (s.mockTest && typeof s.mockTest.durationMinutes === 'number') {
+        durationMinutes = s.mockTest.durationMinutes;
       } else {
-        const tid = (s.testId || '').toLowerCase();
-        if (tid.includes('ssc')) {
-          durationMinutes = 60;
-        } else if (tid.includes('rrb')) {
-          durationMinutes = 90;
-        } else if (tid.includes('ctet')) {
-          durationMinutes = 150;
-        } else if (tid.includes('ugc_net')) {
-          durationMinutes = tid.includes('paper1') ? 60 : 120;
+        const test = catalogTestsMap.get(s.testId);
+        if (test && typeof test.durationMinutes === 'number') {
+          durationMinutes = test.durationMinutes;
+        } else {
+          const tid = (s.testId || '').toLowerCase();
+          if (tid.includes('ssc')) {
+            durationMinutes = 60;
+          } else if (tid.includes('rrb')) {
+            durationMinutes = 90;
+          } else if (tid.includes('ctet')) {
+            durationMinutes = 150;
+          } else if (tid.includes('ugc_net')) {
+            durationMinutes = tid.includes('paper1') ? 60 : 120;
+          }
         }
       }
 
       const totalSec = durationMinutes * 60;
-      const spentSec = s.durationSeconds ?? s.timeSpentSeconds ?? 0;
+      const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
       return spentSec >= totalSec * 0.75;
     }).length;
   }, [examCatalog, currentUser.testSessions]);
