@@ -244,11 +244,23 @@ export default function App() {
               setCurrentUser(authRes.user);
               prefetchCompletedTests(authRes.user);
               await saveUserToCache(authRes.user);
+              setViewMode('dashboard'); // Transition to dashboard upon successful login
               // Flush any offline-queued submissions from a previous session
               flushPendingSubmits();
+            } else {
+              // If credentials are invalid (not a network timeout/failure), clear them and force login
+              if (authRes.error && !authRes.error.includes('failed') && !authRes.error.includes('Network')) {
+                await handleLogout();
+              }
             }
           }).catch(err => {
             console.warn('[Sync] Background user sync failed:', err);
+            // If offline but we have cached user, keep them on dashboard
+            if (cachedUser) {
+              setViewMode('dashboard');
+            } else {
+              setViewMode('auth');
+            }
           }).finally(() => {
             setLoading(false); // ← single authoritative place to stop the spinner
           });
