@@ -798,6 +798,21 @@ export default function DashboardScreen({
       catBorderColor = isDark ? '#5B21B6' : '#EDE9FE';
     }
 
+    const isNew = (() => {
+      if (!notice.publishDate) return false;
+      try {
+        const now = new Date();
+        const pubDate = new Date(notice.publishDate);
+        pubDate.setHours(0, 0, 0, 0);
+        now.setHours(0, 0, 0, 0);
+        const diffTime = Math.abs(now.getTime() - pubDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 3;
+      } catch (e) {
+        return false;
+      }
+    })();
+
     return (
       <View
         key={notice.id}
@@ -812,9 +827,16 @@ export default function DashboardScreen({
         ]}
       >
         <View style={styles.noticeHeader}>
-          <Text style={[styles.noticeBadge, { color: catColor, borderColor: catColor, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}>
-            {notice.type || notice.category.toUpperCase()}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={[styles.noticeBadge, { color: catColor, borderColor: catColor, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}>
+              {notice.type || notice.category.toUpperCase()}
+            </Text>
+            {isNew && (
+              <View style={{ backgroundColor: '#EF4444', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                <Text style={{ color: '#FFFFFF', fontSize: 8, fontWeight: '900' }}>NEW</Text>
+              </View>
+            )}
+          </View>
           <Text style={[styles.noticeDate, { color: isDark ? '#94A3B8' : '#64748B' }]}>{notice.date}</Text>
         </View>
         <Text style={[styles.noticeTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B' }]}>{notice.title}</Text>
