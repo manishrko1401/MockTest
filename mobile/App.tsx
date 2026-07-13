@@ -638,7 +638,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+      <View style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
         <StatusBar 
           barStyle={isDark ? 'light-content' : 'dark-content'} 
           backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
@@ -748,7 +748,7 @@ export default function App() {
             isDark={isDark}
           />
         )}
-      </SafeAreaView>
+      </View>
     </SafeAreaProvider>
   );
 }

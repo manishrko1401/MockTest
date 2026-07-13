@@ -16,7 +16,7 @@ import {
   Modal,
   ActivityIndicator
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Trophy,
   BookOpen,
@@ -109,6 +109,7 @@ export default function DashboardScreen({
   setSelectedCategoryId
 }: DashboardScreenProps) {
 
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [claiming, setClaiming] = useState(false);
@@ -1175,7 +1176,7 @@ export default function DashboardScreen({
   }, [examCatalog, currentUser.testSessions]);
 
   return (
-    <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+    <View style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
       <StatusBar 
         barStyle={isDark ? 'light-content' : 'dark-content'} 
         backgroundColor={isDark ? ThemeColors.dark.headerBg : '#E0F2FE'} 
@@ -1186,7 +1187,11 @@ export default function DashboardScreen({
       <View style={[styles.blurOrbRight, isDark && { backgroundColor: 'rgba(99, 102, 241, 0.08)' }]} />
 
       {/* Header Banner */}
-      <View style={[styles.dashHeader, isDark ? { backgroundColor: ThemeColors.dark.headerBg, borderBottomColor: '#1F2E54' } : { backgroundColor: '#E0F2FE', borderBottomColor: '#BAE6FD' }]}>
+      <View style={[
+        styles.dashHeader, 
+        isDark ? { backgroundColor: ThemeColors.dark.headerBg, borderBottomColor: '#1F2E54' } : { backgroundColor: '#E0F2FE', borderBottomColor: '#BAE6FD' },
+        { paddingTop: insets.top + 10 }
+      ]}>
         {/* Header Decorative Glows */}
         <View style={styles.headerGlowLeft} />
         <View style={styles.headerGlowRight} />
@@ -1224,7 +1229,11 @@ export default function DashboardScreen({
       </View>
 
       {/* Bottom Nav bar */}
-      <View style={[styles.bottomNav, isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder }]}>
+      <View style={[
+        styles.bottomNav, 
+        isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder },
+        { height: 56 + insets.bottom, paddingBottom: insets.bottom }
+      ]}>
         <TouchableOpacity
           style={[
             styles.navBtn, 
@@ -1303,7 +1312,7 @@ export default function DashboardScreen({
       
       {/* Welcome Congrats Popup Modal */}
       {showCongratsPopup && renderCongratsModal()}
-    </SafeAreaView>
+    </View>
   );
 
   function renderCongratsModal() {

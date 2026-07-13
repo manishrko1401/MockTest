@@ -14,7 +14,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Globe, AlignJustify } from 'lucide-react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { ApiClient } from './api';
@@ -101,6 +101,7 @@ export default function MobileTestScreen({
   isDark = false,
   examCatalog = []
 }: MobileTestScreenProps) {
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [loadingText, setLoadingText] = useState('Syncing sitting session...');
   const [totalDuration, setTotalDuration] = useState(3600);
@@ -1125,13 +1126,17 @@ export default function MobileTestScreen({
     if (maxMarks === 0) maxMarks = 200;
 
     return (
-      <SafeAreaView style={[styles.instContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+      <View style={[styles.instContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
         <StatusBar 
           barStyle={isDark ? 'light-content' : 'dark-content'} 
           backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
         />
         {/* Header */}
-        <View style={[styles.instHeader, isDark && { backgroundColor: ThemeColors.dark.headerBg }]}>
+        <View style={[
+          styles.instHeader, 
+          isDark && { backgroundColor: ThemeColors.dark.headerBg },
+          { height: vs(56) + insets.top, paddingTop: insets.top }
+        ]}>
           <Text style={styles.instHeaderTitle}>Instructions Panel</Text>
           <TouchableOpacity 
             style={[styles.instLangBtn, isDark && { backgroundColor: '#16223F', borderColor: '#1F2E54' }]} 
@@ -1240,7 +1245,11 @@ export default function MobileTestScreen({
         </ScrollView>
 
         {/* Footer controls */}
-        <View style={[styles.instFooter, isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder }]}>
+        <View style={[
+          styles.instFooter, 
+          isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder },
+          { height: vs(56) + insets.bottom, paddingBottom: insets.bottom }
+        ]}>
           <TouchableOpacity 
             style={[styles.instCancelBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]} 
             onPress={handleCancelInstructions}
@@ -1262,19 +1271,22 @@ export default function MobileTestScreen({
             <Text style={styles.instStartText}>{t.btn}</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+    <View style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
       <StatusBar 
         barStyle="light-content"
         backgroundColor="#1A1A2E"
       />
 
       {/* Ã¢â‚¬â€ Header Ã¢â‚¬â€ */}
-      <View style={styles.examHeader}>
+      <View style={[
+        styles.examHeader,
+        { paddingTop: insets.top + vs(10), minHeight: vs(56) + insets.top }
+      ]}>
         {/* Left: pause + timer + exam name */}
         <TouchableOpacity style={styles.pauseTextBtn} onPress={handlePauseAndExit}>
           <Text style={styles.pauseTextBtnText}>|| Pause</Text>
@@ -1446,7 +1458,11 @@ export default function MobileTestScreen({
       </ScrollView>
 
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Bottom Navigation Bar ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
-      <View style={[styles.footer, isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder }]}>
+      <View style={[
+        styles.footer, 
+        isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder },
+        { paddingBottom: Math.max(insets.bottom, vs(8)) }
+      ]}>
         <TouchableOpacity
           style={[styles.footerBtn, styles.footerBtnOutline, isDark && { borderColor: '#334155' }]}
           onPress={() => {
@@ -1660,7 +1676,7 @@ export default function MobileTestScreen({
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 

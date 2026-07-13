@@ -10,7 +10,7 @@ import {
   Platform,
   ActivityIndicator
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Send } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiClient } from '../api';
@@ -27,6 +27,7 @@ export default function SupportChatScreen({
   onBack,
   isDark = false
 }: SupportChatScreenProps) {
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(true);
@@ -127,9 +128,13 @@ export default function SupportChatScreen({
   };
 
   return (
-    <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+    <View style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
       {/* Header */}
-      <View style={[styles.header, isDark && { backgroundColor: ThemeColors.dark.headerBg, borderBottomColor: ThemeColors.dark.border }]}>
+      <View style={[
+        styles.header, 
+        isDark && { backgroundColor: ThemeColors.dark.headerBg, borderBottomColor: ThemeColors.dark.border },
+        { height: 56 + insets.top, paddingTop: insets.top }
+      ]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <ArrowLeft color={isDark ? '#60A5FA' : '#2563EB'} size={24} />
         </TouchableOpacity>
@@ -168,7 +173,11 @@ export default function SupportChatScreen({
         )}
 
         {/* Input Bar */}
-        <View style={[styles.inputBar, isDark && { backgroundColor: ThemeColors.dark.headerBg, borderTopColor: ThemeColors.dark.border }]}>
+        <View style={[
+          styles.inputBar, 
+          isDark && { backgroundColor: ThemeColors.dark.headerBg, borderTopColor: ThemeColors.dark.border },
+          { paddingBottom: Math.max(insets.bottom, 12) }
+        ]}>
           <TextInput
             style={[
               styles.textInput,
@@ -193,7 +202,7 @@ export default function SupportChatScreen({
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

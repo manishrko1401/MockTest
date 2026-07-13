@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
   ShieldCheck, 
   Mail, 
@@ -35,6 +36,7 @@ interface AuthScreenProps {
 }
 
 export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleTheme }: AuthScreenProps) {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -136,7 +138,8 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
             styles.themeToggle,
             isDark 
               ? { backgroundColor: '#16223F', borderColor: '#1F2E54' } 
-              : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }
+              : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
+            { top: Math.max(insets.top + 10, 16) }
           ]}
         >
           {isDark ? (

@@ -11,7 +11,7 @@ import {
   Dimensions,
   Switch
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   Check,
@@ -54,6 +54,7 @@ export default function AnalysisScreen({
   onToggleBookmark,
   isDark = false
 }: AnalysisScreenProps) {
+  const insets = useSafeAreaInsets();
   // Navigation / Tabs state: 'analysis' | 'solutions'
   const [activeTab, setActiveTab] = useState<'analysis' | 'solutions'>('analysis');
   const [questions, setQuestions] = useState<any[]>([]);
@@ -318,9 +319,9 @@ export default function AnalysisScreen({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {/* 1. BLACK TOP HEADER */}
-      <View style={styles.blackHeader}>
+      <View style={[styles.blackHeader, { height: 56 + insets.top, paddingTop: insets.top }]}>
         <View style={styles.blackHeaderLeft}>
           <TouchableOpacity style={styles.backBtn} onPress={onBack}>
             <ArrowLeft color="#FFF" size={22} />
@@ -868,7 +869,7 @@ export default function AnalysisScreen({
         </View>
       </Modal>
 
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -8,7 +8,7 @@ import {
   Alert,
   Dimensions
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   Play,
@@ -42,6 +42,7 @@ export default function TestSeriesDetailScreen({
   onOpenAttemptAnalysis,
   isDark = false
 }: TestSeriesDetailScreenProps) {
+  const insets = useSafeAreaInsets();
   const { width: SCREEN_WIDTH } = Dimensions.get('window');
   const horizontalScrollRef = useRef<ScrollView>(null);
   const [activeSubSubId, setActiveSubSubId] = useState<string | null>(null);
@@ -141,13 +142,17 @@ export default function TestSeriesDetailScreen({
   };
 
   return (
-    <SafeAreaView style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+    <View style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
       {/* Decorative Blur Orbs */}
       <View style={[styles.blurOrbLeft, isDark && { backgroundColor: 'rgba(59, 130, 246, 0.08)' }]} />
       <View style={[styles.blurOrbRight, isDark && { backgroundColor: 'rgba(99, 102, 241, 0.08)' }]} />
 
       {/* Header */}
-      <View style={[styles.header, isDark && { backgroundColor: ThemeColors.dark.headerBg }]}>
+      <View style={[
+        styles.header, 
+        isDark && { backgroundColor: ThemeColors.dark.headerBg },
+        { paddingTop: insets.top + 10, paddingBottom: 12 }
+      ]}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
           <ArrowLeft color="#FFF" size={20} />
         </TouchableOpacity>
@@ -437,7 +442,7 @@ export default function TestSeriesDetailScreen({
           )}
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
