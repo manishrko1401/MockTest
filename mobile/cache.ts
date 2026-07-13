@@ -56,7 +56,7 @@ async function pruneQuestionsCache(): Promise<void> {
     const allKeys = await AsyncStorage.getAllKeys();
     const qKeys = allKeys.filter(k => k.startsWith(Q_KEY_PREFIX));
     
-    if (qKeys.length > 12) {
+    if (qKeys.length > 3) {
       const items: { key: string; savedAt: number }[] = [];
       for (const key of qKeys) {
         const val = await AsyncStorage.getItem(key);
@@ -73,11 +73,11 @@ async function pruneQuestionsCache(): Promise<void> {
       // Sort oldest first
       items.sort((a, b) => a.savedAt - b.savedAt);
       
-      // Evict the oldest 4 entries to clear substantial space
-      const toRemove = items.slice(0, 4).map(i => i.key);
+      // Keep only the most recent 3 items, remove the rest
+      const toRemove = items.slice(0, items.length - 3).map(i => i.key);
       if (toRemove.length > 0) {
         await AsyncStorage.multiRemove(toRemove);
-        console.log(`[Cache] Proactively pruned ${toRemove.length} old test caches to prevent SQLITE_FULL.`);
+        console.log(`[Cache] Proactively pruned ${toRemove.length} old test caches. Storing max 3 tests.`);
       }
     }
   } catch (err) {
