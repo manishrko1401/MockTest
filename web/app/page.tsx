@@ -685,7 +685,7 @@ export default function HomeLandingPage() {
       <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* HEADER SECTION */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-6 md:px-12 flex items-center justify-between shadow-sm">
+      <header className="h-16 sticky top-0 z-40 px-6 md:px-12 flex items-center justify-between shadow-sm glass-header transition-all duration-350">
         <div className="flex items-center gap-8">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
@@ -787,8 +787,32 @@ export default function HomeLandingPage() {
       )}
 
       {/* HERO SECTION */}
-      <section className="py-16 md:py-24 px-6 md:px-12 max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+      <section className="py-16 md:py-24 px-6 md:px-12 max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10 edu-grid-pattern">
         
+        {/* Floating Book Art */}
+        <div className="absolute top-20 left-10 opacity-20 dark:opacity-[0.12] animate-float pointer-events-none hidden xl:block">
+          <svg className="w-14 h-14 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+            <path d="M6 6h10M6 10h10M6 14h10" />
+          </svg>
+        </div>
+
+        {/* Floating Graduation Cap Art */}
+        <div className="absolute bottom-10 left-[45%] opacity-20 dark:opacity-[0.12] animate-float-delayed pointer-events-none hidden xl:block">
+          <svg className="w-16 h-16 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+            <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
+          </svg>
+        </div>
+
+        {/* Floating Ruler / Triangle Art */}
+        <div className="absolute top-10 right-20 opacity-20 dark:opacity-[0.12] animate-float pointer-events-none hidden xl:block">
+          <svg className="w-12 h-12 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M22 22 2 2v20Z" />
+            <path d="M18 18H6V6" />
+          </svg>
+        </div>
+
         {/* Left Side: Pitch Title */}
         <div className="space-y-6">
           <span className="inline-flex items-center gap-1.5 text-[10px] bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
@@ -805,7 +829,7 @@ export default function HomeLandingPage() {
 
           {/* Quick search exam */}
           <div className="relative max-w-md w-full pt-2">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-505">
               <Search className="h-4 w-4" />
             </div>
             <input
@@ -817,7 +841,7 @@ export default function HomeLandingPage() {
             />
             <Link
               href={`/mock-tests?q=${searchQuery}`}
-              className="absolute right-2 top-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-xl text-[10px] transition active:scale-95 shadow-md cursor-pointer"
+              className="absolute right-2 top-4 bg-blue-600 hover:bg-blue-750 text-white font-bold py-1.5 px-4 rounded-xl text-[10px] transition active:scale-95 shadow-md cursor-pointer"
             >
               {t.searchBtn}
             </Link>
@@ -826,43 +850,58 @@ export default function HomeLandingPage() {
         </div>
 
         {/* Right Side: Showcase Board */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md relative overflow-hidden flex flex-col justify-between min-h-[300px]">
-          
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-4">
+        <div className="border border-yellow-250 dark:border-yellow-900/40 p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[320px] glass-card glow-shadow-amber hover:scale-[1.01] transition-all duration-300">
+          {/* Watermarked Graduation Cap */}
+          <div className="absolute -bottom-6 -right-6 opacity-5 dark:opacity-[0.03] pointer-events-none">
+            <svg className="w-48 h-48 text-yellow-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+              <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
+            </svg>
+          </div>
+
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-4 mb-4">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-              <Trophy className="h-4 w-4 text-yellow-500" /> {t.topperTitle}
+              <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-bounce" /> {t.topperTitle}
             </h3>
-            <div className="flex gap-1">
+            <div className="flex gap-1.5">
               {testimonials.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSuccessIndex(idx)}
-                  className={`h-2 w-2 rounded-full transition-all cursor-pointer ${successIndex === idx ? 'bg-blue-500 w-4' : 'bg-slate-300 dark:bg-slate-700'}`}
+                  className={`h-2 w-2 rounded-full transition-all cursor-pointer ${successIndex === idx ? 'bg-yellow-500 w-5' : 'bg-slate-350 dark:bg-slate-700'}`}
                 />
               ))}
             </div>
           </div>
 
           <div className="flex-1 flex flex-col justify-center animate-in fade-in slide-in-from-right-4 duration-300">
+            {/* 5-star gold ratings */}
+            <div className="flex gap-1 mb-3 text-yellow-500">
+              <Sparkles className="h-3.5 w-3.5 fill-current" />
+              <Sparkles className="h-3.5 w-3.5 fill-current" />
+              <Sparkles className="h-3.5 w-3.5 fill-current" />
+              <Sparkles className="h-3.5 w-3.5 fill-current" />
+              <Sparkles className="h-3.5 w-3.5 fill-current" />
+            </div>
+
             <p className="text-slate-700 dark:text-slate-300 italic text-xs md:text-sm leading-relaxed mb-6 font-semibold">
               "{activeTopper.quote}"
             </p>
             
             <div className="flex items-center gap-3">
               {activeTopper.photoUrl ? (
-                <img src={activeTopper.photoUrl} alt={activeTopper.name} className="h-10 w-10 rounded-full object-cover border border-slate-200 dark:border-slate-800 shadow-lg" />
+                <img src={activeTopper.photoUrl} alt={activeTopper.name} className="h-11 w-11 rounded-full object-cover border-2 border-yellow-400 dark:border-yellow-905 shadow-lg" />
               ) : (
-                <div className={`h-10 w-10 rounded-full bg-gradient-to-r ${activeTopper.gradient} text-white flex items-center justify-center font-black text-xs shadow-lg`}>
+                <div className={`h-11 w-11 rounded-full bg-gradient-to-r ${activeTopper.gradient} text-white flex items-center justify-center font-black text-xs shadow-lg border-2 border-yellow-400/30`}>
                   {activeTopper.initials}
                 </div>
               )}
               <div>
-                <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">{activeTopper.name}</h4>
-                <p className="text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5">{activeTopper.exam}</p>
+                <h4 className="font-extrabold text-xs text-slate-905 dark:text-white leading-tight">{activeTopper.name}</h4>
+                <p className="text-[10px] text-slate-550 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5">{activeTopper.exam}</p>
               </div>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -882,12 +921,22 @@ export default function HomeLandingPage() {
               cat.id === 'banking' ? Coins :
               cat.id === 'teaching' ? BookOpen :
               cat.id === 'ugc_net' ? GraduationCap : MapPin;
+            const shadowStyle = 
+              cat.id === 'ssc' ? 'glow-shadow-amber' :
+              cat.id === 'railways' ? 'glow-shadow-blue' :
+              cat.id === 'banking' ? 'glow-shadow-green' :
+              cat.id === 'teaching' ? 'glow-shadow-amber' :
+              cat.id === 'ugc_net' ? 'glow-shadow-blue' : 'glow-shadow-purple';
+
             return (
               <button
                 onClick={() => setSelectedModalCategory(cat.id)}
                 key={cat.id}
-                className={`border hover:scale-[1.02] p-6 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full cursor-pointer ${style.bg}`}
+                className={`border hover:scale-[1.03] p-6 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full cursor-pointer relative overflow-hidden ${style.bg} ${shadowStyle}`}
               >
+                {/* Decorative background circle art (watermark) */}
+                <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-current opacity-[0.03] dark:opacity-[0.015] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
+                <div className="absolute -bottom-8 -left-8 w-16 h-16 rounded-full bg-current opacity-[0.02] dark:opacity-[0.01] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
@@ -1107,8 +1156,14 @@ export default function HomeLandingPage() {
         </div>
 
         {/* CBT Engine Security - Full Width Banner */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden glow-shadow-blue border border-blue-400/20">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
+          {/* Watermarked book background shape */}
+          <div className="absolute -left-10 -bottom-10 opacity-[0.08] pointer-events-none">
+            <svg className="w-40 h-40 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+            </svg>
+          </div>
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
             <div className="md:col-span-1 border-b md:border-b-0 md:border-r border-white/10 pb-6 md:pb-0 md:pr-8">
               <h3 className="font-black text-sm uppercase tracking-wider mb-3 flex items-center gap-2 text-white">

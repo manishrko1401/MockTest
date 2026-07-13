@@ -133,4 +133,97 @@ body {
   color: #e2e8f0;
 }
 
+/* Custom Keyframe Animations */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 8s ease-in-out infinite;
+  animation-delay: 2.5s;
+}
+
+.animate-blink {
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+/* Notebook / Blueprint Education Grid Pattern */
+.edu-grid-pattern {
+  background-size: 30px 30px;
+  background-image: 
+    linear-gradient(to right, rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+}
+.dark .edu-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(99, 102, 241, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.02) 1px, transparent 1px);
+}
+
+/* Glassmorphic Cards & Headers */
+.glass-header {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+.dark .glass-header {
+  background-color: rgba(9, 13, 22, 0.8) !important;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+.glass-card {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+.dark .glass-card {
+  background-color: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(51, 65, 85, 0.4);
+}
+
+/* Glow Shadows */
+.glow-shadow-blue {
+  box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.18);
+}
+.dark .glow-shadow-blue {
+  box-shadow: 0 10px 40px -15px rgba(59, 130, 246, 0.3);
+}
+
+.glow-shadow-green {
+  box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.18);
+}
+.dark .glow-shadow-green {
+  box-shadow: 0 10px 40px -15px rgba(16, 185, 129, 0.3);
+}
+
+.glow-shadow-amber {
+  box-shadow: 0 10px 30px -10px rgba(245, 158, 11, 0.18);
+}
+.dark .glow-shadow-amber {
+  box-shadow: 0 10px 40px -15px rgba(245, 158, 11, 0.3);
+}
+
+.glow-shadow-purple {
+  box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.18);
+}
+.dark .glow-shadow-purple {
+  box-shadow: 0 10px 40px -15px rgba(139, 92, 246, 0.3);
+}
+
 

@@ -268,14 +268,15 @@ export default function UpdatesCenterPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200">
+    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 edu-grid-pattern">
       
       {/* Decorative Orbs */}
       <div className="absolute top-10 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-10 right-[30%] w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* HEADER SECTION */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-6 md:px-12 flex items-center justify-between shadow-sm">
+      <header className="h-16 sticky top-0 z-40 px-6 md:px-12 flex items-center justify-between shadow-sm glass-header transition-all duration-350">
         <div className="flex items-center gap-8">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
@@ -391,8 +392,10 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="w-[98%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
+                    className="w-[98%] mx-auto p-4.5 rounded-2xl bg-blue-50/40 dark:bg-blue-950/10 border border-blue-150 dark:border-blue-900/30 border-l-4 border-l-blue-500 hover:scale-[1.015] hover:shadow-sm glow-shadow-blue transition-all duration-200 flex flex-col gap-2 relative overflow-hidden"
                   >
+                    {/* Watermark circle shape */}
+                    <div className="absolute -top-8 -right-8 w-16 h-16 rounded-full bg-blue-550/5 pointer-events-none" />
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
                         <span className="inline-block bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-900 text-blue-700 dark:text-blue-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
@@ -445,8 +448,10 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="w-[98%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
+                    className="w-[98%] mx-auto p-4.5 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-150 dark:border-emerald-900/30 border-l-4 border-l-emerald-500 hover:scale-[1.015] hover:shadow-sm glow-shadow-green transition-all duration-200 flex flex-col gap-2 relative overflow-hidden"
                   >
+                    {/* Watermark circle shape */}
+                    <div className="absolute -top-8 -right-8 w-16 h-16 rounded-full bg-emerald-550/5 pointer-events-none" />
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
                         <span className="inline-block bg-yellow-100 dark:bg-yellow-950/50 border border-yellow-300 dark:border-yellow-900/50 text-yellow-700 dark:text-yellow-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
@@ -499,8 +504,10 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="w-[98%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
+                    className="w-[98%] mx-auto p-4.5 rounded-2xl bg-amber-50/40 dark:bg-amber-950/10 border border-amber-150 dark:border-amber-900/30 border-l-4 border-l-amber-500 hover:scale-[1.015] hover:shadow-sm glow-shadow-amber transition-all duration-200 flex flex-col gap-2 relative overflow-hidden"
                   >
+                    {/* Watermark circle shape */}
+                    <div className="absolute -top-8 -right-8 w-16 h-16 rounded-full bg-amber-550/5 pointer-events-none" />
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
                         <span className="inline-block bg-green-100 dark:bg-green-950 border border-green-300 dark:border-green-900 text-green-700 dark:text-green-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
@@ -552,8 +559,10 @@ export default function UpdatesCenterPage() {
                   .map(notice => (
                   <div
                     key={notice.id}
-                    className="w-[98%] mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-2"
+                    className="w-[98%] mx-auto p-4.5 rounded-2xl bg-purple-50/40 dark:bg-purple-950/10 border border-purple-150 dark:border-purple-900/30 border-l-4 border-l-purple-500 hover:scale-[1.015] hover:shadow-sm glow-shadow-purple transition-all duration-200 flex flex-col gap-2 relative overflow-hidden"
                   >
+                    {/* Watermark circle shape */}
+                    <div className="absolute -top-8 -right-8 w-16 h-16 rounded-full bg-purple-550/5 pointer-events-none" />
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
                         <span className="inline-block bg-purple-100 dark:bg-purple-950/50 border border-purple-300 dark:border-purple-900 text-purple-700 dark:text-purple-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">

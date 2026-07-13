@@ -165,8 +165,8 @@ export default function StudentProfilePage() {
           )}
 
           {/* PROFILE CARD */}
-          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm text-center relative overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          <section className="glass-card glow-shadow-blue p-5 rounded-3xl text-center relative overflow-hidden transition-all duration-300">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
             <div className="relative h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-450 mx-auto flex items-center justify-center border border-blue-200 dark:border-blue-800 mb-3 text-lg font-bold">
               {currentUser.name.split(' ').map(n => n[0]).join('')}
@@ -389,10 +389,14 @@ export default function StudentProfilePage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none pb-12 transition-colors duration-200">
+    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none pb-12 transition-colors duration-200 edu-grid-pattern relative">
       
+      {/* Decorative Orbs */}
+      <div className="absolute top-10 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
       {/* Dynamic Header */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-8 flex items-center justify-between shadow-sm">
+      <header className="h-16 sticky top-0 z-40 px-6 md:px-12 flex items-center justify-between shadow-sm glass-header transition-all duration-350">
         <Link href="/" className="flex items-center gap-2 text-slate-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 font-bold text-sm tracking-wide transition-colors">
           <ChevronRight className="h-4 w-4 rotate-180" /> {t.backToHome}
         </Link>
@@ -437,11 +441,13 @@ export default function StudentProfilePage() {
         <aside className="w-full lg:w-80 flex flex-col gap-6">
           
           {/* User profile recap */}
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl text-center shadow-sm relative overflow-hidden">
+          <div className="glass-card glow-shadow-blue p-6 rounded-3xl text-center relative overflow-hidden transition-all duration-300">
             {/* Ambient Background Glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none">{t.profileSidebarGlow}</div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
+            {/* Background watermarks */}
+            <div className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full bg-blue-600/5 pointer-events-none" />
 
-            <div className="relative h-20 w-20 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mx-auto flex items-center justify-center border border-blue-200 dark:border-blue-800/60 mb-4 text-2xl font-bold">
+            <div className="relative h-20 w-20 rounded-full bg-gradient-to-tr from-blue-100 to-indigo-150 dark:from-blue-900/30 dark:to-indigo-900/20 text-blue-600 dark:text-blue-400 mx-auto flex items-center justify-center border border-blue-200 dark:border-blue-800/60 mb-4 text-2xl font-bold shadow-inner">
               {currentUser.name.split(' ').map(n => n[0]).join('')}
             </div>
             
@@ -542,7 +548,7 @@ export default function StudentProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
             {/* Card 1: Profile Details Form */}
-            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+            <div className="glass-card glow-shadow-blue p-6 rounded-3xl flex flex-col justify-between relative overflow-hidden transition-all duration-300">
               <div>
                 <h3 className="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 flex items-center gap-2">
                   <User className="h-4 w-4 text-blue-500" /> {t.updateDetails}
@@ -602,7 +608,7 @@ export default function StudentProfilePage() {
             </div>
 
             {/* Card 2: Password Update Form */}
-            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+            <div className="glass-card glow-shadow-purple p-6 rounded-3xl flex flex-col justify-between relative overflow-hidden transition-all duration-300">
               <div>
                 <h3 className="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 flex items-center gap-2">
                   <Lock className="h-4 w-4 text-blue-500" /> {t.changePass}
@@ -685,7 +691,7 @@ export default function StudentProfilePage() {
             </div>
 
             {/* Card 3: Default Theme Settings */}
-            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+            <div className="glass-card glow-shadow-amber p-6 rounded-3xl flex flex-col justify-between relative overflow-hidden transition-all duration-300">
               <div>
                 <h3 className="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 flex items-center gap-2">
                   <Sun className="h-4 w-4 text-blue-500" /> {language === 'hi' ? 'डिफ़ॉल्ट थीम प्राथमिकता' : 'Default Theme Preference'}
@@ -727,7 +733,7 @@ export default function StudentProfilePage() {
             </div>
 
             {/* Card 4: Default Language Settings */}
-            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+            <div className="glass-card glow-shadow-green p-6 rounded-3xl flex flex-col justify-between relative overflow-hidden transition-all duration-300">
               <div>
                 <h3 className="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 flex items-center gap-2">
                   <Globe className="h-4 w-4 text-blue-500" /> {t.defaultLangCard}

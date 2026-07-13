@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useAuth, TestCategory, TestSubCategory, MockTestItem } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu } from 'lucide-react';
+import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu, TrendingUp, Coins, MapPin, Sparkles } from 'lucide-react';
 import { generateExamSession, EXPLANATIONS } from '../lib/examUtils';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
@@ -676,27 +676,45 @@ export default function MockTestsCatalog() {
 
             <nav className="space-y-1 flex-1 overflow-y-auto pr-1 scrollbar-thin">
               {filteredSidebarCategories.length > 0 ? (
-                filteredSidebarCategories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => {
-                      setSelectedCategory(category.id);
-                      setSelectedSubCategory(null);
-                      setShowBookmarks(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                      selectedCategory === category.id && !showBookmarks
-                        ? 'bg-blue-600 text-white'
-                        : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <GraduationCap className="h-4 w-4" />
-                      {category.name}
-                    </span>
-                    <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-                  </button>
-                ))
+                filteredSidebarCategories.map((category) => {
+                  const isSelected = selectedCategory === category.id && !showBookmarks;
+                  const SidebarIcon = 
+                    category.id === 'ssc' ? Award :
+                    category.id === 'railways' ? TrendingUp :
+                    category.id === 'banking' ? Coins :
+                    category.id === 'teaching' ? BookOpen :
+                    category.id === 'ugc_net' ? GraduationCap : MapPin;
+
+                  const activeGrad = 
+                    category.id === 'ssc' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow shadow-amber-500/25' :
+                    category.id === 'railways' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow shadow-blue-500/25' :
+                    category.id === 'banking' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow shadow-emerald-500/25' :
+                    category.id === 'teaching' ? 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white shadow shadow-amber-500/25' :
+                    category.id === 'ugc_net' ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow shadow-sky-500/25' : 
+                    'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow shadow-purple-500/25';
+
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        setSelectedCategory(category.id);
+                        setSelectedSubCategory(null);
+                        setShowBookmarks(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 cursor-pointer ${
+                        isSelected
+                          ? `${activeGrad}`
+                          : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-white'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <SidebarIcon className={`h-4 w-4 ${isSelected ? 'animate-pulse' : ''}`} />
+                        {category.name}
+                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                    </button>
+                  );
+                })
               ) : (
                 <div className="text-center py-6 text-slate-400 text-xs font-semibold">
                   {language === 'hi' ? 'कोई श्रेणी नहीं मिली' : 'No categories found'}
@@ -719,7 +737,7 @@ export default function MockTestsCatalog() {
         </aside>
 
         {/* Right Side Content (Tests list/details) */}
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-8 overflow-y-auto edu-grid-pattern relative">
           {showBookmarks ? (
             <div>
               {/* Bookmarked Questions Header */}
@@ -981,12 +999,20 @@ export default function MockTestsCatalog() {
                                 const attempts = getTestAttempts(test.id);
                                 const attemptsCount = attempts.length;
                                 const isTestPremium = test.isPremium;
+                                const cardGlow = 
+                                    selectedCategory === 'ssc' ? 'glow-shadow-amber border-l-4 border-l-amber-500' :
+                                    selectedCategory === 'railways' ? 'glow-shadow-blue border-l-4 border-l-blue-500' :
+                                    selectedCategory === 'banking' ? 'glow-shadow-green border-l-4 border-l-green-500' :
+                                    selectedCategory === 'teaching' ? 'glow-shadow-amber border-l-4 border-l-amber-500' :
+                                    selectedCategory === 'ugc_net' ? 'glow-shadow-blue border-l-4 border-l-blue-500' : 
+                                    'glow-shadow-purple border-l-4 border-l-purple-500';
 
                                 return (
                                   <div
                                     key={test.id}
-                                    className="bg-white/75 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/80 dark:border-slate-800/80 p-4.5 rounded-xl shadow-sm hover:shadow-md hover:border-blue-500/45 dark:hover:border-blue-500/45 transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full hover:scale-[1.01]"
+                                    className={`bg-white/75 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/80 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full hover:scale-[1.015] relative overflow-hidden ${cardGlow}`}
                                   >
+                                    <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-slate-400/5 pointer-events-none" />
                                     <div className="space-y-1.5 flex-1 w-full text-left">
                                       <div className="flex flex-wrap items-center gap-2">
                                         {isTestPremium ? (
@@ -1105,12 +1131,20 @@ export default function MockTestsCatalog() {
                           const attempts = getTestAttempts(test.id);
                           const attemptsCount = attempts.length;
                           const isTestPremium = test.isPremium;
+                          const cardGlow = 
+                            selectedCategory === 'ssc' ? 'glow-shadow-amber border-l-4 border-l-amber-500' :
+                            selectedCategory === 'railways' ? 'glow-shadow-blue border-l-4 border-l-blue-500' :
+                            selectedCategory === 'banking' ? 'glow-shadow-green border-l-4 border-l-green-500' :
+                            selectedCategory === 'teaching' ? 'glow-shadow-amber border-l-4 border-l-amber-500' :
+                            selectedCategory === 'ugc_net' ? 'glow-shadow-blue border-l-4 border-l-blue-500' : 
+                            'glow-shadow-purple border-l-4 border-l-purple-500';
 
                           return (
                             <div
                               key={test.id}
-                              className="bg-white/75 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/80 dark:border-slate-800/80 p-4.5 rounded-xl shadow-sm hover:shadow-md hover:border-blue-500/45 dark:hover:border-blue-500/45 transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full hover:scale-[1.01]"
+                              className={`bg-white/75 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/80 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full hover:scale-[1.015] relative overflow-hidden ${cardGlow}`}
                             >
+                              <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-slate-400/5 pointer-events-none" />
                               <div className="space-y-1.5 flex-1 w-full text-left">
                                 <div className="flex flex-wrap items-center gap-2">
                                   {isTestPremium ? (
