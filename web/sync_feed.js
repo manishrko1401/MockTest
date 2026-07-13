@@ -154,6 +154,7 @@ async function syncFeed() {
   ];
 
   let newNoticesCount = 0;
+  let updatedNoticesCount = 0;
   let importedIndex = 0;
 
   for (const target of targets) {
@@ -203,6 +204,51 @@ async function syncFeed() {
       });
 
       if (existing) {
+        if (existing.title !== item.title) {
+          console.log(`Found UPDATED notice in ${target.name}: "${existing.title}" -> "${item.title}"`);
+          console.log(`  Link: ${item.url}`);
+
+          let dateObj = new Date();
+          let directUrl = item.url;
+          let lastDate = existing.lastDate;
+
+          try {
+            const pageHtml = await fetchUrl(item.url);
+            directUrl = extractDirectLink(pageHtml, item.url, target.category);
+
+            if (target.category === 'notice') {
+              const lastDateMatch = /Last Date:\s*([0-9\/]+)/i.exec(pageHtml);
+              if (lastDateMatch) lastDate = lastDateMatch[1].trim();
+            }
+
+            const schemaMatch = /"datePublished"\s*:\s*"([^"]*)"/i.exec(pageHtml);
+            if (schemaMatch) {
+              dateObj = new Date(schemaMatch[1]);
+            }
+          } catch (err) {
+            console.error(`  Warning: Failed to fetch detail page for updated notice ${item.url}. Using existing metadata where possible.`);
+          }
+
+          const dateStr = formatPublishDate(dateObj);
+          const publishDateStr = dateObj.toISOString().split('T')[0];
+          const createdAtTimestamp = new Date(Date.now() + (importedIndex * 1000));
+
+          await prisma.notice.update({
+            where: { id },
+            data: {
+              title: item.title,
+              date: dateStr,
+              publishDate: publishDateStr,
+              url: directUrl,
+              lastDate,
+              createdAt: createdAtTimestamp
+            }
+          });
+
+          console.log(`  Successfully updated: "${item.title}" -> Direct Link: ${directUrl}`);
+          updatedNoticesCount++;
+          importedIndex++;
+        }
         continue;
       }
 
@@ -254,7 +300,8 @@ async function syncFeed() {
     }
   }
 
-  console.log(`Sync complete. Mapped and imported ${newNoticesCount} new notices.`);
+  console.log(`Sync complete. Mapped and imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices.`);
+
 }
 
 if (require.main === module) {

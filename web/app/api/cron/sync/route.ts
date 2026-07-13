@@ -142,7 +142,9 @@ export async function GET(request: Request) {
     ];
 
     let newNoticesCount = 0;
+    let updatedNoticesCount = 0;
     const importedTitles: string[] = [];
+    const updatedTitles: string[] = [];
     let importedIndex = 0;
 
     for (const target of targets) {
@@ -188,7 +190,52 @@ export async function GET(request: Request) {
           where: { id }
         });
 
-        if (existing) continue;
+        if (existing) {
+          if (existing.title !== item.title) {
+            console.log(`Cron: Found UPDATED ${target.name}: "${existing.title}" -> "${item.title}"`);
+            let dateObj = new Date();
+            let directUrl = item.url;
+            let lastDate = existing.lastDate;
+
+            try {
+              const pageHtml = await fetchUrl(item.url);
+              directUrl = extractDirectLink(pageHtml, item.url, target.category);
+
+              if (target.category === 'notice') {
+                const lastDateMatch = /Last Date:\s*([0-9\/]+)/i.exec(pageHtml);
+                if (lastDateMatch) lastDate = lastDateMatch[1].trim();
+              }
+
+              const schemaMatch = /"datePublished"\s*:\s*"([^"]*)"/i.exec(pageHtml);
+              if (schemaMatch) {
+                dateObj = new Date(schemaMatch[1]);
+              }
+            } catch (err) {
+              console.error(`Cron: Warning: Failed to fetch detail page for updated notice ${item.url}`);
+            }
+
+            const dateStr = formatPublishDate(dateObj);
+            const publishDateStr = dateObj.toISOString().split('T')[0];
+            const createdAtTimestamp = new Date(Date.now() + (importedIndex * 1000));
+
+            await prisma.notice.update({
+              where: { id },
+              data: {
+                title: item.title,
+                date: dateStr,
+                publishDate: publishDateStr,
+                url: directUrl,
+                lastDate,
+                createdAt: createdAtTimestamp
+              }
+            });
+
+            updatedNoticesCount++;
+            updatedTitles.push(item.title);
+            importedIndex++;
+          }
+          continue;
+        }
 
         console.log(`Cron: Found NEW ${target.name}: "${item.title}"`);
         let dateObj = new Date();
@@ -238,8 +285,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Sync complete. Imported ${newNoticesCount} new notices.`,
-      imported: importedTitles
+      message: `Sync complete. Imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices.`,
+      imported: importedTitles,
+      updated: updatedTitles
     });
   } catch (error: any) {
     console.error("Cron Error:", error);
