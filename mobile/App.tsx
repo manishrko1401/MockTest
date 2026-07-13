@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Updates from 'expo-updates';
 import { ApiClient } from './api';
 import NetInfo from '@react-native-community/netinfo';
-import { getCachedCatalog, saveCatalogToCache, clearAllCache, getLastSyncTimestamp, setLastSyncTimestamp, mergeCatalogDelta, invalidateQuestionsCache, getCachedUser, saveUserToCache } from './cache';
+import { getCachedCatalog, saveCatalogToCache, clearAllCache, getLastSyncTimestamp, setLastSyncTimestamp, mergeCatalogDelta, invalidateQuestionsCache, getCachedUser, saveUserToCache, getCachedQuestions, saveQuestionsToCache } from './cache';
 import AuthScreen from './screens/AuthScreen';
 import DashboardScreen from './screens/DashboardScreen';
 import TestSeriesDetailScreen from './screens/TestSeriesDetailScreen';
@@ -63,15 +63,12 @@ export default function App() {
 
     for (const testId of uniqueTestIds) {
       try {
-        const cached = await AsyncStorage.getItem(`qs_v2_${testId}`);
-        if (!cached) {
+        const questionsList = await getCachedQuestions(testId);
+        if (!questionsList) {
           console.log(`[Cache] Prefetching custom questions for ${testId}`);
           const res = await ApiClient.getCustomQuestions(testId);
           if (res.success && res.questions && Array.isArray(res.questions)) {
-            await AsyncStorage.setItem(
-              `qs_v2_${testId}`,
-              JSON.stringify({ questions: res.questions, savedAt: Date.now() })
-            );
+            await saveQuestionsToCache(testId, res.questions);
             console.log(`[Cache] Successfully pre-cached questions for ${testId}`);
           }
         }
