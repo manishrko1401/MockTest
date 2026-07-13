@@ -417,11 +417,19 @@ export default function MockTestsCatalog() {
                               (test.requiredTier === 'Testbook Pass Pro' && currentUser.subscriptionTier === 'Testbook Pass Pro')
                             );
 
-                            return (
-                              <div
-                                key={test.id}
-                                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4.5 rounded-xl shadow-sm hover:shadow-md hover:border-blue-500/50 dark:hover:border-blue-500/50 transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full"
-                              >
+                             const cardStyle = ongoing
+                               ? 'bg-sky-50/30 dark:bg-sky-950/10 border border-sky-200/60 dark:border-sky-900/40 border-l-4 border-l-sky-500'
+                               : completed
+                               ? 'bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-200/60 dark:border-emerald-900/40 border-l-4 border-l-emerald-500'
+                               : isTestPremium && !hasPass
+                               ? 'bg-amber-50/20 dark:bg-amber-950/5 border border-amber-250/60 dark:border-amber-900/40 border-l-4 border-l-amber-500'
+                               : 'bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 border-l-4 border-l-blue-500 hover:border-slate-350 dark:hover:border-slate-700';
+
+                             return (
+                               <div
+                                 key={test.id}
+                                 className={`p-4.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full ${cardStyle}`}
+                               >
                                  <div className="space-y-1.5 flex-1 w-full text-left">
                                    <div className="flex flex-wrap items-center gap-2">
                                      {isTestPremium ? (
