@@ -163,6 +163,66 @@ export default function AnalysisScreen({
   const percentileVal = calculatedRankData.percentile;
   const accuracyVal = activeAttempt.accuracy ?? 0;
 
+  const isCutoffCleared = useMemo(() => {
+    try {
+      const parts = cutoffScoreStr.split('-');
+      const minCutoff = parseFloat(parts[0]);
+      if (!isNaN(minCutoff)) {
+        return scoreVal >= minCutoff;
+      }
+    } catch (e) {}
+    return scoreVal >= 120; // fallback
+  }, [cutoffScoreStr, scoreVal]);
+
+  const sectionalAnalysis = useMemo(() => {
+    const sectionsMap: Record<string, {
+      name: string;
+      total: number;
+      attempted: number;
+      correct: number;
+      incorrect: number;
+      unattempted: number;
+      score: number;
+    }> = {};
+
+    questions.forEach(q => {
+      const secName = q.section || q.subject || 'General Section';
+      if (!sectionsMap[secName]) {
+        sectionsMap[secName] = {
+          name: secName,
+          total: 0,
+          attempted: 0,
+          correct: 0,
+          incorrect: 0,
+          unattempted: 0,
+          score: 0,
+        };
+      }
+
+      const stats = sectionsMap[secName];
+      stats.total++;
+
+      const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
+      const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
+      const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
+
+      if (selectedIdx === null || selectedIdx === undefined) {
+        stats.unattempted++;
+      } else {
+        stats.attempted++;
+        if (selectedIdx === correctIdx) {
+          stats.correct++;
+          stats.score += 1.0;
+        } else {
+          stats.incorrect++;
+          stats.score -= 0.25;
+        }
+      }
+    });
+
+    return Object.values(sectionsMap);
+  }, [questions, activeAttempt]);
+
   // Reconstruct deterministic student responses seed to align with website timers
   let seed = 0;
   const seedString = (currentUser?.id || '') + (activeAttempt?.id || '');
@@ -375,32 +435,128 @@ export default function AnalysisScreen({
             contentContainerStyle={styles.analysisContentContainer}
             showsVerticalScrollIndicator={false}
           >
-
-
-            {/* Quick Summary Header with Section Switcher & Cutoff */}
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>QUICK SUMMARY</Text>
-              
-              <View style={styles.quickSummaryMeta}>
-                <TouchableOpacity style={styles.miniDropdown}>
-                  <Text style={styles.miniDropdownText}>General</Text>
-                  <ChevronDown size={11} color="#475569" style={{ marginLeft: 3 }} />
-                </TouchableOpacity>
-                <Text style={styles.cutoffLabel}>Cut off: {cutoffScoreStr}</Text>
+            {/* 1. CUTOFF / PERFORMANCE STATUS BANNER */}
+            <View style={[
+              styles.statusBannerCard,
+              isCutoffCleared 
+                ? { backgroundColor: isDark ? '#062C1E' : '#ECFDF5', borderColor: isDark ? '#065F46' : '#A7F3D0' }
+                : { backgroundColor: isDark ? '#451A03' : '#FFF7ED', borderColor: isDark ? '#78350F' : '#FFEDD5' }
+            ]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={[
+                  styles.statusIconCircle,
+                  { backgroundColor: isCutoffCleared ? '#10B981' : '#F59E0B' }
+                ]}>
+                  {isCutoffCleared ? <Check color="#FFF" size={20} /> : <AlertTriangle color="#FFF" size={20} />}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.statusTitleText, { color: isCutoffCleared ? (isDark ? '#34D399' : '#065F46') : (isDark ? '#FBBF24' : '#9A3412') }]}>
+                    {isCutoffCleared ? 'Cutoff Cleared! 🎉' : 'Cutoff Not Cleared ⌛'}
+                  </Text>
+                  <Text style={[styles.statusDescText, { color: isDark ? '#94A3B8' : (isCutoffCleared ? '#047857' : '#C2410C') }]}>
+                    {isCutoffCleared 
+                      ? `Great job! Your score is ${scoreVal.toFixed(1)}, which is above the cutoff range of ${cutoffScoreStr}. You have successfully cleared the qualification line!`
+                      : `Keep practicing! Your score is ${scoreVal.toFixed(1)}. You missed the cutoff range of ${cutoffScoreStr} by ${(parseFloat(cutoffScoreStr) - scoreVal).toFixed(1)} marks.`
+                    }
+                  </Text>
+                </View>
               </View>
             </View>
 
-            {/* Metric Cards */}
+            {/* 2. ATTEMPT SWITCHER ROW */}
+            {testAttempts.length > 1 && (
+              <View style={[styles.attemptSwitcherContainer, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+                <Text style={[styles.attemptSwitcherLabel, isDark && { color: ThemeColors.dark.textMuted }]}>SELECT ATTEMPT TO ANALYZE:</Text>
+                <View style={styles.attemptRow}>
+                  {testAttempts.map((att: any, idx: number) => {
+                    const isSelected = activeAttemptIndex === idx;
+                    const dateStr = att.completedAt ? new Date(att.completedAt).toLocaleDateString() : 'Attempt';
+                    return (
+                      <TouchableOpacity
+                        key={att.id}
+                        style={[
+                          styles.attemptPill,
+                          isSelected 
+                            ? { backgroundColor: '#2563EB', borderColor: '#2563EB' } 
+                            : (isDark ? { backgroundColor: '#111827', borderColor: '#374151' } : { backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' }),
+                          { borderWidth: 1 }
+                        ]}
+                        onPress={() => setActiveAttemptIndex(idx)}
+                      >
+                        <Text style={[styles.attemptPillText, isSelected ? { color: '#FFF', fontWeight: 'bold' } : (isDark ? { color: '#E2E8F0' } : { color: '#475569' })]}>
+                          Attempt {testAttempts.length - idx} ({dateStr})
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* 3. SCORE COMPARISON SPECTRUM */}
+            {(() => {
+              const topper = Math.max(bestScore, maxScore, scoreVal, 100);
+              return (
+                <View style={[styles.comparisonSliderCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+                  {/* Decorative Background Art Circle */}
+                  <View style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(99,102,241,0.06)' }} />
+                  
+                  <Text style={[styles.comparisonTitle, isDark && { color: ThemeColors.dark.text }]}>Score Comparison Spectrum</Text>
+                  
+                  {/* Spectrum Track bar */}
+                  <View style={styles.spectrumTrackBg}>
+                    {/* Average Marker */}
+                    <View style={[styles.spectrumMarker, { left: `${(averageScore / topper) * 100}%`, backgroundColor: '#64748B' }]} />
+                    {/* Cutoff Marker */}
+                    <View style={[styles.spectrumMarker, { left: `${(parseFloat(cutoffScoreStr) / topper) * 100}%`, backgroundColor: '#F59E0B' }]} />
+                    {/* User Score Fill */}
+                    <View style={[styles.spectrumProgressFill, { width: `${Math.min(100, Math.max(0, (scoreVal / topper) * 100))}%`, backgroundColor: isCutoffCleared ? '#10B981' : '#2563EB' }]} />
+                    {/* User Pin */}
+                    <View style={[styles.spectrumUserPin, { left: `${Math.min(97, Math.max(0, (scoreVal / topper) * 100))}%` }]}>
+                      <View style={[styles.spectrumPinDot, { backgroundColor: isCutoffCleared ? '#10B981' : '#2563EB' }]} />
+                    </View>
+                  </View>
+
+                  {/* Labels Row */}
+                  <View style={styles.spectrumLabelsRow}>
+                    <View style={styles.labelGroup}>
+                      <View style={[styles.labelLegendDot, { backgroundColor: '#64748B' }]} />
+                      <Text style={[styles.labelText, isDark && { color: ThemeColors.dark.textMuted }]}>Avg: {averageScore.toFixed(0)}</Text>
+                    </View>
+                    <View style={styles.labelGroup}>
+                      <View style={[styles.labelLegendDot, { backgroundColor: '#F59E0B' }]} />
+                      <Text style={[styles.labelText, isDark && { color: ThemeColors.dark.textMuted }]}>Cutoff: {parseFloat(cutoffScoreStr).toFixed(0)}</Text>
+                    </View>
+                    <View style={styles.labelGroup}>
+                      <View style={[styles.labelLegendDot, { backgroundColor: isCutoffCleared ? '#10B981' : '#2563EB' }]} />
+                      <Text style={[styles.labelText, { fontWeight: 'bold' }, isDark && { color: ThemeColors.dark.text }]}>You: {scoreVal.toFixed(0)}</Text>
+                    </View>
+                    <View style={styles.labelGroup}>
+                      <View style={[styles.labelLegendDot, { backgroundColor: '#EC4899' }]} />
+                      <Text style={[styles.labelText, isDark && { color: ThemeColors.dark.textMuted }]}>Topper: {bestScore.toFixed(0)}</Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            })()}
+
+            {/* Quick Summary Title */}
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>PERFORMANCE SNAPSHOT</Text>
+              <Text style={styles.cutoffLabel}>Exam Cutoff: {cutoffScoreStr}</Text>
+            </View>
+
+            {/* 4. METRIC CARDS GRID */}
             <View style={styles.metricsGrid}>
               
               {/* Rank Card */}
-              <View style={styles.metricCard}>
+              <View style={[styles.metricCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
                 <View style={[styles.metricIconBg, { backgroundColor: '#FEE2E2' }]}>
                   <Flag size={18} color="#EF4444" />
                 </View>
                 <View style={styles.metricDetails}>
                   <Text style={styles.metricLabel}>Rank</Text>
-                  <Text style={styles.metricValue}>
+                  <Text style={[styles.metricValue, isDark && { color: ThemeColors.dark.text }]}>
                     {testbookRank}
                     <Text style={styles.metricTotal}>/{testbookTotalUsers}</Text>
                   </Text>
@@ -408,80 +564,119 @@ export default function AnalysisScreen({
               </View>
 
               {/* Score Card */}
-              <View style={[styles.metricCard, { flexDirection: 'column', alignItems: 'stretch' }]}>
+              <View style={[styles.metricCard, { flexDirection: 'column', alignItems: 'stretch' }, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={[styles.metricIconBg, { backgroundColor: '#F3E8FF' }]}>
                     <Trophy size={18} color="#A855F7" />
                   </View>
                   <View style={[styles.metricDetails, { flex: 1 }]}>
                     <Text style={styles.metricLabel}>Score</Text>
-                    <Text style={styles.metricValue}>
+                    <Text style={[styles.metricValue, isDark && { color: ThemeColors.dark.text }]}>
                       {scoreVal.toFixed(1)}
                       <Text style={styles.metricTotal}>/{maxScore.toFixed(0)}</Text>
                     </Text>
                   </View>
                 </View>
-                <View style={styles.scoreBreakdownRow}>
-                  <Text style={styles.scoreBreakdownText}>Average Score: {averageScore.toFixed(2)}</Text>
-                  <Text style={styles.scoreBreakdownText}>Best Score: {bestScore.toFixed(2)}</Text>
+                <View style={[styles.scoreBreakdownRow, isDark && { borderTopColor: '#334155' }]}>
+                  <Text style={[styles.scoreBreakdownText, isDark && { color: ThemeColors.dark.textMuted }]}>Average: {averageScore.toFixed(2)}</Text>
+                  <Text style={[styles.scoreBreakdownText, isDark && { color: ThemeColors.dark.textMuted }]}>Best: {bestScore.toFixed(2)}</Text>
                 </View>
               </View>
 
               {/* Percentile Card */}
-              <View style={styles.metricCard}>
-                <View style={[styles.metricIconBg, { backgroundColor: '#F3E8FF' }]}>
-                  <User size={18} color="#A855F7" />
+              <View style={[styles.metricCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+                <View style={[styles.metricIconBg, { backgroundColor: '#E0F2FE' }]}>
+                  <User size={18} color="#0284C7" />
                 </View>
                 <View style={styles.metricDetails}>
                   <Text style={styles.metricLabel}>Percentile</Text>
-                  <Text style={styles.metricValue}>{percentileVal.toFixed(2)} %</Text>
+                  <Text style={[styles.metricValue, isDark && { color: ThemeColors.dark.text }]}>{percentileVal.toFixed(2)} %</Text>
                 </View>
               </View>
 
               {/* Accuracy Card */}
-              <View style={styles.metricCard}>
+              <View style={[styles.metricCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
                 <View style={[styles.metricIconBg, { backgroundColor: '#DCFCE7' }]}>
                   <Sun size={18} color="#22C55E" />
                 </View>
                 <View style={styles.metricDetails}>
                   <Text style={styles.metricLabel}>Accuracy</Text>
-                  <Text style={styles.metricValue}>{accuracyVal.toFixed(0)} %</Text>
+                  <Text style={[styles.metricValue, isDark && { color: ThemeColors.dark.text }]}>{accuracyVal.toFixed(0)} %</Text>
                 </View>
               </View>
 
-              {/* Qs. Attempted Card */}
-              <View style={[styles.metricCard, { flexDirection: 'column', alignItems: 'stretch' }]}>
+              {/* Qs. Attempted Details */}
+              <View style={[styles.metricCard, { flexDirection: 'column', alignItems: 'stretch' }, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={[styles.metricIconBg, { backgroundColor: '#DBEAFE' }]}>
                     <ClipboardList size={18} color="#3B82F6" />
                   </View>
                   <View style={[styles.metricDetails, { flex: 1 }]}>
                     <Text style={styles.metricLabel}>Qs. Attempted</Text>
-                    <Text style={styles.metricValue}>
+                    <Text style={[styles.metricValue, isDark && { color: ThemeColors.dark.text }]}>
                       {statsCounts.correct + statsCounts.incorrect}
                       <Text style={styles.metricTotal}>/{totalQs}</Text>
                     </Text>
                   </View>
                 </View>
                 
-                <View style={styles.pillsRow}>
-                  <View style={[styles.pillItem, { backgroundColor: '#F0FDF4' }]}>
+                <View style={[styles.pillsRow, isDark && { borderTopColor: '#334155' }]}>
+                  <View style={[styles.pillItem, { backgroundColor: isDark ? '#062C1E' : '#F0FDF4' }]}>
                     <View style={[styles.pillDot, { backgroundColor: '#22C55E' }]} />
-                    <Text style={[styles.pillText, { color: '#166534' }]}>Correct: {statsCounts.correct}</Text>
+                    <Text style={[styles.pillText, { color: isDark ? '#34D399' : '#166534' }]}>Correct: {statsCounts.correct}</Text>
                   </View>
-                  <View style={[styles.pillItem, { backgroundColor: '#FEF2F2' }]}>
+                  <View style={[styles.pillItem, { backgroundColor: isDark ? '#451A03' : '#FEF2F2' }]}>
                     <View style={[styles.pillDot, { backgroundColor: '#EF4444' }]} />
-                    <Text style={[styles.pillText, { color: '#991B1B' }]}>Incorrect: {statsCounts.incorrect}</Text>
+                    <Text style={[styles.pillText, { color: isDark ? '#FCA5A5' : '#991B1B' }]}>Incorrect: {statsCounts.incorrect}</Text>
                   </View>
-                  <View style={[styles.pillItem, { backgroundColor: '#F8FAFC' }]}>
+                  <View style={[styles.pillItem, { backgroundColor: isDark ? '#1F293B' : '#F8FAFC' }]}>
                     <View style={[styles.pillDot, { backgroundColor: '#64748B' }]} />
-                    <Text style={[styles.pillText, { color: '#334155' }]}>Unattempted: {statsCounts.unattempted}</Text>
+                    <Text style={[styles.pillText, { color: isDark ? '#94A3B8' : '#334155' }]}>Unattempt: {statsCounts.unattempted}</Text>
                   </View>
                 </View>
               </View>
 
             </View>
 
+            {/* 5. SUBJECT-WISE BREAKDOWN */}
+            <View style={[styles.sectionalAnalysisCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+              <Text style={[styles.comparisonTitle, { marginBottom: 12, fontSize: 13 }, isDark && { color: ThemeColors.dark.text }]}>Subject-wise Breakdown</Text>
+              
+              {sectionalAnalysis.length === 0 ? (
+                <Text style={[styles.grayText, { textAlign: 'center', padding: 20 }]}>Subject metrics calculating...</Text>
+              ) : (
+                sectionalAnalysis.map((sec) => {
+                  const maxSecScore = sec.total; // assume 1 mark per question
+                  const scorePercent = Math.min(100, Math.max(0, (sec.score / maxSecScore) * 100));
+                  const secAccuracy = sec.attempted > 0 ? (sec.correct / sec.attempted) * 100 : 0;
+                  
+                  return (
+                    <View key={sec.name} style={[styles.sectionRowItem, isDark && { borderBottomColor: '#334155' }]}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <Text style={[styles.sectionRowTitle, isDark && { color: ThemeColors.dark.text }]}>{sec.name}</Text>
+                        <Text style={[styles.sectionRowScore, { color: isDark ? '#60A5FA' : '#2563EB' }]}>
+                          Score: {sec.score.toFixed(1)}/{maxSecScore.toFixed(0)}
+                        </Text>
+                      </View>
+
+                      {/* Progress Bar representing Score Ratio */}
+                      <View style={[styles.sectionProgressBarBg, isDark && { backgroundColor: '#111827' }]}>
+                        <View style={[styles.sectionProgressBarFill, { width: `${scorePercent}%`, backgroundColor: secAccuracy >= 75 ? '#10B981' : (secAccuracy >= 50 ? '#3B82F6' : '#EF4444') }]} />
+                      </View>
+
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                        <Text style={[styles.sectionRowMeta, isDark && { color: ThemeColors.dark.textMuted }]}>
+                          Correct: <Text style={{ color: '#10B981', fontWeight: 'bold' }}>{sec.correct}</Text> | Incorrect: <Text style={{ color: '#EF4444', fontWeight: 'bold' }}>{sec.incorrect}</Text> | Unattempted: <Text style={{ color: '#64748B', fontWeight: 'bold' }}>{sec.unattempted}</Text>
+                        </Text>
+                        <Text style={[styles.sectionRowMeta, { fontWeight: 'bold', color: secAccuracy >= 75 ? '#10B981' : '#64748B' }]}>
+                          Accuracy: {secAccuracy.toFixed(0)}%
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })
+              )}
+            </View>
 
           </ScrollView>
         )}
@@ -1157,6 +1352,163 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
     padding: 10,
     borderRadius: 12
+  },
+  // Redesigned Analysis Styles
+  statusBannerCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  statusIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusTitleText: {
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  statusDescText: {
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  attemptSwitcherContainer: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
+  },
+  attemptSwitcherLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  attemptRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  attemptPill: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  attemptPillText: {
+    fontSize: 11,
+  },
+  comparisonSliderCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  comparisonTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#475569',
+    marginBottom: 14,
+  },
+  spectrumTrackBg: {
+    height: 6,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 3,
+    position: 'relative',
+    marginVertical: 12,
+  },
+  spectrumMarker: {
+    position: 'absolute',
+    width: 3,
+    height: 12,
+    top: -3,
+    borderRadius: 1.5,
+  },
+  spectrumProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  spectrumUserPin: {
+    position: 'absolute',
+    top: -6,
+    width: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  spectrumPinDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  spectrumLabelsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  labelGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  labelLegendDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  labelText: {
+    fontSize: 10,
+    color: '#64748B',
+  },
+  sectionalAnalysisCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  sectionRowItem: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  sectionRowTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#1E293B',
+  },
+  sectionRowScore: {
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  sectionProgressBarBg: {
+    height: 5,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 2.5,
+    marginTop: 4,
+    marginBottom: 6,
+  },
+  sectionProgressBarFill: {
+    height: '100%',
+    borderRadius: 2.5,
+  },
+  sectionRowMeta: {
+    fontSize: 10,
+    color: '#64748B',
   },
   // Tab 2: Solutions Styles
   solutionsContainer: {
