@@ -968,59 +968,112 @@ export default function DashboardScreen({
   };
 
   const renderProfileTab = () => {
+    const isPro = currentUser.subscriptionTier !== 'None';
     return (
       <ScrollView contentContainerStyle={styles.tabContent} showsVerticalScrollIndicator={false}>
         {/* User Card */}
-        <View style={[styles.profileHeaderCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-          <View style={styles.avatar}>
-            <User color="#FFF" size={32} />
+        <View style={[
+          styles.profileHeaderCard,
+          isDark ? { backgroundColor: '#1E293B', borderColor: '#334155', borderTopColor: '#6366F1' } : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', borderTopColor: '#3B82F6' },
+          { borderTopWidth: 6, position: 'relative', overflow: 'hidden' }
+        ]}>
+          {/* Decorative Floating Spheres */}
+          <View style={{ position: 'absolute', top: -30, right: -30, width: 90, height: 90, borderRadius: 45, backgroundColor: isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.06)' }} />
+          <View style={{ position: 'absolute', bottom: -20, left: -20, width: 70, height: 70, borderRadius: 35, backgroundColor: isDark ? 'rgba(236,72,153,0.15)' : 'rgba(236,72,153,0.06)' }} />
+
+          <View style={[styles.avatar, { backgroundColor: isPro ? '#EC4899' : '#3B82F6', borderWidth: 2, borderColor: '#FFFFFF', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4 }]}>
+            {isPro ? <Sparkles color="#FFF" size={32} /> : <User color="#FFF" size={32} />}
           </View>
           <Text style={[styles.profileName, isDark && { color: ThemeColors.dark.text }]}>{currentUser.name}</Text>
           <Text style={[styles.profileEmail, isDark && { color: ThemeColors.dark.textMuted }]}>{currentUser.email}</Text>
+          
           <View style={styles.badgeRow}>
-            <Text style={[styles.profileCodeBadge, isDark && { backgroundColor: '#0B1329', color: ThemeColors.dark.text }]}>Hub ID: {currentUser.candidateCode}</Text>
-            <Text style={[styles.profileCoinsBadge, isDark && { backgroundColor: '#0B1329', color: ThemeColors.dark.text }]}>🪙 {currentUser.coins || 0} Coins</Text>
+            <View style={{ backgroundColor: isDark ? '#111827' : '#F1F5F9', borderColor: isDark ? '#374151' : '#E2E8F0', borderWidth: 1, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20 }}>
+              <Text style={{ color: isDark ? '#E2E8F0' : '#475569', fontSize: 11, fontWeight: 'bold' }}>Hub ID: {currentUser.candidateCode}</Text>
+            </View>
+            <View style={{ backgroundColor: isDark ? '#111827' : '#FFFDF5', borderColor: '#F59E0B', borderWidth: 1, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20 }}>
+              <Text style={{ color: '#D97706', fontSize: 11, fontWeight: 'bold' }}>🪙 {currentUser.coins || 0} Coins</Text>
+            </View>
           </View>
         </View>
 
         {/* System Details */}
-        <View style={[styles.sysDetailsCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-          <View style={styles.sysDetailItem}>
-            <Text style={[styles.sysDetailLabel, isDark && { color: ThemeColors.dark.textMuted }]}>System Role</Text>
-            <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.role}</Text>
+        <View style={[
+          styles.sysDetailsCard,
+          isDark ? { backgroundColor: '#1E293B', borderColor: '#334155' } : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
+          { borderLeftWidth: 4, borderLeftColor: isPro ? '#EC4899' : '#2563EB', padding: 16 }
+        ]}>
+          <View style={[styles.sysDetailItem, { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F1F5F9', paddingBottom: 10, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <KeyRound size={16} color={isDark ? '#60A5FA' : '#2563EB'} />
+              <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>System Role</Text>
+            </View>
+            <Text style={[styles.sysDetailVal, isDark ? { color: '#E2E8F0' } : { color: '#1F2937' }, { fontWeight: 'bold' }]}>{currentUser.role}</Text>
           </View>
-          <View style={styles.sysDetailItem}>
-            <Text style={[styles.sysDetailLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Pass Status</Text>
-            <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.subscriptionTier === 'None' ? 'No Active Pass' : currentUser.subscriptionTier}</Text>
+
+          <View style={[styles.sysDetailItem, { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F1F5F9', paddingBottom: 10, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Trophy size={16} color="#F59E0B" />
+              <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>Pass Status</Text>
+            </View>
+            <Text style={[
+              styles.sysDetailVal,
+              { color: isPro ? '#EC4899' : (isDark ? '#E2E8F0' : '#475569'), fontWeight: 'bold' }
+            ]}>
+              {currentUser.subscriptionTier === 'None' ? 'No Active Pass' : currentUser.subscriptionTier}
+            </Text>
           </View>
+
           {currentUser.subscriptionPurchasedAt && (
-            <View style={styles.sysDetailItem}>
-              <Text style={[styles.sysDetailLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Pass Purchased At</Text>
+            <View style={[styles.sysDetailItem, { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F1F5F9', paddingBottom: 10, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Calendar size={16} color="#10B981" />
+                <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>Purchased At</Text>
+              </View>
               <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.subscriptionPurchasedAt}</Text>
             </View>
           )}
+
           {currentUser.subscriptionExpiresAt && (
-            <View style={styles.sysDetailItem}>
-              <Text style={[styles.sysDetailLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Pass Expires At</Text>
+            <View style={[styles.sysDetailItem, { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F1F5F9', paddingBottom: 10, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Calendar size={16} color="#EF4444" />
+                <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>Expires At</Text>
+              </View>
               <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.subscriptionExpiresAt}</Text>
             </View>
           )}
-          <View style={styles.sysDetailItem}>
-            <Text style={[styles.sysDetailLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Registered On</Text>
+
+          <View style={[styles.sysDetailItem, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Calendar size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+              <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>Registered On</Text>
+            </View>
             <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.registeredDate || 'Recently'}</Text>
           </View>
         </View>
 
         {/* Referral Card */}
-        <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+        <View style={[
+          styles.formCard,
+          isDark ? { backgroundColor: '#1E293B', borderColor: '#334155' } : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
+          { borderLeftWidth: 4, borderLeftColor: '#F59E0B', position: 'relative', overflow: 'hidden' }
+        ]}>
+          {/* Decorative Floating Spheres */}
+          <View style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(245,158,11,0.06)' }} />
+
           <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>🎁 Referral Program</Text>
-          <Text style={[styles.sysDetailLabel, { marginTop: 6, marginBottom: 12, textTransform: 'none' }, isDark && { color: ThemeColors.dark.textMuted }]}>
+          <Text style={[styles.sysDetailLabel, { marginTop: 6, marginBottom: 12, textTransform: 'none', lineHeight: 16 }, isDark && { color: ThemeColors.dark.textMuted }]}>
             Invite your friends to prepare with MockTest Hub. Share your referral code below:
           </Text>
 
-          <View style={[styles.referralCodeRow, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
-            <Text style={[styles.referralCodeText, isDark && { color: '#60A5FA' }]}>{currentUser.referralCode}</Text>
-            <TouchableOpacity style={styles.copyReferralBtn} onPress={shareReferralCode}>
+          <View style={[
+            styles.referralCodeRow,
+            isDark ? { backgroundColor: '#111827', borderColor: '#374151' } : { backgroundColor: '#FFFDF5', borderColor: '#FDE68A' },
+            { borderStyle: 'dashed', borderWidth: 1.5 }
+          ]}>
+            <Text style={[styles.referralCodeText, { color: '#D97706', letterSpacing: 1.5, fontSize: 16 }]}>{currentUser.referralCode}</Text>
+            <TouchableOpacity style={[styles.copyReferralBtn, { backgroundColor: '#F59E0B' }]} onPress={shareReferralCode}>
               <Text style={styles.copyReferralBtnText}>Share & Copy</Text>
             </TouchableOpacity>
           </View>
