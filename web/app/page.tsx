@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles } from 'lucide-react';
+import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
 import { useIsMobile } from './useIsMobile';
 
@@ -28,11 +28,11 @@ const EXAMS_BY_CATEGORY: Record<string, { id: string; name: string }[]> = {
   ],
   state_exams: [
     { id: 'up_psc_prelims', name: 'UPPSC Prelims General Studies (GS Paper 1)' },
-    { id: 'bihar_ssc', name: 'BSSC Inter-Level Full Practice Mock Paper' }
+    { id: 'bssc_cgl_mock', name: 'Bihar SSC CGL (Graduate Level) Practice Set' }
   ],
   banking: [
     { id: 'sbi_po_prelims', name: 'SBI PO Preliminary Exam Full Length Mock Test' },
-    { id: 'ibps_clerk', name: 'IBPS Clerk Preliminary Practice Mock Paper' }
+    { id: 'sbi_clerk_pre', name: 'SBI Clerk Prelims Speed Builder Set' }
   ]
 };
 
@@ -49,25 +49,22 @@ const SUCCESS_STORIES = [
   {
     id: 's1',
     name: 'Aniket Verma',
-    exam: 'SSC CGL 2025 (Selected: Excise Inspector)',
+    exam: 'SSC CGL 2025 (Excise Inspector)',
     initials: 'AV',
-    gradient: 'from-blue-600 to-cyan-500',
-    quote: "Testbook Pass Pro was absolute key for my prep. The custom state machine of the test simulator exactly models the live CBT screen. I gave 50 sittings and cleared CGL easily!"
+    quote: "Pass Pro was absolute key for my prep. The custom state machine of the test simulator exactly models the live CBT screen. I gave 50 sittings and cleared CGL easily!"
   },
   {
     id: 's2',
     name: 'Surbhi Mishra',
-    exam: 'SBI PO 2025 (Selected: Probationary Officer)',
+    exam: 'SBI PO 2025 (Probationary Officer)',
     initials: 'SM',
-    gradient: 'from-purple-600 to-pink-500',
     quote: "Sectional Speed analytics inside the profile screen showed me exactly where I was spending too much time (Quantitative Aptitude). Resetting attempts let me re-verify my weak topics."
   },
   {
     id: 's3',
     name: 'Karan Mehra',
-    exam: 'UGC NET 2025 (Selected: Assistant Professor)',
+    exam: 'UGC NET 2025 (Assistant Professor)',
     initials: 'KM',
-    gradient: 'from-orange-600 to-amber-500',
     quote: "Paper-1 was a massive hurdle for me. Giving mock tests on a platform that simulates the actual bilingual pattern (English & Hindi) of UGC NET gave me immense confidence on exam day."
   }
 ];
@@ -75,8 +72,8 @@ const SUCCESS_STORIES = [
 const isNewlyPublished = (publishDateStr?: string) => {
   if (!publishDateStr) return false;
   try {
-    const pubDate = new Date(publishDateStr);
     const now = new Date();
+    const pubDate = new Date(publishDateStr);
     pubDate.setHours(0, 0, 0, 0);
     now.setHours(0, 0, 0, 0);
     const diffTime = Math.abs(now.getTime() - pubDate.getTime());
@@ -84,6 +81,59 @@ const isNewlyPublished = (publishDateStr?: string) => {
     return diffDays <= 3;
   } catch (e) {
     return false;
+  }
+};
+
+const getWebCategoryStyle = (id: string) => {
+  switch (id) {
+    case 'ssc':
+      return {
+        bg: 'bg-orange-50/70 hover:bg-orange-100/80 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/40 hover:border-orange-300 dark:hover:border-orange-700/60 shadow-orange-100/10 dark:shadow-none hover:shadow-md hover:shadow-orange-150/15',
+        iconBg: 'bg-orange-100/80 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400',
+        icon: 'Award',
+        accentText: 'text-orange-600 dark:text-orange-400',
+        btnAccent: 'text-orange-600 dark:text-orange-400 border-orange-200/60 dark:border-orange-900/30',
+      };
+    case 'railways':
+      return {
+        bg: 'bg-indigo-50/70 hover:bg-indigo-100/80 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/40 hover:border-indigo-300 dark:hover:border-indigo-700/60 shadow-indigo-100/10 dark:shadow-none hover:shadow-md hover:shadow-indigo-150/15',
+        iconBg: 'bg-indigo-100/80 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400',
+        icon: 'TrendingUp',
+        accentText: 'text-indigo-600 dark:text-indigo-400',
+        btnAccent: 'text-indigo-600 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-900/30',
+      };
+    case 'banking':
+      return {
+        bg: 'bg-emerald-50/70 hover:bg-emerald-100/80 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/40 hover:border-emerald-300 dark:hover:border-emerald-700/60 shadow-emerald-100/10 dark:shadow-none hover:shadow-md hover:shadow-emerald-150/15',
+        iconBg: 'bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400',
+        icon: 'Coins',
+        accentText: 'text-emerald-600 dark:text-emerald-400',
+        btnAccent: 'text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/30',
+      };
+    case 'teaching':
+      return {
+        bg: 'bg-amber-50/70 hover:bg-amber-100/80 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/40 hover:border-amber-300 dark:hover:border-amber-700/60 shadow-amber-100/10 dark:shadow-none hover:shadow-md hover:shadow-amber-150/15',
+        iconBg: 'bg-amber-100/80 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400',
+        icon: 'BookOpen',
+        accentText: 'text-amber-600 dark:text-amber-400',
+        btnAccent: 'text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-900/30',
+      };
+    case 'ugc_net':
+      return {
+        bg: 'bg-sky-50/70 hover:bg-sky-100/80 dark:bg-sky-950/20 border-sky-100 dark:border-sky-900/40 hover:border-sky-300 dark:hover:border-sky-700/60 shadow-sky-100/10 dark:shadow-none hover:shadow-md hover:shadow-sky-150/15',
+        iconBg: 'bg-sky-100/80 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400',
+        icon: 'GraduationCap',
+        accentText: 'text-sky-600 dark:text-sky-400',
+        btnAccent: 'text-sky-600 dark:text-sky-400 border-sky-200/60 dark:border-sky-900/30',
+      };
+    default:
+      return {
+        bg: 'bg-pink-50/70 hover:bg-pink-100/80 dark:bg-pink-950/20 border-pink-100 dark:border-pink-900/40 hover:border-pink-300 dark:hover:border-pink-700/60 shadow-pink-100/10 dark:shadow-none hover:shadow-md hover:shadow-pink-150/15',
+        iconBg: 'bg-pink-100/80 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400',
+        icon: 'MapPin',
+        accentText: 'text-pink-600 dark:text-pink-400',
+        btnAccent: 'text-pink-600 dark:text-pink-400 border-pink-200/60 dark:border-pink-900/30',
+      };
   }
 };
 
@@ -816,30 +866,39 @@ export default function HomeLandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {CATEGORIES.map(cat => (
-            <button
-              onClick={() => setSelectedModalCategory(cat.id)}
-              key={cat.id}
-              className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 p-6 rounded-2xl flex flex-col justify-between group transition-all shadow-sm text-left w-full cursor-pointer"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2.5 rounded-xl text-blue-600 dark:text-blue-400">
-                    <GraduationCap className="h-5 w-5" />
+          {CATEGORIES.map(cat => {
+            const style = getWebCategoryStyle(cat.id);
+            const IconComponent = 
+              cat.id === 'ssc' ? Award :
+              cat.id === 'railways' ? TrendingUp :
+              cat.id === 'banking' ? Coins :
+              cat.id === 'teaching' ? BookOpen :
+              cat.id === 'ugc_net' ? GraduationCap : MapPin;
+            return (
+              <button
+                onClick={() => setSelectedModalCategory(cat.id)}
+                key={cat.id}
+                className={`border hover:scale-[1.02] p-6 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full cursor-pointer ${style.bg}`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
+                      <IconComponent className="h-5 w-5 animate-pulse" />
+                    </div>
+                    <span className={`text-[10px] font-black tracking-wider group-hover:underline ${style.accentText}`}>
+                      {cat.count}
+                    </span>
                   </div>
-                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-black tracking-wider group-hover:underline">
-                    {cat.count}
-                  </span>
+                  <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2">{cat.name}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
                 </div>
-                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2">{cat.name}</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
-              </div>
-              
-              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold text-[10px] uppercase tracking-wider mt-6 pt-4 border-t border-slate-200 dark:border-slate-880 w-full">
-                {t.exploreTests} <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
-              </div>
-            </button>
-          ))}
+                
+                <div className={`flex items-center gap-1.5 font-bold text-[10px] uppercase tracking-wider mt-6 pt-4 border-t w-full ${style.btnAccent}`}>
+                  {t.exploreTests} <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+                </div>
+              </button>
+            );
+          })}
         </div>
       </section>
 

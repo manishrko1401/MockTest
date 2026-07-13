@@ -40,7 +40,9 @@ import {
   Coins,
   Search,
   X,
-  Sparkles
+  Sparkles,
+  Activity,
+  MapPin
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
@@ -70,25 +72,90 @@ const SUCCESS_STORIES = [
   {
     id: 's1',
     name: 'Aniket Verma',
-    exam: 'SSC CGL 2025 (Excise Inspector)',
+    exam: 'SSC CGL 2025 (Selected: Excise Inspector)',
     initials: 'AV',
+    gradient: 'from-blue-600 to-cyan-500',
     quote: "Pass Pro was absolute key for my prep. The custom state machine of the test simulator exactly models the live CBT screen. I gave 50 sittings and cleared CGL easily!"
   },
   {
     id: 's2',
     name: 'Surbhi Mishra',
-    exam: 'SBI PO 2025 (Probationary Officer)',
+    exam: 'SBI PO 2025 (Selected: Probationary Officer)',
     initials: 'SM',
+    gradient: 'from-purple-600 to-pink-500',
     quote: "Sectional Speed analytics inside the profile screen showed me exactly where I was spending too much time (Quantitative Aptitude). Resetting attempts let me re-verify my weak topics."
   },
   {
     id: 's3',
     name: 'Karan Mehra',
-    exam: 'UGC NET 2025 (Assistant Professor)',
+    exam: 'UGC NET 2025 (Selected: Assistant Professor)',
     initials: 'KM',
+    gradient: 'from-orange-600 to-amber-500',
     quote: "Paper-1 was a massive hurdle for me. Giving mock tests on a platform that simulates the actual bilingual pattern (English & Hindi) of UGC NET gave me immense confidence on exam day."
   }
 ];
+
+const getCategoryStyle = (name: string, isDark: boolean) => {
+  const norm = name.toLowerCase();
+  if (norm.includes('ssc')) {
+    return {
+      colors: isDark ? ['#3F1D11', '#2A1007'] : ['#FFEFEA', '#FFECE5'],
+      borderColor: isDark ? '#E25C30' : '#FFD0C0',
+      iconColor: '#FF5722',
+      iconName: 'Award',
+    };
+  }
+  if (norm.includes('railway')) {
+    return {
+      colors: isDark ? ['#1A163B', '#100D28'] : ['#EEF2FF', '#E0E7FF'],
+      borderColor: isDark ? '#6366F1' : '#C7D2FE',
+      iconColor: '#6366F1',
+      iconName: 'Activity',
+    };
+  }
+  if (norm.includes('bank') || norm.includes('lic')) {
+    return {
+      colors: isDark ? ['#0C291F', '#071C15'] : ['#E6FDF5', '#D1FAE5'],
+      borderColor: isDark ? '#10B981' : '#A7F3D0',
+      iconColor: '#10B981',
+      iconName: 'Coins',
+    };
+  }
+  if (norm.includes('teach') || norm.includes('ctet')) {
+    return {
+      colors: isDark ? ['#3B2E11', '#2A200B'] : ['#FEFDF0', '#FEF9C3'],
+      borderColor: isDark ? '#F59E0B' : '#FDE68A',
+      iconColor: '#D97706',
+      iconName: 'BookOpen',
+    };
+  }
+  if (norm.includes('ugc') || norm.includes('net')) {
+    return {
+      colors: isDark ? ['#11293B', '#0B1A28'] : ['#F0F9FF', '#E0F2FE'],
+      borderColor: isDark ? '#38BDF8' : '#BAE6FD',
+      iconColor: '#0284C7',
+      iconName: 'GraduationCap',
+    };
+  }
+  return {
+    colors: isDark ? ['#351535', '#240C24'] : ['#FDF2F8', '#FCE7F3'],
+    borderColor: isDark ? '#EC4899' : '#FBCFE8',
+    iconColor: '#DB2777',
+    iconName: 'MapPin',
+  };
+};
+
+const CategoryIcon = ({ name, color, size }: { name: string; color: string; size: number }) => {
+  switch (name) {
+    case 'Award': return <Award color={color} size={size} />;
+    case 'Activity': return <Activity color={color} size={size} />;
+    case 'Coins': return <Coins color={color} size={size} />;
+    case 'BookOpen': return <BookOpen color={color} size={size} />;
+    case 'GraduationCap': return <GraduationCap color={color} size={size} />;
+    case 'MapPin': return <MapPin color={color} size={size} />;
+    default: return <Sparkles color={color} size={size} />;
+  }
+};
 
 export default function DashboardScreen({
   currentUser,
@@ -585,28 +652,41 @@ export default function DashboardScreen({
               contentContainerStyle={styles.listContainer}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
-              renderItem={({ item: category }) => (
-                <TouchableOpacity
-                  style={[styles.categoryCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}
-                  onPress={() => {
-                    setExamSearchQuery('');
-                    setSelectedCategoryId(category.id);
-                  }}
-                >
-                  <View style={styles.categoryCardLeft}>
-                    <View style={[styles.categoryIconCircle, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
-                      <GraduationCap color={isDark ? ThemeColors.dark.text : '#2563EB'} size={24} />
+              renderItem={({ item: category }) => {
+                const catStyle = getCategoryStyle(category.name, isDark);
+                return (
+                  <TouchableOpacity
+                    style={[
+                      styles.categoryCard,
+                      {
+                        backgroundColor: catStyle.colors[0],
+                        borderColor: catStyle.borderColor,
+                        borderLeftWidth: 5,
+                        borderLeftColor: catStyle.iconColor,
+                      },
+                    ]}
+                    onPress={() => {
+                      setExamSearchQuery('');
+                      setSelectedCategoryId(category.id);
+                    }}
+                  >
+                    <View style={styles.categoryCardLeft}>
+                      <View style={[styles.categoryIconCircle, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: catStyle.borderColor }]}>
+                        <CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={22} />
+                      </View>
+                      <View style={styles.categoryDetails}>
+                        <Text style={[styles.categoryTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B' }]}>{category.name}</Text>
+                        <Text style={[styles.categoryMeta, isDark ? { color: '#94A3B8' } : { color: '#64748B' }]}>
+                          {category.subCategories?.length || 0} Sub-Exam Categories
+                        </Text>
+                      </View>
                     </View>
-                    <View style={styles.categoryDetails}>
-                      <Text style={[styles.categoryTitle, isDark && { color: ThemeColors.dark.text }]}>{category.name}</Text>
-                      <Text style={[styles.categoryMeta, isDark && { color: ThemeColors.dark.textMuted }]}>
-                        {category.subCategories?.length || 0} Sub-Exam Categories
-                      </Text>
+                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', justifyContent: 'center', alignItems: 'center' }}>
+                      <ChevronRight color={catStyle.iconColor} size={14} />
                     </View>
-                  </View>
-                  <ChevronRight color="#9CA3AF" size={18} />
-                </TouchableOpacity>
-              )}
+                  </TouchableOpacity>
+                );
+              }}
             />
           )}
         </View>
