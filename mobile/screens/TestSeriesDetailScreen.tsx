@@ -253,10 +253,17 @@ export default function TestSeriesDetailScreen({
                         let cardBorderLeftColor = '#2563EB'; // default primary blue
                         let cardBorderLeftWidth = 4;
 
-                        if (isCompleted) {
-                          cardBg = isDark ? '#061C15' : '#F0FDF4';
-                          cardBorderColor = isDark ? '#064E3B' : '#DCFCE7';
-                          cardBorderLeftColor = '#10B981';
+                        if (isCompleted && attempt) {
+                          const isCleared = attempt.score >= (test.testbookCutoffScore || 0);
+                          if (isCleared) {
+                            cardBg = isDark ? '#062C1E' : '#E8F8F0';
+                            cardBorderColor = isDark ? '#065F46' : '#D0F2E0';
+                            cardBorderLeftColor = '#10B981';
+                          } else {
+                            cardBg = isDark ? '#3A1212' : '#FDE8E8';
+                            cardBorderColor = isDark ? '#7F1D1D' : '#FCD5D5';
+                            cardBorderLeftColor = '#EF4444';
+                          }
                         } else if (isPaused) {
                           cardBg = isDark ? '#0C1E36' : '#F0F9FF';
                           cardBorderColor = isDark ? '#1E3A8A' : '#E0F2FE';
@@ -387,8 +394,45 @@ export default function TestSeriesDetailScreen({
                 (s: any) => s.testId === test.id && s.status === 'ONGOING'
               );
 
+              let cardBg = isDark ? ThemeColors.dark.card : '#FFFFFF';
+              let cardBorderColor = isDark ? ThemeColors.dark.border : '#E2E8F0';
+              let cardBorderLeftColor = '#2563EB'; // default primary blue
+              let cardBorderLeftWidth = 4;
+
+              if (isCompleted && attempt) {
+                const isCleared = attempt.score >= (test.testbookCutoffScore || 0);
+                if (isCleared) {
+                  cardBg = isDark ? '#062C1E' : '#E8F8F0';
+                  cardBorderColor = isDark ? '#065F46' : '#D0F2E0';
+                  cardBorderLeftColor = '#10B981';
+                } else {
+                  cardBg = isDark ? '#3A1212' : '#FDE8E8';
+                  cardBorderColor = isDark ? '#7F1D1D' : '#FCD5D5';
+                  cardBorderLeftColor = '#EF4444';
+                }
+              } else if (isPaused) {
+                cardBg = isDark ? '#0C1E36' : '#F0F9FF';
+                cardBorderColor = isDark ? '#1E3A8A' : '#E0F2FE';
+                cardBorderLeftColor = '#3B82F6';
+              } else if (!allowed) {
+                cardBg = isDark ? '#2E1B0E' : '#FEFBF0';
+                cardBorderColor = isDark ? '#78350F' : '#FDE68A';
+                cardBorderLeftColor = '#F59E0B';
+              }
+
               return (
-                <View key={test.id} style={[styles.testCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+                <View 
+                  key={test.id} 
+                  style={[
+                    styles.testCard, 
+                    {
+                      backgroundColor: cardBg,
+                      borderColor: cardBorderColor,
+                      borderLeftColor: cardBorderLeftColor,
+                      borderLeftWidth: cardBorderLeftWidth,
+                    }
+                  ]}
+                >
                   <View style={styles.testCardHeader}>
                     <Text style={[styles.testTitle, isDark && { color: ThemeColors.dark.text }]}>{test.title}</Text>
                     {test.requiredTier !== 'None' ? (

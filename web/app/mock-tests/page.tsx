@@ -417,12 +417,15 @@ export default function MockTestsCatalog() {
                               (test.requiredTier === 'Testbook Pass Pro' && currentUser.subscriptionTier === 'Testbook Pass Pro')
                             );
 
-                             const cardStyle = ongoing
+                             const latestAttempt = attempts.length > 0 ? [...attempts].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())[0] : null;
+                             const isCleared = completed && latestAttempt && (latestAttempt.score || 0) >= (test.testbookCutoffScore || 0);
+
+                             const cardStyle = completed
+                               ? isCleared
+                                 ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 border-l-4 border-l-emerald-500'
+                                 : 'bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 border-l-4 border-l-red-500'
+                               : ongoing
                                ? 'bg-sky-50/30 dark:bg-sky-950/10 border border-sky-200/60 dark:border-sky-900/40 border-l-4 border-l-sky-500'
-                               : completed
-                               ? 'bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-200/60 dark:border-emerald-900/40 border-l-4 border-l-emerald-500'
-                               : isTestPremium && !hasPass
-                               ? 'bg-amber-50/20 dark:bg-amber-950/5 border border-amber-250/60 dark:border-amber-900/40 border-l-4 border-l-amber-500'
                                : 'bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 border-l-4 border-l-blue-500 hover:border-slate-350 dark:hover:border-slate-700';
 
                              return (
@@ -984,7 +987,7 @@ export default function MockTestsCatalog() {
                         {/* Selected Group's Tests */}
                         {(() => {
                           const activeGroup = groups.find(g => g.id === (activeSubSubId || groups[0]?.id));
-                          if (!activeGroup) return null;
+if (!activeGroup) return null;
                           return (
                             <div className="space-y-3 animate-in fade-in duration-300">
                               {activeGroup.tests.map(test => {
@@ -999,18 +1002,31 @@ export default function MockTestsCatalog() {
                                 const attempts = getTestAttempts(test.id);
                                 const attemptsCount = attempts.length;
                                 const isTestPremium = test.isPremium;
-                                const cardGlow = 
-                                    selectedCategory === 'ssc' ? 'glow-shadow-amber border-l-4 border-l-amber-500' :
-                                    selectedCategory === 'railways' ? 'glow-shadow-blue border-l-4 border-l-blue-500' :
-                                    selectedCategory === 'banking' ? 'glow-shadow-green border-l-4 border-l-green-500' :
-                                    selectedCategory === 'teaching' ? 'glow-shadow-amber border-l-4 border-l-amber-500' :
-                                    selectedCategory === 'ugc_net' ? 'glow-shadow-blue border-l-4 border-l-blue-500' : 
-                                    'glow-shadow-purple border-l-4 border-l-purple-500';
+
+                                const latestAttempt = attempts.length > 0 ? [...attempts].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())[0] : null;
+                                const isCleared = completed && latestAttempt && (latestAttempt.score || 0) >= (test.testbookCutoffScore || 0);
+
+                                const cardColorStyle = completed
+                                  ? isCleared
+                                    ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-250/60 dark:border-emerald-900/40 border-l-4 border-l-emerald-500'
+                                    : 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-250/60 dark:border-rose-900/40 border-l-4 border-l-red-500'
+                                  : 'bg-white/75 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 border-l-4 border-l-blue-500';
+
+                                const cardGlow = completed
+                                  ? isCleared
+                                    ? 'glow-shadow-green'
+                                    : 'glow-shadow-purple'
+                                  : selectedCategory === 'ssc' ? 'glow-shadow-amber' :
+                                    selectedCategory === 'railways' ? 'glow-shadow-blue' :
+                                    selectedCategory === 'banking' ? 'glow-shadow-green' :
+                                    selectedCategory === 'teaching' ? 'glow-shadow-amber' :
+                                    selectedCategory === 'ugc_net' ? 'glow-shadow-blue' : 
+                                    'glow-shadow-purple';
 
                                 return (
                                   <div
                                     key={test.id}
-                                    className={`bg-white/75 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/80 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full hover:scale-[1.015] relative overflow-hidden ${cardGlow}`}
+                                    className={`backdrop-blur-sm p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full hover:scale-[1.015] relative overflow-hidden ${cardColorStyle} ${cardGlow}`}
                                   >
                                     <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-slate-400/5 pointer-events-none" />
                                     <div className="space-y-1.5 flex-1 w-full text-left">
@@ -1131,18 +1147,31 @@ export default function MockTestsCatalog() {
                           const attempts = getTestAttempts(test.id);
                           const attemptsCount = attempts.length;
                           const isTestPremium = test.isPremium;
-                          const cardGlow = 
-                            selectedCategory === 'ssc' ? 'glow-shadow-amber border-l-4 border-l-amber-500' :
-                            selectedCategory === 'railways' ? 'glow-shadow-blue border-l-4 border-l-blue-500' :
-                            selectedCategory === 'banking' ? 'glow-shadow-green border-l-4 border-l-green-500' :
-                            selectedCategory === 'teaching' ? 'glow-shadow-amber border-l-4 border-l-amber-500' :
-                            selectedCategory === 'ugc_net' ? 'glow-shadow-blue border-l-4 border-l-blue-500' : 
-                            'glow-shadow-purple border-l-4 border-l-purple-500';
+
+                          const latestAttempt = attempts.length > 0 ? [...attempts].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())[0] : null;
+                          const isCleared = completed && latestAttempt && (latestAttempt.score || 0) >= (test.testbookCutoffScore || 0);
+
+                          const cardColorStyle = completed
+                            ? isCleared
+                              ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-250/60 dark:border-emerald-900/40 border-l-4 border-l-emerald-500'
+                              : 'bg-rose-50/60 dark:bg-rose-950/20 border border-rose-250/60 dark:border-rose-900/40 border-l-4 border-l-red-500'
+                            : 'bg-white/75 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 border-l-4 border-l-blue-500';
+
+                          const cardGlow = completed
+                            ? isCleared
+                              ? 'glow-shadow-green'
+                              : 'glow-shadow-purple'
+                            : selectedCategory === 'ssc' ? 'glow-shadow-amber' :
+                              selectedCategory === 'railways' ? 'glow-shadow-blue' :
+                              selectedCategory === 'banking' ? 'glow-shadow-green' :
+                              selectedCategory === 'teaching' ? 'glow-shadow-amber' :
+                              selectedCategory === 'ugc_net' ? 'glow-shadow-blue' : 
+                              'glow-shadow-purple';
 
                           return (
                             <div
                               key={test.id}
-                              className={`bg-white/75 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/80 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full hover:scale-[1.015] relative overflow-hidden ${cardGlow}`}
+                              className={`backdrop-blur-sm p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full hover:scale-[1.015] relative overflow-hidden ${cardColorStyle} ${cardGlow}`}
                             >
                               <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-slate-400/5 pointer-events-none" />
                               <div className="space-y-1.5 flex-1 w-full text-left">
