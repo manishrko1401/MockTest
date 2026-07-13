@@ -1057,7 +1057,7 @@ export default function DashboardScreen({
         <View style={[
           styles.formCard,
           isDark ? { backgroundColor: '#1E293B', borderColor: '#334155' } : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
-          { borderLeftWidth: 4, borderLeftColor: '#F59E0B', position: 'relative', overflow: 'hidden' }
+          { borderLeftWidth: 4, borderLeftColor: '#F59E0B', position: 'relative' }
         ]}>
           {/* Decorative Floating Spheres */}
           <View style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(245,158,11,0.06)' }} />
