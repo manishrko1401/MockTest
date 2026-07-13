@@ -296,7 +296,8 @@ export default function AdminAnalytics() {
     reorderSubSubCategories,
     reorderMockTests,
     reportedQuestionsList,
-    deleteReportedQuestion
+    deleteReportedQuestion,
+    mergeUserSessions,
   } = useAuth();
   const t = TRANSLATIONS[language];
 
@@ -409,6 +410,7 @@ export default function AdminAnalytics() {
   }, [currentUser]);
 
   // Sync local edit states with updated usersList (ensures instant UI updates on save)
+  // Note: we DON'T overwrite testSessions here since they are loaded lazily
   useEffect(() => {
     if (selectedUserId) {
       const updatedUser = usersList.find(u => u.id === selectedUserId);
@@ -516,7 +518,7 @@ export default function AdminAnalytics() {
     fetchExistingQuestions();
   }, [selectedUploadTestId]);
 
-  const handleSelectUser = (user: MockUser) => {
+  const handleSelectUser = async (user: MockUser) => {
     setSelectedUserId(user.id);
     setEditName(user.name);
     setEditEmail(user.email);
@@ -531,6 +533,23 @@ export default function AdminAnalytics() {
     setEditPassword(user.password || 'password123');
     setEditIsBlocked(user.isBlocked || false);
     setEditCoins(user.coins || 0);
+
+    // Lazily load full user details (including test sessions) if not yet loaded
+    if (!user.testSessions || user.testSessions.length === 0) {
+      try {
+        const res = await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'get-user-details', data: { userId: user.id } })
+        });
+        const result = await res.json();
+        if (result.success && result.user) {
+          mergeUserSessions(user.id, result.user.testSessions);
+        }
+      } catch (e) {
+        console.error('Failed to load user sessions:', e);
+      }
+    }
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {

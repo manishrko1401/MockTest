@@ -196,6 +196,7 @@ interface AuthContextType {
   reorderSubCategories: (categoryId: string, orderedSubCategories: TestSubCategory[]) => void;
   reorderSubSubCategories: (categoryId: string, subCategoryId: string, orderedSubSubCategories: TestSubSubCategory[]) => void;
   reorderMockTests: (categoryId: string, subCategoryId: string, subSubCategoryId: string, orderedTests: MockTestItem[]) => void;
+  mergeUserSessions: (userId: string, sessions: MockUser['testSessions']) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -1631,6 +1632,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     .catch(err => console.error("Save profile admin error:", err));
   };
 
+  // Merge lazily-loaded sessions into a user entry in usersList (no API call)
+  const mergeUserSessions = (userId: string, sessions: MockUser['testSessions']) => {
+    setUsersList(prev => prev.map(u =>
+      u.id === userId ? { ...u, testSessions: sessions } : u
+    ));
+  };
+
   const reportQuestion = async (
     questionId: string,
     message: string,
@@ -1731,7 +1739,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         reorderMockTests,
         reportedQuestionsList,
         reportQuestion,
-        deleteReportedQuestion
+        deleteReportedQuestion,
+        mergeUserSessions,
       }}
     >
       {children}

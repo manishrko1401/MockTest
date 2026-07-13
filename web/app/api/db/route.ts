@@ -171,74 +171,35 @@ async function handleBootstrap() {
     }
   });
 
-  // Fetch all users list, ordered by newly added first (createdAt desc)
+  // Fetch all users list WITHOUT sessions (sessions loaded lazily per user to avoid timeout)
   const users = await prisma.user.findMany({
     orderBy: {
       createdAt: 'desc',
     },
-    include: {
-      testSessions: {
-        include: {
-          mockTest: true,
-          responses: true,
-        },
-      },
-    },
   });
 
-  // Map users to UI model format
-  const usersList = users.map((u: any) => {
-    return {
-      id: u.id,
-      candidateCode: u.candidateCode,
-      name: u.fullName,
-      email: u.email,
-      mobile: u.mobile,
-      referralCode: u.referralCode,
-      referredBy: u.referredBy,
-      referralsCount: u.referralsCount,
-      role: u.role,
-      subscriptionTier: u.subscriptionTier,
-      subscriptionPurchasedAt: u.subscriptionPurchasedAt,
-      subscriptionExpiresAt: u.subscriptionExpiresAt,
-      registeredDate: formatDateTime(u.createdAt),
-      isBlocked: u.isBlocked,
-      coins: u.coins,
-      referralCoinsCredited: u.referralCoinsCredited,
-      password: u.passwordHash, // Exposed for simulated profile views in mock dashboard
-      bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
-      testSessions: u.testSessions.map((session: any) => {
-        const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
-        session.responses.forEach((r: any) => {
-          responsesRecord[r.questionId] = {
-            selectedOptionIndex: r.selectedOptionIndex,
-            elapsedSeconds: r.elapsedSeconds,
-            state: r.state,
-          };
-        });
-        return {
-          id: session.id,
-          testId: session.mockTestId,
-          title: session.mockTest?.title || 'Mock Test',
-          score: session.finalScore ?? 0,
-          maxScore: session.mockTest?.maxMarks ?? 200,
-          accuracy: session.accuracyPercentage ?? 0,
-          durationMinutes: session.mockTest?.durationMinutes || 60,
-          durationSeconds: session.timeSpentSeconds,
-          status: session.status,
-          violations: session.violationsCount,
-          date: session.startedAt.toISOString().split('T')[0],
-          startedAt: session.startedAt.toISOString(),
-          responses: responsesRecord,
-          timeRemaining: session.remainingSeconds,
-          currentSectionIndex: session.currentSectionIndex,
-          currentQuestionIndex: session.currentQuestionIndex,
-          testbookRank: session.testbookRank ?? null,
-          testbookPercentile: session.testbookPercentile ?? null,
-        };
-      }),
-    };
-  });
+  // Map users to UI model format (testSessions is [] at bootstrap; loaded on demand)
+  const usersList = users.map((u: any) => ({
+    id: u.id,
+    candidateCode: u.candidateCode,
+    name: u.fullName,
+    email: u.email,
+    mobile: u.mobile,
+    referralCode: u.referralCode,
+    referredBy: u.referredBy,
+    referralsCount: u.referralsCount,
+    role: u.role,
+    subscriptionTier: u.subscriptionTier,
+    subscriptionPurchasedAt: u.subscriptionPurchasedAt,
+    subscriptionExpiresAt: u.subscriptionExpiresAt,
+    registeredDate: formatDateTime(u.createdAt),
+    isBlocked: u.isBlocked,
+    coins: u.coins,
+    referralCoinsCredited: u.referralCoinsCredited,
+    password: u.passwordHash,
+    bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
+    testSessions: [], // Loaded lazily via get-user-details action
+  }));
 
   // Fetch Notices
   const notices = await prisma.notice.findMany({
