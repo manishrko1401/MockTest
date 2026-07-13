@@ -610,10 +610,16 @@ export default function DashboardScreen({
                   borderColor: catStyle.borderColor,
                   borderLeftWidth: 4,
                   borderLeftColor: catStyle.iconColor,
+                  position: 'relative',
+                  overflow: 'hidden',
                 },
               ]}
               onPress={() => onSelectTestSeries(exam)}
             >
+              {/* Decorative background circles */}
+              <View style={{ position: 'absolute', top: -25, right: -25, width: 70, height: 70, borderRadius: 35, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.12 : 0.05 }} />
+              <View style={{ position: 'absolute', bottom: -15, left: 40, width: 45, height: 45, borderRadius: 22.5, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.08 : 0.03 }} />
+
               <View style={styles.seriesCardLeft}>
                 <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: catStyle.borderColor, borderWidth: 1, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
                   <BookOpen color={catStyle.iconColor} size={18} />
@@ -691,6 +697,8 @@ export default function DashboardScreen({
                         borderColor: catStyle.borderColor,
                         borderLeftWidth: 5,
                         borderLeftColor: catStyle.iconColor,
+                        position: 'relative',
+                        overflow: 'hidden',
                       },
                     ]}
                     onPress={() => {
@@ -698,6 +706,10 @@ export default function DashboardScreen({
                       setSelectedCategoryId(category.id);
                     }}
                   >
+                    {/* Decorative background circles */}
+                    <View style={{ position: 'absolute', top: -25, right: -25, width: 70, height: 70, borderRadius: 35, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.12 : 0.05 }} />
+                    <View style={{ position: 'absolute', bottom: -15, left: 40, width: 45, height: 45, borderRadius: 22.5, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.08 : 0.03 }} />
+
                     <View style={styles.categoryCardLeft}>
                       <View style={[styles.categoryIconCircle, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: catStyle.borderColor }]}>
                         <CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={22} />
@@ -753,10 +765,16 @@ export default function DashboardScreen({
                     borderColor: catStyle.borderColor,
                     borderLeftWidth: 4,
                     borderLeftColor: catStyle.iconColor,
+                    position: 'relative',
+                    overflow: 'hidden',
                   },
                 ]}
                 onPress={() => onSelectTestSeries({ ...sub, categoryName: selectedCategory.name })}
               >
+                {/* Decorative background circles */}
+                <View style={{ position: 'absolute', top: -25, right: -25, width: 70, height: 70, borderRadius: 35, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.12 : 0.05 }} />
+                <View style={{ position: 'absolute', bottom: -15, left: 40, width: 45, height: 45, borderRadius: 22.5, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.08 : 0.03 }} />
+
                 <View style={styles.seriesCardLeft}>
                   <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: catStyle.borderColor, borderWidth: 1, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
                     <BookOpen color={catStyle.iconColor} size={18} />
@@ -823,9 +841,14 @@ export default function DashboardScreen({
             borderColor: catBorderColor,
             borderLeftColor: catColor,
             borderLeftWidth: 4,
+            position: 'relative',
+            overflow: 'hidden',
           },
         ]}
       >
+        {/* Decorative background circles */}
+        <View style={{ position: 'absolute', top: -25, right: -25, width: 70, height: 70, borderRadius: 35, backgroundColor: catColor, opacity: isDark ? 0.12 : 0.05 }} />
+        <View style={{ position: 'absolute', bottom: -15, left: 40, width: 45, height: 45, borderRadius: 22.5, backgroundColor: catColor, opacity: isDark ? 0.08 : 0.03 }} />
         <View style={styles.noticeHeader}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Text style={[styles.noticeBadge, { color: catColor, borderColor: catColor, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}>
