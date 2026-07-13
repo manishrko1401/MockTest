@@ -408,6 +408,28 @@ export default function AdminAnalytics() {
     }
   }, [currentUser]);
 
+  // Sync local edit states with updated usersList (ensures instant UI updates on save)
+  useEffect(() => {
+    if (selectedUserId) {
+      const updatedUser = usersList.find(u => u.id === selectedUserId);
+      if (updatedUser) {
+        setEditName(updatedUser.name);
+        setEditEmail(updatedUser.email);
+        setEditMobile(updatedUser.mobile || '');
+        setEditReferralCode(updatedUser.referralCode || '');
+        setEditReferredBy(updatedUser.referredBy || '');
+        setEditReferralsCount(updatedUser.referralsCount || 0);
+        setEditRole(updatedUser.role);
+        setEditTier(updatedUser.subscriptionTier);
+        setEditExpiry(updatedUser.subscriptionExpiresAt || '');
+        setEditPurchasedAt(updatedUser.subscriptionPurchasedAt || '');
+        setEditPassword(updatedUser.password || 'password123');
+        setEditIsBlocked(updatedUser.isBlocked || false);
+        setEditCoins(updatedUser.coins || 0);
+      }
+    }
+  }, [usersList, selectedUserId]);
+
   const hasTabAccess = (tab: string): boolean => {
     if (!currentUser) return false;
     const role = currentUser.role;

@@ -1621,7 +1621,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           coins
         }
       })
-    }).catch(err => console.error("Save profile admin error:", err));
+    })
+    .then(res => res.json())
+    .then(resData => {
+      if (resData.success) {
+        fetchUsersList();
+      }
+    })
+    .catch(err => console.error("Save profile admin error:", err));
   };
 
   const reportQuestion = async (

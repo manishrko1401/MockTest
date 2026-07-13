@@ -125,6 +125,52 @@ async function handleBootstrap() {
     await seedDatabase();
   }
 
+  // Ensure mock users with correct administrative roles exist
+  await prisma.user.upsert({
+    where: { email: 'vikram.singh@example.com' },
+    update: { role: 'TEST_CREATOR' },
+    create: {
+      id: 'u3',
+      candidateCode: 'CGL_2291',
+      fullName: 'Vikram Singh',
+      email: 'vikram.singh@example.com',
+      mobile: '9123456789',
+      referralCode: 'TB-VIKRAM-2291',
+      role: 'TEST_CREATOR',
+      passwordHash: 'password123',
+    }
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'support@example.com' },
+    update: { role: 'SUPPORT_TEAM' },
+    create: {
+      id: 'u_support',
+      candidateCode: 'SUP_7712',
+      fullName: 'Support Agent',
+      email: 'support@example.com',
+      mobile: '9888777666',
+      referralCode: 'TB-SUPPORT-7712',
+      role: 'SUPPORT_TEAM',
+      passwordHash: 'password123',
+    }
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'notices@example.com' },
+    update: { role: 'NOTICES_MANAGER' },
+    create: {
+      id: 'u_notices',
+      candidateCode: 'NTS_5541',
+      fullName: 'Notices Manager',
+      email: 'notices@example.com',
+      mobile: '9999000011',
+      referralCode: 'TB-NOTICES-5541',
+      role: 'NOTICES_MANAGER',
+      passwordHash: 'password123',
+    }
+  });
+
   // Fetch all users list, ordered by newly added first (createdAt desc)
   const users = await prisma.user.findMany({
     orderBy: {
@@ -757,6 +803,7 @@ async function handleUpdatePassword(data: any) {
 }
 
 async function handleSaveProfileAdmin(data: any) {
+  console.log("handleSaveProfileAdmin received data:", data);
   const {
     userId,
     name,
