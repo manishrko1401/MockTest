@@ -270,6 +270,8 @@ async function handleBootstrap() {
             testbookAverageScore: t.testbookAverageScore ?? 0.0,
             testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
           }));
+          // Sort tests naturally by title (ascending numerical/alphabetical order)
+          tests.sort((a: any, b: any) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
           return {
             id: ts.id,
             name: ts.title,
@@ -351,11 +353,8 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
       name: cat.name,
       orderIndex: cat.orderIndex,
       subCategories: cat.exams.map((exam: any) => {
-        const subSubCategories = exam.testSeries.map((ts: any) => ({
-          id: ts.id,
-          name: ts.title,
-          orderIndex: ts.orderIndex,
-          tests: ts.mockTests.map((t: any) => ({
+        const subSubCategories = exam.testSeries.map((ts: any) => {
+          const tests = ts.mockTests.map((t: any) => ({
             id: t.id,
             title: t.title,
             questionsCount: t.questionsCount,
@@ -373,8 +372,16 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
             testbookTopperScore: t.testbookTopperScore ?? 0.0,
             testbookAverageScore: t.testbookAverageScore ?? 0.0,
             testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
-          })),
-        }));
+          }));
+          // Sort tests naturally by title (ascending numerical/alphabetical order)
+          tests.sort((a: any, b: any) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
+          return {
+            id: ts.id,
+            name: ts.title,
+            orderIndex: ts.orderIndex,
+            tests,
+          };
+        });
         const tests = subSubCategories.flatMap((ss: any) => ss.tests);
         return {
           id: exam.id,
