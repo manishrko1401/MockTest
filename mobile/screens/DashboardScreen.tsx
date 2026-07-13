@@ -1140,9 +1140,10 @@ export default function DashboardScreen({
       });
     });
 
-    return (currentUser.testSessions || []).filter((s: any) => {
+    const uniqueTests = new Set<string>();
+    (currentUser.testSessions || []).forEach((s: any) => {
       if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') {
-        return false;
+        return;
       }
 
       // Prioritize durationMinutes from the session object, then catalog, then guess, then fallback
@@ -1171,8 +1172,12 @@ export default function DashboardScreen({
 
       const totalSec = durationMinutes * 60;
       const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
-      return spentSec >= totalSec * 0.75;
-    }).length;
+      if (spentSec >= totalSec * 0.75) {
+        uniqueTests.add(s.testId);
+      }
+    });
+
+    return uniqueTests.size;
   }, [examCatalog, currentUser.testSessions]);
 
   return (

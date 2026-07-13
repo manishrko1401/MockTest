@@ -1812,13 +1812,19 @@ export default function AdminAnalytics() {
                                 )}
                               </td>
                               <td className="py-3.5 px-4 text-center font-mono text-slate-800 dark:text-slate-300">
-                                {user.testSessions.filter((s: any) => {
-                                  if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') return false;
-                                  const durationMinutes = s.durationMinutes ?? 60;
-                                  const totalSec = durationMinutes * 60;
-                                  const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
-                                  return spentSec >= totalSec * 0.75;
-                                }).length}
+                                {(() => {
+                                  const uniqueTests = new Set();
+                                  user.testSessions.forEach((s: any) => {
+                                    if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') return;
+                                    const durationMinutes = s.durationMinutes ?? 60;
+                                    const totalSec = durationMinutes * 60;
+                                    const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
+                                    if (spentSec >= totalSec * 0.75) {
+                                      uniqueTests.add(s.testId);
+                                    }
+                                  });
+                                  return uniqueTests.size;
+                                })()}
                               </td>
                               <td className="py-3.5 px-4 text-right">
                                 <button
