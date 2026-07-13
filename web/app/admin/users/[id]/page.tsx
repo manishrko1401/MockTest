@@ -335,7 +335,9 @@ export default function UserDetailPage({ params }: PageProps) {
                       className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                     >
                       <option value="STUDENT">Student / User</option>
-                      <option value="CONTENT_CREATOR">Content Creator / Teacher</option>
+                      <option value="TEST_CREATOR">Test Creator</option>
+                      <option value="SUPPORT_TEAM">Support Team</option>
+                      <option value="NOTICES_MANAGER">Notices & Update Manager</option>
                       <option value="ADMIN">Administrator</option>
                     </select>
                   </div>
@@ -450,9 +452,13 @@ export default function UserDetailPage({ params }: PageProps) {
                   <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
                     user.role === 'ADMIN' 
                       ? 'bg-red-50 dark:bg-red-955/40 text-red-700 dark:text-red-400' 
-                      : user.role === 'CONTENT_CREATOR' 
+                      : user.role === 'TEST_CREATOR' 
                       ? 'bg-purple-50 dark:bg-purple-955/40 text-purple-700 dark:text-purple-400' 
-                      : 'bg-blue-50 dark:bg-blue-955/40 text-blue-750'
+                      : user.role === 'SUPPORT_TEAM' 
+                      ? 'bg-green-50 dark:bg-green-955/40 text-green-700 dark:text-green-400' 
+                      : user.role === 'NOTICES_MANAGER' 
+                      ? 'bg-amber-50 dark:bg-amber-955/40 text-amber-700 dark:text-amber-400' 
+                      : 'bg-blue-50 dark:bg-blue-955/40 text-blue-755'
                   }`}>
                     {user.role}
                   </span>

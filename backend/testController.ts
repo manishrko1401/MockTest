@@ -91,7 +91,7 @@ export async function startTestSession(req: Request, res: Response): Promise<voi
     if (mockTest.requiredTierId) {
       const hasAccess =
         user.role === UserRole.ADMIN ||
-        user.role === UserRole.CONTENT_CREATOR ||
+        user.role === UserRole.TEST_CREATOR ||
         user.subscriptions.some((sub) => sub.tierId === mockTest.requiredTierId);
 
       if (!hasAccess) {

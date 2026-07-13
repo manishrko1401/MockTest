@@ -267,6 +267,7 @@ export default function AdminAnalytics() {
   const { 
     currentUser,
     login,
+    logout,
     usersList, 
     saveUserProfileByAdmin, 
     resetAttempt, 
@@ -308,16 +309,21 @@ export default function AdminAnalytics() {
     e.preventDefault();
     setAdminLoginError(null);
 
-    // Hardcoded password verification for the admin panel
-    if (adminEmail.trim().toLowerCase() === 'admin@mocktest.com' && adminPassword === 'test@admin123') {
-      const res = await login('admin@mocktest.com', 'password123');
-      if (res.success) {
-        showToast('Admin access authorized successfully!');
+    const isHardcodedAdmin = adminEmail.trim().toLowerCase() === 'admin@mocktest.com' && adminPassword === 'test@admin123';
+    const targetEmail = isHardcodedAdmin ? 'admin@mocktest.com' : adminEmail.trim().toLowerCase();
+    const targetPassword = isHardcodedAdmin ? 'password123' : adminPassword;
+
+    const res = await login(targetEmail, targetPassword);
+    if (res.success && res.user) {
+      const allowedAdminRoles = ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'];
+      if (allowedAdminRoles.includes(res.user.role)) {
+        showToast('Access authorized successfully!');
       } else {
-        setAdminLoginError(res.error || 'Database synchronization error. Admin user account could not be activated.');
+        setAdminLoginError('Unauthorized access: your role does not have administrative permissions.');
+        logout();
       }
     } else {
-      setAdminLoginError('Invalid Admin ID or Password.');
+      setAdminLoginError(res.error || 'Invalid ID or Password.');
     }
   };
 
@@ -382,10 +388,41 @@ export default function AdminAnalytics() {
   const [newMockHasSectionalTiming, setNewMockHasSectionalTiming] = useState(false);
   const [newMockSectionalTimingsStr, setNewMockSectionalTimingsStr] = useState(''); // comma-separated minutes
   const [editReferralsCount, setEditReferralsCount] = useState<number>(0);
-  const [editRole, setEditRole] = useState<'STUDENT' | 'ADMIN' | 'CONTENT_CREATOR'>('STUDENT');
+  const [editRole, setEditRole] = useState<'STUDENT' | 'ADMIN' | 'TEST_CREATOR' | 'SUPPORT_TEAM' | 'NOTICES_MANAGER'>('STUDENT');
   const [editTier, setEditTier] = useState<'None' | 'Testbook Pass' | 'Testbook Pass Pro'>('None');
   const [editExpiry, setEditExpiry] = useState('');
   const [editPurchasedAt, setEditPurchasedAt] = useState('');
+  
+  // Set default tab based on user role
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.role === 'TEST_CREATOR') {
+        setActiveTab('upload');
+      } else if (currentUser.role === 'SUPPORT_TEAM') {
+        setActiveTab('support');
+      } else if (currentUser.role === 'NOTICES_MANAGER') {
+        setActiveTab('notices');
+      } else {
+        setActiveTab('analytics');
+      }
+    }
+  }, [currentUser]);
+
+  const hasTabAccess = (tab: string): boolean => {
+    if (!currentUser) return false;
+    const role = currentUser.role;
+    if (role === 'ADMIN') return true;
+    if (role === 'TEST_CREATOR') {
+      return ['upload', 'categories', 'subcategories', 'subsubcategories', 'mocks'].includes(tab);
+    }
+    if (role === 'SUPPORT_TEAM') {
+      return ['support'].includes(tab);
+    }
+    if (role === 'NOTICES_MANAGER') {
+      return ['notices', 'announcements', 'testimonials'].includes(tab);
+    }
+    return false;
+  };
 
   // Toast & Modal confirmation states
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -760,7 +797,10 @@ export default function AdminAnalytics() {
     showToast("Testimonial created successfully!");
   };
 
-  if (currentUser?.role !== 'ADMIN') {
+  const allowedAdminRoles = ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'];
+  const hasAdminAccess = currentUser && allowedAdminRoles.includes(currentUser.role);
+
+  if (!hasAdminAccess) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-950 font-sans text-slate-100 relative overflow-hidden px-4">
         {/* Ambient background blur circles */}
@@ -859,145 +899,169 @@ export default function AdminAnalytics() {
 
           {/* Nav Items */}
           <nav className="space-y-2 font-sans">
-            <button
-              onClick={() => selectTab('analytics')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'analytics'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <BarChart2 className="h-4 w-4" />
-              Student Performance
-            </button>
-            <button
-              onClick={() => selectTab('upload')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'upload'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Upload className="h-4 w-4" />
-              Bulk Question Importer
-            </button>
-            <button
-              onClick={() => selectTab('users')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'users'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Users className="h-4 w-4" />
-              User Management
-            </button>
-            <button
-              onClick={() => selectTab('notices')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'notices'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Bell className="h-4 w-4" />
-              Live Notices & Updates
-            </button>
-            <button
-              onClick={() => selectTab('announcements')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'announcements'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Megaphone className="h-4 w-4" />
-              {language === 'hi' ? 'आधिकारिक घोषणाएँ' : 'Manage Announcements'}
-            </button>
-            <button
-              onClick={() => selectTab('testimonials')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'testimonials'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Award className="h-4 w-4" />
-              {language === 'hi' ? 'प्रशंसापत्र प्रबंधक' : 'Topper Testimonials'}
-            </button>
-            <button
-              onClick={() => selectTab('categories')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'categories'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <FolderPlus className="h-4 w-4" />
-              {language === 'hi' ? 'परीक्षा श्रेणियां' : 'Exam Categories'}
-            </button>
-            <button
-              onClick={() => selectTab('subcategories')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'subcategories'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Layers className="h-4 w-4" />
-              {language === 'hi' ? 'उप-श्रेणियां' : 'Sub Categories'}
-            </button>
-            <button
-              onClick={() => selectTab('subsubcategories')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'subsubcategories'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <FileText className="h-4 w-4" />
-              {language === 'hi' ? 'उप-उप-श्रेणियां' : 'Sub Sub Categories'}
-            </button>
-            <button
-              onClick={() => selectTab('mocks')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'mocks'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <PlusCircle className="h-4 w-4" />
-              {language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests'}
-            </button>
-            <button
-              onClick={() => selectTab('reports')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'reports'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <AlertCircle className="h-4 w-4" />
-              {language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions'}
-            </button>
-            <button
-              onClick={() => selectTab('support')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'support'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <MessageSquare className="h-4 w-4" />
-                <span>{language === 'hi' ? 'सपोर्ट टीम' : 'Support Team'}</span>
-              </div>
-              {totalUnseenCount > 0 && (
-                <span className="bg-red-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center">
-                  {totalUnseenCount}
-                </span>
-              )}
-            </button>
+            {hasTabAccess('analytics') && (
+              <button
+                onClick={() => selectTab('analytics')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'analytics'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <BarChart2 className="h-4 w-4" />
+                Student Performance
+              </button>
+            )}
+            {hasTabAccess('upload') && (
+              <button
+                onClick={() => selectTab('upload')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'upload'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Upload className="h-4 w-4" />
+                Bulk Question Importer
+              </button>
+            )}
+            {hasTabAccess('users') && (
+              <button
+                onClick={() => selectTab('users')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'users'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                User Management
+              </button>
+            )}
+            {hasTabAccess('notices') && (
+              <button
+                onClick={() => selectTab('notices')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'notices'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Bell className="h-4 w-4" />
+                Live Notices & Updates
+              </button>
+            )}
+            {hasTabAccess('announcements') && (
+              <button
+                onClick={() => selectTab('announcements')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'announcements'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Megaphone className="h-4 w-4" />
+                {language === 'hi' ? 'आधिकारिक घोषणाएँ' : 'Manage Announcements'}
+              </button>
+            )}
+            {hasTabAccess('testimonials') && (
+              <button
+                onClick={() => selectTab('testimonials')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'testimonials'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Award className="h-4 w-4" />
+                {language === 'hi' ? 'प्रशंसापत्र प्रबंधक' : 'Topper Testimonials'}
+              </button>
+            )}
+            {hasTabAccess('categories') && (
+              <button
+                onClick={() => selectTab('categories')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'categories'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <FolderPlus className="h-4 w-4" />
+                {language === 'hi' ? 'परीक्षा श्रेणियां' : 'Exam Categories'}
+              </button>
+            )}
+            {hasTabAccess('subcategories') && (
+              <button
+                onClick={() => selectTab('subcategories')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'subcategories'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Layers className="h-4 w-4" />
+                {language === 'hi' ? 'उप-श्रेणियां' : 'Sub Categories'}
+              </button>
+            )}
+            {hasTabAccess('subsubcategories') && (
+              <button
+                onClick={() => selectTab('subsubcategories')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'subsubcategories'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                {language === 'hi' ? 'उप-उप-श्रेणियां' : 'Sub Sub Categories'}
+              </button>
+            )}
+            {hasTabAccess('mocks') && (
+              <button
+                onClick={() => selectTab('mocks')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'mocks'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <PlusCircle className="h-4 w-4" />
+                {language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests'}
+              </button>
+            )}
+            {hasTabAccess('reports') && (
+              <button
+                onClick={() => selectTab('reports')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'reports'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <AlertCircle className="h-4 w-4" />
+                {language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions'}
+              </button>
+            )}
+            {hasTabAccess('support') && (
+              <button
+                onClick={() => selectTab('support')}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'support'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>{language === 'hi' ? 'सपोर्ट टीम' : 'Support Team'}</span>
+                </div>
+                {totalUnseenCount > 0 && (
+                  <span className="bg-red-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center">
+                    {totalUnseenCount}
+                  </span>
+                )}
+              </button>
+            )}
           </nav>
         </div>
 
@@ -1087,7 +1151,7 @@ export default function AdminAnalytics() {
         <div className="flex-1 overflow-y-auto p-8">
           
           {/* TAB 1: STUDENT PERFORMANCE METRICS */}
-          {activeTab === 'analytics' && (
+          {activeTab === 'analytics' && hasTabAccess('analytics') && (
             <div className="space-y-8">
               
               {/* Core Cards KPI Summary */}
@@ -1222,7 +1286,7 @@ export default function AdminAnalytics() {
           )}
 
           {/* TAB 2: BULK QUESTION UPLOADER PORTAL */}
-          {activeTab === 'upload' && (
+          {activeTab === 'upload' && hasTabAccess('upload') && (
             <BulkQuestionImporter
               examCatalog={examCatalog}
               selectedUploadTestId={selectedUploadTestId}
@@ -1287,7 +1351,7 @@ export default function AdminAnalytics() {
           )}
 
           {/* TAB 3: USER MANAGEMENT PORTAL */}
-          {activeTab === 'users' && (
+          {activeTab === 'users' && hasTabAccess('users') && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -1424,7 +1488,9 @@ export default function AdminAnalytics() {
                                   className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                                 >
                                   <option value="STUDENT">Student (Candidate)</option>
-                                  <option value="CONTENT_CREATOR">Content Creator</option>
+                                  <option value="TEST_CREATOR">Test Creator</option>
+                                  <option value="SUPPORT_TEAM">Support Team</option>
+                                  <option value="NOTICES_MANAGER">Notices & Update Manager</option>
                                   <option value="ADMIN">System Administrator</option>
                                 </select>
                               </div>
@@ -1563,7 +1629,9 @@ export default function AdminAnalytics() {
                     >
                       <option value="ALL">All Roles</option>
                       <option value="STUDENT">Student</option>
-                      <option value="CONTENT_CREATOR">Creator</option>
+                      <option value="TEST_CREATOR">Test Creator</option>
+                      <option value="SUPPORT_TEAM">Support Team</option>
+                      <option value="NOTICES_MANAGER">Notices & Update Manager</option>
                       <option value="ADMIN">Admin</option>
                     </select>
 
@@ -1652,8 +1720,12 @@ export default function AdminAnalytics() {
                                 <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
                                   user.role === 'ADMIN' 
                                     ? 'bg-red-50 dark:bg-red-955/40 border border-red-200 dark:border-red-808 text-red-700 dark:text-red-400' 
-                                    : user.role === 'CONTENT_CREATOR' 
+                                    : user.role === 'TEST_CREATOR' 
                                     ? 'bg-purple-50 dark:bg-purple-955/40 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400' 
+                                    : user.role === 'SUPPORT_TEAM' 
+                                    ? 'bg-green-50 dark:bg-green-955/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400' 
+                                    : user.role === 'NOTICES_MANAGER' 
+                                    ? 'bg-amber-50 dark:bg-amber-955/40 border border-amber-200/50 text-amber-700 dark:text-amber-450' 
                                     : 'bg-blue-50 dark:bg-blue-955/40 border border-blue-200 dark:border-blue-800 text-blue-750 dark:text-blue-450'
                                 }`}>
                                   {user.role}
@@ -1864,7 +1936,9 @@ export default function AdminAnalytics() {
                                   className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
                                 >
                                   <option value="STUDENT">Student (Candidate)</option>
-                                  <option value="CONTENT_CREATOR">Content Creator</option>
+                                  <option value="TEST_CREATOR">Test Creator</option>
+                                  <option value="SUPPORT_TEAM">Support Team</option>
+                                  <option value="NOTICES_MANAGER">Notices & Update Manager</option>
                                   <option value="ADMIN">System Administrator</option>
                                 </select>
                               </div>
@@ -1964,8 +2038,12 @@ export default function AdminAnalytics() {
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
                                   activeUser.role === 'ADMIN' 
                                     ? 'bg-red-50 dark:bg-red-955/40 text-red-700 dark:text-red-400' 
-                                    : activeUser.role === 'CONTENT_CREATOR' 
+                                    : activeUser.role === 'TEST_CREATOR' 
                                     ? 'bg-purple-50 dark:bg-purple-955/40 text-purple-700 dark:text-purple-400' 
+                                    : activeUser.role === 'SUPPORT_TEAM' 
+                                    ? 'bg-green-50 dark:bg-green-955/40 text-green-700 dark:text-green-400' 
+                                    : activeUser.role === 'NOTICES_MANAGER' 
+                                    ? 'bg-amber-50 dark:bg-amber-955/40 text-amber-700 dark:text-amber-450' 
                                     : 'bg-blue-50 dark:bg-blue-955/40 text-blue-755'
                                 }`}>
                                   {activeUser.role}
@@ -2147,7 +2225,7 @@ export default function AdminAnalytics() {
             </div>
           )}
                     {/* TAB 4: NOTICES & ANNOUNCEMENTS MANAGER */}
-          {activeTab === 'notices' && (
+          {activeTab === 'notices' && hasTabAccess('notices') && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -2394,7 +2472,7 @@ export default function AdminAnalytics() {
             </div>
           )}
                     {/* TAB 5: CATEGORIES MANAGEMENT */}
-          {activeTab === 'categories' && (
+          {activeTab === 'categories' && hasTabAccess('categories') && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -2587,7 +2665,7 @@ export default function AdminAnalytics() {
             </div>
           )}
                     {/* TAB 6: SUB-CATEGORIES MANAGEMENT */}
-          {activeTab === 'subcategories' && (
+          {activeTab === 'subcategories' && hasTabAccess('subcategories') && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -2805,7 +2883,7 @@ export default function AdminAnalytics() {
             </div>
           )}
                     {/* TAB 6.5: SUB-SUB-CATEGORIES MANAGEMENT */}
-          {activeTab === 'subsubcategories' && (
+          {activeTab === 'subsubcategories' && hasTabAccess('subsubcategories') && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -3048,7 +3126,7 @@ export default function AdminAnalytics() {
             </div>
           )}
                     {/* TAB 7: MOCK TESTS MANAGEMENT */}
-          {activeTab === 'mocks' && (
+          {activeTab === 'mocks' && hasTabAccess('mocks') && (
             <MockTestManager
               examCatalog={examCatalog}
               newMockCategoryParent={newMockCategoryParent}
@@ -3101,7 +3179,7 @@ export default function AdminAnalytics() {
           )}
 
           {/* TAB 8: REPORTED QUESTIONS */}
-          {activeTab === 'reports' && (
+          {activeTab === 'reports' && hasTabAccess('reports') && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex-1 max-w-md relative">
@@ -3225,7 +3303,7 @@ export default function AdminAnalytics() {
           )}
 
           {/* TAB 10: SUPPORT TEAM HELP DESK */}
-          {activeTab === 'support' && (
+          {activeTab === 'support' && hasTabAccess('support') && (
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden h-[calc(100vh-12rem)] flex animate-in fade-in duration-200">
               
               {/* User List sidebar (1/3 width) */}
@@ -3462,7 +3540,7 @@ export default function AdminAnalytics() {
           )}
 
           {/* TAB 9: ANNOUNCEMENTS MANAGER */}
-          {activeTab === 'announcements' && (
+          {activeTab === 'announcements' && hasTabAccess('announcements') && (
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
@@ -3685,7 +3763,7 @@ export default function AdminAnalytics() {
             </div>
           )}
                     {/* TAB: TESTIMONIALS MANAGER */}
-          {activeTab === 'testimonials' && (
+          {activeTab === 'testimonials' && hasTabAccess('testimonials') && (
             <div className="space-y-8 animate-in fade-in duration-200">
               {/* Testimonial Creation Form */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm">

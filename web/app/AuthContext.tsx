@@ -78,7 +78,7 @@ export interface MockUser {
   referralCode: string;
   referredBy: string | null;
   referralsCount: number;
-  role: 'STUDENT' | 'ADMIN' | 'CONTENT_CREATOR';
+  role: 'STUDENT' | 'ADMIN' | 'TEST_CREATOR' | 'SUPPORT_TEAM' | 'NOTICES_MANAGER';
   subscriptionTier: 'None' | 'Testbook Pass' | 'Testbook Pass Pro';
   subscriptionPurchasedAt: string | null;
   subscriptionExpiresAt: string | null;
@@ -108,7 +108,7 @@ interface AuthContextType {
   usersList: MockUser[];
   theme: 'light' | 'dark';
   toggleTheme: () => void;
-  login: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password?: string) => Promise<{ success: boolean; user?: MockUser; error?: string }>;
   signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (name: string, email: string, mobile: string) => void;
@@ -530,7 +530,7 @@ const INITIAL_USERS: MockUser[] = [
     referralCode: 'TB-VIKRAM-2291',
     referredBy: null,
     referralsCount: 0,
-    role: 'CONTENT_CREATOR',
+    role: 'TEST_CREATOR',
     subscriptionTier: 'None',
     subscriptionPurchasedAt: null,
     subscriptionExpiresAt: null,
@@ -1238,7 +1238,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     document.cookie = "tb_lang=" + lang + ";path=/;max-age=31536000";
   };
 
-  const login = async (email: string, password?: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password?: string): Promise<{ success: boolean; user?: MockUser; error?: string }> => {
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
@@ -1253,7 +1253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentUser(data.user);
         document.cookie = "tb_user_id=" + data.user.id + ";path=/;max-age=31536000";
         fetchUsersList();
-        return { success: true };
+        return { success: true, user: data.user };
       }
       return { success: false, error: data.error || 'Login failed' };
     } catch (e: any) {

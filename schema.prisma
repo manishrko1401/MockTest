@@ -12,7 +12,9 @@ generator client {
 enum UserRole {
   STUDENT
   ADMIN
-  CONTENT_CREATOR
+  TEST_CREATOR
+  SUPPORT_TEAM
+  NOTICES_MANAGER
 }
 
 enum QuestionType {
