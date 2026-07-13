@@ -177,6 +177,8 @@ export default function ExamSolutionAnalysisPage() {
   }
 
   const sessionRecord = attempts[selectedAttemptIdx];
+  const cutoffScore = sessionRecord?.mockTest?.testbookCutoffScore || 120;
+  const isCutoffCleared = sessionRecord ? sessionRecord.score >= cutoffScore : false;
 
   if (!sessionRecord) {
     return (
@@ -283,6 +285,60 @@ export default function ExamSolutionAnalysisPage() {
       userSelectedOptionIndex
     };
   });
+
+  const sectionalAnalysis = React.useMemo(() => {
+    const sectionsMap: Record<string, {
+      name: string;
+      total: number;
+      attempted: number;
+      correct: number;
+      incorrect: number;
+      unattempted: number;
+      score: number;
+    }> = {};
+
+    const sectionsList = examSession.sections || [];
+    const getSectionName = (secId: string) => {
+      const found = sectionsList.find(s => s.id === secId);
+      return found ? found.name : (secId ? secId.replace(/sec_/, '').toUpperCase() : 'General Section');
+    };
+
+    questions.forEach((q, idx) => {
+      const secName = getSectionName(q.sectionId);
+      if (!sectionsMap[secName]) {
+        sectionsMap[secName] = {
+          name: secName,
+          total: 0,
+          attempted: 0,
+          correct: 0,
+          incorrect: 0,
+          unattempted: 0,
+          score: 0,
+        };
+      }
+
+      const stats = sectionsMap[secName];
+      stats.total++;
+
+      const userStatus = questionStatuses[idx];
+      const selectedIdx = userStatus ? userStatus.userSelectedOptionIndex : -1;
+
+      if (selectedIdx === -1 || selectedIdx === null || selectedIdx === undefined) {
+        stats.unattempted++;
+      } else {
+        stats.attempted++;
+        if (userStatus.status === 'correct') {
+          stats.correct++;
+          stats.score += 1.0;
+        } else {
+          stats.incorrect++;
+          stats.score -= 0.25;
+        }
+      }
+    });
+
+    return Object.values(sectionsMap);
+  }, [questions, questionStatuses, examSession.sections]);
 
   const activeQuestion = questions[activeQuestionIdx];
   const activeStatus = questionStatuses[activeQuestionIdx];
@@ -441,6 +497,39 @@ export default function ExamSolutionAnalysisPage() {
         </div>
       </section>
 
+      {/* Cutoff Cleared / Missed Status Banner */}
+      <section className="max-w-6xl w-full mx-auto px-6 mt-6">
+        {isCutoffCleared ? (
+          <div className="bg-emerald-50/80 dark:bg-emerald-950/20 border border-emerald-250/60 dark:border-emerald-900/40 p-5 rounded-2xl flex items-center gap-4 text-emerald-800 dark:text-emerald-350 shadow-sm transition-all duration-300">
+            <div className="bg-emerald-500 text-white p-2 rounded-xl">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="font-extrabold text-sm uppercase tracking-wider">{lang === 'hi' ? 'कटऑफ पास हो गया! 🎉' : 'Cutoff Cleared! 🎉'}</h4>
+              <p className="text-xs mt-1 font-semibold opacity-90">
+                {lang === 'hi'
+                  ? `शानदार काम! आपका स्कोर ${sessionRecord.score.toFixed(1)} है, जो ${cutoffScore} के कटऑफ स्कोर से अधिक है। आपने योग्यता रेखा को सफलतापूर्वक पार कर लिया है!`
+                  : `Great job! Your score is ${sessionRecord.score.toFixed(1)}, which is above the cutoff of ${cutoffScore} marks. You have successfully cleared the qualification line!`}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-rose-50/80 dark:bg-rose-950/20 border border-rose-250/60 dark:border-rose-900/40 p-5 rounded-2xl flex items-center gap-4 text-rose-800 dark:text-rose-350 shadow-sm transition-all duration-300">
+            <div className="bg-rose-500 text-white p-2 rounded-xl">
+              <AlertCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="font-extrabold text-sm uppercase tracking-wider">{lang === 'hi' ? 'कटऑफ पास नहीं हुआ ⚠️' : 'Cutoff Not Cleared ⚠️'}</h4>
+              <p className="text-xs mt-1 font-semibold opacity-90">
+                {lang === 'hi'
+                  ? `अभ्यास जारी रखें! आपका स्कोर ${sessionRecord.score.toFixed(1)} है। आप ${cutoffScore} के कटऑफ स्कोर से ${(cutoffScore - sessionRecord.score).toFixed(1)} अंक पीछे रह गए।`
+                  : `Keep practicing! Your score is ${sessionRecord.score.toFixed(1)}. You missed the cutoff score of ${cutoffScore} marks by ${(cutoffScore - sessionRecord.score).toFixed(1)} marks.`}
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
+
       {/* Testbook Equivalent Benchmarking Card */}
       {sessionRecord.testbookRank && sessionRecord.mockTest && (
         <section className="max-w-6xl w-full mx-auto px-6 mt-6">
@@ -492,12 +581,32 @@ export default function ExamSolutionAnalysisPage() {
                 <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full relative">
                   {/* Fill range from average to topper */}
                   <div 
-                    className="absolute h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full"
+                    className="absolute h-full bg-gradient-to-r from-slate-300 to-slate-400 dark:from-slate-700 dark:to-slate-650 rounded-full"
                     style={{
                       left: `${Math.max(0, Math.min(100, (sessionRecord.mockTest.testbookAverageScore / sessionRecord.maxScore) * 100))}%`,
                       right: `${Math.max(0, Math.min(100, 100 - (sessionRecord.mockTest.testbookTopperScore / sessionRecord.maxScore) * 100))}%`
                     }}
                   />
+
+                  {/* Fill range for user score */}
+                  <div 
+                    className={`absolute h-full rounded-full ${isCutoffCleared ? 'bg-gradient-to-r from-blue-500 to-green-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-gradient-to-r from-blue-500 to-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]'}`}
+                    style={{
+                      left: 0,
+                      width: `${Math.min(100, Math.max(0, (sessionRecord.score / sessionRecord.maxScore) * 100))}%`
+                    }}
+                  />
+
+                  {/* Mark: Cutoff Score */}
+                  <div 
+                    className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
+                    style={{ left: `${(cutoffScore / sessionRecord.maxScore) * 100}%` }}
+                  >
+                    <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/50">
+                      {lang === 'hi' ? 'कटऑफ: ' : 'Cutoff: '} {cutoffScore}
+                    </span>
+                    <div className="w-[1.5px] h-6 bg-amber-500 mt-1"></div>
+                  </div>
                   
                   {/* Mark: Average Score */}
                   <div 
@@ -590,6 +699,59 @@ export default function ExamSolutionAnalysisPage() {
           </div>
         </section>
       )}
+
+      {/* Subject-wise Breakdown Section */}
+      <section className="max-w-6xl w-full mx-auto px-6 mt-6 animate-in fade-in duration-300">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+          <h4 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center gap-2">
+            <Award className="h-4.5 w-4.5 text-blue-500" /> {lang === 'hi' ? 'विषयवार प्रदर्शन विश्लेषण' : 'Subject-wise Performance Breakdown'}
+          </h4>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+            {sectionalAnalysis.map((sec) => {
+              const maxSecScore = sec.total;
+              const scorePercent = Math.min(100, Math.max(0, (sec.score / maxSecScore) * 100));
+              const secAccuracy = sec.attempted > 0 ? (sec.correct / sec.attempted) * 100 : 0;
+              const accuracyColor = secAccuracy >= 75 ? 'text-green-600 dark:text-green-400' : (secAccuracy >= 50 ? 'text-blue-600 dark:text-blue-400' : 'text-red-650 dark:text-red-400');
+              const barColor = secAccuracy >= 75 ? 'bg-green-500' : (secAccuracy >= 50 ? 'bg-blue-500' : 'bg-red-500');
+
+              return (
+                <div key={sec.name} className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-850 p-4.5 rounded-2xl flex flex-col justify-between hover:shadow-md transition-all duration-200 relative overflow-hidden group">
+                  <div className="absolute -top-6 -right-6 w-12 h-12 rounded-full bg-slate-500/5 pointer-events-none group-hover:scale-110 transition-transform duration-300" />
+                  
+                  <div>
+                    <h5 className="font-extrabold text-xs text-slate-850 dark:text-slate-200 truncate">{sec.name}</h5>
+                    <div className="flex justify-between items-center mt-3">
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{lang === 'hi' ? 'स्कोर' : 'SCORE'}</span>
+                      <span className="text-xs font-black text-blue-600 dark:text-blue-400">{sec.score.toFixed(1)} / {maxSecScore.toFixed(0)}</span>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="w-full bg-slate-200 dark:bg-slate-855 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                      <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${scorePercent}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3.5 border-t border-slate-200/60 dark:border-slate-800/80 space-y-2">
+                    <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                      <span>{lang === 'hi' ? 'सटीकता' : 'Accuracy'}:</span>
+                      <span className={`font-black ${accuracyColor}`}>{secAccuracy.toFixed(0)}%</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                      <span>{lang === 'hi' ? 'सही / गलत' : 'Correct / Wrong'}:</span>
+                      <span className="font-mono text-[10px] font-extrabold"><strong className="text-green-600 dark:text-green-400">{sec.correct}</strong> / <strong className="text-red-500">{sec.incorrect}</strong></span>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                      <span>{lang === 'hi' ? 'छोड़े गए' : 'Unattempted'}:</span>
+                      <span className="font-extrabold text-slate-500 dark:text-slate-400">{sec.unattempted}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       {/* 3. SPLIT WORKSPACE - QUESTION DETAIL & PALETTE */}
       <section className="max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start">
