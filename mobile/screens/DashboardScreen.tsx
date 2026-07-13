@@ -501,103 +501,105 @@ export default function DashboardScreen({
 
     return (
       <ScrollView contentContainerStyle={styles.tabContent} showsVerticalScrollIndicator={false}>
-        {/* Swipable Announcements Slider */}
-        <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>📢 Official Announcements</Text>
-        {(() => {
-          const announcements = notices.filter(n => n.category === 'announcement');
-          if (announcements.length === 0) {
+        {/* Section 1: Swipable Announcements Slider */}
+        <View style={{ marginBottom: 12 }}>
+          <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>📢 Official Announcements</Text>
+          {(() => {
+            const announcements = notices.filter(n => n.category === 'announcement');
+            if (announcements.length === 0) {
+              return (
+                <View style={[styles.emptyAnnouncementCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+                  <Text style={[styles.emptyAnnouncementText, isDark && { color: ThemeColors.dark.textMuted }]}>No active announcements at the moment.</Text>
+                </View>
+              );
+            }
+
             return (
-              <View style={[styles.emptyAnnouncementCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-                <Text style={[styles.emptyAnnouncementText, isDark && { color: ThemeColors.dark.textMuted }]}>No active announcements at the moment.</Text>
+              <View>
+                <ScrollView
+                  ref={announcementScrollRef}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.carouselScrollView}
+                  onScrollBeginDrag={() => {
+                    setUserHasSwiped(true);
+                  }}
+                  onMomentumScrollEnd={(event) => {
+                    const slideWidth = Dimensions.get('window').width - 32;
+                    const offset = event.nativeEvent.contentOffset.x;
+                    const newIdx = Math.round(offset / slideWidth);
+                    setAnnouncementIndex(newIdx);
+                  }}
+                >
+                  {announcements.map((ann, idx) => (
+                    <View 
+                      key={ann.id || idx} 
+                      style={[
+                        styles.carouselSlide, 
+                        { width: Dimensions.get('window').width - 32 },
+                        ann.imageUrl ? { height: 180, minHeight: 180, padding: 0, overflow: 'hidden' } : {},
+                        isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }
+                      ]}
+                    >
+                      {ann.imageUrl ? (
+                        <TouchableOpacity
+                          activeOpacity={ann.url ? 0.9 : 1}
+                          onPress={() => ann.url && Linking.openURL(ann.url)}
+                          style={{ width: Dimensions.get('window').width - 32, height: 180, justifyContent: 'center', alignItems: 'center' }}
+                        >
+                          <Image
+                            source={{ uri: ann.imageUrl.trim().replace(/^http:\/\//i, 'https://') }}
+                            style={{ width: Dimensions.get('window').width - 34, height: 178 }}
+                            resizeMode="contain"
+                          />
+                        </TouchableOpacity>
+                      ) : (
+                        <View style={styles.announcementCardContent}>
+                          <View style={styles.announcementCardHeader}>
+                            <Text style={[styles.announcementTypeBadge, isDark && { backgroundColor: ThemeColors.dark.bg, color: '#60A5FA', borderColor: '#334155' }]}>{ann.type || 'NEWS'}</Text>
+                            <Text style={styles.announcementDateText}>{ann.date}</Text>
+                          </View>
+                          <Text style={[styles.announcementTitleText, isDark && { color: ThemeColors.dark.text }]}>{ann.title}</Text>
+                          {ann.url && (
+                            <TouchableOpacity
+                              style={styles.announcementLinkBtn}
+                              onPress={() => Linking.openURL(ann.url)}
+                            >
+                              <Text style={[styles.announcementLinkText, isDark && { color: '#60A5FA' }]}>View Details</Text>
+                              <ExternalLink size={12} color={isDark ? '#60A5FA' : '#2563EB'} />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      )}
+                    </View>
+                  ))}
+                </ScrollView>
+                
+                <View style={styles.storyDotRow}>
+                  <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                    {announcements.map((_, i) => (
+                      <View 
+                        key={i} 
+                        style={[
+                          styles.storyIndicatorDot, 
+                          announcementIndex === i 
+                            ? { backgroundColor: '#3B82F6', width: 12 } 
+                            : { backgroundColor: isDark ? '#475569' : '#D1D5DB', width: 6 }
+                        ]} 
+                      />
+                    ))}
+                  </View>
+                  <Text style={[styles.swipeIndicatorText, isDark && { color: ThemeColors.dark.textMuted }]}>
+                    Swipe card to read other announcements ({announcementIndex + 1}/{announcements.length})
+                  </Text>
+                </View>
               </View>
             );
-          }
+          })()}
+        </View>
 
-          return (
-            <View>
-              <ScrollView
-                ref={announcementScrollRef}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                style={styles.carouselScrollView}
-                onScrollBeginDrag={() => {
-                  setUserHasSwiped(true);
-                }}
-                onMomentumScrollEnd={(event) => {
-                  const slideWidth = Dimensions.get('window').width - 32;
-                  const offset = event.nativeEvent.contentOffset.x;
-                  const newIdx = Math.round(offset / slideWidth);
-                  setAnnouncementIndex(newIdx);
-                }}
-              >
-                {announcements.map((ann, idx) => (
-                  <View 
-                    key={ann.id || idx} 
-                    style={[
-                      styles.carouselSlide, 
-                      { width: Dimensions.get('window').width - 32 },
-                      ann.imageUrl ? { height: 180, minHeight: 180, padding: 0, overflow: 'hidden' } : {},
-                      isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }
-                    ]}
-                  >
-                    {ann.imageUrl ? (
-                      <TouchableOpacity
-                        activeOpacity={ann.url ? 0.9 : 1}
-                        onPress={() => ann.url && Linking.openURL(ann.url)}
-                        style={{ width: Dimensions.get('window').width - 32, height: 180, justifyContent: 'center', alignItems: 'center' }}
-                      >
-                        <Image
-                          source={{ uri: ann.imageUrl.trim().replace(/^http:\/\//i, 'https://') }}
-                          style={{ width: Dimensions.get('window').width - 34, height: 178 }}
-                          resizeMode="contain"
-                        />
-                      </TouchableOpacity>
-                    ) : (
-                      <View style={styles.announcementCardContent}>
-                        <View style={styles.announcementCardHeader}>
-                          <Text style={[styles.announcementTypeBadge, isDark && { backgroundColor: ThemeColors.dark.bg, color: '#60A5FA', borderColor: '#334155' }]}>{ann.type || 'NEWS'}</Text>
-                          <Text style={styles.announcementDateText}>{ann.date}</Text>
-                        </View>
-                        <Text style={[styles.announcementTitleText, isDark && { color: ThemeColors.dark.text }]}>{ann.title}</Text>
-                        {ann.url && (
-                          <TouchableOpacity
-                            style={styles.announcementLinkBtn}
-                            onPress={() => Linking.openURL(ann.url)}
-                          >
-                            <Text style={[styles.announcementLinkText, isDark && { color: '#60A5FA' }]}>View Details</Text>
-                            <ExternalLink size={12} color={isDark ? '#60A5FA' : '#2563EB'} />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    )}
-                  </View>
-                ))}
-              </ScrollView>
-              
-              <View style={styles.storyDotRow}>
-                <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                  {announcements.map((_, i) => (
-                    <View 
-                      key={i} 
-                      style={[
-                        styles.storyIndicatorDot, 
-                        announcementIndex === i 
-                          ? { backgroundColor: '#3B82F6', width: 12 } 
-                          : { backgroundColor: isDark ? '#475569' : '#D1D5DB', width: 6 }
-                      ]} 
-                    />
-                  ))}
-                </View>
-                <Text style={[styles.swipeIndicatorText, isDark && { color: ThemeColors.dark.textMuted }]}>
-                  Swipe card to read other announcements ({announcementIndex + 1}/{announcements.length})
-                </Text>
-              </View>
-            </View>
-          );
-        })()}
-
-        {/* Live Updates slideshow (Last 5 Days notices) */}
+        {/* Section 2: Live Updates slideshow (Last 5 Days notices) */}
         {(() => {
           if (recentNotices.length === 0) return null;
 
@@ -623,33 +625,50 @@ export default function DashboardScreen({
           }
 
           return (
-            <View style={{ marginBottom: 20 }}>
-              <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>🔥 Live Updates (Last 5 Days)</Text>
+            <View style={{ marginBottom: 12 }}>
+              <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>🔥 Live Updates</Text>
               <View style={[
                 styles.liveUpdatesCard, 
-                { borderColor: badgeBorderColor, backgroundColor: isDark ? ThemeColors.dark.card : '#FFFFFF' },
+                { 
+                  borderColor: badgeBorderColor, 
+                  backgroundColor: isDark ? ThemeColors.dark.card : badgeBg,
+                  borderLeftWidth: 5,
+                  borderLeftColor: badgeColor,
+                  shadowColor: badgeColor,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.18,
+                  shadowRadius: 8,
+                  elevation: 4
+                },
                 isDark && { borderWidth: 1 }
               ]}>
                 {/* Translucent background circle art */}
-                <View style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: badgeColor, opacity: 0.08 }} />
+                <View style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: badgeColor, opacity: 0.12 }} />
+                <View style={{ position: 'absolute', bottom: -10, left: 60, width: 35, height: 35, borderRadius: 17.5, backgroundColor: badgeColor, opacity: 0.08 }} />
                 
                 <View style={styles.liveUpdatesHeader}>
-                  <View style={[styles.liveCategoryBadge, { backgroundColor: badgeBg, borderColor: badgeBorderColor, borderWidth: 1 }]}>
-                    <Text style={[styles.liveCategoryBadgeText, { color: badgeColor }]}>
-                      {activeNotice.category === 'admit_card' ? 'Admit Card' : activeNotice.category === 'answer_key' ? 'Answer Key' : activeNotice.category.toUpperCase()}
-                    </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <View style={[styles.liveCategoryBadge, { backgroundColor: '#FFFFFF', borderColor: badgeBorderColor, borderWidth: 1 }]}>
+                      <Text style={[styles.liveCategoryBadgeText, { color: badgeColor }]}>
+                        {activeNotice.category === 'admit_card' ? 'Admit Card' : activeNotice.category === 'answer_key' ? 'Answer Key' : activeNotice.category.toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(239,68,68,0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 }}>
+                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#EF4444' }} />
+                      <Text style={{ color: '#EF4444', fontSize: 8, fontWeight: '900', letterSpacing: 0.5 }}>LIVE</Text>
+                    </View>
                   </View>
-                  <Text style={[styles.liveUpdatesCounter, isDark && { color: ThemeColors.dark.textMuted }]}>
+                  <Text style={[styles.liveUpdatesCounter, { color: isDark ? '#94A3B8' : '#475569', fontWeight: 'bold' }]}>
                     {activeNoticeIdx + 1} of {recentNotices.length}
                   </Text>
                 </View>
                 
-                <Text style={[styles.liveUpdatesTitle, isDark && { color: '#FFFFFF' }]} numberOfLines={2}>
+                <Text style={[styles.liveUpdatesTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B', fontWeight: '900' }]} numberOfLines={2}>
                   {activeNotice.title}
                 </Text>
                 
                 <View style={styles.liveUpdatesFooter}>
-                  <Text style={[styles.liveUpdatesDate, isDark && { color: ThemeColors.dark.textMuted }]}>
+                  <Text style={[styles.liveUpdatesDate, isDark ? { color: '#94A3B8' } : { color: '#475569', fontWeight: '600' }]}>
                     Uploaded: {activeNotice.date}
                   </Text>
                   <TouchableOpacity 
@@ -672,33 +691,35 @@ export default function DashboardScreen({
           );
         })()}
 
-        {/* Categories Quick Filter */}
-        <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Explore Categories</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesRow}>
-          {examCatalog.map((cat) => {
-            const catStyle = getCategoryStyle(cat.name, isDark);
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                style={[
-                  styles.categoryBadge,
-                  {
-                    backgroundColor: catStyle.colors[0],
-                    borderColor: catStyle.borderColor,
-                    borderWidth: 1.5,
-                  },
-                ]}
-                onPress={() => {
-                  setExamSearchQuery('');
-                  setSelectedCategoryId(cat.id);
-                  setActiveTab('tests');
-                }}
-              >
-                <Text style={[styles.categoryBadgeText, { color: catStyle.iconColor, fontWeight: 'bold' }]}>{cat.name}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+        {/* Section 3: Explore Categories */}
+        <View style={{ marginBottom: 12 }}>
+          <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Explore Categories</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesRow}>
+            {examCatalog.map((cat) => {
+              const catStyle = getCategoryStyle(cat.name, isDark);
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[
+                    styles.categoryBadge,
+                    {
+                      backgroundColor: catStyle.colors[0],
+                      borderColor: catStyle.borderColor,
+                      borderWidth: 1.5,
+                    },
+                  ]}
+                  onPress={() => {
+                    setExamSearchQuery('');
+                    setSelectedCategoryId(cat.id);
+                    setActiveTab('tests');
+                  }}
+                >
+                  <Text style={[styles.categoryBadgeText, { color: catStyle.iconColor, fontWeight: 'bold' }]}>{cat.name}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
 
         {/* Explore Test Series */}
         <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Popular Test Series</Text>
@@ -1984,7 +2005,7 @@ const styles = StyleSheet.create({
   },
   categoriesRow: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 6,
   },
   categoryBadge: {
     backgroundColor: '#E5E7EB',
@@ -2477,7 +2498,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 16,
     borderWidth: 1.5,
-    marginBottom: 16,
+    marginBottom: 6,
     position: 'relative',
     overflow: 'hidden',
   },
