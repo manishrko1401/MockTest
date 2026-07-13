@@ -576,6 +576,8 @@ export default function DashboardScreen({
                   ))}
                 </ScrollView>
                 
+                {/* Hiding the indicators to adjust spacing, but functionality remains active */}
+                {/* 
                 <View style={styles.storyDotRow}>
                   <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                     {announcements.map((_, i) => (
@@ -594,6 +596,7 @@ export default function DashboardScreen({
                     Swipe card to read other announcements ({announcementIndex + 1}/{announcements.length})
                   </Text>
                 </View>
+                */}
               </View>
             );
           })()}
