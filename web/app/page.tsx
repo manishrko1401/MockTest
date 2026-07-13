@@ -533,45 +533,53 @@ export default function HomeLandingPage() {
                     [...noticesList]
                       .filter(n => n.category === mobileUpdateTab)
                       .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
-                      .map(notice => (
-                      <div
-                        key={notice.id}
-                        className="p-3 rounded-xl bg-slate-55 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 flex flex-col gap-1"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1">
-                            <span className={`text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide ${
-                              mobileUpdateTab === 'notice' ? 'bg-blue-105 text-blue-700 dark:bg-blue-950 dark:text-blue-400' :
-                              mobileUpdateTab === 'result' ? 'bg-yellow-100 text-yellow-750 dark:bg-yellow-950/50 dark:text-yellow-400' :
-                              'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
-                            }`}>
-                              {notice.type}
-                            </span>
-                            {isNewlyPublished(notice.publishDate) && (
-                              <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
-                                {t.newBadge}
+                      .map(notice => {
+                      const noticeStyle = 
+                        notice.category === 'notice' ? 'bg-blue-50/40 dark:bg-blue-950/10 border-blue-100 dark:border-blue-900/30 border-l-4 border-l-blue-500' :
+                        notice.category === 'result' ? 'bg-emerald-50/40 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/30 border-l-4 border-l-emerald-500' :
+                        notice.category === 'admit_card' ? 'bg-amber-50/40 dark:bg-amber-950/10 border-amber-100 dark:border-amber-900/30 border-l-4 border-l-amber-500' :
+                        'bg-purple-50/40 dark:bg-purple-950/10 border-purple-100 dark:border-purple-900/30 border-l-4 border-l-purple-500';
+
+                      return (
+                        <div
+                          key={notice.id}
+                          className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm transition-all duration-200 hover:scale-[1.015] ${noticeStyle}`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1">
+                              <span className={`text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide ${
+                                mobileUpdateTab === 'notice' ? 'bg-blue-105 text-blue-700 dark:bg-blue-950 dark:text-blue-400' :
+                                mobileUpdateTab === 'result' ? 'bg-yellow-100 text-yellow-750 dark:bg-yellow-950/50 dark:text-yellow-400' :
+                                'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
+                              }`}>
+                                {notice.type}
                               </span>
-                            )}
+                              {isNewlyPublished(notice.publishDate) && (
+                                <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
+                                  {t.newBadge}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[7px] text-slate-400 font-semibold">{notice.date}</span>
                           </div>
-                          <span className="text-[7px] text-slate-400 font-semibold">{notice.date}</span>
-                        </div>
-                        <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-normal">
-                          {notice.url ? (
-                            <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-0.5">
-                              {notice.title}
-                              <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
-                            </a>
-                          ) : (
-                            notice.title
+                          <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                            {notice.url ? (
+                              <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-0.5">
+                                {notice.title}
+                                <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
+                              </a>
+                            ) : (
+                              notice.title
+                            )}
+                          </h5>
+                          {notice.lastDate && (
+                            <p className="text-[8px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
+                              {t.lastDate} {notice.lastDate}
+                            </p>
                           )}
-                        </h5>
-                        {notice.lastDate && (
-                          <p className="text-[8px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
-                            {t.lastDate} {notice.lastDate}
-                          </p>
-                        )}
-                      </div>
-                    ))
+                        </div>
+                      );
+                    })
                   ) : (
                     <div className="text-center py-12 text-slate-400 text-xs">
                       {t.noAlerts || 'No active alerts in this section.'}
@@ -925,7 +933,7 @@ export default function HomeLandingPage() {
                     .map(notice => (
                     <div
                       key={notice.id}
-                      className="w-[98%] mx-auto p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
+                      className="w-[98%] mx-auto p-3.5 rounded-2xl bg-blue-50/40 dark:bg-blue-950/10 border border-blue-155 dark:border-blue-900/30 border-l-4 border-l-blue-500 hover:scale-[1.015] hover:shadow-sm transition-all duration-205 flex flex-col gap-1.5"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
@@ -987,7 +995,7 @@ export default function HomeLandingPage() {
                     .map(notice => (
                     <div
                       key={notice.id}
-                      className="w-[98%] mx-auto p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
+                      className="w-[98%] mx-auto p-3.5 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-155 dark:border-emerald-900/30 border-l-4 border-l-emerald-500 hover:scale-[1.015] hover:shadow-sm transition-all duration-205 flex flex-col gap-1.5"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
@@ -1049,7 +1057,7 @@ export default function HomeLandingPage() {
                     .map(notice => (
                     <div
                       key={notice.id}
-                      className="w-[98%] mx-auto p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-950/70 transition flex flex-col gap-1.5"
+                      className="w-[98%] mx-auto p-3.5 rounded-2xl bg-amber-50/40 dark:bg-amber-950/10 border border-amber-155 dark:border-amber-900/30 border-l-4 border-l-amber-500 hover:scale-[1.015] hover:shadow-sm transition-all duration-205 flex flex-col gap-1.5"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">

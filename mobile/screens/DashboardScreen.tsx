@@ -570,39 +570,66 @@ export default function DashboardScreen({
         {/* Categories Quick Filter */}
         <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Explore Categories</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesRow}>
-          {examCatalog.map((cat) => (
-            <TouchableOpacity
-              key={cat.id}
-              style={[styles.categoryBadge, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}
-              onPress={() => {
-                setActiveTab('tests');
-              }}
-            >
-              <Text style={[styles.categoryBadgeText, isDark && { color: ThemeColors.dark.text }]}>{cat.name}</Text>
-            </TouchableOpacity>
-          ))}
+          {examCatalog.map((cat) => {
+            const catStyle = getCategoryStyle(cat.name, isDark);
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                style={[
+                  styles.categoryBadge,
+                  {
+                    backgroundColor: catStyle.colors[0],
+                    borderColor: catStyle.borderColor,
+                    borderWidth: 1.5,
+                  },
+                ]}
+                onPress={() => {
+                  setExamSearchQuery('');
+                  setSelectedCategoryId(cat.id);
+                  setActiveTab('tests');
+                }}
+              >
+                <Text style={[styles.categoryBadgeText, { color: catStyle.iconColor, fontWeight: 'bold' }]}>{cat.name}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Explore Test Series */}
         <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Popular Test Series</Text>
-        {featuredExams.map((exam) => (
-          <TouchableOpacity
-            key={exam.id}
-            style={[styles.seriesCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}
-            onPress={() => onSelectTestSeries(exam)}
-          >
-            <View style={styles.seriesCardLeft}>
-              <BookOpen color={isDark ? ThemeColors.dark.text : '#4B5563'} size={20} />
-              <View style={styles.seriesDetails}>
-                <Text style={[styles.seriesTitle, isDark && { color: ThemeColors.dark.text }]}>{exam.name} Series</Text>
-                <Text style={[styles.seriesMeta, isDark && { color: ThemeColors.dark.textMuted }]}>
-                  {exam.categoryName} • {exam.tests?.length || 0} practice papers
-                </Text>
+        {featuredExams.map((exam) => {
+          const catStyle = getCategoryStyle(exam.categoryName || '', isDark);
+          return (
+            <TouchableOpacity
+              key={exam.id}
+              style={[
+                styles.seriesCard,
+                {
+                  backgroundColor: catStyle.colors[0],
+                  borderColor: catStyle.borderColor,
+                  borderLeftWidth: 4,
+                  borderLeftColor: catStyle.iconColor,
+                },
+              ]}
+              onPress={() => onSelectTestSeries(exam)}
+            >
+              <View style={styles.seriesCardLeft}>
+                <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: catStyle.borderColor, borderWidth: 1, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                  <BookOpen color={catStyle.iconColor} size={18} />
+                </View>
+                <View style={styles.seriesDetails}>
+                  <Text style={[styles.seriesTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B' }]}>{exam.name} Series</Text>
+                  <Text style={[styles.seriesMeta, isDark ? { color: '#94A3B8' } : { color: '#64748B' }]}>
+                    {exam.categoryName} • {exam.tests?.length || 0} practice papers
+                  </Text>
+                </View>
               </View>
-            </View>
-            <ChevronRight color="#9CA3AF" size={18} />
-          </TouchableOpacity>
-        ))}
+              <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', justifyContent: 'center', alignItems: 'center' }}>
+                <ChevronRight color={catStyle.iconColor} size={14} />
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     );
   };
@@ -714,50 +741,92 @@ export default function DashboardScreen({
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item: sub }) => (
-            <TouchableOpacity
-              style={[styles.seriesCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}
-              onPress={() => onSelectTestSeries({ ...sub, categoryName: selectedCategory.name })}
-            >
-              <View style={styles.seriesCardLeft}>
-                <BookOpen color={isDark ? '#60A5FA' : '#3B82F6'} size={20} />
-                <View style={styles.seriesDetails}>
-                  <Text style={[styles.seriesTitle, isDark && { color: ThemeColors.dark.text }]}>{sub.name} Series</Text>
-                  <Text style={[styles.seriesMeta, isDark && { color: ThemeColors.dark.textMuted }]}>
-                    {sub.tests?.length || 0} Full Length Mock Tests
-                  </Text>
+          renderItem={({ item: sub }) => {
+            const catStyle = getCategoryStyle(selectedCategory.name, isDark);
+            return (
+              <TouchableOpacity
+                style={[
+                  styles.seriesCard,
+                  {
+                    backgroundColor: catStyle.colors[0],
+                    borderColor: catStyle.borderColor,
+                    borderLeftWidth: 4,
+                    borderLeftColor: catStyle.iconColor,
+                  },
+                ]}
+                onPress={() => onSelectTestSeries({ ...sub, categoryName: selectedCategory.name })}
+              >
+                <View style={styles.seriesCardLeft}>
+                  <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: catStyle.borderColor, borderWidth: 1, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                    <BookOpen color={catStyle.iconColor} size={18} />
+                  </View>
+                  <View style={styles.seriesDetails}>
+                    <Text style={[styles.seriesTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B' }]}>{sub.name} Series</Text>
+                    <Text style={[styles.seriesMeta, isDark ? { color: '#94A3B8' } : { color: '#64748B' }]}>
+                      {sub.tests?.length || 0} Full Length Mock Tests
+                    </Text>
+                  </View>
                 </View>
-              </View>
-              <ChevronRight color="#9CA3AF" size={18} />
-            </TouchableOpacity>
-          )}
+                <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', justifyContent: 'center', alignItems: 'center' }}>
+                  <ChevronRight color={catStyle.iconColor} size={14} />
+                </View>
+              </TouchableOpacity>
+            );
+          }}
         />
       </View>
     );
   };
 
   const renderNoticeCard = (notice: any) => {
-    let catColor = '#2563EB';
-    if (notice.category === 'result') catColor = '#10B981';
-    if (notice.category === 'admit_card') catColor = '#F59E0B';
-    if (notice.category === 'answer_key') catColor = '#8B5CF6';
+    let catColor = '#3B82F6'; // general notice
+    let catBg = isDark ? '#11293B' : '#EFF6FF';
+    let catBorderColor = isDark ? '#1E3A8A' : '#DBEAFE';
+
+    if (notice.category === 'result') {
+      catColor = '#10B981';
+      catBg = isDark ? '#062C1E' : '#ECFDF5';
+      catBorderColor = isDark ? '#065F46' : '#D1FAE5';
+    } else if (notice.category === 'admit_card') {
+      catColor = '#F59E0B';
+      catBg = isDark ? '#3B2E11' : '#FEF3C7';
+      catBorderColor = isDark ? '#78350F' : '#FDE68A';
+    } else if (notice.category === 'answer_key') {
+      catColor = '#8B5CF6';
+      catBg = isDark ? '#2D1F47' : '#F5F3FF';
+      catBorderColor = isDark ? '#5B21B6' : '#EDE9FE';
+    }
 
     return (
-      <View key={notice.id} style={[styles.noticeCard, { borderLeftColor: catColor }, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+      <View
+        key={notice.id}
+        style={[
+          styles.noticeCard,
+          {
+            backgroundColor: catBg,
+            borderColor: catBorderColor,
+            borderLeftColor: catColor,
+            borderLeftWidth: 4,
+          },
+        ]}
+      >
         <View style={styles.noticeHeader}>
-          <Text style={[styles.noticeBadge, { color: catColor, borderColor: catColor }]}>
+          <Text style={[styles.noticeBadge, { color: catColor, borderColor: catColor, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }]}>
             {notice.type || notice.category.toUpperCase()}
           </Text>
-          <Text style={styles.noticeDate}>{notice.date}</Text>
+          <Text style={[styles.noticeDate, { color: isDark ? '#94A3B8' : '#64748B' }]}>{notice.date}</Text>
         </View>
-        <Text style={[styles.noticeTitle, isDark && { color: ThemeColors.dark.text }]}>{notice.title}</Text>
+        <Text style={[styles.noticeTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B' }]}>{notice.title}</Text>
         {notice.lastDate && (
-          <Text style={[styles.noticeSubText, isDark && { color: ThemeColors.dark.textMuted }]}>Last Date: {notice.lastDate}</Text>
+          <Text style={[styles.noticeSubText, { color: '#EF4444', fontWeight: 'bold' }]}>Last Date: {notice.lastDate}</Text>
         )}
         {notice.url && (
-          <TouchableOpacity style={styles.noticeLinkBtn} onPress={() => Linking.openURL(notice.url)}>
-            <Text style={[styles.noticeLinkText, isDark && { color: '#60A5FA' }]}>Official Link</Text>
-            <ExternalLink size={12} color={isDark ? '#60A5FA' : '#2563EB'} />
+          <TouchableOpacity
+            style={[styles.noticeLinkBtn, { borderColor: catColor, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF' }]}
+            onPress={() => Linking.openURL(notice.url)}
+          >
+            <Text style={[styles.noticeLinkText, { color: catColor }]}>Official Link</Text>
+            <ExternalLink size={12} color={catColor} />
           </TouchableOpacity>
         )}
       </View>
