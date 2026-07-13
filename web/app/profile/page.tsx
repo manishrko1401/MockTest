@@ -398,7 +398,7 @@ export default function StudentProfilePage() {
         </Link>
         
         <div className="flex items-center gap-4">
-          {currentUser.role === 'ADMIN' && (
+          {['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
             <Link href="/admin" className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors px-3 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-white">
               <LayoutDashboard className="h-3.5 w-3.5 text-blue-500" /> {t.navAdmin}
             </Link>
