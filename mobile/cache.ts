@@ -48,17 +48,75 @@ export async function getCachedQuestions(testId: string): Promise<any[] | null> 
 }
 
 /**
+ * Proactively prunes older question caches to prevent hitting storage limits.
+ * Retains only the 12 most recently saved test question sets.
+ */
+async function pruneQuestionsCache(): Promise<void> {
+  try {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const qKeys = allKeys.filter(k => k.startsWith(Q_KEY_PREFIX));
+    
+    if (qKeys.length > 12) {
+      const items: { key: string; savedAt: number }[] = [];
+      for (const key of qKeys) {
+        const val = await AsyncStorage.getItem(key);
+        if (val) {
+          try {
+            const parsed = JSON.parse(val);
+            items.push({ key, savedAt: parsed.savedAt || 0 });
+          } catch {
+            items.push({ key, savedAt: 0 });
+          }
+        }
+      }
+      
+      // Sort oldest first
+      items.sort((a, b) => a.savedAt - b.savedAt);
+      
+      // Evict the oldest 4 entries to clear substantial space
+      const toRemove = items.slice(0, 4).map(i => i.key);
+      if (toRemove.length > 0) {
+        await AsyncStorage.multiRemove(toRemove);
+        console.log(`[Cache] Proactively pruned ${toRemove.length} old test caches to prevent SQLITE_FULL.`);
+      }
+    }
+  } catch (err) {
+    console.warn('[Cache] Pruning failed:', err);
+  }
+}
+
+/**
  * Saves questions for a testId to device storage.
  * Called after every successful network fetch.
  */
 export async function saveQuestionsToCache(testId: string, questions: any[]): Promise<void> {
   try {
+    // Proactively prune older test question caches
+    await pruneQuestionsCache();
+
     await AsyncStorage.setItem(
       `${Q_KEY_PREFIX}${testId}`,
       JSON.stringify({ questions, savedAt: Date.now() })
     );
   } catch (err) {
-    console.warn('[Cache] Failed to save questions:', err);
+    console.warn('[Cache] Failed to save questions, attempting emergency cache eviction:', err);
+    try {
+      const allKeys = await AsyncStorage.getAllKeys();
+      const qKeys = allKeys.filter(k => k.startsWith(Q_KEY_PREFIX));
+      if (qKeys.length > 0) {
+        // Evict all stored questions in case of emergency storage full
+        await AsyncStorage.multiRemove(qKeys);
+        console.log('[Cache] Emergency cache purge of all test questions complete.');
+        
+        // Retry writing the current test questions
+        await AsyncStorage.setItem(
+          `${Q_KEY_PREFIX}${testId}`,
+          JSON.stringify({ questions, savedAt: Date.now() })
+        );
+      }
+    } catch (retryErr) {
+      console.warn('[Cache] Emergency cache eviction retry failed:', retryErr);
+    }
   }
 }
 
