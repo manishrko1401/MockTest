@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
@@ -1587,6 +1587,7 @@ export default function AdminAnalytics() {
                         <th className="pb-3 px-4">User Details</th>
                         <th className="pb-3 px-4">System Role</th>
                         <th className="pb-3 px-4">Access Pass</th>
+                        <th className="pb-3 px-4 text-center">Referrals (T/S/P)</th>
                         <th className="pb-3 px-4 text-center">Attempts</th>
                         <th className="pb-3 px-4 text-right">Action</th>
                       </tr>
@@ -1603,6 +1604,21 @@ export default function AdminAnalytics() {
                         })
                         .map(user => {
                           const isSelected = selectedUserId === user.id;
+                          const code = user.referralCode?.trim().toLowerCase() || '';
+                          const referredList = code 
+                            ? usersList.filter(u => u.referredBy && u.referredBy.trim().toLowerCase() === code)
+                            : [];
+                          const refTotal = referredList.length;
+                          const refSuccessful = referredList.filter(u => {
+                            return u.testSessions && u.testSessions.some((s: any) => {
+                              if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') return false;
+                              const durationMinutes = s.durationMinutes ?? 60;
+                              const totalSec = durationMinutes * 60;
+                              const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
+                              return spentSec >= totalSec * 0.75;
+                            });
+                          }).length;
+                          const refPending = refTotal - refSuccessful;
                           return (
                             <tr
                               key={user.id}
@@ -1654,6 +1670,18 @@ export default function AdminAnalytics() {
                                   {user.subscriptionTier === 'None' ? 'No Pass' : user.subscriptionTier.replace('Testbook', 'Mock Test')}
                                 </span>
                               </td>
+                              <td className="py-3.5 px-4 text-center">
+                                <div className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
+                                  {refTotal}
+                                </div>
+                                {refTotal > 0 && (
+                                  <div className="text-[9px] mt-0.5 whitespace-nowrap">
+                                    <span className="text-green-600 dark:text-green-400 font-extrabold">{refSuccessful} S</span>
+                                    <span className="text-slate-400 mx-1">/</span>
+                                    <span className="text-amber-600 dark:text-amber-500 font-extrabold">{refPending} P</span>
+                                  </div>
+                                )}
+                              </td>
                               <td className="py-3.5 px-4 text-center font-mono text-slate-800 dark:text-slate-300">
                                 {user.testSessions.filter((s: any) => {
                                   if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') return false;
@@ -1690,6 +1718,24 @@ export default function AdminAnalytics() {
                 (() => {
                   const activeUser = usersList.find(u => u.id === selectedUserId);
                   if (!activeUser) return null;
+
+                  // Calculate referral breakdown for activeUser
+                  const activeCode = activeUser.referralCode?.trim().toLowerCase() || '';
+                  const activeReferredList = activeCode 
+                    ? usersList.filter(u => u.referredBy && u.referredBy.trim().toLowerCase() === activeCode)
+                    : [];
+                  const activeRefTotal = activeReferredList.length;
+                  const activeRefSuccessfulList = activeReferredList.filter(u => {
+                    return u.testSessions && u.testSessions.some((s: any) => {
+                      if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') return false;
+                      const durationMinutes = s.durationMinutes ?? 60;
+                      const totalSec = durationMinutes * 60;
+                      const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
+                      return spentSec >= totalSec * 0.75;
+                    });
+                  });
+                  const activeRefSuccessful = activeRefSuccessfulList.length;
+                  const activeRefPending = activeRefTotal - activeRefSuccessful;
 
                   return (
                     <div className="space-y-6 animate-in fade-in duration-200 text-xs">
@@ -1953,6 +1999,61 @@ export default function AdminAnalytics() {
                                 <span className="font-medium text-slate-555">Total Referrals:</span>
                                 <span className="font-extrabold text-slate-900 dark:text-white">{activeUser.referralsCount || 0} user(s)</span>
                               </div>
+                            </div>
+                          </div>
+
+                          {/* Referral Details Card */}
+                          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
+                            <h3 className="font-extrabold text-sm text-slate-905 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-105 dark:border-slate-808 flex items-center gap-2">
+                              <Gift className="h-4 w-4 text-amber-500" />
+                              Referral Stats
+                            </h3>
+                            <div className="space-y-3.5 text-xs text-left">
+                              <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-905">
+                                <span className="font-medium text-slate-550">Total Invited:</span>
+                                <span className="font-black text-slate-900 dark:text-white">{activeRefTotal} user(s)</span>
+                              </div>
+                              <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-905">
+                                <span className="font-medium text-slate-550 flex items-center gap-1.5">
+                                  <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                                  Successful Referrals:
+                                </span>
+                                <span className="font-black text-green-600 dark:text-green-400">{activeRefSuccessful} user(s)</span>
+                              </div>
+                              <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-905">
+                                <span className="font-medium text-slate-550 flex items-center gap-1.5">
+                                  <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                                  Pending First Test:
+                                </span>
+                                <span className="font-black text-amber-600 dark:text-amber-500">{activeRefPending} user(s)</span>
+                              </div>
+                              
+                              {/* Short list of referred users names */}
+                              {activeRefTotal > 0 && (
+                                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                                  <p className="text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider">Referred Friends List</p>
+                                  <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                                    {activeReferredList.map(refUser => {
+                                      const isSuccessful = activeRefSuccessfulList.some(u => u.id === refUser.id);
+                                      return (
+                                        <div key={refUser.id} className="flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40 p-2 rounded-lg border border-slate-100 dark:border-slate-808/30 text-[10px]">
+                                          <div>
+                                            <p className="font-bold text-slate-800 dark:text-slate-202">{refUser.name}</p>
+                                            <p className="text-[9px] text-slate-400 dark:text-slate-500">{refUser.email.replace(/(.{2})(.*)(@.*)/, "$1***$3")}</p>
+                                          </div>
+                                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
+                                            isSuccessful 
+                                              ? 'bg-green-50 dark:bg-green-955/20 text-green-700 dark:text-green-400 border border-green-200/50' 
+                                              : 'bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-450 border border-amber-200/50'
+                                          }`}>
+                                            {isSuccessful ? 'SUCCESS' : 'PENDING'}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
