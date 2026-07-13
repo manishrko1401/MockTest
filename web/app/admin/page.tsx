@@ -844,6 +844,13 @@ export default function AdminAnalytics() {
   if (!hasAdminAccess) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-950 font-sans text-slate-100 relative overflow-hidden px-4">
+        {/* DEBUG STRIP */}
+        <div style={{position:'fixed',top:0,left:0,right:0,zIndex:9999,background:'#111',color:'#0f0',fontSize:'11px',padding:'4px 12px',display:'flex',gap:'16px'}}>
+          <span>👤 currentUser: {currentUser ? `${currentUser.name} (${currentUser.role})` : 'null'}</span>
+          <span>📋 usersList: {usersList.length}</span>
+          <span>📚 catalog: {examCatalog.length}</span>
+          <span>🔒 hasAccess: {String(!!hasAdminAccess)}</span>
+        </div>
         {/* Ambient background blur circles */}
         <div className="absolute top-10 left-10 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-10 right-10 w-72 h-72 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -909,6 +916,15 @@ export default function AdminAnalytics() {
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 overflow-hidden transition-colors duration-200">
+      {/* TEMP DEBUG BAR - shows current data state */}
+      <div style={{position:'fixed',bottom:0,left:0,right:0,zIndex:9999,background:'#111',color:'#0f0',fontSize:'11px',padding:'4px 12px',display:'flex',gap:'16px'}}>
+        <span>👤 User: {currentUser ? `${currentUser.name} (${currentUser.role})` : 'NOT LOGGED IN'}</span>
+        <span>📋 usersList: {usersList.length}</span>
+        <span>📚 catalog: {examCatalog.length}</span>
+        <span>🔔 notices: {noticesList.length}</span>
+        <span>🔑 tab: {activeTab}</span>
+        <span>🔒 hasAccess: {hasAdminAccess ? 'YES' : 'NO'}</span>
+      </div>
       
       {/* SIDEBAR NAVIGATION BACKDROP ON MOBILE */}
       {isMounted && isMobile && mobileSidebarOpen && (
