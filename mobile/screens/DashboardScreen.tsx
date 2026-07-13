@@ -245,6 +245,35 @@ export default function DashboardScreen({
   const [announcementIndex, setAnnouncementIndex] = useState(0);
   const [userHasSwiped, setUserHasSwiped] = useState(false);
 
+  // Live updates states (notices, results, answer keys, admit cards - last 5 days)
+  const [recentNoticeIndex, setRecentNoticeIndex] = useState(0);
+
+  const recentNotices = React.useMemo(() => {
+    return notices.filter(n => {
+      if (!['notice', 'result', 'answer_key', 'admit_card'].includes(n.category)) return false;
+      if (!n.publishDate) return false;
+      try {
+        const now = new Date();
+        const pubDate = new Date(n.publishDate);
+        pubDate.setHours(0, 0, 0, 0);
+        now.setHours(0, 0, 0, 0);
+        const diffTime = now.getTime() - pubDate.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 && diffDays <= 5;
+      } catch (e) {
+        return false;
+      }
+    });
+  }, [notices]);
+
+  useEffect(() => {
+    if (recentNotices.length <= 1) return;
+    const interval = setInterval(() => {
+      setRecentNoticeIndex(prev => (prev + 1) % recentNotices.length);
+    }, 4000); // cycle every 4 seconds
+    return () => clearInterval(interval);
+  }, [recentNotices]);
+
   const announcementsList = React.useMemo(() => {
     return notices.filter(n => n.category === 'announcement');
   }, [notices]);
@@ -563,6 +592,81 @@ export default function DashboardScreen({
                 <Text style={[styles.swipeIndicatorText, isDark && { color: ThemeColors.dark.textMuted }]}>
                   Swipe card to read other announcements ({announcementIndex + 1}/{announcements.length})
                 </Text>
+              </View>
+            </View>
+          );
+        })()}
+
+        {/* Live Updates slideshow (Last 5 Days notices) */}
+        {(() => {
+          if (recentNotices.length === 0) return null;
+
+          const activeNoticeIdx = recentNoticeIndex % recentNotices.length;
+          const activeNotice = recentNotices[activeNoticeIdx];
+
+          let badgeColor = '#3B82F6';
+          let badgeBg = isDark ? 'rgba(59,130,246,0.15)' : '#EFF6FF';
+          let badgeBorderColor = isDark ? '#1E3A8A' : '#DBEAFE';
+          
+          if (activeNotice.category === 'result') {
+            badgeColor = '#10B981';
+            badgeBg = isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5';
+            badgeBorderColor = isDark ? '#065F46' : '#D1FAE5';
+          } else if (activeNotice.category === 'admit_card') {
+            badgeColor = '#F59E0B';
+            badgeBg = isDark ? 'rgba(245,158,11,0.15)' : '#FEF3C7';
+            badgeBorderColor = isDark ? '#78350F' : '#FDE68A';
+          } else if (activeNotice.category === 'answer_key') {
+            badgeColor = '#8B5CF6';
+            badgeBg = isDark ? 'rgba(139,92,246,0.15)' : '#F5F3FF';
+            badgeBorderColor = isDark ? '#5B21B6' : '#EDE9FE';
+          }
+
+          return (
+            <View style={{ marginBottom: 20 }}>
+              <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>🔥 Live Updates (Last 5 Days)</Text>
+              <View style={[
+                styles.liveUpdatesCard, 
+                { borderColor: badgeBorderColor, backgroundColor: isDark ? ThemeColors.dark.card : '#FFFFFF' },
+                isDark && { borderWidth: 1 }
+              ]}>
+                {/* Translucent background circle art */}
+                <View style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: badgeColor, opacity: 0.08 }} />
+                
+                <View style={styles.liveUpdatesHeader}>
+                  <View style={[styles.liveCategoryBadge, { backgroundColor: badgeBg, borderColor: badgeBorderColor, borderWidth: 1 }]}>
+                    <Text style={[styles.liveCategoryBadgeText, { color: badgeColor }]}>
+                      {activeNotice.category === 'admit_card' ? 'Admit Card' : activeNotice.category === 'answer_key' ? 'Answer Key' : activeNotice.category.toUpperCase()}
+                    </Text>
+                  </View>
+                  <Text style={[styles.liveUpdatesCounter, isDark && { color: ThemeColors.dark.textMuted }]}>
+                    {activeNoticeIdx + 1} of {recentNotices.length}
+                  </Text>
+                </View>
+                
+                <Text style={[styles.liveUpdatesTitle, isDark && { color: '#FFFFFF' }]} numberOfLines={2}>
+                  {activeNotice.title}
+                </Text>
+                
+                <View style={styles.liveUpdatesFooter}>
+                  <Text style={[styles.liveUpdatesDate, isDark && { color: ThemeColors.dark.textMuted }]}>
+                    Uploaded: {activeNotice.date}
+                  </Text>
+                  <TouchableOpacity 
+                    style={[styles.liveUpdatesBtn, { backgroundColor: badgeColor }]}
+                    onPress={() => {
+                      if (activeNotice.url) {
+                        Linking.openURL(activeNotice.url);
+                      } else {
+                        // Navigate to notice screen
+                        setActiveTab('notices');
+                      }
+                    }}
+                  >
+                    <Text style={styles.liveUpdatesBtnText}>View Info</Text>
+                    <ExternalLink size={11} color="#FFFFFF" style={{ marginLeft: 3 }} />
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           );
@@ -2368,6 +2472,65 @@ const styles = StyleSheet.create({
   announcementDateText: {
     fontSize: 10,
     color: '#9CA3AF',
+  },
+  liveUpdatesCard: {
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    marginBottom: 16,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  liveUpdatesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  liveCategoryBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  liveCategoryBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  liveUpdatesCounter: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#94A3B8',
+  },
+  liveUpdatesTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    lineHeight: 18,
+    marginVertical: 4,
+  },
+  liveUpdatesFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  liveUpdatesDate: {
+    fontSize: 10,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  liveUpdatesBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+  },
+  liveUpdatesBtnText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   announcementTitleText: {
     fontSize: 13,
