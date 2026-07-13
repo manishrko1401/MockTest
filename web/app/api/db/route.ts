@@ -600,14 +600,28 @@ async function handleSignup(data: any) {
     },
   });
 }
-
 async function handleLogin(data: any) {
   const { email, password } = data;
   const trimmedEmail = email.trim().toLowerCase();
 
-  // Fetch user WITHOUT sessions — sessions are loaded lazily via get-user-details
+  // Fetch user WITH sessions for single-user login (fast, and required for profile history / analysis)
   const user = await prisma.user.findUnique({
     where: { email: trimmedEmail },
+    include: {
+      testSessions: {
+        include: {
+          mockTest: {
+            select: {
+              title: true,
+              maxMarks: true,
+              durationMinutes: true,
+            }
+          },
+          responses: true,
+        },
+        orderBy: { startedAt: 'desc' },
+      },
+    },
   });
 
   if (!user) {
@@ -641,7 +655,36 @@ async function handleLogin(data: any) {
     coins: user.coins,
     referralCoinsCredited: user.referralCoinsCredited,
     bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],
-    testSessions: [], // Loaded lazily via get-user-details
+    testSessions: user.testSessions.map((session: any) => {
+      const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
+      session.responses.forEach((r: any) => {
+        responsesRecord[r.questionId] = {
+          selectedOptionIndex: r.selectedOptionIndex,
+          elapsedSeconds: r.elapsedSeconds,
+          state: r.state,
+        };
+      });
+      return {
+        id: session.id,
+        testId: session.mockTestId,
+        title: session.mockTest?.title || 'Mock Test',
+        score: session.finalScore ?? 0,
+        maxScore: session.mockTest?.maxMarks ?? 200,
+        accuracy: session.accuracyPercentage ?? 0,
+        durationMinutes: session.mockTest?.durationMinutes || 60,
+        durationSeconds: session.timeSpentSeconds,
+        status: session.status,
+        violations: session.violationsCount,
+        date: session.startedAt.toISOString().split('T')[0],
+        startedAt: session.startedAt.toISOString(),
+        responses: responsesRecord,
+        timeRemaining: session.remainingSeconds,
+        currentSectionIndex: session.currentSectionIndex,
+        currentQuestionIndex: session.currentQuestionIndex,
+        testbookRank: session.testbookRank ?? null,
+        testbookPercentile: session.testbookPercentile ?? null,
+      };
+    }),
   };
 
   return NextResponse.json({ success: true, user: mappedUser });
