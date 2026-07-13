@@ -286,7 +286,7 @@ export default function ExamSolutionAnalysisPage() {
     };
   });
 
-  const sectionalAnalysis = React.useMemo(() => {
+  const sectionalAnalysis = (() => {
     const sectionsMap: Record<string, {
       name: string;
       total: number;
@@ -338,7 +338,7 @@ export default function ExamSolutionAnalysisPage() {
     });
 
     return Object.values(sectionsMap);
-  }, [questions, questionStatuses, examSession.sections]);
+  })();
 
   const activeQuestion = questions[activeQuestionIdx];
   const activeStatus = questionStatuses[activeQuestionIdx];
