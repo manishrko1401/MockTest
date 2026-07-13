@@ -157,6 +157,87 @@ const CategoryIcon = ({ name, color, size }: { name: string; color: string; size
   }
 };
 
+const Marquee = ({ notices, isDark }: { notices: any[]; isDark: boolean }) => {
+  const [contentWidth, setContentWidth] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(Dimensions.get('window').width);
+  const translateX = useRef(new Animated.Value(0)).current;
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  const marqueeText = notices
+    .map((n) => `🔥 ${n.type ? `[${n.type}] ` : ''}${n.title} (${n.date})`)
+    .join('      •      ');
+
+  useEffect(() => {
+    if (contentWidth === 0 || containerWidth === 0) return;
+
+    translateX.setValue(containerWidth);
+
+    const animate = () => {
+      translateX.setValue(containerWidth);
+      animationRef.current = Animated.timing(translateX, {
+        toValue: -contentWidth,
+        duration: (contentWidth + containerWidth) * 18, // Speed multiplier
+        useNativeDriver: true,
+        isInteraction: false,
+      });
+
+      animationRef.current.start((result) => {
+        if (result.finished) {
+          animate();
+        }
+      });
+    };
+
+    animate();
+
+    return () => {
+      if (animationRef.current) {
+        animationRef.current.stop();
+      }
+    };
+  }, [contentWidth, containerWidth, marqueeText]);
+
+  if (notices.length === 0) return null;
+
+  return (
+    <View
+      style={{
+        height: 36,
+        backgroundColor: isDark ? '#11293B' : '#EFF6FF',
+        borderTopWidth: 1.5,
+        borderBottomWidth: 1.5,
+        borderColor: isDark ? '#1E3A8A' : '#BFDBFE',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        marginHorizontal: -16, // Bleed to screen edges
+        marginBottom: 16,
+      }}
+      onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
+    >
+      <Animated.View
+        style={{
+          flexDirection: 'row',
+          transform: [{ translateX }],
+          position: 'absolute',
+          alignItems: 'center',
+        }}
+      >
+        <Text
+          onLayout={(e) => setContentWidth(e.nativeEvent.layout.width)}
+          style={{
+            fontSize: 11,
+            fontWeight: 'bold',
+            color: isDark ? '#60A5FA' : '#2563EB',
+            paddingRight: 50,
+          }}
+        >
+          {marqueeText}
+        </Text>
+      </Animated.View>
+    </View>
+  );
+};
+
 export default function DashboardScreen({
   currentUser,
   notices,
@@ -471,6 +552,7 @@ export default function DashboardScreen({
 
     return (
       <ScrollView contentContainerStyle={styles.tabContent} showsVerticalScrollIndicator={false}>
+        <Marquee notices={notices.filter(n => n.category !== 'announcement')} isDark={isDark} />
         {/* Swipable Announcements Slider */}
         <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>📢 Official Announcements</Text>
         {(() => {
