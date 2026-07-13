@@ -103,6 +103,8 @@ export async function POST(request: Request) {
         return await handleCatalogSync(data);
       case 'get-referred-friends':
         return await handleGetReferredFriends(data);
+      case 'get-user-details':
+        return await handleGetUserDetails(data);
       default:
         return NextResponse.json({ success: false, error: `Invalid action: ${action}` }, { status: 400 });
     }
@@ -520,8 +522,12 @@ async function handleSignup(data: any) {
     return NextResponse.json({ success: false, error: 'User account already exists with this email.' }, { status: 400 });
   }
 
-  const codeName = name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
-  const referralCode = 'TB-' + codeName + '-' + Math.floor(1000 + Math.random() * 9000);
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let randStr = '';
+  for (let i = 0; i < 4; i++) {
+    randStr += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const referralCode = `MT-${randStr}`;
 
   let referredByCode: string | null = null;
   if (referralCodeInput && referralCodeInput.trim() !== '') {
@@ -540,7 +546,7 @@ async function handleSignup(data: any) {
 
   const newUser = await prisma.user.create({
     data: {
-      candidateCode: 'HUB-id_' + Math.floor(1000 + Math.random() * 9000),
+      candidateCode: 'HUB-' + Math.floor(1000 + Math.random() * 9000),
       fullName: name.trim(),
       email: trimmedEmail,
       mobile: mobile.trim(),
@@ -1994,4 +2000,80 @@ async function handleDeleteReportedQuestion(data: any) {
   });
 
   return NextResponse.json({ success: true });
+}
+
+async function handleGetUserDetails(data: any) {
+  const { userId } = data;
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  const u = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      testSessions: {
+        include: {
+          mockTest: true,
+          responses: true,
+        },
+      },
+    },
+  });
+
+  if (!u) {
+    return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+  }
+
+  const mappedUser = {
+    id: u.id,
+    candidateCode: u.candidateCode,
+    name: u.fullName,
+    email: u.email,
+    mobile: u.mobile,
+    referralCode: u.referralCode,
+    referredBy: u.referredBy,
+    referralsCount: u.referralsCount,
+    role: u.role,
+    subscriptionTier: u.subscriptionTier,
+    subscriptionPurchasedAt: u.subscriptionPurchasedAt,
+    subscriptionExpiresAt: u.subscriptionExpiresAt,
+    registeredDate: formatDateTime(u.createdAt),
+    isBlocked: u.isBlocked,
+    coins: u.coins,
+    referralCoinsCredited: u.referralCoinsCredited,
+    password: u.passwordHash,
+    bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
+    testSessions: u.testSessions.map((session: any) => {
+      const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
+      session.responses.forEach((r: any) => {
+        responsesRecord[r.questionId] = {
+          selectedOptionIndex: r.selectedOptionIndex,
+          elapsedSeconds: r.elapsedSeconds,
+          state: r.state,
+        };
+      });
+      return {
+        id: session.id,
+        testId: session.mockTestId,
+        title: session.mockTest?.title || 'Mock Test',
+        score: session.finalScore ?? 0,
+        maxScore: session.mockTest?.maxMarks ?? 200,
+        accuracy: session.accuracyPercentage ?? 0,
+        durationMinutes: session.mockTest?.durationMinutes || 60,
+        durationSeconds: session.timeSpentSeconds,
+        status: session.status,
+        violations: session.violationsCount,
+        date: session.startedAt.toISOString().split('T')[0],
+        startedAt: session.startedAt.toISOString(),
+        responses: responsesRecord,
+        timeRemaining: session.remainingSeconds,
+        currentSectionIndex: session.currentSectionIndex,
+        currentQuestionIndex: session.currentQuestionIndex,
+        testbookRank: session.testbookRank ?? null,
+        testbookPercentile: session.testbookPercentile ?? null,
+      };
+    }),
+  };
+
+  return NextResponse.json({ success: true, user: mappedUser });
 }

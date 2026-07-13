@@ -1603,7 +1603,7 @@ export default function AdminAnalytics() {
                           return (
                             <tr
                               key={user.id}
-                              onClick={() => handleSelectUser(user)}
+                              onClick={() => window.open('/admin/users/' + user.id, '_blank')}
                               className={`hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors cursor-pointer ${
                                 isSelected ? 'bg-slate-100 dark:bg-slate-900/60 border-l-2 border-blue-500' : ''
                               }`}
@@ -1620,7 +1620,7 @@ export default function AdminAnalytics() {
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400">{user.email}</p>
                                 {user.candidateCode && (
                                   <p className="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold mt-0.5">
-                                    Roll Code: <span className="font-mono bg-slate-100 dark:bg-slate-900 px-1 py-0.5 rounded text-[9px] border border-slate-200 dark:border-slate-808 text-slate-800 dark:text-white">{user.candidateCode}</span>
+                                    Hub ID: <span className="font-mono bg-slate-100 dark:bg-slate-900 px-1 py-0.5 rounded text-[9px] border border-slate-200 dark:border-slate-808 text-slate-800 dark:text-white">{user.candidateCode}</span>
                                   </p>
                                 )}
                                 <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">Joined: {user.registeredDate}</p>
@@ -1665,12 +1665,11 @@ export default function AdminAnalytics() {
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleSelectUser(user);
-                                    setIsEditUserOpen(true); // Auto-expand form
+                                    window.open('/admin/users/' + user.id, '_blank');
                                   }}
                                   className="text-blue-650 hover:text-blue-750 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                 >
-                                  Edit Profile
+                                  View Dossier
                                 </button>
                               </td>
                             </tr>

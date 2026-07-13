@@ -806,7 +806,7 @@ export default function DashboardScreen({
           <Text style={[styles.profileName, isDark && { color: ThemeColors.dark.text }]}>{currentUser.name}</Text>
           <Text style={[styles.profileEmail, isDark && { color: ThemeColors.dark.textMuted }]}>{currentUser.email}</Text>
           <View style={styles.badgeRow}>
-            <Text style={[styles.profileCodeBadge, isDark && { backgroundColor: '#0B1329', color: ThemeColors.dark.text }]}>Roll Code: {currentUser.candidateCode?.replace('CGL', 'HUB-id')}</Text>
+            <Text style={[styles.profileCodeBadge, isDark && { backgroundColor: '#0B1329', color: ThemeColors.dark.text }]}>Hub ID: {currentUser.candidateCode}</Text>
             <Text style={[styles.profileCoinsBadge, isDark && { backgroundColor: '#0B1329', color: ThemeColors.dark.text }]}>🪙 {currentUser.coins || 0} Coins</Text>
           </View>
         </View>
