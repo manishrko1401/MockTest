@@ -1975,12 +1975,12 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#374151',
-    marginBottom: 10,
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748B',
+    marginBottom: 8,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   categoriesRow: {
     flexDirection: 'row',
