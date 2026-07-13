@@ -1302,7 +1302,8 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Collapsible Edit Profile Form */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+              {!selectedUserId && (
+                <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-sm overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setIsEditUserOpen(!isEditUserOpen)}
@@ -1532,9 +1533,11 @@ export default function AdminAnalytics() {
                   </div>
                 )}
               </div>
+              )}
 
               {/* Users List & Search Card — Full Width */}
-              <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
+              {!selectedUserId && (
+                <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                   <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Registered Users Directory</h3>
                   
@@ -1603,7 +1606,7 @@ export default function AdminAnalytics() {
                           return (
                             <tr
                               key={user.id}
-                              onClick={() => window.open('/admin/users/' + user.id, '_blank')}
+                              onClick={() => handleSelectUser(user)}
                               className={`hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors cursor-pointer ${
                                 isSelected ? 'bg-slate-100 dark:bg-slate-900/60 border-l-2 border-blue-500' : ''
                               }`}
@@ -1665,7 +1668,7 @@ export default function AdminAnalytics() {
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    window.open('/admin/users/' + user.id, '_blank');
+                                    handleSelectUser(user);
                                   }}
                                   className="text-blue-650 hover:text-blue-750 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                 >
@@ -1680,91 +1683,362 @@ export default function AdminAnalytics() {
                 </div>
               </div>
 
-              {/* Exam Sitting attempts logs — Full Width */}
+              )}
+
+              {/* Detailed User Management Dossier & Sitting History section — shows when selectedUserId is active */}
               {selectedUserId && (
                 (() => {
                   const activeUser = usersList.find(u => u.id === selectedUserId);
                   if (!activeUser) return null;
 
                   return (
-                    <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm animate-in fade-in duration-200">
-                      <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-200 dark:border-slate-800">
-                        <h3 className="font-extrabold text-xs text-slate-905 dark:text-white uppercase tracking-wider">Exam Sitting History: {activeUser.name}</h3>
-                        <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-808 font-bold">
-                          {activeUser.testSessions.length} sessions logged
-                        </span>
+                    <div className="space-y-6 animate-in fade-in duration-200 text-xs">
+                      {/* Back button */}
+                      <button 
+                        type="button"
+                        onClick={() => setSelectedUserId(null)}
+                        className="flex items-center gap-2 text-slate-550 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-extrabold text-xs transition cursor-pointer"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Registered Users Directory
+                      </button>
+
+                      {/* User Header Card */}
+                      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in slide-in-from-top-4 duration-250">
+                        <div className="space-y-1 text-left">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <h2 className="text-lg font-extrabold">{activeUser.name}</h2>
+                            {activeUser.isBlocked && (
+                              <span className="bg-red-500/20 border border-red-400/30 text-red-205 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                Blocked
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-blue-100">{activeUser.email} &bull; Hub ID: <span className="font-mono font-bold bg-white/10 px-1.5 py-0.5 rounded">{activeUser.candidateCode || 'None'}</span></p>
+                          <p className="text-[10px] text-indigo-200">Registered on: {activeUser.registeredDate || 'N/A'}</p>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-center">
+                            <p className="text-[9px] text-indigo-200 font-bold uppercase tracking-wider">Wallet Balance</p>
+                            <div className="flex items-center justify-center gap-1 mt-0.5">
+                              <Coins className="h-3.5 w-3.5 text-amber-300" />
+                              <span className="font-black text-xs">{activeUser.coins || 0} Coins</span>
+                            </div>
+                          </div>
+                          <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-center">
+                            <p className="text-[9px] text-indigo-200 font-bold uppercase tracking-wider">Sittings Taken</p>
+                            <span className="font-black text-xs mt-0.5 block">{activeUser.testSessions?.length || 0}</span>
+                          </div>
+                        </div>
                       </div>
-                      
-                      {activeUser.testSessions.length > 0 ? (
-                        <div className="space-y-4">
-                          {activeUser.testSessions.map(session => (
-                            <div key={session.id} className="border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-4 text-xs">
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 mb-3">
-                                <div>
-                                  <p className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">{session.title}</p>
-                                  <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 font-semibold">
-                                    <Calendar className="h-3 w-3" /> Attempted on {session.date}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                    session.status === 'COMPLETED'
-                                      ? 'bg-green-50 dark:bg-green-955/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
-                                      : session.status === 'AUTO_SUBMITTED'
-                                      ? 'bg-yellow-50 dark:bg-yellow-955/40 border border-yellow-200 dark:border-yellow-805 text-yellow-750 dark:text-yellow-405'
-                                      : 'bg-blue-50 dark:bg-blue-955/40 border border-blue-200 dark:border-blue-800 text-blue-750 dark:text-blue-400'
-                                  }`}>
-                                    {session.status}
-                                  </span>
-                                  
-                                  <button
-                                    onClick={() => {
-                                      setResetTarget({
-                                        userId: activeUser.id,
-                                        sessionId: session.id,
-                                        userName: activeUser.name,
-                                        sessionTitle: session.title
-                                      });
-                                      setResetConfirmOpen(true);
-                                    }}
-                                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-bold flex items-center gap-1 bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/45 hover:bg-red-100 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
-                                  >
-                                    <RefreshCw className="h-3.5 w-3.5" /> Reset Attempt
-                                  </button>
-                                </div>
+
+                      {/* Main Details and Edit Form */}
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                        <div className="lg:col-span-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
+                          <div className="flex items-center gap-3 mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <UserCheck className="h-5 w-5 text-blue-500" />
+                            <h2 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Modify Profile Dossier</h2>
+                          </div>
+                          
+                          <form onSubmit={handleSaveProfile} className="space-y-5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={editName}
+                                  onChange={(e) => setEditName(e.target.value)}
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                />
                               </div>
 
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
-                                <div>
-                                  <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Score Obtained</p>
-                                  <p className="text-sm font-black text-blue-600 dark:text-blue-400 mt-0.5">{session.score.toFixed(1)} / {session.maxScore}</p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Accuracy Percentage</p>
-                                  <p className="text-sm font-black text-green-600 dark:text-green-400 mt-0.5">{session.accuracy.toFixed(1)}%</p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Time Spent</p>
-                                  <p className="text-sm font-black text-yellow-600 dark:text-yellow-405 mt-0.5">
-                                    {Math.floor(session.durationSeconds / 60)}m {session.durationSeconds % 60}s
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Cheat Violations</p>
-                                  <p className={`text-sm font-black mt-0.5 ${session.violations > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-slate-300'}`}>
-                                    {session.violations} Focus Alert{session.violations === 1 ? '' : 's'}
-                                  </p>
-                                </div>
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+                                <input
+                                  type="email"
+                                  required
+                                  value={editEmail}
+                                  onChange={(e) => setEditEmail(e.target.value)}
+                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Mobile Number</label>
+                                <input
+                                  type="text"
+                                  required
+                                  maxLength={10}
+                                  value={editMobile}
+                                  onChange={(e) => setEditMobile(e.target.value.replace(/\D/g, ''))}
+                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Referral Code</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={editReferralCode}
+                                  onChange={(e) => setEditReferralCode(e.target.value.toUpperCase())}
+                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Referred By (Code)</label>
+                                <input
+                                  type="text"
+                                  value={editReferredBy}
+                                  onChange={(e) => setEditReferredBy(e.target.value.toUpperCase())}
+                                  placeholder="None"
+                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Referrals Count</label>
+                                <input
+                                  type="number"
+                                  required
+                                  value={editReferralsCount}
+                                  onChange={(e) => setEditReferralsCount(Number(e.target.value))}
+                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">System Role</label>
+                                <select
+                                  value={editRole}
+                                  onChange={(e) => setEditRole(e.target.value as any)}
+                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                >
+                                  <option value="STUDENT">Student (Candidate)</option>
+                                  <option value="CONTENT_CREATOR">Content Creator</option>
+                                  <option value="ADMIN">System Administrator</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Subscription Pass Tier</label>
+                                <select
+                                  value={editTier}
+                                  onChange={(e) => setEditTier(e.target.value as any)}
+                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                >
+                                  <option value="None">None (No Pass)</option>
+                                  <option value="Testbook Pass">Mock Test Pass (Basic)</option>
+                                  <option value="Testbook Pass Pro">Mock Test Pass Pro (Full Gating Access)</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Coins Balance</label>
+                                <input
+                                  type="number"
+                                  required
+                                  value={editCoins}
+                                  onChange={(e) => setEditCoins(Number(e.target.value))}
+                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Account Password</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={editPassword}
+                                  onChange={(e) => setEditPassword(e.target.value)}
+                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                />
                               </div>
                             </div>
-                          ))}
+
+                            {editTier !== 'None' && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/30 dark:bg-blue-955/5 p-4 rounded-xl border border-blue-100 dark:border-blue-950/20">
+                                <div>
+                                  <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Purchased Date</label>
+                                  <input
+                                    type="date"
+                                    required
+                                    value={editPurchasedAt}
+                                    onChange={(e) => setEditPurchasedAt(e.target.value)}
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Expiry Date</label>
+                                  <input
+                                    type="date"
+                                    required
+                                    value={editExpiry}
+                                    onChange={(e) => setEditExpiry(e.target.value)}
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-550 cursor-pointer"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            <div>
+                              <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Account Status</label>
+                              <select
+                                value={editIsBlocked ? 'true' : 'false'}
+                                onChange={(e) => setEditIsBlocked(e.target.value === 'true')}
+                                className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                              >
+                                <option value="false">Active (Unblocked)</option>
+                                <option value="true">Suspended (Blocked)</option>
+                              </select>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-808">
+                              <button
+                                type="submit"
+                                className="flex items-center gap-2 bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md cursor-pointer"
+                              >
+                                <UserCheck className="h-4 w-4" />
+                                Save Dossier Changes
+                              </button>
+                            </div>
+                          </form>
                         </div>
-                      ) : (
-                        <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-808 rounded-xl text-slate-500 text-xs">
-                          <FileText className="h-8 w-8 mx-auto text-slate-400 dark:text-slate-600 mb-2" />
-                          This user has not sat for any exam sittings yet.
+
+                        {/* Sidebar info */}
+                        <div className="space-y-6">
+                          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
+                            <h3 className="font-extrabold text-sm text-slate-905 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-105 dark:border-slate-808">Access Rights</h3>
+                            <div className="space-y-4 text-xs">
+                              <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-905">
+                                <span className="font-medium text-slate-550">System Permission:</span>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                                  activeUser.role === 'ADMIN' 
+                                    ? 'bg-red-50 dark:bg-red-955/40 text-red-700 dark:text-red-400' 
+                                    : activeUser.role === 'CONTENT_CREATOR' 
+                                    ? 'bg-purple-50 dark:bg-purple-955/40 text-purple-700 dark:text-purple-400' 
+                                    : 'bg-blue-50 dark:bg-blue-955/40 text-blue-755'
+                                }`}>
+                                  {activeUser.role}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-905">
+                                <span className="font-medium text-slate-550">Subscription Pass:</span>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                                  activeUser.subscriptionTier === 'Testbook Pass Pro'
+                                    ? 'bg-yellow-50 dark:bg-yellow-955/40 text-yellow-755 font-black'
+                                    : activeUser.subscriptionTier === 'Testbook Pass'
+                                    ? 'bg-green-50 dark:bg-green-955/40 text-green-700'
+                                    : 'bg-slate-100 dark:bg-slate-900 text-slate-500'
+                                }`}>
+                                  {activeUser.subscriptionTier === 'None' ? 'No Pass' : activeUser.subscriptionTier.replace('Testbook', 'Mock Test')}
+                                </span>
+                              </div>
+                              {activeUser.subscriptionTier !== 'None' && (
+                                <>
+                                  <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-905">
+                                    <span className="font-medium text-slate-550">Purchased Date:</span>
+                                    <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{activeUser.subscriptionPurchasedAt?.split('T')[0] || 'N/A'}</span>
+                                  </div>
+                                  <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-905">
+                                    <span className="font-medium text-slate-550">Expires Date:</span>
+                                    <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{activeUser.subscriptionExpiresAt?.split('T')[0] || 'N/A'}</span>
+                                  </div>
+                                </>
+                              )}
+                              <div className="flex justify-between items-center py-2">
+                                <span className="font-medium text-slate-555">Total Referrals:</span>
+                                <span className="font-extrabold text-slate-900 dark:text-white">{activeUser.referralsCount || 0} user(s)</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      )}
+                      </div>
+
+                      {/* Full Width Exam Sitting History */}
+                      <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm text-left">
+                        <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-200 dark:border-slate-808 font-bold">
+                          <h3 className="font-extrabold text-sm text-slate-905 dark:text-white uppercase tracking-wider">Exam Sitting History</h3>
+                          <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-808 font-bold">
+                            {activeUser.testSessions?.length || 0} sessions logged
+                          </span>
+                        </div>
+                        
+                        {activeUser.testSessions && activeUser.testSessions.length > 0 ? (
+                          <div className="space-y-4">
+                            {activeUser.testSessions.map(session => (
+                              <div key={session.id} className="border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-4 text-xs">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-808 pb-3 mb-3">
+                                  <div>
+                                    <p className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">{session.title}</p>
+                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 font-semibold">
+                                      <Calendar className="h-3 w-3" /> Attempted on {session.date}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                      session.status === 'COMPLETED'
+                                        ? 'bg-green-50 dark:bg-green-955/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
+                                        : session.status === 'AUTO_SUBMITTED'
+                                        ? 'bg-yellow-50 dark:bg-yellow-955/40 border border-yellow-200 dark:border-yellow-805 text-yellow-750 dark:text-yellow-405'
+                                        : 'bg-blue-50 dark:bg-blue-955/40 border border-blue-200 dark:border-blue-800 text-blue-750 dark:text-blue-400'
+                                    }`}>
+                                      {session.status}
+                                    </span>
+                                    
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setResetTarget({
+                                          userId: activeUser.id,
+                                          sessionId: session.id,
+                                          userName: activeUser.name,
+                                          sessionTitle: session.title
+                                        });
+                                        setResetConfirmOpen(true);
+                                      }}
+                                      className="text-red-650 hover:text-red-750 dark:text-red-400 dark:hover:text-red-300 font-bold flex items-center gap-1 bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                    >
+                                      <RefreshCw className="h-3.5 w-3.5" /> Reset Attempt
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
+                                  <div>
+                                    <p className="text-slate-550 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Score Obtained</p>
+                                    <p className="text-sm font-black text-blue-600 dark:text-blue-400 mt-0.5">{session.score.toFixed(1)} / {session.maxScore}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-slate-550 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Accuracy Percentage</p>
+                                    <p className="text-sm font-black text-green-600 dark:text-green-400 mt-0.5">{session.accuracy.toFixed(1)}%</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-slate-550 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Time Spent</p>
+                                    <p className="text-sm font-black text-yellow-600 dark:text-yellow-405 mt-0.5">
+                                      {Math.floor(session.durationSeconds / 60)}m {session.durationSeconds % 60}s
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-slate-555 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Cheat Violations</p>
+                                    <p className={`text-sm font-black mt-0.5 ${session.violations > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-slate-300'}`}>
+                                      {session.violations} Focus Alert{session.violations === 1 ? '' : 's'}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-808 rounded-xl text-slate-500 text-xs">
+                            <FileText className="h-8 w-8 mx-auto text-slate-400 dark:text-slate-600 mb-2" />
+                            This user has not sat for any exam sittings yet.
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })()
