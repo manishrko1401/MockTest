@@ -24,7 +24,8 @@ import {
   EyeOff, 
   AlertCircle,
   Sun,
-  Moon
+  Moon,
+  Trophy
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
@@ -155,10 +156,20 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
       <View style={[styles.blurOrbRight, isDark && { backgroundColor: 'rgba(99, 102, 241, 0.08)' }]} />
 
       <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-        {/* Shield Header */}
+        {/* Logo Header */}
         <View style={styles.headerBlock}>
-          <View style={styles.shieldIconContainer}>
-            <ShieldCheck size={28} color="#FFF" />
+          <View style={[
+            styles.shieldIconContainer, 
+            { 
+              backgroundColor: isDark ? '#1E293B' : '#E6F4FE', 
+              borderRadius: 30,
+              padding: 12,
+              borderColor: isDark ? '#334155' : '#BFDBFE',
+              borderWidth: 1.5,
+              shadowColor: '#3B82F6',
+            }
+          ]}>
+            <Trophy size={28} color={isDark ? '#60A5FA' : '#2563EB'} />
           </View>
           <Text style={[styles.logoText, isDark && { color: ThemeColors.dark.text }]}>MOCKTEST HUB ACCOUNT</Text>
           <Text style={[styles.subLogoText, isDark && { color: ThemeColors.dark.textMuted }]}>SINGLE SIGN-ON ACCESS</Text>
