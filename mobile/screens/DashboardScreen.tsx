@@ -1036,6 +1036,7 @@ export default function DashboardScreen({
                           borderLeftWidth: 4,
                           borderLeftColor: catStyle.iconColor,
                           marginBottom: 0,
+                          position: 'relative',
                         },
                       ]}
                       activeOpacity={0.82}
@@ -1044,6 +1045,23 @@ export default function DashboardScreen({
                         setSelectedCategoryId(category.id);
                       }}
                     >
+                      {/* Top-Right Pin Badge */}
+                      {isPinned && (
+                        <View style={{
+                          position: 'absolute',
+                          top: 6,
+                          right: 6,
+                          width: 18,
+                          height: 18,
+                          borderRadius: 9,
+                          backgroundColor: isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.12)',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          zIndex: 10,
+                        }}>
+                          <Pin size={10} color="#10B981" style={{ transform: [{ rotate: '45deg' }] }} />
+                        </View>
+                      )}
                       <View style={styles.categoryCardLeft}>
                         {/* Icon/Logo circle */}
                         <View style={[
@@ -1071,9 +1089,6 @@ export default function DashboardScreen({
                             <Text style={[styles.categoryTitle, { color: isDark ? '#F1F5F9' : '#1E293B' }]}>
                               {category.name}
                             </Text>
-                            {isPinned && (
-                              <Pin size={11} color="#10B981" style={{ transform: [{ rotate: '45deg' }] }} />
-                            )}
                           </View>
                           <Text style={[styles.categoryMeta, { color: isDark ? '#64748B' : '#6B7280' }]}>
                             {category.subCategories?.length || 0} exam types available
