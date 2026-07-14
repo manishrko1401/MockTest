@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Lock, Mail, User, AlertCircle, CheckCircle2, ChevronLeft, ShieldCheck, Phone, Gift, Sun, Moon, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, User, AlertCircle, CheckCircle2, ChevronLeft, ShieldCheck, Trophy, Phone, Gift, Sun, Moon, Eye, EyeOff } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
 
 export default function AuthPage() {
@@ -122,8 +122,8 @@ export default function AuthPage() {
           
           {/* Logo & Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/20 mb-3">
-              <ShieldCheck className="h-6 w-6 text-white" />
+            <div className="inline-flex items-center justify-center bg-[#E6F4FE] dark:bg-slate-800 p-2.5 rounded-full border border-blue-200/50 dark:border-slate-700 shadow-sm mb-3">
+              <Trophy className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <h2 className="font-extrabold text-xl tracking-wider text-slate-900 dark:text-white">{language === 'hi' ? 'मॉक टेस्ट खाता' : 'MOCK TEST ACCOUNT'}</h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold tracking-widest uppercase mt-1">{language === 'hi' ? 'सिंगल साइन-ऑन एक्सेस' : 'Single Sign-On Access'}</p>
