@@ -480,13 +480,18 @@ export default function MobileTestScreen({
         setTotalDuration(durationSeconds);
         totalDurationRef.current = durationSeconds;
 
+        // Always read admin-configured marks first, then fall back to exam-type defaults
+        const isRRBFallback = testId.includes('rrb') || testId.includes('railway');
+        const fallbackPosMark = catalogTest?.positiveMarks !== undefined ? Number(catalogTest.positiveMarks) : (isRRBFallback ? 1 : 2);
+        const fallbackNegMark = catalogTest?.negativeMarks !== undefined ? Number(catalogTest.negativeMarks) : (isRRBFallback ? 0.33 : 0.5);
+
         let list: MobileQuestion[] = [];
         let secs: MobileSection[] = [];
         if (testId.includes('ssc')) {
           secs = [
-            { id: 'sec_quant',     name: 'Quantitative Aptitude',              orderIndex: 0, positiveMark: 2, negativeMark: 0.5 },
-            { id: 'sec_reasoning', name: 'General Intelligence & Reasoning',   orderIndex: 1, positiveMark: 2, negativeMark: 0.5 },
-            { id: 'sec_english',   name: 'English Comprehension',              orderIndex: 2, positiveMark: 2, negativeMark: 0.5 },
+            { id: 'sec_quant',     name: 'Quantitative Aptitude',              orderIndex: 0, positiveMark: fallbackPosMark, negativeMark: fallbackNegMark },
+            { id: 'sec_reasoning', name: 'General Intelligence & Reasoning',   orderIndex: 1, positiveMark: fallbackPosMark, negativeMark: fallbackNegMark },
+            { id: 'sec_english',   name: 'English Comprehension',              orderIndex: 2, positiveMark: fallbackPosMark, negativeMark: fallbackNegMark },
           ];
           list = [
             { id: 'q_q1', sectionId: 'sec_quant',     questionType: 'mcq', orderIndex: 0, correctOptionIndex: 1, content: { en: { questionText: 'If x + 1/x = 5, then find the value of x² + 1/x².', options: ['23', '25', '27', '21'] }, hi: { questionText: 'यदि x + 1/x = 5 है, तो x² + 1/x² का मान ज्ञात कीजिए।', options: ['23', '25', '27', '21'] } } },
@@ -495,7 +500,7 @@ export default function MobileTestScreen({
             { id: 'q_e1', sectionId: 'sec_english',   questionType: 'mcq', orderIndex: 0, correctOptionIndex: 0, content: { en: { questionText: 'Select the antonym for the word: OBSTINATE', options: ['Flexible', 'Stubborn', 'Rigid', 'Dogmatic'] }, hi: { questionText: 'दिए गए शब्द का विलोम शब्द चुनें: OBSTINATE', options: ['Flexible', 'Stubborn', 'Rigid', 'Dogmatic'] } } },
           ];
         } else {
-          secs = [{ id: 'sec_paper1', name: 'Aptitude & General Studies', orderIndex: 0, positiveMark: 2, negativeMark: 0.5 }];
+          secs = [{ id: 'sec_paper1', name: 'Aptitude & General Studies', orderIndex: 0, positiveMark: fallbackPosMark, negativeMark: fallbackNegMark }];
           list = [
             { id: 'q_gen1', sectionId: 'sec_paper1', questionType: 'mcq', orderIndex: 0, correctOptionIndex: 1, content: { en: { questionText: 'What is the unit of electric current?', options: ['Volt', 'Ampere', 'Ohm', 'Watt'] }, hi: { questionText: 'विद्युत धारा की इकाई क्या है?', options: ['वोल्ट', 'एम्पीयर', 'ओम', 'वाट'] } } },
             { id: 'q_gen2', sectionId: 'sec_paper1', questionType: 'mcq', orderIndex: 1, correctOptionIndex: 1, content: { en: { questionText: 'Which planet is known as the Red Planet?', options: ['Earth', 'Mars', 'Jupiter', 'Saturn'] }, hi: { questionText: 'किस ग्रह को लाल ग्रह कहा जाता है?', options: ['पृथ्वी', 'मंगल', 'बृहस्पति', 'शनि'] } } },

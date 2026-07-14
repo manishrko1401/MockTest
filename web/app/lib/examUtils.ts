@@ -142,6 +142,10 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
   }
 
   if (!hasCustomQuestions) {
+    // Always read admin-configured marks first, then fall back to exam-type defaults
+    const positiveMark = catalogTest?.positiveMarks !== undefined ? Number(catalogTest.positiveMarks) : (id.includes('rrb') || id.includes('railway') ? 1 : 2);
+    const negativeMark = catalogTest?.negativeMarks !== undefined ? Number(catalogTest.negativeMarks) : (id.includes('rrb') || id.includes('railway') ? 0.33 : 0.5);
+
     if (id.includes('ssc')) {
       title = id.includes('cgl') 
         ? "SSC CGL 2026 Tier-I CBT Simulator" 
@@ -150,11 +154,11 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
         : "SSC MTS Full-Length Practice Test";
       duration = 3600;
       sections = [
-        { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 0, positiveMark: 2, negativeMark: 0.5,
+        { id: "sec_quant", name: "Quantitative Aptitude", orderIndex: 0, positiveMark, negativeMark,
           durationSeconds: hasSectionalTiming && sectionalTimingsMins[0] ? sectionalTimingsMins[0] * 60 : undefined },
-        { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 2, negativeMark: 0.5,
+        { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark, negativeMark,
           durationSeconds: hasSectionalTiming && sectionalTimingsMins[1] ? sectionalTimingsMins[1] * 60 : undefined },
-        { id: "sec_english", name: "English Comprehension", orderIndex: 2, positiveMark: 2, negativeMark: 0.5,
+        { id: "sec_english", name: "English Comprehension", orderIndex: 2, positiveMark, negativeMark,
           durationSeconds: hasSectionalTiming && sectionalTimingsMins[2] ? sectionalTimingsMins[2] * 60 : undefined },
       ];
       questions = [
@@ -191,11 +195,11 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
       title = "RRB NTPC CBT-1 Mock Assessment Paper";
       duration = 5400; // 90 minutes
       sections = [
-        { id: "sec_math", name: "Mathematics", orderIndex: 0, positiveMark: 1, negativeMark: 0.33,
+        { id: "sec_math", name: "Mathematics", orderIndex: 0, positiveMark, negativeMark,
           durationSeconds: hasSectionalTiming && sectionalTimingsMins[0] ? sectionalTimingsMins[0] * 60 : undefined },
-        { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark: 1, negativeMark: 0.33,
+        { id: "sec_reasoning", name: "General Intelligence & Reasoning", orderIndex: 1, positiveMark, negativeMark,
           durationSeconds: hasSectionalTiming && sectionalTimingsMins[1] ? sectionalTimingsMins[1] * 60 : undefined },
-        { id: "sec_general", name: "General Awareness", orderIndex: 2, positiveMark: 1, negativeMark: 0.33,
+        { id: "sec_general", name: "General Awareness", orderIndex: 2, positiveMark, negativeMark,
           durationSeconds: hasSectionalTiming && sectionalTimingsMins[2] ? sectionalTimingsMins[2] * 60 : undefined },
       ];
       questions = [
@@ -218,7 +222,7 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
       title = "Mock Test Assessment Series - General Mock Test";
       duration = 3600;
       sections = [
-        { id: "sec_paper1", name: "Aptitude & General Studies", orderIndex: 0, positiveMark: 2, negativeMark: 0.5,
+        { id: "sec_paper1", name: "Aptitude & General Studies", orderIndex: 0, positiveMark, negativeMark,
           durationSeconds: hasSectionalTiming && sectionalTimingsMins[0] ? sectionalTimingsMins[0] * 60 : undefined },
       ];
       questions = [
