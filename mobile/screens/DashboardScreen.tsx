@@ -15,7 +15,8 @@ import {
   Image,
   Share,
   Modal,
-  ActivityIndicator
+  ActivityIndicator,
+  PanResponder
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -50,7 +51,8 @@ import {
   ChevronUp,
   CheckSquare,
   Shield,
-  Target
+  Target,
+  Pin
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
@@ -159,6 +161,104 @@ const CategoryIcon = ({ name, color, size }: { name: string; color: string; size
   }
 };
 
+const SwipeableCategoryCard = ({
+  children,
+  isPinned,
+  onPin,
+  onUnpin,
+  isDark
+}: {
+  children: React.ReactNode;
+  isPinned: boolean;
+  onPin: () => void;
+  onUnpin: () => void;
+  isDark: boolean;
+}) => {
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        const { dx, dy } = gestureState;
+        return Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        translateX.setValue(gestureState.dx);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const { dx } = gestureState;
+        if (dx > 90) {
+          // Swipe right -> Pin
+          if (!isPinned) {
+            onPin();
+          }
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 8
+          }).start();
+        } else if (dx < -90) {
+          // Swipe left -> Unpin
+          if (isPinned) {
+            onUnpin();
+          }
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 8
+          }).start();
+        } else {
+          // Snap back
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 12
+          }).start();
+        }
+      }
+    })
+  ).current;
+
+  return (
+    <View style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, marginBottom: 12 }}>
+      {/* Background action hints */}
+      <View style={{
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        backgroundColor: isDark ? '#1E293B' : '#F1F5F9',
+        borderRadius: 16,
+      }}>
+        {/* Swiping Right (to Pin) */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: 0.85 }}>
+          <Pin size={16} color="#10B981" />
+          <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#10B981' }}>Pin to Top</Text>
+        </View>
+
+        {/* Swiping Left (to Unpin) */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: 0.85 }}>
+          <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#EF4444' }}>Remove Pin</Text>
+          <Pin size={16} color="#EF4444" style={{ transform: [{ rotate: '45deg' }] }} />
+        </View>
+      </View>
+
+      {/* Foreground Card */}
+      <Animated.View
+        style={{
+          transform: [{ translateX }],
+          backgroundColor: isDark ? '#0F1C35' : '#FAF9F6',
+        }}
+        {...panResponder.panHandlers}
+      >
+        {children}
+      </Animated.View>
+    </View>
+  );
+};
+
 
 export default function DashboardScreen({
   currentUser,
@@ -184,6 +284,41 @@ export default function DashboardScreen({
   const [refreshing, setRefreshing] = useState(false);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [claiming, setClaiming] = useState(false);
+
+  const [pinnedCategoryIds, setPinnedCategoryIds] = useState<string[]>([]);
+  useEffect(() => {
+    const loadPinned = async () => {
+      try {
+        const raw = await AsyncStorage.getItem('pinned_categories');
+        if (raw) {
+          setPinnedCategoryIds(JSON.parse(raw));
+        }
+      } catch (e) {
+        console.warn('Failed to load pinned categories', e);
+      }
+    };
+    loadPinned();
+  }, []);
+
+  const handlePinCategory = async (catId: string) => {
+    try {
+      const next = [...pinnedCategoryIds.filter(id => id !== catId), catId];
+      setPinnedCategoryIds(next);
+      await AsyncStorage.setItem('pinned_categories', JSON.stringify(next));
+    } catch (e) {
+      console.warn('Failed to pin category', e);
+    }
+  };
+
+  const handleUnpinCategory = async (catId: string) => {
+    try {
+      const next = pinnedCategoryIds.filter(id => id !== catId);
+      setPinnedCategoryIds(next);
+      await AsyncStorage.setItem('pinned_categories', JSON.stringify(next));
+    } catch (e) {
+      console.warn('Failed to unpin category', e);
+    }
+  };
 
   useEffect(() => {
     let timer: any;
@@ -811,7 +946,13 @@ export default function DashboardScreen({
   const renderTestsTab = () => {
     if (selectedCategoryId === null) {
       // Filter exam categories by search query
-      const sortedCatalog = [...examCatalog].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+      const sortedCatalog = [...examCatalog].sort((a, b) => {
+        const aPinned = pinnedCategoryIds.includes(a.id);
+        const bPinned = pinnedCategoryIds.includes(b.id);
+        if (aPinned && !bPinned) return -1;
+        if (!aPinned && bPinned) return 1;
+        return (a.orderIndex ?? 0) - (b.orderIndex ?? 0);
+      });
       const filteredCatalog = examSearchQuery.trim()
         ? sortedCatalog.filter(cat =>
             cat.name?.toLowerCase().includes(examSearchQuery.toLowerCase())
@@ -840,6 +981,16 @@ export default function DashboardScreen({
             )}
           </View>
 
+          {/* Swipe instruction helper */}
+          {examSearchQuery.trim() === '' && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12, opacity: 0.65 }}>
+              <Pin size={10} color={isDark ? '#94A3B8' : '#64748B'} style={{ transform: [{ rotate: '45deg' }] }} />
+              <Text style={{ fontSize: 10, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B' }}>
+                Swipe right to pin to top · Swipe left to unpin
+              </Text>
+            </View>
+          )}
+
           {filteredCatalog.length === 0 ? (
             <View style={styles.examSearchEmpty}>
               <Search size={36} color={isDark ? '#374151' : '#D1D5DB'} />
@@ -856,64 +1007,79 @@ export default function DashboardScreen({
               keyboardShouldPersistTaps="handled"
               renderItem={({ item: category }) => {
                 const catStyle = getCategoryStyle(category.name, isDark);
+                const isPinned = pinnedCategoryIds.includes(category.id);
                 return (
-                  <TouchableOpacity
-                    style={[
-                      styles.categoryCard,
-                      {
-                        backgroundColor: catStyle.colors[0],
-                        borderColor: catStyle.borderColor,
-                        borderLeftWidth: 4,
-                        borderLeftColor: catStyle.iconColor,
-                      },
-                    ]}
-                    activeOpacity={0.82}
-                    onPress={() => {
-                      setExamSearchQuery('');
-                      setSelectedCategoryId(category.id);
-                    }}
+                  <SwipeableCategoryCard
+                    key={category.id}
+                    isPinned={isPinned}
+                    onPin={() => handlePinCategory(category.id)}
+                    onUnpin={() => handleUnpinCategory(category.id)}
+                    isDark={isDark}
                   >
-                    <View style={styles.categoryCardLeft}>
-                      {/* Icon/Logo circle */}
-                      <View style={[
-                        styles.categoryIconCircle,
+                    <TouchableOpacity
+                      style={[
+                        styles.categoryCard,
                         {
-                          backgroundColor: isDark ? '#111D38' : '#FFFFFF',
+                          backgroundColor: catStyle.colors[0],
                           borderColor: catStyle.borderColor,
-                          overflow: 'hidden',
-                        }
-                      ]}>
-                        {category.logoUrl ? (
-                          <Image
-                            source={{ uri: category.logoUrl }}
-                            style={{ width: '100%', height: '100%', borderRadius: 27 }}
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={24} />
-                        )}
+                          borderLeftWidth: 4,
+                          borderLeftColor: catStyle.iconColor,
+                          marginBottom: 0,
+                        },
+                      ]}
+                      activeOpacity={0.82}
+                      onPress={() => {
+                        setExamSearchQuery('');
+                        setSelectedCategoryId(category.id);
+                      }}
+                    >
+                      <View style={styles.categoryCardLeft}>
+                        {/* Icon/Logo circle */}
+                        <View style={[
+                          styles.categoryIconCircle,
+                          {
+                            backgroundColor: isDark ? '#111D38' : '#FFFFFF',
+                            borderColor: catStyle.borderColor,
+                            overflow: 'hidden',
+                          }
+                        ]}>
+                          {category.logoUrl ? (
+                            <Image
+                              source={{ uri: category.logoUrl }}
+                              style={{ width: '100%', height: '100%', borderRadius: 27 }}
+                              resizeMode="cover"
+                            />
+                          ) : (
+                            <CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={24} />
+                          )}
+                        </View>
+
+                        {/* Text info */}
+                        <View style={styles.categoryDetails}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={[styles.categoryTitle, { color: isDark ? '#F1F5F9' : '#1E293B' }]}>
+                              {category.name}
+                            </Text>
+                            {isPinned && (
+                              <Pin size={11} color="#10B981" style={{ transform: [{ rotate: '45deg' }] }} />
+                            )}
+                          </View>
+                          <Text style={[styles.categoryMeta, { color: isDark ? '#64748B' : '#6B7280' }]}>
+                            {category.subCategories?.length || 0} exam types available
+                          </Text>
+                        </View>
                       </View>
 
-                      {/* Text info */}
-                      <View style={styles.categoryDetails}>
-                        <Text style={[styles.categoryTitle, { color: isDark ? '#F1F5F9' : '#1E293B' }]}>
-                          {category.name}
-                        </Text>
-                        <Text style={[styles.categoryMeta, { color: isDark ? '#64748B' : '#6B7280' }]}>
-                          {category.subCategories?.length || 0} exam types available
-                        </Text>
+                      {/* Chevron */}
+                      <View style={{
+                        width: 32, height: 32, borderRadius: 16,
+                        backgroundColor: isDark ? 'rgba(79,110,247,0.15)' : 'rgba(79,110,247,0.1)',
+                        justifyContent: 'center', alignItems: 'center',
+                      }}>
+                        <ChevronRight color={catStyle.iconColor} size={16} />
                       </View>
-                    </View>
-
-                    {/* Chevron */}
-                    <View style={{
-                      width: 32, height: 32, borderRadius: 16,
-                      backgroundColor: isDark ? 'rgba(79,110,247,0.15)' : 'rgba(79,110,247,0.1)',
-                      justifyContent: 'center', alignItems: 'center',
-                    }}>
-                      <ChevronRight color={catStyle.iconColor} size={16} />
-                    </View>
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                  </SwipeableCategoryCard>
                 );
               }}
             />
@@ -1378,7 +1544,7 @@ export default function DashboardScreen({
                             {optionsEn.map((opt: any, oIdx: number) => {
                               const textEn = typeof opt === 'string' ? opt : opt?.text || String(opt);
                               const rawHi = optionsHi[oIdx];
-                              const textHi = typeof rawHi === 'string' ? rawHi : rawHi?.text || textEn;
+                              const textHi = typeof rawHi === 'string' ? rawHi : (rawHi as any)?.text || textEn;
                               const isCorrect = oIdx === correctIdx;
                               return (
                                 <View key={oIdx} style={{
