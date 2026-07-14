@@ -49,6 +49,11 @@ export default function TestSeriesDetailScreen({
   const horizontalScrollRef = useRef<ScrollView>(null);
   const [activeSubSubId, setActiveSubSubId] = useState<string | null>(null);
 
+  const sortedSubSubCategories = React.useMemo(() => {
+    if (!series.subSubCategories) return [];
+    return [...series.subSubCategories].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+  }, [series.subSubCategories]);
+
   // Load locally-cached ongoing sessions so Resume button shows correctly even when offline
   const [localOngoingIds, setLocalOngoingIds] = useState<Set<string>>(new Set());
   useEffect(() => {
@@ -165,15 +170,15 @@ export default function TestSeriesDetailScreen({
       </View>
 
       {/* Horizontal Tab Navigator for Sub-subcategories (Sticky at the top) */}
-      {series.subSubCategories && series.subSubCategories.length > 0 && (
+      {sortedSubSubCategories && sortedSubSubCategories.length > 0 && (
         <View style={[styles.tabsWrapper, isDark && { backgroundColor: ThemeColors.dark.bg, borderBottomColor: ThemeColors.dark.border }]}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.tabsContainer}
           >
-            {series.subSubCategories.map((subSub: any, index: number) => {
-              const isSelected = (activeSubSubId || series.subSubCategories[0]?.id) === subSub.id;
+            {sortedSubSubCategories.map((subSub: any, index: number) => {
+              const isSelected = (activeSubSubId || sortedSubSubCategories[0]?.id) === subSub.id;
               return (
                 <TouchableOpacity
                   key={subSub.id}
@@ -205,7 +210,7 @@ export default function TestSeriesDetailScreen({
         </View>
       )}
 
-      {series.subSubCategories && series.subSubCategories.length > 0 ? (
+      {sortedSubSubCategories && sortedSubSubCategories.length > 0 ? (
         <ScrollView
           ref={horizontalScrollRef}
           horizontal
@@ -214,13 +219,13 @@ export default function TestSeriesDetailScreen({
           onMomentumScrollEnd={(e) => {
             const offsetX = e.nativeEvent.contentOffset.x;
             const index = Math.round(offsetX / SCREEN_WIDTH);
-            if (series.subSubCategories && series.subSubCategories[index]) {
-              setActiveSubSubId(series.subSubCategories[index].id);
+            if (sortedSubSubCategories && sortedSubSubCategories[index]) {
+              setActiveSubSubId(sortedSubSubCategories[index].id);
             }
           }}
           style={{ flex: 1 }}
         >
-          {series.subSubCategories.map((subSub: any) => {
+          {sortedSubSubCategories.map((subSub: any) => {
             return (
               <View key={subSub.id} style={{ width: SCREEN_WIDTH }}>
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -235,7 +240,14 @@ export default function TestSeriesDetailScreen({
                     </View>
 
                     {subSub.tests && subSub.tests.length > 0 ? (
-                      subSub.tests.map((test: any) => {
+                      [...subSub.tests]
+                        .sort((a: any, b: any) => {
+                          const ordA = a.orderIndex ?? 0;
+                          const ordB = b.orderIndex ?? 0;
+                          if (ordA !== ordB) return ordA - ordB;
+                          return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' });
+                        })
+                        .map((test: any) => {
                         const allowed = hasAccess(test.requiredTier);
                         const completedAttempts = (currentUser.testSessions || [])
                           .filter((s: any) => s.testId === test.id && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'))

@@ -1420,7 +1420,12 @@ async function getCompiledExamCatalog() {
       seriesByExam[ts.examId] = [];
     }
     const tests = testsBySeries[ts.id] || [];
-    tests.sort((a: any, b: any) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
+    tests.sort((a: any, b: any) => {
+      const ordA = a.orderIndex ?? 0;
+      const ordB = b.orderIndex ?? 0;
+      if (ordA !== ordB) return ordA - ordB;
+      return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' });
+    });
 
     seriesByExam[ts.examId].push({
       id: ts.id,

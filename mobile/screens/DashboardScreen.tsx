@@ -737,7 +737,7 @@ export default function DashboardScreen({
         <View style={{ marginBottom: 12 }}>
           <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Explore Categories</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesRow}>
-            {examCatalog.map((cat) => {
+            {[...examCatalog].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)).map((cat) => {
               const catStyle = getCategoryStyle(cat.name, isDark);
               return (
                 <TouchableOpacity
@@ -811,11 +811,12 @@ export default function DashboardScreen({
   const renderTestsTab = () => {
     if (selectedCategoryId === null) {
       // Filter exam categories by search query
+      const sortedCatalog = [...examCatalog].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
       const filteredCatalog = examSearchQuery.trim()
-        ? examCatalog.filter(cat =>
+        ? sortedCatalog.filter(cat =>
             cat.name?.toLowerCase().includes(examSearchQuery.toLowerCase())
           )
-        : examCatalog;
+        : sortedCatalog;
 
       return (
         <View style={{ flex: 1 }}>
@@ -938,7 +939,7 @@ export default function DashboardScreen({
         </TouchableOpacity>
 
         <FlatList
-          data={selectedCategory.subCategories}
+          data={[...selectedCategory.subCategories].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
