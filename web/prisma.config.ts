@@ -32,7 +32,7 @@ try {
 export default defineConfig({
   schema: "./schema.prisma",
   datasource: {
-    url: (process.env.DIRECT_URL || "").trim(),
+    url: (process.env.DIRECT_URL || process.env.DATABASE_URL || "").trim(),
   },
 });
 
