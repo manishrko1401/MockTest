@@ -127,15 +127,16 @@ export async function POST(request: Request) {
 // DB Stats — queries Postgres system tables to return per-table sizes and row counts
 async function handleDbStats() {
   try {
-    // Per-table sizes and estimated row counts
+    // Per-table sizes and estimated row counts — public schema only
     const tableStats = await prisma.$queryRaw<any[]>`
       SELECT
-        relname AS "tableName",
-        n_live_tup AS "rowCount",
-        pg_size_pretty(pg_total_relation_size(quote_ident(relname))) AS "sizePretty",
-        pg_total_relation_size(quote_ident(relname)) AS "sizeBytes"
+        relname                                    AS "tableName",
+        n_live_tup                                 AS "rowCount",
+        pg_size_pretty(pg_total_relation_size(relid)) AS "sizePretty",
+        pg_total_relation_size(relid)              AS "sizeBytes"
       FROM pg_stat_user_tables
-      ORDER BY pg_total_relation_size(quote_ident(relname)) DESC
+      WHERE schemaname = 'public'
+      ORDER BY pg_total_relation_size(relid) DESC
     `;
 
     // Total database size
