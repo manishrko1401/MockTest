@@ -17,7 +17,9 @@ import {
   CheckCircle,
   HelpCircle,
   Clock,
-  Eye
+  Eye,
+  PlusCircle,
+  MinusCircle
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
@@ -300,7 +302,7 @@ export default function TestSeriesDetailScreen({
                             <View style={styles.metaRow}>
                               <View style={styles.metaItem}>
                                 <HelpCircle size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
-                                <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.questionsCount} Questions</Text>
+                                <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.questionsCount} Qs</Text>
                               </View>
                               <View style={styles.metaItem}>
                                 <Clock size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
@@ -309,6 +311,14 @@ export default function TestSeriesDetailScreen({
                               <View style={styles.metaItem}>
                                 <Coins size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
                                 <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.maxMarks} Marks</Text>
+                              </View>
+                              <View style={styles.metaItem}>
+                                <PlusCircle size={12} color={isDark ? '#34D399' : '#059669'} />
+                                <Text style={[styles.metaText, { color: isDark ? '#34D399' : '#059669', fontWeight: 'bold' }]}>+{test.positiveMarks ?? 2}</Text>
+                              </View>
+                              <View style={styles.metaItem}>
+                                <MinusCircle size={12} color={isDark ? '#F87171' : '#DC2626'} />
+                                <Text style={[styles.metaText, { color: isDark ? '#F87171' : '#DC2626', fontWeight: 'bold' }]}>-{test.negativeMarks ?? 0.5}</Text>
                               </View>
                             </View>
 
@@ -446,7 +456,7 @@ export default function TestSeriesDetailScreen({
                   <View style={styles.metaRow}>
                     <View style={styles.metaItem}>
                       <HelpCircle size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
-                      <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.questionsCount} Questions</Text>
+                      <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.questionsCount} Qs</Text>
                     </View>
                     <View style={styles.metaItem}>
                       <Clock size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
@@ -455,6 +465,14 @@ export default function TestSeriesDetailScreen({
                     <View style={styles.metaItem}>
                       <Coins size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
                       <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.maxMarks} Marks</Text>
+                    </View>
+                    <View style={styles.metaItem}>
+                      <PlusCircle size={12} color={isDark ? '#34D399' : '#059669'} />
+                      <Text style={[styles.metaText, { color: isDark ? '#34D399' : '#059669', fontWeight: 'bold' }]}>+{test.positiveMarks ?? 2}</Text>
+                    </View>
+                    <View style={styles.metaItem}>
+                      <MinusCircle size={12} color={isDark ? '#F87171' : '#DC2626'} />
+                      <Text style={[styles.metaText, { color: isDark ? '#F87171' : '#DC2626', fontWeight: 'bold' }]}>-{test.negativeMarks ?? 0.5}</Text>
                     </View>
                   </View>
 
@@ -623,7 +641,8 @@ const styles = StyleSheet.create({
   },
   metaRow: {
     flexDirection: 'row',
-    gap: 14,
+    flexWrap: 'wrap',
+    gap: 12,
     marginBottom: 12,
   },
   metaItem: {

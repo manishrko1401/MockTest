@@ -456,6 +456,13 @@ export default function MockTestsCatalog() {
                                          ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                        </span>
                                      )}
+                                     
+                                     <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/60 uppercase tracking-wider font-mono">
+                                       +{test.positiveMarks ?? 2} {language === 'hi' ? 'सही' : 'Right'}
+                                     </span>
+                                     <span className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-red-200 dark:border-red-900/60 uppercase tracking-wider font-mono">
+                                       -{test.negativeMarks ?? 0.5} {language === 'hi' ? 'गलत' : 'Wrong'}
+                                     </span>
                                    </div>
 
                                    <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">
@@ -1052,6 +1059,13 @@ if (!activeGroup) return null;
                                             ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                           </span>
                                         )}
+
+                                        <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider font-mono">
+                                          +{test.positiveMarks ?? 2} {language === 'hi' ? 'सही' : 'Right'}
+                                        </span>
+                                        <span className="bg-red-500/10 text-red-700 dark:bg-red-500/5 dark:text-red-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-red-500/20 uppercase tracking-wider font-mono">
+                                          -{test.negativeMarks ?? 0.5} {language === 'hi' ? 'गलत' : 'Wrong'}
+                                        </span>
                                       </div>
 
                                       <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">
@@ -1197,6 +1211,13 @@ if (!activeGroup) return null;
                                       ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                     </span>
                                   )}
+
+                                  <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider font-mono">
+                                    +{test.positiveMarks ?? 2} {language === 'hi' ? 'सही' : 'Right'}
+                                  </span>
+                                  <span className="bg-red-500/10 text-red-700 dark:bg-red-500/5 dark:text-red-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-red-500/20 uppercase tracking-wider font-mono">
+                                    -{test.negativeMarks ?? 0.5} {language === 'hi' ? 'गलत' : 'Wrong'}
+                                  </span>
                                 </div>
 
                                 <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">
