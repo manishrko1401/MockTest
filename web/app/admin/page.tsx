@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -22,6 +22,7 @@ import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, 
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
+import { DatabaseMonitor } from './components/DatabaseMonitor';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -61,9 +62,9 @@ const scoreVariance = [
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -1128,6 +1129,19 @@ export default function AdminAnalytics() {
                 )}
               </button>
             )}
+            {hasTabAccess('dbmonitor') && (
+              <button
+                onClick={() => selectTab('dbmonitor')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'dbmonitor'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Database className="h-4 w-4" />
+                DB Monitor
+              </button>
+            )}
           </nav>
         </div>
 
@@ -1674,7 +1688,7 @@ export default function AdminAnalytics() {
                     ) : (
                       <p className="text-xs text-slate-500 dark:text-slate-400 font-medium text-center py-6">No user selected. Click the "Edit Profile" button on any user in the table below to load details here.</p>
                     )}
-                  </div>
+
                 )}
               </div>
               )}
@@ -4094,7 +4108,15 @@ export default function AdminAnalytics() {
             </div>
           )}
 
+          {/* TAB: DATABASE MONITOR */}
+          {activeTab === 'dbmonitor' && hasTabAccess('dbmonitor') && (
+            <div className="animate-in fade-in duration-200">
+              <DatabaseMonitor />
+            </div>
+          )}
+
         </div>
+
 
       </main>
 

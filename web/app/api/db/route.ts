@@ -109,6 +109,8 @@ export async function POST(request: Request) {
         return await handleGetUserDetails(data);
       case 'admin-data':
         return await handleAdminData(data);
+      case 'db-stats':
+        return await handleDbStats();
       default:
         return NextResponse.json({ success: false, error: `Invalid action: ${action}` }, { status: 400 });
     }
@@ -121,6 +123,64 @@ export async function POST(request: Request) {
 // -----------------------------------------------------------------------------
 // Action Handlers
 // -----------------------------------------------------------------------------
+
+// DB Stats — queries Postgres system tables to return per-table sizes and row counts
+async function handleDbStats() {
+  try {
+    // Per-table sizes and estimated row counts
+    const tableStats = await prisma.$queryRaw<any[]>`
+      SELECT
+        relname AS "tableName",
+        n_live_tup AS "rowCount",
+        pg_size_pretty(pg_total_relation_size(quote_ident(relname))) AS "sizePretty",
+        pg_total_relation_size(quote_ident(relname)) AS "sizeBytes"
+      FROM pg_stat_user_tables
+      ORDER BY pg_total_relation_size(quote_ident(relname)) DESC
+    `;
+
+    // Total database size
+    const dbSizeResult = await prisma.$queryRaw<any[]>`
+      SELECT pg_database_size(current_database()) AS size_bytes
+    `;
+    const dbSizeBytes = Number(dbSizeResult[0]?.size_bytes ?? 0);
+    const dbSizeMB    = dbSizeBytes / (1024 * 1024);
+
+    // Active connection count
+    const connResult = await prisma.$queryRaw<any[]>`
+      SELECT count(*) AS cnt FROM pg_stat_activity WHERE state = 'active'
+    `;
+    const connectionCount = Number(connResult[0]?.cnt ?? 0);
+
+    // PostgreSQL version
+    const versionResult = await prisma.$queryRaw<any[]>`SELECT version() AS v`;
+    const pgVersionRaw  = String(versionResult[0]?.v ?? '');
+    const pgVersion     = pgVersionRaw.match(/PostgreSQL ([\d.]+)/)?.[1] ?? pgVersionRaw.split(' ')[0];
+
+    // Total rows
+    const totalRows = tableStats.reduce((sum: number, t: any) => sum + Number(t.rowCount ?? 0), 0);
+
+    const stats = {
+      dbSizeMB: Math.round(dbSizeMB * 10) / 10,
+      totalRows,
+      connectionCount,
+      pgVersion,
+      uptime: '',   // not reliably available on hosted Supabase
+      lastRefreshed: new Intl.DateTimeFormat('en-IN', {
+        dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata'
+      }).format(new Date()),
+      tables: tableStats.map((t: any) => ({
+        tableName: String(t.tableName),
+        rowCount:  Number(t.rowCount ?? 0),
+        sizePretty: String(t.sizePretty ?? '0 bytes'),
+        sizeBytes:  Number(t.sizeBytes ?? 0),
+      })),
+    };
+
+    return NextResponse.json({ success: true, stats });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message ?? 'Failed to query db stats' }, { status: 500 });
+  }
+}
 
 async function handleBootstrap() {
   // Check if categories are empty, if so, run seed
