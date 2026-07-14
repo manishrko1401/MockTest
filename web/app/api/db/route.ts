@@ -253,7 +253,7 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
   // Delta sync — only fetch items changed since lastSyncedAt
   const [updatedCategories, updatedExams, updatedSeries, updatedTests, newNotices] = await Promise.all([
     prisma.category.findMany({
-      where: { createdAt: { gt: since } },
+      // Always return all categories so logoUrl/name changes propagate to mobile on every sync
       orderBy: { orderIndex: 'asc' },
     }),
     prisma.exam.findMany({
@@ -1303,7 +1303,7 @@ async function getCompiledExamCatalog() {
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "logoUrl" text;');
   } catch (err: any) {
     console.error("Runtime database patch failed:", err);
-    throw new Error(`DATABASE MIGRATION PATCH FAILED: ${err.message || err}`);
+    // Don't throw — allow the query to proceed and fail naturally if column truly missing
   }
 
   const categories = await prisma.category.findMany({ orderBy: { orderIndex: 'asc' } });

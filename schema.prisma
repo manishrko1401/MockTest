@@ -94,6 +94,7 @@ model UserSubscription {
 model Category {
   id                String             @id @default(uuid())
   name              String             @unique
+  logoUrl           String?
   exams             Exam[]
   createdAt         DateTime           @default(now())
   orderIndex        Int                @default(0)

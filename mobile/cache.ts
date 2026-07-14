@@ -309,9 +309,15 @@ export function mergeCatalogDelta(
   // Deep clone so we don't mutate in place
   const catalog: any[] = JSON.parse(JSON.stringify(existing.examCatalog));
 
-  // 1. Add new top-level categories
+  // 1. Add new top-level categories OR update logoUrl/name on existing ones
   for (const newCat of delta.newCategories) {
-    if (!catalog.find(c => c.id === newCat.id)) {
+    const existing = catalog.find(c => c.id === newCat.id);
+    if (existing) {
+      // Update mutable fields on existing category (e.g. logoUrl changed in admin)
+      existing.logoUrl = newCat.logoUrl ?? existing.logoUrl;
+      existing.name = newCat.name ?? existing.name;
+      existing.orderIndex = newCat.orderIndex ?? existing.orderIndex;
+    } else {
       catalog.push({ ...newCat, subCategories: [] });
     }
   }
