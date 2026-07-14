@@ -198,78 +198,8 @@ async function handleBootstrap() {
     imageUrl: n.imageUrl || undefined,
   }));
 
-  // Fetch Exam Catalog
-  const categories = await prisma.category.findMany({
-    orderBy: {
-      orderIndex: 'asc',
-    },
-    include: {
-      exams: {
-        orderBy: {
-          orderIndex: 'asc',
-        },
-        include: {
-          testSeries: {
-            orderBy: {
-              orderIndex: 'asc',
-            },
-            include: {
-              mockTests: {
-                orderBy: {
-                  orderIndex: 'asc',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  const examCatalog = categories.map((cat: any) => {
-    return {
-      id: cat.id,
-      name: cat.name,
-      logoUrl: cat.logoUrl || null,
-      subCategories: cat.exams.map((exam: any) => {
-        const subSubCategories = exam.testSeries.map((ts: any) => {
-          const tests = ts.mockTests.map((t: any) => ({
-            id: t.id,
-            title: t.title,
-            questionsCount: t.questionsCount,
-            durationMinutes: t.durationMinutes,
-            maxMarks: t.maxMarks,
-            isPremium: t.requiredTierName !== 'None',
-            requiredTier: t.requiredTierName as 'None' | 'Testbook Pass' | 'Testbook Pass Pro',
-            customQuestionsCount: t.customQuestions ? (t.customQuestions as any[]).length : 0,
-            hasSectionalTiming: t.hasSectionalTiming ?? false,
-            sectionalTimings: t.sectionalTimings ?? null,
-            testbookTotalUsers: t.testbookTotalUsers ?? 0,
-            testbookTopperScore: t.testbookTopperScore ?? 0.0,
-            testbookAverageScore: t.testbookAverageScore ?? 0.0,
-            testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
-            positiveMarks: t.positiveMarks ?? 2.0,
-            negativeMarks: t.negativeMarks ?? 0.5,
-          }));
-          // Sort tests naturally by title (ascending numerical/alphabetical order)
-          tests.sort((a: any, b: any) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
-          return {
-            id: ts.id,
-            name: ts.title,
-            tests,
-          };
-        });
-        // Flat map tests for backwards compatibility (e.g. mobile client)
-        const tests = subSubCategories.flatMap((ss: any) => ss.tests);
-        return {
-          id: exam.id,
-          name: exam.name,
-          subSubCategories,
-          tests,
-        };
-      }),
-    };
-  });
+  // Fetch Exam Catalog using optimized memory assembler
+  const examCatalog = await getCompiledExamCatalog();
 
   // Fetch Reported Questions is now disabled in public bootstrap.
   // Admins will fetch this data separately using the 'admin-data' action.
@@ -294,72 +224,8 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
 
   // If no previous sync timestamp, return full catalog (first-time sync)
   if (!since) {
-    // Return the full catalog in the same format as bootstrap
-    const categories = await prisma.category.findMany({
-      orderBy: { orderIndex: 'asc' },
-      include: {
-        exams: {
-          orderBy: { orderIndex: 'asc' },
-          include: {
-            testSeries: {
-              orderBy: { orderIndex: 'asc' },
-              include: {
-                mockTests: { orderBy: { orderIndex: 'asc' } },
-              },
-            },
-          },
-        },
-      },
-    });
-
+    const examCatalog = await getCompiledExamCatalog();
     const notices = await prisma.notice.findMany({ orderBy: { createdAt: 'desc' } });
-
-    const examCatalog = categories.map((cat: any) => ({
-      id: cat.id,
-      name: cat.name,
-      orderIndex: cat.orderIndex,
-      subCategories: cat.exams.map((exam: any) => {
-        const subSubCategories = exam.testSeries.map((ts: any) => {
-          const tests = ts.mockTests.map((t: any) => ({
-            id: t.id,
-            title: t.title,
-            questionsCount: t.questionsCount,
-            durationMinutes: t.durationMinutes,
-            maxMarks: t.maxMarks,
-            isPremium: t.requiredTierName !== 'None',
-            requiredTier: t.requiredTierName,
-            customQuestionsCount: t.customQuestions ? (t.customQuestions as any[]).length : 0,
-            hasSectionalTiming: t.hasSectionalTiming ?? false,
-            sectionalTimings: t.sectionalTimings ?? null,
-            orderIndex: t.orderIndex,
-            testSeriesId: ts.id,
-            updatedAt: t.updatedAt.toISOString(),
-            testbookTotalUsers: t.testbookTotalUsers ?? 0,
-            testbookTopperScore: t.testbookTopperScore ?? 0.0,
-            testbookAverageScore: t.testbookAverageScore ?? 0.0,
-            testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
-            positiveMarks: t.positiveMarks ?? 2.0,
-            negativeMarks: t.negativeMarks ?? 0.5,
-          }));
-          // Sort tests naturally by title (ascending numerical/alphabetical order)
-          tests.sort((a: any, b: any) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
-          return {
-            id: ts.id,
-            name: ts.title,
-            orderIndex: ts.orderIndex,
-            tests,
-          };
-        });
-        const tests = subSubCategories.flatMap((ss: any) => ss.tests);
-        return {
-          id: exam.id,
-          name: exam.name,
-          orderIndex: exam.orderIndex,
-          subSubCategories,
-          tests,
-        };
-      }),
-    }));
 
     const noticesList = notices.map((n: any) => ({
       id: n.id,
@@ -1429,63 +1295,111 @@ async function handleReportQuestion(data: any) {
 // -----------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// Standalone handler: re-fetch the full catalog without seeding
+// Optimized Memory Assembly Compiler for Exam Catalog
 // ---------------------------------------------------------------------------
-async function handleRefreshCatalog() {
-  const categories = await prisma.category.findMany({
-    orderBy: { orderIndex: 'asc' },
-    include: {
-      exams: {
-        orderBy: { orderIndex: 'asc' },
-        include: {
-          testSeries: {
-            orderBy: { orderIndex: 'asc' },
-            include: {
-              mockTests: { orderBy: { orderIndex: 'asc' } },
-            },
-          },
-        },
-      },
-    },
+async function getCompiledExamCatalog() {
+  const categories = await prisma.category.findMany({ orderBy: { orderIndex: 'asc' } });
+  const exams = await prisma.exam.findMany({ orderBy: { orderIndex: 'asc' } });
+  const testSeries = await prisma.testSeries.findMany({ orderBy: { orderIndex: 'asc' } });
+  const mockTests = await prisma.mockTest.findMany({ orderBy: { orderIndex: 'asc' } });
+
+  // Group tests by testSeriesId
+  const testsBySeries: Record<string, any[]> = {};
+  mockTests.forEach((t: any) => {
+    if (!testsBySeries[t.testSeriesId]) {
+      testsBySeries[t.testSeriesId] = [];
+    }
+
+    let customQuestionsCount = 0;
+    if (t.customQuestions) {
+      try {
+        if (typeof t.customQuestions === 'string') {
+          customQuestionsCount = JSON.parse(t.customQuestions).length;
+        } else if (Array.isArray(t.customQuestions)) {
+          customQuestionsCount = t.customQuestions.length;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    testsBySeries[t.testSeriesId].push({
+      id: t.id,
+      title: t.title,
+      questionsCount: t.questionsCount,
+      durationMinutes: t.durationMinutes,
+      maxMarks: t.maxMarks,
+      isPremium: t.requiredTierName !== 'None',
+      requiredTier: t.requiredTierName,
+      customQuestionsCount,
+      hasSectionalTiming: t.hasSectionalTiming ?? false,
+      sectionalTimings: t.sectionalTimings ?? null,
+      testbookTotalUsers: t.testbookTotalUsers ?? 0,
+      testbookTopperScore: t.testbookTopperScore ?? 0.0,
+      testbookAverageScore: t.testbookAverageScore ?? 0.0,
+      testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
+      positiveMarks: t.positiveMarks ?? 2.0,
+      negativeMarks: t.negativeMarks ?? 0.5,
+      orderIndex: t.orderIndex ?? 0,
+    });
   });
 
-  const examCatalog = categories.map((cat: any) => ({
+  // Group testSeries by examId
+  const seriesByExam: Record<string, any[]> = {};
+  testSeries.forEach((ts: any) => {
+    if (!seriesByExam[ts.examId]) {
+      seriesByExam[ts.examId] = [];
+    }
+    const tests = testsBySeries[ts.id] || [];
+    tests.sort((a: any, b: any) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
+
+    seriesByExam[ts.examId].push({
+      id: ts.id,
+      name: ts.title,
+      orderIndex: ts.orderIndex ?? 0,
+      tests,
+    });
+  });
+
+  // Group exams by categoryId
+  const examsByCat: Record<string, any[]> = {};
+  exams.forEach((exam: any) => {
+    if (!examsByCat[exam.categoryId]) {
+      examsByCat[exam.categoryId] = [];
+    }
+    const subSubCategories = seriesByExam[exam.id] || [];
+    const tests = subSubCategories.flatMap((ss: any) => ss.tests);
+
+    examsByCat[exam.categoryId].push({
+      id: exam.id,
+      name: exam.name,
+      orderIndex: exam.orderIndex ?? 0,
+      subSubCategories,
+      tests,
+    });
+  });
+
+  // Assemble full examCatalog
+  return categories.map((cat: any) => ({
     id: cat.id,
     name: cat.name,
     logoUrl: cat.logoUrl || null,
-    subCategories: cat.exams.map((exam: any) => {
-      const subSubCategories = exam.testSeries.map((ts: any) => ({
-        id: ts.id,
-        name: ts.title,
-        tests: ts.mockTests.map((t: any) => ({
-          id: t.id,
-          title: t.title,
-          questionsCount: t.questionsCount,
-          durationMinutes: t.durationMinutes,
-          maxMarks: t.maxMarks,
-          isPremium: t.requiredTierName !== 'None',
-          requiredTier: t.requiredTierName,
-          customQuestionsCount: t.customQuestions ? (t.customQuestions as any[]).length : 0,
-          hasSectionalTiming: t.hasSectionalTiming ?? false,
-          sectionalTimings: t.sectionalTimings ?? null,
-          testbookTotalUsers: t.testbookTotalUsers ?? 0,
-          testbookTopperScore: t.testbookTopperScore ?? 0.0,
-          testbookAverageScore: t.testbookAverageScore ?? 0.0,
-          testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
-          positiveMarks: t.positiveMarks ?? 2.0,
-          negativeMarks: t.negativeMarks ?? 0.5,
-        })),
-      }));
-      return {
-        id: exam.id,
-        name: exam.name,
-        subSubCategories,
-        tests: subSubCategories.flatMap((ss: any) => ss.tests),
-      };
-    }),
+    orderIndex: cat.orderIndex ?? 0,
+    subCategories: examsByCat[cat.id] || [],
   }));
+}
 
-  return NextResponse.json({ success: true, examCatalog });
+// ---------------------------------------------------------------------------
+// Standalone handler: re-fetch the full catalog without seeding
+// ---------------------------------------------------------------------------
+async function handleRefreshCatalog() {
+  try {
+    const examCatalog = await getCompiledExamCatalog();
+    return NextResponse.json({ success: true, examCatalog });
+  } catch (error: any) {
+    console.error('Refresh catalog compilation error:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
+  }
 }
 
 async function seedDatabase() {
