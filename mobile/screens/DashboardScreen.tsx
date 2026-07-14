@@ -302,6 +302,10 @@ export default function DashboardScreen({
 
   const handlePinCategory = async (catId: string) => {
     try {
+      if (pinnedCategoryIds.length >= 5) {
+        Alert.alert('Pin Limit Reached', 'You can only pin up to 5 exams to the top. Please unpin an exam first.');
+        return;
+      }
       const next = [...pinnedCategoryIds.filter(id => id !== catId), catId];
       setPinnedCategoryIds(next);
       await AsyncStorage.setItem('pinned_categories', JSON.stringify(next));
@@ -983,10 +987,10 @@ export default function DashboardScreen({
 
           {/* Swipe instruction helper */}
           {examSearchQuery.trim() === '' && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12, opacity: 0.65 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 4, opacity: 0.65 }}>
               <Pin size={10} color={isDark ? '#94A3B8' : '#64748B'} style={{ transform: [{ rotate: '45deg' }] }} />
               <Text style={{ fontSize: 10, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B' }}>
-                Swipe right to pin to top · Swipe left to unpin
+                Swipe right exam to pin to top, swipe left exam to unpin
               </Text>
             </View>
           )}
@@ -1002,7 +1006,7 @@ export default function DashboardScreen({
             <FlatList
               data={filteredCatalog}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.listContainer}
+              contentContainerStyle={[styles.listContainer, { paddingTop: 4 }]}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               renderItem={({ item: category }) => {
