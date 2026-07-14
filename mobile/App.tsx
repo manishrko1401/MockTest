@@ -264,6 +264,10 @@ export default function App() {
             setLoading(false); // ← single authoritative place to stop the spinner
           });
         } else {
+          // No saved credentials — show dashboard as guest so user can browse catalog/notices
+          const guestUser = { id: 'guest', name: 'Guest', email: '', isGuest: true, testSessions: [], bookmarks: [], subscriptionTier: 'None' };
+          setCurrentUser(guestUser);
+          setViewMode('dashboard');
           setLoading(false);
         }
       } catch (err) {
@@ -591,17 +595,28 @@ export default function App() {
     // Clear device cache so a different login doesn't see stale data
     await clearAllCache();
     setCurrentUser(null);
-    setViewMode('auth');
+    // Show guest dashboard after logout so user can still browse catalog
+    const guestUser = { id: 'guest', name: 'Guest', email: '', isGuest: true, testSessions: [], bookmarks: [], subscriptionTier: 'None' };
+    setCurrentUser(guestUser);
+    setViewMode('dashboard');
     setLoading(false);
   };
 
   // Navigations controllers
   const handleSelectSeries = (series: any) => {
+    if (currentUser?.isGuest) {
+      setViewMode('auth');  // Redirect guest to login before taking tests
+      return;
+    }
     setSelectedSeries(series);
     setViewMode('series_detail');
   };
 
   const handleOpenExam = (testId: string) => {
+    if (currentUser?.isGuest) {
+      setViewMode('auth');  // Redirect guest to login before taking exams
+      return;
+    }
     setPreviousViewMode(viewMode);
     setActiveTestId(testId);
     setViewMode('exam');
