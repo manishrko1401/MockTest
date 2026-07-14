@@ -202,6 +202,7 @@ interface AuthContextType {
   reorderSubSubCategories: (categoryId: string, subCategoryId: string, orderedSubSubCategories: TestSubSubCategory[]) => void;
   reorderMockTests: (categoryId: string, subCategoryId: string, subSubCategoryId: string, orderedTests: MockTestItem[]) => void;
   mergeUserSessions: (userId: string, sessions: MockUser['testSessions']) => void;
+  refreshCatalog: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -652,6 +653,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err) {
       console.error("Fetch data error:", err);
+    }
+  };
+
+  const refreshCatalog = async () => {
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'refresh-catalog' })
+      });
+      const data = await res.json();
+      if (data.success && data.examCatalog) {
+        setExamCatalog(data.examCatalog);
+      }
+    } catch (err) {
+      console.error('Refresh catalog error:', err);
     }
   };
 
@@ -1793,6 +1810,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         reportQuestion,
         deleteReportedQuestion,
         mergeUserSessions,
+        refreshCatalog,
       }}
     >
       {children}

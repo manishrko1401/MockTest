@@ -298,6 +298,7 @@ export default function AdminAnalytics() {
     reportedQuestionsList,
     deleteReportedQuestion,
     mergeUserSessions,
+    refreshCatalog,
   } = useAuth();
   const t = TRANSLATIONS[language];
 
@@ -319,6 +320,8 @@ export default function AdminAnalytics() {
       const allowedAdminRoles = ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'];
       if (allowedAdminRoles.includes(res.user.role)) {
         showToast('Access authorized successfully!');
+        // Always refresh the exam catalog from DB after admin login
+        await refreshCatalog();
       } else {
         setAdminLoginError('Unauthorized access: your role does not have administrative permissions.');
         logout();
@@ -1128,11 +1131,23 @@ export default function AdminAnalytics() {
           </nav>
         </div>
 
-        {/* System telemetry */}
-        <div className="border-t border-slate-200 dark:border-slate-800 pt-4 text-[10px] text-slate-500">
-          <p>Database: Connected (PostgreSQL)</p>
-          <p>Active sessions: 1,429</p>
-          <p>System load: Normal</p>
+        {/* Refresh + System telemetry */}
+        <div className="border-t border-slate-200 dark:border-slate-800 pt-4 space-y-3">
+          <button
+            onClick={async () => {
+              await refreshCatalog();
+              showToast('Catalog refreshed from database!');
+            }}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all active:scale-95 cursor-pointer"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh Data
+          </button>
+          <div className="text-[10px] text-slate-500">
+            <p>Database: Connected (PostgreSQL)</p>
+            <p>Active sessions: 1,429</p>
+            <p>System load: Normal</p>
+          </div>
         </div>
       </aside>
 

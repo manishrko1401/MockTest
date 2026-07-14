@@ -25,6 +25,8 @@ export async function POST(request: Request) {
     switch (action) {
       case 'bootstrap':
         return await handleBootstrap();
+      case 'refresh-catalog':
+        return await handleRefreshCatalog();
       case 'signup':
         return await handleSignup(data);
       case 'login':
@@ -1426,6 +1428,66 @@ async function handleReportQuestion(data: any) {
 // Seeding Logic
 // -----------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Standalone handler: re-fetch the full catalog without seeding
+// ---------------------------------------------------------------------------
+async function handleRefreshCatalog() {
+  const categories = await prisma.category.findMany({
+    orderBy: { orderIndex: 'asc' },
+    include: {
+      exams: {
+        orderBy: { orderIndex: 'asc' },
+        include: {
+          testSeries: {
+            orderBy: { orderIndex: 'asc' },
+            include: {
+              mockTests: { orderBy: { orderIndex: 'asc' } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const examCatalog = categories.map((cat: any) => ({
+    id: cat.id,
+    name: cat.name,
+    logoUrl: cat.logoUrl || null,
+    subCategories: cat.exams.map((exam: any) => {
+      const subSubCategories = exam.testSeries.map((ts: any) => ({
+        id: ts.id,
+        name: ts.title,
+        tests: ts.mockTests.map((t: any) => ({
+          id: t.id,
+          title: t.title,
+          questionsCount: t.questionsCount,
+          durationMinutes: t.durationMinutes,
+          maxMarks: t.maxMarks,
+          isPremium: t.requiredTierName !== 'None',
+          requiredTier: t.requiredTierName,
+          customQuestionsCount: t.customQuestions ? (t.customQuestions as any[]).length : 0,
+          hasSectionalTiming: t.hasSectionalTiming ?? false,
+          sectionalTimings: t.sectionalTimings ?? null,
+          testbookTotalUsers: t.testbookTotalUsers ?? 0,
+          testbookTopperScore: t.testbookTopperScore ?? 0.0,
+          testbookAverageScore: t.testbookAverageScore ?? 0.0,
+          testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
+          positiveMarks: t.positiveMarks ?? 2.0,
+          negativeMarks: t.negativeMarks ?? 0.5,
+        })),
+      }));
+      return {
+        id: exam.id,
+        name: exam.name,
+        subSubCategories,
+        tests: subSubCategories.flatMap((ss: any) => ss.tests),
+      };
+    }),
+  }));
+
+  return NextResponse.json({ success: true, examCatalog });
+}
+
 async function seedDatabase() {
   console.log('Seeding Supabase database tables...');
 
@@ -1445,7 +1507,7 @@ async function seedDatabase() {
   ];
 
   for (const n of defaultNotices) {
-    await prisma.notice.create({ data: n });
+    await prisma.notice.upsert({ where: { id: n.id }, update: {}, create: n });
   }
 
   // Seed Categories, Exams, MockTests
@@ -1593,35 +1655,33 @@ async function seedDatabase() {
   ];
 
   for (const c of catalog) {
-    const cat = await prisma.category.create({
-      data: {
-        id: c.id,
-        name: c.name,
-      },
+    // Use upsert so re-seeding is idempotent (safe to run multiple times)
+    const cat = await prisma.category.upsert({
+      where: { id: c.id },
+      update: {},
+      create: { id: c.id, name: c.name },
     });
 
     for (const sub of c.subCategories) {
-      await prisma.exam.create({
-        data: {
-          id: sub.id,
-          categoryId: cat.id,
-          name: sub.name,
-        },
+      await prisma.exam.upsert({
+        where: { id: sub.id },
+        update: {},
+        create: { id: sub.id, categoryId: cat.id, name: sub.name },
       });
 
       if ((sub as any).subSubCategories) {
         for (const ssub of (sub as any).subSubCategories) {
-          const series = await prisma.testSeries.create({
-            data: {
-              id: ssub.id,
-              examId: sub.id,
-              title: ssub.name,
-            },
+          const series = await prisma.testSeries.upsert({
+            where: { id: ssub.id },
+            update: {},
+            create: { id: ssub.id, examId: sub.id, title: ssub.name },
           });
 
           for (const t of ssub.tests) {
-            await prisma.mockTest.create({
-              data: {
+            await prisma.mockTest.upsert({
+              where: { id: t.id },
+              update: {},
+              create: {
                 id: t.id,
                 testSeriesId: series.id,
                 title: t.title,
@@ -1634,17 +1694,18 @@ async function seedDatabase() {
           }
         }
       } else {
-        const series = await prisma.testSeries.create({
-          data: {
-            id: sub.id + '_series',
-            examId: sub.id,
-            title: sub.name + ' Series',
-          },
+        const seriesId = sub.id + '_series';
+        const series = await prisma.testSeries.upsert({
+          where: { id: seriesId },
+          update: {},
+          create: { id: seriesId, examId: sub.id, title: sub.name + ' Series' },
         });
 
         for (const t of (sub as any).tests) {
-          await prisma.mockTest.create({
-            data: {
+          await prisma.mockTest.upsert({
+            where: { id: t.id },
+            update: {},
+            create: {
               id: t.id,
               testSeriesId: series.id,
               title: t.title,
@@ -1776,8 +1837,10 @@ async function seedDatabase() {
   ];
 
   for (const user of initialUsers) {
-    await prisma.user.create({
-      data: {
+    await prisma.user.upsert({
+      where: { id: user.id },
+      update: {},
+      create: {
         id: user.id,
         candidateCode: user.candidateCode,
         fullName: user.fullName,
@@ -1849,8 +1912,10 @@ async function seedDatabase() {
   ];
 
   for (const session of initialSessions) {
-    await prisma.userTestSession.create({
-      data: {
+    await prisma.userTestSession.upsert({
+      where: { id: session.id },
+      update: {},
+      create: {
         id: session.id,
         userId: session.userId,
         mockTestId: session.mockTestId,
