@@ -168,7 +168,9 @@ export default function App() {
 
         // ── Step 2: Smart delta sync — only download what's new ─────────────
         const lastSyncedAt = await getLastSyncTimestamp();
-        const syncRes = await ApiClient.catalogSync(lastSyncedAt);
+        // Force full sync if local catalog is empty (e.g. first install, or old cached empty data)
+        const hasEmptyCache = !cachedCatalog || (cachedCatalog.examCatalog || []).length === 0;
+        const syncRes = await ApiClient.catalogSync(hasEmptyCache ? null : lastSyncedAt);
 
         if (syncRes.success) {
           let updatedCatalog: typeof cachedCatalog;
@@ -468,9 +470,10 @@ export default function App() {
     const noticesInterval = setInterval(async () => {
       try {
         const lastSyncedAt = await getLastSyncTimestamp();
-        const syncRes = await ApiClient.catalogSync(lastSyncedAt);
+        const existing = await getCachedCatalog();
+        const hasEmptyCache = !existing || (existing.examCatalog || []).length === 0;
+        const syncRes = await ApiClient.catalogSync(hasEmptyCache ? null : lastSyncedAt);
         if (syncRes.success && isMounted && syncRes.hasNewData) {
-          const existing = await getCachedCatalog();
           if (existing) {
             let updated;
             if (syncRes.isFullSync) {
