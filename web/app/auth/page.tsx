@@ -121,12 +121,23 @@ export default function AuthPage() {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl dark:shadow-2xl p-8 overflow-hidden backdrop-blur-md bg-opacity-80 dark:bg-opacity-80">
           
           {/* Logo & Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center bg-[#E6F4FE] dark:bg-slate-800 p-2.5 rounded-full border border-blue-200/50 dark:border-slate-700 shadow-sm mb-3">
-              <Trophy className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          <div className="flex flex-col items-center justify-center mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full border border-blue-200/50 dark:border-slate-700 shadow-sm flex items-center justify-center h-12 w-12 shrink-0">
+                <Trophy className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="text-left">
+                <h1 className="font-black text-2xl leading-none tracking-tight">
+                  <span className="text-slate-900 dark:text-white">MockTest</span>
+                  <span className="text-blue-600 dark:text-blue-400 ml-1">Hub</span>
+                </h1>
+                <p className="text-[9px] text-slate-505 dark:text-slate-400 font-bold tracking-widest uppercase mt-1">
+                  {language === 'hi' ? 'परीक्षा की तैयारी' : 'Exam Preparation'}
+                </p>
+              </div>
             </div>
-            <h2 className="font-extrabold text-xl tracking-wider text-slate-900 dark:text-white">{language === 'hi' ? 'मॉक टेस्ट खाता' : 'MOCK TEST ACCOUNT'}</h2>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold tracking-widest uppercase mt-1">{language === 'hi' ? 'सिंगल साइन-ऑन एक्सेस' : 'Single Sign-On Access'}</p>
+            <h2 className="font-extrabold text-xs tracking-wider text-slate-900 dark:text-white mt-2 uppercase">{language === 'hi' ? 'मॉक टेस्ट खाता' : 'MOCK TEST ACCOUNT'}</h2>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-widest uppercase mt-0.5">{language === 'hi' ? 'सिंगल साइन-ऑन एक्सेस' : 'Single Sign-On Access'}</p>
           </div>
 
           {/* Form Tabs */}
