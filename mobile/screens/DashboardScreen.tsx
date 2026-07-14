@@ -882,8 +882,16 @@ export default function DashboardScreen({
                     <View style={{ position: 'absolute', bottom: -15, left: 40, width: 45, height: 45, borderRadius: 22.5, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.08 : 0.03 }} />
 
                     <View style={styles.categoryCardLeft}>
-                      <View style={[styles.categoryIconCircle, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: catStyle.borderColor }]}>
-                        <CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={22} />
+                      <View style={[styles.categoryIconCircle, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: catStyle.borderColor, overflow: 'hidden' }]}>
+                        {category.logoUrl ? (
+                          <Image 
+                            source={{ uri: category.logoUrl }} 
+                            style={{ width: '100%', height: '100%' }} 
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={22} />
+                        )}
                       </View>
                       <View style={styles.categoryDetails}>
                         <Text style={[styles.categoryTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B' }]}>{category.name}</Text>

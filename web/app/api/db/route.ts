@@ -228,6 +228,7 @@ async function handleBootstrap() {
     return {
       id: cat.id,
       name: cat.name,
+      logoUrl: cat.logoUrl || null,
       subCategories: cat.exams.map((exam: any) => {
         const subSubCategories = exam.testSeries.map((ts: any) => {
           const tests = ts.mockTests.map((t: any) => ({
@@ -474,7 +475,7 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
     success: true,
     isFullSync: false,
     hasNewData,
-    newCategories: updatedCategories.map((c: any) => ({ id: c.id, name: c.name, orderIndex: c.orderIndex })),
+    newCategories: updatedCategories.map((c: any) => ({ id: c.id, name: c.name, logoUrl: c.logoUrl || null, orderIndex: c.orderIndex })),
     newExams: updatedExams.map((e: any) => ({ id: e.id, name: e.name, categoryId: e.categoryId, orderIndex: e.orderIndex })),
     newSeries: updatedSeries.map((s: any) => ({ id: s.id, title: s.title, examId: s.examId, orderIndex: s.orderIndex })),
     newTests: mappedNewTests,
@@ -1107,12 +1108,13 @@ async function handleDeleteNotice(data: any) {
 }
 
 async function handleAddCategory(data: any) {
-  const { id, name } = data;
+  const { id, name, logoUrl } = data;
 
   await prisma.category.create({
     data: {
       id,
       name,
+      logoUrl: logoUrl || null,
     },
   });
 
@@ -1262,11 +1264,14 @@ async function handleDeleteMockTest(data: any) {
 }
 
 async function handleEditCategory(data: any) {
-  const { categoryId, name } = data;
+  const { categoryId, name, logoUrl } = data;
 
   await prisma.category.update({
     where: { id: categoryId },
-    data: { name },
+    data: { 
+      name,
+      logoUrl: logoUrl !== undefined ? logoUrl : undefined,
+    },
   });
 
   return NextResponse.json({ success: true });

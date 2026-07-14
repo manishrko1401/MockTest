@@ -36,6 +36,7 @@ export interface TestSubCategory {
 export interface TestCategory {
   id: string;
   name: string;
+  logoUrl?: string;
   subCategories: TestSubCategory[];
 }
 
@@ -170,8 +171,8 @@ interface AuthContextType {
   language: 'en' | 'hi';
   setLanguage: (lang: 'en' | 'hi') => void;
   examCatalog: TestCategory[];
-  addCategory: (name: string) => void;
-  editCategory: (categoryId: string, name: string) => void;
+  addCategory: (name: string, logoUrl?: string) => void;
+  editCategory: (categoryId: string, name: string, logoUrl?: string) => void;
   deleteCategory: (categoryId: string) => void;
   addSubCategory: (categoryId: string, name: string) => void;
   editSubCategory: (categoryId: string, subCategoryId: string, name: string) => void;
@@ -805,11 +806,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).catch(err => console.error("Delete notice error:", err));
   };
 
-  const addCategory = (name: string) => {
+  const addCategory = (name: string, logoUrl?: string) => {
     const newId = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).substring(2, 6);
     const newCategory: TestCategory = {
       id: newId,
       name,
+      logoUrl,
       subCategories: []
     };
     const updated = [...examCatalog, newCategory];
@@ -820,7 +822,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'add-category',
-        data: { id: newId, name }
+        data: { id: newId, name, logoUrl }
       })
     }).catch(err => console.error("Add category error:", err));
   };
@@ -839,8 +841,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).catch(err => console.error("Delete category error:", err));
   };
 
-  const editCategory = (categoryId: string, name: string) => {
-    const updated = examCatalog.map(c => c.id === categoryId ? { ...c, name } : c);
+  const editCategory = (categoryId: string, name: string, logoUrl?: string) => {
+    const updated = examCatalog.map(c => c.id === categoryId ? { ...c, name, logoUrl } : c);
     setExamCatalog(updated);
 
     fetch('/api/db', {
@@ -848,7 +850,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'edit-category',
-        data: { categoryId, name }
+        data: { categoryId, name, logoUrl }
       })
     }).catch(err => console.error("Edit category error:", err));
   };

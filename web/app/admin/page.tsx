@@ -345,6 +345,7 @@ export default function AdminAnalytics() {
 
   // Category management form states
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryLogoUrl, setNewCategoryLogoUrl] = useState('');
   const [newSubCategoryParent, setNewSubCategoryParent] = useState('');
   const [newSubCategoryName, setNewSubCategoryName] = useState('');
   const [newSubSubCategoryParentCategory, setNewSubSubCategoryParentCategory] = useState('');
@@ -354,6 +355,7 @@ export default function AdminAnalytics() {
   // Category/subcategory/mock edit states
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [editingCategoryLogoUrl, setEditingCategoryLogoUrl] = useState('');
   const [editingSubCategoryId, setEditingSubCategoryId] = useState<string | null>(null);
   const [editingSubCategoryName, setEditingSubCategoryName] = useState('');
   const [editingSubSubCategoryId, setEditingSubSubCategoryId] = useState<string | null>(null);
@@ -2570,7 +2572,7 @@ export default function AdminAnalytics() {
                     </div>
                   </div>
                   <div className={`transition-transform duration-200 ${isCreateCategoryOpen ? 'rotate-180' : ''}`}>
-                    <ArrowDown className="h-4 w-4 text-slate-505" />
+                    <ArrowDown className="h-4 w-4 text-slate-500" />
                   </div>
                 </button>
 
@@ -2580,8 +2582,9 @@ export default function AdminAnalytics() {
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (!newCategoryName.trim()) return;
-                        addCategory(newCategoryName.trim());
+                        addCategory(newCategoryName.trim(), newCategoryLogoUrl.trim() || undefined);
                         setNewCategoryName('');
+                        setNewCategoryLogoUrl('');
                         setIsCreateCategoryOpen(false);
                         showToast('Category created successfully!');
                       }}
@@ -2597,6 +2600,18 @@ export default function AdminAnalytics() {
                           value={newCategoryName}
                           onChange={(e) => setNewCategoryName(e.target.value)}
                           placeholder="e.g. UPSC Exams, SSC Exams"
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                          Category Logo Image URL
+                        </label>
+                        <input
+                          type="text"
+                          value={newCategoryLogoUrl}
+                          onChange={(e) => setNewCategoryLogoUrl(e.target.value)}
+                          placeholder="e.g. https://example.com/logo.png"
                           className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                         />
                       </div>
@@ -2624,6 +2639,7 @@ export default function AdminAnalytics() {
                     <thead>
                       <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
                         <th className="py-3 px-4">ID</th>
+                        <th className="py-3 px-4">Logo</th>
                         <th className="py-3 px-4">Name</th>
                         <th className="py-3 px-4">Sub Categories</th>
                         <th className="py-3 px-4 text-right">Action</th>
@@ -2633,6 +2649,27 @@ export default function AdminAnalytics() {
                       {examCatalog.map(cat => (
                         <tr key={cat.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                           <td className="py-3.5 px-4 font-mono font-bold text-slate-400">{cat.id}</td>
+                          <td className="py-3.5 px-4">
+                            {editingCategoryId === cat.id ? (
+                              <input
+                                type="text"
+                                value={editingCategoryLogoUrl}
+                                onChange={(e) => setEditingCategoryLogoUrl(e.target.value)}
+                                placeholder="e.g. https://example.com/logo.png"
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-full max-w-xs"
+                              />
+                            ) : cat.logoUrl ? (
+                              <img
+                                src={cat.logoUrl}
+                                alt={cat.name}
+                                className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] text-slate-400 font-bold">
+                                None
+                              </div>
+                            )}
+                          </td>
                           <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
                             {editingCategoryId === cat.id ? (
                               <input
@@ -2652,9 +2689,9 @@ export default function AdminAnalytics() {
                                 <button
                                   onClick={() => {
                                     if (editingCategoryName.trim()) {
-                                      editCategory(cat.id, editingCategoryName.trim());
+                                      editCategory(cat.id, editingCategoryName.trim(), editingCategoryLogoUrl.trim() || undefined);
                                       setEditingCategoryId(null);
-                                      showToast('Category renamed successfully.');
+                                      showToast('Category updated successfully.');
                                     }
                                   }}
                                   className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
@@ -2706,6 +2743,7 @@ export default function AdminAnalytics() {
                                   onClick={() => {
                                     setEditingCategoryId(cat.id);
                                     setEditingCategoryName(cat.name);
+                                    setEditingCategoryLogoUrl(cat.logoUrl || '');
                                   }}
                                   className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                 >
