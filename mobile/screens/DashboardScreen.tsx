@@ -876,7 +876,13 @@ export default function DashboardScreen({
         <View style={{ marginBottom: 12 }}>
           <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Explore Categories</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesRow}>
-            {[...examCatalog].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)).map((cat) => {
+            {[...examCatalog].sort((a, b) => {
+              const aPinned = pinnedCategoryIds.includes(a.id);
+              const bPinned = pinnedCategoryIds.includes(b.id);
+              if (aPinned && !bPinned) return -1;
+              if (!aPinned && bPinned) return 1;
+              return (a.orderIndex ?? 0) - (b.orderIndex ?? 0);
+            }).map((cat) => {
               const catStyle = getCategoryStyle(cat.name, isDark);
               return (
                 <TouchableOpacity
@@ -1009,6 +1015,7 @@ export default function DashboardScreen({
               contentContainerStyle={[styles.listContainer, { paddingTop: 4 }]}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
+              extraData={pinnedCategoryIds}
               renderItem={({ item: category }) => {
                 const catStyle = getCategoryStyle(category.name, isDark);
                 const isPinned = pinnedCategoryIds.includes(category.id);
