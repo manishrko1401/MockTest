@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PlusCircle, ArrowDown, ArrowUp, Edit, Trash2, X, Search, FileText } from 'lucide-react';
 
 interface MockTestManagerProps {
@@ -116,15 +116,19 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
   setEditingMockTestbookCutoffScore,
   editMockTestTitle,
 }) => {
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterSubCategory, setFilterSubCategory] = useState('');
+  const [filterSubSubCategory, setFilterSubSubCategory] = useState('');
+
   const filteredMocks: { cat: any; sub: any; subsub: any; test: any; }[] = [];
   examCatalog
-    .filter((cat: any) => !newMockCategoryParent || cat.id === newMockCategoryParent)
+    .filter((cat: any) => !filterCategory || cat.id === filterCategory)
     .forEach((cat: any) => {
       cat.subCategories
-        .filter((sub: any) => !newMockSubCategoryParent || sub.id === newMockSubCategoryParent)
+        .filter((sub: any) => !filterSubCategory || sub.id === filterSubCategory)
         .forEach((sub: any) => {
           (sub.subSubCategories || [])
-            .filter((subsub: any) => !newMockSubSubCategoryParent || subsub.id === newMockSubSubCategoryParent)
+            .filter((subsub: any) => !filterSubSubCategory || subsub.id === filterSubSubCategory)
             .forEach((subsub: any) => {
               subsub.tests.forEach((test: any) => {
                 filteredMocks.push({ cat, sub, subsub, test });
@@ -359,33 +363,33 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
             <Search className="h-3.5 w-3.5" /> Filter
           </div>
           <select
-            value={newMockCategoryParent}
-            onChange={(e) => { setNewMockCategoryParent(e.target.value); setNewMockSubCategoryParent(''); setNewMockSubSubCategoryParent(''); }}
+            value={filterCategory}
+            onChange={(e) => { setFilterCategory(e.target.value); setFilterSubCategory(''); setFilterSubSubCategory(''); }}
             className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
           >
             <option value="">All Exam Categories</option>
             {examCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
           </select>
           <select
-            value={newMockSubCategoryParent}
-            onChange={(e) => { setNewMockSubCategoryParent(e.target.value); setNewMockSubSubCategoryParent(''); }}
-            disabled={!newMockCategoryParent}
+            value={filterSubCategory}
+            onChange={(e) => { setFilterSubCategory(e.target.value); setFilterSubSubCategory(''); }}
+            disabled={!filterCategory}
             className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
           >
             <option value="">All Sub Categories</option>
-            {examCatalog.find((c: any) => c.id === newMockCategoryParent)?.subCategories.map((sub: any) => <option key={sub.id} value={sub.id}>{sub.name}</option>) || null}
+            {examCatalog.find((c: any) => c.id === filterCategory)?.subCategories.map((sub: any) => <option key={sub.id} value={sub.id}>{sub.name}</option>) || null}
           </select>
           <select
-            value={newMockSubSubCategoryParent}
-            onChange={(e) => setNewMockSubSubCategoryParent(e.target.value)}
-            disabled={!newMockSubCategoryParent}
+            value={filterSubSubCategory}
+            onChange={(e) => setFilterSubSubCategory(e.target.value)}
+            disabled={!filterSubCategory}
             className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
           >
             <option value="">All Sub-Sub Categories</option>
-            {examCatalog.find((c: any) => c.id === newMockCategoryParent)?.subCategories.find((s: any) => s.id === newMockSubCategoryParent)?.subSubCategories?.map((subsub: any) => <option key={subsub.id} value={subsub.id}>{subsub.name}</option>) || null}
+            {examCatalog.find((c: any) => c.id === filterCategory)?.subCategories.find((s: any) => s.id === filterSubCategory)?.subSubCategories?.map((subsub: any) => <option key={subsub.id} value={subsub.id}>{subsub.name}</option>) || null}
           </select>
-          {(newMockCategoryParent || newMockSubCategoryParent || newMockSubSubCategoryParent) && (
-            <button type="button" onClick={() => { setNewMockCategoryParent(''); setNewMockSubCategoryParent(''); setNewMockSubSubCategoryParent(''); }} className="text-[11px] text-slate-550 hover:text-red-500 font-bold cursor-pointer flex items-center gap-1 transition-colors">
+          {(filterCategory || filterSubCategory || filterSubSubCategory) && (
+            <button type="button" onClick={() => { setFilterCategory(''); setFilterSubCategory(''); setFilterSubSubCategory(''); }} className="text-[11px] text-slate-555 hover:text-red-500 font-bold cursor-pointer flex items-center gap-1 transition-colors">
               <X className="h-3.5 w-3.5" /> Clear
             </button>
           )}
