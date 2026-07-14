@@ -1301,8 +1301,9 @@ async function getCompiledExamCatalog() {
   // Safe runtime schema patch: ensure logoUrl column exists in categories table
   try {
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "logoUrl" text;');
-  } catch (err) {
+  } catch (err: any) {
     console.error("Runtime database patch failed:", err);
+    throw new Error(`DATABASE MIGRATION PATCH FAILED: ${err.message || err}`);
   }
 
   const categories = await prisma.category.findMany({ orderBy: { orderIndex: 'asc' } });
