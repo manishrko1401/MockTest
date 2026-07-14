@@ -48,7 +48,9 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
-  CheckSquare
+  CheckSquare,
+  Shield,
+  Target
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
@@ -102,67 +104,61 @@ const SUCCESS_STORIES = [
   }
 ];
 
+// Unified premium color system — all tiles use the same deep navy/indigo palette
+// with a single accent color for a consistent, premium look
+const BRAND = {
+  // Core brand blues — used for all backgrounds
+  darkBg1:   '#0F1C35',   // deep navy card bg (dark mode)
+  darkBg2:   '#0A1222',   // deeper navy (dark mode)
+  lightBg1:  '#EEF2FF',   // soft indigo wash (light mode)
+  lightBg2:  '#E0E7FF',   // softer indigo wash (light mode)
+  // Accent — vibrant indigo-blue used for left border, icons, text highlights
+  accent:    '#4F6EF7',   // rich indigo-blue (main accent)
+  accentHover: '#3B55DD',
+  // Border colours per mode
+  darkBorder:  '#2A3F70',
+  lightBorder: '#C7D2FE',
+  // Decorative orb colour
+  orb: '#4F6EF7',
+};
+
 const getCategoryStyle = (name: string, isDark: boolean) => {
+  // Pick icon based on name but keep colors UNIFIED
   const norm = name.toLowerCase();
-  if (norm.includes('ssc')) {
-    return {
-      colors: isDark ? ['#3F1D11', '#2A1007'] : ['#FFEFEA', '#FFECE5'],
-      borderColor: isDark ? '#E25C30' : '#FFD0C0',
-      iconColor: '#FF5722',
-      iconName: 'Award',
-    };
-  }
-  if (norm.includes('railway')) {
-    return {
-      colors: isDark ? ['#1A163B', '#100D28'] : ['#EEF2FF', '#E0E7FF'],
-      borderColor: isDark ? '#6366F1' : '#C7D2FE',
-      iconColor: '#6366F1',
-      iconName: 'Activity',
-    };
-  }
-  if (norm.includes('bank') || norm.includes('lic')) {
-    return {
-      colors: isDark ? ['#0C291F', '#071C15'] : ['#E6FDF5', '#D1FAE5'],
-      borderColor: isDark ? '#10B981' : '#A7F3D0',
-      iconColor: '#10B981',
-      iconName: 'Coins',
-    };
-  }
-  if (norm.includes('teach') || norm.includes('ctet')) {
-    return {
-      colors: isDark ? ['#3B2E11', '#2A200B'] : ['#FEFDF0', '#FEF9C3'],
-      borderColor: isDark ? '#F59E0B' : '#FDE68A',
-      iconColor: '#D97706',
-      iconName: 'BookOpen',
-    };
-  }
-  if (norm.includes('ugc') || norm.includes('net')) {
-    return {
-      colors: isDark ? ['#11293B', '#0B1A28'] : ['#F0F9FF', '#E0F2FE'],
-      borderColor: isDark ? '#38BDF8' : '#BAE6FD',
-      iconColor: '#0284C7',
-      iconName: 'GraduationCap',
-    };
-  }
+  let iconName = 'Sparkles';
+  if (norm.includes('ssc'))                            iconName = 'Award';
+  else if (norm.includes('railway') || norm.includes('rrb')) iconName = 'Activity';
+  else if (norm.includes('bank') || norm.includes('lic'))    iconName = 'Coins';
+  else if (norm.includes('teach') || norm.includes('ctet'))  iconName = 'BookOpen';
+  else if (norm.includes('ugc') || norm.includes('net'))     iconName = 'GraduationCap';
+  else if (norm.includes('police') || norm.includes('upsc')) iconName = 'Shield';
+  else if (norm.includes('defence') || norm.includes('nda')) iconName = 'Target';
+  else if (norm.includes('state') || norm.includes('psc'))   iconName = 'MapPin';
+
   return {
-    colors: isDark ? ['#351535', '#240C24'] : ['#FDF2F8', '#FCE7F3'],
-    borderColor: isDark ? '#EC4899' : '#FBCFE8',
-    iconColor: '#DB2777',
-    iconName: 'MapPin',
+    colors: isDark
+      ? [BRAND.darkBg1, BRAND.darkBg2]
+      : [BRAND.lightBg1, BRAND.lightBg2],
+    borderColor:  isDark ? BRAND.darkBorder  : BRAND.lightBorder,
+    iconColor:    BRAND.accent,
+    iconName,
   };
 };
 
 const CategoryIcon = ({ name, color, size }: { name: string; color: string; size: number }) => {
   switch (name) {
-    case 'Award': return <Award color={color} size={size} />;
-    case 'Activity': return <Activity color={color} size={size} />;
-    case 'Coins': return <Coins color={color} size={size} />;
-    case 'BookOpen': return <BookOpen color={color} size={size} />;
+    case 'Award':        return <Award color={color} size={size} />;
+    case 'Activity':     return <Activity color={color} size={size} />;
+    case 'Coins':        return <Coins color={color} size={size} />;
+    case 'BookOpen':     return <BookOpen color={color} size={size} />;
     case 'GraduationCap': return <GraduationCap color={color} size={size} />;
-    case 'MapPin': return <MapPin color={color} size={size} />;
-    default: return <Sparkles color={color} size={size} />;
+    case 'MapPin':       return <MapPin color={color} size={size} />;
+    case 'Shield':       return <Shield color={color} size={size} />;
+    case 'Target':       return <Target color={color} size={size} />;
+    default:             return <Sparkles color={color} size={size} />;
   }
 };
+
 
 export default function DashboardScreen({
   currentUser,
@@ -866,42 +862,55 @@ export default function DashboardScreen({
                       {
                         backgroundColor: catStyle.colors[0],
                         borderColor: catStyle.borderColor,
-                        borderLeftWidth: 5,
+                        borderLeftWidth: 4,
                         borderLeftColor: catStyle.iconColor,
-                        position: 'relative',
-                        overflow: 'hidden',
                       },
                     ]}
+                    activeOpacity={0.82}
                     onPress={() => {
                       setExamSearchQuery('');
                       setSelectedCategoryId(category.id);
                     }}
                   >
-                    {/* Decorative background circles */}
-                    <View style={{ position: 'absolute', top: -25, right: -25, width: 70, height: 70, borderRadius: 35, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.12 : 0.05 }} />
-                    <View style={{ position: 'absolute', bottom: -15, left: 40, width: 45, height: 45, borderRadius: 22.5, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.08 : 0.03 }} />
-
                     <View style={styles.categoryCardLeft}>
-                      <View style={[styles.categoryIconCircle, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: catStyle.borderColor, overflow: 'hidden' }]}>
+                      {/* Icon/Logo circle */}
+                      <View style={[
+                        styles.categoryIconCircle,
+                        {
+                          backgroundColor: isDark ? '#111D38' : '#FFFFFF',
+                          borderColor: catStyle.borderColor,
+                          overflow: 'hidden',
+                        }
+                      ]}>
                         {category.logoUrl ? (
-                          <Image 
-                            source={{ uri: category.logoUrl }} 
-                            style={{ width: '100%', height: '100%' }} 
+                          <Image
+                            source={{ uri: category.logoUrl }}
+                            style={{ width: '100%', height: '100%', borderRadius: 27 }}
                             resizeMode="cover"
                           />
                         ) : (
-                          <CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={22} />
+                          <CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={24} />
                         )}
                       </View>
+
+                      {/* Text info */}
                       <View style={styles.categoryDetails}>
-                        <Text style={[styles.categoryTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B' }]}>{category.name}</Text>
-                        <Text style={[styles.categoryMeta, isDark ? { color: '#94A3B8' } : { color: '#64748B' }]}>
-                          {category.subCategories?.length || 0} Sub-Exam Categories
+                        <Text style={[styles.categoryTitle, { color: isDark ? '#F1F5F9' : '#1E293B' }]}>
+                          {category.name}
+                        </Text>
+                        <Text style={[styles.categoryMeta, { color: isDark ? '#64748B' : '#6B7280' }]}>
+                          {category.subCategories?.length || 0} exam types available
                         </Text>
                       </View>
                     </View>
-                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', justifyContent: 'center', alignItems: 'center' }}>
-                      <ChevronRight color={catStyle.iconColor} size={14} />
+
+                    {/* Chevron */}
+                    <View style={{
+                      width: 32, height: 32, borderRadius: 16,
+                      backgroundColor: isDark ? 'rgba(79,110,247,0.15)' : 'rgba(79,110,247,0.1)',
+                      justifyContent: 'center', alignItems: 'center',
+                    }}>
+                      <ChevronRight color={catStyle.iconColor} size={16} />
                     </View>
                   </TouchableOpacity>
                 );
@@ -944,29 +953,38 @@ export default function DashboardScreen({
                     borderColor: catStyle.borderColor,
                     borderLeftWidth: 4,
                     borderLeftColor: catStyle.iconColor,
-                    position: 'relative',
-                    overflow: 'hidden',
                   },
                 ]}
+                activeOpacity={0.82}
                 onPress={() => onSelectTestSeries({ ...sub, categoryName: selectedCategory.name })}
               >
-                {/* Decorative background circles */}
-                <View style={{ position: 'absolute', top: -25, right: -25, width: 70, height: 70, borderRadius: 35, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.12 : 0.05 }} />
-                <View style={{ position: 'absolute', bottom: -15, left: 40, width: 45, height: 45, borderRadius: 22.5, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.08 : 0.03 }} />
-
                 <View style={styles.seriesCardLeft}>
-                  <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: catStyle.borderColor, borderWidth: 1, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                    <BookOpen color={catStyle.iconColor} size={18} />
+                  {/* Icon box */}
+                  <View style={{
+                    width: 44, height: 44, borderRadius: 12,
+                    backgroundColor: isDark ? '#111D38' : '#FFFFFF',
+                    borderColor: catStyle.borderColor, borderWidth: 1.5,
+                    justifyContent: 'center', alignItems: 'center', marginRight: 12,
+                    shadowColor: '#4F6EF7', shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.1, shadowRadius: 3, elevation: 1,
+                  }}>
+                    <BookOpen color={catStyle.iconColor} size={20} />
                   </View>
                   <View style={styles.seriesDetails}>
-                    <Text style={[styles.seriesTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B' }]}>{sub.name} Series</Text>
-                    <Text style={[styles.seriesMeta, isDark ? { color: '#94A3B8' } : { color: '#64748B' }]}>
-                      {sub.tests?.length || 0} Full Length Mock Tests
+                    <Text style={[styles.seriesTitle, { color: isDark ? '#F1F5F9' : '#1E293B' }]}>
+                      {sub.name}
+                    </Text>
+                    <Text style={[styles.seriesMeta, { color: isDark ? '#64748B' : '#6B7280' }]}>
+                      {sub.tests?.length || 0} Mock Tests
                     </Text>
                   </View>
                 </View>
-                <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', justifyContent: 'center', alignItems: 'center' }}>
-                  <ChevronRight color={catStyle.iconColor} size={14} />
+                <View style={{
+                  width: 32, height: 32, borderRadius: 16,
+                  backgroundColor: isDark ? 'rgba(79,110,247,0.15)' : 'rgba(79,110,247,0.1)',
+                  justifyContent: 'center', alignItems: 'center',
+                }}>
+                  <ChevronRight color={catStyle.iconColor} size={16} />
                 </View>
               </TouchableOpacity>
             );
@@ -2375,15 +2393,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   seriesCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 10,
+    backgroundColor: '#F0F4FF',
+    borderRadius: 16,
     padding: 14,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    marginBottom: 10,
+    borderWidth: 1.5,
+    borderColor: '#C7D2FE',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    shadowColor: '#4F6EF7',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   seriesCardLeft: {
     flexDirection: 'row',
@@ -2396,13 +2419,15 @@ const styles = StyleSheet.create({
   },
   seriesTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontWeight: '700',
+    color: '#1E293B',
+    letterSpacing: 0.1,
   },
   seriesMeta: {
     fontSize: 11,
     color: '#6B7280',
-    marginTop: 2,
+    marginTop: 3,
+    fontWeight: '500',
   },
   catGroup: {
     marginBottom: 20,
@@ -2958,12 +2983,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
+    backgroundColor: '#F0F4FF',
+    borderWidth: 1.5,
+    borderColor: '#C7D2FE',
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 10,
+    marginBottom: 12,
+    shadowColor: '#4F6EF7',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 3,
   },
   categoryCardLeft: {
     flexDirection: 'row',
@@ -2972,27 +3002,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoryIconCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#EFF6FF',
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#DBEAFE',
+    borderWidth: 2,
+    borderColor: '#C7D2FE',
+    shadowColor: '#4F6EF7',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
   categoryDetails: {
     flex: 1,
   },
   categoryTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1E293B',
+    letterSpacing: 0.1,
   },
   categoryMeta: {
     fontSize: 12,
     color: '#6B7280',
-    marginTop: 4,
+    marginTop: 3,
+    fontWeight: '500',
   },
   examSearchContainer: {
     flexDirection: 'row',
