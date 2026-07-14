@@ -596,6 +596,10 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    if (currentUser?.isGuest) {
+      setViewMode('auth');
+      return;
+    }
     setLoading(true);
     await SecureStore.deleteItemAsync('tb_user_email');
     await SecureStore.deleteItemAsync('tb_user_password');

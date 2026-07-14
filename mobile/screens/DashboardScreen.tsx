@@ -52,7 +52,8 @@ import {
   CheckSquare,
   Shield,
   Target,
-  Pin
+  Pin,
+  LogIn
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
@@ -1748,6 +1749,79 @@ export default function DashboardScreen({
   };
 
   const renderProfileTab = () => {
+    if (currentUser.isGuest) {
+      return (
+        <ScrollView contentContainerStyle={styles.tabContent} showsVerticalScrollIndicator={false}>
+          {/* Guest Greeting Card */}
+          <View style={[
+            styles.profileHeaderCard,
+            isDark ? { backgroundColor: '#1E293B', borderColor: '#334155', borderTopColor: '#3B82F6' } : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', borderTopColor: '#2563EB' },
+            { borderTopWidth: 6, position: 'relative', overflow: 'hidden', padding: 24 }
+          ]}>
+            {/* Decorative Floating Spheres */}
+            <View style={{ position: 'absolute', top: -30, right: -30, width: 90, height: 90, borderRadius: 45, backgroundColor: 'rgba(59,130,246,0.06)' }} />
+            
+            <View style={[styles.avatar, { backgroundColor: '#64748B', borderWidth: 2, borderColor: '#FFFFFF', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4 }]}>
+              <User color="#FFF" size={32} />
+            </View>
+            <Text style={[styles.profileName, isDark && { color: ThemeColors.dark.text }]}>
+              {language === 'en' ? 'Guest Mode' : 'अतिथि मोड'}
+            </Text>
+            <Text style={[styles.profileEmail, { textAlign: 'center', marginTop: 8, paddingHorizontal: 12 }, isDark && { color: ThemeColors.dark.textMuted }]}>
+              {language === 'en' 
+                ? 'You are browsing the catalog as a guest. Sign in to your account to save mock test sessions, unlock premium test series, and track statistics.' 
+                : 'आप अतिथि के रूप में कैटलॉग ब्राउज़ कर रहे हैं। मॉक टेस्ट सत्रों को सहेजने, प्रीमियम टेस्ट श्रृंखला अनलॉक करने और आंकड़ों को ट्रैक करने के लिए अपने खाते में साइन इन करें।'}
+            </Text>
+          </View>
+
+          {/* App Theme Settings (Accessible to Guest) */}
+          <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+            <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>
+              {language === 'en' ? '🎨 App Theme Settings' : '🎨 ऐप थीम सेटिंग्स'}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+              <TouchableOpacity 
+                activeOpacity={0.8}
+                style={[
+                  styles.themeToggleBtn,
+                  !isDark ? styles.themeToggleBtnActive : (isDark ? styles.themeToggleBtnInactiveDark : styles.themeToggleBtnInactiveLight)
+                ]}
+                onPress={() => onToggleTheme && onToggleTheme(false)}
+              >
+                <Text style={[styles.themeToggleText, !isDark ? styles.themeToggleTextActive : styles.themeToggleTextInactive]}>
+                  {language === 'en' ? '☀️ Light Mode' : '☀️ लाइट मोड'}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                activeOpacity={0.8}
+                style={[
+                  styles.themeToggleBtn,
+                  isDark ? styles.themeToggleBtnActive : styles.themeToggleBtnInactiveLight
+                ]}
+                onPress={() => onToggleTheme && onToggleTheme(true)}
+              >
+                <Text style={[styles.themeToggleText, isDark ? styles.themeToggleTextActive : styles.themeToggleTextInactive]}>
+                  {language === 'en' ? '🌙 Dark Mode' : '🌙 डार्क मोड'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Action button to sign in */}
+          <TouchableOpacity 
+            style={[styles.logoutBtn, { backgroundColor: '#2563EB', borderColor: '#2563EB', marginTop: 16 }]} 
+            onPress={onLogout}
+          >
+            <LogIn size={16} color="#FFF" />
+            <Text style={[styles.logoutText, { color: '#FFF' }]}>
+              {language === 'en' ? 'Sign In / Register' : 'साइन इन / पंजीकरण'}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      );
+    }
+
     const isPro = currentUser.subscriptionTier !== 'None';
     return (
       <ScrollView contentContainerStyle={styles.tabContent} showsVerticalScrollIndicator={false}>
