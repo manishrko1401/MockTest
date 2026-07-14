@@ -1298,6 +1298,13 @@ async function handleReportQuestion(data: any) {
 // Optimized Memory Assembly Compiler for Exam Catalog
 // ---------------------------------------------------------------------------
 async function getCompiledExamCatalog() {
+  // Safe runtime schema patch: ensure logoUrl column exists in categories table
+  try {
+    await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "logoUrl" text;');
+  } catch (err) {
+    console.error("Runtime database patch failed:", err);
+  }
+
   const categories = await prisma.category.findMany({ orderBy: { orderIndex: 'asc' } });
   const exams = await prisma.exam.findMany({ orderBy: { orderIndex: 'asc' } });
   const testSeries = await prisma.testSeries.findMany({ orderBy: { orderIndex: 'asc' } });
