@@ -493,76 +493,16 @@ export default function AnalysisScreen({
               </View>
             )}
 
-            {/* 3. SCORE COMPARISON SPECTRUM */}
-            {(() => {
-              const topper = Math.max(bestScore, maxScore, scoreVal, 100);
-              return (
-                <View style={[styles.comparisonSliderCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-                  {/* Decorative Background Art Circle */}
-                  <View style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(99,102,241,0.06)' }} />
-                  
-                  <Text style={[styles.comparisonTitle, isDark && { color: ThemeColors.dark.text }]}>Score Comparison Spectrum</Text>
-                  
-                  {/* Spectrum Track bar */}
-                  <View style={styles.spectrumTrackBg}>
-                    {/* Average Marker */}
-                    <View style={[styles.spectrumMarker, { left: `${(averageScore / topper) * 100}%`, backgroundColor: '#64748B' }]} />
-                    {/* Cutoff Marker */}
-                    <View style={[styles.spectrumMarker, { left: `${(parseFloat(cutoffScoreStr) / topper) * 100}%`, backgroundColor: '#F59E0B' }]} />
-                    {/* User Score Fill */}
-                    <View style={[styles.spectrumProgressFill, { width: `${Math.min(100, Math.max(0, (scoreVal / topper) * 100))}%`, backgroundColor: isCutoffCleared ? '#10B981' : '#2563EB' }]} />
-                    {/* User Pin */}
-                    <View style={[styles.spectrumUserPin, { left: `${Math.min(97, Math.max(0, (scoreVal / topper) * 100))}%` }]}>
-                      <View style={[styles.spectrumPinDot, { backgroundColor: isCutoffCleared ? '#10B981' : '#2563EB' }]} />
-                    </View>
-                  </View>
-
-                  {/* Labels Row */}
-                  <View style={styles.spectrumLabelsRow}>
-                    <View style={styles.labelGroup}>
-                      <View style={[styles.labelLegendDot, { backgroundColor: '#64748B' }]} />
-                      <Text style={[styles.labelText, isDark && { color: ThemeColors.dark.textMuted }]}>Avg: {averageScore.toFixed(0)}</Text>
-                    </View>
-                    <View style={styles.labelGroup}>
-                      <View style={[styles.labelLegendDot, { backgroundColor: '#F59E0B' }]} />
-                      <Text style={[styles.labelText, isDark && { color: ThemeColors.dark.textMuted }]}>Cutoff: {parseFloat(cutoffScoreStr).toFixed(0)}</Text>
-                    </View>
-                    <View style={styles.labelGroup}>
-                      <View style={[styles.labelLegendDot, { backgroundColor: isCutoffCleared ? '#10B981' : '#2563EB' }]} />
-                      <Text style={[styles.labelText, { fontWeight: 'bold' }, isDark && { color: ThemeColors.dark.text }]}>You: {scoreVal.toFixed(0)}</Text>
-                    </View>
-                    <View style={styles.labelGroup}>
-                      <View style={[styles.labelLegendDot, { backgroundColor: '#EC4899' }]} />
-                      <Text style={[styles.labelText, isDark && { color: ThemeColors.dark.textMuted }]}>Topper: {bestScore.toFixed(0)}</Text>
-                    </View>
-                  </View>
-                </View>
-              );
-            })()}
+            {/* 3. SCORE COMPARISON SPECTRUM (HIDDEN) */}
 
             {/* Quick Summary Title */}
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>PERFORMANCE SNAPSHOT</Text>
-              <Text style={styles.cutoffLabel}>Exam Cutoff: {cutoffScoreStr}</Text>
             </View>
 
             {/* 4. METRIC CARDS GRID */}
             <View style={styles.metricsGrid}>
               
-              {/* Rank Card */}
-              <View style={[styles.metricCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-                <View style={[styles.metricIconBg, { backgroundColor: '#FEE2E2' }]}>
-                  <Flag size={18} color="#EF4444" />
-                </View>
-                <View style={styles.metricDetails}>
-                  <Text style={styles.metricLabel}>Rank</Text>
-                  <Text style={[styles.metricValue, isDark && { color: ThemeColors.dark.text }]}>
-                    {testbookRank}
-                    <Text style={styles.metricTotal}>/{testbookTotalUsers}</Text>
-                  </Text>
-                </View>
-              </View>
-
               {/* Score Card */}
               <View style={[styles.metricCard, { flexDirection: 'column', alignItems: 'stretch' }, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -576,21 +516,6 @@ export default function AnalysisScreen({
                       <Text style={styles.metricTotal}>/{maxScore.toFixed(0)}</Text>
                     </Text>
                   </View>
-                </View>
-                <View style={[styles.scoreBreakdownRow, isDark && { borderTopColor: '#334155' }]}>
-                  <Text style={[styles.scoreBreakdownText, isDark && { color: ThemeColors.dark.textMuted }]}>Average: {averageScore.toFixed(2)}</Text>
-                  <Text style={[styles.scoreBreakdownText, isDark && { color: ThemeColors.dark.textMuted }]}>Best: {bestScore.toFixed(2)}</Text>
-                </View>
-              </View>
-
-              {/* Percentile Card */}
-              <View style={[styles.metricCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-                <View style={[styles.metricIconBg, { backgroundColor: '#E0F2FE' }]}>
-                  <User size={18} color="#0284C7" />
-                </View>
-                <View style={styles.metricDetails}>
-                  <Text style={styles.metricLabel}>Percentile</Text>
-                  <Text style={[styles.metricValue, isDark && { color: ThemeColors.dark.text }]}>{percentileVal.toFixed(2)} %</Text>
                 </View>
               </View>
 

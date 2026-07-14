@@ -361,15 +361,49 @@ export default function TestSeriesDetailScreen({
 
                             {/* Subtitle / Status */}
                             {isCompleted && attempt && (
-                              <View style={styles.statusCompletedRow}>
-                                <CheckCircle size={14} color="#10B981" />
-                                <Text style={styles.statusCompletedText}>
-                                  Attempted & Completed (Last Score: {attempt.score.toFixed(1)}/{attempt.maxScore.toFixed(0)})
+                              <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
+                                borderColor: isDark ? '#059669' : '#10B981',
+                                borderWidth: 1,
+                                borderRadius: 8,
+                                paddingVertical: 6,
+                                paddingHorizontal: 10,
+                                gap: 6,
+                                marginTop: 4,
+                                marginBottom: 12,
+                                alignSelf: 'flex-start',
+                              }}>
+                                <CheckCircle size={13} color="#10B981" />
+                                <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#10B981' }}>
+                                  {language === 'en' ? 'Attempted' : 'प्रयास पूरा किया'}
+                                </Text>
+                                <View style={{ width: 1, height: 12, backgroundColor: isDark ? '#334155' : '#D1D5DB' }} />
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: isDark ? '#34D399' : '#047857' }}>
+                                  {language === 'en' ? 'Last Score:' : 'पिछला स्कोर:'} {attempt.score.toFixed(1)}/{attempt.maxScore.toFixed(0)}
                                 </Text>
                               </View>
                             )}
                             {isPaused && (
-                              <Text style={[styles.statusPausedText, isDark && { color: '#60A5FA' }]}>⏸ Test attempt in-progress (paused)</Text>
+                              <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
+                                borderColor: isDark ? '#2563EB' : '#3B82F6',
+                                borderWidth: 1,
+                                borderRadius: 8,
+                                paddingVertical: 6,
+                                paddingHorizontal: 10,
+                                gap: 6,
+                                marginTop: 4,
+                                marginBottom: 12,
+                                alignSelf: 'flex-start',
+                              }}>
+                                <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#3B82F6' }}>
+                                  {language === 'en' ? '⏸ In-Progress (Paused)' : '⏸ प्रगति पर है (रुका हुआ)'}
+                                </Text>
+                              </View>
                             )}
 
                             {/* Actions */}
@@ -525,15 +559,49 @@ export default function TestSeriesDetailScreen({
 
                   {/* Subtitle / Status */}
                   {isCompleted && attempt && (
-                    <View style={styles.statusCompletedRow}>
-                      <CheckCircle size={14} color="#10B981" />
-                      <Text style={styles.statusCompletedText}>
-                        Attempted & Completed (Last Score: {attempt.score.toFixed(1)}/{attempt.maxScore.toFixed(0)})
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
+                      borderColor: isDark ? '#059669' : '#10B981',
+                      borderWidth: 1,
+                      borderRadius: 8,
+                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      gap: 6,
+                      marginTop: 4,
+                      marginBottom: 12,
+                      alignSelf: 'flex-start',
+                    }}>
+                      <CheckCircle size={13} color="#10B981" />
+                      <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#10B981' }}>
+                        {language === 'en' ? 'Attempted' : 'प्रयास पूरा किया'}
+                      </Text>
+                      <View style={{ width: 1, height: 12, backgroundColor: isDark ? '#334155' : '#D1D5DB' }} />
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: isDark ? '#34D399' : '#047857' }}>
+                        {language === 'en' ? 'Last Score:' : 'पिछला स्कोर:'} {attempt.score.toFixed(1)}/{attempt.maxScore.toFixed(0)}
                       </Text>
                     </View>
                   )}
                   {isPaused && (
-                    <Text style={[styles.statusPausedText, isDark && { color: '#60A5FA' }]}>⏸ Test attempt in-progress (paused)</Text>
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
+                      borderColor: isDark ? '#2563EB' : '#3B82F6',
+                      borderWidth: 1,
+                      borderRadius: 8,
+                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      gap: 6,
+                      marginTop: 4,
+                      marginBottom: 12,
+                      alignSelf: 'flex-start',
+                    }}>
+                      <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#3B82F6' }}>
+                        {language === 'en' ? '⏸ In-Progress (Paused)' : '⏸ प्रगति पर है (रुका हुआ)'}
+                      </Text>
+                    </View>
                   )}
 
                   {/* Actions */}
