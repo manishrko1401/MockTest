@@ -33,7 +33,31 @@ interface TestSeriesDetailScreenProps {
   onRefreshUser: (userId: string) => Promise<void>;
   onOpenAttemptAnalysis: (attempt: any) => void;
   isDark?: boolean;
+  language?: 'en' | 'hi';
 }
+
+const LOCALIZATION = {
+  en: {
+    backToCat: 'Back to Exam Categories',
+    papers: 'Papers',
+    resume: 'Resume Test',
+    start: 'Start Mock Test',
+    locked: 'Locked (Requires Pass)',
+    reAttempt: 'Re-attempt Test',
+    viewAnalysis: 'View Attempt Analysis',
+    series: 'Series',
+  },
+  hi: {
+    backToCat: 'परीक्षा श्रेणियों पर वापस जाएं',
+    papers: 'पेपर',
+    resume: 'टेस्ट जारी रखें',
+    start: 'मॉक टेस्ट शुरू करें',
+    locked: 'लॉक्ड (पास आवश्यक है)',
+    reAttempt: 'पुनः टेस्ट दें',
+    viewAnalysis: 'प्रयास विश्लेषण देखें',
+    series: 'सीरीज',
+  }
+};
 
 export default function TestSeriesDetailScreen({
   currentUser,
@@ -42,7 +66,8 @@ export default function TestSeriesDetailScreen({
   onOpenExam,
   onRefreshUser,
   onOpenAttemptAnalysis,
-  isDark = false
+  isDark = false,
+  language = 'en'
 }: TestSeriesDetailScreenProps) {
   const insets = useSafeAreaInsets();
   const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -165,7 +190,7 @@ export default function TestSeriesDetailScreen({
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.headerCategory}>{series.categoryName}</Text>
-          <Text style={styles.headerTitle} numberOfLines={1}>{series.name} Series</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>{series.name} {language === 'en' ? 'Series' : 'सीरीज'}</Text>
         </View>
       </View>
 
@@ -356,7 +381,9 @@ export default function TestSeriesDetailScreen({
                                     onPress={() => onOpenAttemptAnalysis(attempt)}
                                   >
                                     <Eye size={14} color={isDark ? ThemeColors.dark.text : '#475569'} />
-                                    <Text style={[styles.analysisBtnText, isDark && { color: ThemeColors.dark.text }]}>Solution & Analysis</Text>
+                                    <Text style={[styles.analysisBtnText, isDark && { color: ThemeColors.dark.text }]}>
+                                      {language === 'en' ? 'Solution & Analysis' : 'समाधान और विश्लेषण'}
+                                    </Text>
                                   </TouchableOpacity>
                                 )}
                                 <TouchableOpacity
@@ -365,7 +392,11 @@ export default function TestSeriesDetailScreen({
                                 >
                                   <Play size={14} color="#FFF" />
                                   <Text style={styles.actionBtnText}>
-                                    {isPaused ? 'Resume Test sitting' : isCompleted ? 'Re-attempt Test' : 'Start Test Now'}
+                                    {isPaused 
+                                      ? (language === 'en' ? 'Resume Test sitting' : 'टेस्ट जारी रखें') 
+                                      : isCompleted 
+                                      ? (language === 'en' ? 'Re-attempt Test' : 'पुनः टेस्ट दें') 
+                                      : (language === 'en' ? 'Start Test Now' : 'मॉक टेस्ट शुरू करें')}
                                   </Text>
                                 </TouchableOpacity>
                               </View>
@@ -373,14 +404,18 @@ export default function TestSeriesDetailScreen({
                               <View style={[styles.lockBlock, isDark && { borderTopColor: ThemeColors.dark.border }]}>
                                 <View style={styles.lockMsg}>
                                   <Lock size={14} color="#DC2626" />
-                                  <Text style={styles.lockMsgText}>Requires {test.requiredTier}</Text>
+                                  <Text style={styles.lockMsgText}>
+                                    {language === 'en' ? 'Requires' : 'आवश्यकता:'} {test.requiredTier.replace('Testbook', 'Mock Test')}
+                                  </Text>
                                 </View>
                                 <TouchableOpacity
                                   style={[styles.unlockBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
                                   onPress={() => handleUnlockWithCoins(test.title, test.requiredTier)}
                                 >
                                   <Coins size={14} color="#D97706" />
-                                  <Text style={[styles.unlockBtnText, isDark && { color: '#FBBF24' }]}>Unlock (20 Coins)</Text>
+                                  <Text style={[styles.unlockBtnText, isDark && { color: '#FBBF24' }]}>
+                                    {language === 'en' ? 'Unlock (20 Coins)' : 'अनलॉक करें (20 सिक्के)'}
+                                  </Text>
                                 </TouchableOpacity>
                               </View>
                             )}
@@ -510,7 +545,9 @@ export default function TestSeriesDetailScreen({
                           onPress={() => onOpenAttemptAnalysis(attempt)}
                         >
                           <Eye size={14} color={isDark ? ThemeColors.dark.text : '#475569'} />
-                          <Text style={[styles.analysisBtnText, isDark && { color: ThemeColors.dark.text }]}>Solution & Analysis</Text>
+                          <Text style={[styles.analysisBtnText, isDark && { color: ThemeColors.dark.text }]}>
+                            {language === 'en' ? 'Solution & Analysis' : 'समाधान और विश्लेषण'}
+                          </Text>
                         </TouchableOpacity>
                       )}
                       <TouchableOpacity
@@ -519,7 +556,11 @@ export default function TestSeriesDetailScreen({
                       >
                         <Play size={14} color="#FFF" />
                         <Text style={styles.actionBtnText}>
-                          {isPaused ? 'Resume Test sitting' : isCompleted ? 'Re-attempt Test' : 'Start Test Now'}
+                          {isPaused 
+                            ? (language === 'en' ? 'Resume Test sitting' : 'टेस्ट जारी रखें') 
+                            : isCompleted 
+                            ? (language === 'en' ? 'Re-attempt Test' : 'पुनः टेस्ट दें') 
+                            : (language === 'en' ? 'Start Test Now' : 'मॉक टेस्ट शुरू करें')}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -527,14 +568,18 @@ export default function TestSeriesDetailScreen({
                     <View style={[styles.lockBlock, isDark && { borderTopColor: ThemeColors.dark.border }]}>
                       <View style={styles.lockMsg}>
                         <Lock size={14} color="#DC2626" />
-                        <Text style={styles.lockMsgText}>Requires {test.requiredTier}</Text>
+                        <Text style={styles.lockMsgText}>
+                          {language === 'en' ? 'Requires' : 'आवश्यकता:'} {test.requiredTier.replace('Testbook', 'Mock Test')}
+                        </Text>
                       </View>
                       <TouchableOpacity
                         style={[styles.unlockBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]}
                         onPress={() => handleUnlockWithCoins(test.title, test.requiredTier)}
                       >
                         <Coins size={14} color="#D97706" />
-                        <Text style={[styles.unlockBtnText, isDark && { color: '#FBBF24' }]}>Unlock (20 Coins)</Text>
+                        <Text style={[styles.unlockBtnText, isDark && { color: '#FBBF24' }]}>
+                          {language === 'en' ? 'Unlock (20 Coins)' : 'अनलॉक करें (20 सिक्के)'}
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   )}

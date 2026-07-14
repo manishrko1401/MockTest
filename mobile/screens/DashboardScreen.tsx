@@ -77,7 +77,110 @@ interface DashboardScreenProps {
   selectedCategoryId: string | null;
   setSelectedCategoryId: (id: string | null) => void;
   onToggleBookmark?: (testId: string, questionId: string) => void;
+  language: 'en' | 'hi';
+  onChangeLanguage: (lang: 'en' | 'hi') => void;
 }
+
+const LOCALIZATION = {
+  en: {
+    exploreCategories: 'Explore Categories',
+    practiceExams: 'Practice Exams',
+    notices: 'Notices',
+    bookmarks: 'Bookmarks',
+    profile: 'Profile',
+    recentAttempts: 'Recent Attempts',
+    noAttemptsYet: 'No attempts yet.',
+    buyPass: 'Unlock Premium Pass',
+    passStatus: 'Pass Status',
+    coinsBalance: 'Coins Balance',
+    referralCode: 'Referral Code',
+    copyCode: 'Copy',
+    copied: 'Copied!',
+    logout: 'Logout',
+    systemRole: 'System Role',
+    changePassword: 'Change Account Password',
+    oldPassword: 'Old Password',
+    newPassword: 'New Password',
+    confirmPassword: 'Confirm New Password',
+    savePassword: 'Save Password',
+    pinInstruction: 'Swipe right exam to pin to top, swipe left exam to unpin',
+    congrats: 'Congratulations!',
+    claimPass: 'Claim Pass Pro',
+    backToCat: 'Back to Exam Categories',
+    searchExams: 'Search exam name...',
+    activePass: 'Active Pass',
+    noActivePass: 'No Active Pass',
+    registeredOn: 'Registered On',
+    language: 'App Language',
+    switchLanguage: 'हिन्दी (Hindi)',
+    welcomeBack: 'Welcome Back,',
+    learnMore: 'Learn More',
+    officialAnnouncements: '📢 Official Announcements',
+    exploreTestSeries: '⚡ Explore Test Series',
+    featuredToppers: '🏆 Featured Toppers (Selections)',
+    liveUpdates: '📢 Live Updates',
+    viewInfo: 'View Info',
+    admitCard: 'Admit Cards',
+    results: 'Results',
+    answerKeys: 'Answer Keys',
+    noNotices: 'No notices available in this category.',
+    noBookmarks: 'No bookmarked questions yet.',
+    editProfile: 'Edit profile and check subscription pass details below',
+    inviteFriends: '🎁 Invite Friends & Earn Coins',
+    shareCode: 'Share Code',
+    supportTeam: '💬 Live Chat Support',
+    supportSub: 'Instant resolutions from our support experts',
+  },
+  hi: {
+    exploreCategories: 'परीक्षा श्रेणियां खोजें',
+    practiceExams: 'अभ्यास परीक्षाएं',
+    notices: 'सूचनाएं',
+    bookmarks: 'बुकमार्क',
+    profile: 'प्रोफाइल',
+    recentAttempts: 'हाल के प्रयास',
+    noAttemptsYet: 'अभी तक कोई प्रयास नहीं किया गया।',
+    buyPass: 'प्रीमियम पास अनलॉक करें',
+    passStatus: 'पास की स्थिति',
+    coinsBalance: 'सिक्के का संतुलन',
+    referralCode: 'रेफरल कोड',
+    copyCode: 'कॉपी करें',
+    copied: 'कॉपी किया गया!',
+    logout: 'लॉगआउट',
+    systemRole: 'सिस्टम भूमिका',
+    changePassword: 'खाता पासवर्ड बदलें',
+    oldPassword: 'पुराना पासवर्ड',
+    newPassword: 'नया पासवर्ड',
+    confirmPassword: 'नए पासवर्ड की पुष्टि करें',
+    savePassword: 'पासवर्ड सहेजें',
+    pinInstruction: 'पिन करने के लिए परीक्षा को दाएं स्वाइप करें, अनपिन करने के लिए बाएं स्वाइप करें',
+    congrats: 'बधाई हो!',
+    claimPass: 'पास प्रो प्राप्त करें',
+    backToCat: 'परीक्षा श्रेणियों पर वापस जाएं',
+    searchExams: 'परीक्षा का नाम खोजें...',
+    activePass: 'सक्रिय पास',
+    noActivePass: 'कोई सक्रिय पास नहीं',
+    registeredOn: 'पंजीकरण तिथि',
+    language: 'ऐप की भाषा',
+    switchLanguage: 'English (अंग्रेज़ी)',
+    welcomeBack: 'स्वागत है,',
+    learnMore: 'अधिक जानें',
+    officialAnnouncements: '📢 आधिकारिक घोषणाएं',
+    exploreTestSeries: '⚡ परीक्षा सीरीज खोजें',
+    featuredToppers: '🏆 हमारे सफल छात्र',
+    liveUpdates: '📢 लाइव अपडेट',
+    viewInfo: 'जानकारी देखें',
+    admitCard: 'प्रवेश पत्र',
+    results: 'परिणाम',
+    answerKeys: 'उत्तर कुंजी',
+    noNotices: 'इस श्रेणी में कोई सूचना उपलब्ध नहीं है।',
+    noBookmarks: 'अभी तक कोई बुकमार्क किया गया प्रश्न नहीं है।',
+    editProfile: 'नीचे अपनी प्रोफाइल संपादित करें और सदस्यता पास विवरण जांचें',
+    inviteFriends: '🎁 दोस्तों को आमंत्रित करें और सिक्के कमाएं',
+    shareCode: 'कोड साझा करें',
+    supportTeam: '💬 लाइव चैट सहायता',
+    supportSub: 'हमारे सहायता विशेषज्ञों से तुरंत समाधान पाएं',
+  }
+};
 
 const SUCCESS_STORIES = [
   {
@@ -278,6 +381,8 @@ export default function DashboardScreen({
   selectedCategoryId,
   setSelectedCategoryId,
   onToggleBookmark,
+  language,
+  onChangeLanguage,
 }: DashboardScreenProps) {
 
   const insets = useSafeAreaInsets();
@@ -874,7 +979,7 @@ export default function DashboardScreen({
 
         {/* Section 3: Explore Categories */}
         <View style={{ marginBottom: 12 }}>
-          <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Explore Categories</Text>
+          <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>{LOCALIZATION[language].exploreCategories}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesRow}>
             {[...examCatalog].sort((a, b) => {
               const aPinned = pinnedCategoryIds.includes(a.id);
@@ -976,7 +1081,7 @@ export default function DashboardScreen({
             <Search size={16} color={isDark ? '#60A5FA' : '#6B7280'} style={{ marginRight: 8 }} />
             <TextInput
               style={[styles.examSearchInput, isDark && { color: ThemeColors.dark.text }]}
-              placeholder="Search exam name..."
+              placeholder={LOCALIZATION[language].searchExams}
               placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
               value={examSearchQuery}
               onChangeText={setExamSearchQuery}
@@ -996,7 +1101,7 @@ export default function DashboardScreen({
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 4, opacity: 0.65 }}>
               <Pin size={10} color={isDark ? '#94A3B8' : '#64748B'} style={{ transform: [{ rotate: '45deg' }] }} />
               <Text style={{ fontSize: 10, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B' }}>
-                Swipe right exam to pin to top, swipe left exam to unpin
+                {LOCALIZATION[language].pinInstruction}
               </Text>
             </View>
           )}
@@ -1728,6 +1833,58 @@ export default function DashboardScreen({
           </View>
         </View>
 
+        {/* Language Settings Card */}
+        <View style={[
+          styles.formCard,
+          isDark ? { backgroundColor: '#1E293B', borderColor: '#334155' } : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
+          { borderLeftWidth: 4, borderLeftColor: '#10B981', padding: 16 }
+        ]}>
+          <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>
+            🌐 {LOCALIZATION[language].language}
+          </Text>
+          <Text style={{ fontSize: 12, color: isDark ? '#94A3B8' : '#64748B', marginBottom: 12, lineHeight: 16 }}>
+            {language === 'en' ? 'Select your preferred language for the application interface.' : 'एप्लिकेशन इंटरफ़ेस के लिए अपनी पसंदीदा भाषा चुनें।'}
+          </Text>
+
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                borderRadius: 8,
+                borderWidth: 1.5,
+                borderColor: language === 'en' ? '#10B981' : (isDark ? '#334155' : '#E2E8F0'),
+                backgroundColor: language === 'en' ? 'rgba(16,185,129,0.1)' : 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onPress={() => onChangeLanguage('en')}
+            >
+              <Text style={{ fontSize: 13, fontWeight: 'bold', color: language === 'en' ? '#10B981' : (isDark ? '#CBD5E1' : '#475569') }}>
+                English (अंग्रेज़ी)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                borderRadius: 8,
+                borderWidth: 1.5,
+                borderColor: language === 'hi' ? '#10B981' : (isDark ? '#334155' : '#E2E8F0'),
+                backgroundColor: language === 'hi' ? 'rgba(16,185,129,0.1)' : 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onPress={() => onChangeLanguage('hi')}
+            >
+              <Text style={{ fontSize: 13, fontWeight: 'bold', color: language === 'hi' ? '#10B981' : (isDark ? '#CBD5E1' : '#475569') }}>
+                हिन्दी (Hindi)
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Referral Card */}
         <View style={[
           styles.formCard,
@@ -2162,7 +2319,7 @@ export default function DashboardScreen({
             activeTab === 'home' && styles.navTextActive,
             isDark && activeTab === 'home' && { color: '#60A5FA' },
             isDark && activeTab !== 'home' && { color: '#94A3B8' }
-          ]}>Home</Text>
+          ]}>{language === 'en' ? 'Home' : 'होम'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -2179,7 +2336,7 @@ export default function DashboardScreen({
             activeTab === 'tests' && styles.navTextActive,
             isDark && activeTab === 'tests' && { color: '#60A5FA' },
             isDark && activeTab !== 'tests' && { color: '#94A3B8' }
-          ]}>Tests</Text>
+          ]}>{language === 'en' ? 'Tests' : 'परीक्षाएं'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -2203,7 +2360,7 @@ export default function DashboardScreen({
             activeTab === 'notices' && styles.navTextActive,
             isDark && activeTab === 'notices' && { color: '#60A5FA' },
             isDark && activeTab !== 'notices' && { color: '#94A3B8' }
-          ]}>Notices</Text>
+          ]}>{language === 'en' ? 'Notices' : 'सूचनाएं'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -2231,7 +2388,7 @@ export default function DashboardScreen({
             activeTab === 'bookmarks' && styles.navTextActive,
             activeTab === 'bookmarks' && { color: isDark ? '#F59E0B' : '#D97706' },
             isDark && activeTab !== 'bookmarks' && { color: '#94A3B8' }
-          ]}>Saved</Text>
+          ]}>{language === 'en' ? 'Saved' : 'बुकमार्क'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -2248,7 +2405,7 @@ export default function DashboardScreen({
             activeTab === 'profile' && styles.navTextActive,
             isDark && activeTab === 'profile' && { color: '#60A5FA' },
             isDark && activeTab !== 'profile' && { color: '#94A3B8' }
-          ]}>Me</Text>
+          ]}>{language === 'en' ? 'Me' : 'प्रोफाइल'}</Text>
         </TouchableOpacity>
       </View>
       

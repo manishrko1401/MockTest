@@ -36,6 +36,7 @@ export default function App() {
   
   // Theme state
   const [isDark, setIsDark] = useState(false);
+  const [language, setLanguage] = useState<'en' | 'hi'>('en');
 
   // App data loaded from database bootstrap
   const [notices, setNotices] = useState<any[]>([]);
@@ -156,6 +157,12 @@ export default function App() {
         const savedTheme = await SecureStore.getItemAsync('app_theme');
         if (savedTheme === 'dark') {
           setIsDark(true);
+        }
+
+        // Load saved language
+        const savedLang = await AsyncStorage.getItem('app_language');
+        if (savedLang === 'hi' || savedLang === 'en') {
+          setLanguage(savedLang as 'en' | 'hi');
         }
 
         // ── Step 1: Serve cached catalog instantly (zero network wait) ──────
@@ -698,6 +705,11 @@ export default function App() {
             selectedCategoryId={dashboardCategoryId}
             setSelectedCategoryId={setDashboardCategoryId}
             onToggleBookmark={handleToggleBookmark}
+            language={language}
+            onChangeLanguage={async (lang) => {
+              setLanguage(lang);
+              await AsyncStorage.setItem('app_language', lang);
+            }}
           />
         )}
 
@@ -710,6 +722,7 @@ export default function App() {
             onRefreshUser={refreshUserData}
             onOpenAttemptAnalysis={handleOpenAttemptAnalysis}
             isDark={isDark}
+            language={language}
           />
         )}
 
