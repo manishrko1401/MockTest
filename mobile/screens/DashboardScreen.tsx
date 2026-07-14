@@ -110,14 +110,14 @@ const BRAND = {
   // Core brand blues — used for all backgrounds
   darkBg1:   '#0F1C35',   // deep navy card bg (dark mode)
   darkBg2:   '#0A1222',   // deeper navy (dark mode)
-  lightBg1:  '#EEF2FF',   // soft indigo wash (light mode)
-  lightBg2:  '#E0E7FF',   // softer indigo wash (light mode)
+  lightBg1:  '#FAF9F6',   // warm white card bg (light mode)
+  lightBg2:  '#F5F3ED',   // slightly darker warm white (light mode)
   // Accent — vibrant indigo-blue used for left border, icons, text highlights
   accent:    '#4F6EF7',   // rich indigo-blue (main accent)
   accentHover: '#3B55DD',
   // Border colours per mode
   darkBorder:  '#2A3F70',
-  lightBorder: '#C7D2FE',
+  lightBorder: '#E5E7EB',   // soft grey border
   // Decorative orb colour
   orb: '#4F6EF7',
 };
@@ -1502,7 +1502,7 @@ export default function DashboardScreen({
               styles.sysDetailVal,
               { color: isPro ? '#EC4899' : (isDark ? '#E2E8F0' : '#475569'), fontWeight: 'bold' }
             ]}>
-              {currentUser.subscriptionTier === 'None' ? 'No Active Pass' : currentUser.subscriptionTier}
+              {currentUser.subscriptionTier === 'None' ? 'No Active Pass' : currentUser.subscriptionTier.replace('Testbook', 'Mock Test')}
             </Text>
           </View>
 
@@ -2393,12 +2393,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   seriesCard: {
-    backgroundColor: '#F0F4FF',
+    backgroundColor: '#FAF9F6',
     borderRadius: 16,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1.5,
-    borderColor: '#C7D2FE',
+    borderColor: '#E5E7EB',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -2485,6 +2485,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     marginTop: 10,
+    alignSelf: 'flex-end',
   },
   noticeLinkText: {
     fontSize: 12,
@@ -2983,9 +2984,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F0F4FF',
+    backgroundColor: '#FAF9F6',
     borderWidth: 1.5,
-    borderColor: '#C7D2FE',
+    borderColor: '#E5E7EB',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
