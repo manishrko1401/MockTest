@@ -691,22 +691,22 @@ export default function AdminAnalytics() {
     const template = [
       {
         textEn: "What is the unit of electric current?",
-        textHi: "विद्युत धारा की इकाई क्या है?",
+        textHi: "αñ╡αñ┐αñªαÑìαñ»αÑüαññ αñºαñ╛αñ░αñ╛ αñòαÑÇ αñçαñòαñ╛αñê αñòαÑìαñ»αñ╛ αñ╣αÑê?",
         optionsEn: ["Ampere", "Volt", "Ohm", "Watt"],
-        optionsHi: ["एम्पीयर", "वोल्ट", "ओम", "वाट"],
+        optionsHi: ["αñÅαñ«αÑìαñ¬αÑÇαñ»αñ░", "αñ╡αÑïαñ▓αÑìαñƒ", "αñôαñ«", "αñ╡αñ╛αñƒ"],
         correctIndex: 0,
         explanationEn: "Ampere is the base unit of electric current.",
-        explanationHi: "एम्पीयर विद्युत धारा की मूल इकाई है।",
+        explanationHi: "αñÅαñ«αÑìαñ¬αÑÇαñ»αñ░ αñ╡αñ┐αñªαÑìαñ»αÑüαññ αñºαñ╛αñ░αñ╛ αñòαÑÇ αñ«αÑéαñ▓ αñçαñòαñ╛αñê αñ╣αÑêαÑñ",
         section: "General Studies"
       },
       {
         textEn: "Which planet is known as the Red Planet?",
-        textHi: "किस ग्रह को लाल ग्रह के नाम से जाना जाता है?",
+        textHi: "αñòαñ┐αñ╕ αñùαÑìαñ░αñ╣ αñòαÑï αñ▓αñ╛αñ▓ αñùαÑìαñ░αñ╣ αñòαÑç αñ¿αñ╛αñ« αñ╕αÑç αñ£αñ╛αñ¿αñ╛ αñ£αñ╛αññαñ╛ αñ╣αÑê?",
         optionsEn: ["Earth", "Mars", "Jupiter", "Saturn"],
-        optionsHi: ["पृथ्वी", "मंगल", "बृहस्पति", "शनि"],
+        optionsHi: ["αñ¬αÑâαñÑαÑìαñ╡αÑÇ", "αñ«αñéαñùαñ▓", "αñ¼αÑâαñ╣αñ╕αÑìαñ¬αññαñ┐", "αñ╢αñ¿αñ┐"],
         correctIndex: 1,
         explanationEn: "Mars is called the Red Planet due to iron oxide on its surface.",
-        explanationHi: "मंगल को उसकी सतह पर आयरन ऑक्साइड के कारण लाल ग्रह कहा जाता है।",
+        explanationHi: "αñ«αñéαñùαñ▓ αñòαÑï αñëαñ╕αñòαÑÇ αñ╕αññαñ╣ αñ¬αñ░ αñåαñ»αñ░αñ¿ αñæαñòαÑìαñ╕αñ╛αñçαñí αñòαÑç αñòαñ╛αñ░αñú αñ▓αñ╛αñ▓ αñùαÑìαñ░αñ╣ αñòαñ╣αñ╛ αñ£αñ╛αññαñ╛ αñ╣αÑêαÑñ",
         section: "General Studies"
       }
     ];
@@ -734,7 +734,7 @@ export default function AdminAnalytics() {
 
     if (opt5En.trim() || opt5Hi.trim()) {
       optionsEn.push(opt5En.trim() || "Option 5");
-      optionsHi.push(opt5Hi.trim() || "विकल्प 5");
+      optionsHi.push(opt5Hi.trim() || "αñ╡αñ┐αñòαñ▓αÑìαñ¬ 5");
     }
 
     if (formCorrectIndex >= optionsEn.length) {
@@ -856,10 +856,10 @@ export default function AdminAnalytics() {
       <div className="flex h-screen items-center justify-center bg-slate-950 font-sans text-slate-100 relative overflow-hidden px-4">
         {/* DEBUG STRIP */}
         <div style={{position:'fixed',top:0,left:0,right:0,zIndex:9999,background:'#111',color:'#0f0',fontSize:'11px',padding:'4px 12px',display:'flex',gap:'16px'}}>
-          <span>👤 currentUser: {currentUser ? `${currentUser.name} (${currentUser.role})` : 'null'}</span>
-          <span>📋 usersList: {usersList.length}</span>
-          <span>📚 catalog: {examCatalog.length}</span>
-          <span>🔒 hasAccess: {String(!!hasAdminAccess)}</span>
+          <span>≡ƒæñ currentUser: {currentUser ? `${currentUser.name} (${currentUser.role})` : 'null'}</span>
+          <span>≡ƒôï usersList: {usersList.length}</span>
+          <span>≡ƒôÜ catalog: {examCatalog.length}</span>
+          <span>≡ƒöÆ hasAccess: {String(!!hasAdminAccess)}</span>
         </div>
         {/* Ambient background blur circles */}
         <div className="absolute top-10 left-10 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -901,7 +901,7 @@ export default function AdminAnalytics() {
                 required
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó"
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-bold transition-all"
               />
             </div>
@@ -928,12 +928,12 @@ export default function AdminAnalytics() {
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 overflow-hidden transition-colors duration-200">
       {/* TEMP DEBUG BAR - shows current data state */}
       <div style={{position:'fixed',bottom:0,left:0,right:0,zIndex:9999,background:'#111',color:'#0f0',fontSize:'11px',padding:'4px 12px',display:'flex',gap:'16px'}}>
-        <span>👤 User: {currentUser ? `${currentUser.name} (${currentUser.role})` : 'NOT LOGGED IN'}</span>
-        <span>📋 usersList: {usersList.length}</span>
-        <span>📚 catalog: {examCatalog.length}</span>
-        <span>🔔 notices: {noticesList.length}</span>
-        <span>🔑 tab: {activeTab}</span>
-        <span>🔒 hasAccess: {hasAdminAccess ? 'YES' : 'NO'}</span>
+        <span>≡ƒæñ User: {currentUser ? `${currentUser.name} (${currentUser.role})` : 'NOT LOGGED IN'}</span>
+        <span>≡ƒôï usersList: {usersList.length}</span>
+        <span>≡ƒôÜ catalog: {examCatalog.length}</span>
+        <span>≡ƒöö notices: {noticesList.length}</span>
+        <span>≡ƒöæ tab: {activeTab}</span>
+        <span>≡ƒöÆ hasAccess: {hasAdminAccess ? 'YES' : 'NO'}</span>
       </div>
       
       {/* SIDEBAR NAVIGATION BACKDROP ON MOBILE */}
@@ -1028,7 +1028,7 @@ export default function AdminAnalytics() {
                 }`}
               >
                 <Megaphone className="h-4 w-4" />
-                {language === 'hi' ? 'आधिकारिक घोषणाएँ' : 'Manage Announcements'}
+                {language === 'hi' ? 'αñåαñºαñ┐αñòαñ╛αñ░αñ┐αñò αñÿαÑïαñ╖αñúαñ╛αñÅαñü' : 'Manage Announcements'}
               </button>
             )}
             {hasTabAccess('testimonials') && (
@@ -1041,7 +1041,7 @@ export default function AdminAnalytics() {
                 }`}
               >
                 <Award className="h-4 w-4" />
-                {language === 'hi' ? 'प्रशंसापत्र प्रबंधक' : 'Topper Testimonials'}
+                {language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αñéαñ╕αñ╛αñ¬αññαÑìαñ░ αñ¬αÑìαñ░αñ¼αñéαñºαñò' : 'Topper Testimonials'}
               </button>
             )}
             {hasTabAccess('categories') && (
@@ -1054,7 +1054,7 @@ export default function AdminAnalytics() {
                 }`}
               >
                 <FolderPlus className="h-4 w-4" />
-                {language === 'hi' ? 'परीक्षा श्रेणियां' : 'Exam Categories'}
+                {language === 'hi' ? 'αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé' : 'Exam Categories'}
               </button>
             )}
             {hasTabAccess('subcategories') && (
@@ -1067,7 +1067,7 @@ export default function AdminAnalytics() {
                 }`}
               >
                 <Layers className="h-4 w-4" />
-                {language === 'hi' ? 'उप-श्रेणियां' : 'Sub Categories'}
+                {language === 'hi' ? 'αñëαñ¬-αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé' : 'Sub Categories'}
               </button>
             )}
             {hasTabAccess('subsubcategories') && (
@@ -1080,7 +1080,7 @@ export default function AdminAnalytics() {
                 }`}
               >
                 <FileText className="h-4 w-4" />
-                {language === 'hi' ? 'उप-उप-श्रेणियां' : 'Sub Sub Categories'}
+                {language === 'hi' ? 'αñëαñ¬-αñëαñ¬-αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé' : 'Sub Sub Categories'}
               </button>
             )}
             {hasTabAccess('mocks') && (
@@ -1093,7 +1093,7 @@ export default function AdminAnalytics() {
                 }`}
               >
                 <PlusCircle className="h-4 w-4" />
-                {language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests'}
+                {language === 'hi' ? 'αñ«αÑëαñò αñƒαÑçαñ╕αÑìαñƒ αñ¬αÑìαñ░αñ¼αñéαñºαñ┐αññ αñòαñ░αÑçαñé' : 'Manage Mock Tests'}
               </button>
             )}
             {hasTabAccess('reports') && (
@@ -1106,7 +1106,7 @@ export default function AdminAnalytics() {
                 }`}
               >
                 <AlertCircle className="h-4 w-4" />
-                {language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions'}
+                {language === 'hi' ? 'αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ αñòαñ┐αñÅ αñùαñÅ αñ¬αÑìαñ░αñ╢αÑìαñ¿' : 'Reported Questions'}
               </button>
             )}
             {hasTabAccess('support') && (
@@ -1120,7 +1120,7 @@ export default function AdminAnalytics() {
               >
                 <div className="flex items-center gap-3">
                   <MessageSquare className="h-4 w-4" />
-                  <span>{language === 'hi' ? 'सपोर्ट टीम' : 'Support Team'}</span>
+                  <span>{language === 'hi' ? 'αñ╕αñ¬αÑïαñ░αÑìαñƒ αñƒαÑÇαñ«' : 'Support Team'}</span>
                 </div>
                 {totalUnseenCount > 0 && (
                   <span className="bg-red-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center">
@@ -1181,28 +1181,28 @@ export default function AdminAnalytics() {
             )}
             <h2 className="text-xs sm:text-sm md:text-base font-extrabold tracking-wide text-slate-900 dark:text-white truncate max-w-[150px] sm:max-w-[300px] md:max-w-none">
               {activeTab === 'analytics' 
-                ? (language === 'hi' ? 'छात्र विश्लेषण और स्पीड डैशबोर्ड' : 'Student Analytics & Speed Dashboard')
+                ? (language === 'hi' ? 'αñ¢αñ╛αññαÑìαñ░ αñ╡αñ┐αñ╢αÑìαñ▓αÑçαñ╖αñú αñöαñ░ αñ╕αÑìαñ¬αÑÇαñí αñíαÑêαñ╢αñ¼αÑïαñ░αÑìαñí' : 'Student Analytics & Speed Dashboard')
                 : activeTab === 'upload' 
-                ? (language === 'hi' ? 'थोक प्रश्न प्रविष्टि टर्मिनल' : 'Bulk Question Ingestion Terminal')
+                ? (language === 'hi' ? 'αñÑαÑïαñò αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñ¬αÑìαñ░αñ╡αñ┐αñ╖αÑìαñƒαñ┐ αñƒαñ░αÑìαñ«αñ┐αñ¿αñ▓' : 'Bulk Question Ingestion Terminal')
                 : activeTab === 'users'
-                ? (language === 'hi' ? 'उपयोगकर्ता प्रबंधन और पहुँच नियंत्रण' : 'User Management & Access Control')
+                ? (language === 'hi' ? 'αñëαñ¬αñ»αÑïαñùαñòαñ░αÑìαññαñ╛ αñ¬αÑìαñ░αñ¼αñéαñºαñ¿ αñöαñ░ αñ¬αñ╣αÑüαñüαñÜ αñ¿αñ┐αñ»αñéαññαÑìαñ░αñú' : 'User Management & Access Control')
                 : activeTab === 'notices'
-                ? (language === 'hi' ? 'लाइव अपडेट और नोटिस प्रबंधक' : 'Live Updates & Notices Manager')
+                ? (language === 'hi' ? 'αñ▓αñ╛αñçαñ╡ αñàαñ¬αñíαÑçαñƒ αñöαñ░ αñ¿αÑïαñƒαñ┐αñ╕ αñ¬αÑìαñ░αñ¼αñéαñºαñò' : 'Live Updates & Notices Manager')
                 : activeTab === 'testimonials'
-                ? (language === 'hi' ? 'प्रशंसापत्र प्रबंधक' : 'Toppers Testimonials Manager')
+                ? (language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αñéαñ╕αñ╛αñ¬αññαÑìαñ░ αñ¬αÑìαñ░αñ¼αñéαñºαñò' : 'Toppers Testimonials Manager')
                 : activeTab === 'categories'
-                ? (language === 'hi' ? 'परीक्षा श्रेणियां प्रबंधित करें' : 'Manage Exam Categories')
+                ? (language === 'hi' ? 'αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé αñ¬αÑìαñ░αñ¼αñéαñºαñ┐αññ αñòαñ░αÑçαñé' : 'Manage Exam Categories')
                 : activeTab === 'subcategories'
-                ? (language === 'hi' ? 'परीक्षा उप-श्रेणियां प्रबंधित करें' : 'Manage Exam Subcategories')
+                ? (language === 'hi' ? 'αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ αñëαñ¬-αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé αñ¬αÑìαñ░αñ¼αñéαñºαñ┐αññ αñòαñ░αÑçαñé' : 'Manage Exam Subcategories')
                 : activeTab === 'subsubcategories'
-                ? (language === 'hi' ? 'परीक्षा उप-उप-श्रेणियां प्रबंधित करें' : 'Manage Exam Sub-Subcategories')
+                ? (language === 'hi' ? 'αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ αñëαñ¬-αñëαñ¬-αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé αñ¬αÑìαñ░αñ¼αñéαñºαñ┐αññ αñòαñ░αÑçαñé' : 'Manage Exam Sub-Subcategories')
                 : activeTab === 'mocks'
-                ? (language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests')
+                ? (language === 'hi' ? 'αñ«αÑëαñò αñƒαÑçαñ╕αÑìαñƒ αñ¬αÑìαñ░αñ¼αñéαñºαñ┐αññ αñòαñ░αÑçαñé' : 'Manage Mock Tests')
                 : activeTab === 'announcements'
-                ? (language === 'hi' ? 'आधिकारिक घोषणा प्रकाशक' : 'Official Announcements Publisher')
+                ? (language === 'hi' ? 'αñåαñºαñ┐αñòαñ╛αñ░αñ┐αñò αñÿαÑïαñ╖αñúαñ╛ αñ¬αÑìαñ░αñòαñ╛αñ╢αñò' : 'Official Announcements Publisher')
                 : activeTab === 'support'
-                ? (language === 'hi' ? 'सपोर्ट टीम टिकटिंग केंद्र' : 'Support Team Helpdesk')
-                : (language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions')}
+                ? (language === 'hi' ? 'αñ╕αñ¬αÑïαñ░αÑìαñƒ αñƒαÑÇαñ« αñƒαñ┐αñòαñƒαñ┐αñéαñù αñòαÑçαñéαñªαÑìαñ░' : 'Support Team Helpdesk')
+                : (language === 'hi' ? 'αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ αñòαñ┐αñÅ αñùαñÅ αñ¬αÑìαñ░αñ╢αÑìαñ¿' : 'Reported Questions')}
             </h2>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -1218,7 +1218,7 @@ export default function AdminAnalytics() {
               className="px-2 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
             >
               <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
-              <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
+              <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">αñ╣αñ┐αñ¿αÑìαñªαÑÇ</option>
             </select>
 
             {/* Theme switcher */}
@@ -1234,7 +1234,7 @@ export default function AdminAnalytics() {
 
             <div className="flex items-center gap-3">
               <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{language === 'hi' ? 'एपीआई सर्वर ऑनलाइन' : 'API Server Online'}</span>
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{language === 'hi' ? 'αñÅαñ¬αÑÇαñåαñê αñ╕αñ░αÑìαñ╡αñ░ αñæαñ¿αñ▓αñ╛αñçαñ¿' : 'API Server Online'}</span>
             </div>
           </div>
         </header>
@@ -1688,12 +1688,12 @@ export default function AdminAnalytics() {
                     ) : (
                       <p className="text-xs text-slate-500 dark:text-slate-400 font-medium text-center py-6">No user selected. Click the "Edit Profile" button on any user in the table below to load details here.</p>
                     )}
-
+                  </div>
                 )}
               </div>
               )}
 
-              {/* Users List & Search Card — Full Width */}
+              {/* Users List & Search Card ΓÇö Full Width */}
               {!selectedUserId && (
                 <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -1883,7 +1883,7 @@ export default function AdminAnalytics() {
 
               )}
 
-              {/* Detailed User Management Dossier & Sitting History section — shows when selectedUserId is active */}
+              {/* Detailed User Management Dossier & Sitting History section ΓÇö shows when selectedUserId is active */}
               {selectedUserId && (
                 (() => {
                   const activeUser = usersList.find(u => u.id === selectedUserId);
@@ -2470,7 +2470,7 @@ export default function AdminAnalytics() {
                 )}
               </div>
 
-              {/* Active Board List — Full Width */}
+              {/* Active Board List ΓÇö Full Width */}
               <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
@@ -2657,7 +2657,7 @@ export default function AdminAnalytics() {
                 )}
               </div>
 
-              {/* Categories Table Card — Full Width */}
+              {/* Categories Table Card ΓÇö Full Width */}
               <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
                 <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
                   Active Exam Categories
@@ -2896,7 +2896,7 @@ export default function AdminAnalytics() {
                 )}
               </div>
 
-              {/* Subcategories Table Card — Full Width */}
+              {/* Subcategories Table Card ΓÇö Full Width */}
               <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-sm p-6">
                 <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
                   Active Sub Categories
@@ -3135,7 +3135,7 @@ export default function AdminAnalytics() {
                 )}
               </div>
 
-              {/* Sub-subcategories Table Card — Full Width */}
+              {/* Sub-subcategories Table Card ΓÇö Full Width */}
               <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
                 <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
                   Active Sub-Sub Categories
@@ -3330,7 +3330,7 @@ export default function AdminAnalytics() {
                   </span>
                   <input
                     type="text"
-                    placeholder={language === 'hi' ? 'प्रश्न आईडी, परीक्षा या संदेश से खोजें...' : 'Search by Question ID, Test, or message...'}
+                    placeholder={language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñåαñêαñíαÑÇ, αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ αñ»αñ╛ αñ╕αñéαñªαÑçαñ╢ αñ╕αÑç αñûαÑïαñ£αÑçαñé...' : 'Search by Question ID, Test, or message...'}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-xl text-xs text-slate-850 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors font-semibold"
@@ -3340,34 +3340,34 @@ export default function AdminAnalytics() {
                 <div className="flex gap-4 shrink-0 text-xs font-bold text-slate-500 dark:text-slate-400">
                   <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-red-500 animate-pulse" />
-                    <span>{language === 'hi' ? 'कुल रिपोर्ट:' : 'Total Reports:'} <strong className="text-slate-850 dark:text-white font-extrabold">{reportedQuestionsList.length}</strong></span>
+                    <span>{language === 'hi' ? 'αñòαÑüαñ▓ αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ:' : 'Total Reports:'} <strong className="text-slate-850 dark:text-white font-extrabold">{reportedQuestionsList.length}</strong></span>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden p-6">
                 <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
-                  {language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Question Logs'}
+                  {language === 'hi' ? 'αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ αñòαñ┐αñÅ αñùαñÅ αñ¬αÑìαñ░αñ╢αÑìαñ¿' : 'Reported Question Logs'}
                 </h3>
 
                 <div className="overflow-x-auto max-h-[600px] overflow-y-auto pr-1">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead className="sticky top-0 bg-white dark:bg-slate-950 z-10 border-b border-slate-200 dark:border-slate-800">
                       <tr className="text-slate-400 dark:text-slate-500 uppercase text-[9px] tracking-wider font-bold">
-                        <th className="py-3 px-4">{language === 'hi' ? 'प्रश्न आईडी' : 'Question ID'}</th>
-                        <th className="py-3 px-4">{language === 'hi' ? 'मॉक टेस्ट' : 'Mock Test'}</th>
-                        <th className="py-3 px-4">{language === 'hi' ? 'प्रश्न पाठ' : 'Question Text'}</th>
-                        <th className="py-3 px-4">{language === 'hi' ? 'विवरण / संदेश' : 'Report Message'}</th>
-                        <th className="py-3 px-4">{language === 'hi' ? 'रिपोर्टर (रोल कोड)' : 'Reporter (Roll Code)'}</th>
-                        <th className="py-3 px-4">{language === 'hi' ? 'दिनांक और समय' : 'Report Date & Time'}</th>
-                        <th className="py-3 px-4 text-right">{language === 'hi' ? 'कार्रवाई' : 'Action'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñåαñêαñíαÑÇ' : 'Question ID'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'αñ«αÑëαñò αñƒαÑçαñ╕αÑìαñƒ' : 'Mock Test'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñ¬αñ╛αñá' : 'Question Text'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'αñ╡αñ┐αñ╡αñ░αñú / αñ╕αñéαñªαÑçαñ╢' : 'Report Message'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒαñ░ (αñ░αÑïαñ▓ αñòαÑïαñí)' : 'Reporter (Roll Code)'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'αñªαñ┐αñ¿αñ╛αñéαñò αñöαñ░ αñ╕αñ«αñ»' : 'Report Date & Time'}</th>
+                        <th className="py-3 px-4 text-right">{language === 'hi' ? 'αñòαñ╛αñ░αÑìαñ░αñ╡αñ╛αñê' : 'Action'}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {reportedQuestionsList.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="py-8 text-center text-slate-400 dark:text-slate-500 font-bold">
-                            {language === 'hi' ? 'कोई रिपोर्ट किए गए प्रश्न नहीं मिले।' : 'No reported questions found.'}
+                            {language === 'hi' ? 'αñòαÑïαñê αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ αñòαñ┐αñÅ αñùαñÅ αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñ¿αñ╣αÑÇαñé αñ«αñ┐αñ▓αÑçαÑñ' : 'No reported questions found.'}
                           </td>
                         </tr>
                       ) : (
@@ -3787,7 +3787,7 @@ export default function AdminAnalytics() {
                           className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
                         />
                         <p className="text-[9px] text-slate-500 dark:text-slate-500 mt-1 font-semibold">
-                          💡 Perfect size for tile view is 1200x600 (aspect ratio 2:1) for clean coverage.
+                          ≡ƒÆí Perfect size for tile view is 1200x600 (aspect ratio 2:1) for clean coverage.
                         </p>
                       </div>
 
@@ -3816,7 +3816,7 @@ export default function AdminAnalytics() {
                 )}
               </div>
 
-              {/* Active Announcements List Card — Full Width */}
+              {/* Active Announcements List Card ΓÇö Full Width */}
               <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
@@ -3867,7 +3867,7 @@ export default function AdminAnalytics() {
                               )}
                               {ann.imageUrl && (
                                 <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                  <span>🖼️ Image:</span>
+                                  <span>≡ƒû╝∩╕Å Image:</span>
                                   <a href={ann.imageUrl} target="_blank" rel="noopener noreferrer" className="underline truncate max-w-[200px] inline-block font-normal">
                                     {ann.imageUrl}
                                   </a>
@@ -4116,7 +4116,6 @@ export default function AdminAnalytics() {
           )}
 
         </div>
-
 
       </main>
 
