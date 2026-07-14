@@ -343,28 +343,26 @@ export default function DashboardScreen({
   const [showReferralRules, setShowReferralRules] = useState(false);
   const [showReferredFriends, setShowReferredFriends] = useState(false);
 
-  const referredFriends = useMemo(() => {
-    if (!currentUser?.referralCode || !usersList) return [];
-    const lowerReferral = currentUser.referralCode.trim().toLowerCase();
-    return usersList
-      .filter((u: any) => u.referredBy && u.referredBy.trim().toLowerCase() === lowerReferral)
-      .map((u: any) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        candidateCode: u.candidateCode,
-        registeredDate: u.registeredDate,
-        hasCompletedTest: u.testSessions && u.testSessions.some((s: any) => {
-          if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') {
-            return false;
+  const [referredFriends, setReferredFriends] = useState<any[]>([]);
+  const [loadingReferred, setLoadingReferred] = useState(false);
+
+  useEffect(() => {
+    if (showReferredFriends && currentUser?.referralCode) {
+      setLoadingReferred(true);
+      ApiClient.getReferredFriends(currentUser.referralCode)
+        .then((res: any) => {
+          if (res.success && res.referredFriends) {
+            setReferredFriends(res.referredFriends);
           }
-          const durationMinutes = s.durationMinutes ?? 60;
-          const totalSec = durationMinutes * 60;
-          const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
-          return spentSec >= totalSec * 0.75;
         })
-      }));
-  }, [usersList, currentUser?.referralCode]);
+        .catch((err: any) => {
+          console.error("Error fetching referred friends:", err);
+        })
+        .finally(() => {
+          setLoadingReferred(false);
+        });
+    }
+  }, [showReferredFriends, currentUser?.referralCode]);
 
   // Form and tab states
   const [activeNoticeTab, setActiveNoticeTab] = useState<'notice' | 'result' | 'admit_card' | 'answer_key'>('notice');
@@ -1291,6 +1289,14 @@ export default function DashboardScreen({
           </TouchableOpacity>
 
           {showReferredFriends && (() => {
+            if (loadingReferred) {
+              return (
+                <View style={{ marginTop: 10, padding: 16, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color="#3B82F6" />
+                </View>
+              );
+            }
+
             if (referredFriends.length === 0) {
               return (
                 <View style={{ marginTop: 10, padding: 16, alignItems: 'center', backgroundColor: isDark ? '#0B1329' : '#F9FAFB', borderRadius: 8 }}>

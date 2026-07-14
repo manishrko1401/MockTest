@@ -105,6 +105,8 @@ export async function POST(request: Request) {
         return await handleGetReferredFriends(data);
       case 'get-user-details':
         return await handleGetUserDetails(data);
+      case 'admin-data':
+        return await handleAdminData(data);
       default:
         return NextResponse.json({ success: false, error: `Invalid action: ${action}` }, { status: 400 });
     }
@@ -171,35 +173,9 @@ async function handleBootstrap() {
     }
   });
 
-  // Fetch all users list WITHOUT sessions (sessions loaded lazily per user to avoid timeout)
-  const users = await prisma.user.findMany({
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
-
-  // Map users to UI model format (testSessions is [] at bootstrap; loaded on demand)
-  const usersList = users.map((u: any) => ({
-    id: u.id,
-    candidateCode: u.candidateCode,
-    name: u.fullName,
-    email: u.email,
-    mobile: u.mobile,
-    referralCode: u.referralCode,
-    referredBy: u.referredBy,
-    referralsCount: u.referralsCount,
-    role: u.role,
-    subscriptionTier: u.subscriptionTier,
-    subscriptionPurchasedAt: u.subscriptionPurchasedAt,
-    subscriptionExpiresAt: u.subscriptionExpiresAt,
-    registeredDate: formatDateTime(u.createdAt),
-    isBlocked: u.isBlocked,
-    coins: u.coins,
-    referralCoinsCredited: u.referralCoinsCredited,
-    password: u.passwordHash,
-    bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
-    testSessions: [], // Loaded lazily via get-user-details action
-  }));
+  // Fetch all users list is now disabled in public bootstrap to reduce egress and fix security vulnerability.
+  // Admins will fetch this data separately using the 'admin-data' action.
+  const usersList: any[] = [];
 
   // Fetch Notices
   const notices = await prisma.notice.findMany({
@@ -269,6 +245,8 @@ async function handleBootstrap() {
             testbookTopperScore: t.testbookTopperScore ?? 0.0,
             testbookAverageScore: t.testbookAverageScore ?? 0.0,
             testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
+            positiveMarks: t.positiveMarks ?? 2.0,
+            negativeMarks: t.negativeMarks ?? 0.5,
           }));
           // Sort tests naturally by title (ascending numerical/alphabetical order)
           tests.sort((a: any, b: any) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
@@ -290,24 +268,9 @@ async function handleBootstrap() {
     };
   });
 
-  // Fetch Reported Questions
-  const reportedQuestions = await prisma.reportedQuestion.findMany({
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
-
-  const reportedQuestionsList = reportedQuestions.map((rq: any) => ({
-    id: rq.id,
-    questionId: rq.questionId,
-    questionText: rq.questionText,
-    mockTestId: rq.mockTestId,
-    mockTestTitle: rq.mockTestTitle,
-    message: rq.message,
-    userId: rq.userId || null,
-    candidateCode: rq.candidateCode || null,
-    createdAt: formatDateTime(rq.createdAt),
-  }));
+  // Fetch Reported Questions is now disabled in public bootstrap.
+  // Admins will fetch this data separately using the 'admin-data' action.
+  const reportedQuestionsList: any[] = [];
 
   return NextResponse.json({
     success: true,
@@ -372,6 +335,8 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
             testbookTopperScore: t.testbookTopperScore ?? 0.0,
             testbookAverageScore: t.testbookAverageScore ?? 0.0,
             testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
+            positiveMarks: t.positiveMarks ?? 2.0,
+            negativeMarks: t.negativeMarks ?? 0.5,
           }));
           // Sort tests naturally by title (ascending numerical/alphabetical order)
           tests.sort((a: any, b: any) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
@@ -449,6 +414,8 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
         testbookTopperScore: true,
         testbookAverageScore: true,
         testbookCutoffScore: true,
+        positiveMarks: true,
+        negativeMarks: true,
         // NOTE: customQuestions is intentionally excluded — fetched per-test separately
       },
     }),
@@ -483,6 +450,8 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
     testbookTopperScore: t.testbookTopperScore ?? 0.0,
     testbookAverageScore: t.testbookAverageScore ?? 0.0,
     testbookCutoffScore: t.testbookCutoffScore ?? 0.0,
+    positiveMarks: t.positiveMarks ?? 2.0,
+    negativeMarks: t.negativeMarks ?? 0.5,
   }));
 
   const mappedNewNotices = newNotices.map((n: any) => ({
@@ -1233,7 +1202,9 @@ async function handleAddMockTest(data: any) {
     testbookTotalUsers,
     testbookTopperScore,
     testbookAverageScore,
-    testbookCutoffScore
+    testbookCutoffScore,
+    positiveMarks,
+    negativeMarks
   } = data;
 
   let finalTestSeriesId = subSubCategoryId;
@@ -1272,6 +1243,8 @@ async function handleAddMockTest(data: any) {
       testbookTopperScore: testbookTopperScore !== undefined ? Number(testbookTopperScore) : 0.0,
       testbookAverageScore: testbookAverageScore !== undefined ? Number(testbookAverageScore) : 0.0,
       testbookCutoffScore: testbookCutoffScore !== undefined ? Number(testbookCutoffScore) : 0.0,
+      positiveMarks: positiveMarks !== undefined ? Number(positiveMarks) : 2.0,
+      negativeMarks: negativeMarks !== undefined ? Number(negativeMarks) : 0.5,
     },
   });
 
@@ -1322,7 +1295,7 @@ async function handleEditSubSubCategory(data: any) {
 }
 
 async function handleEditMockTestTitle(data: any) {
-  const { testId, title, testbookTotalUsers, testbookTopperScore, testbookAverageScore, testbookCutoffScore } = data;
+  const { testId, title, testbookTotalUsers, testbookTopperScore, testbookAverageScore, testbookCutoffScore, positiveMarks, negativeMarks } = data;
 
   await prisma.mockTest.update({
     where: { id: testId },
@@ -1332,6 +1305,8 @@ async function handleEditMockTestTitle(data: any) {
       testbookTopperScore: testbookTopperScore !== undefined ? Number(testbookTopperScore) : undefined,
       testbookAverageScore: testbookAverageScore !== undefined ? Number(testbookAverageScore) : undefined,
       testbookCutoffScore: testbookCutoffScore !== undefined ? Number(testbookCutoffScore) : undefined,
+      positiveMarks: positiveMarks !== undefined ? Number(positiveMarks) : undefined,
+      negativeMarks: negativeMarks !== undefined ? Number(negativeMarks) : undefined,
     },
   });
 
@@ -2127,4 +2102,75 @@ async function handleGetUserDetails(data: any) {
   };
 
   return NextResponse.json({ success: true, user: mappedUser });
+}
+
+async function handleAdminData(data: any) {
+  const { userId } = data;
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'Unauthorized: No User ID provided' }, { status: 401 });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true }
+  });
+
+  if (!user || user.role === 'STUDENT') {
+    return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 403 });
+  }
+
+  // Fetch all users list WITHOUT sessions (sessions loaded lazily per user to avoid timeout)
+  const users = await prisma.user.findMany({
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  // Map users to UI model format (testSessions is [] at bootstrap; loaded on demand)
+  const usersList = users.map((u: any) => ({
+    id: u.id,
+    candidateCode: u.candidateCode,
+    name: u.fullName,
+    email: u.email,
+    mobile: u.mobile,
+    referralCode: u.referralCode,
+    referredBy: u.referredBy,
+    referralsCount: u.referralsCount,
+    role: u.role,
+    subscriptionTier: u.subscriptionTier,
+    subscriptionPurchasedAt: u.subscriptionPurchasedAt,
+    subscriptionExpiresAt: u.subscriptionExpiresAt,
+    registeredDate: formatDateTime(u.createdAt),
+    isBlocked: u.isBlocked,
+    coins: u.coins,
+    referralCoinsCredited: u.referralCoinsCredited,
+    password: u.passwordHash,
+    bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
+    testSessions: [], // Loaded lazily via get-user-details action
+  }));
+
+  // Fetch Reported Questions
+  const reportedQuestions = await prisma.reportedQuestion.findMany({
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  const reportedQuestionsList = reportedQuestions.map((rq: any) => ({
+    id: rq.id,
+    questionId: rq.questionId,
+    questionText: rq.questionText,
+    mockTestId: rq.mockTestId,
+    mockTestTitle: rq.mockTestTitle,
+    message: rq.message,
+    userId: rq.userId || null,
+    candidateCode: rq.candidateCode || null,
+    createdAt: formatDateTime(rq.createdAt),
+  }));
+
+  return NextResponse.json({
+    success: true,
+    usersList,
+    reportedQuestionsList,
+  });
 }

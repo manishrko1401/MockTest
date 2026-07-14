@@ -14,10 +14,34 @@ export default function ReferralsTrackerPage() {
 
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [referredUsers, setReferredUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (currentUser?.referralCode) {
+      setLoading(true);
+      fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'get-referred-friends',
+          data: { referralCode: currentUser.referralCode }
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.referredFriends) {
+          setReferredUsers(data.referredFriends);
+        }
+      })
+      .catch(err => console.error("Error fetching referred friends:", err))
+      .finally(() => setLoading(false));
+    }
+  }, [currentUser?.referralCode]);
 
   const handleCopyCode = () => {
     if (!currentUser) return;
@@ -40,11 +64,6 @@ export default function ReferralsTrackerPage() {
       </div>
     );
   }
-
-  // Get referred users from usersList
-  const referredUsers = usersList.filter(
-    (u) => u.referredBy && u.referredBy.trim().toLowerCase() === currentUser.referralCode.trim().toLowerCase()
-  );
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 pb-16 transition-colors duration-200">
@@ -197,15 +216,17 @@ export default function ReferralsTrackerPage() {
           ) : (
             <div className="space-y-4">
               {referredUsers.map((user) => {
-                const hasCompletedTest = user.testSessions && user.testSessions.some((s: any) => {
-                  if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') {
-                    return false;
-                  }
-                  const durationMinutes = s.durationMinutes ?? 60;
-                  const totalSec = durationMinutes * 60;
-                  const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
-                  return spentSec >= totalSec * 0.75;
-                });
+                const hasCompletedTest = user.hasCompletedTest !== undefined
+                  ? user.hasCompletedTest
+                  : (user.testSessions && user.testSessions.some((s: any) => {
+                      if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') {
+                        return false;
+                      }
+                      const durationMinutes = s.durationMinutes ?? 60;
+                      const totalSec = durationMinutes * 60;
+                      const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
+                      return spentSec >= totalSec * 0.75;
+                    }));
                 
                 return (
                   <div 
@@ -215,7 +236,7 @@ export default function ReferralsTrackerPage() {
                     {/* User profile info */}
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300">
-                        {user.name.split(' ').map(n => n[0]).join('')}
+                        {user.name.split(' ').map((n: string) => n[0]).join('')}
                       </div>
                       <div>
                         <p className="font-bold text-xs text-slate-800 dark:text-slate-100">{user.name}</p>

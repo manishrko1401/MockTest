@@ -277,8 +277,8 @@ export default function MobileTestScreen({
         }
 
         const isRRB = testId.includes('rrb');
-        const posMark = isRRB ? 1 : 2;
-        const negMark = isRRB ? 0.33 : 0.5;
+        const posMark = catalogTest?.positiveMarks !== undefined ? Number(catalogTest.positiveMarks) : (isRRB ? 1 : 2);
+        const negMark = catalogTest?.negativeMarks !== undefined ? Number(catalogTest.negativeMarks) : (isRRB ? 0.33 : 0.5);
 
         const sectionNames: string[] = [];
         rawQuestions.forEach((q: any) => {

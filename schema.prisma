@@ -150,6 +150,8 @@ model MockTest {
   hasSectionalTiming  Boolean            @default(false)
   sectionalTimings    Json?
   orderIndex          Int                @default(0)
+  positiveMarks       Float              @default(2.0)
+  negativeMarks       Float              @default(0.5)
 
   @@map("mock_tests")
 }

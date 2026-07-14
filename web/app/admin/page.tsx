@@ -388,6 +388,10 @@ export default function AdminAnalytics() {
   const [newMockRequiredTier, setNewMockRequiredTier] = useState<'None' | 'Testbook Pass' | 'Testbook Pass Pro'>('None');
   const [newMockHasSectionalTiming, setNewMockHasSectionalTiming] = useState(false);
   const [newMockSectionalTimingsStr, setNewMockSectionalTimingsStr] = useState(''); // comma-separated minutes
+  const [newMockPositiveMarks, setNewMockPositiveMarks] = useState(2.0);
+  const [newMockNegativeMarks, setNewMockNegativeMarks] = useState(0.5);
+  const [editingMockPositiveMarks, setEditingMockPositiveMarks] = useState(2.0);
+  const [editingMockNegativeMarks, setEditingMockNegativeMarks] = useState(0.5);
   const [editReferralsCount, setEditReferralsCount] = useState<number>(0);
   const [editRole, setEditRole] = useState<'STUDENT' | 'ADMIN' | 'TEST_CREATOR' | 'SUPPORT_TEAM' | 'NOTICES_MANAGER'>('STUDENT');
   const [editTier, setEditTier] = useState<'None' | 'Testbook Pass' | 'Testbook Pass Pro'>('None');
@@ -3214,6 +3218,10 @@ export default function AdminAnalytics() {
               setNewMockHasSectionalTiming={setNewMockHasSectionalTiming}
               newMockSectionalTimingsStr={newMockSectionalTimingsStr}
               setNewMockSectionalTimingsStr={setNewMockSectionalTimingsStr}
+              newMockPositiveMarks={newMockPositiveMarks}
+              setNewMockPositiveMarks={setNewMockPositiveMarks}
+              newMockNegativeMarks={newMockNegativeMarks}
+              setNewMockNegativeMarks={setNewMockNegativeMarks}
               newMockTestbookTotalUsers={newMockTestbookTotalUsers}
               setNewMockTestbookTotalUsers={setNewMockTestbookTotalUsers}
               newMockTestbookTopperScore={newMockTestbookTopperScore}
@@ -3229,6 +3237,10 @@ export default function AdminAnalytics() {
               deleteMockTest={deleteMockTest}
               editingMockTestTitle={editingMockTestTitle}
               setEditingMockTestTitle={setEditingMockTestTitle}
+              editingMockPositiveMarks={editingMockPositiveMarks}
+              setEditingMockPositiveMarks={setEditingMockPositiveMarks}
+              editingMockNegativeMarks={editingMockNegativeMarks}
+              setEditingMockNegativeMarks={setEditingMockNegativeMarks}
               editingMockTestbookTotalUsers={editingMockTestbookTotalUsers}
               setEditingMockTestbookTotalUsers={setEditingMockTestbookTotalUsers}
               editingMockTestbookTopperScore={editingMockTestbookTopperScore}

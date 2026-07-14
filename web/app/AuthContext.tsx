@@ -16,6 +16,8 @@ export interface MockTestItem {
   testbookTopperScore?: number;
   testbookAverageScore?: number;
   testbookCutoffScore?: number;
+  positiveMarks?: number;
+  negativeMarks?: number;
 }
 
 export interface TestSubSubCategory {
@@ -189,6 +191,8 @@ interface AuthContextType {
       testbookTopperScore?: number;
       testbookAverageScore?: number;
       testbookCutoffScore?: number;
+      positiveMarks?: number;
+      negativeMarks?: number;
     }
   ) => void;
   deleteMockTest: (categoryId: string, subCategoryId: string, testId: string) => void;
@@ -609,12 +613,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const data = await res.json();
       if (data.success) {
-        setUsersList(data.usersList || []);
+        setUsersList([]);
         setNoticesList(sortNotices(data.noticesList || []));
         setExamCatalog(data.examCatalog || []);
-        if (data.reportedQuestionsList) {
-          setReportedQuestionsList(data.reportedQuestionsList);
-        }
+        setReportedQuestionsList([]);
 
         const getCookie = (name: string) => {
           const value = `; ${document.cookie}`;
@@ -624,19 +626,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         const savedUserId = getCookie('tb_user_id');
         if (savedUserId) {
-          const matchingUser = (data.usersList || []).find((u: any) => u.id === savedUserId);
-          if (matchingUser) {
-            if (matchingUser.isBlocked) {
+          // Fetch user details from database directly to avoid exposing all users
+          const userRes = await fetch('/api/db', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'get-user-details',
+              data: { userId: savedUserId }
+            })
+          });
+          const userData = await userRes.json();
+          if (userData.success && userData.user) {
+            if (userData.user.isBlocked) {
               document.cookie = "tb_user_id=;path=/;max-age=0";
               setCurrentUser(null);
             } else {
-              setCurrentUser(matchingUser);
+              setCurrentUser(userData.user);
             }
+          } else {
+            document.cookie = "tb_user_id=;path=/;max-age=0";
+            setCurrentUser(null);
           }
         }
       }
     } catch (err) {
       console.error("Fetch data error:", err);
+    }
+  };
+
+  const fetchAdminData = async () => {
+    // Only admins/staff need to download all users and reports
+    if (!currentUser || currentUser.role === 'STUDENT') return;
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'admin-data',
+          data: { userId: currentUser.id }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUsersList(data.usersList || []);
+        if (data.reportedQuestionsList) {
+          setReportedQuestionsList(data.reportedQuestionsList);
+        }
+      }
+    } catch (err) {
+      console.error("Fetch admin data error:", err);
     }
   };
 
@@ -664,6 +702,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLanguageState('en');
     }
   }, []);
+
+  // Load admin data only if the logged-in user is an administrator/staff
+  useEffect(() => {
+    if (currentUser && currentUser.role !== 'STUDENT') {
+      fetchAdminData();
+    } else {
+      setUsersList([]);
+      setReportedQuestionsList([]);
+    }
+  }, [currentUser]);
 
   // Sync theme changes with DOM node class selectors
   useEffect(() => {
@@ -1079,6 +1127,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       testbookTopperScore?: number;
       testbookAverageScore?: number;
       testbookCutoffScore?: number;
+      positiveMarks?: number;
+      negativeMarks?: number;
     }
   ) => {
     const updated = examCatalog.map(c => {
@@ -1626,7 +1676,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     .then(res => res.json())
     .then(resData => {
       if (resData.success) {
-        fetchUsersList();
+        fetchAdminData();
       }
     })
     .catch(err => console.error("Save profile admin error:", err));

@@ -25,6 +25,10 @@ interface MockTestManagerProps {
   setNewMockHasSectionalTiming: (val: boolean) => void;
   newMockSectionalTimingsStr: string;
   setNewMockSectionalTimingsStr: (val: string) => void;
+  newMockPositiveMarks: number;
+  setNewMockPositiveMarks: (val: number) => void;
+  newMockNegativeMarks: number;
+  setNewMockNegativeMarks: (val: number) => void;
   newMockTestbookTotalUsers: number;
   setNewMockTestbookTotalUsers: (val: number) => void;
   newMockTestbookTopperScore: number;
@@ -40,6 +44,10 @@ interface MockTestManagerProps {
   deleteMockTest: (catId: string, subId: string, testId: string) => void;
   editingMockTestTitle: string;
   setEditingMockTestTitle: (val: string) => void;
+  editingMockPositiveMarks: number;
+  setEditingMockPositiveMarks: (val: number) => void;
+  editingMockNegativeMarks: number;
+  setEditingMockNegativeMarks: (val: number) => void;
   editingMockTestbookTotalUsers: number;
   setEditingMockTestbookTotalUsers: (val: number) => void;
   editingMockTestbookTopperScore: number;
@@ -75,6 +83,10 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
   setNewMockHasSectionalTiming,
   newMockSectionalTimingsStr,
   setNewMockSectionalTimingsStr,
+  newMockPositiveMarks,
+  setNewMockPositiveMarks,
+  newMockNegativeMarks,
+  setNewMockNegativeMarks,
   newMockTestbookTotalUsers,
   setNewMockTestbookTotalUsers,
   newMockTestbookTopperScore,
@@ -90,6 +102,10 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
   deleteMockTest,
   editingMockTestTitle,
   setEditingMockTestTitle,
+  editingMockPositiveMarks,
+  setEditingMockPositiveMarks,
+  editingMockNegativeMarks,
+  setEditingMockNegativeMarks,
   editingMockTestbookTotalUsers,
   setEditingMockTestbookTotalUsers,
   editingMockTestbookTopperScore,
@@ -177,11 +193,15 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                   testbookTopperScore: Number(newMockTestbookTopperScore),
                   testbookAverageScore: Number(newMockTestbookAverageScore),
                   testbookCutoffScore: Number(newMockTestbookCutoffScore),
+                  positiveMarks: Number(newMockPositiveMarks),
+                  negativeMarks: Number(newMockNegativeMarks),
                 } as any);
                 setNewMockTitle('');
                 setNewMockSubSubCategoryParent('');
                 setNewMockHasSectionalTiming(false);
                 setNewMockSectionalTimingsStr('');
+                setNewMockPositiveMarks(2.0);
+                setNewMockNegativeMarks(0.5);
                 setNewMockTestbookTotalUsers(0);
                 setNewMockTestbookTopperScore(0.0);
                 setNewMockTestbookAverageScore(0.0);
@@ -281,6 +301,21 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     })()}
                   </div>
                 )}
+              </div>
+              
+              {/* Scoring Rules */}
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
+                <h4 className="text-[10px] font-extrabold text-slate-555 dark:text-slate-400 uppercase tracking-wider">Scoring Parameters</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Marks per Correct Answer (+ve)</label>
+                    <input type="number" required step="0.01" min={0} value={newMockPositiveMarks} onChange={(e) => setNewMockPositiveMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Negative Mark per Wrong Answer (-ve)</label>
+                    <input type="number" required step="0.01" min={0} value={newMockNegativeMarks} onChange={(e) => setNewMockNegativeMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                  </div>
+                </div>
               </div>
 
               {/* Benchmark Stats */}
@@ -476,6 +511,8 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                         } else {
                           setEditingMockTestId(test.id);
                           setEditingMockTestTitle(test.title);
+                          setEditingMockPositiveMarks(test.positiveMarks ?? 2.0);
+                          setEditingMockNegativeMarks(test.negativeMarks ?? 0.5);
                           setEditingMockTestbookTotalUsers(test.testbookTotalUsers ?? 0);
                           setEditingMockTestbookTopperScore(test.testbookTopperScore ?? 0);
                           setEditingMockTestbookAverageScore(test.testbookAverageScore ?? 0);
@@ -511,8 +548,18 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                       <Edit className="h-3 w-3" /> Editing: {test.title}
                     </p>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">Title</label>
-                      <input type="text" value={editingMockTestTitle} onChange={(e) => setEditingMockTestTitle(e.target.value)} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold" />
+                      <label className="block text-[10px] font-extrabold text-slate-550 uppercase tracking-wider mb-2">Title</label>
+                      <input type="text" value={editingMockTestTitle} onChange={(e) => setEditingMockTestTitle(e.target.value)} className="w-full bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-855 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Positive Marks (+ve)</label>
+                        <input type="number" step="0.01" min={0} value={editingMockPositiveMarks} onChange={(e) => setEditingMockPositiveMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-202 focus:outline-none focus:border-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Negative Marks (-ve)</label>
+                        <input type="number" step="0.01" min={0} value={editingMockNegativeMarks} onChange={(e) => setEditingMockNegativeMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-202 focus:outline-none focus:border-blue-500" />
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
@@ -545,6 +592,8 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                               testbookTopperScore: Number(editingMockTestbookTopperScore),
                               testbookAverageScore: Number(editingMockTestbookAverageScore),
                               testbookCutoffScore: Number(editingMockTestbookCutoffScore),
+                              positiveMarks: Number(editingMockPositiveMarks),
+                              negativeMarks: Number(editingMockNegativeMarks),
                             });
                             setEditingMockTestId(null);
                             showToast('Mock test updated successfully.');

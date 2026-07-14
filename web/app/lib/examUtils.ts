@@ -84,8 +84,8 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
   let hasCustomQuestions = false;
   if (customQs && Array.isArray(customQs) && customQs.length > 0) {
     hasCustomQuestions = true;
-    const positiveMark = id.includes('rrb') ? 1 : 2;
-    const negativeMark = id.includes('rrb') ? 0.33 : 0.5;
+    const positiveMark = catalogTest?.positiveMarks !== undefined ? Number(catalogTest.positiveMarks) : (id.includes('rrb') ? 1 : 2);
+    const negativeMark = catalogTest?.negativeMarks !== undefined ? Number(catalogTest.negativeMarks) : (id.includes('rrb') ? 0.33 : 0.5);
 
     // Dynamically build sections based on unique question section fields
     const sectionNames: string[] = [];
