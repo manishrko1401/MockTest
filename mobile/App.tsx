@@ -46,7 +46,7 @@ export default function App() {
   const [selectedSeries, setSelectedSeries] = useState<any>(null);
   const [selectedAttempt, setSelectedAttempt] = useState<any>(null);
   const [activeTestId, setActiveTestId] = useState<string>('');
-  const [dashboardTab, setDashboardTab] = useState<'home' | 'tests' | 'notices' | 'profile'>('home');
+  const [dashboardTab, setDashboardTab] = useState<'home' | 'tests' | 'notices' | 'bookmarks' | 'profile'>('home');
   const [dashboardCategoryId, setDashboardCategoryId] = useState<string | null>(null);
 
   // Helper to prefetch questions for completed/ongoing test sessions so they load instantly offline
@@ -679,6 +679,7 @@ export default function App() {
             setActiveTab={setDashboardTab}
             selectedCategoryId={dashboardCategoryId}
             setSelectedCategoryId={setDashboardCategoryId}
+            onToggleBookmark={handleToggleBookmark}
           />
         )}
 

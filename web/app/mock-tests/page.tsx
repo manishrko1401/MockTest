@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth, TestCategory, TestSubCategory, MockTestItem } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -65,6 +65,9 @@ export default function MockTestsCatalog() {
 
   const [showBookmarks, setShowBookmarks] = useState<boolean>(false);
   const [expandedBookmarks, setExpandedBookmarks] = useState<Record<string, boolean>>({});
+  // Cache: testId -> list of questions (from API for custom tests, or demo fallback)
+  const [bookmarkQsCache, setBookmarkQsCache] = useState<Record<string, any[]>>({});
+  const [bookmarkQsLoading, setBookmarkQsLoading] = useState(false);
 
   const toggleExpandBookmark = (qId: string) => {
     setExpandedBookmarks(prev => ({
@@ -73,8 +76,50 @@ export default function MockTestsCatalog() {
     }));
   };
 
+  // Fetch custom questions for each unique testId in bookmarks when the bookmark panel opens
+  useEffect(() => {
+    if (!showBookmarks || !currentUser?.bookmarkedQuestions?.length) return;
+
+    const uniqueTestIds = [...new Set(currentUser.bookmarkedQuestions.map(b => b.testId))];
+    const missingIds = uniqueTestIds.filter(id => !bookmarkQsCache[id]);
+    if (missingIds.length === 0) return;
+
+    setBookmarkQsLoading(true);
+    Promise.all(
+      missingIds.map(async (testId) => {
+        try {
+          const res = await fetch('/api/db', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get-custom-questions', data: { testId } })
+          });
+          const data = await res.json();
+          if (data.success && data.questions?.length) {
+            return { testId, questions: data.questions };
+          }
+        } catch (e) { /* ignore */ }
+        // Fallback: use demo session questions
+        const session = generateExamSession(testId, examCatalog);
+        return { testId, questions: session.questions };
+      })
+    ).then(results => {
+      const newCache: Record<string, any[]> = {};
+      results.forEach(r => { if (r) newCache[r.testId] = r.questions; });
+      setBookmarkQsCache(prev => ({ ...prev, ...newCache }));
+      setBookmarkQsLoading(false);
+    });
+  }, [showBookmarks, currentUser?.bookmarkedQuestions]);
+
+  // Helper: find a question from the cache by testId + questionId
+  const findBookmarkedQuestion = useCallback((testId: string, questionId: string) => {
+    const questions = bookmarkQsCache[testId];
+    if (!questions) return null;
+    // Custom questions from API have different shape — normalise
+    return questions.find((q: any) => q.id === questionId) || null;
+  }, [bookmarkQsCache]);
+
   // Trigger MathJax typesetting whenever bookmarks are expanded
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).MathJax) {
       try {
         (window as any).MathJax.typesetPromise();
@@ -285,16 +330,41 @@ export default function MockTestsCatalog() {
                 <div className="text-center py-8 text-slate-400 text-xs">
                   No bookmarked questions yet. Click bookmarks inside mock sittings solutions to review here.
                 </div>
+              ) : bookmarkQsLoading ? (
+                <div className="text-center py-8 text-slate-400 text-xs flex flex-col items-center gap-2">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                  Loading bookmarked questions...
+                </div>
               ) : (
                 <div className="space-y-3">
                   {currentUser.bookmarkedQuestions.map((bm) => {
-                    const exam = generateExamSession(bm.testId, examCatalog);
-                    const question = exam.questions.find(q => q.id === bm.questionId);
-                    if (!question) return null;
+                    const rawQ = findBookmarkedQuestion(bm.testId, bm.questionId);
+                    if (!rawQ) return null;
 
-                    const qContent = language === 'hi' ? question.content.hi : question.content.en;
+                    // Normalise: API raw format has textEn/optionsEn; engine format has content.en
+                    const questionTextEn = rawQ.textEn || rawQ.content?.en?.questionText || '';
+                    const questionTextHi = rawQ.textHi || rawQ.content?.hi?.questionText || questionTextEn;
+                    const optionsEn: string[] = rawQ.optionsEn || rawQ.content?.en?.options || [];
+                    const optionsHi: string[] = rawQ.optionsHi || rawQ.content?.hi?.options || optionsEn;
+                    const correctIdx: number = rawQ.correctIndex !== undefined ? rawQ.correctIndex : (rawQ.correctOptionIndex ?? 0);
+                    const questionText = language === 'hi' ? questionTextHi : questionTextEn;
+                    const options = language === 'hi' ? optionsHi : optionsEn;
+
                     const isExpanded = !!expandedBookmarks[bm.questionId];
                     const expl = EXPLANATIONS[bm.questionId] || {};
+
+                    // Find test title from catalog
+                    let testTitle = bm.testId;
+                    for (const cat of examCatalog) {
+                      for (const sub of cat.subCategories || []) {
+                        const found = (sub.tests || []).find((t: any) => t.id === bm.testId);
+                        if (found) { testTitle = found.title; break; }
+                        for (const ss of sub.subSubCategories || []) {
+                          const f2 = (ss.tests || []).find((t: any) => t.id === bm.testId);
+                          if (f2) { testTitle = f2.title; break; }
+                        }
+                      }
+                    }
 
                     return (
                       <div
@@ -302,8 +372,8 @@ export default function MockTestsCatalog() {
                         className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[8px] bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 font-extrabold px-1.5 py-0.5 rounded uppercase">
-                            {exam.testTitle}
+                          <span className="text-[8px] bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 font-extrabold px-1.5 py-0.5 rounded uppercase truncate max-w-[60%]">
+                            {testTitle}
                           </span>
                           <button
                             onClick={() => toggleBookmark(bm.testId, bm.questionId)}
@@ -314,9 +384,7 @@ export default function MockTestsCatalog() {
                           </button>
                         </div>
 
-                        <p className="font-bold text-slate-850 dark:text-slate-200 mt-2 line-clamp-2">
-                          {qContent.questionText}
-                        </p>
+                        <p className="font-bold text-slate-800 dark:text-slate-200 mt-2 line-clamp-2" dangerouslySetInnerHTML={{ __html: questionText }} />
 
                         <button
                           onClick={() => toggleExpandBookmark(bm.questionId)}
@@ -327,12 +395,12 @@ export default function MockTestsCatalog() {
 
                         {isExpanded && (
                           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
-                            {qContent.options && qContent.options.length > 0 && (
+                            {options.length > 0 && (
                               <div className="space-y-1.5">
                                 <p className="font-extrabold text-[9px] text-slate-400 uppercase">Multiple Choice Options:</p>
-                                {qContent.options.map((opt, oIdx) => {
-                                  const text = typeof opt === 'string' ? opt : (opt as any).text;
-                                  const isCorrect = oIdx === question.correctOptionIndex;
+                                {options.map((opt, oIdx) => {
+                                  const text = typeof opt === 'string' ? opt : (opt as any).text || String(opt);
+                                  const isCorrect = oIdx === correctIdx;
                                   return (
                                     <div
                                       key={oIdx}
@@ -342,7 +410,7 @@ export default function MockTestsCatalog() {
                                           : 'bg-white border-slate-200 dark:bg-slate-950 dark:border-slate-800 text-slate-600 dark:text-slate-400'
                                       }`}
                                     >
-                                      <span>{text}</span>
+                                      <span dangerouslySetInnerHTML={{ __html: text }} />
                                       {isCorrect && <Check className="h-3 w-3 text-green-600 shrink-0" />}
                                     </div>
                                   );
@@ -350,12 +418,14 @@ export default function MockTestsCatalog() {
                               </div>
                             )}
                             
-                            <div className="bg-yellow-50/50 dark:bg-yellow-950/10 border border-yellow-250 dark:border-yellow-900/40 p-2.5 rounded-lg">
-                              <p className="font-extrabold text-[9px] text-yellow-800 dark:text-yellow-400 uppercase">Correct Explanation:</p>
-                              <p className="text-[10px] text-slate-700 dark:text-slate-350 leading-relaxed mt-1 font-medium">
-                                {language === 'hi' ? (expl.hi || "विवरण उपलब्ध नहीं है।") : (expl.en || "No explanation text provided.")}
-                              </p>
-                            </div>
+                            {(expl.en || expl.hi) && (
+                              <div className="bg-yellow-50/50 dark:bg-yellow-950/10 border border-yellow-200 dark:border-yellow-900/40 p-2.5 rounded-lg">
+                                <p className="font-extrabold text-[9px] text-yellow-800 dark:text-yellow-400 uppercase">Correct Explanation:</p>
+                                <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed mt-1 font-medium">
+                                  {language === 'hi' ? (expl.hi || 'विवरण उपलब्ध नहीं है।') : (expl.en || 'No explanation text provided.')}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -766,12 +836,38 @@ export default function MockTestsCatalog() {
                   <p className="text-slate-600 dark:text-slate-400 text-sm font-bold">{t.noBookmarks}</p>
                   <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{t.noBookmarksDesc}</p>
                 </div>
+              ) : bookmarkQsLoading ? (
+                <div className="text-center py-16 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col items-center gap-3">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Loading bookmarked questions...</p>
+                </div>
               ) : (
                 <div className="space-y-4 max-w-4xl">
                   {currentUser.bookmarkedQuestions.map((bm, index) => {
-                    const exam = generateExamSession(bm.testId, examCatalog);
-                    const question = exam.questions.find(q => q.id === bm.questionId);
-                    if (!question) return null;
+                    const rawQ = findBookmarkedQuestion(bm.testId, bm.questionId);
+                    if (!rawQ) return null;
+
+                    // Normalise: API raw format uses textEn/optionsEn; engine format uses content.en
+                    const questionTextEn = rawQ.textEn || rawQ.content?.en?.questionText || '';
+                    const questionTextHi = rawQ.textHi || rawQ.content?.hi?.questionText || questionTextEn;
+                    const optionsEn: string[] = rawQ.optionsEn || rawQ.content?.en?.options || [];
+                    const optionsHi: string[] = rawQ.optionsHi || rawQ.content?.hi?.options || optionsEn;
+                    const correctIdx: number = rawQ.correctIndex !== undefined ? rawQ.correctIndex : (rawQ.correctOptionIndex ?? 0);
+                    const explanationEn: string = rawQ.explanationEn || EXPLANATIONS[bm.questionId]?.en || '';
+                    const explanationHi: string = rawQ.explanationHi || EXPLANATIONS[bm.questionId]?.hi || '';
+
+                    // Find test title from catalog
+                    let testTitle = bm.testId;
+                    for (const cat of examCatalog) {
+                      for (const sub of cat.subCategories || []) {
+                        const found = (sub.tests || []).find((t: any) => t.id === bm.testId);
+                        if (found) { testTitle = found.title; break; }
+                        for (const ss of (sub as any).subSubCategories || []) {
+                          const f2 = (ss.tests || []).find((t: any) => t.id === bm.testId);
+                          if (f2) { testTitle = f2.title; break; }
+                        }
+                      }
+                    }
 
                     const isExpanded = !!expandedBookmarks[bm.questionId];
 
@@ -783,16 +879,14 @@ export default function MockTestsCatalog() {
                         >
                           <div className="flex-1 min-w-0 pr-4">
                             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                              <span className="bg-blue-50 border border-blue-200 dark:bg-blue-950/20 dark:border-blue-900 px-2 py-0.5 rounded text-[9px] font-bold text-blue-600 dark:text-blue-400">
-                                {exam.testTitle}
+                              <span className="bg-blue-50 border border-blue-200 dark:bg-blue-950/20 dark:border-blue-900 px-2 py-0.5 rounded text-[9px] font-bold text-blue-600 dark:text-blue-400 truncate max-w-xs">
+                                {testTitle}
                               </span>
                               <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider font-mono">
-                                Question #{index + 1}
+                                Q #{index + 1}
                               </span>
                             </div>
-                            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
-                              {question.content.en.questionText}
-                            </p>
+                            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" dangerouslySetInnerHTML={{ __html: decodeHtml(questionTextEn) }} />
                           </div>
                           
                           <div className="flex items-center gap-3">
@@ -815,62 +909,61 @@ export default function MockTestsCatalog() {
                             {/* Question Text */}
                             <div className="bg-slate-50 dark:bg-slate-900/60 p-4 border border-slate-200 dark:border-slate-800 rounded text-xs leading-relaxed text-slate-800 dark:text-slate-200">
                               <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">Question (English):</p>
-                              <div className="font-normal mb-3 markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(question.content.en.questionText) }} />
-                              {question.content.en.mathLatex && (
-                                <p className="mb-3 font-mono text-[10px] text-yellow-600 dark:text-yellow-500 bg-yellow-500/5 px-2 py-1 rounded">LaTeX: {question.content.en.mathLatex}</p>
-                              )}
-                              <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">प्रश्न (Hindi):</p>
-                              <div className="font-normal markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(question.content.hi.questionText) }} />
-                              {question.content.hi.mathLatex && (
-                                <p className="mt-3 font-mono text-[10px] text-yellow-600 dark:text-yellow-500 bg-yellow-500/5 px-2 py-1 rounded">LaTeX: {question.content.hi.mathLatex}</p>
-                              )}
+                              <div className="font-normal mb-3 markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(questionTextEn) }} />
+                              {questionTextHi && questionTextHi !== questionTextEn && (<>
+                                <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">प्रश्न (Hindi):</p>
+                                <div className="font-normal markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(questionTextHi) }} />
+                              </>)}
                             </div>
 
                             {/* Options with Highlighted Correct Answer */}
-                            <div>
-                              <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Options & Correct Answer</p>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                {question.content.en.options.map((opt, oIdx) => {
-                                  const textEn = typeof opt === 'string' ? opt : opt.text;
-                                  const textHi = typeof question.content.hi.options[oIdx] === 'string' 
-                                    ? (question.content.hi.options[oIdx] as string) 
-                                    : (question.content.hi.options[oIdx] as any).text;
-                                  const isCorrect = oIdx === question.correctOptionIndex;
+                            {optionsEn.length > 0 && (
+                              <div>
+                                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Options & Correct Answer</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                  {optionsEn.map((opt, oIdx) => {
+                                    const textEn = typeof opt === 'string' ? opt : (opt as any).text || String(opt);
+                                    const rawHiOpt = optionsHi[oIdx];
+                                    const textHi = typeof rawHiOpt === 'string' ? rawHiOpt : (rawHiOpt as any)?.text || textEn;
+                                    const isCorrect = oIdx === correctIdx;
 
-                                  return (
-                                    <div 
-                                      key={oIdx} 
-                                      className={`p-3 rounded-lg border text-xs flex flex-col gap-1 ${
-                                        isCorrect 
-                                          ? 'bg-green-50 border-green-300 dark:bg-green-950/20 dark:border-green-900/60 text-green-800 dark:text-green-350 font-semibold' 
-                                          : 'bg-white border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 text-slate-700 dark:text-slate-400'
-                                      }`}
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <span className="flex items-center gap-1">Option {oIdx + 1}: <span dangerouslySetInnerHTML={{ __html: decodeHtml(textEn) }} /></span>
-                                        {isCorrect && <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />}
+                                    return (
+                                      <div 
+                                        key={oIdx} 
+                                        className={`p-3 rounded-lg border text-xs flex flex-col gap-1 ${
+                                          isCorrect 
+                                            ? 'bg-green-50 border-green-300 dark:bg-green-950/20 dark:border-green-900/60 text-green-800 dark:text-green-300 font-semibold' 
+                                            : 'bg-white border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 text-slate-700 dark:text-slate-400'
+                                        }`}
+                                      >
+                                        <div className="flex items-center justify-between">
+                                          <span className="flex items-center gap-1">Option {oIdx + 1}: <span dangerouslySetInnerHTML={{ __html: decodeHtml(textEn) }} /></span>
+                                          {isCorrect && <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />}
+                                        </div>
+                                        {textHi !== textEn && <span className="text-[10px] opacity-80 mt-0.5 flex items-center gap-1">हिंदी: <span dangerouslySetInnerHTML={{ __html: decodeHtml(textHi) }} /></span>}
                                       </div>
-                                      <span className="text-[10px] opacity-80 mt-0.5 flex items-center gap-1">हिंदी: <span dangerouslySetInnerHTML={{ __html: decodeHtml(textHi) }} /></span>
-                                    </div>
-                                  );
-                                })}
+                                    );
+                                  })}
+                                </div>
                               </div>
-                            </div>
+                            )}
 
                             {/* Solution Explanation */}
-                            <div className="bg-blue-50/40 dark:bg-blue-950/10 p-4 border border-blue-100 dark:border-blue-900/45 rounded-xl">
-                              <p className="text-[11px] font-bold text-blue-850 dark:text-blue-400 mb-3 uppercase tracking-wide">{t.explanation}</p>
-                              <div className="space-y-4 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
-                                <div>
-                                  <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.englishExplanation}</p>
-                                  <div className="markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(EXPLANATIONS[question.id]?.en || "No explanation available.") }} />
-                                </div>
-                                <div className="pt-3 border-t border-blue-100/50 dark:border-blue-950/20">
-                                  <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.hindiExplanation}</p>
-                                  <div className="markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(EXPLANATIONS[question.id]?.hi || "कोई व्याख्या उपलब्ध नहीं है।") }} />
+                            {(explanationEn || explanationHi) && (
+                              <div className="bg-blue-50/40 dark:bg-blue-950/10 p-4 border border-blue-100 dark:border-blue-900/45 rounded-xl">
+                                <p className="text-[11px] font-bold text-blue-700 dark:text-blue-400 mb-3 uppercase tracking-wide">{t.explanation}</p>
+                                <div className="space-y-4 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
+                                  {explanationEn && <div>
+                                    <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.englishExplanation}</p>
+                                    <div className="markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(explanationEn) }} />
+                                  </div>}
+                                  {explanationHi && <div className="pt-3 border-t border-blue-100/50 dark:border-blue-950/20">
+                                    <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.hindiExplanation}</p>
+                                    <div className="markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(explanationHi) }} />
+                                  </div>}
                                 </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                         )}
                       </div>

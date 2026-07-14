@@ -43,7 +43,12 @@ import {
   X,
   Sparkles,
   Activity,
-  MapPin
+  MapPin,
+  Bookmark,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  CheckSquare
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
@@ -63,10 +68,11 @@ interface DashboardScreenProps {
   isDark?: boolean;
   onToggleTheme?: (dark: boolean) => void;
   onOpenSupportChat: () => void;
-  activeTab: 'home' | 'tests' | 'notices' | 'profile';
-  setActiveTab: (tab: 'home' | 'tests' | 'notices' | 'profile') => void;
+  activeTab: 'home' | 'tests' | 'notices' | 'bookmarks' | 'profile';
+  setActiveTab: (tab: 'home' | 'tests' | 'notices' | 'bookmarks' | 'profile') => void;
   selectedCategoryId: string | null;
   setSelectedCategoryId: (id: string | null) => void;
+  onToggleBookmark?: (testId: string, questionId: string) => void;
 }
 
 const SUCCESS_STORIES = [
@@ -174,7 +180,8 @@ export default function DashboardScreen({
   activeTab,
   setActiveTab,
   selectedCategoryId,
-  setSelectedCategoryId
+  setSelectedCategoryId,
+  onToggleBookmark,
 }: DashboardScreenProps) {
 
   const insets = useSafeAreaInsets();
@@ -345,6 +352,44 @@ export default function DashboardScreen({
 
   const [referredFriends, setReferredFriends] = useState<any[]>([]);
   const [loadingReferred, setLoadingReferred] = useState(false);
+
+  // Bookmark tab state
+  const [bookmarkQsCache, setBookmarkQsCache] = useState<Record<string, any[]>>({});
+  const [bookmarkQsLoading, setBookmarkQsLoading] = useState(false);
+  const [expandedBookmarks, setExpandedBookmarks] = useState<Record<string, boolean>>({});
+
+  const toggleExpandBookmark = (qId: string) => {
+    setExpandedBookmarks(prev => ({ ...prev, [qId]: !prev[qId] }));
+  };
+
+  // Fetch custom questions for each unique testId in bookmarks when the bookmark tab opens
+  useEffect(() => {
+    if (activeTab !== 'bookmarks') return;
+    const bookmarks: any[] = currentUser?.bookmarkedQuestions || [];
+    if (bookmarks.length === 0) return;
+
+    const uniqueTestIds = [...new Set(bookmarks.map((b: any) => b.testId as string))];
+    const missingIds = uniqueTestIds.filter(id => !bookmarkQsCache[id]);
+    if (missingIds.length === 0) return;
+
+    setBookmarkQsLoading(true);
+    Promise.all(
+      missingIds.map(async (testId) => {
+        try {
+          const res = await ApiClient.getCustomQuestions(testId);
+          if (res.success && Array.isArray(res.questions) && res.questions.length > 0) {
+            return { testId, questions: res.questions };
+          }
+        } catch (e) { /* ignore */ }
+        return { testId, questions: [] };
+      })
+    ).then(results => {
+      const newCache: Record<string, any[]> = {};
+      results.forEach(r => { if (r) newCache[r.testId] = r.questions; });
+      setBookmarkQsCache(prev => ({ ...prev, ...newCache }));
+      setBookmarkQsLoading(false);
+    });
+  }, [activeTab, currentUser?.bookmarkedQuestions]);
 
   useEffect(() => {
     if (showReferredFriends && currentUser?.referralCode) {
@@ -1116,6 +1161,268 @@ export default function DashboardScreen({
     );
   };
 
+  const renderBookmarksTab = () => {
+    const bookmarks: any[] = currentUser?.bookmarkedQuestions || [];
+
+    // Helper: find a question from cache by testId + questionId
+    const findQ = (testId: string, questionId: string) => {
+      const qs = bookmarkQsCache[testId];
+      if (!qs) return null;
+      return qs.find((q: any) => q.id === questionId) || null;
+    };
+
+    // Helper: find test title from catalog
+    const getTestTitle = (testId: string) => {
+      for (const cat of examCatalog) {
+        for (const sub of cat.subCategories || []) {
+          const found = (sub.tests || []).find((t: any) => t.id === testId);
+          if (found) return found.title;
+          for (const ss of (sub.subSubCategories || [])) {
+            const f2 = (ss.tests || []).find((t: any) => t.id === testId);
+            if (f2) return f2.title;
+          }
+        }
+      }
+      return testId;
+    };
+
+    return (
+      <ScrollView contentContainerStyle={styles.tabContent} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={{ marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Bookmark size={20} color={isDark ? '#F59E0B' : '#D97706'} fill={isDark ? '#F59E0B' : '#D97706'} />
+            <Text style={{ fontSize: 16, fontWeight: '800', color: isDark ? '#F1F5F9' : '#0F172A' }}>
+              Bookmarked Questions
+            </Text>
+          </View>
+          <Text style={{ fontSize: 11, color: isDark ? '#64748B' : '#94A3B8', marginTop: 4 }}>
+            {bookmarks.length} question{bookmarks.length !== 1 ? 's' : ''} saved for review
+          </Text>
+        </View>
+
+        {bookmarks.length === 0 ? (
+          <View style={{
+            alignItems: 'center', paddingVertical: 40,
+            backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+            borderRadius: 16, borderWidth: 1,
+            borderColor: isDark ? '#334155' : '#E2E8F0'
+          }}>
+            <Bookmark size={36} color={isDark ? '#475569' : '#CBD5E1'} />
+            <Text style={{ marginTop: 12, fontSize: 13, fontWeight: '700', color: isDark ? '#64748B' : '#94A3B8' }}>
+              No bookmarks yet
+            </Text>
+            <Text style={{ marginTop: 4, fontSize: 11, color: isDark ? '#475569' : '#CBD5E1', textAlign: 'center', paddingHorizontal: 24 }}>
+              Tap the bookmark icon on any question during a test or analysis to save it here.
+            </Text>
+          </View>
+        ) : bookmarkQsLoading ? (
+          <View style={{
+            alignItems: 'center', paddingVertical: 40,
+            backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+            borderRadius: 16, borderWidth: 1,
+            borderColor: isDark ? '#334155' : '#E2E8F0'
+          }}>
+            <ActivityIndicator size="large" color="#3B82F6" />
+            <Text style={{ marginTop: 12, fontSize: 12, fontWeight: '600', color: isDark ? '#64748B' : '#94A3B8' }}>
+              Loading bookmarked questions...
+            </Text>
+          </View>
+        ) : (
+          <View style={{ gap: 12 }}>
+            {bookmarks.map((bm: any, index: number) => {
+              const rawQ = findQ(bm.testId, bm.questionId);
+              if (!rawQ) return null;
+
+              // Normalise both API raw format and engine format
+              const questionTextEn: string = rawQ.textEn || rawQ.content?.en?.questionText || '';
+              const questionTextHi: string = rawQ.textHi || rawQ.content?.hi?.questionText || questionTextEn;
+              const optionsEn: string[] = rawQ.optionsEn || rawQ.content?.en?.options || [];
+              const optionsHi: string[] = rawQ.optionsHi || rawQ.content?.hi?.options || optionsEn;
+              const correctIdx: number = rawQ.correctIndex !== undefined ? rawQ.correctIndex : (rawQ.correctOptionIndex ?? 0);
+              const explanationEn: string = rawQ.explanationEn || '';
+              const explanationHi: string = rawQ.explanationHi || '';
+              const testTitle = getTestTitle(bm.testId);
+              const isExpanded = !!expandedBookmarks[bm.questionId];
+
+              // Decode simple HTML entities
+              const decode = (s: string) => s
+                .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
+
+              return (
+                <View key={bm.questionId} style={{
+                  backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                  borderRadius: 14, borderWidth: 1,
+                  borderColor: isDark ? '#334155' : '#E2E8F0',
+                  overflow: 'hidden',
+                  elevation: 1, shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.06, shadowRadius: 4,
+                }}>
+                  {/* Top strip */}
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => toggleExpandBookmark(bm.questionId)}
+                    style={{ padding: 14 }}
+                  >
+                    {/* Test badge row */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <View style={{
+                        backgroundColor: isDark ? 'rgba(59,130,246,0.15)' : '#EFF6FF',
+                        borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
+                        borderWidth: 1, borderColor: isDark ? '#1D4ED8' : '#BFDBFE',
+                        maxWidth: '75%'
+                      }}>
+                        <Text style={{ fontSize: 9, fontWeight: '800', color: isDark ? '#93C5FD' : '#1D4ED8', textTransform: 'uppercase' }} numberOfLines={1}>
+                          {testTitle}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={{ fontSize: 9, fontWeight: '700', color: isDark ? '#64748B' : '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                          Q#{index + 1}
+                        </Text>
+                        {onToggleBookmark && (
+                          <TouchableOpacity
+                            onPress={() => onToggleBookmark(bm.testId, bm.questionId)}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <Trash2 size={14} color="#EF4444" />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+
+                    {/* Question preview */}
+                    <Text
+                      style={{ fontSize: 12, fontWeight: '600', color: isDark ? '#CBD5E1' : '#1E293B', lineHeight: 18 }}
+                      numberOfLines={2}
+                    >
+                      {decode(questionTextEn)}
+                    </Text>
+
+                    {/* Expand toggle */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#3B82F6', textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                        {isExpanded ? 'Hide Solution' : 'Show Solution & Options'}
+                      </Text>
+                      {isExpanded ? <ChevronUp size={12} color="#3B82F6" /> : <ChevronDown size={12} color="#3B82F6" />}
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* Expanded content */}
+                  {isExpanded && (
+                    <View style={{
+                      borderTopWidth: 1, borderTopColor: isDark ? '#334155' : '#F1F5F9',
+                      padding: 14, gap: 12
+                    }}>
+                      {/* Full question */}
+                      <View style={{
+                        backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
+                        borderRadius: 10, padding: 12,
+                        borderWidth: 1, borderColor: isDark ? '#1E293B' : '#E2E8F0'
+                      }}>
+                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#3B82F6', textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.4 }}>
+                          Question
+                        </Text>
+                        <Text style={{ fontSize: 12, color: isDark ? '#E2E8F0' : '#1E293B', lineHeight: 19 }}>
+                          {decode(questionTextEn)}
+                        </Text>
+                        {questionTextHi && questionTextHi !== questionTextEn && (
+                          <>
+                            <View style={{ height: 1, backgroundColor: isDark ? '#1E293B' : '#E2E8F0', marginVertical: 8 }} />
+                            <Text style={{ fontSize: 9, fontWeight: '800', color: '#6366F1', textTransform: 'uppercase', marginBottom: 4, letterSpacing: 0.4 }}>
+                              हिंदी
+                            </Text>
+                            <Text style={{ fontSize: 12, color: isDark ? '#CBD5E1' : '#374151', lineHeight: 19 }}>
+                              {decode(questionTextHi)}
+                            </Text>
+                          </>
+                        )}
+                      </View>
+
+                      {/* Options */}
+                      {optionsEn.length > 0 && (
+                        <View>
+                          <Text style={{ fontSize: 9, fontWeight: '800', color: isDark ? '#64748B' : '#94A3B8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.4 }}>
+                            Options & Answer
+                          </Text>
+                          <View style={{ gap: 6 }}>
+                            {optionsEn.map((opt: any, oIdx: number) => {
+                              const textEn = typeof opt === 'string' ? opt : opt?.text || String(opt);
+                              const rawHi = optionsHi[oIdx];
+                              const textHi = typeof rawHi === 'string' ? rawHi : rawHi?.text || textEn;
+                              const isCorrect = oIdx === correctIdx;
+                              return (
+                                <View key={oIdx} style={{
+                                  padding: 10, borderRadius: 10, borderWidth: 1,
+                                  backgroundColor: isCorrect
+                                    ? (isDark ? 'rgba(16,185,129,0.12)' : '#F0FDF4')
+                                    : (isDark ? '#0F172A' : '#F8FAFC'),
+                                  borderColor: isCorrect
+                                    ? (isDark ? '#059669' : '#86EFAC')
+                                    : (isDark ? '#1E293B' : '#E2E8F0'),
+                                }}>
+                                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                                    <Text style={{
+                                      flex: 1, fontSize: 12, lineHeight: 18,
+                                      fontWeight: isCorrect ? '700' : '500',
+                                      color: isCorrect
+                                        ? (isDark ? '#34D399' : '#065F46')
+                                        : (isDark ? '#94A3B8' : '#374151')
+                                    }}>
+                                      {String.fromCharCode(65 + oIdx)}. {decode(textEn)}
+                                    </Text>
+                                    {isCorrect && <CheckSquare size={16} color={isDark ? '#34D399' : '#059669'} />}
+                                  </View>
+                                  {textHi && textHi !== textEn && (
+                                    <Text style={{ fontSize: 10, color: isDark ? '#64748B' : '#9CA3AF', marginTop: 3 }}>
+                                      {decode(textHi)}
+                                    </Text>
+                                  )}
+                                </View>
+                              );
+                            })}
+                          </View>
+                        </View>
+                      )}
+
+                      {/* Explanation */}
+                      {(explanationEn || explanationHi) && (
+                        <View style={{
+                          backgroundColor: isDark ? 'rgba(59,130,246,0.08)' : '#EFF6FF',
+                          borderRadius: 10, padding: 12,
+                          borderWidth: 1, borderColor: isDark ? '#1D4ED8' : '#BFDBFE'
+                        }}>
+                          <Text style={{ fontSize: 9, fontWeight: '800', color: isDark ? '#60A5FA' : '#1D4ED8', textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.4 }}>
+                            Explanation
+                          </Text>
+                          {explanationEn && (
+                            <Text style={{ fontSize: 11, color: isDark ? '#CBD5E1' : '#1E293B', lineHeight: 17 }}>
+                              {decode(explanationEn)}
+                            </Text>
+                          )}
+                          {explanationHi && explanationHi !== explanationEn && (
+                            <>
+                              <View style={{ height: 1, backgroundColor: isDark ? '#1D4ED8' : '#BFDBFE', marginVertical: 6 }} />
+                              <Text style={{ fontSize: 11, color: isDark ? '#93C5FD' : '#1D4ED8', lineHeight: 17 }}>
+                                {decode(explanationHi)}
+                              </Text>
+                            </>
+                          )}
+                        </View>
+                      )}
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </ScrollView>
+    );
+  };
+
   const renderProfileTab = () => {
     const isPro = currentUser.subscriptionTier !== 'None';
     return (
@@ -1612,6 +1919,7 @@ export default function DashboardScreen({
         {activeTab === 'home' && renderHomeTab()}
         {activeTab === 'tests' && renderTestsTab()}
         {activeTab === 'notices' && renderNoticesTab()}
+        {activeTab === 'bookmarks' && renderBookmarksTab()}
         {activeTab === 'profile' && renderProfileTab()}
       </View>
 
@@ -1677,6 +1985,34 @@ export default function DashboardScreen({
             isDark && activeTab === 'notices' && { color: '#60A5FA' },
             isDark && activeTab !== 'notices' && { color: '#94A3B8' }
           ]}>Notices</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.navBtn, 
+            activeTab === 'bookmarks' && styles.navBtnActive,
+            activeTab === 'bookmarks' && isDark && { borderTopColor: '#F59E0B' }
+          ]}
+          onPress={() => setActiveTab('bookmarks')}
+        >
+          <View style={styles.iconBadgeContainer}>
+            <Bookmark
+              size={20}
+              color={activeTab === 'bookmarks' ? (isDark ? '#F59E0B' : '#D97706') : (isDark ? '#94A3B8' : '#6B7280')}
+              fill={activeTab === 'bookmarks' ? (isDark ? '#F59E0B' : '#D97706') : 'none'}
+            />
+            {(currentUser?.bookmarkedQuestions?.length || 0) > 0 && (
+              <View style={[styles.badge, { backgroundColor: '#F59E0B' }, isDark && { borderColor: ThemeColors.dark.bottomNavBg }]}>
+                <Text style={styles.badgeText}>{currentUser?.bookmarkedQuestions?.length}</Text>
+              </View>
+            )}
+          </View>
+          <Text style={[
+            styles.navText, 
+            activeTab === 'bookmarks' && styles.navTextActive,
+            activeTab === 'bookmarks' && { color: isDark ? '#F59E0B' : '#D97706' },
+            isDark && activeTab !== 'bookmarks' && { color: '#94A3B8' }
+          ]}>Saved</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
