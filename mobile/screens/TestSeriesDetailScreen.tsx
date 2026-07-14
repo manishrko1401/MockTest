@@ -385,26 +385,7 @@ export default function TestSeriesDetailScreen({
                                 </Text>
                               </View>
                             )}
-                            {isPaused && (
-                              <View style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
-                                borderColor: isDark ? '#2563EB' : '#3B82F6',
-                                borderWidth: 1,
-                                borderRadius: 8,
-                                paddingVertical: 6,
-                                paddingHorizontal: 10,
-                                gap: 6,
-                                marginTop: 4,
-                                marginBottom: 12,
-                                alignSelf: 'flex-start',
-                              }}>
-                                <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#3B82F6' }}>
-                                  {language === 'en' ? '⏸ In-Progress (Paused)' : '⏸ प्रगति पर है (रुका हुआ)'}
-                                </Text>
-                              </View>
-                            )}
+                             
 
                             {/* Actions */}
                             {allowed ? (
@@ -583,26 +564,7 @@ export default function TestSeriesDetailScreen({
                       </Text>
                     </View>
                   )}
-                  {isPaused && (
-                    <View style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
-                      borderColor: isDark ? '#2563EB' : '#3B82F6',
-                      borderWidth: 1,
-                      borderRadius: 8,
-                      paddingVertical: 6,
-                      paddingHorizontal: 10,
-                      gap: 6,
-                      marginTop: 4,
-                      marginBottom: 12,
-                      alignSelf: 'flex-start',
-                    }}>
-                      <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#3B82F6' }}>
-                        {language === 'en' ? '⏸ In-Progress (Paused)' : '⏸ प्रगति पर है (रुका हुआ)'}
-                      </Text>
-                    </View>
-                  )}
+                  
 
                   {/* Actions */}
                   {allowed ? (

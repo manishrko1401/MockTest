@@ -435,33 +435,7 @@ export default function AnalysisScreen({
             contentContainerStyle={styles.analysisContentContainer}
             showsVerticalScrollIndicator={false}
           >
-            {/* 1. CUTOFF / PERFORMANCE STATUS BANNER */}
-            <View style={[
-              styles.statusBannerCard,
-              isCutoffCleared 
-                ? { backgroundColor: isDark ? '#062C1E' : '#ECFDF5', borderColor: isDark ? '#065F46' : '#A7F3D0' }
-                : { backgroundColor: isDark ? '#451A03' : '#FFF7ED', borderColor: isDark ? '#78350F' : '#FFEDD5' }
-            ]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={[
-                  styles.statusIconCircle,
-                  { backgroundColor: isCutoffCleared ? '#10B981' : '#F59E0B' }
-                ]}>
-                  {isCutoffCleared ? <Check color="#FFF" size={20} /> : <AlertTriangle color="#FFF" size={20} />}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.statusTitleText, { color: isCutoffCleared ? (isDark ? '#34D399' : '#065F46') : (isDark ? '#FBBF24' : '#9A3412') }]}>
-                    {isCutoffCleared ? 'Cutoff Cleared! 🎉' : 'Cutoff Not Cleared ⌛'}
-                  </Text>
-                  <Text style={[styles.statusDescText, { color: isDark ? '#94A3B8' : (isCutoffCleared ? '#047857' : '#C2410C') }]}>
-                    {isCutoffCleared 
-                      ? `Great job! Your score is ${scoreVal.toFixed(1)}, which is above the cutoff range of ${cutoffScoreStr}. You have successfully cleared the qualification line!`
-                      : `Keep practicing! Your score is ${scoreVal.toFixed(1)}. You missed the cutoff range of ${cutoffScoreStr} by ${(parseFloat(cutoffScoreStr) - scoreVal).toFixed(1)} marks.`
-                    }
-                  </Text>
-                </View>
-              </View>
-            </View>
+            {/* 1. CUTOFF / PERFORMANCE STATUS BANNER (HIDDEN) */}
 
             {/* 2. ATTEMPT SWITCHER ROW */}
             {testAttempts.length > 1 && (
