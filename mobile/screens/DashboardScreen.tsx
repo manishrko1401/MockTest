@@ -1786,7 +1786,9 @@ export default function DashboardScreen({
           <View style={[styles.sysDetailItem, { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F1F5F9', paddingBottom: 10, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <KeyRound size={16} color={isDark ? '#60A5FA' : '#2563EB'} />
-              <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>System Role</Text>
+              <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>
+                {language === 'en' ? 'System Role' : 'सिस्टम भूमिका'}
+              </Text>
             </View>
             <Text style={[styles.sysDetailVal, isDark ? { color: '#E2E8F0' } : { color: '#1F2937' }, { fontWeight: 'bold' }]}>{currentUser.role}</Text>
           </View>
@@ -1794,13 +1796,17 @@ export default function DashboardScreen({
           <View style={[styles.sysDetailItem, { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F1F5F9', paddingBottom: 10, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Trophy size={16} color="#F59E0B" />
-              <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>Pass Status</Text>
+              <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>
+                {language === 'en' ? 'Pass Status' : 'पास की स्थिति'}
+              </Text>
             </View>
             <Text style={[
               styles.sysDetailVal,
               { color: isPro ? '#EC4899' : (isDark ? '#E2E8F0' : '#475569'), fontWeight: 'bold' }
             ]}>
-              {currentUser.subscriptionTier === 'None' ? 'No Active Pass' : currentUser.subscriptionTier.replace('Testbook', 'Mock Test')}
+              {currentUser.subscriptionTier === 'None' 
+                ? (language === 'en' ? 'No Active Pass' : 'कोई सक्रिय पास नहीं') 
+                : currentUser.subscriptionTier.replace('Testbook', 'Mock Test')}
             </Text>
           </View>
 
@@ -1808,7 +1814,9 @@ export default function DashboardScreen({
             <View style={[styles.sysDetailItem, { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F1F5F9', paddingBottom: 10, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Calendar size={16} color="#10B981" />
-                <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>Purchased At</Text>
+                <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>
+                  {language === 'en' ? 'Purchased At' : 'खरीद तिथि'}
+                </Text>
               </View>
               <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.subscriptionPurchasedAt}</Text>
             </View>
@@ -1818,7 +1826,9 @@ export default function DashboardScreen({
             <View style={[styles.sysDetailItem, { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F1F5F9', paddingBottom: 10, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Calendar size={16} color="#EF4444" />
-                <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>Expires At</Text>
+                <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>
+                  {language === 'en' ? 'Expires At' : 'समाप्ति तिथि'}
+                </Text>
               </View>
               <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.subscriptionExpiresAt}</Text>
             </View>
@@ -1827,7 +1837,9 @@ export default function DashboardScreen({
           <View style={[styles.sysDetailItem, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Calendar size={16} color={isDark ? '#94A3B8' : '#64748B'} />
-              <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>Registered On</Text>
+              <Text style={[styles.sysDetailLabel, { marginBottom: 0, textTransform: 'none', fontWeight: '700' }, isDark && { color: ThemeColors.dark.textMuted }]}>
+                {language === 'en' ? 'Registered On' : 'पंजीकरण तिथि'}
+              </Text>
             </View>
             <Text style={[styles.sysDetailVal, isDark && { color: ThemeColors.dark.text }]}>{currentUser.registeredDate || 'Recently'}</Text>
           </View>
@@ -1894,9 +1906,13 @@ export default function DashboardScreen({
           {/* Decorative Floating Spheres */}
           <View style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(245,158,11,0.06)' }} />
 
-          <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>🎁 Referral Program</Text>
+          <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>
+            {language === 'en' ? '🎁 Referral Program' : '🎁 रेफरल प्रोग्राम'}
+          </Text>
           <Text style={[styles.sysDetailLabel, { marginTop: 6, marginBottom: 12, textTransform: 'none', lineHeight: 16 }, isDark && { color: ThemeColors.dark.textMuted }]}>
-            Invite your friends to prepare with MockTest Hub. Share your referral code below:
+            {language === 'en' 
+              ? 'Invite your friends to prepare with MockTest Hub. Share your referral code below:' 
+              : 'अपने दोस्तों को मॉक टेस्ट के साथ तैयारी करने के लिए आमंत्रित करें। नीचे अपना रेफरल कोड साझा करें:'}
           </Text>
 
           <View style={[
@@ -1906,7 +1922,9 @@ export default function DashboardScreen({
           ]}>
             <Text style={[styles.referralCodeText, { color: '#D97706', letterSpacing: 1.5, fontSize: 16 }]}>{currentUser.referralCode}</Text>
             <TouchableOpacity style={[styles.copyReferralBtn, { backgroundColor: '#F59E0B' }]} onPress={shareReferralCode}>
-              <Text style={styles.copyReferralBtnText}>Share & Copy</Text>
+              <Text style={styles.copyReferralBtnText}>
+                {language === 'en' ? 'Share & Copy' : 'साझा और कॉपी करें'}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -1915,8 +1933,14 @@ export default function DashboardScreen({
             style={[styles.collapsibleHeader, { marginTop: 16, borderTopWidth: 1, borderTopColor: isDark ? '#334155' : '#F3F4F6', paddingTop: 12 }]} 
             onPress={() => setShowReferralRules(!showReferralRules)}
           >
-            <Text style={[styles.formCardTitle, { fontSize: 12 }, isDark && { color: ThemeColors.dark.text }]}>📋 How It Works & Rules</Text>
-            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>{showReferralRules ? '▲ Hide' : '▼ View'}</Text>
+            <Text style={[styles.formCardTitle, { fontSize: 12 }, isDark && { color: ThemeColors.dark.text }]}>
+              {language === 'en' ? '📋 How It Works & Rules' : '📋 यह कैसे काम करता है और नियम'}
+            </Text>
+            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>
+              {showReferralRules 
+                ? (language === 'en' ? '▲ Hide' : '▲ छिपाएं') 
+                : (language === 'en' ? '▼ View' : '▼ देखें')}
+            </Text>
           </TouchableOpacity>
 
           {showReferralRules && (
@@ -1924,32 +1948,56 @@ export default function DashboardScreen({
               <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
                 <View style={styles.ruleStepNumberContainer}><Text style={styles.ruleStepNumber}>1</Text></View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Share Invite Code</Text>
-                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>Copy your code and share it with friends who are preparing for competitive exams.</Text>
+                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>
+                    {language === 'en' ? 'Share Invite Code' : 'इनवाइट कोड साझा करें'}
+                  </Text>
+                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>
+                    {language === 'en' 
+                      ? 'Copy your code and share it with friends who are preparing for competitive exams.' 
+                      : 'अपना कोड कॉपी करें और उन दोस्तों के साथ साझा करें जो प्रतियोगी परीक्षाओं की तैयारी कर रहे हैं।'}
+                  </Text>
                 </View>
               </View>
 
               <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
                 <View style={[styles.ruleStepNumberContainer, { backgroundColor: '#C084FC' }]}><Text style={styles.ruleStepNumber}>2</Text></View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Friend Registers</Text>
-                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>Your friend signs up on Mock Test and enters your referral code on the signup screen.</Text>
+                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>
+                    {language === 'en' ? 'Friend Registers' : 'मित्र का पंजीकरण'}
+                  </Text>
+                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>
+                    {language === 'en' 
+                      ? 'Your friend signs up on Mock Test and enters your referral code on the signup screen.' 
+                      : 'आपका मित्र मॉक टेस्ट पर साइन अप करता है और साइनअप स्क्रीन पर आपका रेफरल कोड दर्ज करता है।'}
+                  </Text>
                 </View>
               </View>
 
               <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
                 <View style={[styles.ruleStepNumberContainer, { backgroundColor: '#FBBF24' }]}><Text style={styles.ruleStepNumber}>3</Text></View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Complete First Mock Test</Text>
-                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>Once they complete any full-length or practice mock test sitting on the CBT interface.</Text>
+                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>
+                    {language === 'en' ? 'Complete First Mock Test' : 'पहला मॉक टेस्ट पूरा करें'}
+                  </Text>
+                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>
+                    {language === 'en' 
+                      ? 'Once they complete any full-length or practice mock test sitting on the CBT interface.' 
+                      : 'जैसे ही वे सीबीटी इंटरफ़ेस पर कोई भी पूर्ण या अभ्यास मॉक टेस्ट प्रयास पूरा करते हैं।'}
+                  </Text>
                 </View>
               </View>
 
               <View style={[styles.ruleStepItem, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
                 <View style={[styles.ruleStepNumberContainer, { backgroundColor: '#34D399' }]}><Text style={styles.ruleStepNumber}>4</Text></View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>Both Receive Coins</Text>
-                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>You get 20 Coins and your friend gets 10 Coins instantly credited!</Text>
+                  <Text style={[styles.ruleStepTitle, isDark && { color: ThemeColors.dark.text }]}>
+                    {language === 'en' ? 'Both Receive Coins' : 'दोनों को सिक्के प्राप्त होंगे'}
+                  </Text>
+                  <Text style={[styles.ruleStepDesc, isDark && { color: ThemeColors.dark.textMuted }]}>
+                    {language === 'en' 
+                      ? 'You get 20 Coins and your friend gets 10 Coins instantly credited!' 
+                      : 'आपको तुरंत 20 सिक्के और आपके मित्र को 10 सिक्के प्राप्त होंगे!'}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -1961,14 +2009,20 @@ export default function DashboardScreen({
             onPress={() => setShowReferredFriends(!showReferredFriends)}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[styles.formCardTitle, { fontSize: 12 }, isDark && { color: ThemeColors.dark.text }]}>👥 Referred Friends Tracker</Text>
+              <Text style={[styles.formCardTitle, { fontSize: 12 }, isDark && { color: ThemeColors.dark.text }]}>
+                {language === 'en' ? '👥 Referred Friends Tracker' : '👥 आमंत्रित मित्रों की सूची'}
+              </Text>
               <View style={styles.referredCountBadge}>
                 <Text style={styles.referredCountBadgeText}>
                   {currentUser.referralsCount}
                 </Text>
               </View>
             </View>
-            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>{showReferredFriends ? '▲ Hide' : '▼ Track'}</Text>
+            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>
+              {showReferredFriends 
+                ? (language === 'en' ? '▲ Hide' : '▲ छिपाएं') 
+                : (language === 'en' ? '▼ Track' : '▼ ट्रैक करें')}
+            </Text>
           </TouchableOpacity>
 
           {showReferredFriends && (() => {
@@ -1984,7 +2038,7 @@ export default function DashboardScreen({
               return (
                 <View style={{ marginTop: 10, padding: 16, alignItems: 'center', backgroundColor: isDark ? '#0B1329' : '#F9FAFB', borderRadius: 8 }}>
                   <Text style={{ fontSize: 11, color: isDark ? '#94A3B8' : '#6B7280', fontStyle: 'italic' }}>
-                    You haven't referred any candidates yet.
+                    {language === 'en' ? "You haven't referred any candidates yet." : 'आपने अभी तक किसी भी उम्मीदवार को आमंत्रित नहीं किया है।'}
                   </Text>
                 </View>
               );
@@ -2000,7 +2054,9 @@ export default function DashboardScreen({
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text style={[styles.friendNameText, isDark && { color: ThemeColors.dark.text }]}>{friend.name || 'Candidate'}</Text>
                         <Text style={[styles.friendProgressText, { color: hasCompletedTest ? '#10B981' : '#F59E0B' }]}>
-                          {hasCompletedTest ? 'Completed! 20 Coins' : 'Pending Test Attempt'}
+                          {hasCompletedTest 
+                            ? (language === 'en' ? 'Completed! 20 Coins' : 'पूरा हुआ! 20 सिक्के') 
+                            : (language === 'en' ? 'Pending Test Attempt' : 'टेस्ट का प्रयास लंबित')}
                         </Text>
                       </View>
                       
@@ -2011,9 +2067,11 @@ export default function DashboardScreen({
 
                       {/* Steps detail */}
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-                        <Text style={styles.stepDetailLabel}>✓ Registered</Text>
+                        <Text style={styles.stepDetailLabel}>{language === 'en' ? '✓ Registered' : '✓ पंजीकृत'}</Text>
                         <Text style={[styles.stepDetailLabel, { color: hasCompletedTest ? '#10B981' : '#6B7280' }]}>
-                          {hasCompletedTest ? '✓ Test Completed' : '⌛ Attempting test...'}
+                          {hasCompletedTest 
+                            ? (language === 'en' ? '✓ Test Completed' : '✓ टेस्ट पूरा हुआ') 
+                            : (language === 'en' ? '⌛ Attempting test...' : '⌛ टेस्ट का प्रयास कर रहे हैं...')}
                         </Text>
                       </View>
                     </View>
@@ -2026,21 +2084,29 @@ export default function DashboardScreen({
 
         {/* Support Chat Card */}
         <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-          <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>💬 Talk to Support Team</Text>
-          <Text style={[styles.sysDetailLabel, { marginTop: 6, marginBottom: 12, textTransform: 'none' }, isDark && { color: ThemeColors.dark.textMuted }]}>
-            Have any questions, doubts, or technical issues? Get in touch with our support representatives directly.
+          <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>
+            {language === 'en' ? '💬 Talk to Support Team' : '💬 सहायता टीम से बात करें'}
+          </Text>
+          <Text style={[styles.sysDetailLabel, { marginTop: 6, marginBottom: 12, textTransform: 'none', lineHeight: 16 }, isDark && { color: ThemeColors.dark.textMuted }]}>
+            {language === 'en' 
+              ? 'Have any questions, doubts, or technical issues? Get in touch with our support representatives directly.' 
+              : 'कोई प्रश्न, संदेह या तकनीकी समस्या है? सीधे हमारे सहायता प्रतिनिधियों से संपर्क करें।'}
           </Text>
           <TouchableOpacity 
             style={[styles.formSubmitBtn, { backgroundColor: '#2563EB', marginTop: 0 }]} 
             onPress={onOpenSupportChat}
           >
-            <Text style={styles.formSubmitBtnText}>Start Chatting</Text>
+            <Text style={styles.formSubmitBtnText}>
+              {language === 'en' ? 'Start Chatting' : 'चैट शुरू करें'}
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* App Theme Settings */}
         <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-          <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>🎨 App Theme Settings</Text>
+          <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>
+            {language === 'en' ? '🎨 App Theme Settings' : '🎨 ऐप थीम सेटिंग्स'}
+          </Text>
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
             <TouchableOpacity 
               activeOpacity={0.8}
@@ -2050,7 +2116,9 @@ export default function DashboardScreen({
               ]}
               onPress={() => onToggleTheme && onToggleTheme(false)}
             >
-              <Text style={[styles.themeToggleText, !isDark ? styles.themeToggleTextActive : styles.themeToggleTextInactive]}>☀️ Light Mode</Text>
+              <Text style={[styles.themeToggleText, !isDark ? styles.themeToggleTextActive : styles.themeToggleTextInactive]}>
+                {language === 'en' ? '☀️ Light Mode' : '☀️ लाइट मोड'}
+              </Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -2061,7 +2129,9 @@ export default function DashboardScreen({
               ]}
               onPress={() => onToggleTheme && onToggleTheme(true)}
             >
-              <Text style={[styles.themeToggleText, isDark ? styles.themeToggleTextActive : styles.themeToggleTextInactive]}>🌙 Dark Mode</Text>
+              <Text style={[styles.themeToggleText, isDark ? styles.themeToggleTextActive : styles.themeToggleTextInactive]}>
+                {language === 'en' ? '🌙 Dark Mode' : '🌙 डार्क मोड'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -2072,14 +2142,22 @@ export default function DashboardScreen({
             style={[styles.collapsibleHeader, showUpdateProfile && { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F3F4F6', paddingBottom: 8 }]} 
             onPress={() => setShowUpdateProfile(!showUpdateProfile)}
           >
-            <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>👤 Update Profile Details</Text>
-            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>{showUpdateProfile ? '▲ Collapse' : '▼ Expand'}</Text>
+            <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>
+              {language === 'en' ? '👤 Update Profile Details' : '👤 प्रोफ़ाइल विवरण अपडेट करें'}
+            </Text>
+            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>
+              {showUpdateProfile 
+                ? (language === 'en' ? '▲ Collapse' : '▲ समेटें') 
+                : (language === 'en' ? '▼ Expand' : '▼ फैलाएं')}
+            </Text>
           </TouchableOpacity>
 
           {showUpdateProfile && (
             <View style={{ marginTop: 12 }}>
               <View style={styles.formInputGroup}>
-                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Full Name</Text>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
+                  {language === 'en' ? 'Full Name' : 'पूरा नाम'}
+                </Text>
                 <TextInput
                   style={[styles.formInput, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
                   placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
@@ -2088,7 +2166,9 @@ export default function DashboardScreen({
                 />
               </View>
               <View style={styles.formInputGroup}>
-                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Email Address</Text>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
+                  {language === 'en' ? 'Email Address' : 'ईमेल पता'}
+                </Text>
                 <TextInput
                   style={[styles.formInput, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
                   placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
@@ -2099,7 +2179,9 @@ export default function DashboardScreen({
                 />
               </View>
               <View style={styles.formInputGroup}>
-                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Mobile Number</Text>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
+                  {language === 'en' ? 'Mobile Number' : 'मोबाइल नंबर'}
+                </Text>
                 <TextInput
                   style={[styles.formInput, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder, color: ThemeColors.dark.text }]}
                   placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
@@ -2109,7 +2191,9 @@ export default function DashboardScreen({
                 />
               </View>
               <TouchableOpacity style={styles.formSubmitBtn} onPress={handleUpdateProfile}>
-                <Text style={styles.formSubmitBtnText}>Save Profile Details</Text>
+                <Text style={styles.formSubmitBtnText}>
+                  {language === 'en' ? 'Save Profile Details' : 'प्रोफ़ाइल विवरण सहेजें'}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -2121,14 +2205,22 @@ export default function DashboardScreen({
             style={[styles.collapsibleHeader, showChangePassword && { borderBottomWidth: 1, borderBottomColor: isDark ? '#334155' : '#F3F4F6', paddingBottom: 8 }]} 
             onPress={() => setShowChangePassword(!showChangePassword)}
           >
-            <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>🔑 Change Account Password</Text>
-            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>{showChangePassword ? '▲ Collapse' : '▼ Expand'}</Text>
+            <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>
+              {language === 'en' ? '🔑 Change Account Password' : '🔑 खाता पासवर्ड बदलें'}
+            </Text>
+            <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>
+              {showChangePassword 
+                ? (language === 'en' ? '▲ Collapse' : '▲ समेटें') 
+                : (language === 'en' ? '▼ Expand' : '▼ फैलाएं')}
+            </Text>
           </TouchableOpacity>
 
           {showChangePassword && (
             <View style={{ marginTop: 12 }}>
               <View style={styles.formInputGroup}>
-                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Old Password</Text>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
+                  {language === 'en' ? 'Old Password' : 'पुराना पासवर्ड'}
+                </Text>
                 <View style={[styles.pwInputRow, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
                   <TextInput
                     style={[styles.pwInput, isDark && { color: ThemeColors.dark.text }]}
@@ -2139,12 +2231,18 @@ export default function DashboardScreen({
                     autoCapitalize="none"
                   />
                   <TouchableOpacity onPress={() => setShowOldPassword(!showOldPassword)}>
-                    <Text style={[styles.pwToggleText, isDark && { color: '#60A5FA' }]}>{showOldPassword ? 'Hide' : 'Show'}</Text>
+                    <Text style={[styles.pwToggleText, isDark && { color: '#60A5FA' }]}>
+                      {showOldPassword 
+                        ? (language === 'en' ? 'Hide' : 'छिपाएं') 
+                        : (language === 'en' ? 'Show' : 'दिखाएं')}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
               <View style={styles.formInputGroup}>
-                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>New Password</Text>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
+                  {language === 'en' ? 'New Password' : 'नया पासवर्ड'}
+                </Text>
                 <View style={[styles.pwInputRow, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
                   <TextInput
                     style={[styles.pwInput, isDark && { color: ThemeColors.dark.text }]}
@@ -2155,12 +2253,18 @@ export default function DashboardScreen({
                     autoCapitalize="none"
                   />
                   <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
-                    <Text style={[styles.pwToggleText, isDark && { color: '#60A5FA' }]}>{showNewPassword ? 'Hide' : 'Show'}</Text>
+                    <Text style={[styles.pwToggleText, isDark && { color: '#60A5FA' }]}>
+                      {showNewPassword 
+                        ? (language === 'en' ? 'Hide' : 'छिपाएं') 
+                        : (language === 'en' ? 'Show' : 'दिखाएं')}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
               <View style={styles.formInputGroup}>
-                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Confirm New Password</Text>
+                <Text style={[styles.formInputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
+                  {language === 'en' ? 'Confirm New Password' : 'नए पासवर्ड की पुष्टि करें'}
+                </Text>
                 <View style={[styles.pwInputRow, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
                   <TextInput
                     style={[styles.pwInput, isDark && { color: ThemeColors.dark.text }]}
@@ -2171,12 +2275,18 @@ export default function DashboardScreen({
                     autoCapitalize="none"
                   />
                   <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                    <Text style={[styles.pwToggleText, isDark && { color: '#60A5FA' }]}>{showConfirmPassword ? 'Hide' : 'Show'}</Text>
+                    <Text style={[styles.pwToggleText, isDark && { color: '#60A5FA' }]}>
+                      {showConfirmPassword 
+                        ? (language === 'en' ? 'Hide' : 'छिपाएं') 
+                        : (language === 'en' ? 'Show' : 'दिखाएं')}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
               <TouchableOpacity style={[styles.formSubmitBtn, { backgroundColor: '#2563EB' }]} onPress={handleUpdatePassword}>
-                <Text style={styles.formSubmitBtnText}>Update Account Password</Text>
+                <Text style={styles.formSubmitBtnText}>
+                  {language === 'en' ? 'Update Account Password' : 'खाता पासवर्ड अपडेट करें'}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -2184,7 +2294,9 @@ export default function DashboardScreen({
 
         <TouchableOpacity style={[styles.logoutBtn, isDark && { backgroundColor: '#3F1F1F', borderColor: '#EF4444' }]} onPress={onLogout}>
           <LogOut size={16} color="#EF4444" />
-          <Text style={[styles.logoutText, isDark && { color: '#FCA5A5' }]}>Log Out Account</Text>
+          <Text style={[styles.logoutText, isDark && { color: '#FCA5A5' }]}>
+            {language === 'en' ? 'Log Out Account' : 'खाता लॉगआउट करें'}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     );
