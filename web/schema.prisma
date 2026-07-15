@@ -56,6 +56,8 @@ model User {
   coins                   Int                @default(0)
   referralCoinsCredited   Boolean            @default(false)
   currentSessionId        String?
+  otpCode                 String?
+  otpExpiresAt            DateTime?
   supportMessages         SupportMessage[]
 
   @@map("users")

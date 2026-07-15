@@ -2308,9 +2308,12 @@ async function handleRequestPasswordReset(data: any) {
   // 2. Generate 6-digit OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   
-  // 3. Cache it (expires in 5 minutes)
-  const expiresAt = Date.now() + 5 * 60 * 1000;
-  otpCache.set(trimmedEmail, { code: otp, expiresAt });
+  // 3. Save OTP to database (works across Vercel serverless instances)
+  const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+  await prisma.user.update({
+    where: { email: trimmedEmail },
+    data: { otpCode: otp, otpExpiresAt }
+  });
 
   // 4. Send email
   try {
@@ -2378,18 +2381,23 @@ async function handleConfirmPasswordReset(data: any) {
   }
 
   const trimmedEmail = email.trim().toLowerCase();
-  const cached = otpCache.get(trimmedEmail);
 
-  if (!cached) {
+  // Read OTP from database (shared across all serverless instances)
+  const user = await prisma.user.findUnique({
+    where: { email: trimmedEmail },
+    select: { otpCode: true, otpExpiresAt: true }
+  });
+
+  if (!user || !user.otpCode || !user.otpExpiresAt) {
     return NextResponse.json({ success: false, error: 'Verification code expired or not found. Please request a new one.' }, { status: 400 });
   }
 
-  if (cached.code !== otp.trim()) {
+  if (user.otpCode !== otp.trim()) {
     return NextResponse.json({ success: false, error: 'Invalid verification code. Please check and try again.' }, { status: 400 });
   }
 
-  if (Date.now() > cached.expiresAt) {
-    otpCache.delete(trimmedEmail);
+  if (new Date() > user.otpExpiresAt) {
+    await prisma.user.update({ where: { email: trimmedEmail }, data: { otpCode: null, otpExpiresAt: null } });
     return NextResponse.json({ success: false, error: 'Verification code has expired. Please request a new code.' }, { status: 400 });
   }
 
@@ -2397,15 +2405,12 @@ async function handleConfirmPasswordReset(data: any) {
   try {
     await prisma.user.update({
       where: { email: trimmedEmail },
-      data: { passwordHash: newPassword }
+      data: { passwordHash: newPassword, otpCode: null, otpExpiresAt: null }
     });
 
-    // Clear cache
-    otpCache.delete(trimmedEmail);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Password reset DB update failed:', error);
     return NextResponse.json({ success: false, error: 'Failed to update password. Please try again.' }, { status: 500 });
   }
 }
-
