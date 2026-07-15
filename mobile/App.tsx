@@ -127,16 +127,6 @@ export default function App() {
     }
   };
 
-  // Register session invalidated callback to force logout on multi-device login conflict
-  useEffect(() => {
-    ApiClient.onSessionInvalidated(() => {
-      Alert.alert(
-        "Session Expired",
-        "You have been logged out because your account is active on another device.",
-        [{ text: "OK", onPress: () => handleLogout() }]
-      );
-    });
-  }, [currentUser]);
 
   // 1. Initial mounting check for saved credentials & bootstrap catalogs
   useEffect(() => {

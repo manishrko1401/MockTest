@@ -23,16 +23,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'No action provided' }, { status: 400 });
     }
 
-    // Centrally prevent simultaneous multi-device logins
-    if (data && data.userId && data.sessionId && action !== 'login' && action !== 'signup') {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: data.userId },
-        select: { currentSessionId: true }
-      });
-      if (dbUser && dbUser.currentSessionId && dbUser.currentSessionId !== data.sessionId) {
-        return NextResponse.json({ success: false, error: 'SESSION_INVALIDATED' }, { status: 401 });
-      }
-    }
 
     switch (action) {
       case 'bootstrap':
