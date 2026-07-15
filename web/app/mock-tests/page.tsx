@@ -1048,9 +1048,20 @@ export default function MockTestsCatalog() {
                           {t.testSeriesDesc}
                         </p>
                       </div>
+
+                      {currentCategoryObj?.logoUrl && (
+                        <div className="flex-1 flex justify-center items-center">
+                          <img 
+                            src={currentCategoryObj.logoUrl} 
+                            alt={`${currentCategoryObj.name} logo`} 
+                            className="h-10 w-auto max-h-12 object-contain rounded-md"
+                          />
+                        </div>
+                      )}
+
                       <button
                         onClick={() => setSelectedSubCategory(null)}
-                        className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95"
+                        className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 shrink-0"
                       >
                         <ArrowLeft className="h-4 w-4" /> {t.backToSubcategories}
                       </button>
