@@ -179,12 +179,12 @@ export default function AnalysisScreen({
   const sectionalAnalysis = useMemo(() => {
     // Derive per-test marking scheme (same logic as examUtils.ts + prefer DB metadata)
     const testId = activeAttempt.testId || '';
-    const pmFromMeta = activeAttempt.mockTest?.positiveMarks ?? activeAttempt.positiveMarks;
-    const nmFromMeta = activeAttempt.mockTest?.negativeMarks ?? activeAttempt.negativeMarks;
+    const pmFromMeta = activeAttempt.positiveMarks ?? activeAttempt.mockTest?.positiveMarks ?? testPositiveMarks;
+    const nmFromMeta = activeAttempt.negativeMarks ?? activeAttempt.mockTest?.negativeMarks ?? testNegativeMarks;
     // Fallbacks match examUtils.ts: RRB = +1/−0.33, SSC/others = +2/−0.5
-    const positiveMark: number = pmFromMeta !== undefined ? Number(pmFromMeta) :
+    const positiveMark: number = (pmFromMeta !== undefined && pmFromMeta !== null) ? Number(pmFromMeta) :
       (testId.includes('rrb') || testId.includes('railway') ? 1 : 2);
-    const negativeMark: number = nmFromMeta !== undefined ? Number(nmFromMeta) :
+    const negativeMark: number = (nmFromMeta !== undefined && nmFromMeta !== null) ? Number(nmFromMeta) :
       (testId.includes('rrb') || testId.includes('railway') ? 0.33 : 0.5);
 
     const sectionsMap: Record<string, {
@@ -258,6 +258,12 @@ export default function AnalysisScreen({
         })));
         setLoadingQs(false);
         ApiClient.getCustomQuestions(activeAttempt.testId).then(res => {
+          if (res.positiveMarks !== null && res.positiveMarks !== undefined) {
+            setTestPositiveMarks(Number(res.positiveMarks));
+          }
+          if (res.negativeMarks !== null && res.negativeMarks !== undefined) {
+            setTestNegativeMarks(Number(res.negativeMarks));
+          }
           if (res.success && res.questions && Array.isArray(res.questions)) {
             saveQuestionsToCache(activeAttempt.testId, res.questions);
           }

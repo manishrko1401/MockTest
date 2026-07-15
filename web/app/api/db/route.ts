@@ -514,6 +514,8 @@ async function handleLogin(data: any) {
               title: true,
               maxMarks: true,
               durationMinutes: true,
+              positiveMarks: true,
+              negativeMarks: true,
             }
           },
           responses: true,
@@ -582,6 +584,8 @@ async function handleLogin(data: any) {
         currentQuestionIndex: session.currentQuestionIndex,
         testbookRank: session.testbookRank ?? null,
         testbookPercentile: session.testbookPercentile ?? null,
+        positiveMarks: session.mockTest?.positiveMarks ?? null,
+        negativeMarks: session.mockTest?.negativeMarks ?? null,
       };
     }),
   };
@@ -2109,6 +2113,8 @@ async function handleGetUserDetails(data: any) {
               title: true,
               maxMarks: true,
               durationMinutes: true,
+              positiveMarks: true,
+              negativeMarks: true,
             }
           },
           // responses excluded — too heavy and not needed for admin list view
