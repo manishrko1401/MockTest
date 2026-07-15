@@ -556,12 +556,28 @@ export default function AnalysisScreen({
 
               {/* Time Taken Card */}
               {(() => {
-                const rawSecs = activeAttempt.durationSeconds ?? activeAttempt.timeSpentSeconds ?? 0;
-                const spentSec = Math.max(0, Number(rawSecs) || 0);
+                // Primary: durationSeconds = timeSpentSeconds from DB (total - remaining at submit)
+                // Fallback: derive from (allotted total - remaining seconds saved at submit)
+                // This handles older sessions where timeSpentSeconds was not stored.
+                let spentSec = 0;
+                const rawDur = activeAttempt.durationSeconds ?? activeAttempt.timeSpentSeconds;
+                if (rawDur !== null && rawDur !== undefined && Number(rawDur) > 0) {
+                  spentSec = Number(rawDur);
+                } else {
+                  // Fallback: allotted_minutes × 60 - time_remaining_at_submit
+                  const allottedSec = (activeAttempt.durationMinutes ?? 60) * 60;
+                  const remaining = activeAttempt.timeRemaining ?? activeAttempt.remainingSeconds;
+                  if (remaining !== null && remaining !== undefined) {
+                    spentSec = Math.max(0, allottedSec - Number(remaining));
+                  }
+                }
+                spentSec = Math.floor(spentSec);
                 const hrs = Math.floor(spentSec / 3600);
                 const mins = Math.floor((spentSec % 3600) / 60);
                 const secs = spentSec % 60;
-                const timeStr = hrs > 0
+                const timeStr = spentSec <= 0
+                  ? '—'
+                  : hrs > 0
                   ? `${hrs}h ${mins}m ${secs}s`
                   : mins > 0
                   ? `${mins}m ${secs}s`

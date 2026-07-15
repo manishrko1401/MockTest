@@ -774,8 +774,13 @@ export default function App() {
               // Keep track of the current sessions before login refresh
               const existingSessionIds = new Set((currentUser?.testSessions || []).map((s: any) => s.id));
               
-              // Login once to refresh all user data and get attempts
-              const res = await ApiClient.login(currentUser.email, currentUser.password);
+              // Login once to refresh all user data and get attempts.
+              // Use loginRefresh so the existing sessionId is preserved (same device).
+              const savedPassword = await SecureStore.getItemAsync('tb_user_password');
+              const existingSession = currentUser?.currentSessionId || '';
+              const res = savedPassword && existingSession
+                ? await ApiClient.loginRefresh(currentUser.email, savedPassword, existingSession)
+                : await ApiClient.login(currentUser.email, currentUser.password);
               if (res.success && res.user) {
                 setCurrentUser(res.user);
                 ApiClient.setApiSession(res.user.id, res.user.currentSessionId);
