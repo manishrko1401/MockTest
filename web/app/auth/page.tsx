@@ -53,7 +53,14 @@ export default function AuthPage() {
 
   const setupRecaptcha = () => {
     if ((window as any).recaptchaVerifier) {
-      return;
+      try {
+        (window as any).recaptchaVerifier.clear();
+      } catch (e) {}
+      (window as any).recaptchaVerifier = null;
+    }
+    const container = document.getElementById('recaptcha-container');
+    if (container) {
+      container.innerHTML = '';
     }
     (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       size: 'invisible',
