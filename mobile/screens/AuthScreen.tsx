@@ -56,8 +56,6 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
   // Password Reset states
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetStep, setResetStep] = useState(1); // 1 = input credentials, 2 = input OTP + new password
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetOtp, setResetOtp] = useState('');
   const [resetNewPassword, setResetNewPassword] = useState('');
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
@@ -72,7 +70,6 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
   const [phoneLoading, setPhoneLoading] = useState(false);
 
   // Phone auth password reset states
-  const [resetMethod, setResetMethod] = useState<'email' | 'phone'>('email');
   const [resetPhone, setResetPhone] = useState('');
   const [resetPhoneCode, setResetPhoneCode] = useState('');
   const [confirmResetResult, setConfirmResetResult] = useState<any>(null);
@@ -207,60 +204,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
     }
   };
 
-  const handleRequestReset = async () => {
-    if (!resetEmail.trim()) {
-      setResetError('Please enter your email address');
-      return;
-    }
-    setResetLoading(true);
-    setResetError('');
-    setResetSuccess('');
 
-    const res = await ApiClient.requestPasswordReset(resetEmail);
-    if (res.success) {
-      setResetSuccess('Verification code has been sent to your email.');
-      setResetStep(2);
-    } else {
-      setResetError(res.error || 'Failed to request reset.');
-    }
-    setResetLoading(false);
-  };
-
-  const handleConfirmReset = async () => {
-    if (!resetOtp.trim()) {
-      setResetError('Please enter the verification code.');
-      return;
-    }
-    if (!resetNewPassword.trim()) {
-      setResetError('Please enter a new password.');
-      return;
-    }
-    if (resetNewPassword.length < 4) {
-      setResetError('Password must be at least 4 characters long.');
-      return;
-    }
-
-    setResetLoading(true);
-    setResetError('');
-    setResetSuccess('');
-
-    const res = await ApiClient.confirmPasswordReset(resetEmail, resetOtp, resetNewPassword);
-    if (res.success) {
-      Alert.alert(
-        'Success',
-        'Password reset successful! Please login with your new password.',
-        [{ text: 'OK' }]
-      );
-      setShowResetModal(false);
-      setResetOtp('');
-      setResetNewPassword('');
-      setPassword(resetNewPassword);
-      setEmail(resetEmail);
-    } else {
-      setResetError(res.error || 'Verification failed.');
-    }
-    setResetLoading(false);
-  };
 
   const handleLogin = async (loginEmail: string, loginPass: string) => {
     if (!loginEmail.trim()) {
@@ -666,8 +610,6 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => {
-                    setResetEmail(email);
-                    setResetMethod('email');
                     setResetStep(1);
                     setShowResetModal(true);
                     setResetError('');
@@ -729,287 +671,113 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
                 <Text style={[styles.modalTitle, isDark && { color: ThemeColors.dark.text }]}>RESET PASSWORD</Text>
               </View>
 
-              <View style={[styles.loginMethodBar, isDark && { backgroundColor: '#020617', borderColor: '#334155' }]}>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  style={[
-                    styles.loginMethodBtn,
-                    resetMethod === 'email' && styles.loginMethodBtnActive
-                  ]}
-                  onPress={() => {
-                    setResetMethod('email');
-                    setResetError('');
-                    setResetSuccess('');
-                    setResetStep(1);
-                  }}
-                >
-                  <Text style={[
-                    styles.loginMethodBtnText,
-                    resetMethod === 'email' ? styles.loginMethodBtnTextActive : (isDark ? { color: '#94A3B8' } : { color: '#4B5563' })
-                  ]}>
-                    Email
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  style={[
-                    styles.loginMethodBtn,
-                    resetMethod === 'phone' && styles.loginMethodBtnActive
-                  ]}
-                  onPress={() => {
-                    setResetMethod('phone');
-                    setResetError('');
-                    setResetSuccess('');
-                    setResetStep(1);
-                  }}
-                >
-                  <Text style={[
-                    styles.loginMethodBtnText,
-                    resetMethod === 'phone' ? styles.loginMethodBtnTextActive : (isDark ? { color: '#94A3B8' } : { color: '#4B5563' })
-                  ]}>
-                    Phone (SMS)
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {resetError ? (
-                <View style={[styles.errorBox, isDark && { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: '#7F1D1D' }]}>
-                  <AlertCircle size={14} color="#EF4444" style={styles.errorIcon} />
-                  <Text style={[styles.errorText, { fontSize: 11 }, isDark && { color: '#FCA5A5' }]}>{resetError}</Text>
-                </View>
-              ) : null}
-
-              {resetSuccess ? (
-                <View style={[styles.successBox, isDark && { backgroundColor: 'rgba(34, 197, 94, 0.1)', borderColor: '#14532D' }]}>
-                  <ShieldCheck size={14} color="#22C55E" style={styles.successIcon} />
-                  <Text style={[styles.successText, { fontSize: 11 }, isDark && { color: '#86EFAC' }]}>{resetSuccess}</Text>
-                </View>
-              ) : null}
-
-              {resetMethod === 'email' ? (
+              {resetStep === 1 ? (
                 <View style={{ width: '100%' }}>
-                  {resetStep === 1 ? (
-                    <View style={{ width: '100%' }}>
-                      <Text style={[styles.resetInstructions, isDark && { color: ThemeColors.dark.textMuted }]}>
-                        Enter your registered email address. We will send you a 6-digit verification code (OTP) to reset your password.
-                      </Text>
+                  <Text style={[styles.resetInstructions, isDark && { color: ThemeColors.dark.textMuted }]}>
+                    Enter your registered phone number. We will send you a 6-digit verification code (OTP) to reset your password.
+                  </Text>
 
-                      <View style={styles.fieldGroup}>
-                        <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Email Address</Text>
-                        <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
-                          <Mail size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
-                          <TextInput
-                            style={[styles.input, isDark && { color: ThemeColors.dark.text }]}
-                            placeholder="name@example.com"
-                            placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
-                            value={resetEmail}
-                            onChangeText={setResetEmail}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                          />
-                        </View>
-                      </View>
-
-                      <TouchableOpacity
-                        activeOpacity={0.9}
-                        style={[styles.primaryBtn, isDark && { backgroundColor: '#3B82F6' }]}
-                        onPress={handleRequestReset}
-                        disabled={resetLoading}
-                      >
-                        {resetLoading ? (
-                          <ActivityIndicator color="#FFF" />
-                        ) : (
-                          <Text style={styles.primaryBtnText}>GET VERIFICATION CODE</Text>
-                        )}
-                      </TouchableOpacity>
+                  <View style={styles.fieldGroup}>
+                    <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Phone Number</Text>
+                    <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
+                      <Phone size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
+                      <TextInput
+                        style={[styles.input, isDark && { color: ThemeColors.dark.text }]}
+                        placeholder="e.g. +919123456789"
+                        placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
+                        value={resetPhone}
+                        onChangeText={setResetPhone}
+                        autoCapitalize="none"
+                        keyboardType="phone-pad"
+                      />
                     </View>
-                  ) : (
-                    <View style={{ width: '100%' }}>
-                      <Text style={[styles.resetInstructions, isDark && { color: ThemeColors.dark.textMuted }]}>
-                        Please enter the 6-digit verification code (OTP) sent to your email and choose a new password.
-                      </Text>
+                  </View>
 
-                      <View style={styles.fieldGroup}>
-                        <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Verification Code (OTP)</Text>
-                        <TextInput
-                          style={[
-                            styles.input, 
-                            styles.otpInput,
-                            isDark && { color: ThemeColors.dark.text, backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }
-                          ]}
-                          placeholder="e.g. 583921"
-                          placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
-                          value={resetOtp}
-                          onChangeText={(val) => setResetOtp(val.replace(/\D/g, ''))}
-                          keyboardType="number-pad"
-                          maxLength={6}
-                        />
-                      </View>
-
-                      <View style={styles.fieldGroup}>
-                        <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>New Password</Text>
-                        <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
-                          <Lock size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
-                          <TextInput
-                            style={[styles.input, { flex: 1 }, isDark && { color: ThemeColors.dark.text }]}
-                            placeholder="At least 4 characters"
-                            placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
-                            value={resetNewPassword}
-                            onChangeText={setResetNewPassword}
-                            secureTextEntry={!showResetPassword}
-                            autoCapitalize="none"
-                          />
-                          <TouchableOpacity
-                            activeOpacity={0.7}
-                            style={styles.eyeButton}
-                            onPress={() => setShowResetPassword(!showResetPassword)}
-                          >
-                            {showResetPassword ? (
-                              <EyeOff size={16} color={isDark ? '#94A3B8' : '#6B7280'} />
-                            ) : (
-                              <Eye size={16} color={isDark ? '#94A3B8' : '#6B7280'} />
-                            )}
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-
-                      <View style={{ flexDirection: 'row', gap: 12 }}>
-                        <TouchableOpacity
-                          activeOpacity={0.8}
-                          style={[styles.secondaryBtn, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}
-                          onPress={() => { setResetStep(1); setResetError(''); setResetSuccess(''); }}
-                        >
-                          <Text style={[styles.secondaryBtnText, isDark && { color: ThemeColors.dark.text }]}>BACK</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          activeOpacity={0.9}
-                          style={[styles.primaryBtn, { flex: 1, marginTop: 0 }, isDark && { backgroundColor: '#3B82F6' }]}
-                          onPress={handleConfirmReset}
-                          disabled={resetLoading}
-                        >
-                          {resetLoading ? (
-                            <ActivityIndicator color="#FFF" />
-                          ) : (
-                            <Text style={styles.primaryBtnText}>RESET PASSWORD</Text>
-                          )}
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  )}
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    style={[styles.primaryBtn, isDark && { backgroundColor: '#3B82F6' }]}
+                    onPress={handleRequestPhoneReset}
+                    disabled={resetLoading}
+                  >
+                    {resetLoading ? (
+                      <ActivityIndicator color="#FFF" />
+                    ) : (
+                      <Text style={styles.primaryBtnText}>GET VERIFICATION CODE</Text>
+                    )}
+                  </TouchableOpacity>
                 </View>
               ) : (
                 <View style={{ width: '100%' }}>
-                  {resetStep === 1 ? (
-                    <View style={{ width: '100%' }}>
-                      <Text style={[styles.resetInstructions, isDark && { color: ThemeColors.dark.textMuted }]}>
-                        Enter your registered phone number. We will send you a 6-digit verification code (OTP) to reset your password.
-                      </Text>
+                  <Text style={[styles.resetInstructions, isDark && { color: ThemeColors.dark.textMuted }]}>
+                    Please enter the 6-digit verification code (OTP) sent to your phone and choose a new password.
+                  </Text>
 
-                      <View style={styles.fieldGroup}>
-                        <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Phone Number</Text>
-                        <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
-                          <Phone size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
-                          <TextInput
-                            style={[styles.input, isDark && { color: ThemeColors.dark.text }]}
-                            placeholder="e.g. +919123456789"
-                            placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
-                            value={resetPhone}
-                            onChangeText={setResetPhone}
-                            autoCapitalize="none"
-                            keyboardType="phone-pad"
-                          />
-                        </View>
-                      </View>
+                  <View style={styles.fieldGroup}>
+                    <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Verification Code (OTP)</Text>
+                    <TextInput
+                      style={[
+                        styles.input, 
+                        styles.otpInput,
+                        isDark && { color: ThemeColors.dark.text, backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }
+                      ]}
+                      placeholder="e.g. 583921"
+                      placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
+                      value={resetPhoneCode}
+                      onChangeText={(val) => setResetPhoneCode(val.replace(/\D/g, ''))}
+                      keyboardType="number-pad"
+                      maxLength={6}
+                    />
+                  </View>
 
+                  <View style={styles.fieldGroup}>
+                    <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>New Password</Text>
+                    <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
+                      <Lock size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
+                      <TextInput
+                        style={[styles.input, { flex: 1 }, isDark && { color: ThemeColors.dark.text }]}
+                        placeholder="At least 4 characters"
+                        placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
+                        value={resetNewPassword}
+                        onChangeText={setResetNewPassword}
+                        secureTextEntry={!showResetPassword}
+                        autoCapitalize="none"
+                      />
                       <TouchableOpacity
-                        activeOpacity={0.9}
-                        style={[styles.primaryBtn, isDark && { backgroundColor: '#3B82F6' }]}
-                        onPress={handleRequestPhoneReset}
-                        disabled={resetLoading}
+                        activeOpacity={0.7}
+                        style={styles.eyeButton}
+                        onPress={() => setShowResetPassword(!showResetPassword)}
                       >
-                        {resetLoading ? (
-                          <ActivityIndicator color="#FFF" />
+                        {showResetPassword ? (
+                          <EyeOff size={16} color={isDark ? '#94A3B8' : '#6B7280'} />
                         ) : (
-                          <Text style={styles.primaryBtnText}>GET VERIFICATION CODE</Text>
+                          <Eye size={16} color={isDark ? '#94A3B8' : '#6B7280'} />
                         )}
                       </TouchableOpacity>
                     </View>
-                  ) : (
-                    <View style={{ width: '100%' }}>
-                      <Text style={[styles.resetInstructions, isDark && { color: ThemeColors.dark.textMuted }]}>
-                        Please enter the 6-digit verification code (OTP) sent to your phone and choose a new password.
-                      </Text>
+                  </View>
 
-                      <View style={styles.fieldGroup}>
-                        <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Verification Code (OTP)</Text>
-                        <TextInput
-                          style={[
-                            styles.input, 
-                            styles.otpInput,
-                            isDark && { color: ThemeColors.dark.text, backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }
-                          ]}
-                          placeholder="e.g. 583921"
-                          placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
-                          value={resetPhoneCode}
-                          onChangeText={(val) => setResetPhoneCode(val.replace(/\D/g, ''))}
-                          keyboardType="number-pad"
-                          maxLength={6}
-                        />
-                      </View>
+                  <View style={{ flexDirection: 'row', gap: 12 }}>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      style={[styles.secondaryBtn, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}
+                      onPress={() => { setResetStep(1); setResetError(''); setResetSuccess(''); }}
+                    >
+                      <Text style={[styles.secondaryBtnText, isDark && { color: ThemeColors.dark.text }]}>BACK</Text>
+                    </TouchableOpacity>
 
-                      <View style={styles.fieldGroup}>
-                        <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>New Password</Text>
-                        <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
-                          <Lock size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
-                          <TextInput
-                            style={[styles.input, { flex: 1 }, isDark && { color: ThemeColors.dark.text }]}
-                            placeholder="At least 4 characters"
-                            placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
-                            value={resetNewPassword}
-                            onChangeText={setResetNewPassword}
-                            secureTextEntry={!showResetPassword}
-                            autoCapitalize="none"
-                          />
-                          <TouchableOpacity
-                            activeOpacity={0.7}
-                            style={styles.eyeButton}
-                            onPress={() => setShowResetPassword(!showResetPassword)}
-                          >
-                            {showResetPassword ? (
-                              <EyeOff size={16} color={isDark ? '#94A3B8' : '#6B7280'} />
-                            ) : (
-                              <Eye size={16} color={isDark ? '#94A3B8' : '#6B7280'} />
-                            )}
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-
-                      <View style={{ flexDirection: 'row', gap: 12 }}>
-                        <TouchableOpacity
-                          activeOpacity={0.8}
-                          style={[styles.secondaryBtn, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}
-                          onPress={() => { setResetStep(1); setResetError(''); setResetSuccess(''); }}
-                        >
-                          <Text style={[styles.secondaryBtnText, isDark && { color: ThemeColors.dark.text }]}>BACK</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          activeOpacity={0.9}
-                          style={[styles.primaryBtn, { flex: 1, marginTop: 0 }, isDark && { backgroundColor: '#3B82F6' }]}
-                          onPress={handleConfirmPhoneReset}
-                          disabled={resetLoading}
-                        >
-                          {resetLoading ? (
-                            <ActivityIndicator color="#FFF" />
-                          ) : (
-                            <Text style={styles.primaryBtnText}>RESET PASSWORD</Text>
-                          )}
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  )}
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      style={[styles.primaryBtn, { flex: 1, marginTop: 0 }, isDark && { backgroundColor: '#3B82F6' }]}
+                      onPress={handleConfirmPhoneReset}
+                      disabled={resetLoading}
+                    >
+                      {resetLoading ? (
+                        <ActivityIndicator color="#FFF" />
+                      ) : (
+                        <Text style={styles.primaryBtnText}>RESET PASSWORD</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
             </View>

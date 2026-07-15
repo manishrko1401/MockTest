@@ -186,17 +186,7 @@ export const ApiClient = {
   getReferredFriends: (referralCode: string) => 
     postRequest('get-referred-friends', { referralCode }),
 
-  /**
-   * Requests a password reset OTP email
-   */
-  requestPasswordReset: (email: string) =>
-    postRequest('request-password-reset', { email }),
 
-  /**
-   * Confirms verification code and resets password
-   */
-  confirmPasswordReset: (email: string, otp: string, newPassword: string) =>
-    postRequest('confirm-password-reset', { email, otp, newPassword }),
 
   /**
    * Logs in a user via verified Firebase Phone Auth

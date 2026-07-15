@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
 
 // Persistent OTP Cache in global to survive Next.js dev server hot-reloads
 const otpCache = (global as any).otpCache || new Map<string, { code: string; expiresAt: number }>();
@@ -37,10 +36,6 @@ export async function POST(request: Request) {
         return await handlePhoneAuthLogin(data);
       case 'phone-auth-reset-password':
         return await handlePhoneAuthResetPassword(data);
-      case 'request-password-reset':
-        return await handleRequestPasswordReset(data);
-      case 'confirm-password-reset':
-        return await handleConfirmPasswordReset(data);
       case 'bootstrap':
         return await handleBootstrap();
       case 'refresh-catalog':
@@ -2290,133 +2285,6 @@ async function handleAdminData(data: any) {
     usersList,
     reportedQuestionsList,
   });
-}
-
-async function handleRequestPasswordReset(data: any) {
-  const { email } = data;
-  if (!email) {
-    return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
-  }
-
-  const trimmedEmail = email.trim().toLowerCase();
-  
-  // 1. Check if user exists
-  const user = await prisma.user.findUnique({
-    where: { email: trimmedEmail }
-  });
-
-  if (!user) {
-    return NextResponse.json({ success: false, error: 'No account found with this email address.' }, { status: 404 });
-  }
-
-  // 2. Generate 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  
-  // 3. Save OTP to database (works across Vercel serverless instances)
-  const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
-  await prisma.user.update({
-    where: { email: trimmedEmail },
-    data: { otpCode: otp, otpExpiresAt }
-  });
-
-  // 4. Send email
-  try {
-    const smtpHost = (process.env.SMTP_HOST || 'smtp-relay.brevo.com').replace(/"/g, '').trim();
-    const smtpPort = Number((process.env.SMTP_PORT || '587').toString().replace(/"/g, '').trim());
-    const smtpUser = (process.env.SMTP_USER || '').replace(/"/g, '').trim();
-    const smtpPass = (process.env.SMTP_PASS || '').replace(/"/g, '').trim();
-    const smtpFrom = (process.env.SMTP_FROM || 'MockTest Hub Support <painlancer@gmail.com>').replace(/"/g, '').trim();
-
-    console.log('[SMTP] Attempting with host:', smtpHost, 'port:', smtpPort, 'user:', smtpUser, 'from:', smtpFrom);
-
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
-      requireTLS: smtpPort === 587,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-    });
-
-    const mailOptions = {
-      from: smtpFrom,
-      to: trimmedEmail,
-      subject: 'Password Reset Verification Code - MockTest Hub',
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="color: #2563eb; margin: 0; font-size: 24px; font-weight: 800;">MockTest Hub</h2>
-            <p style="color: #64748b; font-size: 12px; margin: 5px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">Exam Preparation</p>
-          </div>
-          <p style="color: #334155; font-size: 14px; line-height: 1.5;">Hello,</p>
-          <p style="color: #334155; font-size: 14px; line-height: 1.5;">We received a request to reset the password for your MockTest Hub account. Please use the following 6-digit verification code (OTP) to proceed with resetting your password:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <span style="font-size: 26px; font-weight: 800; letter-spacing: 6px; background-color: #f8fafc; padding: 14px 28px; border-radius: 8px; border: 1px solid #e2e8f0; display: inline-block; color: #1e293b; font-family: monospace;">${otp}</span>
-          </div>
-          <p style="color: #475569; font-size: 13px; line-height: 1.5; font-weight: 600;">Note: This verification code is valid for 5 minutes only. If you did not request a password reset, please ignore this email or contact support.</p>
-          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
-          <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">This is an automated email. Please do not reply directly to this message.</p>
-        </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('SMTP Mail send failed:', error);
-    // Return the actual SMTP error message for easier debugging
-    const smtpErrorMsg = error?.message || error?.code || 'Unknown SMTP error';
-    return NextResponse.json({ 
-      success: false, 
-      error: `Failed to send verification code email. (${smtpErrorMsg})` 
-    }, { status: 500 });
-  }
-}
-
-async function handleConfirmPasswordReset(data: any) {
-  const { email, otp, newPassword } = data;
-  if (!email || !otp || !newPassword) {
-    return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
-  }
-
-  const trimmedEmail = email.trim().toLowerCase();
-
-  // Read OTP from database (shared across all serverless instances)
-  const user = await prisma.user.findUnique({
-    where: { email: trimmedEmail },
-    select: { otpCode: true, otpExpiresAt: true }
-  });
-
-  if (!user || !user.otpCode || !user.otpExpiresAt) {
-    return NextResponse.json({ success: false, error: 'Verification code expired or not found. Please request a new one.' }, { status: 400 });
-  }
-
-  if (user.otpCode !== otp.trim()) {
-    return NextResponse.json({ success: false, error: 'Invalid verification code. Please check and try again.' }, { status: 400 });
-  }
-
-  if (new Date() > user.otpExpiresAt) {
-    await prisma.user.update({ where: { email: trimmedEmail }, data: { otpCode: null, otpExpiresAt: null } });
-    return NextResponse.json({ success: false, error: 'Verification code has expired. Please request a new code.' }, { status: 400 });
-  }
-
-  // Update user password
-  try {
-    await prisma.user.update({
-      where: { email: trimmedEmail },
-      data: { passwordHash: newPassword, otpCode: null, otpExpiresAt: null }
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Password reset DB update failed:', error);
-    return NextResponse.json({ success: false, error: 'Failed to update password. Please try again.' }, { status: 500 });
-  }
 }
 
 async function verifyFirebaseIdToken(idToken: string): Promise<string | null> {

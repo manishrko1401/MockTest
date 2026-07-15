@@ -711,7 +711,7 @@ export default function AuthPage() {
 
       </div>
 
-      {/* Password Reset Modal Overlay */}
+            {/* Password Reset Modal Overlay */}
       {showResetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative text-slate-800 dark:text-white">
@@ -744,247 +744,110 @@ export default function AuthPage() {
               </div>
             )}
 
-            <div className="flex bg-slate-100 dark:bg-slate-950 rounded-lg p-0.5 border border-slate-200 dark:border-slate-800 mb-4 max-w-[200px]">
-              <button
-                onClick={() => { setResetMethod('email'); setResetError(null); setResetSuccess(null); setResetStep(1); }}
-                type="button"
-                className="flex-1 text-center py-1 rounded text-[9px] font-extrabold transition-all cursor-pointer uppercase tracking-wider"
-                style={{
-                  backgroundColor: resetMethod === 'email' ? '#2563eb' : 'transparent',
-                  color: resetMethod === 'email' ? '#ffffff' : undefined
-                }}
-              >
-                Email
-              </button>
-              <button
-                onClick={() => { setResetMethod('phone'); setResetError(null); setResetSuccess(null); setResetStep(1); }}
-                type="button"
-                className="flex-1 text-center py-1 rounded text-[9px] font-extrabold transition-all cursor-pointer uppercase tracking-wider"
-                style={{
-                  backgroundColor: resetMethod === 'phone' ? '#2563eb' : 'transparent',
-                  color: resetMethod === 'phone' ? '#ffffff' : undefined
-                }}
-              >
-                Phone (SMS)
-              </button>
-            </div>
-
-            {resetMethod === 'email' ? (
-              <>
-                {resetStep === 1 ? (
-                  <form onSubmit={handleRequestReset} className="space-y-4">
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
-                      {language === 'hi' 
-                        ? 'अपना पंजीकृत ईमेल दर्ज करें। हम आपको पासवर्ड बदलने के लिए एक 6-अंकीय सत्यापन कोड (OTP) भेजेंगे।' 
-                        : 'Enter your registered email address. We will send you a 6-digit verification code (OTP) to reset your password.'}
-                    </p>
-                    <div>
-                      <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
-                        {t.authEmail}
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                          <Mail className="h-4 w-4" />
-                        </div>
-                        <input
-                          type="email"
-                          required
-                          value={resetEmail}
-                          onChange={(e) => setResetEmail(e.target.value)}
-                          placeholder="name@example.com"
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
-                        />
-                      </div>
+            {resetStep === 1 ? (
+              <form onSubmit={handleRequestPhoneReset} className="space-y-4">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+                  {language === 'hi' 
+                    ? 'अपना पंजीकृत फोन नंबर दर्ज करें। हम आपको पासवर्ड बदलने के लिए एक 6-अंकीय सत्यापन कोड (OTP) भेजेंगे।' 
+                    : 'Enter your registered phone number. We will send you a 6-digit verification code (OTP) to reset your password.'}
+                </p>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
+                    {language === 'hi' ? 'फोन नंबर' : 'Phone Number'}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
+                      <Phone className="h-4 w-4" />
                     </div>
+                    <input
+                      type="tel"
+                      required
+                      value={resetPhone}
+                      onChange={(e) => setResetPhone(e.target.value.replace(/[^d+]/g, ''))}
+                      placeholder="e.g. +919123456789"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
+                    />
+                  </div>
+                </div>
 
-                    <button
-                      type="submit"
-                      disabled={resetLoading}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 cursor-pointer disabled:opacity-50"
-                    >
-                      {resetLoading 
-                        ? (language === 'hi' ? 'भेज रहा है...' : 'Sending Code...') 
-                        : (language === 'hi' ? 'सत्यापन कोड प्राप्त करें' : 'Get Verification Code')}
-                    </button>
-                  </form>
-                ) : (
-                  <form onSubmit={handleConfirmReset} className="space-y-4">
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
-                      {language === 'hi' 
-                        ? 'कृपया अपने ईमेल पर प्राप्त 6-अंकीय सत्यापन कोड (OTP) और अपना नया पासवर्ड दर्ज करें।' 
-                        : 'Please enter the 6-digit verification code (OTP) sent to your email and choose a new password.'}
-                    </p>
-
-                    <div>
-                      <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
-                        {language === 'hi' ? 'सत्यापन कोड (OTP)' : 'Verification Code (OTP)'}
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        maxLength={6}
-                        value={resetOtp}
-                        onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, ''))}
-                        placeholder="e.g. 583921"
-                        className="w-full text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
-                        {language === 'hi' ? 'नया पासवर्ड' : 'New Password'}
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
-                          <Lock className="h-4 w-4" />
-                        </div>
-                        <input
-                          type={showResetPassword ? "text" : "password"}
-                          required
-                          value={resetNewPassword}
-                          onChange={(e) => setResetNewPassword(e.target.value)}
-                          placeholder="At least 4 characters"
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowResetPassword(!showResetPassword)}
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-550 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
-                        >
-                          {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        type="button"
-                        onClick={() => { setResetStep(1); setResetError(null); setResetSuccess(null); }}
-                        className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center"
-                      >
-                        {language === 'hi' ? 'पीछे' : 'Back'}
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={resetLoading}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 cursor-pointer disabled:opacity-50"
-                      >
-                        {resetLoading 
-                          ? (language === 'hi' ? 'रीसेट हो रहा है...' : 'Resetting...') 
-                          : (language === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset Password')}
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </>
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 cursor-pointer disabled:opacity-50"
+                >
+                  {resetLoading 
+                    ? (language === 'hi' ? 'भेज रहा है...' : 'Sending Code...') 
+                    : (language === 'hi' ? 'सत्यापन कोड प्राप्त करें' : 'Get Verification Code')}
+                </button>
+              </form>
             ) : (
-              <>
-                {resetStep === 1 ? (
-                  <form onSubmit={handleRequestPhoneReset} className="space-y-4">
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
-                      {language === 'hi' 
-                        ? 'अपना पंजीकृत फोन नंबर दर्ज करें। हम आपको पासवर्ड बदलने के लिए एक 6-अंकीय सत्यापन कोड (OTP) भेजेंगे।' 
-                        : 'Enter your registered phone number. We will send you a 6-digit verification code (OTP) to reset your password.'}
-                    </p>
-                    <div>
-                      <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
-                        {language === 'hi' ? 'फोन नंबर' : 'Phone Number'}
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
-                          <Phone className="h-4 w-4" />
-                        </div>
-                        <input
-                          type="tel"
-                          required
-                          value={resetPhone}
-                          onChange={(e) => setResetPhone(e.target.value.replace(/[^\d+]/g, ''))}
-                          placeholder="e.g. +919123456789"
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
-                        />
-                      </div>
-                    </div>
+              <form onSubmit={handleConfirmPhoneReset} className="space-y-4">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+                  {language === 'hi' 
+                    ? 'कृपया अपने फोन पर प्राप्त 6-अंकीय सत्यापन कोड (OTP) और अपना नया पासवर्ड दर्ज करें।' 
+                    : 'Please enter the 6-digit verification code (OTP) sent to your phone and choose a new password.'}
+                </p>
 
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
+                    {language === 'hi' ? 'सत्यापन कोड (OTP)' : 'Verification Code (OTP)'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={resetPhoneCode}
+                    onChange={(e) => setResetPhoneCode(e.target.value.replace(/D/g, ''))}
+                    placeholder="e.g. 583921"
+                    className="w-full text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
+                    {language === 'hi' ? 'नया पासवर्ड' : 'New Password'}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
+                      <Lock className="h-4 w-4" />
+                    </div>
+                    <input
+                      type={showResetPassword ? "text" : "password"}
+                      required
+                      value={resetNewPassword}
+                      onChange={(e) => setResetNewPassword(e.target.value)}
+                      placeholder="At least 4 characters"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
+                    />
                     <button
-                      type="submit"
-                      disabled={resetLoading}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 cursor-pointer disabled:opacity-50"
+                      type="button"
+                      onClick={() => setShowResetPassword(!showResetPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-550 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
                     >
-                      {resetLoading 
-                        ? (language === 'hi' ? 'भेज रहा है...' : 'Sending Code...') 
-                        : (language === 'hi' ? 'सत्यापन कोड प्राप्त करें' : 'Get Verification Code')}
+                      {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
-                  </form>
-                ) : (
-                  <form onSubmit={handleConfirmPhoneReset} className="space-y-4">
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
-                      {language === 'hi' 
-                        ? 'कृपया अपने फोन पर प्राप्त 6-अंकीय सत्यापन कोड (OTP) और अपना नया पासवर्ड दर्ज करें।' 
-                        : 'Please enter the 6-digit verification code (OTP) sent to your phone and choose a new password.'}
-                    </p>
+                  </div>
+                </div>
 
-                    <div>
-                      <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
-                        {language === 'hi' ? 'सत्यापन कोड (OTP)' : 'Verification Code (OTP)'}
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        maxLength={6}
-                        value={resetPhoneCode}
-                        onChange={(e) => setResetPhoneCode(e.target.value.replace(/\D/g, ''))}
-                        placeholder="e.g. 583921"
-                        className="w-full text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-500 transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
-                        {language === 'hi' ? 'नया पासवर्ड' : 'New Password'}
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
-                          <Lock className="h-4 w-4" />
-                        </div>
-                        <input
-                          type={showResetPassword ? "text" : "password"}
-                          required
-                          value={resetNewPassword}
-                          onChange={(e) => setResetNewPassword(e.target.value)}
-                          placeholder="At least 4 characters"
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowResetPassword(!showResetPassword)}
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-550 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
-                        >
-                          {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        type="button"
-                        onClick={() => { setResetStep(1); setResetError(null); setResetSuccess(null); }}
-                        className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center"
-                      >
-                        {language === 'hi' ? 'पीछे' : 'Back'}
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={resetLoading}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 cursor-pointer disabled:opacity-50"
-                      >
-                        {resetLoading 
-                          ? (language === 'hi' ? 'रीसेट हो रहा है...' : 'Resetting...') 
-                          : (language === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset Password')}
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setResetStep(1); setResetError(null); setResetSuccess(null); }}
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center"
+                  >
+                    {language === 'hi' ? 'पीछे' : 'Back'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="flex-1 bg-blue-650 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 cursor-pointer disabled:opacity-50"
+                  >
+                    {resetLoading 
+                      ? (language === 'hi' ? 'रीसेट हो रहा है...' : 'Resetting...') 
+                      : (language === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset Password')}
+                  </button>
+                </div>
+              </form>
             )}
 
           </div>
