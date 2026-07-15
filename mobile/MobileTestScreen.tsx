@@ -441,12 +441,7 @@ export default function MobileTestScreen({
         const { builtList, builtSecs, durationSeconds, catalogTest } = buildScreenFromApiQuestions(cachedRaw);
         await applyToScreen(builtList, builtSecs, durationSeconds, catalogTest);
 
-        // Silently refresh cache in background (no UI update unless questions changed)
-        ApiClient.getCustomQuestions(testId).then(res => {
-          if (res.success && res.questions && res.questions.length > 0) {
-            saveQuestionsToCache(testId, res.questions);
-          }
-        }).catch(() => { /* silent — cache will refresh next open */ });
+
         return;
       }
 

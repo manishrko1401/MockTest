@@ -257,17 +257,6 @@ export default function AnalysisScreen({
           id: q.id || `q_custom_${idx}`
         })));
         setLoadingQs(false);
-        ApiClient.getCustomQuestions(activeAttempt.testId).then(res => {
-          if (res.positiveMarks !== null && res.positiveMarks !== undefined) {
-            setTestPositiveMarks(Number(res.positiveMarks));
-          }
-          if (res.negativeMarks !== null && res.negativeMarks !== undefined) {
-            setTestNegativeMarks(Number(res.negativeMarks));
-          }
-          if (res.success && res.questions && Array.isArray(res.questions)) {
-            saveQuestionsToCache(activeAttempt.testId, res.questions);
-          }
-        }).catch(() => {});
         return;
       }
 

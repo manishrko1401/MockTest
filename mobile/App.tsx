@@ -527,12 +527,12 @@ export default function App() {
       } catch (err) {
         console.error('Catalog sync polling error:', err);
       }
-    }, 90000);
+    }, 300000);
 
     // Poll support messages every 60 seconds (down from 8s)
     const supportInterval = setInterval(() => {
       checkNewSupportMessages();
-    }, 60000);
+    }, 300000);
 
     return () => {
       isMounted = false;
