@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth, MockUser, MockTestRecord } from '../../../AuthContext';
@@ -539,38 +539,6 @@ export default function ExamSolutionAnalysisPage() {
         </div>
       </section>
 
-      {/* Cutoff Cleared / Missed Status Banner */}
-      <section className="max-w-6xl w-full mx-auto px-6 mt-6">
-        {isCutoffCleared ? (
-          <div className="bg-emerald-50/80 dark:bg-emerald-950/20 border border-emerald-250/60 dark:border-emerald-900/40 p-5 rounded-2xl flex items-center gap-4 text-emerald-800 dark:text-emerald-350 shadow-sm transition-all duration-300">
-            <div className="bg-emerald-500 text-white p-2 rounded-xl">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm uppercase tracking-wider">{lang === 'hi' ? 'कटऑफ पास हो गया! 🎉' : 'Cutoff Cleared! 🎉'}</h4>
-              <p className="text-xs mt-1 font-semibold opacity-90">
-                {lang === 'hi'
-                  ? `शानदार काम! आपका स्कोर ${sessionRecord.score.toFixed(1)} है, जो ${cutoffScore} के कटऑफ स्कोर से अधिक है। आपने योग्यता रेखा को सफलतापूर्वक पार कर लिया है!`
-                  : `Great job! Your score is ${sessionRecord.score.toFixed(1)}, which is above the cutoff of ${cutoffScore} marks. You have successfully cleared the qualification line!`}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-rose-50/80 dark:bg-rose-950/20 border border-rose-250/60 dark:border-rose-900/40 p-5 rounded-2xl flex items-center gap-4 text-rose-800 dark:text-rose-350 shadow-sm transition-all duration-300">
-            <div className="bg-rose-500 text-white p-2 rounded-xl">
-              <AlertCircle className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm uppercase tracking-wider">{lang === 'hi' ? 'कटऑफ पास नहीं हुआ ⚠️' : 'Cutoff Not Cleared ⚠️'}</h4>
-              <p className="text-xs mt-1 font-semibold opacity-90">
-                {lang === 'hi'
-                  ? `अभ्यास जारी रखें! आपका स्कोर ${sessionRecord.score.toFixed(1)} है। आप ${cutoffScore} के कटऑफ स्कोर से ${(cutoffScore - sessionRecord.score).toFixed(1)} अंक पीछे रह गए।`
-                  : `Keep practicing! Your score is ${sessionRecord.score.toFixed(1)}. You missed the cutoff score of ${cutoffScore} marks by ${(cutoffScore - sessionRecord.score).toFixed(1)} marks.`}
-              </p>
-            </div>
-          </div>
-        )}
-      </section>
 
       {/* Testbook Equivalent Benchmarking Card */}
       {sessionRecord.testbookRank && sessionRecord.mockTest && (

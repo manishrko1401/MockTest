@@ -2125,7 +2125,7 @@ async function handleGetUserDetails(data: any) {
     return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
   }
 
-  // Fetch sessions WITHOUT responses — admin only needs metadata (score, date, status)
+  // Fetch sessions WITH responses so Solution/Analysis dashboard gets correct time taken and statuses
   const u = await prisma.user.findUnique({
     where: { id: userId },
     include: {
@@ -2140,7 +2140,7 @@ async function handleGetUserDetails(data: any) {
               negativeMarks: true,
             }
           },
-          // responses excluded — too heavy and not needed for admin list view
+          responses: true,
         },
         orderBy: { startedAt: 'desc' },
       },
@@ -2170,26 +2170,36 @@ async function handleGetUserDetails(data: any) {
     referralCoinsCredited: u.referralCoinsCredited,
     password: u.passwordHash,
     bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
-    testSessions: u.testSessions.map((session: any) => ({
-      id: session.id,
-      testId: session.mockTestId,
-      title: session.mockTest?.title || 'Mock Test',
-      score: session.finalScore ?? 0,
-      maxScore: session.mockTest?.maxMarks ?? 200,
-      accuracy: session.accuracyPercentage ?? 0,
-      durationMinutes: session.mockTest?.durationMinutes || 60,
-      durationSeconds: session.timeSpentSeconds,
-      status: session.status,
-      violations: session.violationsCount,
-      date: session.startedAt.toISOString().split('T')[0],
-      startedAt: session.startedAt.toISOString(),
-      responses: {}, // Not loaded here — load separately only when viewing analysis
-      timeRemaining: session.remainingSeconds,
-      currentSectionIndex: session.currentSectionIndex,
-      currentQuestionIndex: session.currentQuestionIndex,
-      testbookRank: session.testbookRank ?? null,
-      testbookPercentile: session.testbookPercentile ?? null,
-    })),
+    testSessions: u.testSessions.map((session: any) => {
+      const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
+      session.responses.forEach((r: any) => {
+        responsesRecord[r.questionId] = {
+          selectedOptionIndex: r.selectedOptionIndex,
+          elapsedSeconds: r.elapsedSeconds,
+          state: r.state,
+        };
+      });
+      return {
+        id: session.id,
+        testId: session.mockTestId,
+        title: session.mockTest?.title || 'Mock Test',
+        score: session.finalScore ?? 0,
+        maxScore: session.mockTest?.maxMarks ?? 200,
+        accuracy: session.accuracyPercentage ?? 0,
+        durationMinutes: session.mockTest?.durationMinutes || 60,
+        durationSeconds: session.timeSpentSeconds,
+        status: session.status,
+        violations: session.violationsCount,
+        date: session.startedAt.toISOString().split('T')[0],
+        startedAt: session.startedAt.toISOString(),
+        responses: responsesRecord,
+        timeRemaining: session.remainingSeconds,
+        currentSectionIndex: session.currentSectionIndex,
+        currentQuestionIndex: session.currentQuestionIndex,
+        testbookRank: session.testbookRank ?? null,
+        testbookPercentile: session.testbookPercentile ?? null,
+      };
+    }),
   };
 
   return NextResponse.json({ success: true, user: mappedUser });

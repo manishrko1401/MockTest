@@ -296,8 +296,8 @@ try {
       formattedQuestions.push({
         textEn: cleanTextEn || `Question ${qIdx + 1}`,
         textHi: cleanTextHi || cleanTextEn || `Question ${qIdx + 1}`,
-        optionsEn: optionsEnList.slice(0, 4),
-        optionsHi: optionsHiList.slice(0, 4),
+        optionsEn: optionsEnList,
+        optionsHi: optionsHiList,
         correctIndex: correctIndex,
         explanationEn: explanationEn || "",
         explanationHi: explanationHi || explanationEn || "",
