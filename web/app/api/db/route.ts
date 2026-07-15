@@ -33,6 +33,8 @@ export async function POST(request: Request) {
 
 
     switch (action) {
+      case 'db-diagnose':
+        return await handleDbDiagnose();
       case 'request-password-reset':
         return await handleRequestPasswordReset(data);
       case 'confirm-password-reset':
@@ -2412,5 +2414,31 @@ async function handleConfirmPasswordReset(data: any) {
   } catch (error: any) {
     console.error('Password reset DB update failed:', error);
     return NextResponse.json({ success: false, error: 'Failed to update password. Please try again.' }, { status: 500 });
+  }
+}
+
+async function handleDbDiagnose() {
+  try {
+    const dbUrl = process.env.DATABASE_URL || 'not set';
+    // Clean database URL to show host/db name safely without password
+    const safeDbUrl = dbUrl.replace(/:[^:@]+@/, ':***@');
+    
+    const columns = await prisma.$queryRaw<any[]>`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'users';
+    `;
+    const columnNames = columns.map(c => `${c.column_name} (${c.data_type})`);
+    
+    return NextResponse.json({
+      success: true,
+      safeDbUrl,
+      columnNames
+    });
+  } catch (e: any) {
+    return NextResponse.json({
+      success: false,
+      error: e.message
+    });
   }
 }
