@@ -444,10 +444,29 @@ export default function ExamSolutionAnalysisPage() {
   const totalSkipped = questionStatuses.filter(s => s.status === 'skipped').length;
 
   const formatDuration = (secs: number) => {
-    const m = Math.floor(secs / 60);
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
     const s = secs % 60;
+    if (h > 0) return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
     return `${m}m ${s.toString().padStart(2, '0')}s`;
   };
+
+  // Compute actual time taken:
+  // 1. Prefer durationSeconds from DB (timeSpentSeconds stored on submission) when > 0
+  // 2. Fallback: sum of per-question elapsedSeconds from responses (most accurate)
+  // 3. Last resort: show 0
+  const computedTimeTakenSeconds = (() => {
+    if (sessionRecord.durationSeconds && sessionRecord.durationSeconds > 0) {
+      return sessionRecord.durationSeconds;
+    }
+    if (sessionRecord.responses && Object.keys(sessionRecord.responses).length > 0) {
+      const total = Object.values(sessionRecord.responses).reduce(
+        (sum, r) => sum + (r.elapsedSeconds ?? 0), 0
+      );
+      if (total > 0) return total;
+    }
+    return 0;
+  })();
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200 select-none pb-12">
@@ -522,7 +541,7 @@ export default function ExamSolutionAnalysisPage() {
             </div>
             <div>
               <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisTimeTaken}</p>
-              <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{formatDuration(sessionRecord.durationSeconds)}</h4>
+              <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{formatDuration(computedTimeTakenSeconds)}</h4>
             </div>
           </div>
 
