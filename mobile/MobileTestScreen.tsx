@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -956,16 +956,18 @@ export default function MobileTestScreen({
         };
       });
 
-      const attemptPayload = {
-        userId: currentUser.id,
-        testId,
-        score: totalMarks,
-        maxScore: totalMaxScore,
-        accuracy,
-        durationSeconds: totalDurationRef.current - timeLeftRef.current,
-        violations: violationsCount,
-        responses: formattedResponses
-      };
+       const totalSpentSeconds = Object.values(responses).reduce((sum, r) => sum + (r.elapsedSeconds || 0), 0);
+
+       const attemptPayload = {
+         userId: currentUser.id,
+         testId,
+         score: totalMarks,
+         maxScore: totalMaxScore,
+         accuracy,
+         durationSeconds: Math.max(1, totalSpentSeconds),
+         violations: violationsCount,
+         responses: formattedResponses
+       };
 
       // ── OFFLINE BRANCH: queue the result locally for later sync ─────────
       if (!isOnlineRef.current) {

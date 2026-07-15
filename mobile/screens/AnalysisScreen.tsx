@@ -556,21 +556,32 @@ export default function AnalysisScreen({
 
               {/* Time Taken Card */}
               {(() => {
-                // Primary: durationSeconds = timeSpentSeconds from DB (total - remaining at submit)
-                // Fallback: derive from (allotted total - remaining seconds saved at submit)
-                // This handles older sessions where timeSpentSeconds was not stored.
+                // Primary: Sum of elapsedSeconds across all question responses for exact timing
                 let spentSec = 0;
-                const rawDur = activeAttempt.durationSeconds ?? activeAttempt.timeSpentSeconds;
-                if (rawDur !== null && rawDur !== undefined && Number(rawDur) > 0) {
-                  spentSec = Number(rawDur);
-                } else {
-                  // Fallback: allotted_minutes × 60 - time_remaining_at_submit
+                if (activeAttempt.responses && Object.keys(activeAttempt.responses).length > 0) {
+                  spentSec = Object.values(activeAttempt.responses).reduce(
+                    (sum: number, r: any) => sum + (r.elapsedSeconds || 0),
+                    0
+                  );
+                }
+
+                // Fallback 1: durationSeconds / timeSpentSeconds directly from database
+                if (spentSec <= 0) {
+                  const rawDur = activeAttempt.durationSeconds ?? activeAttempt.timeSpentSeconds;
+                  if (rawDur !== null && rawDur !== undefined && Number(rawDur) > 0) {
+                    spentSec = Number(rawDur);
+                  }
+                }
+
+                // Fallback 2: allotted_minutes × 60 - time_remaining_at_submit
+                if (spentSec <= 0) {
                   const allottedSec = (activeAttempt.durationMinutes ?? 60) * 60;
                   const remaining = activeAttempt.timeRemaining ?? activeAttempt.remainingSeconds;
                   if (remaining !== null && remaining !== undefined) {
                     spentSec = Math.max(0, allottedSec - Number(remaining));
                   }
                 }
+
                 spentSec = Math.floor(spentSec);
                 const hrs = Math.floor(spentSec / 3600);
                 const mins = Math.floor((spentSec % 3600) / 60);
@@ -746,7 +757,14 @@ export default function AnalysisScreen({
                       <Text style={styles.metaBadgeCircleText}>{activeQuestionIdx + 1}</Text>
                     </View>
                     
-                    <Text style={styles.metaText}>0sec</Text>
+                     {(() => {
+                       const userResponse = activeAttempt.responses ? activeAttempt.responses[activeQuestion.id] : null;
+                       const elapsed = userResponse ? Number(userResponse.elapsedSeconds) || 0 : 0;
+                       if (elapsed >= 60) {
+                         return <Text style={styles.metaText}>{Math.floor(elapsed / 60)}m {elapsed % 60}s</Text>;
+                       }
+                       return <Text style={styles.metaText}>{elapsed}s</Text>;
+                     })()}
                     <Text style={[styles.metaText, { color: '#22C55E', fontWeight: 'bold' }]}>+1.0</Text>
                     <Text style={[styles.metaText, { color: '#EF4444', fontWeight: 'bold' }]}>-0.25</Text>
 
