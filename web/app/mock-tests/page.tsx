@@ -1054,7 +1054,7 @@ export default function MockTestsCatalog() {
                           <img 
                             src={currentCategoryObj.logoUrl} 
                             alt={`${currentCategoryObj.name} logo`} 
-                            className="h-10 w-auto max-h-12 object-contain rounded-md"
+                            className="h-20 w-auto max-h-24 object-contain rounded-xl shadow-sm"
                           />
                         </div>
                       )}
