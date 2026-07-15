@@ -894,37 +894,37 @@ export default function AnalysisScreen({
               )}
             </ScrollView>
 
-            {/* Bottom Panel: Arrow navigation keys on the left, question count on the right */}
-            <View style={styles.solBottomBar}>
-              <View style={styles.arrowKeysContainer}>
-                <TouchableOpacity 
-                  style={[styles.arrowKeyBtn, activeQuestionIdx === 0 && styles.arrowKeyBtnDisabled]}
-                  disabled={activeQuestionIdx === 0}
-                  onPress={() => {
-                    if (activeQuestionIdx > 0) {
-                      setActiveQuestionIdx(activeQuestionIdx - 1);
-                    }
-                  }}
-                >
-                  <ChevronLeft size={22} color={activeQuestionIdx === 0 ? "#94A3B8" : "#1E293B"} />
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.arrowKeyBtn, activeQuestionIdx === filteredQuestions.length - 1 && styles.arrowKeyBtnDisabled]}
-                  disabled={activeQuestionIdx === filteredQuestions.length - 1}
-                  onPress={() => {
-                    if (activeQuestionIdx < filteredQuestions.length - 1) {
-                      setActiveQuestionIdx(activeQuestionIdx + 1);
-                    }
-                  }}
-                >
-                  <ChevronRight size={22} color={activeQuestionIdx === filteredQuestions.length - 1 ? "#94A3B8" : "#1E293B"} />
-                </TouchableOpacity>
-              </View>
+             {/* Bottom Panel: Question count on the left, Arrow navigation keys on the right */}
+             <View style={[styles.solBottomBar, isDark && { backgroundColor: ThemeColors.dark.card, borderTopColor: ThemeColors.dark.border }]}>
+               <Text style={[styles.questionCountText, isDark && { color: ThemeColors.dark.text }]}>
+                 {filteredQuestions.length > 0 ? `Question ${activeQuestionIdx + 1} of ${filteredQuestions.length}` : '0 of 0'}
+               </Text>
 
-              <Text style={styles.questionCountText}>
-                {filteredQuestions.length > 0 ? `Question ${activeQuestionIdx + 1} of ${filteredQuestions.length}` : '0 of 0'}
-              </Text>
-            </View>
+               <View style={styles.arrowKeysContainer}>
+                 <TouchableOpacity 
+                   style={[styles.arrowKeyBtn, activeQuestionIdx === 0 && styles.arrowKeyBtnDisabled, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}
+                   disabled={activeQuestionIdx === 0}
+                   onPress={() => {
+                     if (activeQuestionIdx > 0) {
+                       setActiveQuestionIdx(activeQuestionIdx - 1);
+                     }
+                   }}
+                 >
+                   <ChevronLeft size={22} color={activeQuestionIdx === 0 ? (isDark ? "#475569" : "#94A3B8") : (isDark ? "#E2E8F0" : "#1E293B")} />
+                 </TouchableOpacity>
+                 <TouchableOpacity 
+                   style={[styles.arrowKeyBtn, activeQuestionIdx === filteredQuestions.length - 1 && styles.arrowKeyBtnDisabled, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}
+                   disabled={activeQuestionIdx === filteredQuestions.length - 1}
+                   onPress={() => {
+                     if (activeQuestionIdx < filteredQuestions.length - 1) {
+                       setActiveQuestionIdx(activeQuestionIdx + 1);
+                     }
+                   }}
+                 >
+                   <ChevronRight size={22} color={activeQuestionIdx === filteredQuestions.length - 1 ? (isDark ? "#475569" : "#94A3B8") : (isDark ? "#E2E8F0" : "#1E293B")} />
+                 </TouchableOpacity>
+               </View>
+             </View>
           </View>
         )}
 
