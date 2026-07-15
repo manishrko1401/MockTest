@@ -2314,18 +2314,24 @@ async function handleRequestPasswordReset(data: any) {
 
   // 4. Send email
   try {
+    const smtpHost = (process.env.SMTP_HOST || 'smtp-relay.brevo.com').replace(/"/g, '');
+    const smtpPort = Number(process.env.SMTP_PORT || 587);
+    const smtpUser = (process.env.SMTP_USER || '').replace(/"/g, '');
+    const smtpPass = (process.env.SMTP_PASS || '').replace(/"/g, '');
+    const smtpFrom = (process.env.SMTP_FROM || 'MockTest Hub Support <painlancer@gmail.com>').replace(/"/g, '');
+
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: Number(process.env.SMTP_PORT) === 465,
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: smtpUser,
+        pass: smtpPass,
       },
     });
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'MockTest Hub Support <painlancer@gmail.com>',
+      from: smtpFrom,
       to: trimmedEmail,
       subject: 'Password Reset Verification Code - MockTest Hub',
       html: `
