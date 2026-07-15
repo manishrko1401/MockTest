@@ -2314,19 +2314,25 @@ async function handleRequestPasswordReset(data: any) {
 
   // 4. Send email
   try {
-    const smtpHost = (process.env.SMTP_HOST || 'smtp-relay.brevo.com').replace(/"/g, '');
-    const smtpPort = Number(process.env.SMTP_PORT || 587);
-    const smtpUser = (process.env.SMTP_USER || '').replace(/"/g, '');
-    const smtpPass = (process.env.SMTP_PASS || '').replace(/"/g, '');
-    const smtpFrom = (process.env.SMTP_FROM || 'MockTest Hub Support <painlancer@gmail.com>').replace(/"/g, '');
+    const smtpHost = (process.env.SMTP_HOST || 'smtp-relay.brevo.com').replace(/"/g, '').trim();
+    const smtpPort = Number((process.env.SMTP_PORT || '587').toString().replace(/"/g, '').trim());
+    const smtpUser = (process.env.SMTP_USER || '').replace(/"/g, '').trim();
+    const smtpPass = (process.env.SMTP_PASS || '').replace(/"/g, '').trim();
+    const smtpFrom = (process.env.SMTP_FROM || 'MockTest Hub Support <painlancer@gmail.com>').replace(/"/g, '').trim();
+
+    console.log('[SMTP] Attempting with host:', smtpHost, 'port:', smtpPort, 'user:', smtpUser, 'from:', smtpFrom);
 
     const transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
       secure: smtpPort === 465,
+      requireTLS: smtpPort === 587,
       auth: {
         user: smtpUser,
         pass: smtpPass,
+      },
+      tls: {
+        rejectUnauthorized: false
       },
     });
 
@@ -2356,7 +2362,12 @@ async function handleRequestPasswordReset(data: any) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('SMTP Mail send failed:', error);
-    return NextResponse.json({ success: false, error: 'Failed to send verification code email. Please try again.' }, { status: 500 });
+    // Return the actual SMTP error message for easier debugging
+    const smtpErrorMsg = error?.message || error?.code || 'Unknown SMTP error';
+    return NextResponse.json({ 
+      success: false, 
+      error: `Failed to send verification code email. (${smtpErrorMsg})` 
+    }, { status: 500 });
   }
 }
 
