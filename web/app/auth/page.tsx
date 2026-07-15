@@ -25,6 +25,102 @@ export default function AuthPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  // Password Reset states
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetStep, setResetStep] = useState(1); // 1 = input email, 2 = input OTP + new password
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetOtp, setResetOtp] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetSuccess, setResetSuccess] = useState<string | null>(null);
+
+  const handleRequestReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail.trim()) {
+      setResetError(language === 'hi' ? 'कृपया अपना ईमेल पता दर्ज करें।' : 'Please enter your email address.');
+      return;
+    }
+    setResetLoading(true);
+    setResetError(null);
+    setResetSuccess(null);
+
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'request-password-reset',
+          data: { email: resetEmail }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResetSuccess(language === 'hi' ? 'सत्यापन कोड आपके ईमेल पर भेज दिया गया है।' : 'Verification code has been sent to your email.');
+        setResetStep(2);
+      } else {
+        setResetError(data.error || (language === 'hi' ? 'ईमेल भेजने में विफल।' : 'Failed to request reset.'));
+      }
+    } catch (err) {
+      setResetError(language === 'hi' ? 'कनेक्शन त्रुटि।' : 'Connection error. Please try again.');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleConfirmReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetOtp.trim()) {
+      setResetError(language === 'hi' ? 'कृपया सत्यापन कोड दर्ज करें।' : 'Please enter the verification code.');
+      return;
+    }
+    if (!resetNewPassword.trim()) {
+      setResetError(language === 'hi' ? 'कृपया नया पासवर्ड दर्ज करें।' : 'Please enter a new password.');
+      return;
+    }
+    if (resetNewPassword.length < 4) {
+      setResetError(language === 'hi' ? 'पासवर्ड कम से कम 4 वर्णों का होना चाहिए।' : 'Password must be at least 4 characters long.');
+      return;
+    }
+
+    setResetLoading(true);
+    setResetError(null);
+    setResetSuccess(null);
+
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'confirm-password-reset',
+          data: {
+            email: resetEmail,
+            otp: resetOtp,
+            newPassword: resetNewPassword
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSuccessMsg(language === 'hi' ? 'पासवर्ड सफलतापूर्वक बदल दिया गया है! अब लॉगिन करें।' : 'Password reset successful! Please login with your new password.');
+        setShowResetModal(false);
+        // Clear reset states
+        setResetOtp('');
+        setResetNewPassword('');
+        // Autofill password with the new one
+        setPassword(resetNewPassword);
+        setEmail(resetEmail);
+      } else {
+        setResetError(data.error || (language === 'hi' ? 'सत्यापन विफल।' : 'Verification failed.'));
+      }
+    } catch (err) {
+      setResetError(language === 'hi' ? 'कनेक्शन त्रुटि।' : 'Connection error. Please try again.');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -280,6 +376,24 @@ export default function AuthPage() {
               </div>
             </div>
 
+            {activeTab === 'login' && (
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetEmail(email); // prepopulate if they already typed email
+                    setResetStep(1);
+                    setShowResetModal(true);
+                    setResetError(null);
+                    setResetSuccess(null);
+                  }}
+                  className="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold hover:underline uppercase tracking-wide cursor-pointer"
+                >
+                  {language === 'hi' ? 'पासवर्ड भूल गए?' : 'Forgot Password?'}
+                </button>
+              </div>
+            )}
+
             <button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-xs tracking-wider uppercase transition-all shadow-lg shadow-blue-900/25 active:scale-[0.98] mt-6 cursor-pointer"
@@ -301,6 +415,149 @@ export default function AuthPage() {
         </div>
 
       </div>
+
+      {/* Password Reset Modal Overlay */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative text-slate-800 dark:text-white">
+            
+            <button
+              onClick={() => setShowResetModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full h-8 w-8 flex items-center justify-center cursor-pointer border border-slate-250 dark:border-slate-700"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400 mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <Lock className="h-5 w-5" />
+              <h4 className="font-extrabold text-xs uppercase tracking-wider">
+                {language === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset Password'}
+              </h4>
+            </div>
+
+            {resetError && (
+              <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-red-650 dark:text-red-400 flex items-start gap-2 text-[10px] mb-4">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                <span className="font-bold">{resetError}</span>
+              </div>
+            )}
+
+            {resetSuccess && (
+              <div className="p-3 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 flex items-start gap-2 text-[10px] mb-4">
+                <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
+                <span className="font-bold">{resetSuccess}</span>
+              </div>
+            )}
+
+            {resetStep === 1 ? (
+              <form onSubmit={handleRequestReset} className="space-y-4">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+                  {language === 'hi' 
+                    ? 'अपना पंजीकृत ईमेल दर्ज करें। हम आपको पासवर्ड बदलने के लिए एक 6-अंकीय सत्यापन कोड (OTP) भेजेंगे।' 
+                    : 'Enter your registered email address. We will send you a 6-digit verification code (OTP) to reset your password.'}
+                </p>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
+                    {t.authEmail}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <input
+                      type="email"
+                      required
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 cursor-pointer disabled:opacity-50"
+                >
+                  {resetLoading 
+                    ? (language === 'hi' ? 'भेज रहा है...' : 'Sending Code...') 
+                    : (language === 'hi' ? 'सत्यापन कोड प्राप्त करें' : 'Get Verification Code')}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleConfirmReset} className="space-y-4">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+                  {language === 'hi' 
+                    ? 'कृपया अपने ईमेल पर प्राप्त 6-अंकीय सत्यापन कोड (OTP) और अपना नया पासवर्ड दर्ज करें।' 
+                    : 'Please enter the 6-digit verification code (OTP) sent to your email and choose a new password.'}
+                </p>
+
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
+                    {language === 'hi' ? 'सत्यापन कोड (OTP)' : 'Verification Code (OTP)'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={resetOtp}
+                    onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, ''))}
+                    placeholder="e.g. 583921"
+                    className="w-full text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2 text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
+                    {language === 'hi' ? 'नया पासवर्ड' : 'New Password'}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                      <Lock className="h-4 w-4" />
+                    </div>
+                    <input
+                      type={showResetPassword ? "text" : "password"}
+                      required
+                      value={resetNewPassword}
+                      onChange={(e) => setResetNewPassword(e.target.value)}
+                      placeholder="At least 4 characters"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPassword(!showResetPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+                    >
+                      {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setResetStep(1); setResetError(null); setResetSuccess(null); }}
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center"
+                  >
+                    {language === 'hi' ? 'पीछे' : 'Back'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 cursor-pointer disabled:opacity-50"
+                  >
+                    {resetLoading 
+                      ? (language === 'hi' ? 'रीसेट हो रहा है...' : 'Resetting...') 
+                      : (language === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset Password')}
+                  </button>
+                </div>
+              </form>
+            )}
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
