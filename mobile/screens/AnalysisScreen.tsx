@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -32,7 +32,8 @@ import {
   ClipboardList,
   Filter,
   CircleCheck,
-  CircleX
+  CircleX,
+  Clock
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { getCachedQuestions, saveQuestionsToCache } from '../cache';
@@ -552,6 +553,31 @@ export default function AnalysisScreen({
                   </View>
                 </View>
               </View>
+
+              {/* Time Taken Card */}
+              {(() => {
+                const rawSecs = activeAttempt.durationSeconds ?? activeAttempt.timeSpentSeconds ?? 0;
+                const spentSec = Math.max(0, Number(rawSecs) || 0);
+                const hrs = Math.floor(spentSec / 3600);
+                const mins = Math.floor((spentSec % 3600) / 60);
+                const secs = spentSec % 60;
+                const timeStr = hrs > 0
+                  ? `${hrs}h ${mins}m ${secs}s`
+                  : mins > 0
+                  ? `${mins}m ${secs}s`
+                  : `${secs}s`;
+                return (
+                  <View style={[styles.metricCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+                    <View style={[styles.metricIconBg, { backgroundColor: '#FEF3C7' }]}>
+                      <Clock size={18} color="#F59E0B" />
+                    </View>
+                    <View style={styles.metricDetails}>
+                      <Text style={styles.metricLabel}>Time Taken</Text>
+                      <Text style={[styles.metricValue, isDark && { color: ThemeColors.dark.text }]}>{timeStr}</Text>
+                    </View>
+                  </View>
+                );
+              })()}
 
             </View>
 

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -2391,7 +2391,7 @@ export default function DashboardScreen({
       });
     });
 
-    const uniqueTests = new Set<string>();
+    let count = 0;
     (currentUser.testSessions || []).forEach((s: any) => {
       if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') {
         return;
@@ -2418,6 +2418,9 @@ export default function DashboardScreen({
         }
       }
 
+      // durationMinutes must be positive
+      if (durationMinutes <= 0) return;
+
       const totalSec = durationMinutes * 60;
 
       // Resolve how many seconds the user actually spent (totalDuration - timeLeft at submission).
@@ -2425,15 +2428,15 @@ export default function DashboardScreen({
       const rawSpent = s.durationSeconds ?? s.timeSpentSeconds;
       if (rawSpent === null || rawSpent === undefined) return;
       const spentSec = Number(rawSpent);
-      if (!isFinite(spentSec) || spentSec < 0) return;
+      if (!isFinite(spentSec) || spentSec <= 0) return;
 
       // Only count this test if user utilized >= 75% of the allotted time
-      if (totalSec > 0 && spentSec >= totalSec * 0.75) {
-        uniqueTests.add(s.testId);
+      if (spentSec >= totalSec * 0.75) {
+        count += 1;
       }
     });
 
-    return uniqueTests.size;
+    return count;
   }, [examCatalog, currentUser.testSessions]);
 
   return (
