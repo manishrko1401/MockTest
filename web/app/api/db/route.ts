@@ -35,6 +35,8 @@ export async function POST(request: Request) {
     switch (action) {
       case 'db-diagnose':
         return await handleDbDiagnose();
+      case 'db-sync':
+        return await handleDbSync();
       case 'request-password-reset':
         return await handleRequestPasswordReset(data);
       case 'confirm-password-reset':
@@ -2442,3 +2444,14 @@ async function handleDbDiagnose() {
     });
   }
 }
+
+async function handleDbSync() {
+  try {
+    await prisma.$executeRawUnsafe('ALTER TABLE users ADD COLUMN IF NOT EXISTS "otpCode" text;');
+    await prisma.$executeRawUnsafe('ALTER TABLE users ADD COLUMN IF NOT EXISTS "otpExpiresAt" timestamp without time zone;');
+    return NextResponse.json({ success: true, message: 'Database columns synced successfully.' });
+  } catch (e: any) {
+    return NextResponse.json({ success: false, error: e.message });
+  }
+}
+
