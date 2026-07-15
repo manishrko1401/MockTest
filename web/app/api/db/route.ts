@@ -33,10 +33,6 @@ export async function POST(request: Request) {
 
 
     switch (action) {
-      case 'db-diagnose':
-        return await handleDbDiagnose();
-      case 'db-sync':
-        return await handleDbSync();
       case 'request-password-reset':
         return await handleRequestPasswordReset(data);
       case 'confirm-password-reset':
@@ -2419,39 +2415,4 @@ async function handleConfirmPasswordReset(data: any) {
   }
 }
 
-async function handleDbDiagnose() {
-  try {
-    const dbUrl = process.env.DATABASE_URL || 'not set';
-    // Clean database URL to show host/db name safely without password
-    const safeDbUrl = dbUrl.replace(/:[^:@]+@/, ':***@');
-    
-    const columns = await prisma.$queryRaw<any[]>`
-      SELECT column_name, data_type 
-      FROM information_schema.columns 
-      WHERE table_name = 'users';
-    `;
-    const columnNames = columns.map(c => `${c.column_name} (${c.data_type})`);
-    
-    return NextResponse.json({
-      success: true,
-      safeDbUrl,
-      columnNames
-    });
-  } catch (e: any) {
-    return NextResponse.json({
-      success: false,
-      error: e.message
-    });
-  }
-}
-
-async function handleDbSync() {
-  try {
-    await prisma.$executeRawUnsafe('ALTER TABLE users ADD COLUMN IF NOT EXISTS "otpCode" text;');
-    await prisma.$executeRawUnsafe('ALTER TABLE users ADD COLUMN IF NOT EXISTS "otpExpiresAt" timestamp without time zone;');
-    return NextResponse.json({ success: true, message: 'Database columns synced successfully.' });
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e.message });
-  }
-}
 
