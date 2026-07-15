@@ -386,8 +386,8 @@ export default function ExamSolutionAnalysisPage() {
   const activeStatus = questionStatuses[activeQuestionIdx];
 
   // Calculate question time statistics and bookmark state
-  const userTime = sessionRecord.responses?.[activeQuestion.id]?.elapsedSeconds ?? (15 + (seed + activeQuestionIdx) % 75);
-  const avgTime = 30 + (activeQuestion.id.charCodeAt(activeQuestion.id.length - 1) % 5) * 15;
+  // Only show actual elapsed seconds — never fall back to fake random values
+  const userTime = sessionRecord.responses?.[activeQuestion.id]?.elapsedSeconds ?? 0;
   const isBookmarked = currentUser.bookmarkedQuestions?.some(b => b.testId === testId && b.questionId === activeQuestion.id) || false;
 
   const activeExplanation = EXPLANATIONS[activeQuestion.id] || activeQuestion.explanation || {
@@ -452,18 +452,19 @@ export default function ExamSolutionAnalysisPage() {
   };
 
   // Compute actual time taken:
-  // 1. Prefer durationSeconds from DB (timeSpentSeconds stored on submission) when > 0
-  // 2. Fallback: sum of per-question elapsedSeconds from responses (most accurate)
-  // 3. Last resort: show 0
+  // Sum per-question elapsedSeconds from responses — this is the most accurate
+  // measure of actual time the user spent actively on questions in this sitting.
+  // Fall back to durationSeconds (totalDuration - timeRemaining) if responses aren't available.
   const computedTimeTakenSeconds = (() => {
-    if (sessionRecord.durationSeconds && sessionRecord.durationSeconds > 0) {
-      return sessionRecord.durationSeconds;
-    }
     if (sessionRecord.responses && Object.keys(sessionRecord.responses).length > 0) {
       const total = Object.values(sessionRecord.responses).reduce(
-        (sum, r) => sum + (r.elapsedSeconds ?? 0), 0
+        (sum, r) => sum + ((r as any).elapsedSeconds ?? 0), 0
       );
       if (total > 0) return total;
+    }
+    // Fallback: totalDuration - timeRemaining (includes timer-running but not necessarily active time)
+    if (sessionRecord.durationSeconds && sessionRecord.durationSeconds > 0) {
+      return sessionRecord.durationSeconds;
     }
     return 0;
   })();
@@ -827,10 +828,7 @@ export default function ExamSolutionAnalysisPage() {
               <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                 <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 dark:text-slate-400">
                   <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded">
-                    {language === 'hi' ? 'आपका समय: ' : 'Your Time: '}<strong className="text-slate-800 dark:text-white font-bold">{userTime}s</strong>
-                  </span>
-                  <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded">
-                    {language === 'hi' ? 'औसत समय: ' : 'Avg Time: '}<strong className="text-slate-800 dark:text-white font-bold">{avgTime}s</strong>
+                    {language === 'hi' ? 'आपका समय: ' : 'Your Time: '}<strong className="text-slate-800 dark:text-white font-bold">{userTime > 0 ? `${userTime}s` : (language === 'hi' ? 'N/A' : 'N/A')}</strong>
                   </span>
                 </div>
 
