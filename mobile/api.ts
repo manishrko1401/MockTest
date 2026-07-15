@@ -197,4 +197,16 @@ export const ApiClient = {
    */
   confirmPasswordReset: (email: string, otp: string, newPassword: string) =>
     postRequest('confirm-password-reset', { email, otp, newPassword }),
+
+  /**
+   * Logs in a user via verified Firebase Phone Auth
+   */
+  loginViaPhone: (phoneNumber: string, idToken: string) =>
+    postRequest('login-via-phone', { phoneNumber, idToken }),
+
+  /**
+   * Resets password of a user via verified Firebase Phone Auth
+   */
+  resetPasswordViaPhone: (phoneNumber: string, idToken: string, newPassword: string) =>
+    postRequest('reset-password-via-phone', { phoneNumber, idToken, newPassword }),
 };

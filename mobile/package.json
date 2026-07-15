@@ -17,7 +17,9 @@
     "react": "19.2.3",
     "react-native": "0.85.3",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-svg": "15.15.4"
+    "react-native-svg": "15.15.4",
+    "@react-native-firebase/app": "^21.8.0",
+    "@react-native-firebase/auth": "^21.8.0"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",

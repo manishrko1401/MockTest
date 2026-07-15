@@ -33,6 +33,10 @@ export async function POST(request: Request) {
 
 
     switch (action) {
+      case 'phone-auth-login':
+        return await handlePhoneAuthLogin(data);
+      case 'phone-auth-reset-password':
+        return await handlePhoneAuthResetPassword(data);
       case 'request-password-reset':
         return await handleRequestPasswordReset(data);
       case 'confirm-password-reset':
@@ -2411,6 +2415,183 @@ async function handleConfirmPasswordReset(data: any) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Password reset DB update failed:', error);
+    return NextResponse.json({ success: false, error: 'Failed to update password. Please try again.' }, { status: 500 });
+  }
+}
+
+async function verifyFirebaseIdToken(idToken: string): Promise<string | null> {
+  try {
+    const apiKey = (process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyB6PEhV9ijxH10a-8_J6ccQS9_U4M6ituk").replace(/"/g, '').trim();
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ idToken }),
+    });
+
+    const result = await response.json();
+    if (result && result.users && result.users.length > 0) {
+      return result.users[0].phoneNumber || null;
+    }
+  } catch (error) {
+    console.error("Firebase ID Token verification error:", error);
+  }
+  return null;
+}
+
+function cleanPhoneNumber(phone: string) {
+  const digits = phone.replace(/\D/g, '');
+  return digits.substring(digits.length - 10);
+}
+
+async function handlePhoneAuthLogin(data: any) {
+  const { phoneNumber, idToken } = data;
+  if (!phoneNumber || !idToken) {
+    return NextResponse.json({ success: false, error: 'Phone number and authentication token are required.' }, { status: 400 });
+  }
+
+  const verifiedPhone = await verifyFirebaseIdToken(idToken);
+  if (!verifiedPhone) {
+    return NextResponse.json({ success: false, error: 'Failed to verify authentication token. Please try again.' }, { status: 401 });
+  }
+
+  const cleanedVerified = cleanPhoneNumber(verifiedPhone);
+  const cleanedInput = cleanPhoneNumber(phoneNumber);
+  if (cleanedVerified !== cleanedInput) {
+    return NextResponse.json({ success: false, error: 'Token and phone number mismatch.' }, { status: 400 });
+  }
+
+  const user = await prisma.user.findFirst({
+    where: { mobile: cleanedVerified },
+    include: {
+      testSessions: {
+        include: {
+          mockTest: {
+            select: {
+              title: true,
+              maxMarks: true,
+              durationMinutes: true,
+              positiveMarks: true,
+              negativeMarks: true,
+            }
+          },
+          responses: true,
+        },
+        orderBy: { startedAt: 'desc' },
+      },
+    },
+  });
+
+  if (!user) {
+    return NextResponse.json({ success: false, error: 'No account found with this phone number. Please register first.' }, { status: 404 });
+  }
+
+  if (user.isBlocked) {
+    return NextResponse.json({ success: false, error: 'This user account is blocked by the administrator.' }, { status: 403 });
+  }
+
+  const newSessionId = crypto.randomUUID();
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { currentSessionId: newSessionId }
+  });
+
+  const mappedUser = {
+    id: user.id,
+    currentSessionId: newSessionId,
+    candidateCode: user.candidateCode,
+    name: user.fullName,
+    email: user.email,
+    mobile: user.mobile,
+    referralCode: user.referralCode,
+    referredBy: user.referredBy,
+    referralsCount: user.referralsCount,
+    role: user.role,
+    subscriptionTier: user.subscriptionTier,
+    subscriptionPurchasedAt: user.subscriptionPurchasedAt,
+    subscriptionExpiresAt: user.subscriptionExpiresAt,
+    registeredDate: formatDateTime(user.createdAt),
+    isBlocked: user.isBlocked,
+    password: user.passwordHash,
+    coins: user.coins,
+    referralCoinsCredited: user.referralCoinsCredited,
+    bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],
+    testSessions: user.testSessions.map((session: any) => {
+      const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
+      session.responses.forEach((r: any) => {
+        responsesRecord[r.questionId] = {
+          selectedOptionIndex: r.selectedOptionIndex,
+          elapsedSeconds: r.elapsedSeconds,
+          state: r.state,
+        };
+      });
+      return {
+        id: session.id,
+        testId: session.mockTestId,
+        title: session.mockTest?.title || 'Mock Test',
+        score: session.finalScore ?? 0,
+        maxScore: session.mockTest?.maxMarks ?? 200,
+        accuracy: session.accuracyPercentage ?? 0,
+        durationMinutes: session.mockTest?.durationMinutes || 60,
+        durationSeconds: session.timeSpentSeconds,
+        status: session.status,
+        violations: session.violationsCount,
+        date: session.startedAt.toISOString().split('T')[0],
+        startedAt: session.startedAt.toISOString(),
+        responses: responsesRecord,
+        timeRemaining: session.remainingSeconds,
+        currentSectionIndex: session.currentSectionIndex,
+        currentQuestionIndex: session.currentQuestionIndex,
+        testbookRank: session.testbookRank ?? null,
+        testbookPercentile: session.testbookPercentile ?? null,
+        positiveMarks: session.mockTest?.positiveMarks ?? null,
+        negativeMarks: session.mockTest?.negativeMarks ?? null,
+      };
+    }),
+  };
+
+  return NextResponse.json({ success: true, user: mappedUser });
+}
+
+async function handlePhoneAuthResetPassword(data: any) {
+  const { phoneNumber, idToken, newPassword } = data;
+  if (!phoneNumber || !idToken || !newPassword) {
+    return NextResponse.json({ success: false, error: 'Phone number, token, and new password are required.' }, { status: 400 });
+  }
+
+  if (newPassword.length < 4) {
+    return NextResponse.json({ success: false, error: 'Password must be at least 4 characters long.' }, { status: 400 });
+  }
+
+  const verifiedPhone = await verifyFirebaseIdToken(idToken);
+  if (!verifiedPhone) {
+    return NextResponse.json({ success: false, error: 'Failed to verify authentication token. Please try again.' }, { status: 401 });
+  }
+
+  const cleanedVerified = cleanPhoneNumber(verifiedPhone);
+  const cleanedInput = cleanPhoneNumber(phoneNumber);
+  if (cleanedVerified !== cleanedInput) {
+    return NextResponse.json({ success: false, error: 'Token and phone number mismatch.' }, { status: 400 });
+  }
+
+  const user = await prisma.user.findFirst({
+    where: { mobile: cleanedVerified }
+  });
+
+  if (!user) {
+    return NextResponse.json({ success: false, error: 'No account found with this phone number. Please register first.' }, { status: 404 });
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: newPassword }
+    });
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Password reset via phone DB update failed:', error);
     return NextResponse.json({ success: false, error: 'Failed to update password. Please try again.' }, { status: 500 });
   }
 }
