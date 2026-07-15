@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -2397,33 +2397,38 @@ export default function DashboardScreen({
         return;
       }
 
-      // Prioritize durationMinutes from the session object, then catalog, then guess, then fallback
+      // Resolve total allotted duration in minutes — must be > 0
+      // Priority: session.durationMinutes (from DB join) > catalog > testId guess > 60min fallback
       let durationMinutes = 60;
-      if (typeof s.durationMinutes === 'number') {
+      if (typeof s.durationMinutes === 'number' && s.durationMinutes > 0) {
         durationMinutes = s.durationMinutes;
-      } else if (s.mockTest && typeof s.mockTest.durationMinutes === 'number') {
+      } else if (s.mockTest && typeof s.mockTest.durationMinutes === 'number' && s.mockTest.durationMinutes > 0) {
         durationMinutes = s.mockTest.durationMinutes;
       } else {
         const test = catalogTestsMap.get(s.testId);
-        if (test && typeof test.durationMinutes === 'number') {
+        if (test && typeof test.durationMinutes === 'number' && test.durationMinutes > 0) {
           durationMinutes = test.durationMinutes;
         } else {
           const tid = (s.testId || '').toLowerCase();
-          if (tid.includes('ssc')) {
-            durationMinutes = 60;
-          } else if (tid.includes('rrb')) {
-            durationMinutes = 90;
-          } else if (tid.includes('ctet')) {
-            durationMinutes = 150;
-          } else if (tid.includes('ugc_net')) {
-            durationMinutes = tid.includes('paper1') ? 60 : 120;
-          }
+          if (tid.includes('ssc'))          durationMinutes = 60;
+          else if (tid.includes('rrb'))     durationMinutes = 90;
+          else if (tid.includes('ctet'))    durationMinutes = 150;
+          else if (tid.includes('ugc_net')) durationMinutes = tid.includes('paper1') ? 60 : 120;
+          else                              durationMinutes = 60;
         }
       }
 
       const totalSec = durationMinutes * 60;
-      const spentSec = Number(s.durationSeconds ?? s.timeSpentSeconds ?? 0);
-      if (spentSec >= totalSec * 0.75) {
+
+      // Resolve how many seconds the user actually spent (totalDuration - timeLeft at submission).
+      // null/undefined means the field was never saved — skip rather than assume 0 spent.
+      const rawSpent = s.durationSeconds ?? s.timeSpentSeconds;
+      if (rawSpent === null || rawSpent === undefined) return;
+      const spentSec = Number(rawSpent);
+      if (!isFinite(spentSec) || spentSec < 0) return;
+
+      // Only count this test if user utilized >= 75% of the allotted time
+      if (totalSec > 0 && spentSec >= totalSec * 0.75) {
         uniqueTests.add(s.testId);
       }
     });

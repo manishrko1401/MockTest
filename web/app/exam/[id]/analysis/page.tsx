@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth, MockUser, MockTestRecord } from '../../../AuthContext';
@@ -287,6 +287,49 @@ export default function ExamSolutionAnalysisPage() {
   });
 
   const sectionalAnalysis = (() => {
+    // Resolve admin-configured marks for this test from the catalog
+    let catalogPositiveMark = testId.includes('rrb') || testId.includes('railway') ? 1 : 2;
+    let catalogNegativeMark = testId.includes('rrb') || testId.includes('railway') ? 0.33 : 0.5;
+    for (const cat of (examCatalog || [])) {
+      for (const sub of (cat.subCategories || [])) {
+        const directTest = (sub.tests || []).find((t: any) => t.id === testId);
+        if (directTest) {
+          if (directTest.positiveMarks !== undefined) catalogPositiveMark = Number(directTest.positiveMarks);
+          if (directTest.negativeMarks !== undefined) catalogNegativeMark = Number(directTest.negativeMarks);
+        }
+        for (const subsub of (sub.subSubCategories || [])) {
+          const subsubTest = (subsub.tests || []).find((t: any) => t.id === testId);
+          if (subsubTest) {
+            if (subsubTest.positiveMarks !== undefined) catalogPositiveMark = Number(subsubTest.positiveMarks);
+            if (subsubTest.negativeMarks !== undefined) catalogNegativeMark = Number(subsubTest.negativeMarks);
+          }
+        }
+      }
+    }
+
+    const sectionsList = examSession.sections || [];
+
+    // Build a map of sectionId -> { name, positiveMark, negativeMark }
+    // Use section-level marks if set; otherwise use test-level catalog marks
+    const sectionInfoMap: Record<string, { name: string; positiveMark: number; negativeMark: number }> = {};
+    sectionsList.forEach(s => {
+      sectionInfoMap[s.id] = {
+        name: s.name,
+        positiveMark: (s.positiveMark !== undefined && s.positiveMark !== null) ? Number(s.positiveMark) : catalogPositiveMark,
+        negativeMark: (s.negativeMark !== undefined && s.negativeMark !== null) ? Number(s.negativeMark) : catalogNegativeMark,
+      };
+    });
+
+    const getSectionInfo = (secId: string) => {
+      if (sectionInfoMap[secId]) return sectionInfoMap[secId];
+      // Fallback: use catalog marks for unknown sections
+      return {
+        name: secId ? secId.replace(/sec_/, '').toUpperCase() : 'General Section',
+        positiveMark: catalogPositiveMark,
+        negativeMark: catalogNegativeMark,
+      };
+    };
+
     const sectionsMap: Record<string, {
       name: string;
       total: number;
@@ -295,16 +338,13 @@ export default function ExamSolutionAnalysisPage() {
       incorrect: number;
       unattempted: number;
       score: number;
+      positiveMark: number;
+      negativeMark: number;
     }> = {};
 
-    const sectionsList = examSession.sections || [];
-    const getSectionName = (secId: string) => {
-      const found = sectionsList.find(s => s.id === secId);
-      return found ? found.name : (secId ? secId.replace(/sec_/, '').toUpperCase() : 'General Section');
-    };
-
     questions.forEach((q, idx) => {
-      const secName = getSectionName(q.sectionId);
+      const info = getSectionInfo(q.sectionId);
+      const secName = info.name;
       if (!sectionsMap[secName]) {
         sectionsMap[secName] = {
           name: secName,
@@ -314,6 +354,8 @@ export default function ExamSolutionAnalysisPage() {
           incorrect: 0,
           unattempted: 0,
           score: 0,
+          positiveMark: info.positiveMark,
+          negativeMark: info.negativeMark,
         };
       }
 
@@ -329,10 +371,10 @@ export default function ExamSolutionAnalysisPage() {
         stats.attempted++;
         if (userStatus.status === 'correct') {
           stats.correct++;
-          stats.score += 1.0;
+          stats.score += info.positiveMark;
         } else {
           stats.incorrect++;
-          stats.score -= 0.25;
+          stats.score -= info.negativeMark;
         }
       }
     });
@@ -709,8 +751,9 @@ export default function ExamSolutionAnalysisPage() {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
             {sectionalAnalysis.map((sec) => {
-              const maxSecScore = sec.total;
-              const scorePercent = Math.min(100, Math.max(0, (sec.score / maxSecScore) * 100));
+              // maxSecScore = total questions × positiveMark (actual max marks, not question count)
+              const maxSecScore = sec.total * sec.positiveMark;
+              const scorePercent = maxSecScore > 0 ? Math.min(100, Math.max(0, (sec.score / maxSecScore) * 100)) : 0;
               const secAccuracy = sec.attempted > 0 ? (sec.correct / sec.attempted) * 100 : 0;
               const accuracyColor = secAccuracy >= 75 ? 'text-green-600 dark:text-green-400' : (secAccuracy >= 50 ? 'text-blue-600 dark:text-blue-400' : 'text-red-650 dark:text-red-400');
               const barColor = secAccuracy >= 75 ? 'bg-green-500' : (secAccuracy >= 50 ? 'bg-blue-500' : 'bg-red-500');
@@ -723,7 +766,7 @@ export default function ExamSolutionAnalysisPage() {
                     <h5 className="font-extrabold text-xs text-slate-850 dark:text-slate-200 truncate">{sec.name}</h5>
                     <div className="flex justify-between items-center mt-3">
                       <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{lang === 'hi' ? 'स्कोर' : 'SCORE'}</span>
-                      <span className="text-xs font-black text-blue-600 dark:text-blue-400">{sec.score.toFixed(1)} / {maxSecScore.toFixed(0)}</span>
+                      <span className="text-xs font-black text-blue-600 dark:text-blue-400">{sec.score.toFixed(2)} / {maxSecScore.toFixed(0)}</span>
                     </div>
 
                     {/* Progress bar */}
@@ -744,6 +787,10 @@ export default function ExamSolutionAnalysisPage() {
                     <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
                       <span>{lang === 'hi' ? 'छोड़े गए' : 'Unattempted'}:</span>
                       <span className="font-extrabold text-slate-500 dark:text-slate-400">{sec.unattempted}</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                      <span>{lang === 'hi' ? 'मार्किंग' : 'Marking'}:</span>
+                      <span className="font-extrabold"><strong className="text-green-600">+{sec.positiveMark}</strong> / <strong className="text-red-500">−{sec.negativeMark}</strong></span>
                     </div>
                   </div>
                 </div>

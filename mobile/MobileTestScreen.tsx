@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -967,7 +967,7 @@ export default function MobileTestScreen({
         score: totalMarks,
         maxScore: totalMaxScore,
         accuracy,
-        durationSeconds: totalDuration - timeLeft,
+        durationSeconds: totalDurationRef.current - timeLeftRef.current,
         violations: violationsCount,
         responses: formattedResponses
       };

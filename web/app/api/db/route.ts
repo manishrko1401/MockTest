@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 
 function formatDateTime(date: Date) {
@@ -1311,12 +1311,16 @@ async function handleGetCustomQuestions(data: any) {
     where: { id: testId },
     select: {
       customQuestions: true,
+      positiveMarks: true,
+      negativeMarks: true,
     },
   });
 
   return NextResponse.json({
     success: true,
     questions: mockTest?.customQuestions || null,
+    positiveMarks: mockTest?.positiveMarks ?? null,
+    negativeMarks: mockTest?.negativeMarks ?? null,
   });
 }
 

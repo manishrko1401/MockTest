@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+﻿import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -60,6 +60,8 @@ export default function AnalysisScreen({
   const [questions, setQuestions] = useState<any[]>([]);
   const [loadingQs, setLoadingQs] = useState(true);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
+  const [testPositiveMarks, setTestPositiveMarks] = useState<number | null>(null);
+  const [testNegativeMarks, setTestNegativeMarks] = useState<number | null>(null);
   
   // Re-attempt Mode states (Solutions Tab)
   const [reattemptMode, setReattemptMode] = useState(false);
@@ -175,6 +177,16 @@ export default function AnalysisScreen({
   }, [cutoffScoreStr, scoreVal]);
 
   const sectionalAnalysis = useMemo(() => {
+    // Derive per-test marking scheme (same logic as examUtils.ts + prefer DB metadata)
+    const testId = activeAttempt.testId || '';
+    const pmFromMeta = activeAttempt.mockTest?.positiveMarks ?? activeAttempt.positiveMarks;
+    const nmFromMeta = activeAttempt.mockTest?.negativeMarks ?? activeAttempt.negativeMarks;
+    // Fallbacks match examUtils.ts: RRB = +1/−0.33, SSC/others = +2/−0.5
+    const positiveMark: number = pmFromMeta !== undefined ? Number(pmFromMeta) :
+      (testId.includes('rrb') || testId.includes('railway') ? 1 : 2);
+    const negativeMark: number = nmFromMeta !== undefined ? Number(nmFromMeta) :
+      (testId.includes('rrb') || testId.includes('railway') ? 0.33 : 0.5);
+
     const sectionsMap: Record<string, {
       name: string;
       total: number;
@@ -183,6 +195,8 @@ export default function AnalysisScreen({
       incorrect: number;
       unattempted: number;
       score: number;
+      positiveMark: number;
+      negativeMark: number;
     }> = {};
 
     questions.forEach(q => {
@@ -196,6 +210,8 @@ export default function AnalysisScreen({
           incorrect: 0,
           unattempted: 0,
           score: 0,
+          positiveMark,
+          negativeMark,
         };
       }
 
@@ -212,16 +228,16 @@ export default function AnalysisScreen({
         stats.attempted++;
         if (selectedIdx === correctIdx) {
           stats.correct++;
-          stats.score += 1.0;
+          stats.score += positiveMark;
         } else {
           stats.incorrect++;
-          stats.score -= 0.25;
+          stats.score -= negativeMark;
         }
       }
     });
 
     return Object.values(sectionsMap);
-  }, [questions, activeAttempt]);
+  }, [questions, activeAttempt, testPositiveMarks, testNegativeMarks]);
 
   // Reconstruct deterministic student responses seed to align with website timers
   let seed = 0;
@@ -250,6 +266,13 @@ export default function AnalysisScreen({
       }
 
       const res = await ApiClient.getCustomQuestions(activeAttempt.testId);
+      // Store admin-configured marks returned alongside questions
+      if (res.positiveMarks !== null && res.positiveMarks !== undefined) {
+        setTestPositiveMarks(Number(res.positiveMarks));
+      }
+      if (res.negativeMarks !== null && res.negativeMarks !== undefined) {
+        setTestNegativeMarks(Number(res.negativeMarks));
+      }
       if (res.success && res.questions && Array.isArray(res.questions)) {
         const mappedQuestions = res.questions.map((q: any, idx: number) => ({
           ...q,
@@ -306,7 +329,7 @@ export default function AnalysisScreen({
     });
 
     return { correct, incorrect, unattempted };
-  }, [questions, activeAttempt]);
+  }, [questions, activeAttempt, testPositiveMarks, testNegativeMarks]);
 
   // Filtered questions based on selected Section and category filter
   const filteredQuestions = useMemo(() => {
@@ -544,9 +567,10 @@ export default function AnalysisScreen({
               {sectionalAnalysis.length === 0 ? (
                 <Text style={[styles.grayText, { textAlign: 'center', padding: 20 }]}>Subject metrics calculating...</Text>
               ) : (
-                sectionalAnalysis.map((sec) => {
-                  const maxSecScore = sec.total; // assume 1 mark per question
-                  const scorePercent = Math.min(100, Math.max(0, (sec.score / maxSecScore) * 100));
+              sectionalAnalysis.map((sec) => {
+                  // maxSecScore = total questions × positiveMark (actual max marks, not question count)
+                  const maxSecScore = sec.total * sec.positiveMark;
+                  const scorePercent = maxSecScore > 0 ? Math.min(100, Math.max(0, (sec.score / maxSecScore) * 100)) : 0;
                   const secAccuracy = sec.attempted > 0 ? (sec.correct / sec.attempted) * 100 : 0;
                   
                   return (
@@ -554,7 +578,7 @@ export default function AnalysisScreen({
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                         <Text style={[styles.sectionRowTitle, isDark && { color: ThemeColors.dark.text }]}>{sec.name}</Text>
                         <Text style={[styles.sectionRowScore, { color: isDark ? '#60A5FA' : '#2563EB' }]}>
-                          Score: {sec.score.toFixed(1)}/{maxSecScore.toFixed(0)}
+                          Score: {sec.score.toFixed(2)}/{maxSecScore.toFixed(0)}
                         </Text>
                       </View>
 
@@ -569,6 +593,11 @@ export default function AnalysisScreen({
                         </Text>
                         <Text style={[styles.sectionRowMeta, { fontWeight: 'bold', color: secAccuracy >= 75 ? '#10B981' : '#64748B' }]}>
                           Accuracy: {secAccuracy.toFixed(0)}%
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 2 }}>
+                        <Text style={[styles.sectionRowMeta, { color: isDark ? '#94A3B8' : '#64748B' }]}>
+                          Marking: <Text style={{ color: '#10B981', fontWeight: 'bold' }}>+{sec.positiveMark}</Text> / <Text style={{ color: '#EF4444', fontWeight: 'bold' }}>−{sec.negativeMark}</Text>
                         </Text>
                       </View>
                     </View>
