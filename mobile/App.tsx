@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -107,11 +107,14 @@ export default function App() {
         }
       }
 
-      // Refresh user data after syncing so sessions update
+      // Refresh user data after syncing so sessions update (use loginRefresh to preserve existing session)
       if (currentUser?.email) {
         const savedPassword = await SecureStore.getItemAsync('tb_user_password');
         if (savedPassword) {
-          const authRes = await ApiClient.login(currentUser.email, savedPassword);
+          const existingSession = currentUser?.currentSessionId || '';
+          const authRes = existingSession
+            ? await ApiClient.loginRefresh(currentUser.email, savedPassword, existingSession)
+            : await ApiClient.login(currentUser.email, savedPassword);
           if (authRes.success && authRes.user) {
             setCurrentUser(authRes.user);
             ApiClient.setApiSession(authRes.user.id, authRes.user.currentSessionId);
@@ -257,8 +260,15 @@ export default function App() {
             // Don't stop loading here — background sync below will call setLoading(false) via finally()
           }
 
-          // Fetch fresh user profile in background (always runs, finally() stops the spinner)
-          ApiClient.login(savedEmail, savedPassword).then(async (authRes) => {
+          // Fetch fresh user profile in background (always runs, finally() stops the spinner).
+          // Use loginRefresh (passes existing sessionId) so we don't generate a new session UUID,
+          // which would falsely invalidate any other device that's also legitimately active.
+          const existingSession = cachedUser?.currentSessionId || '';
+          const refreshCall = existingSession
+            ? ApiClient.loginRefresh(savedEmail, savedPassword, existingSession)
+            : ApiClient.login(savedEmail, savedPassword);
+
+          refreshCall.then(async (authRes) => {
             if (authRes.success && authRes.user) {
               setCurrentUser(authRes.user);
               ApiClient.setApiSession(authRes.user.id, authRes.user.currentSessionId);
@@ -552,7 +562,11 @@ export default function App() {
     // ✅ Use SecureStore password — NOT the stale currentUser.password from DB response
     const savedPassword = await SecureStore.getItemAsync('tb_user_password');
     if (!savedPassword) return;
-    const res = await ApiClient.login(currentUser.email, savedPassword);
+    // Use loginRefresh to preserve the existing session so we don't invalidate other real sessions
+    const existingSession = currentUser?.currentSessionId || '';
+    const res = existingSession
+      ? await ApiClient.loginRefresh(currentUser.email, savedPassword, existingSession)
+      : await ApiClient.login(currentUser.email, savedPassword);
     if (res.success && res.user) {
       setCurrentUser(res.user);
       ApiClient.setApiSession(res.user.id, res.user.currentSessionId);

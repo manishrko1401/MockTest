@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 import crypto from 'crypto';
 
@@ -552,15 +552,26 @@ async function handleLogin(data: any) {
     return NextResponse.json({ success: false, error: 'Invalid password. Please check your credentials.' }, { status: 401 });
   }
 
-  const newSessionId = crypto.randomUUID();
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { currentSessionId: newSessionId }
-  });
+  // If the client already has a valid session ID for this user (e.g., app restart / background re-auth),
+  // reuse the existing session to avoid invalidating it unnecessarily.
+  // Only generate a new session ID when it's a genuine new-device login (no existing session, or session mismatch).
+  const { existingSessionId } = data;
+  let sessionIdToUse: string;
+  if (existingSessionId && user.currentSessionId && existingSessionId === user.currentSessionId) {
+    // Same device re-authenticating — keep the existing session, don't generate a new one
+    sessionIdToUse = existingSessionId;
+  } else {
+    // Genuinely new login (new device, or first ever login) — generate a fresh session
+    sessionIdToUse = crypto.randomUUID();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { currentSessionId: sessionIdToUse }
+    });
+  }
 
   const mappedUser = {
     id: user.id,
-    currentSessionId: newSessionId,
+    currentSessionId: sessionIdToUse,
     candidateCode: user.candidateCode,
     name: user.fullName,
     email: user.email,

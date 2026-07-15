@@ -1,4 +1,4 @@
-﻿/**
+/**
  * API client to communicate with the shared Next.js backend database endpoints.
  */
 
@@ -69,9 +69,18 @@ export const ApiClient = {
     postRequest('catalog-sync', { lastSyncedAt: lastSyncedAt ?? null }),
 
   /**
-   * Performs user login using email
+   * Performs user login using email (new device / first login).
+   * Always generates a fresh session ID — invalidates any other active session.
    */
   login: (email: string, password?: string) => postRequest('login', { email, password }),
+
+  /**
+   * Re-authenticates the current device without invalidating the existing session.
+   * Pass the device's existing sessionId so the server reuses it if it still matches.
+   * Use this for background refresh on app startup — NOT for a fresh device login.
+   */
+  loginRefresh: (email: string, password: string, existingSessionId: string) =>
+    postRequest('login', { email, password, existingSessionId }),
 
   /**
    * Performs user signup/registration
