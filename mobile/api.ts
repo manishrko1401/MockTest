@@ -1,4 +1,4 @@
-/**
+﻿/**
  * API client to communicate with the shared Next.js backend database endpoints.
  */
 
@@ -7,8 +7,30 @@
 export const BASE_URL = 'https://mock-test-three-indol.vercel.app';
 export const API_URL = `${BASE_URL}/api/db`;
 
+let activeUserId: string | null = null;
+let activeSessionId: string | null = null;
+let sessionInvalidatedCallback: (() => void) | null = null;
+
+export function setApiSession(userId: string | null, sessionId: string | null) {
+  activeUserId = userId;
+  activeSessionId = sessionId;
+}
+
+export function onSessionInvalidated(callback: () => void) {
+  sessionInvalidatedCallback = callback;
+}
+
 async function postRequest(action: string, data: any = {}) {
   try {
+    // Automatically inject active session identifier for verification
+    if (activeUserId && activeSessionId && action !== 'login' && action !== 'signup') {
+      data = {
+        userId: data.userId || activeUserId,
+        sessionId: activeSessionId,
+        ...data
+      };
+    }
+
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
@@ -18,6 +40,14 @@ async function postRequest(action: string, data: any = {}) {
     });
 
     const result = await response.json();
+
+    // Catch centralized session invalidation alerts
+    if (result && result.error === 'SESSION_INVALIDATED') {
+      if (sessionInvalidatedCallback) {
+        sessionInvalidatedCallback();
+      }
+    }
+
     return result;
   } catch (error) {
     console.error(`API Error on action [${action}]:`, error);
@@ -26,9 +56,8 @@ async function postRequest(action: string, data: any = {}) {
 }
 
 export const ApiClient = {
-  /**
-   * Bootstraps the application data (notices, test catalog categories, subcategories)
-   */
+  setApiSession,
+  onSessionInvalidated,
   bootstrap: () => postRequest('bootstrap'),
 
   /**

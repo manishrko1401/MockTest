@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
+import crypto from 'crypto';
 
 function formatDateTime(date: Date) {
   try {
@@ -20,6 +21,17 @@ export async function POST(request: Request) {
 
     if (!action) {
       return NextResponse.json({ success: false, error: 'No action provided' }, { status: 400 });
+    }
+
+    // Centrally prevent simultaneous multi-device logins
+    if (data && data.userId && data.sessionId && action !== 'login' && action !== 'signup') {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: data.userId },
+        select: { currentSessionId: true }
+      });
+      if (dbUser && dbUser.currentSessionId && dbUser.currentSessionId !== data.sessionId) {
+        return NextResponse.json({ success: false, error: 'SESSION_INVALIDATED' }, { status: 401 });
+      }
     }
 
     switch (action) {
@@ -457,6 +469,7 @@ async function handleSignup(data: any) {
     }
   }
 
+  const newSessionId = crypto.randomUUID();
   const newUser = await prisma.user.create({
     data: {
       candidateCode: 'HUB-' + Math.floor(1000 + Math.random() * 9000),
@@ -472,6 +485,7 @@ async function handleSignup(data: any) {
       subscriptionPurchasedAt: null,
       subscriptionExpiresAt: null,
       isBlocked: false,
+      currentSessionId: newSessionId,
     },
   });
 
@@ -479,6 +493,7 @@ async function handleSignup(data: any) {
     success: true,
     user: {
       id: newUser.id,
+      currentSessionId: newSessionId,
       candidateCode: newUser.candidateCode,
       name: newUser.fullName,
       email: newUser.email,
@@ -537,8 +552,15 @@ async function handleLogin(data: any) {
     return NextResponse.json({ success: false, error: 'Invalid password. Please check your credentials.' }, { status: 401 });
   }
 
+  const newSessionId = crypto.randomUUID();
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { currentSessionId: newSessionId }
+  });
+
   const mappedUser = {
     id: user.id,
+    currentSessionId: newSessionId,
     candidateCode: user.candidateCode,
     name: user.fullName,
     email: user.email,

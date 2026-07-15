@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -114,6 +114,7 @@ export default function App() {
           const authRes = await ApiClient.login(currentUser.email, savedPassword);
           if (authRes.success && authRes.user) {
             setCurrentUser(authRes.user);
+            ApiClient.setApiSession(authRes.user.id, authRes.user.currentSessionId);
             await saveUserToCache(authRes.user);
           }
         }
@@ -122,6 +123,17 @@ export default function App() {
       console.error('[Offline Sync] Error during pending submit flush:', err);
     }
   };
+
+  // Register session invalidated callback to force logout on multi-device login conflict
+  useEffect(() => {
+    ApiClient.onSessionInvalidated(() => {
+      Alert.alert(
+        "Session Expired",
+        "You have been logged out because your account is active on another device.",
+        [{ text: "OK", onPress: () => handleLogout() }]
+      );
+    });
+  }, [currentUser]);
 
   // 1. Initial mounting check for saved credentials & bootstrap catalogs
   useEffect(() => {
@@ -239,6 +251,7 @@ export default function App() {
           const cachedUser = await getCachedUser();
           if (cachedUser) {
             setCurrentUser(cachedUser);
+            ApiClient.setApiSession(cachedUser.id, cachedUser.currentSessionId);
             prefetchCompletedTests(cachedUser);
             setViewMode('dashboard');
             // Don't stop loading here — background sync below will call setLoading(false) via finally()
@@ -248,6 +261,7 @@ export default function App() {
           ApiClient.login(savedEmail, savedPassword).then(async (authRes) => {
             if (authRes.success && authRes.user) {
               setCurrentUser(authRes.user);
+              ApiClient.setApiSession(authRes.user.id, authRes.user.currentSessionId);
               prefetchCompletedTests(authRes.user);
               await saveUserToCache(authRes.user);
               setViewMode('dashboard'); // Transition to dashboard upon successful login
@@ -541,6 +555,7 @@ export default function App() {
     const res = await ApiClient.login(currentUser.email, savedPassword);
     if (res.success && res.user) {
       setCurrentUser(res.user);
+      ApiClient.setApiSession(res.user.id, res.user.currentSessionId);
       prefetchCompletedTests(res.user);
       await saveUserToCache(res.user);
     }
@@ -580,6 +595,7 @@ export default function App() {
 
   const handleLoginSuccess = async (user: any) => {
     setCurrentUser(user);
+    ApiClient.setApiSession(user.id, user.currentSessionId);
     prefetchCompletedTests(user);
     await saveUserToCache(user);
     await SecureStore.setItemAsync('tb_user_email', user.email);
@@ -605,6 +621,7 @@ export default function App() {
     await SecureStore.deleteItemAsync('tb_user_password');
     // Clear device cache so a different login doesn't see stale data
     await clearAllCache();
+    ApiClient.setApiSession(null, null);
     setCurrentUser(null);
     // Show guest dashboard after logout so user can still browse catalog
     const guestUser = { id: 'guest', name: 'Guest', email: '', isGuest: true, testSessions: [], bookmarks: [], subscriptionTier: 'None' };
@@ -747,6 +764,7 @@ export default function App() {
               const res = await ApiClient.login(currentUser.email, currentUser.password);
               if (res.success && res.user) {
                 setCurrentUser(res.user);
+                ApiClient.setApiSession(res.user.id, res.user.currentSessionId);
                 prefetchCompletedTests(res.user);
                 
                 // Find the new session (the one that is not in the set of pre-existing session IDs)

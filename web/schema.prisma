@@ -55,6 +55,7 @@ model User {
   bookmarkedQuestions     Json?
   coins                   Int                @default(0)
   referralCoinsCredited   Boolean            @default(false)
+  currentSessionId        String?
   supportMessages         SupportMessage[]
 
   @@map("users")
