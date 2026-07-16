@@ -234,7 +234,7 @@ const getCategoryStyle = (name: string, isDark: boolean) => {
   let iconName = 'Sparkles';
   if (norm.includes('ssc'))                            iconName = 'Award';
   else if (norm.includes('railway') || norm.includes('rrb')) iconName = 'Activity';
-  else if (norm.includes('bank') || norm.includes('lic'))    iconName = 'Coins';
+  else if (norm.includes('bank') || norm.includes('lic') || norm.includes('rbi'))    iconName = 'Coins';
   else if (norm.includes('teach') || norm.includes('ctet'))  iconName = 'BookOpen';
   else if (norm.includes('ugc') || norm.includes('net'))     iconName = 'GraduationCap';
   else if (norm.includes('police') || norm.includes('upsc')) iconName = 'Shield';
@@ -263,6 +263,24 @@ const CategoryIcon = ({ name, color, size }: { name: string; color: string; size
     case 'Target':       return <Target color={color} size={size} />;
     default:             return <Sparkles color={color} size={size} />;
   }
+};
+
+const CategoryLogoImage = ({ logoUrl, fallbackIcon }: { logoUrl: string; fallbackIcon: React.ReactNode }) => {
+  const [hasError, setHasError] = useState(false);
+  const isSvg = logoUrl.toLowerCase().split('?')[0].endsWith('.svg');
+
+  if (hasError || isSvg) {
+    return <>{fallbackIcon}</>;
+  }
+
+  return (
+    <Image
+      source={{ uri: logoUrl }}
+      style={{ width: '100%', height: '100%', borderRadius: 27 }}
+      resizeMode="cover"
+      onError={() => setHasError(true)}
+    />
+  );
 };
 
 const SwipeableCategoryCard = ({
@@ -1188,15 +1206,10 @@ export default function DashboardScreen({
                             overflow: 'hidden',
                           }
                         ]}>
-                          {category.logoUrl ? (
-                            <Image
-                              source={{ uri: category.logoUrl }}
-                              style={{ width: '100%', height: '100%', borderRadius: 27 }}
-                              resizeMode="cover"
-                            />
-                          ) : (
-                            <CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={24} />
-                          )}
+                          <CategoryLogoImage
+                            logoUrl={category.logoUrl || ''}
+                            fallbackIcon={<CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={24} />}
+                          />
                         </View>
 
                         {/* Text info */}
