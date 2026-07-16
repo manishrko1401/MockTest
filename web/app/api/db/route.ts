@@ -1633,66 +1633,6 @@ async function seedDatabase() {
           ]
         }
       ]
-    },
-    {
-      id: 'teaching',
-      name: 'Teaching Exams',
-      subCategories: [
-        {
-          id: 'ctet_p1',
-          name: 'CTET Paper 1 Exams',
-          tests: [
-            { id: 'ctet_paper1', title: 'CTET 2026 Paper-I (Primary Class I-V) Mock Paper', questionsCount: 150, durationMinutes: 150, maxMarks: 150, requiredTier: 'None' }
-          ]
-        },
-        {
-          id: 'ctet_p2',
-          name: 'CTET Paper 2 Exams',
-          tests: [
-            { id: 'ctet_paper2', title: 'CTET 2026 Paper-II (Mathematics & Science)', questionsCount: 150, durationMinutes: 150, maxMarks: 150, requiredTier: 'Testbook Pass' }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'state_exams',
-      name: 'All State Exams',
-      subCategories: [
-        {
-          id: 'uppsc',
-          name: 'UPPSC Exams',
-          tests: [
-            { id: 'up_psc_prelims', title: 'UPPSC Prelims General Studies (GS Paper 1)', questionsCount: 150, durationMinutes: 120, maxMarks: 200, requiredTier: 'Testbook Pass Pro' }
-          ]
-        },
-        {
-          id: 'bssc',
-          name: 'BSSC Exams',
-          tests: [
-            { id: 'bihar_ssc', title: 'BSSC Inter-Level Full Practice Mock Paper', questionsCount: 150, durationMinutes: 135, maxMarks: 600, requiredTier: 'Testbook Pass' }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'banking',
-      name: 'Banking Exams',
-      subCategories: [
-        {
-          id: 'sbi_po',
-          name: 'SBI PO Exams',
-          tests: [
-            { id: 'sbi_po_prelims', title: 'SBI PO Preliminary Exam Full Length Mock Test', questionsCount: 100, durationMinutes: 60, maxMarks: 100, requiredTier: 'Testbook Pass Pro' }
-          ]
-        },
-        {
-          id: 'ibps_clerk',
-          name: 'IBPS Clerk Exams',
-          tests: [
-            { id: 'ibps_clerk', title: 'IBPS Clerk Preliminary Practice Mock Paper', questionsCount: 100, durationMinutes: 60, maxMarks: 100, requiredTier: 'None' }
-          ]
-        }
-      ]
     }
   ];
 

@@ -307,11 +307,13 @@ export function mergeCatalogDelta(
   }
 ): { examCatalog: any[]; noticesList: any[]; usersList: any[] } {
   // Deep clone so we don't mutate in place
-  const catalog: any[] = JSON.parse(JSON.stringify(existing.examCatalog));
+  // 1. Filter out categories that have been deleted from the database
+  const validCatIds = new Set(delta.newCategories.map((c: any) => c.id));
+  const catalog = JSON.parse(JSON.stringify(existing.examCatalog)).filter((c: any) => validCatIds.has(c.id));
 
-  // 1. Add new top-level categories OR update logoUrl/name on existing ones
+  // Add new top-level categories OR update logoUrl/name on existing ones
   for (const newCat of delta.newCategories) {
-    const existing = catalog.find(c => c.id === newCat.id);
+    const existing = catalog.find((c: any) => c.id === newCat.id);
     if (existing) {
       // Update mutable fields on existing category (e.g. logoUrl changed in admin)
       existing.logoUrl = newCat.logoUrl ?? existing.logoUrl;
@@ -324,7 +326,7 @@ export function mergeCatalogDelta(
 
   // 2. Add new exams into their parent category
   for (const newExam of delta.newExams) {
-    const parentCat = catalog.find(c => c.id === newExam.categoryId);
+    const parentCat = catalog.find((c: any) => c.id === newExam.categoryId);
     if (parentCat) {
       if (!parentCat.subCategories.find((e: any) => e.id === newExam.id)) {
         parentCat.subCategories.push({
