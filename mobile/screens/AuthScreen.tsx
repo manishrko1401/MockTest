@@ -62,7 +62,9 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState('');
-  const [resetSuccess, setResetSuccess] = useState('');  const handleRequestReset = async () => {
+  const [resetSuccess, setResetSuccess] = useState('');
+
+  const handleRequestReset = async () => {
     if (!resetEmail.trim()) {
       setResetError('Please enter your email address.');
       return;
