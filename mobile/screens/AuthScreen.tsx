@@ -31,7 +31,7 @@ import {
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
-import auth from '@react-native-firebase/auth';
+
 
 interface AuthScreenProps {
   onLoginSuccess: (user: any) => void;
@@ -56,111 +56,38 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
   // Password Reset states
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetStep, setResetStep] = useState(1); // 1 = input credentials, 2 = input OTP + new password
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetOtp, setResetOtp] = useState('');
   const [resetNewPassword, setResetNewPassword] = useState('');
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState('');
-  const [resetSuccess, setResetSuccess] = useState('');
-
-  // Phone auth states
-  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
-  const [phoneNo, setPhoneNo] = useState('');
-  const [confirmResult, setConfirmResult] = useState<any>(null);
-  const [phoneCode, setPhoneCode] = useState('');
-  const [phoneLoading, setPhoneLoading] = useState(false);
-
-  // Phone auth password reset states
-  const [resetPhone, setResetPhone] = useState('');
-  const [resetPhoneCode, setResetPhoneCode] = useState('');
-  const [confirmResetResult, setConfirmResetResult] = useState<any>(null);
-
-  const handleSendPhoneOtp = async () => {
-    if (!phoneNo.trim()) {
-      setError('Please enter your phone number.');
+  const [resetSuccess, setResetSuccess] = useState('');  const handleRequestReset = async () => {
+    if (!resetEmail.trim()) {
+      setResetError('Please enter your email address.');
       return;
     }
-    let formattedPhone = phoneNo.trim();
-    if (!formattedPhone.startsWith('+')) {
-      formattedPhone = '+91' + formattedPhone.replace(/\D/g, '');
-    }
-
-    setPhoneLoading(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const confirmation = await auth().signInWithPhoneNumber(formattedPhone);
-      setConfirmResult(confirmation);
-      setSuccess('Verification code sent to your phone.');
-    } catch (err: any) {
-      console.error("Firebase Native SMS Send Error:", err);
-      setError(err.message || 'Failed to send verification code.');
-    } finally {
-      setPhoneLoading(false);
-    }
-  };
-
-  const handleVerifyPhoneOtp = async () => {
-    if (!phoneCode.trim()) {
-      setError('Please enter the verification code.');
-      return;
-    }
-
-    setPhoneLoading(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const result = await confirmResult.confirm(phoneCode);
-      const idToken = await result.user.getIdToken();
-
-      const res = await ApiClient.loginViaPhone(result.user.phoneNumber, idToken);
-      if (res.success && res.user) {
-        setSuccess('Login successful!');
-        setTimeout(() => {
-          setPhoneLoading(false);
-          onLoginSuccess(res.user);
-        }, 1500);
-      } else {
-        setError(res.error || 'Login failed.');
-        setPhoneLoading(false);
-      }
-    } catch (err: any) {
-      console.error("OTP verification error:", err);
-      setError(err.message || 'Invalid code. Please try again.');
-      setPhoneLoading(false);
-    }
-  };
-
-  const handleRequestPhoneReset = async () => {
-    if (!resetPhone.trim()) {
-      setResetError('Please enter your phone number.');
-      return;
-    }
-    let formattedPhone = resetPhone.trim();
-    if (!formattedPhone.startsWith('+')) {
-      formattedPhone = '+91' + formattedPhone.replace(/\D/g, '');
-    }
-
     setResetLoading(true);
     setResetError('');
     setResetSuccess('');
 
     try {
-      const confirmation = await auth().signInWithPhoneNumber(formattedPhone);
-      setConfirmResetResult(confirmation);
-      setResetSuccess('Verification code sent to your phone.');
-      setResetStep(2);
-    } catch (err: any) {
-      console.error("Firebase Native Reset SMS Error:", err);
-      setResetError(err.message || 'Failed to send verification code.');
+      const res = await ApiClient.requestPasswordReset(resetEmail.trim());
+      if (res.success) {
+        setResetSuccess('Verification code has been sent to your email.');
+        setResetStep(2);
+      } else {
+        setResetError(res.error || 'Failed to request reset.');
+      }
+    } catch (err) {
+      setResetError('Connection error. Please try again.');
     } finally {
       setResetLoading(false);
     }
   };
 
-  const handleConfirmPhoneReset = async () => {
-    if (!resetPhoneCode.trim()) {
+  const handleConfirmReset = async () => {
+    if (!resetOtp.trim()) {
       setResetError('Please enter the verification code.');
       return;
     }
@@ -178,10 +105,11 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
     setResetSuccess('');
 
     try {
-      const result = await confirmResetResult.confirm(resetPhoneCode);
-      const idToken = await result.user.getIdToken();
-
-      const res = await ApiClient.resetPasswordViaPhone(result.user.phoneNumber, idToken, resetNewPassword);
+      const res = await ApiClient.confirmPasswordReset(
+        resetEmail.trim(),
+        resetOtp.trim(),
+        resetNewPassword.trim()
+      );
       if (res.success) {
         Alert.alert(
           'Success',
@@ -189,22 +117,19 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
           [{ text: 'OK' }]
         );
         setShowResetModal(false);
-        setResetPhoneCode('');
+        setResetOtp('');
         setResetNewPassword('');
-        setConfirmResetResult(null);
         setPassword(resetNewPassword);
+        setEmail(resetEmail);
       } else {
         setResetError(res.error || 'Password reset failed.');
       }
-    } catch (err: any) {
-      console.error("Phone OTP verification error during reset:", err);
-      setResetError(err.message || 'Invalid code. Please try again.');
+    } catch (err) {
+      setResetError('Connection error. Please try again.');
     } finally {
       setResetLoading(false);
     }
   };
-
-
 
   const handleLogin = async (loginEmail: string, loginPass: string) => {
     if (!loginEmail.trim()) {
@@ -377,49 +302,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
             </TouchableOpacity>
           </View>
 
-          {activeTab === 'login' && (
-            <View style={[styles.loginMethodBar, isDark && { backgroundColor: '#020617', borderColor: '#334155' }]}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={[
-                  styles.loginMethodBtn,
-                  loginMethod === 'email' && styles.loginMethodBtnActive
-                ]}
-                onPress={() => {
-                  setLoginMethod('email');
-                  setError('');
-                  setSuccess('');
-                }}
-              >
-                <Text style={[
-                  styles.loginMethodBtnText,
-                  loginMethod === 'email' ? styles.loginMethodBtnTextActive : (isDark ? { color: '#94A3B8' } : { color: '#4B5563' })
-                ]}>
-                  Email
-                </Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={[
-                  styles.loginMethodBtn,
-                  loginMethod === 'phone' && styles.loginMethodBtnActive
-                ]}
-                onPress={() => {
-                  setLoginMethod('phone');
-                  setError('');
-                  setSuccess('');
-                }}
-              >
-                <Text style={[
-                  styles.loginMethodBtnText,
-                  loginMethod === 'phone' ? styles.loginMethodBtnTextActive : (isDark ? { color: '#94A3B8' } : { color: '#4B5563' })
-                ]}>
-                  Phone (SMS)
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
 
           {/* Feedback Message */}
           {error ? (
@@ -437,79 +320,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
           ) : null}
 
           {/* Form Fields */}
-          {activeTab === 'login' && loginMethod === 'phone' ? (
-            <View style={{ width: '100%' }}>
-              {!confirmResult ? (
-                <View style={{ width: '105%', marginHorizontal: '-2.5%' }}>
-                  <View style={styles.fieldGroup}>
-                    <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Phone Number</Text>
-                    <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
-                      <Phone size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
-                      <TextInput
-                        style={[styles.input, isDark && { color: ThemeColors.dark.text }]}
-                        placeholder="e.g. +919123456789"
-                        placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
-                        value={phoneNo}
-                        onChangeText={setPhoneNo}
-                        keyboardType="phone-pad"
-                      />
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    activeOpacity={0.9}
-                    style={[styles.primaryBtn, isDark && { backgroundColor: '#3B82F6', shadowColor: '#3B82F6' }]}
-                    onPress={handleSendPhoneOtp}
-                    disabled={phoneLoading}
-                  >
-                    {phoneLoading ? (
-                      <ActivityIndicator color="#FFF" />
-                    ) : (
-                      <Text style={styles.primaryBtnText}>SEND VERIFICATION OTP</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={{ width: '105%', marginHorizontal: '-2.5%' }}>
-                  <View style={styles.fieldGroup}>
-                    <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Verification Code (OTP)</Text>
-                    <TextInput
-                      style={[
-                        styles.otpInput,
-                        isDark && { color: ThemeColors.dark.text, backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }
-                      ]}
-                      placeholder="e.g. 123456"
-                      placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
-                      value={phoneCode}
-                      onChangeText={(val) => setPhoneCode(val.replace(/\D/g, ''))}
-                      keyboardType="number-pad"
-                      maxLength={6}
-                    />
-                  </View>
-                  <View style={{ flexDirection: 'row', gap: 12, marginTop: 10 }}>
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      style={[styles.secondaryBtn, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}
-                      onPress={() => { setConfirmResult(null); setError(''); setSuccess(''); }}
-                    >
-                      <Text style={[styles.secondaryBtnText, isDark && { color: ThemeColors.dark.text }]}>BACK</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      activeOpacity={0.9}
-                      style={[styles.primaryBtn, { flex: 1, marginTop: 0 }, isDark && { backgroundColor: '#3B82F6' }]}
-                      onPress={handleVerifyPhoneOtp}
-                      disabled={phoneLoading}
-                    >
-                      {phoneLoading ? (
-                        <ActivityIndicator color="#FFF" />
-                      ) : (
-                        <Text style={styles.primaryBtnText}>VERIFY & LOGIN</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            </View>
-          ) : (
+
             <View style={{ width: '100%' }}>
               {activeTab === 'signup' && (
                 <View style={styles.fieldGroup}>
@@ -638,7 +449,6 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
                 )}
               </TouchableOpacity>
             </View>
-          )}
         </View>
       </ScrollView>
 
@@ -674,21 +484,21 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
               {resetStep === 1 ? (
                 <View style={{ width: '100%' }}>
                   <Text style={[styles.resetInstructions, isDark && { color: ThemeColors.dark.textMuted }]}>
-                    Enter your registered phone number. We will send you a 6-digit verification code (OTP) to reset your password.
+                    Enter your registered email address. We will send you a 6-digit verification code (OTP) to reset your password.
                   </Text>
 
                   <View style={styles.fieldGroup}>
-                    <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Phone Number</Text>
+                    <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Email Address</Text>
                     <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }]}>
-                      <Phone size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
+                      <Mail size={16} color={isDark ? '#94A3B8' : '#6B7280'} style={styles.inputIcon} />
                       <TextInput
                         style={[styles.input, isDark && { color: ThemeColors.dark.text }]}
-                        placeholder="e.g. +919123456789"
+                        placeholder="student@example.com"
                         placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
-                        value={resetPhone}
-                        onChangeText={setResetPhone}
+                        value={resetEmail}
+                        onChangeText={setResetEmail}
                         autoCapitalize="none"
-                        keyboardType="phone-pad"
+                        keyboardType="email-address"
                       />
                     </View>
                   </View>
@@ -696,7 +506,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
                   <TouchableOpacity
                     activeOpacity={0.9}
                     style={[styles.primaryBtn, isDark && { backgroundColor: '#3B82F6' }]}
-                    onPress={handleRequestPhoneReset}
+                    onPress={handleRequestReset}
                     disabled={resetLoading}
                   >
                     {resetLoading ? (
@@ -709,7 +519,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
               ) : (
                 <View style={{ width: '100%' }}>
                   <Text style={[styles.resetInstructions, isDark && { color: ThemeColors.dark.textMuted }]}>
-                    Please enter the 6-digit verification code (OTP) sent to your phone and choose a new password.
+                    Please enter the 6-digit verification code (OTP) sent to your email and choose a new password.
                   </Text>
 
                   <View style={styles.fieldGroup}>
@@ -722,8 +532,8 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
                       ]}
                       placeholder="e.g. 583921"
                       placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
-                      value={resetPhoneCode}
-                      onChangeText={(val) => setResetPhoneCode(val.replace(/\D/g, ''))}
+                      value={resetOtp}
+                      onChangeText={(val) => setResetOtp(val.replace(/\D/g, ''))}
                       keyboardType="number-pad"
                       maxLength={6}
                     />
@@ -768,7 +578,7 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
                     <TouchableOpacity
                       activeOpacity={0.9}
                       style={[styles.primaryBtn, { flex: 1, marginTop: 0 }, isDark && { backgroundColor: '#3B82F6' }]}
-                      onPress={handleConfirmPhoneReset}
+                      onPress={handleConfirmReset}
                       disabled={resetLoading}
                     >
                       {resetLoading ? (

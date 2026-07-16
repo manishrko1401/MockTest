@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Mail, User, AlertCircle, CheckCircle2, ChevronLeft, ShieldCheck, Trophy, Phone, Gift, Sun, Moon, Eye, EyeOff } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+
 
 export default function AuthPage() {
   const { login, signup, theme, toggleTheme, language, setLanguage, usersList } = useAuth();
@@ -38,210 +37,7 @@ export default function AuthPage() {
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState<string | null>(null);
 
-  // Phone auth states
-  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
-  const [phoneNo, setPhoneNo] = useState('');
-  const [verificationId, setVerificationId] = useState<any>(null);
-  const [phoneCode, setPhoneCode] = useState('');
-  const [phoneLoading, setPhoneLoading] = useState(false);
 
-  // Phone auth password reset states
-  const [resetMethod, setResetMethod] = useState<'email' | 'phone'>('email');
-  const [resetPhone, setResetPhone] = useState('');
-  const [resetPhoneCode, setResetPhoneCode] = useState('');
-  const [resetVerificationId, setResetVerificationId] = useState<any>(null);
-
-  const setupRecaptcha = () => {
-    if ((window as any).recaptchaVerifier) {
-      try {
-        (window as any).recaptchaVerifier.clear();
-      } catch (e) {}
-      (window as any).recaptchaVerifier = null;
-    }
-    const container = document.getElementById('recaptcha-container');
-    if (container) {
-      container.innerHTML = '';
-    }
-    (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      size: 'invisible',
-      callback: () => {
-        // reCAPTCHA solved
-      }
-    });
-  };
-
-  const handleSendPhoneOtp = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!phoneNo.trim()) {
-      setErrorMsg(language === 'hi' ? 'कृपया अपना फोन नंबर दर्ज करें।' : 'Please enter your phone number.');
-      return;
-    }
-    let formattedPhone = phoneNo.trim();
-    if (!formattedPhone.startsWith('+')) {
-      formattedPhone = '+91' + formattedPhone.replace(/\D/g, '');
-    }
-
-    setPhoneLoading(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-
-    try {
-      setupRecaptcha();
-      const appVerifier = (window as any).recaptchaVerifier;
-      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-      setVerificationId(confirmationResult);
-      setSuccessMsg(language === 'hi' ? 'सत्यापन कोड आपके फोन पर भेजा गया है।' : 'Verification code sent to your phone.');
-    } catch (err: any) {
-      console.error("Firebase SMS send error:", err);
-      setErrorMsg(err.message || (language === 'hi' ? 'सत्यापन कोड भेजने में विफल।' : 'Failed to send verification code.'));
-      if ((window as any).recaptchaVerifier) {
-        try {
-          (window as any).recaptchaVerifier.clear();
-          (window as any).recaptchaVerifier = null;
-        } catch (e) {}
-      }
-    } finally {
-      setPhoneLoading(false);
-    }
-  };
-
-  const handleVerifyPhoneOtp = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!phoneCode.trim()) {
-      setErrorMsg(language === 'hi' ? 'कृपया सत्यापन कोड दर्ज करें।' : 'Please enter the verification code.');
-      return;
-    }
-
-    setPhoneLoading(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-
-    try {
-      const result = await verificationId.confirm(phoneCode);
-      const user = result.user;
-      const idToken = await user.getIdToken();
-
-      const res = await fetch('/api/db', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'phone-auth-login',
-          data: {
-            phoneNumber: user.phoneNumber,
-            idToken
-          }
-        })
-      });
-
-      const backendResult = await res.json();
-      if (backendResult.success && backendResult.user) {
-        setSuccessMsg(language === 'hi' ? 'लॉगिन सफल!' : 'Login successful!');
-        login(backendResult.user);
-        setTimeout(() => {
-          router.push('/');
-        }, 1000);
-      } else {
-        setErrorMsg(backendResult.error || (language === 'hi' ? 'लॉगिन विफल।' : 'Login failed.'));
-      }
-    } catch (err: any) {
-      console.error("OTP verification error:", err);
-      setErrorMsg(err.message || (language === 'hi' ? 'गलत कोड। कृपया पुनः प्रयास करें।' : 'Invalid code. Please try again.'));
-    } finally {
-      setPhoneLoading(false);
-    }
-  };
-
-  const handleRequestPhoneReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!resetPhone.trim()) {
-      setResetError(language === 'hi' ? 'कृपया अपना फोन नंबर दर्ज करें।' : 'Please enter your phone number.');
-      return;
-    }
-    let formattedPhone = resetPhone.trim();
-    if (!formattedPhone.startsWith('+')) {
-      formattedPhone = '+91' + formattedPhone.replace(/\D/g, '');
-    }
-
-    setResetLoading(true);
-    setResetError(null);
-    setResetSuccess(null);
-
-    try {
-      setupRecaptcha();
-      const appVerifier = (window as any).recaptchaVerifier;
-      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-      setResetVerificationId(confirmationResult);
-      setResetSuccess(language === 'hi' ? 'सत्यापन कोड आपके फोन पर भेजा गया है।' : 'Verification code sent to your phone.');
-      setResetStep(2);
-    } catch (err: any) {
-      console.error("Firebase reset SMS error:", err);
-      setResetError(err.message || (language === 'hi' ? 'कोड भेजने में विफल।' : 'Failed to send verification code.'));
-      if ((window as any).recaptchaVerifier) {
-        try {
-          (window as any).recaptchaVerifier.clear();
-          (window as any).recaptchaVerifier = null;
-        } catch (e) {}
-      }
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  const handleConfirmPhoneReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!resetPhoneCode.trim()) {
-      setResetError(language === 'hi' ? 'कृपया सत्यापन कोड दर्ज करें।' : 'Please enter the verification code.');
-      return;
-    }
-    if (!resetNewPassword.trim()) {
-      setResetError(language === 'hi' ? 'कृपया नया पासवर्ड दर्ज करें।' : 'Please enter a new password.');
-      return;
-    }
-    if (resetNewPassword.length < 4) {
-      setResetError(language === 'hi' ? 'पासवर्ड कम से कम 4 वर्णों का होना चाहिए।' : 'Password must be at least 4 characters long.');
-      return;
-    }
-
-    setResetLoading(true);
-    setResetError(null);
-    setResetSuccess(null);
-
-    try {
-      const result = await resetVerificationId.confirm(resetPhoneCode);
-      const user = result.user;
-      const idToken = await user.getIdToken();
-
-      const res = await fetch('/api/db', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'phone-auth-reset-password',
-          data: {
-            phoneNumber: user.phoneNumber,
-            idToken,
-            newPassword: resetNewPassword
-          }
-        })
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setSuccessMsg(language === 'hi' ? 'पासवर्ड सफलतापूर्वक बदल दिया गया है! अब लॉगिन करें।' : 'Password reset successful! Please login with your new password.');
-        setShowResetModal(false);
-        setResetPhoneCode('');
-        setResetNewPassword('');
-        setResetVerificationId(null);
-        setPassword(resetNewPassword);
-      } else {
-        setResetError(data.error || (language === 'hi' ? 'पासवर्ड रीसेट विफल।' : 'Password reset failed.'));
-      }
-    } catch (err: any) {
-      console.error("Phone OTP verification error during reset:", err);
-      setResetError(err.message || (language === 'hi' ? 'गलत कोड। कृपया पुनः प्रयास करें।' : 'Invalid code. Please try again.'));
-    } finally {
-      setResetLoading(false);
-    }
-  };
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -468,32 +264,7 @@ export default function AuthPage() {
             </button>
           </div>
 
-          {activeTab === 'login' && (
-            <div className="flex bg-slate-100 dark:bg-slate-950 rounded-lg p-0.5 border border-slate-200 dark:border-slate-800 mb-5 max-w-[200px]">
-              <button
-                onClick={() => { setLoginMethod('email'); setErrorMsg(null); setSuccessMsg(null); }}
-                type="button"
-                className="flex-1 text-center py-1.5 rounded text-[10px] font-extrabold transition-all cursor-pointer uppercase tracking-wider"
-                style={{
-                  backgroundColor: loginMethod === 'email' ? '#2563eb' : 'transparent',
-                  color: loginMethod === 'email' ? '#ffffff' : undefined
-                }}
-              >
-                Email
-              </button>
-              <button
-                onClick={() => { setLoginMethod('phone'); setErrorMsg(null); setSuccessMsg(null); }}
-                type="button"
-                className="flex-1 text-center py-1.5 rounded text-[10px] font-extrabold transition-all cursor-pointer uppercase tracking-wider"
-                style={{
-                  backgroundColor: loginMethod === 'phone' ? '#2563eb' : 'transparent',
-                  color: loginMethod === 'phone' ? '#ffffff' : undefined
-                }}
-              >
-                Phone (SMS)
-              </button>
-            </div>
-          )}
+          
 
           {/* Error & Success Messages */}
           {errorMsg && (
@@ -512,72 +283,7 @@ export default function AuthPage() {
           {/* Input Fields Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             
-            {activeTab === 'login' && loginMethod === 'phone' ? (
-              <div className="space-y-4">
-                {!verificationId ? (
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
-                      {language === 'hi' ? 'फोन नंबर' : 'Phone Number'}
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
-                        <Phone className="h-4 w-4" />
-                      </div>
-                      <input
-                        type="tel"
-                        required
-                        value={phoneNo}
-                        onChange={(e) => setPhoneNo(e.target.value.replace(/[^\d+]/g, ''))}
-                        placeholder="e.g. +919123456789"
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
-                      />
-                    </div>
-                    <button
-                      onClick={handleSendPhoneOtp}
-                      disabled={phoneLoading}
-                      type="button"
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 mt-4 cursor-pointer disabled:opacity-50"
-                    >
-                      {phoneLoading ? 'Sending...' : (language === 'hi' ? 'सत्यापन कोड प्राप्त करें' : 'Send Verification OTP')}
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
-                      {language === 'hi' ? 'सत्यापन कोड (OTP)' : 'Verification Code (OTP)'}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      maxLength={6}
-                      value={phoneCode}
-                      onChange={(e) => setPhoneCode(e.target.value.replace(/\D/g, ''))}
-                      placeholder="e.g. 123456"
-                      className="w-full text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-500 transition-all"
-                    />
-                    
-                    <div className="flex gap-3 mt-4">
-                      <button
-                        onClick={() => { setVerificationId(null); setErrorMsg(null); setSuccessMsg(null); }}
-                        type="button"
-                        className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center"
-                      >
-                        {language === 'hi' ? 'पीछे' : 'Back'}
-                      </button>
-                      <button
-                        onClick={handleVerifyPhoneOtp}
-                        disabled={phoneLoading}
-                        type="button"
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 cursor-pointer disabled:opacity-50"
-                      >
-                        {phoneLoading ? 'Verifying...' : (language === 'hi' ? 'सत्यापित करें और लॉगिन करें' : 'Verify & Login')}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <>
+            
                 {activeTab === 'signup' && (
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authName}</label>
@@ -702,8 +408,7 @@ export default function AuthPage() {
                     ? (language === 'hi' ? 'खाते में साइन इन करें' : 'Sign In to Account') 
                     : (language === 'hi' ? 'खाता पंजीकृत करें' : 'Register Account')}
                 </button>
-              </>
-            )}
+
 
           </form>
 
@@ -752,27 +457,27 @@ export default function AuthPage() {
             )}
 
             {resetStep === 1 ? (
-              <form onSubmit={handleRequestPhoneReset} className="space-y-4">
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+              <form onSubmit={handleRequestReset} className="space-y-4">
+                <p className="text-[10px] text-slate-550 dark:text-slate-400 leading-relaxed font-semibold">
                   {language === 'hi' 
-                    ? 'अपना पंजीकृत फोन नंबर दर्ज करें। हम आपको पासवर्ड बदलने के लिए एक 6-अंकीय सत्यापन कोड (OTP) भेजेंगे।' 
-                    : 'Enter your registered phone number. We will send you a 6-digit verification code (OTP) to reset your password.'}
+                    ? 'अपना पंजीकृत ईमेल पता दर्ज करें। हम आपको पासवर्ड बदलने के लिए एक 6-अंकीय सत्यापन कोड (OTP) भेजेंगे।' 
+                    : 'Enter your registered email address. We will send you a 6-digit verification code (OTP) to reset your password.'}
                 </p>
                 <div>
                   <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
-                    {language === 'hi' ? 'फोन नंबर' : 'Phone Number'}
+                    {t.authEmail}
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
-                      <Phone className="h-4 w-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-555">
+                      <Mail className="h-4 w-4" />
                     </div>
                     <input
-                      type="tel"
+                      type="email"
                       required
-                      value={resetPhone}
-                      onChange={(e) => setResetPhone(e.target.value.replace(/[^d+]/g, ''))}
-                      placeholder="e.g. +919123456789"
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      placeholder={t.authEmailPlaceholder || "name@example.com"}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-500 transition-all font-semibold"
                     />
                   </div>
                 </div>
@@ -788,25 +493,25 @@ export default function AuthPage() {
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleConfirmPhoneReset} className="space-y-4">
+              <form onSubmit={handleConfirmReset} className="space-y-4">
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
                   {language === 'hi' 
-                    ? 'कृपया अपने फोन पर प्राप्त 6-अंकीय सत्यापन कोड (OTP) और अपना नया पासवर्ड दर्ज करें।' 
-                    : 'Please enter the 6-digit verification code (OTP) sent to your phone and choose a new password.'}
+                    ? 'कृपया अपने ईमेल पर प्राप्त 6-अंकीय सत्यापन कोड (OTP) और अपना नया पासवर्ड दर्ज करें।' 
+                    : 'Please enter the 6-digit verification code (OTP) sent to your email and choose a new password.'}
                 </p>
 
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
+                  <label className="block text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase mb-2">
                     {language === 'hi' ? 'सत्यापन कोड (OTP)' : 'Verification Code (OTP)'}
                   </label>
                   <input
                     type="text"
                     required
                     maxLength={6}
-                    value={resetPhoneCode}
-                    onChange={(e) => setResetPhoneCode(e.target.value.replace(/D/g, ''))}
+                    value={resetOtp}
+                    onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, ''))}
                     placeholder="e.g. 583921"
-                    className="w-full text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-all"
+                    className="w-full text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-500 transition-all"
                   />
                 </div>
 
@@ -824,7 +529,7 @@ export default function AuthPage() {
                       value={resetNewPassword}
                       onChange={(e) => setResetNewPassword(e.target.value)}
                       placeholder="At least 4 characters"
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-550 transition-all font-semibold"
                     />
                     <button
                       type="button"
@@ -847,7 +552,7 @@ export default function AuthPage() {
                   <button
                     type="submit"
                     disabled={resetLoading}
-                    className="flex-1 bg-blue-650 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 cursor-pointer disabled:opacity-50"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition-all shadow-md shadow-blue-900/20 cursor-pointer disabled:opacity-50"
                   >
                     {resetLoading 
                       ? (language === 'hi' ? 'रीसेट हो रहा है...' : 'Resetting...') 
@@ -861,8 +566,7 @@ export default function AuthPage() {
         </div>
       )}
 
-      {/* Invisible Recaptcha container for Phone Auth */}
-      <div id="recaptcha-container"></div>
+
     </div>
   );
 }

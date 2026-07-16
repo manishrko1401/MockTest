@@ -1,12 +1,24 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 
 // Persistent OTP Cache in global to survive Next.js dev server hot-reloads
 const otpCache = (global as any).otpCache || new Map<string, { code: string; expiresAt: number }>();
 if (process.env.NODE_ENV !== 'production') {
   (global as any).otpCache = otpCache;
 }
+
+// Nodemailer transporter config using environment variables (e.g. Gmail, Resend, Brevo)
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: {
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+  },
+});
 
 
 function formatDateTime(date: Date) {
@@ -32,10 +44,10 @@ export async function POST(request: Request) {
 
 
     switch (action) {
-      case 'phone-auth-login':
-        return await handlePhoneAuthLogin(data);
-      case 'phone-auth-reset-password':
-        return await handlePhoneAuthResetPassword(data);
+      case 'request-password-reset':
+        return await handleRequestPasswordReset(data);
+      case 'confirm-password-reset':
+        return await handleConfirmPasswordReset(data);
       case 'bootstrap':
         return await handleBootstrap();
       case 'refresh-catalog':
@@ -2287,180 +2299,103 @@ async function handleAdminData(data: any) {
   });
 }
 
-async function verifyFirebaseIdToken(idToken: string): Promise<string | null> {
+
+
+// -----------------------------------------------------------------------------
+// Email OTP Password Reset Handlers
+// -----------------------------------------------------------------------------
+
+async function handleRequestPasswordReset(data: { email: string }) {
+  const { email } = data;
+  if (!email || !email.trim()) {
+    return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
+  }
+
+  const trimmedEmail = email.trim().toLowerCase();
+
+  // Verify that the user exists in our DB first
+  const user = await prisma.user.findUnique({
+    where: { email: trimmedEmail }
+  });
+  if (!user) {
+    return NextResponse.json({ success: false, error: 'No account found with this email address.' }, { status: 404 });
+  }
+
+  // Generate a random 6-digit OTP code
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // Set expiry to 10 minutes from now
+  const expiresAt = Date.now() + 10 * 60 * 1000;
+
+  // Store in cache
+  otpCache.set(trimmedEmail, { code: otpCode, expiresAt });
+
+  // Send the email
   try {
-    const apiKey = (process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyB6PEhV9ijxH10a-8_J6ccQS9_U4M6ituk").replace(/"/g, '').trim();
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ idToken }),
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || 'MockTest Hub Support <support@mocktest.com>',
+      to: trimmedEmail,
+      subject: 'MockTest Hub - Password Reset OTP',
+      text: `Your OTP for password reset is: ${otpCode}. It is valid for 10 minutes.`,
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; color: #333;">
+          <h2>Password Reset Request</h2>
+          <p>You requested a password reset for your MockTest Hub account.</p>
+          <p>Please use the following One-Time Password (OTP) to complete the reset:</p>
+          <div style="font-size: 24px; font-weight: bold; background: #f3f4f6; padding: 10px 20px; display: inline-block; border-radius: 5px; margin: 10px 0; color: #2563eb; letter-spacing: 2px;">
+            ${otpCode}
+          </div>
+          <p>This OTP is valid for <strong>10 minutes</strong>. If you did not request this, please ignore this email.</p>
+        </div>
+      `,
     });
 
-    const result = await response.json();
-    if (result && result.users && result.users.length > 0) {
-      return result.users[0].phoneNumber || null;
-    }
-  } catch (error) {
-    console.error("Firebase ID Token verification error:", error);
+    return NextResponse.json({ success: true, message: 'OTP sent successfully.' });
+  } catch (error: any) {
+    console.error('Email sending error:', error);
+    return NextResponse.json({ success: false, error: 'Failed to send OTP email.' }, { status: 500 });
   }
-  return null;
 }
 
-function cleanPhoneNumber(phone: string) {
-  const digits = phone.replace(/\D/g, '');
-  return digits.substring(digits.length - 10);
-}
+async function handleConfirmPasswordReset(data: any) {
+  const { email, otp, newPassword } = data;
 
-async function handlePhoneAuthLogin(data: any) {
-  const { phoneNumber, idToken } = data;
-  if (!phoneNumber || !idToken) {
-    return NextResponse.json({ success: false, error: 'Phone number and authentication token are required.' }, { status: 400 });
+  if (!email || !otp || !newPassword) {
+    return NextResponse.json({ success: false, error: 'Email, OTP, and new password are required' }, { status: 400 });
   }
 
-  const verifiedPhone = await verifyFirebaseIdToken(idToken);
-  if (!verifiedPhone) {
-    return NextResponse.json({ success: false, error: 'Failed to verify authentication token. Please try again.' }, { status: 401 });
+  const trimmedEmail = email.trim().toLowerCase();
+
+  // Retrieve cached OTP details
+  const cachedOtp = otpCache.get(trimmedEmail);
+
+  if (!cachedOtp) {
+    return NextResponse.json({ success: false, error: 'OTP expired or not found. Please request a new one.' }, { status: 400 });
   }
 
-  const cleanedVerified = cleanPhoneNumber(verifiedPhone);
-  const cleanedInput = cleanPhoneNumber(phoneNumber);
-  if (cleanedVerified !== cleanedInput) {
-    return NextResponse.json({ success: false, error: 'Token and phone number mismatch.' }, { status: 400 });
+  if (Date.now() > cachedOtp.expiresAt) {
+    otpCache.delete(trimmedEmail);
+    return NextResponse.json({ success: false, error: 'OTP has expired. Please request a new one.' }, { status: 400 });
   }
 
-  const user = await prisma.user.findFirst({
-    where: { mobile: cleanedVerified },
-    include: {
-      testSessions: {
-        include: {
-          mockTest: {
-            select: {
-              title: true,
-              maxMarks: true,
-              durationMinutes: true,
-              positiveMarks: true,
-              negativeMarks: true,
-            }
-          },
-          responses: true,
-        },
-        orderBy: { startedAt: 'desc' },
-      },
-    },
-  });
-
-  if (!user) {
-    return NextResponse.json({ success: false, error: 'No account found with this phone number. Please register first.' }, { status: 404 });
-  }
-
-  if (user.isBlocked) {
-    return NextResponse.json({ success: false, error: 'This user account is blocked by the administrator.' }, { status: 403 });
-  }
-
-  const newSessionId = crypto.randomUUID();
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { currentSessionId: newSessionId }
-  });
-
-  const mappedUser = {
-    id: user.id,
-    currentSessionId: newSessionId,
-    candidateCode: user.candidateCode,
-    name: user.fullName,
-    email: user.email,
-    mobile: user.mobile,
-    referralCode: user.referralCode,
-    referredBy: user.referredBy,
-    referralsCount: user.referralsCount,
-    role: user.role,
-    subscriptionTier: user.subscriptionTier,
-    subscriptionPurchasedAt: user.subscriptionPurchasedAt,
-    subscriptionExpiresAt: user.subscriptionExpiresAt,
-    registeredDate: formatDateTime(user.createdAt),
-    isBlocked: user.isBlocked,
-    password: user.passwordHash,
-    coins: user.coins,
-    referralCoinsCredited: user.referralCoinsCredited,
-    bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],
-    testSessions: user.testSessions.map((session: any) => {
-      const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
-      session.responses.forEach((r: any) => {
-        responsesRecord[r.questionId] = {
-          selectedOptionIndex: r.selectedOptionIndex,
-          elapsedSeconds: r.elapsedSeconds,
-          state: r.state,
-        };
-      });
-      return {
-        id: session.id,
-        testId: session.mockTestId,
-        title: session.mockTest?.title || 'Mock Test',
-        score: session.finalScore ?? 0,
-        maxScore: session.mockTest?.maxMarks ?? 200,
-        accuracy: session.accuracyPercentage ?? 0,
-        durationMinutes: session.mockTest?.durationMinutes || 60,
-        durationSeconds: session.timeSpentSeconds,
-        status: session.status,
-        violations: session.violationsCount,
-        date: session.startedAt.toISOString().split('T')[0],
-        startedAt: session.startedAt.toISOString(),
-        responses: responsesRecord,
-        timeRemaining: session.remainingSeconds,
-        currentSectionIndex: session.currentSectionIndex,
-        currentQuestionIndex: session.currentQuestionIndex,
-        testbookRank: session.testbookRank ?? null,
-        testbookPercentile: session.testbookPercentile ?? null,
-        positiveMarks: session.mockTest?.positiveMarks ?? null,
-        negativeMarks: session.mockTest?.negativeMarks ?? null,
-      };
-    }),
-  };
-
-  return NextResponse.json({ success: true, user: mappedUser });
-}
-
-async function handlePhoneAuthResetPassword(data: any) {
-  const { phoneNumber, idToken, newPassword } = data;
-  if (!phoneNumber || !idToken || !newPassword) {
-    return NextResponse.json({ success: false, error: 'Phone number, token, and new password are required.' }, { status: 400 });
-  }
-
-  if (newPassword.length < 4) {
-    return NextResponse.json({ success: false, error: 'Password must be at least 4 characters long.' }, { status: 400 });
-  }
-
-  const verifiedPhone = await verifyFirebaseIdToken(idToken);
-  if (!verifiedPhone) {
-    return NextResponse.json({ success: false, error: 'Failed to verify authentication token. Please try again.' }, { status: 401 });
-  }
-
-  const cleanedVerified = cleanPhoneNumber(verifiedPhone);
-  const cleanedInput = cleanPhoneNumber(phoneNumber);
-  if (cleanedVerified !== cleanedInput) {
-    return NextResponse.json({ success: false, error: 'Token and phone number mismatch.' }, { status: 400 });
-  }
-
-  const user = await prisma.user.findFirst({
-    where: { mobile: cleanedVerified }
-  });
-
-  if (!user) {
-    return NextResponse.json({ success: false, error: 'No account found with this phone number. Please register first.' }, { status: 404 });
+  if (cachedOtp.code !== otp.trim()) {
+    return NextResponse.json({ success: false, error: 'Invalid OTP code.' }, { status: 400 });
   }
 
   try {
+    // Update password in the database
     await prisma.user.update({
-      where: { id: user.id },
+      where: { email: trimmedEmail },
       data: { passwordHash: newPassword }
     });
-    return NextResponse.json({ success: true });
+
+    // Clear OTP from cache after successful verification
+    otpCache.delete(trimmedEmail);
+
+    return NextResponse.json({ success: true, message: 'Password updated successfully.' });
   } catch (error: any) {
-    console.error('Password reset via phone DB update failed:', error);
-    return NextResponse.json({ success: false, error: 'Failed to update password. Please try again.' }, { status: 500 });
+    console.error('Database update error during password reset:', error);
+    return NextResponse.json({ success: false, error: 'Failed to reset password.' }, { status: 500 });
   }
 }
 
