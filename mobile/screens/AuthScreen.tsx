@@ -496,6 +496,21 @@ export default function AuthScreen({ onLoginSuccess, onContinueAsGuest, isDark =
                 <Text style={[styles.modalTitle, isDark && { color: ThemeColors.dark.text }]}>RESET PASSWORD</Text>
               </View>
 
+              {/* Feedback Messages for Reset */}
+              {resetError ? (
+                <View style={[styles.errorBox, isDark && { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: '#7F1D1D' }, { width: '100%', marginBottom: 16 }]}>
+                  <AlertCircle size={16} color="#EF4444" style={styles.errorIcon} />
+                  <Text style={[styles.errorText, isDark && { color: '#FCA5A5' }]}>{resetError}</Text>
+                </View>
+              ) : null}
+
+              {resetSuccess ? (
+                <View style={[styles.successBox, isDark && { backgroundColor: 'rgba(34, 197, 94, 0.1)', borderColor: '#14532D' }, { width: '100%', marginBottom: 16 }]}>
+                  <ShieldCheck size={16} color="#22C55E" style={styles.successIcon} />
+                  <Text style={[styles.successText, isDark && { color: '#86EFAC' }]}>{resetSuccess}</Text>
+                </View>
+              ) : null}
+
               {resetStep === 1 ? (
                 <View style={{ width: '100%' }}>
                   <Text style={[styles.resetInstructions, isDark && { color: ThemeColors.dark.textMuted }]}>
@@ -539,19 +554,21 @@ export default function AuthScreen({ onLoginSuccess, onContinueAsGuest, isDark =
 
                   <View style={styles.fieldGroup}>
                     <Text style={[styles.inputLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Verification Code (OTP)</Text>
-                    <TextInput
-                      style={[
-                        styles.input, 
-                        styles.otpInput,
-                        isDark && { color: ThemeColors.dark.text, backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }
-                      ]}
-                      placeholder="e.g. 583921"
-                      placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
-                      value={resetOtp}
-                      onChangeText={(val) => setResetOtp(val.replace(/\D/g, ''))}
-                      keyboardType="number-pad"
-                      maxLength={6}
-                    />
+                    <View style={[styles.inputWrapper, isDark && { backgroundColor: ThemeColors.dark.inputBg, borderColor: ThemeColors.dark.inputBorder }, { justifyContent: 'center' }]}>
+                      <TextInput
+                        style={[
+                          styles.input,
+                          { textAlign: 'center', fontSize: 18, fontWeight: 'bold', letterSpacing: 8, paddingVertical: 10 },
+                          isDark && { color: ThemeColors.dark.text }
+                        ]}
+                        placeholder="••••••"
+                        placeholderTextColor={isDark ? '#475569' : '#9CA3AF'}
+                        value={resetOtp}
+                        onChangeText={(val) => setResetOtp(val.replace(/\D/g, ''))}
+                        keyboardType="number-pad"
+                        maxLength={6}
+                      />
+                    </View>
                   </View>
 
                   <View style={styles.fieldGroup}>
