@@ -366,8 +366,30 @@ export default function HomeLandingPage() {
         )}
 
         {/* HERO SECTION */}
-        <main className="flex-1 flex flex-col p-4 space-y-8 relative z-10">
-          <section className="text-center pt-8 pb-4 space-y-4">
+        <main className="flex-1 flex flex-col p-4 space-y-8 relative z-10 edu-grid-pattern">
+          {/* Floating Mobile Background Art Elements (Low Opacity Decorative) */}
+          <div className="absolute top-12 left-4 opacity-[0.06] dark:opacity-[0.04] animate-float pointer-events-none">
+            <svg className="w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+              <path d="M6 6h10M6 10h10M6 14h10" />
+            </svg>
+          </div>
+
+          <div className="absolute top-[32%] right-4 opacity-[0.06] dark:opacity-[0.04] animate-float-delayed pointer-events-none">
+            <svg className="w-9 h-9 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+              <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
+            </svg>
+          </div>
+
+          <div className="absolute bottom-24 left-6 opacity-[0.06] dark:opacity-[0.04] animate-float pointer-events-none">
+            <svg className="w-8 h-8 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M22 22 2 2v20Z" />
+              <path d="M18 18H6V6" />
+            </svg>
+          </div>
+
+          <section className="text-center pt-8 pb-4 space-y-4 relative z-10">
             <span className="inline-flex items-center gap-1 bg-blue-105 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-black px-3 py-1 rounded-full text-[9px] uppercase tracking-wider">
               {t.heroBadge}
             </span>
@@ -406,9 +428,17 @@ export default function HomeLandingPage() {
           </section>
 
           {/* TOPPERS TESTIMONIAL PANEL */}
-          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm flex flex-col justify-between min-h-[220px]">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
-              <h3 className="font-extrabold text-[10px] text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1">
+          <section className="border border-yellow-250 dark:border-yellow-900/45 p-5.5 rounded-2xl flex flex-col justify-between min-h-[230px] glass-card glow-shadow-amber relative overflow-hidden hover:scale-[1.01] transition-all duration-300">
+            {/* Watermarked Graduation Cap */}
+            <div className="absolute -bottom-6 -right-6 opacity-[0.06] dark:opacity-[0.03] pointer-events-none">
+              <svg className="w-28 h-28 text-yellow-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
+              </svg>
+            </div>
+
+            <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/40 pb-3.5 mb-3 z-10">
+              <h3 className="font-extrabold text-[10px] text-slate-905 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                 <Trophy className="h-3.5 w-3.5 text-yellow-500" /> Topper Testimonials
               </h3>
               <div className="flex gap-1">
@@ -416,65 +446,84 @@ export default function HomeLandingPage() {
                   <button
                     key={idx}
                     onClick={() => setSuccessIndex(idx)}
-                    className={`h-1.5 w-1.5 rounded-full transition-all ${successIndex === idx ? 'bg-blue-500 w-3' : 'bg-slate-300 dark:bg-slate-700'}`}
+                    className={`h-1.5 w-1.5 rounded-full transition-all cursor-pointer ${successIndex === idx ? 'bg-yellow-500 w-3' : 'bg-slate-300 dark:bg-slate-700'}`}
                   />
                 ))}
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col justify-center min-h-[100px]">
-              <p className="text-slate-700 dark:text-slate-300 italic text-[11px] leading-relaxed mb-4 font-medium">
+            <div className="flex-1 flex flex-col justify-center min-h-[100px] z-10 text-left">
+              <p className="text-slate-755 dark:text-slate-300 italic text-[11px] leading-relaxed mb-4 font-semibold">
                 "{activeTopper.quote}"
               </p>
               
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-3">
                 {activeTopper.photoUrl ? (
-                  <img src={activeTopper.photoUrl} alt={activeTopper.name} className="h-8 w-8 rounded-full object-cover border border-slate-200 dark:border-slate-800 shadow" />
+                  <img src={activeTopper.photoUrl} alt={activeTopper.name} className="h-9 w-9 rounded-full object-cover border border-yellow-400 dark:border-yellow-905 shadow-md" />
                 ) : (
-                  <div className={`h-8 w-8 rounded-full bg-gradient-to-r ${activeTopper.gradient} text-white flex items-center justify-center font-black text-[10px] shadow`}>
+                  <div className={`h-9 w-9 rounded-full bg-gradient-to-r ${activeTopper.gradient} text-white flex items-center justify-center font-black text-[10px] shadow border border-yellow-400/30`}>
                     {activeTopper.initials}
                   </div>
                 )}
                 <div>
                   <h4 className="font-extrabold text-[11px] text-slate-900 dark:text-white leading-none">{activeTopper.name}</h4>
-                  <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider mt-1">{activeTopper.exam.split(' (')[0]}</p>
+                  <p className="text-[8px] text-slate-505 font-bold uppercase tracking-wider mt-1">{activeTopper.exam.split(' (')[0]}</p>
                 </div>
               </div>
             </div>
           </section>
 
           {/* POPULAR CATEGORIES */}
-          <section className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-900">
+          <section className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-900 relative z-10">
             <div className="text-center max-w-sm mx-auto">
               <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.popularTitle}</h2>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">{t.popularDesc}</p>
             </div>
 
             <div className="flex flex-col gap-4">
-              {CATEGORIES.map(cat => (
-                <button
-                  onClick={() => setSelectedModalCategory(cat.id)}
-                  key={cat.id}
-                  className="bg-white dark:bg-slate-900/40 border border-slate-205 dark:border-slate-800 p-4 rounded-xl flex flex-col justify-between group text-left w-full shadow-sm"
-                >
-                  <div className="w-full">
-                    <div className="flex items-center justify-between mb-2.5">
-                      <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg text-blue-600 dark:text-blue-400">
-                        <GraduationCap className="h-4.5 w-4.5" />
+              {CATEGORIES.map(cat => {
+                const style = getWebCategoryStyle(cat.id);
+                const IconComponent = 
+                  cat.id === 'ssc' ? Award :
+                  cat.id === 'railways' ? TrendingUp :
+                  cat.id === 'banking' ? Coins :
+                  cat.id === 'teaching' ? BookOpen :
+                  cat.id === 'ugc_net' ? GraduationCap : MapPin;
+                const shadowStyle = 
+                  cat.id === 'ssc' ? 'glow-shadow-amber' :
+                  cat.id === 'railways' ? 'glow-shadow-blue' :
+                  cat.id === 'banking' ? 'glow-shadow-green' :
+                  cat.id === 'teaching' ? 'glow-shadow-amber' :
+                  cat.id === 'ugc_net' ? 'glow-shadow-blue' : 'glow-shadow-purple';
+
+                return (
+                  <button
+                    onClick={() => setSelectedModalCategory(cat.id)}
+                    key={cat.id}
+                    className={`border p-4.5 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full relative overflow-hidden active:scale-[0.99] cursor-pointer ${style.bg} ${shadowStyle}`}
+                  >
+                    {/* Decorative background circle art (watermark) */}
+                    <div className="absolute -top-6 -right-6 w-16 h-16 rounded-full bg-current opacity-[0.03] dark:opacity-[0.015] pointer-events-none group-hover:scale-110 transition-transform duration-300" />
+                    
+                    <div className="w-full">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
+                          <IconComponent className="h-4.5 w-4.5 animate-pulse" />
+                        </div>
+                        <span className={`text-[10px] font-black tracking-wider ${style.accentText}`}>
+                          {cat.count}
+                        </span>
                       </div>
-                      <span className="text-[9px] text-blue-600 dark:text-blue-400 font-black tracking-wider">
-                        {cat.count}
-                      </span>
+                      <h4 className="font-extrabold text-xs text-slate-900 dark:text-white mb-1.5">{cat.name}</h4>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
                     </div>
-                    <h4 className="font-extrabold text-xs text-slate-905 dark:text-white mb-1">{cat.name}</h4>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">{cat.desc}</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[9px] uppercase tracking-wider mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 w-full">
-                    {t.exploreTests} <ChevronRight className="h-3 w-3" />
-                  </div>
-                </button>
-              ))}
+                    
+                    <div className={`flex items-center gap-1 font-bold text-[9px] uppercase tracking-wider mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-800/40 w-full ${style.accentText}`}>
+                      {t.exploreTests} <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </section>
 
