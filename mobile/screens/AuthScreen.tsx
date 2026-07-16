@@ -35,11 +35,12 @@ import { ThemeColors } from '../theme';
 
 interface AuthScreenProps {
   onLoginSuccess: (user: any) => void;
+  onContinueAsGuest?: () => void;
   isDark?: boolean;
   onToggleTheme?: (dark: boolean) => void;
 }
 
-export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleTheme }: AuthScreenProps) {
+export default function AuthScreen({ onLoginSuccess, onContinueAsGuest, isDark = false, onToggleTheme }: AuthScreenProps) {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
@@ -450,6 +451,18 @@ export default function AuthScreen({ onLoginSuccess, isDark = false, onToggleThe
                   </Text>
                 )}
               </TouchableOpacity>
+
+              {onContinueAsGuest && (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={onContinueAsGuest}
+                  style={styles.guestBtn}
+                >
+                  <Text style={[styles.guestBtnText, isDark && { color: '#94A3B8' }]}>
+                    CONTINUE AS GUEST
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
         </View>
       </ScrollView>
@@ -814,6 +827,17 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     color: '#2563EB',
+  },
+  guestBtn: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  guestBtnText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#64748B',
+    letterSpacing: 1.2,
   },
   modalOverlay: {
     flex: 1,

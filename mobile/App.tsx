@@ -285,10 +285,9 @@ export default function App() {
             setLoading(false); // ← single authoritative place to stop the spinner
           });
         } else {
-          // No saved credentials — show dashboard as guest so user can browse catalog/notices
-          const guestUser = { id: 'guest', name: 'Guest', email: '', isGuest: true, testSessions: [], bookmarks: [], subscriptionTier: 'None' };
-          setCurrentUser(guestUser);
-          setViewMode('dashboard');
+          // No saved credentials — redirect to login screen
+          setCurrentUser(null);
+          setViewMode('auth');
           setLoading(false);
         }
       } catch (err) {
@@ -616,10 +615,6 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    if (currentUser?.isGuest) {
-      setViewMode('auth');
-      return;
-    }
     setLoading(true);
     await SecureStore.deleteItemAsync('tb_user_email');
     await SecureStore.deleteItemAsync('tb_user_password');
@@ -627,11 +622,14 @@ export default function App() {
     await clearAllCache();
     ApiClient.setApiSession(null, null);
     setCurrentUser(null);
-    // Show guest dashboard after logout so user can still browse catalog
+    setViewMode('auth');
+    setLoading(false);
+  };
+
+  const handleContinueAsGuest = () => {
     const guestUser = { id: 'guest', name: 'Guest', email: '', isGuest: true, testSessions: [], bookmarks: [], subscriptionTier: 'None' };
     setCurrentUser(guestUser);
     setViewMode('dashboard');
-    setLoading(false);
   };
 
   // Navigations controllers
@@ -706,6 +704,7 @@ export default function App() {
         {viewMode === 'auth' && (
           <AuthScreen 
             onLoginSuccess={handleLoginSuccess} 
+            onContinueAsGuest={handleContinueAsGuest}
             isDark={isDark} 
             onToggleTheme={handleToggleTheme} 
           />
