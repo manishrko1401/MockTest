@@ -101,6 +101,27 @@ function extractDirectLink(pageHtml, defaultUrl) {
   return defaultUrl;
 }
 
+// Function to extract Last Date from details page HTML
+function extractLastDate(html) {
+  // Pattern 1: Table cell structure
+  const tdRegex = /<td[^>]*>(?:Apply\s+Online\s+|Online\s+)?Last\s+Date(?:[^<]*)<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/i;
+  const matchTd = tdRegex.exec(html);
+  if (matchTd) {
+    const value = matchTd[1].replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    if (value) return value;
+  }
+
+  // Pattern 2: Plain text with colon/dash
+  const txtRegex = /Last\s+Date\s*[:\-]\s*([^<\n\r]+)/i;
+  const matchTxt = txtRegex.exec(html);
+  if (matchTxt) {
+    const value = matchTxt[1].replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    if (value) return value;
+  }
+
+  return null;
+}
+
 async function main() {
   const htmlPath = 'C:\\Users\\painl\\.gemini\\antigravity-ide\\brain\\efd68c44-b16d-434b-9ee6-b9b7eda9d218\\scratch\\fetched_rojgar.html';
   if (!fs.existsSync(htmlPath)) {
@@ -128,8 +149,7 @@ async function main() {
     const url = urlMatch[1].trim();
     
     // Extract Last Date
-    const lastDateMatch = /Last Date:\s*([0-9\/]+)/i.exec(itemHtml);
-    const lastDate = lastDateMatch ? lastDateMatch[1].trim() : null;
+    const lastDate = extractLastDate(itemHtml);
     
     parsedJobs.push({ title, url, lastDate });
   }

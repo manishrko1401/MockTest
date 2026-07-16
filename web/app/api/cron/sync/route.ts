@@ -69,6 +69,27 @@ function extractDirectLink(pageHtml: string, defaultUrl: string, category: strin
   return defaultUrl;
 }
 
+// Function to extract Last Date from details page HTML
+function extractLastDate(html: string): string | null {
+  // Pattern 1: Table cell structure
+  const tdRegex = /<td[^>]*>(?:Apply\s+Online\s+|Online\s+)?Last\s+Date(?:[^<]*)<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/i;
+  const matchTd = tdRegex.exec(html);
+  if (matchTd) {
+    const value = matchTd[1].replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    if (value) return value;
+  }
+
+  // Pattern 2: Plain text with colon/dash
+  const txtRegex = /Last\s+Date\s*[:\-]\s*([^<\n\r]+)/i;
+  const matchTxt = txtRegex.exec(html);
+  if (matchTxt) {
+    const value = matchTxt[1].replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    if (value) return value;
+  }
+
+  return null;
+}
+
 // Map RSS feed categories/tags to database notice category and type
 function mapCategoryAndType(xmlCategoriesStr: string, url: string, title: string) {
   const categories = xmlCategoriesStr.toLowerCase();
@@ -201,10 +222,8 @@ export async function GET(request: Request) {
               const pageHtml = await fetchUrl(item.url);
               directUrl = extractDirectLink(pageHtml, item.url, target.category);
 
-              if (target.category === 'notice') {
-                const lastDateMatch = /Last Date:\s*([0-9\/]+)/i.exec(pageHtml);
-                if (lastDateMatch) lastDate = lastDateMatch[1].trim();
-              }
+              const parsedLastDate = extractLastDate(pageHtml);
+              if (parsedLastDate) lastDate = parsedLastDate;
 
               const schemaMatch = /"datePublished"\s*:\s*"([^"]*)"/i.exec(pageHtml);
               if (schemaMatch) {
@@ -246,10 +265,8 @@ export async function GET(request: Request) {
           const pageHtml = await fetchUrl(item.url);
           directUrl = extractDirectLink(pageHtml, item.url, target.category);
 
-          if (target.category === 'notice') {
-            const lastDateMatch = /Last Date:\s*([0-9\/]+)/i.exec(pageHtml);
-            if (lastDateMatch) lastDate = lastDateMatch[1].trim();
-          }
+          const parsedLastDate = extractLastDate(pageHtml);
+          if (parsedLastDate) lastDate = parsedLastDate;
 
           const schemaMatch = /"datePublished"\s*:\s*"([^"]*)"/i.exec(pageHtml);
           if (schemaMatch) {

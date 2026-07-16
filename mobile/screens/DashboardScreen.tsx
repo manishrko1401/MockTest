@@ -845,6 +845,11 @@ export default function DashboardScreen({
                             <Text style={styles.announcementDateText}>{ann.date}</Text>
                           </View>
                           <Text style={[styles.announcementTitleText, isDark && { color: ThemeColors.dark.text }]}>{ann.title}</Text>
+                          {ann.lastDate && (
+                            <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#EF4444', marginTop: 4, marginBottom: 4 }}>
+                              {language === 'en' ? 'Last Date: ' : 'अंतिम तिथि: '}{ann.lastDate}
+                            </Text>
+                          )}
                           {ann.url && (
                             <TouchableOpacity
                               style={styles.announcementLinkBtn}
@@ -953,6 +958,11 @@ export default function DashboardScreen({
                 <Text style={[styles.liveUpdatesTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B', fontWeight: '900' }]} numberOfLines={2}>
                   {activeNotice.title}
                 </Text>
+                {activeNotice.lastDate && (
+                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#EF4444', marginTop: 4, marginBottom: 4 }}>
+                    {language === 'en' ? 'Last Date: ' : 'अंतिम तिथि: '}{activeNotice.lastDate}
+                  </Text>
+                )}
                 
                 <View style={styles.liveUpdatesFooter}>
                   <Text style={[styles.liveUpdatesDate, isDark ? { color: '#94A3B8' } : { color: '#475569', fontWeight: '600' }]}>
