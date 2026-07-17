@@ -5,11 +5,19 @@ import Link from 'next/link';
 import { useAuth, MockUser } from '../../../AuthContext';
 import { ArrowLeft, User, Mail, Phone, Calendar, Coins, Award, Trash2, ShieldAlert, CheckCircle, Save, Key, UserCheck } from 'lucide-react';
 
-interface PageProps {
+const formatTime = (secs: number) => {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+  return `${m}m ${s.toString().padStart(2, '0')}s`;
+};
+
+interface UserDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function UserDetailPage({ params }: PageProps) {
+export default function UserDetailPage({ params }: UserDetailPageProps) {
   // Safe Next.js 13/14/15 compatible param resolution
   const resolvedParams = React.use ? React.use(params) : (params as any);
   const userId = resolvedParams.id;
@@ -515,9 +523,20 @@ export default function UserDetailPage({ params }: PageProps) {
                 const answersSubmitted = Object.keys(session.responses || {}).length;
                 const scorePercent = session.maxScore > 0 ? ((session.score / session.maxScore) * 100).toFixed(1) : '0';
                 
-                const timeSpentMinutes = session.durationSeconds 
-                  ? Math.floor(session.durationSeconds / 60) 
-                  : 0;
+                const timeTakenSeconds = (() => {
+                  if (session.responses && Object.keys(session.responses).length > 0) {
+                    const total = Object.values(session.responses).reduce(
+                      (sum: number, r: any) => sum + ((r as any).elapsedSeconds ?? 0), 0
+                    ) as number;
+                    if (total > 0) return total;
+                  }
+                  if (session.durationSeconds && session.durationSeconds > 0) {
+                    return session.durationSeconds;
+                  }
+                  return 0;
+                })();
+                
+                const timeSpentStr = formatTime(timeTakenSeconds);
                 
                 return (
                   <div 
@@ -557,7 +576,7 @@ export default function UserDetailPage({ params }: PageProps) {
 
                         <div className="text-center bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-808 min-w-[70px]">
                           <p className="text-[9px] text-slate-400 font-extrabold uppercase">Duration</p>
-                          <p className="font-black text-slate-850 dark:text-white mt-0.5">{timeSpentMinutes} / {session.durationMinutes} min</p>
+                          <p className="font-black text-slate-850 dark:text-white mt-0.5">{timeSpentStr} / {session.durationMinutes} min</p>
                         </div>
 
                         <div className="text-center bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-808 min-w-[70px]">
