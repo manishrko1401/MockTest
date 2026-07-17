@@ -2718,7 +2718,6 @@ export default function AdminAnalytics() {
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
-                        <th className="py-3 px-4">ID</th>
                         <th className="py-3 px-4">Logo</th>
                         <th className="py-3 px-4">Name</th>
                         <th className="py-3 px-4">Description</th>
@@ -2731,7 +2730,6 @@ export default function AdminAnalytics() {
                     <tbody>
                       {examCatalog.map(cat => (
                         <tr key={cat.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                          <td className="py-3.5 px-4 font-mono font-bold text-slate-400">{cat.id}</td>
                           
                           {/* Logo */}
                           <td className="py-3.5 px-4">
