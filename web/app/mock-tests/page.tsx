@@ -160,8 +160,13 @@ export default function MockTestsCatalog() {
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
   const [activeSubSubId, setActiveSubSubId] = useState<string | null>(null);
 
-  // Reset active sub-subcategory when subcategory changes
+  // Reset active sub-subcategory when subcategory changes, but bypass on initial mount to allow query param loading
+  const isInitialSubCat = React.useRef(true);
   React.useEffect(() => {
+    if (isInitialSubCat.current) {
+      isInitialSubCat.current = false;
+      return;
+    }
     setActiveSubSubId(null);
   }, [selectedSubCategory]);
 
@@ -170,10 +175,14 @@ export default function MockTestsCatalog() {
       const params = new URLSearchParams(window.location.search);
       const cat = params.get('cat');
       const sub = params.get('sub');
+      const subsub = params.get('subsub');
       if (cat) {
         setSelectedCategory(cat);
         if (sub) {
           setSelectedSubCategory(sub);
+          if (subsub) {
+            setActiveSubSubId(subsub);
+          }
         }
       } else {
         setSelectedCategory(null);

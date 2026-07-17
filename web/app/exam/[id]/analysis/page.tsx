@@ -92,6 +92,56 @@ export default function ExamSolutionAnalysisPage() {
   const [loadingCustomQs, setLoadingCustomQs] = useState(true);
   const t = TRANSLATIONS[lang];
 
+  // Find test context in catalog to redirect back precisely
+  const getCatalogContext = () => {
+    if (!examCatalog || !testId) return null;
+    for (const cat of examCatalog) {
+      for (const sub of cat.subCategories || []) {
+        if (sub.subSubCategories) {
+          for (const subSub of sub.subSubCategories) {
+            const found = subSub.tests?.some(t => t.id === testId);
+            if (found) {
+              return {
+                categoryId: cat.id,
+                subCategoryId: sub.id,
+                subSubCategoryId: subSub.id
+              };
+            }
+          }
+        }
+        if (sub.tests) {
+          const found = sub.tests.some(t => t.id === testId);
+          if (found) {
+            return {
+              categoryId: cat.id,
+              subCategoryId: sub.id,
+              subSubCategoryId: null
+            };
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  const handleBackToTestSeries = () => {
+    const context = getCatalogContext();
+    if (context) {
+      const { categoryId, subCategoryId, subSubCategoryId } = context;
+      let url = `/mock-tests?cat=${categoryId}&sub=${subCategoryId}`;
+      if (subSubCategoryId) {
+        url += `&subsub=${subSubCategoryId}`;
+      }
+      router.push(url);
+    } else {
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        router.back();
+      } else {
+        router.push('/mock-tests');
+      }
+    }
+  };
+
   // Sync selector language with auth context
   useEffect(() => {
     if (language) {
@@ -487,13 +537,7 @@ export default function ExamSolutionAnalysisPage() {
           </Link>
           <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
           <button
-            onClick={() => {
-              if (typeof window !== 'undefined' && window.history.length > 1) {
-                router.back();
-              } else {
-                router.push('/mock-tests');
-              }
-            }}
+            onClick={handleBackToTestSeries}
             className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors cursor-pointer bg-transparent border-none p-0 outline-none"
           >
             <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}
