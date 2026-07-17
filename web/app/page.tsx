@@ -1236,6 +1236,7 @@ const formatSubCategoryName = (name: string) => {
                         ) : (
                           notice.title
                         )}
+                      </h5>
                     </div>
                   ))
                 ) : (
@@ -1293,6 +1294,7 @@ const formatSubCategoryName = (name: string) => {
                         ) : (
                           notice.title
                         )}
+                      </h5>
                     </div>
                   ))
                 ) : (
