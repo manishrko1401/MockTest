@@ -57,6 +57,30 @@ const scoreVariance = [
 ];
 
 // ============================================================================
+// HELPER: Format seconds into Hh Mm Ss (same logic as analysis page)
+// ============================================================================
+const formatExactTime = (secs: number): string => {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+  return `${m}m ${s.toString().padStart(2, '0')}s`;
+};
+
+const computeExactTimeSpent = (session: any): number => {
+  // Priority 1: Sum per-question elapsedSeconds — same as analysis page
+  if (session.responses && Object.keys(session.responses).length > 0) {
+    const total = Object.values(session.responses).reduce(
+      (sum: number, r: any) => sum + (r?.elapsedSeconds ?? 0), 0
+    ) as number;
+    if (total > 0) return total;
+  }
+  // Fallback: timer-elapsed (totalDuration - timeRemaining)
+  if (session.durationSeconds && session.durationSeconds > 0) return session.durationSeconds;
+  return 0;
+};
+
+// ============================================================================
 // CORE ADMIN COMPONENT
 // ============================================================================
 export default function AdminAnalytics() {
@@ -2302,7 +2326,7 @@ export default function AdminAnalytics() {
                                   <div>
                                     <p className="text-slate-550 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Time Spent</p>
                                     <p className="text-sm font-black text-yellow-600 dark:text-yellow-405 mt-0.5">
-                                      {Math.floor(session.durationSeconds / 60)}m {session.durationSeconds % 60}s
+                                      {formatExactTime(computeExactTimeSpent(session))}
                                     </p>
                                   </div>
                                   <div>
