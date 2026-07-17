@@ -45,8 +45,12 @@ export default function MockTestsCatalog() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const cat = params.get('cat');
+      const sub = params.get('sub');
       if (cat) {
         setSelectedCategory(cat);
+        if (sub) {
+          setSelectedSubCategory(sub);
+        }
       } else {
         const isMob = window.innerWidth <= 768;
         setSelectedCategory(isMob ? null : 'ssc');

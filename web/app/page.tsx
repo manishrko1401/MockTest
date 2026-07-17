@@ -1370,7 +1370,7 @@ export default function HomeLandingPage() {
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
                 <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                   <GraduationCap className="h-5 w-5 text-blue-600" />
-                  {CATEGORIES.find(c => c.id === selectedModalCategory)?.name} Options
+                  {(examCatalog?.find(c => c.id === selectedModalCategory) || CATEGORIES.find(c => c.id === selectedModalCategory))?.name || 'Exam'} Options
                 </h4>
                 <button
                   onClick={() => setSelectedModalCategory(null)}
@@ -1385,17 +1385,28 @@ export default function HomeLandingPage() {
               </p>
 
               <div className="space-y-3">
-                {EXAMS_BY_CATEGORY[selectedModalCategory]?.map((exam) => (
-                  <Link
-                    key={exam.id}
-                    href={`/mock-tests?cat=${selectedModalCategory}`}
-                    onClick={() => setSelectedModalCategory(null)}
-                    className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:border-blue-300 dark:hover:border-blue-900/60 rounded-xl transition group text-xs font-bold text-slate-800 dark:text-slate-200"
-                  >
-                    <span>{exam.name}</span>
-                    <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition group-hover:text-blue-600" />
-                  </Link>
-                ))}
+                {(() => {
+                  const dbCategory = examCatalog?.find(c => c.id === selectedModalCategory);
+                  const itemsToRender = dbCategory && dbCategory.subCategories?.length > 0
+                    ? dbCategory.subCategories.map(sub => ({ id: sub.id, name: sub.name, href: `/mock-tests?cat=${selectedModalCategory}&sub=${sub.id}` }))
+                    : EXAMS_BY_CATEGORY[selectedModalCategory]?.map(exam => ({ id: exam.id, name: exam.name, href: `/mock-tests?cat=${selectedModalCategory}` })) || [];
+
+                  if (itemsToRender.length === 0) {
+                    return <p className="text-xs text-slate-400 italic text-center py-4">No subcategories available yet.</p>;
+                  }
+
+                  return itemsToRender.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      onClick={() => setSelectedModalCategory(null)}
+                      className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-blue-955/20 hover:border-blue-300 dark:hover:border-blue-900/60 rounded-xl transition group text-xs font-bold text-slate-800 dark:text-slate-200"
+                    >
+                      <span>{item.name}</span>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition group-hover:text-blue-600" />
+                    </Link>
+                  ));
+                })()}
               </div>
             </div>
 
