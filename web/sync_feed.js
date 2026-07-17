@@ -268,6 +268,24 @@ async function syncFeed() {
           console.log(`  Successfully updated: "${item.title}" -> Direct Link: ${directUrl}`);
           updatedNoticesCount++;
           importedIndex++;
+        } else if (!existing.lastDate) {
+          // Title same but lastDate is null — backfill lastDate from detail page
+          console.log(`Backfilling lastDate for: "${existing.title.substring(0, 55)}"`);
+          let lastDate = null;
+          try {
+            const pageHtml = await fetchUrl(item.url);
+            lastDate = extractLastDate(pageHtml);
+          } catch (err) {
+            console.error(`  Warning: Failed to fetch detail page for ${item.url}.`);
+          }
+          const updateValue = lastDate || 'See Notification';
+          await prisma.notice.update({
+            where: { id },
+            data: { lastDate: updateValue }
+          });
+          console.log(`  Backfilled lastDate: "${updateValue}"`);
+          updatedNoticesCount++;
+          importedIndex++;
         }
         continue;
       }

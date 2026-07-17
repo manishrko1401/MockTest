@@ -26,6 +26,96 @@ function decodeHtml(text: string): string {
   return decoded;
 }
 
+// Helper functions for premium subcategory card styling
+const getCategoryTheme = (catId: string | null) => {
+  const id = catId?.toLowerCase() || '';
+  if (id.includes('ssc')) {
+    return {
+      color: 'orange',
+      bg: 'bg-orange-50/50 dark:bg-orange-950/15',
+      border: 'border-orange-150 dark:border-orange-900/30',
+      hoverBorder: 'hover:border-orange-400 dark:hover:border-orange-600',
+      iconBg: 'bg-orange-500/10 text-orange-650 dark:text-orange-400',
+      badgeBg: 'bg-orange-50 dark:bg-orange-950/45 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-900/30',
+      gradient: 'from-orange-500 to-amber-500',
+      glow: 'shadow-orange-500/10 dark:shadow-orange-500/5',
+      accentGlow: 'rgba(249,115,22,0.12)'
+    };
+  }
+  if (id.includes('railway')) {
+    return {
+      color: 'indigo',
+      bg: 'bg-indigo-50/50 dark:bg-indigo-950/15',
+      border: 'border-indigo-150 dark:border-indigo-900/30',
+      hoverBorder: 'hover:border-indigo-400 dark:hover:border-indigo-600',
+      iconBg: 'bg-indigo-500/10 text-indigo-650 dark:text-indigo-400',
+      badgeBg: 'bg-indigo-50 dark:bg-indigo-950/45 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/30',
+      gradient: 'from-indigo-500 to-blue-550',
+      glow: 'shadow-indigo-500/10 dark:shadow-indigo-500/5',
+      accentGlow: 'rgba(99,102,241,0.12)'
+    };
+  }
+  if (id.includes('banking') || id.includes('bank')) {
+    return {
+      color: 'emerald',
+      bg: 'bg-emerald-50/50 dark:bg-emerald-950/15',
+      border: 'border-emerald-150 dark:border-emerald-900/30',
+      hoverBorder: 'hover:border-emerald-400 dark:hover:border-emerald-600',
+      iconBg: 'bg-emerald-500/10 text-emerald-650 dark:text-emerald-400',
+      badgeBg: 'bg-emerald-50 dark:bg-emerald-950/45 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30',
+      gradient: 'from-emerald-500 to-teal-500',
+      glow: 'shadow-emerald-500/10 dark:shadow-emerald-500/5',
+      accentGlow: 'rgba(16,185,129,0.12)'
+    };
+  }
+  if (id.includes('teaching')) {
+    return {
+      color: 'amber',
+      bg: 'bg-amber-50/50 dark:bg-amber-950/15',
+      border: 'border-amber-150 dark:border-amber-900/30',
+      hoverBorder: 'hover:border-amber-400 dark:hover:border-amber-600',
+      iconBg: 'bg-amber-500/10 text-amber-650 dark:text-amber-400',
+      badgeBg: 'bg-amber-50 dark:bg-amber-950/45 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/30',
+      gradient: 'from-amber-500 to-orange-500',
+      glow: 'shadow-amber-500/10 dark:shadow-amber-500/5',
+      accentGlow: 'rgba(245,158,11,0.12)'
+    };
+  }
+  if (id.includes('ugc') || id.includes('net')) {
+    return {
+      color: 'sky',
+      bg: 'bg-sky-50/50 dark:bg-sky-950/15',
+      border: 'border-sky-150 dark:border-sky-900/30',
+      hoverBorder: 'hover:border-sky-400 dark:hover:border-sky-600',
+      iconBg: 'bg-sky-500/10 text-sky-650 dark:text-sky-400',
+      badgeBg: 'bg-sky-50 dark:bg-sky-950/45 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/30',
+      gradient: 'from-sky-500 to-indigo-500',
+      glow: 'shadow-sky-500/10 dark:shadow-sky-500/5',
+      accentGlow: 'rgba(14,165,233,0.12)'
+    };
+  }
+  return {
+    color: 'pink',
+    bg: 'bg-pink-50/50 dark:bg-pink-950/15',
+    border: 'border-pink-155 dark:border-pink-900/30',
+    hoverBorder: 'hover:border-pink-400 dark:hover:border-pink-650',
+    iconBg: 'bg-pink-500/10 text-pink-650 dark:text-pink-400',
+    badgeBg: 'bg-pink-50 dark:bg-pink-950/45 text-pink-700 dark:text-pink-400 border-pink-100 dark:border-pink-900/30',
+    gradient: 'from-pink-500 to-purple-550',
+    glow: 'shadow-pink-500/10 dark:shadow-pink-500/5',
+    accentGlow: 'rgba(236,72,153,0.12)'
+  };
+};
+
+const getSubCatIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('cgl') || n.includes('cpo')) return <Award className="h-5.5 w-5.5" />;
+  if (n.includes('ntpc') || n.includes('group d') || n.includes('alp') || n.includes('si')) return <Trophy className="h-5.5 w-5.5" />;
+  if (n.includes('net') || n.includes('science')) return <GraduationCap className="h-5.5 w-5.5" />;
+  if (n.includes('chsl') || n.includes('mts') || n.includes('phase')) return <BookOpen className="h-5.5 w-5.5" />;
+  return <GraduationCap className="h-5.5 w-5.5" />;
+};
+
 export default function MockTestsCatalog() {
   const { currentUser, saveUserProfileByAdmin, theme, toggleTheme, toggleBookmark, clearOngoingSession, language, setLanguage, examCatalog } = useAuth();
   const router = useRouter();
@@ -557,37 +647,47 @@ export default function MockTestsCatalog() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {activeCategoryObj?.subCategories.map(subCat => {
                       const count = subCat.tests.length;
-                      const countStr = count === 1 ? `1 Mock Test` : `${count} Mock Tests`;
+                      const countStr = count === 1 
+                        ? (language === 'hi' ? `1 ${t.mocksCount}` : `1 Mock Test`)
+                        : (language === 'hi' ? `${count} ${t.mocksCount}` : `${count} Mock Tests`);
                       
-                      const isSsc = selectedCategory === 'ssc';
-                      const isRailways = selectedCategory === 'railways';
-                      const isBanking = selectedCategory === 'banking';
-                      const isTeaching = selectedCategory === 'teaching';
-                      const isUgcNet = selectedCategory === 'ugc_net';
-
-                      const accentColor = 
-                        isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
-                        isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
-                        isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
-                        isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
-                        isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
-                        'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
+                      const themeInfo = getCategoryTheme(selectedCategory);
 
                       return (
                         <button
                           key={subCat.id}
                           onClick={() => setSelectedSubCategory(subCat.id)}
-                          className={`w-full flex flex-col items-center text-center p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/85 rounded-2xl transition-all duration-350 shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-[0.99] border-t-4 border-l-0 border-r-0 border-b-0 cursor-pointer ${accentColor}`}
+                          className="relative overflow-hidden w-full flex flex-col items-center text-center p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
                         >
-                          <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-850 flex items-center justify-center mb-4 shadow-sm text-blue-500 dark:text-blue-400">
-                            <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          {/* Accent Gradient Border at top */}
+                          <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${themeInfo.gradient}`} />
+                          
+                          {/* Radial Glow on Hover */}
+                          <div 
+                            className="absolute -right-16 -top-16 w-36 h-36 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                            style={{ backgroundColor: themeInfo.accentGlow }}
+                          />
+
+                          {/* Icon Container */}
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md ${themeInfo.iconBg}`}>
+                            {getSubCatIcon(subCat.name)}
                           </div>
-                          <h4 className="font-extrabold text-xs md:text-sm text-slate-850 dark:text-slate-100 mb-2.5 leading-snug line-clamp-2">
+
+                          {/* Exam Title */}
+                          <h4 className="font-extrabold text-sm text-slate-850 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-3 leading-snug line-clamp-2">
                             {subCat.name}
                           </h4>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800">
+
+                          {/* Test Count Badge */}
+                          <span className={`text-[10px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg} group-hover:scale-105`}>
                             {countStr}
-                          </p>
+                          </span>
+
+                          {/* Practice CTA Prompt */}
+                          <div className="flex items-center gap-1 text-[9px] uppercase font-black text-blue-600 dark:text-blue-400 tracking-wider mt-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                            {language === 'hi' ? "तैयारी शुरू करें" : "Start Practice"}
+                            <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 duration-200" />
+                          </div>
                         </button>
                       );
                     })}
@@ -1177,29 +1277,45 @@ export default function MockTestsCatalog() {
                 {getFilteredSubCategories().map(subCat => {
                   const count = subCat.tests.length;
                   const countStr = count === 1 
-                    ? (language === 'hi' ? `1 ${t.mocksCount}` : `1 ${t.mocksCount}`)
-                    : (language === 'hi' ? `${count} ${t.mocksCount}` : `${count} ${t.mocksCountPlural}`);
+                    ? (language === 'hi' ? `1 ${t.mocksCount}` : `1 Mock Test`)
+                    : (language === 'hi' ? `${count} ${t.mocksCount}` : `${count} Mock Tests`);
+                  
+                  const themeInfo = getCategoryTheme(selectedCategory);
 
                   return (
                     <button
                       key={subCat.id}
                       onClick={() => setSelectedSubCategory(subCat.id)}
-                      className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 p-4 rounded-xl flex flex-col justify-between group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200"
+                      className="relative overflow-hidden w-full flex flex-col items-center text-center p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
                     >
-                      <div>
-                        <div className="bg-blue-50 dark:bg-blue-900/25 p-2 rounded-lg text-blue-600 dark:text-blue-400 inline-block mb-3">
-                          <GraduationCap className="h-4 w-4" />
-                        </div>
-                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {subCat.name}
-                        </h4>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded-md">
-                          {countStr}
-                        </span>
-                      </div>
+                      {/* Accent Gradient Border at top */}
+                      <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${themeInfo.gradient}`} />
                       
-                      <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[9px] uppercase tracking-wider mt-4 pt-2.5 border-t border-slate-150 dark:border-slate-800/60 w-full">
-                        {language === 'hi' ? "टेस्ट देखें" : "View Tests"} <ChevronRight className="h-3 w-3 transition group-hover:translate-x-1" />
+                      {/* Radial Glow on Hover */}
+                      <div 
+                        className="absolute -right-16 -top-16 w-36 h-36 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                        style={{ backgroundColor: themeInfo.accentGlow }}
+                      />
+
+                      {/* Icon Container */}
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md ${themeInfo.iconBg}`}>
+                        {getSubCatIcon(subCat.name)}
+                      </div>
+
+                      {/* Exam Title */}
+                      <h4 className="font-extrabold text-sm text-slate-850 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-3 leading-snug line-clamp-2">
+                        {subCat.name}
+                      </h4>
+
+                      {/* Test Count Badge */}
+                      <span className={`text-[10px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg} group-hover:scale-105`}>
+                        {countStr}
+                      </span>
+
+                      {/* Practice CTA Prompt */}
+                      <div className="flex items-center gap-1 text-[9px] uppercase font-black text-blue-600 dark:text-blue-400 tracking-wider mt-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                        {language === 'hi' ? "तैयारी शुरू करें" : "Start Practice"}
+                        <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 duration-200" />
                       </div>
                     </button>
                   );
