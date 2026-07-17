@@ -469,6 +469,33 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           <section className="text-center pt-8 pb-4 space-y-4 relative z-10">
+            {/* Promo Advertisement Banner */}
+            <div className="mx-auto max-w-md bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 dark:from-amber-500/20 dark:to-red-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              
+              <div className="flex items-center gap-2.5 z-10">
+                <div className="bg-amber-500 text-white p-1.5 rounded-lg shrink-0 animate-bounce">
+                  <Trophy className="h-4 w-4" />
+                </div>
+                <div className="text-left leading-tight">
+                  <p className="text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-amber-300 uppercase tracking-wide">
+                    {language === 'hi' ? 'सीमित समय का ऑफर!' : 'Limited Time Offer!'}
+                  </p>
+                  <p className="text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-350 font-semibold">
+                    {language === 'hi' 
+                      ? '31 दिसंबर 2026 से पहले रजिस्टर करें और पाएं MockTest Hub Pass Pro!' 
+                      : 'Register before 31 Dec 2026 & get MockTest Hub Pass Pro!'}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/auth"
+                className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-sm"
+              >
+                {language === 'hi' ? 'दावा करें' : 'Claim Now'}
+              </Link>
+            </div>
+
             <span className="inline-flex items-center gap-1 bg-blue-105 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-black px-3 py-1 rounded-full text-[9px] uppercase tracking-wider">
               {t.heroBadge}
             </span>
@@ -968,6 +995,33 @@ const formatSubCategoryName = (name: string) => {
 
         {/* Left Side: Pitch Title */}
         <div className="space-y-6">
+          {/* Promo Advertisement Banner */}
+          <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 dark:from-amber-500/20 dark:to-red-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            
+            <div className="flex items-center gap-2.5 z-10">
+              <div className="bg-amber-500 text-white p-1.5 rounded-lg shrink-0 animate-bounce">
+                <Trophy className="h-4 w-4" />
+              </div>
+              <div className="text-left leading-tight">
+                <p className="text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-amber-300 uppercase tracking-wide">
+                  {language === 'hi' ? 'सीमित समय का ऑफर!' : 'Limited Time Offer!'}
+                </p>
+                <p className="text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-355 font-semibold">
+                  {language === 'hi' 
+                    ? '31 दिसंबर 2026 से पहले रजिस्टर करें और पाएं MockTest Hub Pass Pro!' 
+                    : 'Register before 31 Dec 2026 & get MockTest Hub Pass Pro!'}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/auth"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-sm"
+            >
+              {language === 'hi' ? 'दावा करें' : 'Claim Now'}
+            </Link>
+          </div>
+
           <span className="inline-flex items-center gap-1.5 text-[10px] bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
             {t.heroBadge}
           </span>
