@@ -323,46 +323,118 @@ function TcsIonEngine({ testId }: { testId: string }) {
     <div className="flex h-screen flex-col bg-gray-100 font-sans select-none text-xs leading-normal text-slate-800">
       
       {/* 1. TOP HEADER BANNER */}
-      <header className="flex h-12 items-center justify-between bg-[#0F2942] px-3 sm:px-4 text-white">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="hidden sm:block bg-red-600 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider animate-pulse shrink-0">
-            Live Exam
-          </div>
-          <span className="font-bold text-xs sm:text-sm tracking-wide truncate max-w-[120px] sm:max-w-xs md:max-w-none">{session.testTitle}</span>
-        </div>
+      {(() => {
+        const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+        if (!isSsc) {
+          return (
+            <header className="flex h-14 items-center justify-between bg-white border-b border-slate-200 px-3 sm:px-4 text-slate-800 shrink-0">
+              {/* Left: Logo & Test Title */}
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-1 shrink-0">
+                  <svg className="h-5 w-5 text-[#0D88B9] fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                  </svg>
+                  <span className="font-black text-base text-[#0D88B9] tracking-tight">testbook</span>
+                </div>
+                <span className="text-slate-300 hidden xs:inline">|</span>
+                <span className="font-bold text-xs sm:text-sm text-slate-700 truncate max-w-[120px] sm:max-w-xs md:max-w-none">
+                  {session.testTitle}
+                </span>
+              </div>
 
-        {/* Dynamic Countdown Clock & Pause button */}
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-          <div className="flex items-center gap-1 sm:gap-2 bg-[#1C3D5A] px-2 sm:px-3 py-1 sm:py-1.5 rounded border border-[#2E587A]">
-            <span className="text-gray-300 text-[9px] sm:text-[10px] uppercase hidden xs:inline sm:inline">
-              {session.hasSectionalTiming ? `${currentSection.name} Time:` : 'Time Left:'}
-            </span>
-            <span className="font-mono text-sm sm:text-base font-bold text-yellow-400 tracking-wider">
-              {formatTime(timeRemaining)}
-            </span>
-          </div>
+              {/* Middle: Section Time countdown */}
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-650 bg-slate-50 border border-slate-200 px-2 sm:px-3 py-1 rounded">
+                <span className="text-slate-500 uppercase tracking-wide text-[9px] sm:text-[10px] hidden xs:inline">Section Time</span>
+                {(() => {
+                  const timeStr = formatTime(timeRemaining);
+                  const parts = timeStr.split(':');
+                  return (
+                    <div className="flex items-center gap-1">
+                      <span className="bg-slate-500 text-white font-mono px-1 py-0.5 rounded text-[11px]">{parts[0]}</span>
+                      <span>:</span>
+                      <span className="bg-slate-500 text-white font-mono px-1 py-0.5 rounded text-[11px]">{parts[1]}</span>
+                      <span>:</span>
+                      <span className="bg-slate-500 text-white font-mono px-1 py-0.5 rounded text-[11px]">{parts[2]}</span>
+                    </div>
+                  );
+                })()}
+              </div>
 
-          <button
-            type="button"
-            onClick={pauseExam}
-            className="flex items-center gap-1 bg-yellow-600 hover:bg-yellow-750 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded border border-yellow-500 font-bold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider"
-          >
-            <Pause className="h-3 w-3" /> <span className="hidden sm:inline">Pause</span>
-          </button>
+              {/* Right: Actions */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                      } else {
+                        document.exitFullscreen();
+                      }
+                    } catch (e) {
+                      console.warn("Toggle fullscreen error:", e);
+                    }
+                  }}
+                  className="border border-[#0D88B9] text-[#0D88B9] bg-white hover:bg-[#E3F2FD] px-2.5 py-1.5 rounded font-extrabold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider hidden sm:inline-block"
+                >
+                  Enter Full Screen
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={pauseExam}
+                  className="border border-[#0D88B9] text-[#0D88B9] bg-white hover:bg-[#E3F2FD] px-2.5 py-1.5 rounded font-extrabold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider"
+                >
+                  Pause
+                </button>
+              </div>
+            </header>
+          );
+        }
 
-          <div className="flex items-center gap-1 sm:gap-2 border-l border-slate-600 pl-2 sm:pl-4">
-            <Globe className="h-3.5 w-3.5 text-slate-400 hidden sm:inline" />
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-              className="bg-[#1C3D5A] border border-[#2E587A] rounded px-1 py-0.5 text-[10px] sm:text-xs text-white outline-none cursor-pointer"
-            >
-              <option value="en">EN</option>
-              <option value="hi">HI</option>
-            </select>
-          </div>
-        </div>
-      </header>
+        return (
+          <header className="flex h-12 items-center justify-between bg-[#0F2942] px-3 sm:px-4 text-white shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="hidden sm:block bg-red-600 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider animate-pulse shrink-0">
+                Live Exam
+              </div>
+              <span className="font-bold text-xs sm:text-sm tracking-wide truncate max-w-[120px] sm:max-w-xs md:max-w-none">{session.testTitle}</span>
+            </div>
+
+            {/* Dynamic Countdown Clock & Pause button */}
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 bg-[#1C3D5A] px-2 sm:px-3 py-1 sm:py-1.5 rounded border border-[#2E587A]">
+                <span className="text-gray-300 text-[9px] sm:text-[10px] uppercase hidden xs:inline sm:inline">
+                  {session.hasSectionalTiming ? `${currentSection.name} Time:` : 'Time Left:'}
+                </span>
+                <span className="font-mono text-sm sm:text-base font-bold text-yellow-400 tracking-wider">
+                  {formatTime(timeRemaining)}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={pauseExam}
+                className="flex items-center gap-1 bg-yellow-600 hover:bg-yellow-750 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded border border-yellow-500 font-bold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider"
+              >
+                <Pause className="h-3 w-3" /> <span className="hidden sm:inline">Pause</span>
+              </button>
+
+              <div className="flex items-center gap-1 sm:gap-2 border-l border-slate-600 pl-2 sm:pl-4">
+                <Globe className="h-3.5 w-3.5 text-slate-400 hidden sm:inline" />
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+                  className="bg-[#1C3D5A] border border-[#2E587A] rounded px-1 py-0.5 text-[10px] sm:text-xs text-white outline-none cursor-pointer"
+                >
+                  <option value="en">EN</option>
+                  <option value="hi">HI</option>
+                </select>
+              </div>
+            </div>
+          </header>
+        );
+      })()}
 
       {/* PAUSE SCREEN BLUR OVERLAY */}
       {!state.isTimerRunning && !isExamSubmitted && state.session && (
@@ -615,38 +687,55 @@ function TcsIonEngine({ testId }: { testId: string }) {
           </div>
 
           {/* 5. STICKY ACTIONS BAR */}
-          <footer className="fixed bottom-0 inset-x-0 bg-[#E9ECF2] border-t border-slate-202 z-20 px-3 py-2 flex items-center justify-between gap-2 shadow-inner">
-            <button
-              onClick={() => setMobilePaletteOpen(true)}
-              className="bg-white border border-slate-305 text-slate-700 font-black p-2 rounded shadow-sm hover:bg-slate-50 text-[10px] w-12 flex flex-col items-center justify-center shrink-0 cursor-pointer"
-              title="Show Palette"
-            >
-              <Menu className="h-3.5 w-3.5 text-slate-605" />
-              <span className="text-[7px] uppercase mt-0.5 font-bold">Palette</span>
-            </button>
+          {(() => {
+            const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+            return (
+              <footer className={`fixed bottom-0 inset-x-0 border-t z-20 px-3 py-2 flex items-center justify-between gap-2 shadow-inner ${
+                !isSsc ? 'bg-white border-slate-200' : 'bg-[#E9ECF2] border-slate-202'
+              }`}>
+                <button
+                  onClick={() => setMobilePaletteOpen(true)}
+                  className="bg-white border border-slate-300 text-slate-700 font-black p-2 rounded shadow-sm hover:bg-slate-50 text-[10px] w-12 flex flex-col items-center justify-center shrink-0 cursor-pointer"
+                  title="Show Palette"
+                >
+                  <Menu className="h-3.5 w-3.5 text-slate-600" />
+                  <span className="text-[7px] uppercase mt-0.5 font-bold">Palette</span>
+                </button>
 
-            <div className="flex gap-2 flex-1">
-              <button
-                onClick={markForReviewAndNext}
-                className="bg-white border border-slate-300 text-slate-700 font-bold px-2 py-2.5 rounded shadow-sm hover:bg-slate-50 active:bg-slate-100 transition text-[10px] flex-1 text-center cursor-pointer"
-              >
-                Review & Next
-              </button>
-              <button
-                onClick={clearResponse}
-                className="bg-white border border-slate-300 text-slate-750 font-bold px-2 py-2.5 rounded shadow-sm hover:bg-slate-50 active:bg-slate-100 transition text-[10px] flex-1 text-center cursor-pointer"
-              >
-                Clear
-              </button>
-            </div>
+                <div className="flex gap-2 flex-1">
+                  <button
+                    onClick={markForReviewAndNext}
+                    className={`font-bold px-2 py-2.5 rounded shadow-sm transition text-[10px] flex-1 text-center cursor-pointer active:scale-95 ${
+                      !isSsc 
+                        ? 'bg-[#B3E5FC]/60 text-[#006064] border border-[#B3E5FC]' 
+                        : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 active:bg-slate-100'
+                    }`}
+                  >
+                    Review & Next
+                  </button>
+                  <button
+                    onClick={clearResponse}
+                    className={`font-bold px-2 py-2.5 rounded shadow-sm transition text-[10px] flex-1 text-center cursor-pointer active:scale-95 ${
+                      !isSsc 
+                        ? 'bg-[#B3E5FC]/60 text-[#006064] border border-[#B3E5FC]' 
+                        : 'bg-white border border-slate-300 text-slate-750 hover:bg-slate-50 active:bg-slate-100'
+                    }`}
+                  >
+                    Clear
+                  </button>
+                </div>
 
-            <button
-              onClick={saveAndNext}
-              className="bg-[#2E7D32] hover:bg-green-800 text-white font-bold px-4 py-2.5 rounded shadow transition text-[10px] shrink-0 cursor-pointer"
-            >
-              Save & Next
-            </button>
-          </footer>
+                <button
+                  onClick={saveAndNext}
+                  className={`font-bold px-4 py-2.5 rounded shadow transition text-[10px] shrink-0 cursor-pointer active:scale-95 ${
+                    !isSsc ? 'bg-[#0D88B9] hover:bg-[#0A739C] text-white' : 'bg-[#2E7D32] hover:bg-green-800 text-white'
+                  }`}
+                >
+                  Save & Next
+                </button>
+              </footer>
+            );
+          })()}
 
           {/* 6. BOTTOM DRAWER PALETTE SHEET */}
           {mobilePaletteOpen && (
@@ -673,95 +762,129 @@ function TcsIonEngine({ testId }: { testId: string }) {
                   </div>
 
                   {/* Legend counts for stats */}
-                  <div className="grid grid-cols-2 gap-2 text-[9px] mb-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100 font-semibold">
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-4.5 w-4.5 bg-gray-200 border border-gray-400 text-slate-800 font-bold flex items-center justify-center text-[9px] shadow-xs">
-                        {counts.notVisited}
-                      </div>
-                      <span>Not Visited</span>
-                    </div>
+                  {(() => {
+                    const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+                    return (
+                      <>
+                        <div className={`grid grid-cols-2 gap-2 text-[9px] mb-4 p-2.5 rounded-lg border font-semibold ${
+                          !isSsc ? 'bg-[#EBF5FA] border-[#B3E5FC] text-slate-705' : 'bg-slate-50 border-slate-100'
+                        }`}>
+                          <div className="flex items-center gap-1.5">
+                            <div className={`h-4.5 w-4.5 font-bold flex items-center justify-center text-[9px] shadow-xs ${
+                              !isSsc ? 'bg-[#2E7D32] text-white rounded-full' : 'bg-[#2E7D32] text-white rounded-b-md'
+                            }`}>
+                              {counts.answered}
+                            </div>
+                            <span>Answered</span>
+                          </div>
 
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-4.5 w-4.5 bg-[#C62828] text-white font-bold flex items-center justify-center text-[9px] rounded-t-sm shadow-xs">
-                        {counts.notAnswered}
-                      </div>
-                      <span>Not Answered</span>
-                    </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className={`h-4.5 w-4.5 font-bold flex items-center justify-center text-[9px] shadow-xs ${
+                              !isSsc ? 'bg-[#8E24AA] text-white rounded-full' : 'bg-[#4527A0] text-white rounded-full'
+                            }`}>
+                              {counts.marked}
+                            </div>
+                            <span>Marked Review</span>
+                          </div>
 
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-4.5 w-4.5 bg-[#2E7D32] text-white font-bold flex items-center justify-center text-[9px] rounded-b-sm shadow-xs">
-                        {counts.answered}
-                      </div>
-                      <span>Answered</span>
-                    </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className={`h-4.5 w-4.5 font-bold flex items-center justify-center text-[9px] shadow-xs ${
+                              !isSsc ? 'bg-[#D32F2F] text-white rounded-full' : 'bg-[#C62828] text-white rounded-t-md'
+                            }`}>
+                              {counts.notAnswered}
+                            </div>
+                            <span>Not Answered</span>
+                          </div>
 
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-4.5 w-4.5 bg-[#4527A0] text-white font-bold flex items-center justify-center text-[9px] rounded-full shadow-xs">
-                        {counts.marked}
-                      </div>
-                      <span>Marked Review</span>
-                    </div>
-                  </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className={`h-4.5 w-4.5 text-slate-800 font-bold flex items-center justify-center text-[9px] shadow-xs ${
+                              !isSsc ? 'bg-white border border-slate-400 rounded' : 'bg-gray-200 border border-gray-400'
+                            }`}>
+                              {counts.notVisited}
+                            </div>
+                            <span>Not Visited</span>
+                          </div>
+                        </div>
 
-                  {/* Numbers Grid */}
-                  <div className="grid grid-cols-5 gap-2.5 py-2">
-                    {currentSectionQuestions.map((q, idx) => {
-                      const resp = responses[q.id];
-                      const stateCode = resp?.state ?? 1;
-                      const isActive = idx === currentQuestionIndex;
+                        {/* Numbers Grid */}
+                        <div className="grid grid-cols-5 gap-2.5 py-2">
+                          {currentSectionQuestions.map((q, idx) => {
+                            const resp = responses[q.id];
+                            const stateCode = resp?.state ?? 1;
+                            const isActive = idx === currentQuestionIndex;
 
-                      let styleClass = "";
-                      switch (stateCode) {
-                        case 1: // Not Visited
-                          styleClass = "bg-gray-200 border-gray-400 text-slate-800";
-                          break;
-                        case 2: // Not Answered
-                          styleClass = "bg-[#C62828] text-white rounded-t-md border-transparent";
-                          break;
-                        case 3: // Answered
-                          styleClass = "bg-[#2E7D32] text-white rounded-b-md border-transparent";
-                          break;
-                        case 4: // Marked for Review
-                          styleClass = "bg-[#4527A0] text-white rounded-full border-transparent";
-                          break;
-                        case 5: // Answered & Marked for Review
-                          styleClass = "bg-[#4527A0] text-white rounded-full border-transparent relative";
-                          break;
-                      }
+                            let styleClass = "";
+                            switch (stateCode) {
+                              case 1: // Not Visited
+                                styleClass = !isSsc 
+                                  ? "bg-white border-slate-300 text-slate-800 rounded" 
+                                  : "bg-gray-200 border-gray-400 text-slate-800";
+                                break;
+                              case 2: // Not Answered
+                                styleClass = !isSsc 
+                                  ? "bg-[#D32F2F] text-white rounded border-transparent" 
+                                  : "bg-[#C62828] text-white rounded-t-md border-transparent";
+                                break;
+                              case 3: // Answered
+                                styleClass = !isSsc 
+                                  ? "bg-[#2E7D32] text-white rounded border-transparent" 
+                                  : "bg-[#2E7D32] text-white rounded-b-md border-transparent";
+                                break;
+                              case 4: // Marked for Review
+                                styleClass = !isSsc 
+                                  ? "bg-[#8E24AA] text-white rounded-full border-transparent" 
+                                  : "bg-[#4527A0] text-white rounded-full border-transparent";
+                                break;
+                              case 5: // Answered & Marked for Review
+                                styleClass = !isSsc 
+                                  ? "bg-[#8E24AA] text-white rounded-full border-transparent relative" 
+                                  : "bg-[#4527A0] text-white rounded-full border-transparent relative";
+                                break;
+                            }
 
-                      return (
-                        <button
-                          key={q.id}
-                          onClick={() => {
-                            jumpToQuestion(currentSectionIndex, idx);
-                            setMobilePaletteOpen(false);
-                          }}
-                          className={`flex h-9 w-9 items-center justify-center border font-bold text-xs shadow-sm cursor-pointer ${styleClass} ${
-                            isActive ? 'ring-2 ring-blue-500 ring-offset-1 z-10' : ''
-                          }`}
-                        >
-                          {idx + 1}
-                          {stateCode === 5 && (
-                            <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white">
-                              <Check className="h-1.5 w-1.5" />
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                            return (
+                              <button
+                                key={q.id}
+                                onClick={() => {
+                                  jumpToQuestion(currentSectionIndex, idx);
+                                  setMobilePaletteOpen(false);
+                                }}
+                                className={`flex h-9 w-9 items-center justify-center border font-bold text-xs shadow-sm cursor-pointer ${styleClass} ${
+                                  isActive ? 'ring-2 ring-blue-500 ring-offset-1 z-10' : ''
+                                }`}
+                              >
+                                {idx + 1}
+                                {stateCode === 5 && (
+                                  <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white">
+                                    <Check className="h-1.5 w-1.5" />
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 mt-6">
-                  <button
-                    onClick={() => {
-                      setMobilePaletteOpen(false);
-                      submitExam();
-                    }}
-                    className="w-full bg-[#1A3B5C] hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow text-xs uppercase cursor-pointer"
-                  >
-                    Submit Exam Paper
-                  </button>
+                  {(() => {
+                    const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+                    return (
+                      <button
+                        onClick={() => {
+                          setMobilePaletteOpen(false);
+                          submitExam();
+                        }}
+                        className={`w-full text-white font-bold py-3 rounded-xl shadow text-xs uppercase cursor-pointer active:scale-95 transition-all ${
+                          !isSsc ? 'bg-[#0D88B9] hover:bg-[#0A739C]' : 'bg-[#1A3B5C] hover:bg-slate-800'
+                        }`}
+                      >
+                        Submit Exam Paper
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
             </>
@@ -775,43 +898,100 @@ function TcsIonEngine({ testId }: { testId: string }) {
           <main className="flex w-full lg:w-[75%] flex-col border-b lg:border-b-0 lg:border-r border-slate-200 bg-white lg:h-full">
             
             {/* Subject Tabs Switcher */}
-            <div className="flex h-10 border-b border-slate-200 bg-[#E9ECF2]">
-              {session.sections.map((sec, idx) => {
-                const isActive = idx === currentSectionIndex;
-                const isLocked = session.hasSectionalTiming && !isActive;
+            {(() => {
+              const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+              if (!isSsc) {
                 return (
-                  <button
-                    key={sec.id}
-                    onClick={() => !isLocked && switchSection(idx)}
-                    disabled={isLocked}
-                    title={isLocked ? 'Section locked — complete current section first' : undefined}
-                    className={`flex items-center px-4 font-bold border-r border-slate-200 transition-colors ${
-                      isActive
-                        ? 'bg-white text-blue-800 border-t-2 border-t-orange-500 font-extrabold'
-                        : isLocked
-                        ? 'text-slate-400 bg-[#E9ECF2] cursor-not-allowed opacity-50'
-                        : 'text-slate-600 hover:bg-[#DEE3EC] cursor-pointer'
-                    }`}
-                  >
-                    {isLocked && <span className="mr-1 text-[9px]">🔒</span>}
-                    {sec.name}
-                  </button>
+                  <div className="flex h-10 border-b border-slate-200 bg-[#F8FAFC] items-center shrink-0">
+                    <span className="px-4 text-[10px] font-black uppercase text-slate-400 tracking-wider border-r border-slate-200 h-full flex items-center shrink-0">
+                      SECTIONS
+                    </span>
+                    <div className="flex flex-1 overflow-x-auto scrollbar-none h-full">
+                      {session.sections.map((sec, idx) => {
+                        const isActive = idx === currentSectionIndex;
+                        const isLocked = session.hasSectionalTiming && !isActive;
+                        return (
+                          <button
+                            key={sec.id}
+                            onClick={() => !isLocked && switchSection(idx)}
+                            disabled={isLocked}
+                            title={isLocked ? 'Section locked — complete current section first' : undefined}
+                            className={`flex items-center px-5 font-bold border-r border-slate-200 transition-colors h-full text-xs ${
+                              isActive
+                                ? 'bg-[#1B6E88] text-white font-extrabold'
+                                : isLocked
+                                ? 'text-slate-300 bg-[#F8FAFC] cursor-not-allowed opacity-50'
+                                : 'text-slate-650 hover:bg-slate-100 bg-[#F8FAFC] cursor-pointer'
+                            }`}
+                          >
+                            {isLocked && <span className="mr-1 text-[9px]">🔒</span>}
+                            {sec.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
-              })}
-            </div>
+              }
+
+              return (
+                <div className="flex h-10 border-b border-slate-200 bg-[#E9ECF2] shrink-0">
+                  {session.sections.map((sec, idx) => {
+                    const isActive = idx === currentSectionIndex;
+                    const isLocked = session.hasSectionalTiming && !isActive;
+                    return (
+                      <button
+                        key={sec.id}
+                        onClick={() => !isLocked && switchSection(idx)}
+                        disabled={isLocked}
+                        title={isLocked ? 'Section locked — complete current section first' : undefined}
+                        className={`flex items-center px-4 font-bold border-r border-slate-200 transition-colors ${
+                          isActive
+                            ? 'bg-white text-blue-800 border-t-2 border-t-orange-500 font-extrabold'
+                            : isLocked
+                            ? 'text-slate-400 bg-[#E9ECF2] cursor-not-allowed opacity-50'
+                            : 'text-slate-600 hover:bg-[#DEE3EC] cursor-pointer'
+                        }`}
+                      >
+                        {isLocked && <span className="mr-1 text-[9px]">🔒</span>}
+                        {sec.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             {/* Question Header Bar */}
-            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2 text-[11px] font-bold">
-              <span className="text-[#0747A6] text-xs">Question Type: Multiple Choice Question</span>
-              <div className="flex gap-2">
-                <span className="text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded">
-                  Marks: +{currentSection.positiveMark}
-                </span>
-                <span className="text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
-                  Negative: -{currentSection.negativeMark}
-                </span>
-              </div>
-            </div>
+            {(() => {
+              const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+              if (!isSsc) {
+                return (
+                  <div className="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-2 text-[11px] font-bold shrink-0">
+                    <span className="text-slate-400">Question Type: Multiple Choice Question</span>
+                    <div className="flex gap-2">
+                      <span className="text-slate-550 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[10px]">
+                        Section Marks: +{currentSection.positiveMark} | -{currentSection.negativeMark}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2 text-[11px] font-bold shrink-0">
+                  <span className="text-[#0747A6] text-xs">Question Type: Multiple Choice Question</span>
+                  <div className="flex gap-2">
+                    <span className="text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded">
+                      Marks: +{currentSection.positiveMark}
+                    </span>
+                    <span className="text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                      Negative: -{currentSection.negativeMark}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Question Text & Math Rendering */}
             <div className="flex-1 lg:overflow-y-auto overflow-y-visible p-6 bg-white">
@@ -826,31 +1006,86 @@ function TcsIonEngine({ testId }: { testId: string }) {
                           <h3 className="text-sm font-bold text-slate-800">
                             Question No. {currentQuestionIndex + 1}
                           </h3>
-                          {/* Question-specific Language Switcher Button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const nextLang = questionLang === 'en' ? 'hi' : 'en';
-                              setQuestionLanguages(prev => ({ ...prev, [currentQuestion.id]: nextLang }));
-                            }}
-                            className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded border border-blue-200 text-[9px] sm:text-[10px] transition cursor-pointer active:scale-95 shadow-sm"
-                            title={questionLang === 'en' ? 'Switch question view to Hindi' : 'Switch question view to English'}
-                          >
-                            <Globe className="h-3 w-3 text-blue-500" />
-                            {questionLang === 'en' ? 'हिन्दी' : 'English'}
-                          </button>
                         </div>
                         
-                        <div className="flex items-center gap-2 text-[9px] sm:text-[10px]">
-                          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-mono px-2 py-0.5 rounded-md">
-                            <Clock className="h-3 w-3 text-slate-500" />
-                            <span>Time Spent: {Math.floor((activeResponse?.elapsedSeconds || 0) / 60)}:
-                            {String((activeResponse?.elapsedSeconds || 0) % 60).padStart(2, '0')}</span>
-                          </div>
-                          <div className="text-slate-400 hidden sm:inline">
-                            ID: {currentQuestion.id}
-                          </div>
-                        </div>
+                        {(() => {
+                          const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+                          if (!isSsc) {
+                            return (
+                              <div className="flex items-center gap-3.5 text-[10px] font-semibold flex-wrap">
+                                {/* Testbook Style Marks Badges */}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-slate-500 font-bold">Marks:</span>
+                                  <span className="bg-[#2E7D32] text-white font-extrabold px-2 py-0.5 rounded-md text-[9px]">
+                                    +{currentSection.positiveMark}
+                                  </span>
+                                  <span className="bg-[#C62828] text-white font-extrabold px-2 py-0.5 rounded-md text-[9px]">
+                                    -{currentSection.negativeMark}
+                                  </span>
+                                </div>
+
+                                {/* Clock Icon / Time Spent */}
+                                <div className="flex items-center gap-1 text-slate-600 font-mono bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
+                                  <Clock className="h-3.5 w-3.5 text-slate-400" />
+                                  <span>Time: {Math.floor((activeResponse?.elapsedSeconds || 0) / 60)}:
+                                  {String((activeResponse?.elapsedSeconds || 0) % 60).padStart(2, '0')}</span>
+                                </div>
+
+                                {/* View in Language Dropdown */}
+                                <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+                                  <span className="text-slate-400">View in:</span>
+                                  <select
+                                    value={questionLang}
+                                    onChange={(e) => {
+                                      const nextLang = e.target.value as 'en' | 'hi';
+                                      setQuestionLanguages(prev => ({ ...prev, [currentQuestion.id]: nextLang }));
+                                    }}
+                                    className="bg-white border border-slate-200 rounded px-1.5 py-0.5 text-[10px] font-bold text-slate-700 outline-none cursor-pointer"
+                                  >
+                                    <option value="en">English</option>
+                                    <option value="hi">Hindi</option>
+                                  </select>
+                                </div>
+
+                                {/* Report Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => alert(language === 'hi' ? "प्रश्न की रिपोर्ट दर्ज कर ली गई है।" : "Question reported successfully.")}
+                                  className="flex items-center gap-1 text-slate-500 hover:text-red-500 transition cursor-pointer"
+                                >
+                                  <ShieldAlert className="h-3.5 w-3.5" />
+                                  <span>Report</span>
+                                </button>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="flex items-center gap-2 text-[9px] sm:text-[10px]">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextLang = questionLang === 'en' ? 'hi' : 'en';
+                                  setQuestionLanguages(prev => ({ ...prev, [currentQuestion.id]: nextLang }));
+                                }}
+                                className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded border border-blue-200 text-[9px] sm:text-[10px] transition cursor-pointer active:scale-95 shadow-sm"
+                                title={questionLang === 'en' ? 'Switch question view to Hindi' : 'Switch question view to English'}
+                              >
+                                <Globe className="h-3 w-3 text-blue-500" />
+                                {questionLang === 'en' ? 'हिन्दी' : 'English'}
+                              </button>
+
+                              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-mono px-2 py-0.5 rounded-md">
+                                <Clock className="h-3.5 w-3.5 text-slate-500" />
+                                <span>Time Spent: {Math.floor((activeResponse?.elapsedSeconds || 0) / 60)}:
+                                {String((activeResponse?.elapsedSeconds || 0) % 60).padStart(2, '0')}</span>
+                              </div>
+                              <div className="text-slate-400 hidden sm:inline">
+                                ID: {currentQuestion.id}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Render Question Text Based on active Language */}
@@ -925,158 +1160,258 @@ function TcsIonEngine({ testId }: { testId: string }) {
             </div>
 
             {/* Bottom Actions Row */}
-            <footer className="flex flex-col sm:flex-row sm:h-14 items-center justify-between gap-3 border-t border-slate-200 bg-[#E9ECF2] px-4 py-3 sm:py-0">
-              <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-start">
-                <button
-                  onClick={markForReviewAndNext}
-                  className="bg-white border border-slate-300 text-slate-700 font-bold px-3 sm:px-4 py-2 rounded shadow-sm hover:bg-slate-50 active:bg-slate-100 transition text-[10px] sm:text-xs flex-1 sm:flex-none"
-                >
-                  Mark for Review & Next
-                </button>
-                <button
-                  onClick={clearResponse}
-                  className="bg-white border border-slate-300 text-slate-700 font-bold px-3 sm:px-4 py-2 rounded shadow-sm hover:bg-slate-50 active:bg-slate-100 transition text-[10px] sm:text-xs flex-1 sm:flex-none"
-                >
-                  Clear Response
-                </button>
-              </div>
+            {(() => {
+              const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+              return (
+                <footer className={`flex flex-col sm:flex-row sm:h-14 items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 sm:py-0 shrink-0 ${
+                  !isSsc ? 'bg-white' : 'bg-[#E9ECF2]'
+                }`}>
+                  <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-start">
+                    <button
+                      onClick={markForReviewAndNext}
+                      className={`font-bold px-3 sm:px-4 py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs flex-1 sm:flex-none cursor-pointer active:scale-95 ${
+                        !isSsc 
+                          ? 'bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC]' 
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 active:bg-slate-100'
+                      }`}
+                    >
+                      Mark for Review & Next
+                    </button>
+                    <button
+                      onClick={clearResponse}
+                      className={`font-bold px-3 sm:px-4 py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs flex-1 sm:flex-none cursor-pointer active:scale-95 ${
+                        !isSsc 
+                          ? 'bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC]' 
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 active:bg-slate-100'
+                      }`}
+                    >
+                      Clear Response
+                    </button>
+                  </div>
 
-              <button
-                onClick={saveAndNext}
-                className="bg-[#2E7D32] text-white font-bold px-6 py-2 rounded shadow hover:bg-green-800 transition text-[10px] sm:text-xs w-full sm:w-auto"
-              >
-                Save & Next
-              </button>
-            </footer>
+                  <button
+                    onClick={saveAndNext}
+                    className={`font-bold px-6 py-2.5 rounded shadow transition text-[10px] sm:text-xs w-full sm:w-auto cursor-pointer active:scale-95 ${
+                      !isSsc 
+                        ? 'bg-[#0D88B9] hover:bg-[#0A739C] text-white' 
+                        : 'bg-[#2E7D32] hover:bg-green-800 text-white'
+                    }`}
+                  >
+                    Save & Next
+                  </button>
+                </footer>
+              );
+            })()}
           </main>
 
           {/* RIGHT PANEL (25% WIDTH) - CANDIDATE IDENTITY & QUESTION PALETTE GRID */}
-          <aside className="flex w-full lg:w-[25%] flex-col bg-[#F3F4F6] border-t lg:border-t-0 lg:border-l border-slate-200 lg:overflow-y-auto overflow-y-visible">
-            
-            {/* Profile Avatar Card */}
-            <div className="flex items-center gap-3 bg-white p-4 border-b border-slate-200">
-              <div className="relative h-12 w-12 rounded bg-slate-200 flex items-center justify-center border border-slate-300 text-slate-400">
-                <User className="h-6 w-6" />
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Candidate Code: {currentUser?.candidateCode || 'GUEST'}</p>
-                <p className="font-bold text-slate-900 truncate">{currentUser?.name || 'Guest User'}</p>
-                {violationsCount > 0 && (
-                  <span className="inline-flex items-center gap-1 text-[9px] bg-red-50 text-red-700 border border-red-200 rounded px-1 py-0.5 mt-1 font-bold">
-                    <ShieldAlert className="h-3 w-3" />
-                    Blur Violations: {violationsCount}/3
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Legend Panel of States (Custom Designs/Shapes matching TCS iON) */}
-            <div className="p-3 bg-white border-b border-slate-200 grid grid-cols-2 gap-x-2 gap-y-1.5 text-[10px]">
-              
-              <div className="flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center bg-gray-200 border border-gray-400 text-xs font-bold text-slate-800">
-                  {counts.notVisited}
+          {(() => {
+            const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+            return (
+              <aside className={`flex w-full lg:w-[25%] flex-col border-t lg:border-t-0 lg:border-l border-slate-200 lg:overflow-y-auto overflow-y-visible ${
+                !isSsc ? 'bg-[#EBF5FA]' : 'bg-[#F3F4F6]'
+              }`}>
+                
+                {/* Profile Avatar Card */}
+                <div className={`flex items-center gap-3 p-4 border-b border-slate-200 ${
+                  !isSsc ? 'bg-[#EBF5FA]' : 'bg-white'
+                }`}>
+                  <div className={`relative h-12 w-12 flex items-center justify-center text-slate-400 ${
+                    !isSsc ? 'rounded-full bg-[#0D88B9] text-white' : 'rounded bg-slate-200 border border-slate-300'
+                  }`}>
+                    <User className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Candidate Code: {currentUser?.candidateCode || 'GUEST'}</p>
+                    <p className="font-bold text-slate-900 truncate">{currentUser?.name || 'Guest User'}</p>
+                    {violationsCount > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[9px] bg-red-50 text-red-700 border border-red-200 rounded px-1 py-0.5 mt-1 font-bold">
+                        <ShieldAlert className="h-3 w-3" />
+                        Blur Violations: {violationsCount}/3
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <span>Not Visited</span>
-              </div>
 
-              <div className="flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center bg-[#C62828] text-white text-xs font-bold rounded-t-md">
-                  {counts.notAnswered}
-                </div>
-                <span>Not Answered</span>
-              </div>
+                {/* Legend Panel of States (Custom Designs/Shapes matching TCS iON or Testbook) */}
+                {!isSsc ? (
+                  <div className="p-3 bg-white border-b border-slate-200 grid grid-cols-2 gap-x-2 gap-y-2 text-[10px] font-bold text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 bg-[#2E7D32] text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-xs">
+                        {counts.answered}
+                      </div>
+                      <span>Answered</span>
+                    </div>
 
-              <div className="flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center bg-[#2E7D32] text-white text-xs font-bold rounded-b-md">
-                  {counts.answered}
-                </div>
-                <span>Answered</span>
-              </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 bg-[#8E24AA] text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-xs">
+                        {counts.marked}
+                      </div>
+                      <span>Marked</span>
+                    </div>
 
-              <div className="flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center bg-[#4527A0] text-white text-xs font-bold rounded-full">
-                  {counts.marked}
-                </div>
-                <span>Marked for Review</span>
-              </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 bg-[#D32F2F] text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-xs">
+                        {counts.notAnswered}
+                      </div>
+                      <span>Not Answered</span>
+                    </div>
 
-              <div className="flex items-center gap-2 col-span-2">
-                <div className="relative flex h-5 w-5 items-center justify-center bg-[#4527A0] text-white text-xs font-bold rounded-full">
-                  {counts.markedAndAnswered}
-                  <span className="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-0.5 border border-white">
-                    <Check className="h-2 w-2" />
-                  </span>
-                </div>
-                <span>Answered & Marked for Review</span>
-              </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 bg-white border border-slate-400 text-slate-800 flex items-center justify-center font-bold text-[9px] shadow-xs rounded">
+                        {counts.notVisited}
+                      </div>
+                      <span>Not Visited</span>
+                    </div>
 
-            </div>
-
-            {/* Active Palette Section Grid */}
-            <div className="flex-1 p-4 bg-white">
-              <h4 className="font-bold text-[#0F2942] uppercase text-[10px] tracking-wide mb-3">
-                Question Palette - {currentSection.name}
-              </h4>
-              
-              <div className="grid grid-cols-5 gap-2.5">
-                {currentSectionQuestions.map((q, idx) => {
-                  const resp = responses[q.id];
-                  const stateCode = resp?.state ?? 1;
-                  const isActive = idx === currentQuestionIndex;
-
-                  let styleClass = "";
-
-                  // Select style configurations based on TCS iON Palette State Rules
-                  switch (stateCode) {
-                    case 1: // Not Visited
-                      styleClass = "bg-gray-200 border-gray-400 text-slate-800";
-                      break;
-                    case 2: // Not Answered
-                      styleClass = "bg-[#C62828] text-white rounded-t-md border-transparent";
-                      break;
-                    case 3: // Answered
-                      styleClass = "bg-[#2E7D32] text-white rounded-b-md border-transparent";
-                      break;
-                    case 4: // Marked for Review
-                      styleClass = "bg-[#4527A0] text-white rounded-full border-transparent";
-                      break;
-                    case 5: // Answered & Marked for Review
-                      styleClass = "bg-[#4527A0] text-white rounded-full border-transparent relative";
-                      break;
-                  }
-
-                  return (
-                    <button
-                      key={q.id}
-                      onClick={() => jumpToQuestion(currentSectionIndex, idx)}
-                      className={`flex h-8 w-8 items-center justify-center border font-bold text-xs shadow-sm hover:opacity-90 active:scale-95 transition-all ${styleClass} ${
-                        isActive ? 'ring-2 ring-blue-500 ring-offset-1 z-10' : ''
-                      }`}
-                    >
-                      {idx + 1}
-                      {stateCode === 5 && (
+                    <div className="flex items-center gap-2 col-span-2">
+                      <div className="relative h-5 w-5 bg-[#8E24AA] text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-xs">
+                        {counts.markedAndAnswered}
                         <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white">
                           <Check className="h-1.5 w-1.5" />
                         </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                      </div>
+                      <span>Marked & Answered</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-white border-b border-slate-200 grid grid-cols-2 gap-x-2 gap-y-1.5 text-[10px]">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-5 w-5 items-center justify-center bg-gray-200 border border-gray-400 text-xs font-bold text-slate-800">
+                        {counts.notVisited}
+                      </div>
+                      <span>Not Visited</span>
+                    </div>
 
-            {/* Submit Block Section */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50">
-              <button
-                onClick={submitExam}
-                className="w-full bg-[#1A3B5C] text-white font-bold py-2.5 rounded shadow hover:bg-slate-800 transition"
-              >
-                Submit Exam Paper
-              </button>
-            </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-5 w-5 items-center justify-center bg-[#C62828] text-white text-xs font-bold rounded-t-md">
+                        {counts.notAnswered}
+                      </div>
+                      <span>Not Answered</span>
+                    </div>
 
-          </aside>
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-5 w-5 items-center justify-center bg-[#2E7D32] text-white text-xs font-bold rounded-b-md">
+                        {counts.answered}
+                      </div>
+                      <span>Answered</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-5 w-5 items-center justify-center bg-[#4527A0] text-white text-xs font-bold rounded-full">
+                        {counts.marked}
+                      </div>
+                      <span>Marked for Review</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 col-span-2">
+                      <div className="relative flex h-5 w-5 items-center justify-center bg-[#4527A0] text-white text-xs font-bold rounded-full">
+                        {counts.markedAndAnswered}
+                        <span className="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-0.5 border border-white">
+                          <Check className="h-2 w-2" />
+                        </span>
+                      </div>
+                      <span>Answered & Marked for Review</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Active Palette Section Grid */}
+                <div className={`flex-1 p-4 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-white'}`}>
+                  <h4 className="font-bold text-[#0F2942] uppercase text-[10px] tracking-wide mb-3">
+                    Question Palette - {currentSection.name}
+                  </h4>
+                  
+                  <div className="grid grid-cols-5 gap-2.5">
+                    {currentSectionQuestions.map((q, idx) => {
+                      const resp = responses[q.id];
+                      const stateCode = resp?.state ?? 1;
+                      const isActive = idx === currentQuestionIndex;
+
+                      let styleClass = "";
+
+                      // Select style configurations based on Palette State Rules
+                      switch (stateCode) {
+                        case 1: // Not Visited
+                          styleClass = !isSsc 
+                            ? "bg-white border-slate-300 text-slate-800 rounded" 
+                            : "bg-gray-200 border-gray-400 text-slate-800";
+                          break;
+                        case 2: // Not Answered
+                          styleClass = !isSsc 
+                            ? "bg-[#D32F2F] text-white rounded border-transparent" 
+                            : "bg-[#C62828] text-white rounded-t-md border-transparent";
+                          break;
+                        case 3: // Answered
+                          styleClass = !isSsc 
+                            ? "bg-[#2E7D32] text-white rounded border-transparent" 
+                            : "bg-[#2E7D32] text-white rounded-b-md border-transparent";
+                          break;
+                        case 4: // Marked for Review
+                          styleClass = !isSsc 
+                            ? "bg-[#8E24AA] text-white rounded-full border-transparent" 
+                            : "bg-[#4527A0] text-white rounded-full border-transparent";
+                          break;
+                        case 5: // Answered & Marked for Review
+                          styleClass = !isSsc 
+                            ? "bg-[#8E24AA] text-white rounded-full border-transparent relative" 
+                            : "bg-[#4527A0] text-white rounded-full border-transparent relative";
+                          break;
+                      }
+
+                      return (
+                        <button
+                          key={q.id}
+                          onClick={() => jumpToQuestion(currentSectionIndex, idx)}
+                          className={`flex h-8 w-8 items-center justify-center border font-bold text-xs shadow-sm hover:opacity-90 active:scale-95 transition-all ${styleClass} ${
+                            isActive ? 'ring-2 ring-blue-500 ring-offset-1 z-10' : ''
+                          }`}
+                        >
+                          {idx + 1}
+                          {stateCode === 5 && (
+                            <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white">
+                              <Check className="h-1.5 w-1.5" />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Submit Block Section */}
+                <div className={`p-4 border-t border-slate-200 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
+                  {!isSsc && (
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => alert("Question Paper view is not available in mock simulation.")}
+                        className="bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/85 text-[#006064] font-extrabold py-2 rounded text-[11px] text-center shadow-xs cursor-pointer active:scale-95 transition-all"
+                      >
+                        Question Paper
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => alert("Instructions: Select an option and click 'Save & Next' to record your response.")}
+                        className="bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/85 text-[#006064] font-extrabold py-2 rounded text-[11px] text-center shadow-xs cursor-pointer active:scale-95 transition-all"
+                      >
+                        Instructions
+                      </button>
+                    </div>
+                  )}
+                  <button
+                    onClick={submitExam}
+                    className={`w-full text-white font-bold py-2.5 rounded shadow transition cursor-pointer text-xs uppercase tracking-wider active:scale-95 ${
+                      !isSsc ? 'bg-[#0D88B9] hover:bg-[#0A739C]' : 'bg-[#1A3B5C] hover:bg-slate-800'
+                    }`}
+                  >
+                    Submit Test
+                  </button>
+                </div>
+
+              </aside>
+            );
+          })()}
         </div>
       )}
 
