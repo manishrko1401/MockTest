@@ -19,7 +19,8 @@ import {
   ShieldAlert,
   Award,
   Timer,
-  Bookmark
+  Bookmark,
+  Trophy
 } from 'lucide-react';
 import { TRANSLATIONS } from '../../../translations';
 
@@ -475,10 +476,20 @@ export default function ExamSolutionAnalysisPage() {
       {/* 1. NAVIGATION BAR */}
       <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 backdrop-blur-md px-6 md:px-12 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
+              <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{language === 'hi' ? 'मॉक टेस्ट हब' : 'MOCK TEST HUB'}</h1>
+              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{language === 'hi' ? 'परीक्षा की तैयारी' : 'EXAM PREPARATION'}</p>
+            </div>
+          </Link>
+          <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
           <Link href="/mock-tests" className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors">
             <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}
           </Link>
-          <span className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
+          <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
           <div className="flex flex-col">
             <span className="font-extrabold text-sm text-slate-900 dark:text-white leading-tight">{examSession.testTitle}</span>
             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{language === 'hi' ? 'समाधान और विश्लेषण डैशबोर्ड' : 'Solution & Analysis Dashboard'}</span>
