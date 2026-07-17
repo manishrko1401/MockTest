@@ -11,7 +11,7 @@ import {
 import { useAuth, TestCategory, MockTestItem } from '../../AuthContext';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Check, ShieldAlert, ShieldCheck, Globe, User, BookOpen, AlertCircle, ArrowLeft, Sun, Moon, Clock, Pause, Play, Menu, X } from 'lucide-react';
+import { Check, ShieldAlert, ShieldCheck, Globe, User, BookOpen, AlertCircle, ArrowLeft, Sun, Moon, Clock, Pause, Play, Menu, X, Trophy } from 'lucide-react';
 import { useIsMobile } from '../../useIsMobile';
 
 function decodeHtml(text: string): string {
@@ -91,6 +91,18 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
   const { isMobile, isMounted } = useIsMobile();
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+    };
+  }, []);
 
   const stateRef = useRef(state);
   useEffect(() => {
@@ -330,11 +342,14 @@ function TcsIonEngine({ testId }: { testId: string }) {
             <header className="flex h-14 items-center justify-between bg-white border-b border-slate-200 px-3 sm:px-4 text-slate-800 shrink-0">
               {/* Left: Logo & Test Title */}
               <div className="flex items-center gap-3 min-w-0">
-                <div className="flex items-center gap-1 shrink-0">
-                  <svg className="h-5 w-5 text-[#0D88B9] fill-current" viewBox="0 0 24 24">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                  </svg>
-                  <span className="font-black text-base text-[#0D88B9] tracking-tight">testbook</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="bg-[#E6F4FE] p-1.5 rounded-full shadow-sm flex items-center justify-center h-8 w-8 border border-blue-200/50 shrink-0">
+                    <Trophy className="h-4.5 w-4.5 text-blue-600 animate-pulse" />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="font-black text-[11px] sm:text-[12px] text-slate-900 tracking-wider leading-none uppercase">Mock Test Hub</span>
+                    <span className="text-[7px] text-blue-600 font-extrabold tracking-wider uppercase mt-0.5 leading-none">India's #1 Prep Terminal</span>
+                  </div>
                 </div>
                 <span className="text-slate-300 hidden xs:inline">|</span>
                 <span className="font-bold text-xs sm:text-sm text-slate-700 truncate max-w-[120px] sm:max-w-xs md:max-w-none">
@@ -377,7 +392,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                   }}
                   className="border border-[#0D88B9] text-[#0D88B9] bg-white hover:bg-[#E3F2FD] px-2.5 py-1.5 rounded font-extrabold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider hidden sm:inline-block"
                 >
-                  Enter Full Screen
+                  {isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
                 </button>
                 
                 <button
@@ -1381,24 +1396,6 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
                 {/* Submit Block Section */}
                 <div className={`p-4 border-t border-slate-200 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
-                  {!isSsc && (
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <button
-                        type="button"
-                        onClick={() => alert("Question Paper view is not available in mock simulation.")}
-                        className="bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/85 text-[#006064] font-extrabold py-2 rounded text-[11px] text-center shadow-xs cursor-pointer active:scale-95 transition-all"
-                      >
-                        Question Paper
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => alert("Instructions: Select an option and click 'Save & Next' to record your response.")}
-                        className="bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/85 text-[#006064] font-extrabold py-2 rounded text-[11px] text-center shadow-xs cursor-pointer active:scale-95 transition-all"
-                      >
-                        Instructions
-                      </button>
-                    </div>
-                  )}
                   <button
                     onClick={submitExam}
                     className={`w-full text-white font-bold py-2.5 rounded shadow transition cursor-pointer text-xs uppercase tracking-wider active:scale-95 ${
