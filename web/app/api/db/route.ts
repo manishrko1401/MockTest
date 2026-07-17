@@ -1087,13 +1087,16 @@ async function handleDeleteNotice(data: any) {
 }
 
 async function handleAddCategory(data: any) {
-  const { id, name, logoUrl } = data;
+  const { id, name, logoUrl, isPopular, description, countText } = data;
 
   await prisma.category.create({
     data: {
       id,
       name,
       logoUrl: logoUrl || null,
+      isPopular: isPopular ?? false,
+      description: description ?? '',
+      countText: countText ?? '',
     },
   });
 
@@ -1243,13 +1246,16 @@ async function handleDeleteMockTest(data: any) {
 }
 
 async function handleEditCategory(data: any) {
-  const { categoryId, name, logoUrl } = data;
+  const { categoryId, name, logoUrl, isPopular, description, countText } = data;
 
   await prisma.category.update({
     where: { id: categoryId },
     data: { 
       name,
       logoUrl: logoUrl !== undefined ? logoUrl : undefined,
+      isPopular: isPopular !== undefined ? isPopular : undefined,
+      description: description !== undefined ? description : undefined,
+      countText: countText !== undefined ? countText : undefined,
     },
   });
 
@@ -1413,9 +1419,12 @@ async function handleReportQuestion(data: any) {
 // Optimized Memory Assembly Compiler for Exam Catalog
 // ---------------------------------------------------------------------------
 async function getCompiledExamCatalog() {
-  // Safe runtime schema patch: ensure logoUrl column exists in categories table
+  // Safe runtime schema patch: ensure logoUrl, isPopular, description, countText columns exist in categories table
   try {
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "logoUrl" text;');
+    await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "isPopular" boolean DEFAULT false;');
+    await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "description" text DEFAULT \'\';');
+    await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "countText" text DEFAULT \'\';');
   } catch (err: any) {
     console.error("Runtime database patch failed:", err);
     // Don't throw — allow the query to proceed and fail naturally if column truly missing
@@ -1513,6 +1522,9 @@ async function getCompiledExamCatalog() {
     name: cat.name,
     logoUrl: cat.logoUrl || null,
     orderIndex: cat.orderIndex ?? 0,
+    isPopular: cat.isPopular ?? false,
+    description: cat.description ?? '',
+    countText: cat.countText ?? '',
     subCategories: examsByCat[cat.id] || [],
   }));
 }
@@ -1557,6 +1569,9 @@ async function seedDatabase() {
     {
       id: 'ssc',
       name: 'SSC Exams',
+      isPopular: true,
+      description: 'SSC CGL, CHSL, MTS, GD Constable',
+      countText: '45+ Tests',
       subCategories: [
         {
           id: 'ssc_cgl',
@@ -1597,6 +1612,9 @@ async function seedDatabase() {
     {
       id: 'railways',
       name: 'Railways Exams',
+      isPopular: true,
+      description: 'RRB NTPC, Group D, ALP',
+      countText: '30+ Tests',
       subCategories: [
         {
           id: 'rrb_ntpc',
@@ -1617,6 +1635,9 @@ async function seedDatabase() {
     {
       id: 'ugc_net',
       name: 'UGC NET Exams',
+      isPopular: true,
+      description: 'Paper 1 & Paper 2 CS/Arts',
+      countText: '15+ Tests',
       subCategories: [
         {
           id: 'ugc_net_p1',
@@ -1633,6 +1654,139 @@ async function seedDatabase() {
           ]
         }
       ]
+    },
+    {
+      id: 'teaching',
+      name: 'Teaching Exams',
+      isPopular: true,
+      description: 'CTET Paper 1, Paper 2, State TET',
+      countText: '20+ Tests',
+      subCategories: [
+        {
+          id: 'ctet_paper1_exams',
+          name: 'CTET Paper-I Exams',
+          tests: [
+            { id: 'ctet_paper1', title: 'CTET 2026 Paper-I (Primary Class I-V) Mock Paper', questionsCount: 150, durationMinutes: 150, maxMarks: 150, requiredTier: 'Testbook Pass' }
+          ]
+        },
+        {
+          id: 'ctet_paper2_exams',
+          name: 'CTET Paper-II Exams',
+          tests: [
+            { id: 'ctet_paper2', title: 'CTET 2026 Paper-II (Mathematics & Science)', questionsCount: 150, durationMinutes: 150, maxMarks: 150, requiredTier: 'Testbook Pass' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'state_exams',
+      name: 'All State Exams',
+      isPopular: true,
+      description: 'UPPSC, BSSC, MPSC, RAS',
+      countText: '35+ Tests',
+      subCategories: [
+        {
+          id: 'uppsc',
+          name: 'UPPSC Exams',
+          tests: [
+            { id: 'up_psc_prelims', title: 'UPPSC Prelims General Studies (GS Paper 1)', questionsCount: 150, durationMinutes: 120, maxMarks: 200, requiredTier: 'Testbook Pass Pro' }
+          ]
+        },
+        {
+          id: 'bssc',
+          name: 'BSSC Exams',
+          tests: [
+            { id: 'bihar_ssc', title: 'BSSC Inter-Level Full Practice Mock Paper', questionsCount: 150, durationMinutes: 135, maxMarks: 600, requiredTier: 'Testbook Pass' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'banking',
+      name: 'Banking Exams',
+      isPopular: true,
+      description: 'SBI PO, Clerk, IBPS PO, Clerk',
+      countText: '40+ Tests',
+      subCategories: [
+        {
+          id: 'sbi_po',
+          name: 'SBI PO Exams',
+          tests: [
+            { id: 'sbi_po_prelims', title: 'SBI PO Preliminary Exam Full Length Mock Test', questionsCount: 100, durationMinutes: 60, maxMarks: 100, requiredTier: 'Testbook Pass Pro' }
+          ]
+        },
+        {
+          id: 'ibps_clerk',
+          name: 'IBPS Clerk Exams',
+          tests: [
+            { id: 'ibps_clerk', title: 'IBPS Clerk Preliminary Practice Mock Paper', questionsCount: 100, durationMinutes: 60, maxMarks: 100, requiredTier: 'None' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'upsc',
+      name: 'UPSC CSE Exams',
+      isPopular: true,
+      description: 'IAS, IPS, IFS, Civil Services GS',
+      countText: '50+ Tests',
+      subCategories: [
+        {
+          id: 'upsc_prelims',
+          name: 'UPSC Prelims Exams',
+          tests: [
+            { id: 'upsc_prelims_mock', title: 'UPSC Civil Services Prelims Mock Test', questionsCount: 100, durationMinutes: 120, maxMarks: 200, requiredTier: 'Testbook Pass Pro' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'defence',
+      name: 'Defence Exams',
+      isPopular: true,
+      description: 'NDA, CDS, AFCAT, CAPF',
+      countText: '25+ Tests',
+      subCategories: [
+        {
+          id: 'defence_exams',
+          name: 'Defence Mock Exams',
+          tests: [
+            { id: 'nda_mock', title: 'NDA General Ability Practice Test', questionsCount: 120, durationMinutes: 150, maxMarks: 300, requiredTier: 'Testbook Pass' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'engineering',
+      name: 'Engineering Exams',
+      isPopular: true,
+      description: 'GATE, AE/JE Civil/Mech/EE',
+      countText: '40+ Tests',
+      subCategories: [
+        {
+          id: 'gate_cs',
+          name: 'GATE Computer Science',
+          tests: [
+            { id: 'gate_cs_mock', title: 'GATE CS & IT Mock Exam', questionsCount: 65, durationMinutes: 180, maxMarks: 100, requiredTier: 'Testbook Pass Pro' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'mba',
+      name: 'MBA Entrance Exams',
+      isPopular: true,
+      description: 'CAT, XAT, SNAP, NMAT',
+      countText: '15+ Tests',
+      subCategories: [
+        {
+          id: 'mba_exams',
+          name: 'MBA Entrance Exams',
+          tests: [
+            { id: 'cat_mock', title: 'CAT Quantitative & Verbal Mock Test', questionsCount: 66, durationMinutes: 120, maxMarks: 198, requiredTier: 'Testbook Pass Pro' }
+          ]
+        }
+      ]
     }
   ];
 
@@ -1640,8 +1794,19 @@ async function seedDatabase() {
     // Use upsert so re-seeding is idempotent (safe to run multiple times)
     const cat = await prisma.category.upsert({
       where: { id: c.id },
-      update: {},
-      create: { id: c.id, name: c.name },
+      update: {
+        name: c.name,
+        isPopular: c.isPopular ?? false,
+        description: c.description ?? '',
+        countText: c.countText ?? '',
+      },
+      create: { 
+        id: c.id, 
+        name: c.name,
+        isPopular: c.isPopular ?? false,
+        description: c.description ?? '',
+        countText: c.countText ?? '',
+      },
     });
 
     for (const sub of c.subCategories) {

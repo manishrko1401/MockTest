@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -350,6 +350,9 @@ export default function AdminAnalytics() {
   // Category management form states
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryLogoUrl, setNewCategoryLogoUrl] = useState('');
+  const [newCategoryIsPopular, setNewCategoryIsPopular] = useState(false);
+  const [newCategoryDescription, setNewCategoryDescription] = useState('');
+  const [newCategoryCountText, setNewCategoryCountText] = useState('');
   const [newSubCategoryParent, setNewSubCategoryParent] = useState('');
   const [newSubCategoryName, setNewSubCategoryName] = useState('');
   const [newSubSubCategoryParentCategory, setNewSubSubCategoryParentCategory] = useState('');
@@ -360,6 +363,9 @@ export default function AdminAnalytics() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
   const [editingCategoryLogoUrl, setEditingCategoryLogoUrl] = useState('');
+  const [editingCategoryIsPopular, setEditingCategoryIsPopular] = useState(false);
+  const [editingCategoryDescription, setEditingCategoryDescription] = useState('');
+  const [editingCategoryCountText, setEditingCategoryCountText] = useState('');
   const [editingSubCategoryId, setEditingSubCategoryId] = useState<string | null>(null);
   const [editingSubCategoryName, setEditingSubCategoryName] = useState('');
   const [editingSubSubCategoryId, setEditingSubSubCategoryId] = useState<string | null>(null);
@@ -2611,9 +2617,18 @@ export default function AdminAnalytics() {
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (!newCategoryName.trim()) return;
-                        addCategory(newCategoryName.trim(), newCategoryLogoUrl.trim() || undefined);
+                        addCategory(
+                          newCategoryName.trim(), 
+                          newCategoryLogoUrl.trim() || undefined,
+                          newCategoryIsPopular,
+                          newCategoryDescription.trim(),
+                          newCategoryCountText.trim()
+                        );
                         setNewCategoryName('');
                         setNewCategoryLogoUrl('');
+                        setNewCategoryIsPopular(false);
+                        setNewCategoryDescription('');
+                        setNewCategoryCountText('');
                         setIsCreateCategoryOpen(false);
                         showToast('Category created successfully!');
                       }}
@@ -2644,7 +2659,43 @@ export default function AdminAnalytics() {
                           className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                         />
                       </div>
-                      <div className="flex justify-end">
+                      <div>
+                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                          Description (e.g. SSC CGL, CHSL, MTS, GD Constable)
+                        </label>
+                        <input
+                          type="text"
+                          value={newCategoryDescription}
+                          onChange={(e) => setNewCategoryDescription(e.target.value)}
+                          placeholder="List sub-exams or a brief description"
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                          Test Count / Badge Text (e.g. 45+ Tests)
+                        </label>
+                        <input
+                          type="text"
+                          value={newCategoryCountText}
+                          onChange={(e) => setNewCategoryCountText(e.target.value)}
+                          placeholder="e.g. 45+ Tests"
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 pt-1.5">
+                        <input
+                          type="checkbox"
+                          id="newCategoryIsPopular"
+                          checked={newCategoryIsPopular}
+                          onChange={(e) => setNewCategoryIsPopular(e.target.checked)}
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                        <label htmlFor="newCategoryIsPopular" className="text-xs font-bold text-slate-700 dark:text-slate-350 cursor-pointer">
+                          Show in Popular Exam Mock Series section on homepage
+                        </label>
+                      </div>
+                      <div className="flex justify-end pt-2">
                         <button
                           type="submit"
                           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
@@ -2657,7 +2708,7 @@ export default function AdminAnalytics() {
                 )}
               </div>
 
-              {/* Categories Table Card ΓÇö Full Width */}
+              {/* Categories Table Card — Full Width */}
               <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
                 <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
                   Active Exam Categories
@@ -2670,6 +2721,9 @@ export default function AdminAnalytics() {
                         <th className="py-3 px-4">ID</th>
                         <th className="py-3 px-4">Logo</th>
                         <th className="py-3 px-4">Name</th>
+                        <th className="py-3 px-4">Description</th>
+                        <th className="py-3 px-4">Count Text</th>
+                        <th className="py-3 px-4">Popular?</th>
                         <th className="py-3 px-4">Sub Categories</th>
                         <th className="py-3 px-4 text-right">Action</th>
                       </tr>
@@ -2678,14 +2732,16 @@ export default function AdminAnalytics() {
                       {examCatalog.map(cat => (
                         <tr key={cat.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                           <td className="py-3.5 px-4 font-mono font-bold text-slate-400">{cat.id}</td>
+                          
+                          {/* Logo */}
                           <td className="py-3.5 px-4">
                             {editingCategoryId === cat.id ? (
                               <input
                                 type="text"
                                 value={editingCategoryLogoUrl}
                                 onChange={(e) => setEditingCategoryLogoUrl(e.target.value)}
-                                placeholder="e.g. https://example.com/logo.png"
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-full max-w-xs"
+                                placeholder="e.g. Logo URL"
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-24"
                               />
                             ) : cat.logoUrl ? (
                               <img
@@ -2699,18 +2755,67 @@ export default function AdminAnalytics() {
                               </div>
                             )}
                           </td>
+
+                          {/* Name */}
                           <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
                             {editingCategoryId === cat.id ? (
                               <input
                                 type="text"
                                 value={editingCategoryName}
                                 onChange={(e) => setEditingCategoryName(e.target.value)}
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-28"
                               />
                             ) : (
                               <span>{cat.name}</span>
                             )}
                           </td>
+
+                          {/* Description */}
+                          <td className="py-3.5 px-4 text-slate-650 dark:text-slate-350">
+                            {editingCategoryId === cat.id ? (
+                              <input
+                                type="text"
+                                value={editingCategoryDescription}
+                                onChange={(e) => setEditingCategoryDescription(e.target.value)}
+                                placeholder="List sub-exams"
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-40"
+                              />
+                            ) : (
+                              <span>{cat.description || <span className="text-slate-400 italic">None</span>}</span>
+                            )}
+                          </td>
+
+                          {/* Count Text */}
+                          <td className="py-3.5 px-4 text-slate-650 dark:text-slate-350 font-semibold">
+                            {editingCategoryId === cat.id ? (
+                              <input
+                                type="text"
+                                value={editingCategoryCountText}
+                                onChange={(e) => setEditingCategoryCountText(e.target.value)}
+                                placeholder="e.g. 45+ Tests"
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-24"
+                              />
+                            ) : (
+                              <span>{cat.countText || <span className="text-slate-400 italic">None</span>}</span>
+                            )}
+                          </td>
+
+                          {/* Is Popular checkbox */}
+                          <td className="py-3.5 px-4">
+                            {editingCategoryId === cat.id ? (
+                              <input
+                                type="checkbox"
+                                checked={editingCategoryIsPopular}
+                                onChange={(e) => setEditingCategoryIsPopular(e.target.checked)}
+                                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                              />
+                            ) : cat.isPopular ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Popular</span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-400">Regular</span>
+                            )}
+                          </td>
+
                           <td className="py-3.5 px-4 font-semibold text-slate-500">{cat.subCategories.length} Sub-cat(s)</td>
                           <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
                             {editingCategoryId === cat.id ? (
@@ -2718,12 +2823,19 @@ export default function AdminAnalytics() {
                                 <button
                                   onClick={() => {
                                     if (editingCategoryName.trim()) {
-                                      editCategory(cat.id, editingCategoryName.trim(), editingCategoryLogoUrl.trim() || undefined);
+                                      editCategory(
+                                        cat.id,
+                                        editingCategoryName.trim(),
+                                        editingCategoryLogoUrl.trim() || undefined,
+                                        editingCategoryIsPopular,
+                                        editingCategoryDescription.trim(),
+                                        editingCategoryCountText.trim()
+                                      );
                                       setEditingCategoryId(null);
                                       showToast('Category updated successfully.');
                                     }
                                   }}
-                                  className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                  className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-955/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                 >
                                   Save
                                 </button>
@@ -2773,6 +2885,9 @@ export default function AdminAnalytics() {
                                     setEditingCategoryId(cat.id);
                                     setEditingCategoryName(cat.name);
                                     setEditingCategoryLogoUrl(cat.logoUrl || '');
+                                    setEditingCategoryIsPopular(cat.isPopular || false);
+                                    setEditingCategoryDescription(cat.description || '');
+                                    setEditingCategoryCountText(cat.countText || '');
                                   }}
                                   className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                 >

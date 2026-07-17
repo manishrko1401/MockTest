@@ -37,6 +37,9 @@ export interface TestCategory {
   id: string;
   name: string;
   logoUrl?: string;
+  isPopular?: boolean;
+  description?: string;
+  countText?: string;
   subCategories: TestSubCategory[];
 }
 
@@ -171,8 +174,8 @@ interface AuthContextType {
   language: 'en' | 'hi';
   setLanguage: (lang: 'en' | 'hi') => void;
   examCatalog: TestCategory[];
-  addCategory: (name: string, logoUrl?: string) => void;
-  editCategory: (categoryId: string, name: string, logoUrl?: string) => void;
+  addCategory: (name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string) => void;
+  editCategory: (categoryId: string, name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string) => void;
   deleteCategory: (categoryId: string) => void;
   addSubCategory: (categoryId: string, name: string) => void;
   editSubCategory: (categoryId: string, subCategoryId: string, name: string) => void;
@@ -211,6 +214,9 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
   {
     id: 'ssc',
     name: 'SSC Exams',
+    isPopular: true,
+    description: 'SSC CGL, CHSL, MTS, GD Constable',
+    countText: '45+ Tests',
     subCategories: [
       {
         id: 'ssc_cgl',
@@ -273,6 +279,9 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
   {
     id: 'railways',
     name: 'Railways Exams',
+    isPopular: true,
+    description: 'RRB NTPC, Group D, ALP',
+    countText: '30+ Tests',
     subCategories: [
       {
         id: 'rrb_ntpc',
@@ -311,6 +320,9 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
   {
     id: 'ugc_net',
     name: 'UGC NET Exams',
+    isPopular: true,
+    description: 'Paper 1 & Paper 2 CS/Arts',
+    countText: '15+ Tests',
     subCategories: [
       {
         id: 'ugc_net_p1',
@@ -349,30 +361,33 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
   {
     id: 'teaching',
     name: 'Teaching Exams',
+    isPopular: true,
+    description: 'CTET Paper 1, Paper 2, State TET',
+    countText: '20+ Tests',
     subCategories: [
       {
-        id: 'ctet_p1',
-        name: 'CTET Paper 1 Exams',
+        id: 'ctet_paper1_exams',
+        name: 'CTET Paper-I Exams',
         subSubCategories: [
           {
-            id: 'ctet_p1_series',
-            name: 'CTET Paper 1 Exams Series',
+            id: 'ctet_paper1_series',
+            name: 'CTET Paper-I Series',
             tests: [
-              { id: 'ctet_paper1', title: 'CTET 2026 Paper-I (Primary Class I-V) Mock Paper', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: false, requiredTier: 'None' }
+              { id: 'ctet_paper1', title: 'CTET 2026 Paper-I (Primary Class I-V) Mock Paper', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: true, requiredTier: 'Testbook Pass' }
             ]
           }
         ],
         tests: [
-          { id: 'ctet_paper1', title: 'CTET 2026 Paper-I (Primary Class I-V) Mock Paper', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: false, requiredTier: 'None' }
+          { id: 'ctet_paper1', title: 'CTET 2026 Paper-I (Primary Class I-V) Mock Paper', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: true, requiredTier: 'Testbook Pass' }
         ]
       },
       {
-        id: 'ctet_p2',
-        name: 'CTET Paper 2 Exams',
+        id: 'ctet_paper2_exams',
+        name: 'CTET Paper-II Exams',
         subSubCategories: [
           {
-            id: 'ctet_p2_series',
-            name: 'CTET Paper 2 Exams Series',
+            id: 'ctet_paper2_series',
+            name: 'CTET Paper-II Series',
             tests: [
               { id: 'ctet_paper2', title: 'CTET 2026 Paper-II (Mathematics & Science)', questionsCount: 150, durationMinutes: 150, maxMarks: 150, isPremium: true, requiredTier: 'Testbook Pass' }
             ]
@@ -387,6 +402,9 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
   {
     id: 'state_exams',
     name: 'All State Exams',
+    isPopular: true,
+    description: 'UPPSC, BSSC, MPSC, RAS',
+    countText: '35+ Tests',
     subCategories: [
       {
         id: 'uppsc',
@@ -425,6 +443,9 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
   {
     id: 'banking',
     name: 'Banking Exams',
+    isPopular: true,
+    description: 'SBI PO, Clerk, IBPS PO, Clerk',
+    countText: '40+ Tests',
     subCategories: [
       {
         id: 'sbi_po',
@@ -456,6 +477,106 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
         ],
         tests: [
           { id: 'ibps_clerk', title: 'IBPS Clerk Preliminary Practice Mock Paper', questionsCount: 100, durationMinutes: 60, maxMarks: 100, isPremium: false, requiredTier: 'None' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'upsc',
+    name: 'UPSC CSE Exams',
+    isPopular: true,
+    description: 'IAS, IPS, IFS, Civil Services GS',
+    countText: '50+ Tests',
+    subCategories: [
+      {
+        id: 'upsc_prelims',
+        name: 'UPSC Prelims Exams',
+        subSubCategories: [
+          {
+            id: 'upsc_prelims_series',
+            name: 'UPSC Prelims Exams Series',
+            tests: [
+              { id: 'upsc_prelims_mock', title: 'UPSC Civil Services Prelims Mock Test', questionsCount: 100, durationMinutes: 120, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+            ]
+          }
+        ],
+        tests: [
+          { id: 'upsc_prelims_mock', title: 'UPSC Civil Services Prelims Mock Test', questionsCount: 100, durationMinutes: 120, maxMarks: 200, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'defence',
+    name: 'Defence Exams',
+    isPopular: true,
+    description: 'NDA, CDS, AFCAT, CAPF',
+    countText: '25+ Tests',
+    subCategories: [
+      {
+        id: 'defence_exams',
+        name: 'Defence Mock Exams',
+        subSubCategories: [
+          {
+            id: 'defence_exams_series',
+            name: 'Defence Mock Exams Series',
+            tests: [
+              { id: 'nda_mock', title: 'NDA General Ability Practice Test', questionsCount: 120, durationMinutes: 150, maxMarks: 300, isPremium: true, requiredTier: 'Testbook Pass' }
+            ]
+          }
+        ],
+        tests: [
+          { id: 'nda_mock', title: 'NDA General Ability Practice Test', questionsCount: 120, durationMinutes: 150, maxMarks: 300, isPremium: true, requiredTier: 'Testbook Pass' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'engineering',
+    name: 'Engineering Exams',
+    isPopular: true,
+    description: 'GATE, AE/JE Civil/Mech/EE',
+    countText: '40+ Tests',
+    subCategories: [
+      {
+        id: 'gate_cs',
+        name: 'GATE Computer Science',
+        subSubCategories: [
+          {
+            id: 'gate_cs_series',
+            name: 'GATE Computer Science Series',
+            tests: [
+              { id: 'gate_cs_mock', title: 'GATE CS & IT Mock Exam', questionsCount: 65, durationMinutes: 180, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+            ]
+          }
+        ],
+        tests: [
+          { id: 'gate_cs_mock', title: 'GATE CS & IT Mock Exam', questionsCount: 65, durationMinutes: 180, maxMarks: 100, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'mba',
+    name: 'MBA Entrance Exams',
+    isPopular: true,
+    description: 'CAT, XAT, SNAP, NMAT',
+    countText: '15+ Tests',
+    subCategories: [
+      {
+        id: 'mba_exams',
+        name: 'MBA Entrance Exams',
+        subSubCategories: [
+          {
+            id: 'mba_exams_series',
+            name: 'MBA Entrance Exams Series',
+            tests: [
+              { id: 'cat_mock', title: 'CAT Quantitative & Verbal Mock Test', questionsCount: 66, durationMinutes: 120, maxMarks: 198, isPremium: true, requiredTier: 'Testbook Pass Pro' }
+            ]
+          }
+        ],
+        tests: [
+          { id: 'cat_mock', title: 'CAT Quantitative & Verbal Mock Test', questionsCount: 66, durationMinutes: 120, maxMarks: 198, isPremium: true, requiredTier: 'Testbook Pass Pro' }
         ]
       }
     ]
@@ -823,12 +944,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).catch(err => console.error("Delete notice error:", err));
   };
 
-  const addCategory = (name: string, logoUrl?: string) => {
+  const addCategory = (name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string) => {
     const newId = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).substring(2, 6);
     const newCategory: TestCategory = {
       id: newId,
       name,
       logoUrl,
+      isPopular: isPopular ?? false,
+      description: description ?? '',
+      countText: countText ?? '',
       subCategories: []
     };
     const updated = [...examCatalog, newCategory];
@@ -839,7 +963,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'add-category',
-        data: { id: newId, name, logoUrl }
+        data: { id: newId, name, logoUrl, isPopular, description, countText }
       })
     }).catch(err => console.error("Add category error:", err));
   };
@@ -858,8 +982,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).catch(err => console.error("Delete category error:", err));
   };
 
-  const editCategory = (categoryId: string, name: string, logoUrl?: string) => {
-    const updated = examCatalog.map(c => c.id === categoryId ? { ...c, name, logoUrl } : c);
+  const editCategory = (categoryId: string, name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string) => {
+    const updated = examCatalog.map(c => c.id === categoryId ? { ...c, name, logoUrl, isPopular, description, countText } : c);
     setExamCatalog(updated);
 
     fetch('/api/db', {
@@ -867,7 +991,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'edit-category',
-        data: { categoryId, name, logoUrl }
+        data: { categoryId, name, logoUrl, isPopular, description, countText }
       })
     }).catch(err => console.error("Edit category error:", err));
   };

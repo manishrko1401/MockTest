@@ -42,7 +42,11 @@ const CATEGORIES = [
   { id: 'ugc_net', name: 'UGC NET Exams', desc: 'Paper 1 & Paper 2 CS/Arts', count: '15+ Tests' },
   { id: 'teaching', name: 'Teaching Exams', desc: 'CTET Paper 1, Paper 2, State TET', count: '20+ Tests' },
   { id: 'state_exams', name: 'All State Exams', desc: 'UPPSC, BSSC, MPSC, RAS', count: '35+ Tests' },
-  { id: 'banking', name: 'Banking Exams', desc: 'SBI PO, Clerk, IBPS PO, Clerk', count: '40+ Tests' }
+  { id: 'banking', name: 'Banking Exams', desc: 'SBI PO, Clerk, IBPS PO, Clerk', count: '40+ Tests' },
+  { id: 'upsc', name: 'UPSC CSE Exams', desc: 'IAS, IPS, IFS, Civil Services GS', count: '50+ Tests' },
+  { id: 'defence', name: 'Defence Exams', desc: 'NDA, CDS, AFCAT, CAPF', count: '25+ Tests' },
+  { id: 'engineering', name: 'Engineering Exams', desc: 'GATE, AE/JE Civil/Mech/EE', count: '40+ Tests' },
+  { id: 'mba', name: 'MBA Entrance Exams', desc: 'CAT, XAT, SNAP, NMAT', count: '15+ Tests' }
 ];
 
 const SUCCESS_STORIES = [
@@ -85,60 +89,100 @@ const isNewlyPublished = (publishDateStr?: string) => {
 };
 
 const getWebCategoryStyle = (id: string) => {
-  switch (id) {
-    case 'ssc':
-      return {
-        bg: 'bg-orange-50/70 hover:bg-orange-100/80 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/40 hover:border-orange-300 dark:hover:border-orange-700/60 shadow-orange-100/10 dark:shadow-none hover:shadow-md hover:shadow-orange-150/15',
-        iconBg: 'bg-orange-100/80 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400',
-        icon: 'Award',
-        accentText: 'text-orange-600 dark:text-orange-400',
-        btnAccent: 'text-orange-600 dark:text-orange-400 border-orange-200/60 dark:border-orange-900/30',
-      };
-    case 'railways':
-      return {
-        bg: 'bg-indigo-50/70 hover:bg-indigo-100/80 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/40 hover:border-indigo-300 dark:hover:border-indigo-700/60 shadow-indigo-100/10 dark:shadow-none hover:shadow-md hover:shadow-indigo-150/15',
-        iconBg: 'bg-indigo-100/80 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400',
-        icon: 'TrendingUp',
-        accentText: 'text-indigo-600 dark:text-indigo-400',
-        btnAccent: 'text-indigo-600 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-900/30',
-      };
-    case 'banking':
-      return {
-        bg: 'bg-emerald-50/70 hover:bg-emerald-100/80 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/40 hover:border-emerald-300 dark:hover:border-emerald-700/60 shadow-emerald-100/10 dark:shadow-none hover:shadow-md hover:shadow-emerald-150/15',
-        iconBg: 'bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400',
-        icon: 'Coins',
-        accentText: 'text-emerald-600 dark:text-emerald-400',
-        btnAccent: 'text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/30',
-      };
-    case 'teaching':
-      return {
-        bg: 'bg-amber-50/70 hover:bg-amber-100/80 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/40 hover:border-amber-300 dark:hover:border-amber-700/60 shadow-amber-100/10 dark:shadow-none hover:shadow-md hover:shadow-amber-150/15',
-        iconBg: 'bg-amber-100/80 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400',
-        icon: 'BookOpen',
-        accentText: 'text-amber-600 dark:text-amber-400',
-        btnAccent: 'text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-900/30',
-      };
-    case 'ugc_net':
-      return {
-        bg: 'bg-sky-50/70 hover:bg-sky-100/80 dark:bg-sky-950/20 border-sky-100 dark:border-sky-900/40 hover:border-sky-300 dark:hover:border-sky-700/60 shadow-sky-100/10 dark:shadow-none hover:shadow-md hover:shadow-sky-150/15',
-        iconBg: 'bg-sky-100/80 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400',
-        icon: 'GraduationCap',
-        accentText: 'text-sky-600 dark:text-sky-400',
-        btnAccent: 'text-sky-600 dark:text-sky-400 border-sky-200/60 dark:border-sky-900/30',
-      };
-    default:
-      return {
-        bg: 'bg-pink-50/70 hover:bg-pink-100/80 dark:bg-pink-950/20 border-pink-100 dark:border-pink-900/40 hover:border-pink-300 dark:hover:border-pink-700/60 shadow-pink-100/10 dark:shadow-none hover:shadow-md hover:shadow-pink-150/15',
-        iconBg: 'bg-pink-100/80 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400',
-        icon: 'MapPin',
-        accentText: 'text-pink-600 dark:text-pink-400',
-        btnAccent: 'text-pink-600 dark:text-pink-400 border-pink-200/60 dark:border-pink-900/30',
-      };
+  const nid = id.toLowerCase();
+  if (nid.includes('ssc')) {
+    return {
+      bg: 'bg-orange-50/70 hover:bg-orange-100/80 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/40 hover:border-orange-300 dark:hover:border-orange-700/60 shadow-orange-100/10 dark:shadow-none hover:shadow-md hover:shadow-orange-150/15',
+      iconBg: 'bg-orange-100/80 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400',
+      icon: 'Award',
+      accentText: 'text-orange-600 dark:text-orange-400',
+      btnAccent: 'text-orange-600 dark:text-orange-400 border-orange-200/60 dark:border-orange-900/30',
+    };
   }
+  if (nid.includes('railway')) {
+    return {
+      bg: 'bg-indigo-50/70 hover:bg-indigo-100/80 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/40 hover:border-indigo-300 dark:hover:border-indigo-700/60 shadow-indigo-100/10 dark:shadow-none hover:shadow-md hover:shadow-indigo-150/15',
+      iconBg: 'bg-indigo-100/80 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400',
+      icon: 'TrendingUp',
+      accentText: 'text-indigo-600 dark:text-indigo-400',
+      btnAccent: 'text-indigo-600 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-900/30',
+    };
+  }
+  if (nid.includes('banking') || nid.includes('bank')) {
+    return {
+      bg: 'bg-emerald-50/70 hover:bg-emerald-100/80 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/40 hover:border-emerald-300 dark:hover:border-emerald-700/60 shadow-emerald-100/10 dark:shadow-none hover:shadow-md hover:shadow-emerald-150/15',
+      iconBg: 'bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400',
+      icon: 'Coins',
+      accentText: 'text-emerald-600 dark:text-emerald-400',
+      btnAccent: 'text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/30',
+    };
+  }
+  if (nid.includes('teaching') || nid.includes('tet') || nid.includes('ctet')) {
+    return {
+      bg: 'bg-amber-50/70 hover:bg-amber-100/80 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/40 hover:border-amber-300 dark:hover:border-amber-700/60 shadow-amber-100/10 dark:shadow-none hover:shadow-md hover:shadow-amber-150/15',
+      iconBg: 'bg-amber-100/80 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400',
+      icon: 'BookOpen',
+      accentText: 'text-amber-600 dark:text-amber-400',
+      btnAccent: 'text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-900/30',
+    };
+  }
+  if (nid.includes('ugc') || nid.includes('net')) {
+    return {
+      bg: 'bg-sky-50/70 hover:bg-sky-100/80 dark:bg-sky-950/20 border-sky-100 dark:border-sky-900/40 hover:border-sky-300 dark:hover:border-sky-700/60 shadow-sky-100/10 dark:shadow-none hover:shadow-md hover:shadow-sky-150/15',
+      iconBg: 'bg-sky-100/80 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400',
+      icon: 'GraduationCap',
+      accentText: 'text-sky-600 dark:text-sky-400',
+      btnAccent: 'text-sky-600 dark:text-sky-400 border-sky-200/60 dark:border-sky-900/30',
+    };
+  }
+  if (nid.includes('upsc') || nid.includes('civil')) {
+    return {
+      bg: 'bg-teal-50/70 hover:bg-teal-100/80 dark:bg-teal-950/20 border-teal-100 dark:border-teal-900/40 hover:border-teal-300 dark:hover:border-teal-700/60 shadow-teal-100/10 dark:shadow-none hover:shadow-md hover:shadow-teal-150/15',
+      iconBg: 'bg-teal-100/80 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400',
+      icon: 'ShieldCheck',
+      accentText: 'text-teal-600 dark:text-teal-400',
+      btnAccent: 'text-teal-600 dark:text-teal-400 border-teal-200/60 dark:border-teal-900/30',
+    };
+  }
+  if (nid.includes('def') || nid.includes('defence') || nid.includes('military')) {
+    return {
+      bg: 'bg-cyan-50/70 hover:bg-cyan-100/80 dark:bg-cyan-950/20 border-cyan-100 dark:border-cyan-900/40 hover:border-cyan-300 dark:hover:border-cyan-700/60 shadow-cyan-100/10 dark:shadow-none hover:shadow-md hover:shadow-cyan-150/15',
+      iconBg: 'bg-cyan-100/80 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400',
+      icon: 'ShieldCheck',
+      accentText: 'text-cyan-600 dark:text-cyan-400',
+      btnAccent: 'text-cyan-600 dark:text-cyan-400 border-cyan-200/60 dark:border-cyan-900/30',
+    };
+  }
+  if (nid.includes('eng') || nid.includes('gate') || nid.includes('engineering')) {
+    return {
+      bg: 'bg-purple-50/70 hover:bg-purple-100/80 dark:bg-purple-950/20 border-purple-100 dark:border-purple-900/40 hover:border-purple-300 dark:hover:border-purple-700/60 shadow-purple-100/10 dark:shadow-none hover:shadow-md hover:shadow-purple-150/15',
+      iconBg: 'bg-purple-100/80 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400',
+      icon: 'GraduationCap',
+      accentText: 'text-purple-600 dark:text-purple-400',
+      btnAccent: 'text-purple-600 dark:text-purple-400 border-purple-200/60 dark:border-purple-900/30',
+    };
+  }
+  if (nid.includes('mba') || nid.includes('cat') || nid.includes('entrance')) {
+    return {
+      bg: 'bg-rose-50/70 hover:bg-rose-100/80 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/40 hover:border-rose-300 dark:hover:border-rose-700/60 shadow-rose-100/10 dark:shadow-none hover:shadow-md hover:shadow-rose-150/15',
+      iconBg: 'bg-rose-100/80 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400',
+      icon: 'BookOpen',
+      accentText: 'text-rose-600 dark:text-rose-400',
+      btnAccent: 'text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-900/30',
+    };
+  }
+
+  return {
+    bg: 'bg-pink-50/70 hover:bg-pink-100/80 dark:bg-pink-950/20 border-pink-100 dark:border-pink-900/40 hover:border-pink-300 dark:hover:border-pink-700/60 shadow-pink-100/10 dark:shadow-none hover:shadow-md hover:shadow-pink-150/15',
+    iconBg: 'bg-pink-100/80 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400',
+    icon: 'MapPin',
+    accentText: 'text-pink-600 dark:text-pink-400',
+    btnAccent: 'text-pink-600 dark:text-pink-400 border-pink-200/60 dark:border-pink-900/30',
+  };
 };
 
 export default function HomeLandingPage() {
-  const { currentUser, logout, theme, toggleTheme, noticesList, language, setLanguage, saveUserProfileByAdmin } = useAuth();
+  const { currentUser, logout, theme, toggleTheme, noticesList, language, setLanguage, saveUserProfileByAdmin, examCatalog } = useAuth();
   const router = useRouter();
   const t = TRANSLATIONS[language];
   
@@ -147,6 +191,16 @@ export default function HomeLandingPage() {
   const [selectedModalCategory, setSelectedModalCategory] = useState<string | null>(null);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [claiming, setClaiming] = useState(false);
+
+  const popularCategories = examCatalog?.filter(c => c.isPopular) || [];
+  const displayCategories = popularCategories.length > 0
+    ? popularCategories.map(c => ({
+        id: c.id,
+        name: c.name,
+        desc: c.description || '',
+        count: c.countText || ''
+      }))
+    : CATEGORIES;
 
   const handleClaimPassPro = async () => {
     if (!currentUser) return;
@@ -481,20 +535,23 @@ export default function HomeLandingPage() {
             </div>
 
             <div className="flex flex-col gap-4">
-              {CATEGORIES.map(cat => {
+              {displayCategories.map(cat => {
                 const style = getWebCategoryStyle(cat.id);
                 const IconComponent = 
-                  cat.id === 'ssc' ? Award :
-                  cat.id === 'railways' ? TrendingUp :
-                  cat.id === 'banking' ? Coins :
-                  cat.id === 'teaching' ? BookOpen :
-                  cat.id === 'ugc_net' ? GraduationCap : MapPin;
+                  cat.id.includes('ssc') ? Award :
+                  cat.id.includes('railways') ? TrendingUp :
+                  cat.id.includes('banking') ? Coins :
+                  cat.id.includes('teaching') ? BookOpen :
+                  cat.id.includes('ugc_net') ? GraduationCap :
+                  cat.id.includes('upsc') ? ShieldCheck :
+                  cat.id.includes('defence') ? ShieldCheck :
+                  cat.id.includes('engg') || cat.id.includes('engineering') ? GraduationCap : MapPin;
                 const shadowStyle = 
-                  cat.id === 'ssc' ? 'glow-shadow-amber' :
-                  cat.id === 'railways' ? 'glow-shadow-blue' :
-                  cat.id === 'banking' ? 'glow-shadow-green' :
-                  cat.id === 'teaching' ? 'glow-shadow-amber' :
-                  cat.id === 'ugc_net' ? 'glow-shadow-blue' : 'glow-shadow-purple';
+                  cat.id.includes('ssc') ? 'glow-shadow-amber' :
+                  cat.id.includes('railways') ? 'glow-shadow-blue' :
+                  cat.id.includes('banking') ? 'glow-shadow-green' :
+                  cat.id.includes('teaching') ? 'glow-shadow-amber' :
+                  cat.id.includes('ugc_net') ? 'glow-shadow-blue' : 'glow-shadow-purple';
 
                 return (
                   <button
@@ -961,33 +1018,36 @@ export default function HomeLandingPage() {
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">{t.popularDesc}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {CATEGORIES.map(cat => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+          {displayCategories.map(cat => {
             const style = getWebCategoryStyle(cat.id);
             const IconComponent = 
-              cat.id === 'ssc' ? Award :
-              cat.id === 'railways' ? TrendingUp :
-              cat.id === 'banking' ? Coins :
-              cat.id === 'teaching' ? BookOpen :
-              cat.id === 'ugc_net' ? GraduationCap : MapPin;
+              cat.id.includes('ssc') ? Award :
+              cat.id.includes('railways') ? TrendingUp :
+              cat.id.includes('banking') ? Coins :
+              cat.id.includes('teaching') ? BookOpen :
+              cat.id.includes('ugc_net') ? GraduationCap :
+              cat.id.includes('upsc') ? ShieldCheck :
+              cat.id.includes('defence') ? ShieldCheck :
+              cat.id.includes('engg') || cat.id.includes('engineering') ? GraduationCap : MapPin;
             const shadowStyle = 
-              cat.id === 'ssc' ? 'glow-shadow-amber' :
-              cat.id === 'railways' ? 'glow-shadow-blue' :
-              cat.id === 'banking' ? 'glow-shadow-green' :
-              cat.id === 'teaching' ? 'glow-shadow-amber' :
-              cat.id === 'ugc_net' ? 'glow-shadow-blue' : 'glow-shadow-purple';
+              cat.id.includes('ssc') ? 'glow-shadow-amber' :
+              cat.id.includes('railways') ? 'glow-shadow-blue' :
+              cat.id.includes('banking') ? 'glow-shadow-green' :
+              cat.id.includes('teaching') ? 'glow-shadow-amber' :
+              cat.id.includes('ugc_net') ? 'glow-shadow-blue' : 'glow-shadow-purple';
 
             return (
               <button
                 onClick={() => setSelectedModalCategory(cat.id)}
                 key={cat.id}
-                className={`border hover:scale-[1.03] p-6 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full cursor-pointer relative overflow-hidden ${style.bg} ${shadowStyle}`}
+                className={`border hover:scale-[1.03] p-5 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full cursor-pointer relative overflow-hidden ${style.bg} ${shadowStyle}`}
               >
                 {/* Decorative background circle art (watermark) */}
                 <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-current opacity-[0.03] dark:opacity-[0.015] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
                 <div className="absolute -bottom-8 -left-8 w-16 h-16 rounded-full bg-current opacity-[0.02] dark:opacity-[0.01] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-3.5">
                     <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
                       <IconComponent className="h-5 w-5 animate-pulse" />
                     </div>
@@ -995,11 +1055,11 @@ export default function HomeLandingPage() {
                       {cat.count}
                     </span>
                   </div>
-                  <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2">{cat.name}</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
+                  <h4 className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white mb-1.5">{cat.name}</h4>
+                  <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
                 </div>
                 
-                <div className={`flex items-center gap-1.5 font-bold text-[10px] uppercase tracking-wider mt-6 pt-4 border-t w-full ${style.btnAccent}`}>
+                <div className={`flex items-center gap-1.5 font-bold text-[9px] md:text-[10px] uppercase tracking-wider mt-5 pt-3 border-t w-full ${style.btnAccent}`}>
                   {t.exploreTests} <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
                 </div>
               </button>

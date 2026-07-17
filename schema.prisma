@@ -98,6 +98,9 @@ model Category {
   exams             Exam[]
   createdAt         DateTime           @default(now())
   orderIndex        Int                @default(0)
+  isPopular         Boolean            @default(false)
+  description       String             @default("")
+  countText         String             @default("")
 
   @@map("categories")
 }
