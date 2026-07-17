@@ -811,15 +811,21 @@ export default function MockTestsCatalog() {
       
       {/* Navbar header */}
       <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-8 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
-            <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div>
-            <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
-            <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
-          </div>
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
+              <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
+              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
+            </div>
+          </Link>
+          <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
+          <Link href="/" className="flex items-center gap-2 text-slate-650 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors">
+            <ArrowLeft className="h-4 w-4" /> {t.backToHome}
+          </Link>
+        </div>
 
         <div className="flex items-center gap-3 max-w-md w-full justify-end">
           {/* Language selector */}
