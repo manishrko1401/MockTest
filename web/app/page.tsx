@@ -215,6 +215,7 @@ const formatSubCategoryName = (name: string) => {
         name: c.name,
         desc: c.description || '',
         count: c.countText || '',
+        logoUrl: c.logoUrl || null,
         subCategories: c.subCategories || []
       }))
     : CATEGORIES.map(c => ({
@@ -222,6 +223,7 @@ const formatSubCategoryName = (name: string) => {
         name: c.name,
         desc: c.desc,
         count: c.count,
+        logoUrl: null,
         subCategories: EXAMS_BY_CATEGORY[c.id] || []
       }));
 
@@ -587,9 +589,19 @@ const formatSubCategoryName = (name: string) => {
                     
                     <div className="w-full">
                       <div className="flex items-center justify-between mb-3">
-                        <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
-                          <IconComponent className="h-4.5 w-4.5 animate-pulse" />
-                        </div>
+                        {cat.logoUrl ? (
+                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                            <img
+                              src={cat.logoUrl}
+                              alt={`${cat.name} logo`}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
+                            <IconComponent className="h-4.5 w-4.5 animate-pulse" />
+                          </div>
+                        )}
                         <span className={`text-[10px] font-black tracking-wider ${style.accentText}`}>
                           {cat.count}
                         </span>
@@ -1084,9 +1096,19 @@ const formatSubCategoryName = (name: string) => {
                 <div className="absolute -bottom-8 -left-8 w-16 h-16 rounded-full bg-current opacity-[0.02] dark:opacity-[0.01] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
                 <div>
                   <div className="flex items-center justify-between mb-3.5">
-                    <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
-                      <IconComponent className="h-5 w-5 animate-pulse" />
-                    </div>
+                    {cat.logoUrl ? (
+                      <div className="w-11 h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                        <img
+                          src={cat.logoUrl}
+                          alt={`${cat.name} logo`}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
+                        <IconComponent className="h-5 w-5 animate-pulse" />
+                      </div>
+                    )}
                     <span className={`text-[10px] font-black tracking-wider group-hover:underline ${style.accentText}`}>
                       {cat.count}
                     </span>
