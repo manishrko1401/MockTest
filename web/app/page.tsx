@@ -364,6 +364,36 @@ const formatSubCategoryName = (name: string) => {
           </div>
         )}
 
+        {/* Promo Banner just below Live Updates */}
+        <div className="px-4 pt-3 flex justify-center w-full z-20 shrink-0">
+          {/* Promo Advertisement Banner */}
+          <div className="w-full max-w-md bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 dark:from-amber-500/20 dark:to-red-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            
+            <div className="flex items-center gap-2.5 z-10">
+              <div className="bg-amber-500 text-white p-1.5 rounded-lg shrink-0 animate-bounce">
+                <Trophy className="h-4 w-4" />
+              </div>
+              <div className="text-left leading-tight">
+                <p className="text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-amber-300 uppercase tracking-wide">
+                  {language === 'hi' ? 'सीमित समय का ऑफर!' : 'Limited Time Offer!'}
+                </p>
+                <p className="text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-350 font-semibold">
+                  {language === 'hi' 
+                    ? '31 दिसंबर 2026 से पहले रजिस्टर करें और पाएं MockTest Hub Pass Pro!' 
+                    : 'Register before 31 Dec 2026 & get MockTest Hub Pass Pro!'}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/auth"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-sm"
+            >
+              {language === 'hi' ? 'दावा करें' : 'Claim Now'}
+            </Link>
+          </div>
+        </div>
+
         {/* MOBILE SLIDE-DOWN DRAWER MENU */}
         {mobileMenuOpen && (
           <div className="fixed inset-x-0 top-14 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-205 dark:border-slate-900 z-30 shadow-lg p-6 flex flex-col gap-6 animate-in slide-in-from-top-4 duration-200">
@@ -469,33 +499,6 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           <section className="text-center pt-8 pb-4 space-y-4 relative z-10">
-            {/* Promo Advertisement Banner */}
-            <div className="mx-auto max-w-md bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 dark:from-amber-500/20 dark:to-red-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              
-              <div className="flex items-center gap-2.5 z-10">
-                <div className="bg-amber-500 text-white p-1.5 rounded-lg shrink-0 animate-bounce">
-                  <Trophy className="h-4 w-4" />
-                </div>
-                <div className="text-left leading-tight">
-                  <p className="text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-amber-300 uppercase tracking-wide">
-                    {language === 'hi' ? 'सीमित समय का ऑफर!' : 'Limited Time Offer!'}
-                  </p>
-                  <p className="text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-350 font-semibold">
-                    {language === 'hi' 
-                      ? '31 दिसंबर 2026 से पहले रजिस्टर करें और पाएं MockTest Hub Pass Pro!' 
-                      : 'Register before 31 Dec 2026 & get MockTest Hub Pass Pro!'}
-                  </p>
-                </div>
-              </div>
-              <Link
-                href="/auth"
-                className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-sm"
-              >
-                {language === 'hi' ? 'दावा करें' : 'Claim Now'}
-              </Link>
-            </div>
-
             <span className="inline-flex items-center gap-1 bg-blue-105 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-black px-3 py-1 rounded-full text-[9px] uppercase tracking-wider">
               {t.heroBadge}
             </span>
@@ -966,6 +969,36 @@ const formatSubCategoryName = (name: string) => {
         </div>
       )}
 
+      {/* Promo Banner just below Live Updates */}
+      <div className="px-6 md:px-12 pt-4 flex justify-center w-full z-20 shrink-0">
+        {/* Promo Advertisement Banner */}
+        <div className="w-full max-w-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 dark:from-amber-500/20 dark:to-red-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+          
+          <div className="flex items-center gap-3 z-10">
+            <div className="bg-amber-500 text-white p-1.5 rounded-lg shrink-0 animate-bounce">
+              <Trophy className="h-4.5 w-4.5 text-blue-600 animate-pulse" />
+            </div>
+            <div className="text-left leading-tight">
+              <p className="text-xs font-black text-slate-800 dark:text-amber-300 uppercase tracking-wide">
+                {language === 'hi' ? 'सीमित समय का ऑफर!' : 'Limited Time Offer!'}
+              </p>
+              <p className="text-[11px] text-slate-655 dark:text-slate-350 font-semibold">
+                {language === 'hi' 
+                  ? '31 दिसंबर 2026 से पहले रजिस्टर करें और पाएं MockTest Hub Pass Pro!' 
+                  : 'Register before 31 Dec 2026 & get MockTest Hub Pass Pro!'}
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/auth"
+            className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-4 py-2 rounded-xl text-xs uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-sm"
+          >
+            {language === 'hi' ? 'दावा करें' : 'Claim Now'}
+          </Link>
+        </div>
+      </div>
+
       {/* HERO SECTION */}
       <section className="py-16 md:py-24 px-6 md:px-12 max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10 edu-grid-pattern">
         
@@ -995,33 +1028,6 @@ const formatSubCategoryName = (name: string) => {
 
         {/* Left Side: Pitch Title */}
         <div className="space-y-6">
-          {/* Promo Advertisement Banner */}
-          <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 dark:from-amber-500/20 dark:to-red-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-            
-            <div className="flex items-center gap-2.5 z-10">
-              <div className="bg-amber-500 text-white p-1.5 rounded-lg shrink-0 animate-bounce">
-                <Trophy className="h-4 w-4" />
-              </div>
-              <div className="text-left leading-tight">
-                <p className="text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-amber-300 uppercase tracking-wide">
-                  {language === 'hi' ? 'सीमित समय का ऑफर!' : 'Limited Time Offer!'}
-                </p>
-                <p className="text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-355 font-semibold">
-                  {language === 'hi' 
-                    ? '31 दिसंबर 2026 से पहले रजिस्टर करें और पाएं MockTest Hub Pass Pro!' 
-                    : 'Register before 31 Dec 2026 & get MockTest Hub Pass Pro!'}
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/auth"
-              className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-sm"
-            >
-              {language === 'hi' ? 'दावा करें' : 'Claim Now'}
-            </Link>
-          </div>
-
           <span className="inline-flex items-center gap-1.5 text-[10px] bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
             {t.heroBadge}
           </span>
