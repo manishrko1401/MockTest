@@ -486,9 +486,18 @@ export default function ExamSolutionAnalysisPage() {
             </div>
           </Link>
           <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
-          <Link href="/mock-tests" className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors">
+          <button
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.history.length > 1) {
+                router.back();
+              } else {
+                router.push('/mock-tests');
+              }
+            }}
+            className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors cursor-pointer bg-transparent border-none p-0 outline-none"
+          >
             <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}
-          </Link>
+          </button>
           <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
           <div className="flex flex-col">
             <span className="font-extrabold text-sm text-slate-900 dark:text-white leading-tight">{examSession.testTitle}</span>
