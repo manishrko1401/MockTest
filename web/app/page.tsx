@@ -671,11 +671,12 @@ const formatSubCategoryName = (name: string) => {
                   {mobileUpdateTab === 'admit_card' && <><FileText className="h-4 w-4 text-green-550" /> {t.admitCards}</>}
                 </h3>
                 
-                <div className="space-y-3 max-h-[350px] overflow-y-auto no-scrollbar">
+                <div className="space-y-3">
                   {noticesList.filter(n => n.category === mobileUpdateTab).length > 0 ? (
                     [...noticesList]
                       .filter(n => n.category === mobileUpdateTab)
                       .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                      .slice(0, 4)
                       .map(notice => {
                       const noticeStyle = 
                         notice.category === 'notice' ? 'bg-blue-50/40 dark:bg-blue-950/10 border-blue-100 dark:border-blue-900/30 border-l-4 border-l-blue-500' :
@@ -1143,11 +1144,12 @@ const formatSubCategoryName = (name: string) => {
                 <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> {t.liveNotices}
               </h3>
               
-              <div className="space-y-3 overflow-y-auto max-h-[442px] no-scrollbar">
+              <div className="space-y-3">
                 {noticesList.filter(n => n.category === 'notice').length > 0 ? (
                   [...noticesList]
                     .filter(n => n.category === 'notice')
                     .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                    .slice(0, 4)
                     .map(notice => (
                     <div
                       key={notice.id}
@@ -1205,11 +1207,12 @@ const formatSubCategoryName = (name: string) => {
                 <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-pulse" /> {t.resultsMerits}
               </h3>
               
-              <div className="space-y-3 overflow-y-auto max-h-[442px] no-scrollbar">
+              <div className="space-y-3">
                 {noticesList.filter(n => n.category === 'result').length > 0 ? (
                   [...noticesList]
                     .filter(n => n.category === 'result')
                     .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                    .slice(0, 4)
                     .map(notice => (
                     <div
                       key={notice.id}
@@ -1267,11 +1270,12 @@ const formatSubCategoryName = (name: string) => {
                 <FileText className="h-4.5 w-4.5 text-green-550" /> {t.admitCards}
               </h3>
               
-              <div className="space-y-3 overflow-y-auto max-h-[442px] no-scrollbar">
+              <div className="space-y-3">
                 {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
                   [...noticesList]
                     .filter(n => n.category === 'admit_card')
                     .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                    .slice(0, 4)
                     .map(notice => (
                     <div
                       key={notice.id}
