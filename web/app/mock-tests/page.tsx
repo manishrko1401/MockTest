@@ -52,8 +52,7 @@ export default function MockTestsCatalog() {
           setSelectedSubCategory(sub);
         }
       } else {
-        const isMob = window.innerWidth <= 768;
-        setSelectedCategory(isMob ? null : 'ssc');
+        setSelectedCategory(null);
       }
     }
   }, []);
@@ -840,94 +839,7 @@ export default function MockTestsCatalog() {
       {/* Main split-pane content */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
         
-        {/* Left Side Navigation (Categories list) */}
-        <aside className="w-full lg:w-64 bg-white dark:bg-slate-950 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between shrink-0 lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
-          <div className="flex flex-col flex-1 min-h-0">
-            <h3 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-4 font-sans shrink-0">{t.examCategories}</h3>
-            
-            {/* Category Search Input */}
-            <div className="relative mb-4 shrink-0">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
-                <Search className="h-3.5 w-3.5" />
-              </div>
-              <input
-                type="text"
-                value={categorySearchQuery}
-                onChange={(e) => setCategorySearchQuery(e.target.value)}
-                placeholder={language === 'hi' ? 'श्रेणी खोजें...' : 'Search categories...'}
-                className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-7 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium"
-              />
-              {categorySearchQuery && (
-                <button
-                  onClick={() => setCategorySearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-605 dark:hover:text-slate-300 focus:outline-none text-[10px] font-bold"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
 
-            <nav className="space-y-1 flex-1 overflow-y-auto pr-1 scrollbar-thin">
-              {filteredSidebarCategories.length > 0 ? (
-                filteredSidebarCategories.map((category) => {
-                  const isSelected = selectedCategory === category.id && !showBookmarks;
-                  const SidebarIcon = 
-                    category.id === 'ssc' ? Award :
-                    category.id === 'railways' ? TrendingUp :
-                    category.id === 'banking' ? Coins :
-                    category.id === 'teaching' ? BookOpen :
-                    category.id === 'ugc_net' ? GraduationCap : MapPin;
-
-                  const activeGrad = 
-                    category.id === 'ssc' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow shadow-amber-500/25' :
-                    category.id === 'railways' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow shadow-blue-500/25' :
-                    category.id === 'banking' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow shadow-emerald-500/25' :
-                    category.id === 'teaching' ? 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white shadow shadow-amber-500/25' :
-                    category.id === 'ugc_net' ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow shadow-sky-500/25' : 
-                    'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow shadow-purple-500/25';
-
-                  return (
-                    <button
-                      key={category.id}
-                      onClick={() => {
-                        setSelectedCategory(category.id);
-                        setSelectedSubCategory(null);
-                        setShowBookmarks(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 cursor-pointer ${
-                        isSelected
-                          ? `${activeGrad}`
-                          : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-white'
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <SidebarIcon className={`h-4 w-4 ${isSelected ? 'animate-pulse' : ''}`} />
-                        {category.name}
-                      </span>
-                      <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-                    </button>
-                  );
-                })
-              ) : (
-                <div className="text-center py-6 text-slate-400 text-xs font-semibold">
-                  {language === 'hi' ? 'कोई श्रेणी नहीं मिली' : 'No categories found'}
-                </div>
-              )}
-            </nav>
-          </div>
-
-          {/* Hide Unlock All / Get Pass Pro tab for now */}
-          {/* <div className="bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl p-4 text-center">
-            <p className="text-[10px] uppercase font-bold text-slate-600 dark:text-slate-400">{t.unlockAll}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-500 leading-normal mt-1 mb-3">{t.upgradeDesc}</p>
-            <button
-              onClick={() => { setRequiredTierInfo('Testbook Pass Pro'); setUpgradePopupOpen(true); }}
-              className="w-full bg-yellow-600 hover:bg-yellow-750 text-white py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-md active:scale-95 cursor-pointer"
-            >
-              {t.getPassPro}
-            </button>
-          </div> */}
-        </aside>
 
         {/* Right Side Content (Tests list/details) */}
         <main className="flex-1 p-8 overflow-y-auto edu-grid-pattern relative">
