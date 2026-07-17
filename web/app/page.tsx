@@ -192,15 +192,38 @@ export default function HomeLandingPage() {
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [claiming, setClaiming] = useState(false);
 
+const formatSubCategoryName = (name: string) => {
+  let cleanName = name
+    .replace(/\s*(?:2025|2026)\s*/g, ' ')
+    .split(' - ')[0]
+    .split(' (')[0]
+    .replace(/(?:Full-Length|Full Length|Practice|Simulator|Mock|Paper-I|Paper-II|Paper 1|Paper-1|Paper 2|Paper-II|Test Paper|Teaching & Research Aptitude|Computer Science & Applications)/gi, '')
+    .trim();
+  
+  // Specific fallbacks to make sure it looks short and recognizable
+  if (name.includes('Paper-1') || name.includes('Paper 1')) cleanName += ' Paper 1';
+  if (name.includes('Paper-II') || name.includes('Paper 2')) cleanName += ' Paper 2';
+  if (name.includes('Paper-I') || name.includes('Paper 1')) cleanName += ' Paper 1';
+  
+  return cleanName || name;
+};
+
   const popularCategories = examCatalog?.filter(c => c.isPopular) || [];
   const displayCategories = popularCategories.length > 0
     ? popularCategories.map(c => ({
         id: c.id,
         name: c.name,
         desc: c.description || '',
-        count: c.countText || ''
+        count: c.countText || '',
+        subCategories: c.subCategories || []
       }))
-    : CATEGORIES;
+    : CATEGORIES.map(c => ({
+        id: c.id,
+        name: c.name,
+        desc: c.desc,
+        count: c.count,
+        subCategories: EXAMS_BY_CATEGORY[c.id] || []
+      }));
 
   const handleClaimPassPro = async () => {
     if (!currentUser) return;
@@ -573,6 +596,24 @@ export default function HomeLandingPage() {
                       </div>
                       <h4 className="font-extrabold text-xs text-slate-900 dark:text-white mb-1.5">{cat.name}</h4>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
+                      
+                      {cat.subCategories && cat.subCategories.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {cat.subCategories.slice(0, 3).map((sub: any) => (
+                            <span
+                              key={sub.id}
+                              className="px-2 py-0.5 rounded-md text-[8px] font-extrabold bg-white/70 dark:bg-slate-900/70 border border-slate-200/40 dark:border-slate-800/40 text-slate-655 dark:text-slate-350 shadow-sm"
+                            >
+                              {formatSubCategoryName(sub.name)}
+                            </span>
+                          ))}
+                          {cat.subCategories.length > 3 && (
+                            <span className="px-1.5 py-0.5 rounded-md text-[8px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30 animate-pulse">
+                              +{cat.subCategories.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     
                     <div className={`flex items-center gap-1 font-bold text-[9px] uppercase tracking-wider mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-800/40 w-full ${style.accentText}`}>
@@ -741,7 +782,7 @@ export default function HomeLandingPage() {
                 <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
                   <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
                     <GraduationCap className="h-4.5 w-4.5 text-blue-600" />
-                    {CATEGORIES.find(c => c.id === selectedModalCategory)?.name}
+                    {(examCatalog?.find(c => c.id === selectedModalCategory) || CATEGORIES.find(c => c.id === selectedModalCategory))?.name || 'Exam'} Options
                   </h4>
                   <button
                     onClick={() => setSelectedModalCategory(null)}
@@ -756,17 +797,28 @@ export default function HomeLandingPage() {
                 </p>
 
                 <div className="space-y-2.5">
-                  {EXAMS_BY_CATEGORY[selectedModalCategory]?.map((exam) => (
-                    <Link
-                      key={exam.id}
-                      href={`/mock-tests?cat=${selectedModalCategory}`}
-                      onClick={() => setSelectedModalCategory(null)}
-                      className="w-full flex items-center justify-between p-3.5 bg-slate-55 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-bold text-slate-800 dark:text-slate-200"
-                    >
-                      <span className="flex-1 pr-2">{exam.name}</span>
-                      <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
-                    </Link>
-                  ))}
+                  {(() => {
+                    const dbCategory = examCatalog?.find(c => c.id === selectedModalCategory);
+                    const itemsToRender = dbCategory && dbCategory.subCategories?.length > 0
+                      ? dbCategory.subCategories.map(sub => ({ id: sub.id, name: sub.name, href: `/mock-tests?cat=${selectedModalCategory}&sub=${sub.id}` }))
+                      : EXAMS_BY_CATEGORY[selectedModalCategory]?.map(exam => ({ id: exam.id, name: exam.name, href: `/mock-tests?cat=${selectedModalCategory}` })) || [];
+
+                    if (itemsToRender.length === 0) {
+                      return <p className="text-xs text-slate-400 italic text-center py-4">No subcategories available yet.</p>;
+                    }
+
+                    return itemsToRender.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        onClick={() => setSelectedModalCategory(null)}
+                        className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-bold text-slate-800 dark:text-slate-200"
+                      >
+                        <span className="flex-1 pr-2">{item.name}</span>
+                        <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+                      </Link>
+                    ));
+                  })()}
                 </div>
               </div>
 
@@ -1057,6 +1109,24 @@ export default function HomeLandingPage() {
                   </div>
                   <h4 className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white mb-1.5">{cat.name}</h4>
                   <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
+                  
+                  {cat.subCategories && cat.subCategories.length > 0 && (
+                    <div className="mt-3.5 flex flex-wrap gap-1.5">
+                      {cat.subCategories.slice(0, 3).map((sub: any) => (
+                        <span
+                          key={sub.id}
+                          className="px-2.5 py-0.5 rounded-md text-[9px] font-extrabold bg-white/70 dark:bg-slate-900/70 border border-slate-200/40 dark:border-slate-800/40 text-slate-655 dark:text-slate-350 shadow-sm"
+                        >
+                          {formatSubCategoryName(sub.name)}
+                        </span>
+                      ))}
+                      {cat.subCategories.length > 3 && (
+                        <span className="px-2 py-0.5 rounded-md text-[9px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30 animate-pulse">
+                          +{cat.subCategories.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className={`flex items-center gap-1.5 font-bold text-[9px] md:text-[10px] uppercase tracking-wider mt-5 pt-3 border-t w-full ${style.btnAccent}`}>
