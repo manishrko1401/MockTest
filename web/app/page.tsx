@@ -597,23 +597,7 @@ const formatSubCategoryName = (name: string) => {
                       <h4 className="font-extrabold text-xs text-slate-900 dark:text-white mb-1.5">{cat.name}</h4>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
                       
-                      {cat.subCategories && cat.subCategories.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-1">
-                          {cat.subCategories.slice(0, 3).map((sub: any) => (
-                            <span
-                              key={sub.id}
-                              className="px-2 py-0.5 rounded-md text-[8px] font-extrabold bg-white/70 dark:bg-slate-900/70 border border-slate-200/40 dark:border-slate-800/40 text-slate-655 dark:text-slate-350 shadow-sm"
-                            >
-                              {formatSubCategoryName(sub.name)}
-                            </span>
-                          ))}
-                          {cat.subCategories.length > 3 && (
-                            <span className="px-1.5 py-0.5 rounded-md text-[8px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30 animate-pulse">
-                              +{cat.subCategories.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      )}
+
                     </div>
                     
                     <div className={`flex items-center gap-1 font-bold text-[9px] uppercase tracking-wider mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-800/40 w-full ${style.accentText}`}>
@@ -1110,23 +1094,7 @@ const formatSubCategoryName = (name: string) => {
                   <h4 className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white mb-1.5">{cat.name}</h4>
                   <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
                   
-                  {cat.subCategories && cat.subCategories.length > 0 && (
-                    <div className="mt-3.5 flex flex-wrap gap-1.5">
-                      {cat.subCategories.slice(0, 3).map((sub: any) => (
-                        <span
-                          key={sub.id}
-                          className="px-2.5 py-0.5 rounded-md text-[9px] font-extrabold bg-white/70 dark:bg-slate-900/70 border border-slate-200/40 dark:border-slate-800/40 text-slate-655 dark:text-slate-350 shadow-sm"
-                        >
-                          {formatSubCategoryName(sub.name)}
-                        </span>
-                      ))}
-                      {cat.subCategories.length > 3 && (
-                        <span className="px-2 py-0.5 rounded-md text-[9px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30 animate-pulse">
-                          +{cat.subCategories.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  )}
+
                 </div>
                 
                 <div className={`flex items-center gap-1.5 font-bold text-[9px] md:text-[10px] uppercase tracking-wider mt-5 pt-3 border-t w-full ${style.btnAccent}`}>
