@@ -9,6 +9,15 @@ if (process.env.NODE_ENV !== 'production') {
   (global as any).otpCache = otpCache;
 }
 
+// Persistent Exam Catalog and Notices Cache to survive Next.js dev server hot-reloads
+const catalogCache = (global as any).catalogCache || {
+  examCatalog: null,
+  noticesList: null
+};
+if (process.env.NODE_ENV !== 'production') {
+  (global as any).catalogCache = catalogCache;
+}
+
 // Nodemailer transporter config using environment variables (e.g. Gmail, Resend, Brevo)
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -42,6 +51,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'No action provided' }, { status: 400 });
     }
 
+
+    if (action) {
+      const writeActions = [
+        'add-notice', 'delete-notice',
+        'add-category', 'edit-category', 'delete-category',
+        'add-subcategory', 'edit-subcategory', 'delete-subcategory',
+        'add-subsubcategory', 'edit-subsubcategory', 'delete-subsubcategory',
+        'add-mocktest', 'edit-mocktest-title', 'delete-mocktest',
+        'save-custom-questions',
+        'reorder-categories', 'reorder-subcategories', 'reorder-subsubcategories', 'reorder-mocktests',
+        'refresh-catalog'
+      ];
+      if (writeActions.includes(action)) {
+        catalogCache.examCatalog = null;
+        catalogCache.noticesList = null;
+      }
+    }
 
     switch (action) {
       case 'request-password-reset':
@@ -213,53 +239,64 @@ async function handleBootstrap() {
   const categoryCount = await prisma.category.count();
   if (categoryCount === 0) {
     await seedDatabase();
+
+    // Ensure mock users with correct administrative roles exist (only during database seeding!)
+    await prisma.user.upsert({
+      where: { email: 'vikram.singh@example.com' },
+      update: { role: 'TEST_CREATOR' },
+      create: {
+        id: 'u3',
+        candidateCode: 'CGL_2291',
+        fullName: 'Vikram Singh',
+        email: 'vikram.singh@example.com',
+        mobile: '9123456789',
+        referralCode: 'TB-VIKRAM-2291',
+        role: 'TEST_CREATOR',
+        passwordHash: 'password123',
+      }
+    });
+
+    await prisma.user.upsert({
+      where: { email: 'support@example.com' },
+      update: { role: 'SUPPORT_TEAM' },
+      create: {
+        id: 'u_support',
+        candidateCode: 'SUP_7712',
+        fullName: 'Support Agent',
+        email: 'support@example.com',
+        mobile: '9888777666',
+        referralCode: 'TB-SUPPORT-7712',
+        role: 'SUPPORT_TEAM',
+        passwordHash: 'password123',
+      }
+    });
+
+    await prisma.user.upsert({
+      where: { email: 'notices@example.com' },
+      update: { role: 'NOTICES_MANAGER' },
+      create: {
+        id: 'u_notices',
+        candidateCode: 'NTS_5541',
+        fullName: 'Notices Manager',
+        email: 'notices@example.com',
+        mobile: '9999000011',
+        referralCode: 'TB-NOTICES-5541',
+        role: 'NOTICES_MANAGER',
+        passwordHash: 'password123',
+      }
+    });
   }
 
-  // Ensure mock users with correct administrative roles exist
-  await prisma.user.upsert({
-    where: { email: 'vikram.singh@example.com' },
-    update: { role: 'TEST_CREATOR' },
-    create: {
-      id: 'u3',
-      candidateCode: 'CGL_2291',
-      fullName: 'Vikram Singh',
-      email: 'vikram.singh@example.com',
-      mobile: '9123456789',
-      referralCode: 'TB-VIKRAM-2291',
-      role: 'TEST_CREATOR',
-      passwordHash: 'password123',
-    }
-  });
-
-  await prisma.user.upsert({
-    where: { email: 'support@example.com' },
-    update: { role: 'SUPPORT_TEAM' },
-    create: {
-      id: 'u_support',
-      candidateCode: 'SUP_7712',
-      fullName: 'Support Agent',
-      email: 'support@example.com',
-      mobile: '9888777666',
-      referralCode: 'TB-SUPPORT-7712',
-      role: 'SUPPORT_TEAM',
-      passwordHash: 'password123',
-    }
-  });
-
-  await prisma.user.upsert({
-    where: { email: 'notices@example.com' },
-    update: { role: 'NOTICES_MANAGER' },
-    create: {
-      id: 'u_notices',
-      candidateCode: 'NTS_5541',
-      fullName: 'Notices Manager',
-      email: 'notices@example.com',
-      mobile: '9999000011',
-      referralCode: 'TB-NOTICES-5541',
-      role: 'NOTICES_MANAGER',
-      passwordHash: 'password123',
-    }
-  });
+  // Use memory cache if populated
+  if (catalogCache.examCatalog && catalogCache.noticesList) {
+    return NextResponse.json({
+      success: true,
+      usersList: [],
+      noticesList: catalogCache.noticesList,
+      examCatalog: catalogCache.examCatalog,
+      reportedQuestionsList: [],
+    });
+  }
 
   // Fetch all users list is now disabled in public bootstrap to reduce egress and fix security vulnerability.
   // Admins will fetch this data separately using the 'admin-data' action.
@@ -286,6 +323,10 @@ async function handleBootstrap() {
 
   // Fetch Exam Catalog using optimized memory assembler
   const examCatalog = await getCompiledExamCatalog();
+
+  // Populate cache
+  catalogCache.examCatalog = examCatalog;
+  catalogCache.noticesList = noticesList;
 
   // Fetch Reported Questions is now disabled in public bootstrap.
   // Admins will fetch this data separately using the 'admin-data' action.
@@ -1534,6 +1575,8 @@ async function getCompiledExamCatalog() {
 // ---------------------------------------------------------------------------
 async function handleRefreshCatalog() {
   try {
+    catalogCache.examCatalog = null;
+    catalogCache.noticesList = null;
     const examCatalog = await getCompiledExamCatalog();
     return NextResponse.json({ success: true, examCatalog });
   } catch (error: any) {
