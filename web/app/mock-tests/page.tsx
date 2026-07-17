@@ -653,7 +653,7 @@ export default function MockTestsCatalog() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {activeCategoryObj?.subCategories.map(subCat => {
                       const count = subCat.tests.length;
                       const countStr = count === 1 
@@ -666,29 +666,29 @@ export default function MockTestsCatalog() {
                         <button
                           key={subCat.id}
                           onClick={() => setSelectedSubCategory(subCat.id)}
-                          className="relative overflow-hidden w-full flex flex-col items-center text-center p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
+                          className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
                         >
                           {/* Accent Gradient Border at top */}
-                          <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${themeInfo.gradient}`} />
+                          <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${themeInfo.gradient}`} />
                           
                           {/* Radial Glow on Hover */}
                           <div 
-                            className="absolute -right-16 -top-16 w-36 h-36 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                            className="absolute -right-16 -top-16 w-32 h-32 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                             style={{ backgroundColor: themeInfo.accentGlow }}
                           />
 
                           {/* Icon Container */}
-                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md ${themeInfo.iconBg}`}>
+                          <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md ${themeInfo.iconBg}`}>
                             {getSubCatIcon(subCat.name)}
                           </div>
 
                           {/* Exam Title */}
-                          <h4 className="font-extrabold text-sm text-slate-850 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-3 leading-snug line-clamp-2">
+                          <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-855 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2.5 leading-snug line-clamp-2">
                             {subCat.name}
                           </h4>
 
                           {/* Test Count Badge */}
-                          <span className={`text-[10px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg} group-hover:scale-105`}>
+                          <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 sm:px-3.5 sm:py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg} group-hover:scale-105`}>
                             {countStr}
                           </span>
 
@@ -1282,7 +1282,7 @@ export default function MockTestsCatalog() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in duration-300">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 animate-in fade-in duration-300">
                 {getFilteredSubCategories().map(subCat => {
                   const count = subCat.tests.length;
                   const countStr = count === 1 
@@ -1295,29 +1295,29 @@ export default function MockTestsCatalog() {
                     <button
                       key={subCat.id}
                       onClick={() => setSelectedSubCategory(subCat.id)}
-                      className="relative overflow-hidden w-full flex flex-col items-center text-center p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
+                      className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
                     >
                       {/* Accent Gradient Border at top */}
-                      <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${themeInfo.gradient}`} />
+                      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${themeInfo.gradient}`} />
                       
                       {/* Radial Glow on Hover */}
                       <div 
-                        className="absolute -right-16 -top-16 w-36 h-36 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                        className="absolute -right-16 -top-16 w-32 h-32 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                         style={{ backgroundColor: themeInfo.accentGlow }}
                       />
 
                       {/* Icon Container */}
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md ${themeInfo.iconBg}`}>
+                      <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md ${themeInfo.iconBg}`}>
                         {getSubCatIcon(subCat.name)}
                       </div>
 
                       {/* Exam Title */}
-                      <h4 className="font-extrabold text-sm text-slate-850 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-3 leading-snug line-clamp-2">
+                      <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-850 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2.5 leading-snug line-clamp-2">
                         {subCat.name}
                       </h4>
 
                       {/* Test Count Badge */}
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg} group-hover:scale-105`}>
+                      <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 sm:px-3.5 sm:py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg} group-hover:scale-105`}>
                         {countStr}
                       </span>
 
