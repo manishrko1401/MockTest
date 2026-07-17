@@ -32,6 +32,40 @@ export default function MockTestsCatalog() {
   const t = TRANSLATIONS[language];
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [examSearchQuery, setExamSearchQuery] = useState('');
+
+  // Filter exam catalog by search query (checks category name or subcategory exam name)
+  const getFilteredCatalogForSearch = () => {
+    const query = examSearchQuery.toLowerCase().trim();
+    if (!query) return examCatalog;
+    
+    return examCatalog.map(cat => {
+      // If the category name matches, keep all its subcategories
+      if (cat.name.toLowerCase().includes(query)) {
+        return cat;
+      }
+      // Otherwise, filter subcategories that match
+      const matchingSubs = (cat.subCategories || []).filter(sub => 
+        sub.name.toLowerCase().includes(query)
+      );
+      if (matchingSubs.length > 0) {
+        return {
+          ...cat,
+          subCategories: matchingSubs
+        };
+      }
+      return null;
+    }).filter(Boolean) as TestCategory[];
+  };
+
+  const getFilteredSubCategories = () => {
+    if (!currentCategoryObj) return [];
+    const query = examSearchQuery.toLowerCase().trim();
+    if (!query) return currentCategoryObj.subCategories || [];
+    return (currentCategoryObj.subCategories || []).filter(sub => 
+      sub.name.toLowerCase().includes(query)
+    );
+  };
 
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
   const [activeSubSubId, setActiveSubSubId] = useState<string | null>(null);
@@ -999,18 +1033,42 @@ export default function MockTestsCatalog() {
             </div>
           ) : selectedCategory === null ? (
             <>
-              <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-350">
-                <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-blue-500" />
-                  {language === 'hi' ? 'परीक्षा श्रेणियाँ' : 'Exam Categories'}
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक श्रेणी चुनें' : 'Select a category to explore mock tests'}
-                </p>
+              <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+                <div className="animate-in fade-in slide-in-from-top-4 duration-350">
+                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-blue-500" />
+                    {language === 'hi' ? 'परीक्षा श्रेणियाँ' : 'Exam Categories'}
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक श्रेणी चुनें' : 'Select a category to explore mock tests'}
+                  </p>
+                </div>
+
+                {/* Categories Search Bar */}
+                <div className="relative max-w-sm w-full">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                    <Search className="h-4 w-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={examSearchQuery}
+                    onChange={(e) => setExamSearchQuery(e.target.value)}
+                    placeholder={language === 'hi' ? 'परीक्षा खोजें (उदा. SSC CGL)...' : 'Search exams (e.g. SSC CGL)...'}
+                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold shadow-sm"
+                  />
+                  {examSearchQuery && (
+                    <button
+                      onClick={() => setExamSearchQuery('')}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none text-[11px] font-bold"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in duration-300">
-                {examCatalog.map(cat => {
+                {getFilteredCatalogForSearch().map(cat => {
                   const isSsc = cat.id === 'ssc';
                   const isRailways = cat.id === 'railways';
                   const isBanking = cat.id === 'banking';
@@ -1072,27 +1130,51 @@ export default function MockTestsCatalog() {
             </>
           ) : selectedSubCategory === null ? (
             <>
-              <div className="mb-6 flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-                <div className="animate-in fade-in slide-in-from-top-4 duration-350">
-                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-blue-500" />
-                    {currentCategoryObj?.name}
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {language === 'hi' ? TRANSLATIONS.hi.subCatDesc : TRANSLATIONS.en.subCatDesc}
-                  </p>
-                </div>
-
+              <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
                 <button
                   onClick={() => setSelectedCategory(null)}
                   className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 shrink-0"
                 >
                   <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'श्रेणियों पर वापस जाएं' : 'Back to Categories'}
                 </button>
+
+                <div className="flex items-center gap-4 max-w-xl w-full justify-end flex-wrap md:flex-nowrap">
+                  {/* Search Bar in Subcategory View */}
+                  <div className="relative max-w-xs w-full">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                      <Search className="h-4 w-4" />
+                    </div>
+                    <input
+                      type="text"
+                      value={examSearchQuery}
+                      onChange={(e) => setExamSearchQuery(e.target.value)}
+                      placeholder={language === 'hi' ? 'इस श्रेणी में खोजें...' : 'Search in this category...'}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 py-2 text-xs text-slate-855 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold shadow-sm"
+                    />
+                    {examSearchQuery && (
+                      <button
+                        onClick={() => setExamSearchQuery('')}
+                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none text-[11px] font-bold"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="text-right animate-in fade-in slide-in-from-top-4 duration-350">
+                    <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2 justify-end">
+                      {currentCategoryObj?.name}
+                      <BookOpen className="h-5 w-5 text-blue-500" />
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      {language === 'hi' ? TRANSLATIONS.hi.subCatDesc : TRANSLATIONS.en.subCatDesc}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in duration-300">
-                {currentCategoryObj?.subCategories.map(subCat => {
+                {getFilteredSubCategories().map(subCat => {
                   const count = subCat.tests.length;
                   const countStr = count === 1 
                     ? (language === 'hi' ? `1 ${t.mocksCount}` : `1 ${t.mocksCount}`)
@@ -1146,32 +1228,32 @@ export default function MockTestsCatalog() {
                 return (
                   <div className="space-y-6 animate-in fade-in duration-300">
                     <div className="mb-6 flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-                      <div>
-                        <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                          <BookOpen className="h-5 w-5 text-blue-500" />
-                          {activeSubCat?.name}
-                        </h2>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          {t.testSeriesDesc}
-                        </p>
-                      </div>
-
-                      {currentCategoryObj?.logoUrl && (
-                        <div className="flex-1 flex justify-center items-center">
-                          <img 
-                            src={currentCategoryObj.logoUrl} 
-                            alt={`${currentCategoryObj.name} logo`} 
-                            className="h-20 w-auto max-h-24 object-contain rounded-xl shadow-sm"
-                          />
-                        </div>
-                      )}
-
                       <button
                         onClick={() => setSelectedSubCategory(null)}
                         className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 shrink-0"
                       >
                         <ArrowLeft className="h-4 w-4" /> {t.backToSubcategories}
                       </button>
+
+                      {currentCategoryObj?.logoUrl && (
+                        <div className="flex-1 flex justify-center items-center">
+                          <img 
+                            src={currentCategoryObj.logoUrl} 
+                            alt={`${currentCategoryObj.name} logo`} 
+                            className="h-16 w-auto max-h-20 object-contain rounded-xl shadow-sm"
+                          />
+                        </div>
+                      )}
+
+                      <div className="text-right">
+                        <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2 justify-end">
+                          {activeSubCat?.name}
+                          <BookOpen className="h-5 w-5 text-blue-500" />
+                        </h2>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          {t.testSeriesDesc}
+                        </p>
+                      </div>
                     </div>
 
                     {groups.length === 0 && fallbackTests.length === 0 ? (
