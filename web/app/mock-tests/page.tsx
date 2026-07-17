@@ -447,8 +447,22 @@ export default function MockTestsCatalog() {
                       Select a category to explore mock tests
                     </p>
                   </div>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {filteredCatalog.map(cat => {
+                      const isSsc = cat.id === 'ssc';
+                      const isRailways = cat.id === 'railways';
+                      const isBanking = cat.id === 'banking';
+                      const isTeaching = cat.id === 'teaching';
+                      const isUgcNet = cat.id === 'ugc_net';
+
+                      const accentColor = 
+                        isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
+                        isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
+                        isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
+                        isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
+                        isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
+                        'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
+
                       return (
                         <button
                           key={cat.id}
@@ -456,47 +470,33 @@ export default function MockTestsCatalog() {
                             setSelectedCategory(cat.id);
                             setSelectedSubCategory(null);
                           }}
-                          className={`w-full flex items-center justify-between p-4 bg-white dark:bg-slate-950 border border-slate-205 dark:border-slate-800/80 rounded-2xl text-left transition shadow-sm active:scale-[0.99] border-l-4 ${
-                            cat.id === 'ssc' ? 'border-l-orange-500' :
-                            cat.id === 'railways' ? 'border-l-indigo-500' :
-                            cat.id === 'banking' ? 'border-l-emerald-500' :
-                            cat.id === 'teaching' ? 'border-l-amber-500' :
-                            cat.id === 'ugc_net' ? 'border-l-sky-500' :
-                            'border-l-pink-500'
-                          }`}
+                          className={`w-full flex flex-col items-center text-center p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/85 rounded-2xl transition-all duration-350 shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-[0.99] border-t-4 border-l-0 border-r-0 border-b-0 cursor-pointer ${accentColor}`}
                         >
-                          <div className="flex items-center gap-3.5">
-                            {/* Icon container */}
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden shrink-0 bg-slate-50 dark:bg-slate-900">
-                              {cat.logoUrl ? (
-                                <img
-                                  src={cat.logoUrl}
-                                  alt={`${cat.name} logo`}
-                                  className="w-full h-full object-contain"
-                                />
-                              ) : (
-                                <div className="text-blue-500">
-                                  {cat.id === 'ssc' && <Award className="h-5 w-5 text-orange-500" />}
-                                  {cat.id === 'railways' && <TrendingUp className="h-5 w-5 text-indigo-500" />}
-                                  {cat.id === 'banking' && <Coins className="h-5 w-5 text-emerald-500" />}
-                                  {cat.id === 'teaching' && <BookOpen className="h-5 w-5 text-amber-500" />}
-                                  {cat.id === 'ugc_net' && <GraduationCap className="h-5 w-5 text-sky-500" />}
-                                  {cat.id !== 'ssc' && cat.id !== 'railways' && cat.id !== 'banking' && cat.id !== 'teaching' && cat.id !== 'ugc_net' && <Sparkles className="h-5 w-5 text-pink-500" />}
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <h4 className="font-extrabold text-sm text-slate-850 dark:text-slate-200">
-                                {cat.name}
-                              </h4>
-                              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                                {cat.subCategories?.length || 0} exam types available
-                              </p>
-                            </div>
+                          {/* Logo/Icon Container */}
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-4 bg-slate-50 dark:bg-slate-900 transition duration-300">
+                            {cat.logoUrl ? (
+                              <img
+                                src={cat.logoUrl}
+                                alt={`${cat.name} logo`}
+                                className="w-full h-full object-contain p-1"
+                              />
+                            ) : (
+                              <div className="text-blue-500">
+                                {isSsc && <Award className="h-6 w-6 text-orange-500" />}
+                                {isRailways && <TrendingUp className="h-6 w-6 text-indigo-500" />}
+                                {isBanking && <Coins className="h-6 w-6 text-emerald-500" />}
+                                {isTeaching && <BookOpen className="h-6 w-6 text-amber-500" />}
+                                {isUgcNet && <GraduationCap className="h-6 w-6 text-sky-500" />}
+                                {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-6 w-6 text-pink-500" />}
+                              </div>
+                            )}
                           </div>
-                          <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-                            <ChevronRight className="h-4 w-4 text-blue-500 dark:text-blue-450" />
-                          </div>
+                          <h4 className="font-extrabold text-xs md:text-sm text-slate-850 dark:text-slate-100 mb-2.5 leading-snug">
+                            {cat.name}
+                          </h4>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800">
+                            {cat.subCategories?.length || 0} Exams
+                          </p>
                         </button>
                       );
                     })}
@@ -521,39 +521,40 @@ export default function MockTestsCatalog() {
                     </p>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {activeCategoryObj?.subCategories.map(subCat => {
                       const count = subCat.tests.length;
                       const countStr = count === 1 ? `1 Mock Test` : `${count} Mock Tests`;
+                      
+                      const isSsc = selectedCategory === 'ssc';
+                      const isRailways = selectedCategory === 'railways';
+                      const isBanking = selectedCategory === 'banking';
+                      const isTeaching = selectedCategory === 'teaching';
+                      const isUgcNet = selectedCategory === 'ugc_net';
+
+                      const accentColor = 
+                        isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
+                        isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
+                        isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
+                        isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
+                        isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
+                        'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
+
                       return (
                         <button
                           key={subCat.id}
                           onClick={() => setSelectedSubCategory(subCat.id)}
-                          className={`w-full flex items-center justify-between p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-left transition shadow-sm active:scale-[0.99] border-l-4 ${
-                            selectedCategory === 'ssc' ? 'border-l-orange-500' :
-                            selectedCategory === 'railways' ? 'border-l-indigo-500' :
-                            selectedCategory === 'banking' ? 'border-l-emerald-500' :
-                            selectedCategory === 'teaching' ? 'border-l-amber-500' :
-                            selectedCategory === 'ugc_net' ? 'border-l-sky-500' :
-                            'border-l-pink-500'
-                          }`}
+                          className={`w-full flex flex-col items-center text-center p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/85 rounded-2xl transition-all duration-350 shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-[0.99] border-t-4 border-l-0 border-r-0 border-b-0 cursor-pointer ${accentColor}`}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 border dark:border-slate-800 flex items-center justify-center shrink-0 shadow-sm text-blue-500 dark:text-blue-400">
-                              <BookOpen className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <h4 className="font-extrabold text-sm text-slate-850 dark:text-slate-200">
-                                {subCat.name}
-                              </h4>
-                              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                                {countStr}
-                              </p>
-                            </div>
+                          <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-850 flex items-center justify-center mb-4 shadow-sm text-blue-500 dark:text-blue-400">
+                            <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                           </div>
-                          <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-                            <ChevronRight className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-                          </div>
+                          <h4 className="font-extrabold text-xs md:text-sm text-slate-850 dark:text-slate-100 mb-2.5 leading-snug line-clamp-2">
+                            {subCat.name}
+                          </h4>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800">
+                            {countStr}
+                          </p>
                         </button>
                       );
                     })}
@@ -1084,16 +1085,98 @@ export default function MockTestsCatalog() {
                 </div>
               )}
             </div>
-          ) : selectedSubCategory === null ? (
+          ) : selectedCategory === null ? (
             <>
               <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-350">
                 <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-blue-500" />
-                  {language === 'hi' ? TRANSLATIONS.hi.subCatTitle : TRANSLATIONS.en.subCatTitle}
+                  {language === 'hi' ? 'परीक्षा श्रेणियाँ' : 'Exam Categories'}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {language === 'hi' ? TRANSLATIONS.hi.subCatDesc : TRANSLATIONS.en.subCatDesc}
+                  {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक श्रेणी चुनें' : 'Select a category to explore mock tests'}
                 </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in duration-300">
+                {examCatalog.map(cat => {
+                  const isSsc = cat.id === 'ssc';
+                  const isRailways = cat.id === 'railways';
+                  const isBanking = cat.id === 'banking';
+                  const isTeaching = cat.id === 'teaching';
+                  const isUgcNet = cat.id === 'ugc_net';
+
+                  const accentColor = 
+                    isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
+                    isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
+                    isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
+                    isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
+                    isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
+                    'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
+
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setSelectedCategory(cat.id);
+                        setSelectedSubCategory(null);
+                      }}
+                      className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 p-6 rounded-2xl flex flex-col justify-between group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.03] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
+                    >
+                      <div>
+                        {/* Logo/Icon Container */}
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-4 bg-slate-50 dark:bg-slate-900 transition duration-300">
+                          {cat.logoUrl ? (
+                            <img
+                              src={cat.logoUrl}
+                              alt={`${cat.name} logo`}
+                              className="w-full h-full object-contain p-1"
+                            />
+                          ) : (
+                            <div className="text-blue-500">
+                              {isSsc && <Award className="h-6 w-6 text-orange-500" />}
+                              {isRailways && <TrendingUp className="h-6 w-6 text-indigo-500" />}
+                              {isBanking && <Coins className="h-6 w-6 text-emerald-500" />}
+                              {isTeaching && <BookOpen className="h-6 w-6 text-amber-500" />}
+                              {isUgcNet && <GraduationCap className="h-6 w-6 text-sky-500" />}
+                              {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-6 w-6 text-pink-500" />}
+                            </div>
+                          )}
+                        </div>
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {cat.name}
+                        </h4>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800">
+                          {cat.subCategories?.length || 0} Exams
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[9px] uppercase tracking-wider mt-4 pt-2.5 border-t border-slate-150 dark:border-slate-800/60 w-full">
+                        {language === 'hi' ? "कैटेगरी देखें" : "View Category"} <ChevronRight className="h-3 w-3 transition group-hover:translate-x-1" />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : selectedSubCategory === null ? (
+            <>
+              <div className="mb-6 flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                <div className="animate-in fade-in slide-in-from-top-4 duration-350">
+                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-blue-500" />
+                    {currentCategoryObj?.name}
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {language === 'hi' ? TRANSLATIONS.hi.subCatDesc : TRANSLATIONS.en.subCatDesc}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 shrink-0"
+                >
+                  <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'श्रेणियों पर वापस जाएं' : 'Back to Categories'}
+                </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in duration-300">
