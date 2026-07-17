@@ -1236,10 +1236,6 @@ const formatSubCategoryName = (name: string) => {
                         ) : (
                           notice.title
                         )}
-                      </h5>
-                      <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
-                        {t.lastDate} {notice.lastDate || (language === 'hi' ? 'उपलब्ध नहीं' : 'N/A')}
-                      </p>
                     </div>
                   ))
                 ) : (
@@ -1297,10 +1293,6 @@ const formatSubCategoryName = (name: string) => {
                         ) : (
                           notice.title
                         )}
-                      </h5>
-                      <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
-                        {t.lastDate} {notice.lastDate || (language === 'hi' ? 'उपलब्ध नहीं' : 'N/A')}
-                      </p>
                     </div>
                   ))
                 ) : (
