@@ -579,7 +579,7 @@ export default function MockTestsCatalog() {
                       Select a category to explore mock tests
                     </p>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {filteredCatalog.map(cat => {
                       const isSsc = cat.id === 'ssc';
                       const isRailways = cat.id === 'railways';
@@ -602,10 +602,10 @@ export default function MockTestsCatalog() {
                             setSelectedCategory(cat.id);
                             setSelectedSubCategory(null);
                           }}
-                          className={`w-full flex flex-col items-center text-center p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/85 rounded-2xl transition-all duration-350 shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-[0.99] border-t-4 border-l-0 border-r-0 border-b-0 cursor-pointer ${accentColor}`}
+                          className={`w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/85 rounded-2xl transition-all duration-350 shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-[0.99] border-t-4 border-l-0 border-r-0 border-b-0 cursor-pointer ${accentColor}`}
                         >
                           {/* Logo/Icon Container */}
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-4 bg-slate-50 dark:bg-slate-900 transition duration-300">
+                          <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-3 bg-slate-50 dark:bg-slate-900 transition duration-300">
                             {cat.logoUrl ? (
                               <img
                                 src={cat.logoUrl}
@@ -614,19 +614,19 @@ export default function MockTestsCatalog() {
                               />
                             ) : (
                               <div className="text-blue-500">
-                                {isSsc && <Award className="h-6 w-6 text-orange-500" />}
-                                {isRailways && <TrendingUp className="h-6 w-6 text-indigo-500" />}
-                                {isBanking && <Coins className="h-6 w-6 text-emerald-500" />}
-                                {isTeaching && <BookOpen className="h-6 w-6 text-amber-500" />}
-                                {isUgcNet && <GraduationCap className="h-6 w-6 text-sky-500" />}
-                                {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-6 w-6 text-pink-500" />}
+                                {isSsc && <Award className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />}
+                                {isRailways && <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />}
+                                {isBanking && <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />}
+                                {isTeaching && <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />}
+                                {isUgcNet && <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-sky-500" />}
+                                {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-pink-500" />}
                               </div>
                             )}
                           </div>
-                          <h4 className="font-extrabold text-xs md:text-sm text-slate-850 dark:text-slate-100 mb-2.5 leading-snug">
+                          <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-850 dark:text-slate-100 mb-2 leading-snug line-clamp-2">
                             {cat.name}
                           </h4>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800">
+                          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border border-slate-100 dark:border-slate-800">
                             {cat.subCategories?.length || 0} Exams
                           </p>
                         </button>
@@ -1176,7 +1176,7 @@ export default function MockTestsCatalog() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in duration-300">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 animate-in fade-in duration-300">
                 {getFilteredCatalogForSearch().map(cat => {
                   const isSsc = cat.id === 'ssc';
                   const isRailways = cat.id === 'railways';
@@ -1199,11 +1199,11 @@ export default function MockTestsCatalog() {
                         setSelectedCategory(cat.id);
                         setSelectedSubCategory(null);
                       }}
-                      className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 p-6 rounded-2xl flex flex-col justify-between group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.03] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
+                      className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 p-4 sm:p-6 rounded-2xl flex flex-col justify-between group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.03] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
                     >
                       <div>
                         {/* Logo/Icon Container */}
-                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-4 bg-slate-50 dark:bg-slate-900 transition duration-300">
+                        <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-3 bg-slate-50 dark:bg-slate-900 transition duration-300">
                           {cat.logoUrl ? (
                             <img
                               src={cat.logoUrl}
@@ -1212,19 +1212,19 @@ export default function MockTestsCatalog() {
                             />
                           ) : (
                             <div className="text-blue-500">
-                              {isSsc && <Award className="h-6 w-6 text-orange-500" />}
-                              {isRailways && <TrendingUp className="h-6 w-6 text-indigo-500" />}
-                              {isBanking && <Coins className="h-6 w-6 text-emerald-500" />}
-                              {isTeaching && <BookOpen className="h-6 w-6 text-amber-500" />}
-                              {isUgcNet && <GraduationCap className="h-6 w-6 text-sky-500" />}
-                              {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-6 w-6 text-pink-500" />}
+                              {isSsc && <Award className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />}
+                              {isRailways && <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />}
+                              {isBanking && <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />}
+                              {isTeaching && <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />}
+                              {isUgcNet && <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-sky-500" />}
+                              {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-pink-500" />}
                             </div>
                           )}
                         </div>
-                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                           {cat.name}
                         </h4>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800">
+                        <span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border border-slate-100 dark:border-slate-800">
                           {cat.subCategories?.length || 0} Exams
                         </span>
                       </div>
