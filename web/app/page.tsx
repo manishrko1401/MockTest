@@ -380,7 +380,8 @@ const formatSubCategoryName = (name: string) => {
 
   if (isMounted && isMobile) {
     return (
-      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
+      <>
+        <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
         {/* Mobile Orbs */}
         <div className="absolute top-10 -left-20 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute top-[50%] -right-20 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -1039,8 +1040,107 @@ const formatSubCategoryName = (name: string) => {
           </div>
         )}
       </div>
-    );
-  }
+      {showCongratsPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 overflow-hidden">
+            {/* Background design accents */}
+            <div className="absolute -top-10 -right-10 w-36 h-36 bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-2xl pointer-events-none"></div>
+            <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-2xl pointer-events-none"></div>
+
+            {/* Close cross */}
+            <button
+              onClick={() => {
+                setShowCongratsPopup(false);
+                sessionStorage.setItem('dismissed_congrats_popup', 'true');
+              }}
+              className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-55 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-350 transition"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Header Icon */}
+            <div className="mx-auto w-16 h-16 bg-blue-50 dark:bg-blue-950/60 rounded-2xl flex items-center justify-center border border-blue-100 dark:border-blue-900/40 mb-6 shadow-inner relative">
+              <Gift className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-bounce" />
+              <Sparkles className="h-4 w-4 text-yellow-500 dark:text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
+            </div>
+
+            {/* Content */}
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+                {language === 'hi' ? 'बधाई हो! 🎉' : 'Congratulations! 🎉'}
+              </h2>
+              <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                {language === 'hi' ? 'मॉक टेस्ट हब टीम से उपहार' : 'Gift from Mock Test Hub Team'}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 px-2 pt-2 leading-relaxed">
+                {language === 'hi'
+                  ? 'आपके खाते में 1 वर्ष का मॉक टेस्ट पास प्रो (Premium Plan) सक्रिय कर दिया गया है! अब आप सभी प्रीमियम परीक्षाओं का उपयोग कर सकते हैं।'
+                  : 'A 1-Year Mock Test Pass Pro subscription has been credited to your account! Explore all features and premium tests immediately.'}
+              </p>
+            </div>
+
+            {/* Unlocked Benefits list */}
+            <div className="mt-6 p-4 bg-slate-55 dark:bg-slate-955/60 border border-slate-150 dark:border-slate-850 rounded-2xl space-y-3.5">
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">🔓</div>
+                <div>
+                  <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
+                    {language === 'hi' ? 'असीमित मॉक टेस्ट्स' : 'Unlimited Premium Tests'}
+                  </h4>
+                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    {language === 'hi' ? 'सभी एसएससी, बैंकिंग, रेलवे और राज्य स्तरीय प्रीमियम टेस्ट अनलॉक हैं।' : 'Access all SSC, Banking, Railways & State level exams without restriction.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">📝</div>
+                <div>
+                  <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
+                    {language === 'hi' ? 'कस्टम टेस्ट क्रिएटर' : 'Custom Paper Creator'}
+                  </h4>
+                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    {language === 'hi' ? 'अपने कमजोर विषयों के अनुसार स्वयं के प्रश्न-पत्र तैयार करें।' : 'Build customizable exam papers focused on your weak subjects.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">📊</div>
+                <div>
+                  <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
+                    {language === 'hi' ? 'पूर्ण स्पीड और गति विश्लेषक' : 'Advanced Speed Analytics'}
+                  </h4>
+                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    {language === 'hi' ? 'अपने डैशबोर्ड पर सेक्शनल टाइम, स्पीड और तुलनात्मक परिणाम देखें।' : 'Track sectional timing averages and topper comparative speed details.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action button */}
+            <div className="mt-6">
+              <button
+                onClick={handleClaimPassPro}
+                disabled={claiming}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold py-3.5 rounded-2xl text-xs transition active:scale-95 cursor-pointer shadow-lg shadow-blue-500/20 uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {claiming ? (
+                  <span>{language === 'hi' ? 'प्रोसेसिंग...' : 'Processing...'}</span>
+                ) : (
+                  <>
+                    <Gift className="h-4.5 w-4.5 animate-pulse" />
+                    <span>{language === 'hi' ? '1 वर्ष का पास प्रो दावा करें (Claim Now) 🎁' : 'Claim 1 Year Pass Pro 🎁'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200">
