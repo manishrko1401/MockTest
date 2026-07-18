@@ -170,8 +170,47 @@ export default function MockTestsCatalog() {
     setActiveSubSubId(null);
   }, [selectedSubCategory]);
 
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
+  // Hash synchronization and back button tracking for mobile view screen-by-screen
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#bookmarks') {
+        setShowBookmarks(true);
+      } else if (hash.startsWith('#exam-')) {
+        const examId = hash.replace('#exam-', '');
+        let foundCatId = null;
+        for (const cat of examCatalog) {
+          if (cat.subCategories.some(sub => sub.id === examId)) {
+            foundCatId = cat.id;
+            break;
+          }
+        }
+        setShowBookmarks(false);
+        if (foundCatId) {
+          setSelectedCategory(foundCatId);
+        }
+        setSelectedSubCategory(examId);
+      } else if (hash.startsWith('#category-')) {
+        const catId = hash.replace('#category-', '');
+        setShowBookmarks(false);
+        setSelectedCategory(catId);
+        setSelectedSubCategory(null);
+      } else {
+        setShowBookmarks(false);
+        setSelectedCategory(null);
+        setSelectedSubCategory(null);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Initial load: parse query params, but check hash first (hash takes precedence on reload if present)
+    const initialHash = window.location.hash;
+    if (initialHash) {
+      handleHashChange();
+    } else {
       const params = new URLSearchParams(window.location.search);
       const cat = params.get('cat');
       const sub = params.get('sub');
@@ -184,11 +223,81 @@ export default function MockTestsCatalog() {
             setActiveSubSubId(subsub);
           }
         }
-      } else {
-        setSelectedCategory(null);
       }
     }
-  }, []);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [examCatalog]);
+
+  const handleCategorySelect = (catId: string) => {
+    setSelectedCategory(catId);
+    setSelectedSubCategory(null);
+    if (typeof window !== 'undefined') {
+      window.location.hash = `category-${catId}`;
+    }
+  };
+
+  const handleSubCategorySelect = (subCatId: string) => {
+    setSelectedSubCategory(subCatId);
+    if (typeof window !== 'undefined') {
+      window.location.hash = `exam-${subCatId}`;
+    }
+  };
+
+  const handleCategoryBack = () => {
+    if (typeof window !== 'undefined') {
+      if (window.location.hash.startsWith('#category-')) {
+        window.history.back();
+      } else {
+        setSelectedCategory(null);
+        window.location.hash = '';
+      }
+    } else {
+      setSelectedCategory(null);
+    }
+  };
+
+  const handleSubCategoryBack = () => {
+    if (typeof window !== 'undefined') {
+      if (window.location.hash.startsWith('#exam-')) {
+        window.history.back();
+      } else {
+        setSelectedSubCategory(null);
+        if (selectedCategory) {
+          window.location.hash = `category-${selectedCategory}`;
+        } else {
+          window.location.hash = '';
+        }
+      }
+    } else {
+      setSelectedSubCategory(null);
+    }
+  };
+
+  const handleToggleBookmarks = () => {
+    const nextState = !showBookmarks;
+    setShowBookmarks(nextState);
+    if (typeof window !== 'undefined') {
+      if (nextState) {
+        window.location.hash = 'bookmarks';
+      } else {
+        if (window.location.hash === '#bookmarks') {
+          window.history.back();
+        } else {
+          window.location.hash = '';
+        }
+      }
+    }
+  };
+
+  const handleCloseBookmarks = () => {
+    setShowBookmarks(false);
+    if (typeof window !== 'undefined' && window.location.hash === '#bookmarks') {
+      window.history.back();
+    }
+  };
 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [categorySearchQuery, setCategorySearchQuery] = useState<string>('');
@@ -391,7 +500,7 @@ export default function MockTestsCatalog() {
           <div className="flex items-center gap-2">
             {/* Bookmarked Questions Button */}
             <button
-              onClick={() => setShowBookmarks(!showBookmarks)}
+              onClick={handleToggleBookmarks}
               className={`p-1.5 rounded-lg flex items-center justify-center gap-1 border text-[10px] font-bold transition h-8 ${
                 showBookmarks 
                   ? 'bg-yellow-500 border-yellow-500 text-white shadow-sm'
@@ -451,7 +560,7 @@ export default function MockTestsCatalog() {
                   <Bookmark className="h-4 w-4 text-yellow-500 fill-yellow-500" /> Bookmarked Questions ({currentUser?.bookmarkedQuestions?.length || 0})
                 </h3>
                 <button
-                  onClick={() => setShowBookmarks(false)}
+                  onClick={handleCloseBookmarks}
                   className="text-[10px] text-blue-600 font-bold"
                 >
                   Back to List
@@ -598,10 +707,7 @@ export default function MockTestsCatalog() {
                       return (
                         <button
                           key={cat.id}
-                          onClick={() => {
-                            setSelectedCategory(cat.id);
-                            setSelectedSubCategory(null);
-                          }}
+                          onClick={() => handleCategorySelect(cat.id)}
                           className={`w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/85 rounded-2xl transition-all duration-350 shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-[0.99] border-t-4 border-l-0 border-r-0 border-b-0 cursor-pointer ${accentColor}`}
                         >
                           {/* Logo/Icon Container */}
@@ -638,7 +744,7 @@ export default function MockTestsCatalog() {
                 /* Case 2: Category is selected, but Subcategory (Exam) is not - Render Subcategory (Exam) list */
                 <div className="flex-1 overflow-y-auto space-y-4 mobile-fade-in">
                   <button
-                    onClick={() => setSelectedCategory(null)}
+                    onClick={handleCategoryBack}
                     className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[10px] uppercase tracking-wider mb-2 cursor-pointer"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" /> Back to Exam Categories
@@ -665,8 +771,8 @@ export default function MockTestsCatalog() {
                       return (
                         <button
                           key={subCat.id}
-                          onClick={() => setSelectedSubCategory(subCat.id)}
-                          className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
+                          onClick={() => handleSubCategorySelect(subCat.id)}
+                          className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
                         >
                           {/* Accent Gradient Border at top */}
                           <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${themeInfo.gradient}`} />
@@ -706,7 +812,7 @@ export default function MockTestsCatalog() {
                 /* Case 3: Subcategory (Exam) is selected - Render Tests List under it */
                 <div className="flex-1 overflow-y-auto space-y-4 mobile-fade-in">
                   <button
-                    onClick={() => setSelectedSubCategory(null)}
+                    onClick={handleSubCategoryBack}
                     className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[10px] uppercase tracking-wider mb-2 cursor-pointer"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" /> Back to Exams

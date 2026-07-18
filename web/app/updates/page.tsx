@@ -30,6 +30,69 @@ export default function UpdatesCenterPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [activeMobileTab, setActiveMobileTab] = React.useState<'notice' | 'result' | 'admit_card' | 'answer_key'>('notice');
 
+  // Screen back navigation screen-by-screen logic for mobile view
+  const handleToggleMenu = (open: boolean) => {
+    setMobileMenuOpen(open);
+    if (typeof window !== 'undefined') {
+      if (open) {
+        window.location.hash = 'menu';
+      } else {
+        if (window.location.hash === '#menu') {
+          window.history.back();
+        } else {
+          window.location.hash = '';
+        }
+      }
+    }
+  };
+
+  const handleTabClick = (tab: 'notice' | 'result' | 'admit_card' | 'answer_key') => {
+    setActiveMobileTab(tab);
+    if (typeof window !== 'undefined') {
+      if (tab === 'notice') {
+        if (window.location.hash.startsWith('#tab-')) {
+          window.history.back();
+        } else {
+          window.location.hash = '';
+        }
+      } else {
+        window.location.hash = `tab-${tab}`;
+      }
+    }
+  };
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#tab-')) {
+        const tabName = hash.replace('#tab-', '') as any;
+        setActiveMobileTab(tabName);
+      } else {
+        setActiveMobileTab('notice');
+      }
+
+      if (hash === '#menu') {
+        setMobileMenuOpen(true);
+      } else {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    
+    // Initial check
+    const initialHash = window.location.hash;
+    if (initialHash) {
+      handleHashChange();
+    }
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
+
   if (isMounted && isMobile) {
     return (
       <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
@@ -51,7 +114,7 @@ export default function UpdatesCenterPage() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => handleToggleMenu(!mobileMenuOpen)}
               className="p-2 rounded-lg bg-slate-100 dark:bg-slate-905 text-slate-600 dark:text-slate-355 border border-slate-200 dark:border-slate-800 active:scale-95"
             >
               {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
@@ -154,7 +217,7 @@ export default function UpdatesCenterPage() {
           {/* MOBILE TABS FILTER */}
           <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl shrink-0">
             <button
-              onClick={() => setActiveMobileTab('notice')}
+              onClick={() => handleTabClick('notice')}
               className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
                 activeMobileTab === 'notice' 
                   ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm'
@@ -164,7 +227,7 @@ export default function UpdatesCenterPage() {
               Notices
             </button>
             <button
-              onClick={() => setActiveMobileTab('result')}
+              onClick={() => handleTabClick('result')}
               className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
                 activeMobileTab === 'result' 
                   ? 'bg-white dark:bg-slate-800 text-yellow-600 dark:text-white shadow-sm'
@@ -174,7 +237,7 @@ export default function UpdatesCenterPage() {
               Results
             </button>
             <button
-              onClick={() => setActiveMobileTab('admit_card')}
+              onClick={() => handleTabClick('admit_card')}
               className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
                 activeMobileTab === 'admit_card' 
                   ? 'bg-white dark:bg-slate-800 text-green-600 dark:text-white shadow-sm'
@@ -184,7 +247,7 @@ export default function UpdatesCenterPage() {
               Admit Cards
             </button>
             <button
-              onClick={() => setActiveMobileTab('answer_key')}
+              onClick={() => handleTabClick('answer_key')}
               className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
                 activeMobileTab === 'answer_key' 
                   ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-white shadow-sm'

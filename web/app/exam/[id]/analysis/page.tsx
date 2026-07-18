@@ -91,6 +91,62 @@ export default function ExamSolutionAnalysisPage() {
   const [customQs, setCustomQs] = useState<any[] | null>(null);
   const [loadingCustomQs, setLoadingCustomQs] = useState(true);
   const [activeMobileTab, setActiveMobileTab] = useState<'analysis' | 'solutions'>('analysis');
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const diffX = e.changedTouches[0].clientX - touchStartX.current;
+    const diffY = e.changedTouches[0].clientY - touchStartY.current;
+
+    if (Math.abs(diffX) > 50 && Math.abs(diffY) < 40) {
+      if (diffX > 0) {
+        // Swipe right -> Previous question
+        setActiveQuestionIdx(prev => Math.max(0, prev - 1));
+      } else {
+        // Swipe left -> Next question
+        setActiveQuestionIdx(prev => Math.min(totalQs - 1, prev + 1));
+      }
+    }
+  };
+
+  const handleTabClick = (tab: 'analysis' | 'solutions') => {
+    setActiveMobileTab(tab);
+    if (typeof window !== 'undefined') {
+      if (tab === 'solutions') {
+        window.location.hash = 'solutions';
+      } else {
+        if (window.location.hash === '#solutions') {
+          window.history.back();
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleHashChange = () => {
+      const isSolutionsHash = window.location.hash === '#solutions';
+      setActiveMobileTab(isSolutionsHash ? 'solutions' : 'analysis');
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Initial check
+    if (window.location.hash === '#solutions') {
+      setActiveMobileTab('solutions');
+    }
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
+
   const t = TRANSLATIONS[lang];
 
   // Find test context in catalog to redirect back precisely
@@ -581,7 +637,7 @@ export default function ExamSolutionAnalysisPage() {
       {/* Mobile Tab Switcher (Visible only on mobile) */}
       <div className="flex lg:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-16 z-30 shadow-sm">
         <button
-          onClick={() => setActiveMobileTab('analysis')}
+          onClick={() => handleTabClick('analysis')}
           className={`flex-1 py-3 text-xs font-bold transition-all text-center border-b-2 ${
             activeMobileTab === 'analysis'
               ? 'border-blue-600 text-blue-600 dark:text-blue-400'
@@ -591,7 +647,7 @@ export default function ExamSolutionAnalysisPage() {
           {language === 'hi' ? 'विश्लेषण' : 'Analysis'}
         </button>
         <button
-          onClick={() => setActiveMobileTab('solutions')}
+          onClick={() => handleTabClick('solutions')}
           className={`flex-1 py-3 text-xs font-bold transition-all text-center border-b-2 ${
             activeMobileTab === 'solutions'
               ? 'border-blue-600 text-blue-600 dark:text-blue-400'
@@ -875,7 +931,7 @@ export default function ExamSolutionAnalysisPage() {
       {activeMobileTab === 'analysis' && (
         <div className="block lg:hidden max-w-6xl w-full mx-auto px-6 mt-6">
           <button
-            onClick={() => setActiveMobileTab('solutions')}
+            onClick={() => handleTabClick('solutions')}
             className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all active:scale-98 flex items-center justify-center gap-2 text-xs tracking-wider uppercase border border-blue-500/10"
           >
             <HelpCircle className="h-4.5 w-4.5" />
@@ -893,6 +949,38 @@ export default function ExamSolutionAnalysisPage() {
         <main className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm min-h-[480px] flex flex-col justify-between w-full">
           
           <div>
+            {/* Mobile-only Horizontal Question Palette Bar (placed at the top of the question workspace) */}
+            <div className="block lg:hidden w-full overflow-x-auto pb-3 mb-5 shrink-0 scrollbar-none border-b border-slate-100 dark:border-slate-800/60">
+              <div className="flex gap-2 px-1 min-w-max">
+                {questionStatuses.map((stat, idx) => {
+                  const isActive = idx === activeQuestionIdx;
+                  
+                  let statusBg = 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-850 dark:text-slate-400';
+                  if (stat.status === 'correct') {
+                    statusBg = 'bg-green-600 text-white shadow shadow-green-950/20';
+                  } else if (stat.status === 'incorrect') {
+                    statusBg = 'bg-red-650 text-white shadow shadow-red-950/20';
+                  } else if (stat.status === 'skipped') {
+                    statusBg = 'bg-slate-400 dark:bg-slate-600 text-white';
+                  }
+
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveQuestionIdx(idx)}
+                      className={`h-9 w-9 rounded-xl flex items-center justify-center text-xs font-black transition-all cursor-pointer ${statusBg} ${
+                        isActive 
+                          ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 transform scale-105 border-2 border-white dark:border-slate-900' 
+                          : 'border border-transparent'
+                      }`}
+                    >
+                      {idx + 1}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Question Header Status */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4 mb-5 gap-3">
               <div className="flex items-center gap-3 flex-wrap">
@@ -952,8 +1040,14 @@ export default function ExamSolutionAnalysisPage() {
               </div>
             </div>
 
-            {/* Question Box */}
-            <div className="mb-6 space-y-4">
+            {/* Swipeable Question Content Area */}
+            <div 
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              className="mt-4"
+            >
+              {/* Question Box */}
+              <div className="mb-6 space-y-4">
               <MathJaxText
                 component="div"
                 className="text-sm font-semibold text-slate-900 dark:text-white leading-relaxed markup-content"
@@ -1040,6 +1134,7 @@ export default function ExamSolutionAnalysisPage() {
                 content={decodeHtml(activeExplanation[lang] || activeExplanation['en'] || "")}
               />
             </div>
+            </div>
 
           </div>
 
@@ -1069,7 +1164,7 @@ export default function ExamSolutionAnalysisPage() {
         </main>
 
         {/* RIGHT WORKSPACE SIDEBAR: QUESTION PALETTE */}
-        <aside className="w-full lg:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+        <aside className="hidden lg:block w-full lg:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
           
           <h4 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2">
             {t.analysisQuestionsPal}

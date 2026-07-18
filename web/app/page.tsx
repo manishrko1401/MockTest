@@ -305,6 +305,72 @@ const formatSubCategoryName = (name: string) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileUpdateTab, setMobileUpdateTab] = useState<'notice' | 'result' | 'admit_card'>('notice');
 
+  // Screen back navigation screen-by-screen logic for mobile view
+  const handleToggleMenu = (open: boolean) => {
+    setMobileMenuOpen(open);
+    if (typeof window !== 'undefined') {
+      if (open) {
+        window.location.hash = 'menu';
+      } else {
+        if (window.location.hash === '#menu') {
+          window.history.back();
+        } else {
+          window.location.hash = '';
+        }
+      }
+    }
+  };
+
+  const handleOpenCategoryModal = (catId: string) => {
+    setSelectedModalCategory(catId);
+    if (typeof window !== 'undefined') {
+      window.location.hash = `cat-${catId}`;
+    }
+  };
+
+  const handleCloseCategoryModal = () => {
+    setSelectedModalCategory(null);
+    if (typeof window !== 'undefined') {
+      if (window.location.hash.startsWith('#cat-')) {
+        window.history.back();
+      } else {
+        window.location.hash = '';
+      }
+    }
+  };
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#cat-')) {
+        const catId = hash.replace('#cat-', '');
+        setSelectedModalCategory(catId);
+      } else {
+        setSelectedModalCategory(null);
+      }
+
+      if (hash === '#menu') {
+        setMobileMenuOpen(true);
+      } else {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    
+    // Initial check
+    const initialHash = window.location.hash;
+    if (initialHash) {
+      handleHashChange();
+    }
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
+
   const activeTopper = testimonials[successIndex] || testimonials[0] || SUCCESS_STORIES[0];
 
   if (isMounted && isMobile) {
@@ -328,7 +394,7 @@ const formatSubCategoryName = (name: string) => {
           <div className="flex items-center gap-2">
             {/* Hamburger Button */}
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => handleToggleMenu(!mobileMenuOpen)}
               className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-350 border border-slate-200 dark:border-slate-800 active:scale-95"
             >
               {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
@@ -621,7 +687,7 @@ const formatSubCategoryName = (name: string) => {
 
                 return (
                   <button
-                    onClick={() => setSelectedModalCategory(cat.id)}
+                    onClick={() => handleOpenCategoryModal(cat.id)}
                     key={cat.id}
                     className={`border p-4.5 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full relative overflow-hidden active:scale-[0.99] cursor-pointer ${style.bg} ${shadowStyle}`}
                   >
@@ -821,7 +887,7 @@ const formatSubCategoryName = (name: string) => {
                     {(examCatalog?.find(c => c.id === selectedModalCategory) || CATEGORIES.find(c => c.id === selectedModalCategory))?.name || 'Exam'} Options
                   </h4>
                   <button
-                    onClick={() => setSelectedModalCategory(null)}
+                    onClick={handleCloseCategoryModal}
                     className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500"
                   >
                     <X className="h-4 w-4" />
@@ -847,7 +913,7 @@ const formatSubCategoryName = (name: string) => {
                       <Link
                         key={item.id}
                         href={item.href}
-                        onClick={() => setSelectedModalCategory(null)}
+                        onClick={handleCloseCategoryModal}
                         className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-bold text-slate-800 dark:text-slate-200"
                       >
                         <span className="flex-1 pr-2">{item.name}</span>
@@ -859,7 +925,7 @@ const formatSubCategoryName = (name: string) => {
               </div>
 
               <button
-                onClick={() => setSelectedModalCategory(null)}
+                onClick={() => { setSelectedModalCategory(null); window.history.back(); }}
                 className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 py-3 rounded-xl text-xs font-bold mt-6"
               >
                 Close View
