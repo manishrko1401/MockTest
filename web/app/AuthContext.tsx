@@ -206,6 +206,7 @@ interface AuthContextType {
   reorderMockTests: (categoryId: string, subCategoryId: string, subSubCategoryId: string, orderedTests: MockTestItem[]) => void;
   mergeUserSessions: (userId: string, sessions: MockUser['testSessions']) => void;
   refreshCatalog: () => Promise<void>;
+  refreshUsersList: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -1935,6 +1936,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteReportedQuestion,
         mergeUserSessions,
         refreshCatalog,
+        refreshUsersList: fetchUsersList,
       }}
     >
       {children}

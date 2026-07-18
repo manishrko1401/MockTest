@@ -349,6 +349,7 @@ export default function AdminAnalytics() {
     deleteReportedQuestion,
     mergeUserSessions,
     refreshCatalog,
+    refreshUsersList,
   } = useAuth();
   const t = TRANSLATIONS[language];
 
@@ -1538,9 +1539,21 @@ export default function AdminAnalytics() {
                   <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">User Management Portal</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage user credentials, passes, roles, referral data, and view attempt histories</p>
                 </div>
-                <span className="text-xs font-bold text-slate-550 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
-                  {usersList.length} user{usersList.length !== 1 ? 's' : ''} registered
-                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      await refreshUsersList();
+                      showToast('Users directory refreshed from database!');
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-755 text-white text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Refresh List
+                  </button>
+                  <span className="text-xs font-bold text-slate-550 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                    {usersList.length} user{usersList.length !== 1 ? 's' : ''} registered
+                  </span>
+                </div>
               </div>
 
               {/* Collapsible Edit Profile Form */}
