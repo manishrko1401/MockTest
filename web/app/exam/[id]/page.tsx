@@ -517,8 +517,8 @@ function TcsIonEngine({ testId }: { testId: string }) {
             
             <h3 className="text-lg font-black text-slate-900 uppercase tracking-wide">
               {language === 'hi' 
-                ? `सुरक्षा उल्लंघन चेतावनी (${violationsCount}/2)` 
-                : `Security Violation Warning (${violationsCount}/2)`}
+                ? `टेस्ट उल्लंघन चेतावनी (${violationsCount}/2)` 
+                : `Test Violation Warning (${violationsCount}/2)`}
             </h3>
             
             <p className="text-xs text-red-600 font-extrabold mt-1 uppercase tracking-wider">

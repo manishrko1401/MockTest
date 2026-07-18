@@ -1646,8 +1646,8 @@ export default function MobileTestScreen({
             </View>
             <Text style={[styles.modalTitle, { color: '#EF4444' }]}>
               {lang === 'hi' 
-                ? `सुरक्षा उल्लंघन चेतावनी (${violationsCount}/2)` 
-                : `Security Violation Warning (${violationsCount}/2)`}
+                ? `टेस्ट उल्लंघन चेतावनी (${violationsCount}/2)` 
+                : `Test Violation Warning (${violationsCount}/2)`}
             </Text>
             
             <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#DC2626', textAlign: 'center', marginVertical: 4 }}>
