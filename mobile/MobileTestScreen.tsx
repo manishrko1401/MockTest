@@ -886,6 +886,9 @@ export default function MobileTestScreen({
     setIsTimerRunning(false);
 
     const performSubmission = async () => {
+      // Mark as exiting/submitted immediately to prevent background auto-save from clobbering this submission
+      isExitingRef.current = true;
+
       // Clear ongoing test IMMEDIATELY at start of submission so it can never be resumed
       try {
         await AsyncStorage.removeItem(`ongoing_test_${testId}`);
