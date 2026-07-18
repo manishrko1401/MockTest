@@ -534,6 +534,17 @@ const formatSubCategoryName = (name: string) => {
               </Link>
             </div>
 
+            {/* Test Series Button (Mobile Only) */}
+            <div className="flex justify-center pt-2">
+              <Link
+                href="/mock-tests"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 px-6 rounded-xl text-xs transition active:scale-95 shadow-md flex items-center gap-2"
+              >
+                <BookOpen className="h-4 w-4" />
+                {language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series'}
+              </Link>
+            </div>
+
           </section>
 
           {/* TOPPERS TESTIMONIAL PANEL */}
