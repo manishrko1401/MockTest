@@ -289,3 +289,19 @@ model SupportMessage {
   @@map("support_messages")
 }
 
+// 15. User Feedback & Ratings
+model Feedback {
+  id             String   @id @default(uuid())
+  userId         String
+  userEmail      String   @default("")
+  userFullName   String   @default("")
+  testId         String
+  testTitle      String   @default("")
+  platformRating Int      // 1-5 rating for web/app
+  examRating     Int      // 1-5 rating for exam
+  feedbackText   String?
+  createdAt      DateTime @default(now())
+
+  @@map("feedbacks")
+}
+

@@ -592,7 +592,26 @@ function TcsIonEngine({ testId }: { testId: string }) {
             </div>
 
             <button
-              onClick={() => {
+              onClick={async () => {
+                // Submit rating/feedback in background
+                if (websiteRating > 0 || examRating > 0 || feedbackText.trim() !== '') {
+                  try {
+                    await fetch('/api/feedback', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        userId: currentUser?.id,
+                        testId: testId,
+                        platformRating: websiteRating,
+                        examRating: examRating,
+                        feedbackText: feedbackText
+                      })
+                    });
+                  } catch (e) {
+                    console.warn("Feedback submission failed:", e);
+                  }
+                }
+
                 try {
                   const doc = document as any;
                   if (document.exitFullscreen) {

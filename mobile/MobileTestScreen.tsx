@@ -20,7 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Globe, AlignJustify } from 'lucide-react-native';
 import NetInfo from '@react-native-community/netinfo';
-import { ApiClient } from './api';
+import { ApiClient, BASE_URL } from './api';
 import { getCachedQuestions, saveQuestionsToCache } from './cache';
 import { ThemeColors } from './theme';
 import { HtmlText, preloadImages } from './HtmlText';
@@ -1108,7 +1108,26 @@ export default function MobileTestScreen({
           buttons: [
             {
               text: 'View Performance',
-              onPress: () => {
+              onPress: async () => {
+                // Submit rating/feedback in background
+                if (websiteRating > 0 || examRating > 0 || feedbackText.trim() !== '') {
+                  try {
+                    await fetch(`${BASE_URL}/api/feedback`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        userId: currentUser?.id,
+                        testId: testId,
+                        platformRating: websiteRating,
+                        examRating: examRating,
+                        feedbackText: feedbackText
+                      })
+                    });
+                  } catch (e) {
+                    console.warn("Feedback submission failed:", e);
+                  }
+                }
+
                 setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
                 setLoading(true);
                 setLoadingText('Generating performance analysis...');

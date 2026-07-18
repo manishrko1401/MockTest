@@ -86,9 +86,9 @@ const computeExactTimeSpent = (session: any): number => {
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -104,6 +104,10 @@ export default function AdminAnalytics() {
   const [supportSending, setSupportSending] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingMessageText, setEditingMessageText] = useState('');
+
+  // Feedbacks state
+  const [feedbacksList, setFeedbacksList] = useState<any[]>([]);
+  const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
 
   const handleSaveEditMessage = async (messageId: string, text: string) => {
     if (!text.trim()) return;
@@ -127,6 +131,27 @@ export default function AdminAnalytics() {
       console.error(e);
     }
   };
+
+  const fetchFeedbacks = async () => {
+    setLoadingFeedbacks(true);
+    try {
+      const res = await fetch('/api/feedback');
+      const data = await res.json();
+      if (data.success) {
+        setFeedbacksList(data.feedbacks || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch feedbacks:', e);
+    } finally {
+      setLoadingFeedbacks(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'feedback') {
+      fetchFeedbacks();
+    }
+  }, [activeTab]);
 
   // Poll support users list
   const fetchSupportUsers = async (showLoading = false) => {
@@ -1170,6 +1195,19 @@ export default function AdminAnalytics() {
               >
                 <Database className="h-4 w-4" />
                 DB Monitor
+              </button>
+            )}
+            {hasTabAccess('feedback') && (
+              <button
+                onClick={() => selectTab('feedback')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'feedback'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <MessageCircle className="h-4 w-4" />
+                User Feedbacks
               </button>
             )}
           </nav>
@@ -4249,6 +4287,144 @@ export default function AdminAnalytics() {
           {activeTab === 'dbmonitor' && hasTabAccess('dbmonitor') && (
             <div className="animate-in fade-in duration-200">
               <DatabaseMonitor />
+            </div>
+          )}
+
+          {/* TAB: USER FEEDBACKS */}
+          {activeTab === 'feedback' && hasTabAccess('feedback') && (
+            <div className="animate-in fade-in duration-200 space-y-6">
+              {/* Header */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">User Feedbacks & Ratings</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Monitor ratings and suggestions submitted by candidates upon test submission.</p>
+                </div>
+                <button
+                  onClick={fetchFeedbacks}
+                  disabled={loadingFeedbacks}
+                  className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${loadingFeedbacks ? 'animate-spin' : ''}`} />
+                  Refresh List
+                </button>
+              </div>
+
+              {/* Summary Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total Feedback Submissions</p>
+                    <h4 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{feedbacksList.length}</h4>
+                  </div>
+                  <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/40 rounded-lg flex items-center justify-center text-blue-500">
+                    <MessageSquare className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Average Platform Rating</p>
+                    <h4 className="text-2xl font-black text-amber-500 mt-1">
+                      {feedbacksList.length > 0 
+                        ? (feedbacksList.reduce((sum, f) => sum + f.platformRating, 0) / feedbacksList.length).toFixed(1)
+                        : "0.0"} <span className="text-sm text-amber-400">★</span>
+                    </h4>
+                  </div>
+                  <div className="h-10 w-10 bg-amber-50 dark:bg-amber-950/40 rounded-lg flex items-center justify-center text-amber-500">
+                    <Award className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Average Exam Experience</p>
+                    <h4 className="text-2xl font-black text-emerald-500 mt-1">
+                      {feedbacksList.length > 0 
+                        ? (feedbacksList.reduce((sum, f) => sum + f.examRating, 0) / feedbacksList.length).toFixed(1)
+                        : "0.0"} <span className="text-sm text-emerald-400">★</span>
+                    </h4>
+                  </div>
+                  <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg flex items-center justify-center text-emerald-500">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Feedbacks Table Grid */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Candidate / Date</th>
+                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mock Test</th>
+                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">App/Web Rating</th>
+                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Exam Rating</th>
+                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Written Feedback</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {loadingFeedbacks ? (
+                        <tr>
+                          <td colSpan={5} className="py-24 text-center">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-3"></div>
+                            <p className="text-xs text-slate-400 font-bold">Loading feedbacks data...</p>
+                          </td>
+                        </tr>
+                      ) : feedbacksList.length > 0 ? (
+                        feedbacksList.map((f) => (
+                          <tr key={f.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                            <td className="py-4 px-4">
+                              <p className="font-extrabold text-xs text-slate-800 dark:text-slate-200">{f.userFullName || 'Anonymous'}</p>
+                              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{f.userEmail}</p>
+                              <p className="text-[9px] text-slate-400 font-medium mt-1 font-sans">
+                                {new Date(f.createdAt).toLocaleString()}
+                              </p>
+                            </td>
+                            <td className="py-4 px-4 max-w-[200px]">
+                              <p className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">{f.testTitle}</p>
+                              <p className="text-[9px] text-slate-400 font-mono mt-0.5 truncate">{f.testId}</p>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex gap-0.5 text-amber-500 text-sm">
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <span key={s} className={s <= f.platformRating ? 'text-amber-400' : 'text-slate-200 dark:text-slate-700'}>★</span>
+                                ))}
+                              </div>
+                              <span className="text-[9px] font-bold text-slate-500 mt-1 block">Rating: {f.platformRating}/5</span>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex gap-0.5 text-emerald-500 text-sm">
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <span key={s} className={s <= f.examRating ? 'text-emerald-400' : 'text-slate-200 dark:text-slate-700'}>★</span>
+                                ))}
+                              </div>
+                              <span className="text-[9px] font-bold text-slate-500 mt-1 block">Rating: {f.examRating}/5</span>
+                            </td>
+                            <td className="py-4 px-4">
+                              {f.feedbackText ? (
+                                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-750 p-2.5 rounded-lg max-w-sm">
+                                  <p className="text-xs text-slate-700 dark:text-slate-300 font-medium whitespace-pre-line leading-relaxed">
+                                    {f.feedbackText}
+                                  </p>
+                                </div>
+                              ) : (
+                                <span className="text-[10px] text-slate-400 italic">No comment provided</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="py-16 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
+                            No feedbacks or ratings submitted by users yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 
