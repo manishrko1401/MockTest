@@ -11,7 +11,8 @@ import {
   Alert,
   StatusBar,
   AppState,
-  ActivityIndicator
+  ActivityIndicator,
+  TextInput
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -117,6 +118,7 @@ export default function MobileTestScreen({
   const [violationsCount, setViolationsCount] = useState(0);
   const [websiteRating, setWebsiteRating] = useState(0);
   const [examRating, setExamRating] = useState(0);
+  const [feedbackText, setFeedbackText] = useState("");
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [drawerTab, setDrawerTab] = useState<'symbols' | 'instructions'>('symbols');
   const [drawerSectionIdx, setDrawerSectionIdx] = useState(0);
@@ -1654,6 +1656,32 @@ export default function MobileTestScreen({
                       </TouchableOpacity>
                     ))}
                   </View>
+                </View>
+
+                <View style={{ marginTop: 12 }}>
+                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', marginBottom: 6 }}>
+                    {lang === 'hi' ? 'अपनी प्रतिक्रिया लिखें (वैकल्पिक):' : 'Write Feedback (Optional):'}
+                  </Text>
+                  <TextInput
+                    value={feedbackText}
+                    onChangeText={setFeedbackText}
+                    placeholder={lang === 'hi' ? 'कृपया अपने विचार लिखें...' : 'Share your thoughts about your test experience...'}
+                    placeholderTextColor={isDark ? '#475569' : '#94A3B8'}
+                    multiline
+                    numberOfLines={2}
+                    style={{
+                      backgroundColor: isDark ? '#0B1329' : '#F8FAFC',
+                      borderColor: isDark ? '#334155' : '#E2E8F0',
+                      borderWidth: 1,
+                      borderRadius: 8,
+                      padding: 8,
+                      fontSize: 11,
+                      color: isDark ? '#FFF' : '#1E293B',
+                      textAlignVertical: 'top',
+                      height: 50,
+                      fontWeight: '600'
+                    }}
+                  />
                 </View>
               </View>
             )}

@@ -90,6 +90,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
   const [questionLanguages, setQuestionLanguages] = useState<Record<string, 'en' | 'hi'>>({});
   const [websiteRating, setWebsiteRating] = useState(0);
   const [examRating, setExamRating] = useState(0);
+  const [feedbackText, setFeedbackText] = useState("");
 
   const { isMobile, isMounted } = useIsMobile();
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
@@ -577,6 +578,16 @@ function TcsIonEngine({ testId }: { testId: string }) {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="mt-4 border-t border-slate-100 pt-3">
+                <p className="text-[11px] font-bold text-slate-600 mb-1.5">Write Feedback (Optional):</p>
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="Share your thoughts about your test experience..."
+                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white resize-none h-16 font-semibold"
+                />
               </div>
             </div>
 
