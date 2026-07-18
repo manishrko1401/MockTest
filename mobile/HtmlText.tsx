@@ -537,6 +537,15 @@ function splitByTables(
   return parts;
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Extract just the tag name (lowercased) from a full tag token.
+// e.g. '<p class="foo">' → 'p', '</strong>' → 'strong', '<br/>' → 'br'
+// ──────────────────────────────────────────────────────────────────────────────
+function getTagName(token: string): string {
+  const m = token.match(/^<\/?([a-zA-Z][a-zA-Z0-9]*)/);
+  return m ? m[1].toLowerCase() : '';
+}
+
 function renderContent(
   html: string,
   textStyle: any,
@@ -573,32 +582,61 @@ function renderContent(
 
   // ── No table: proceed with normal token-based rendering ─────────────────────
 
-  // Split by HTML tags
+  // Split by HTML tags (handles tags with attributes correctly)
   const tokens = clean.split(/(<[^>]+>)/g);
 
   let isBold = false;
+  let isItalic = false;
   let isUnderline = false;
+  let isSup = false;
+  let isSub = false;
+  let isOl = false;
+  let listCounter = 0;
+  let currentHeadingLevel = 0; // 0 = not a heading
+
   const nodes: React.ReactNode[] = [];
   let keyIdx = 0;
 
   const color: string = isDark ? '#E5E7EB' : '#1F2937';
   const fontSize: number = textStyle?.fontSize ?? 14;
 
+  // ── Dedup guard: don't push two consecutive newlines ──────────────────────
+  const pushNewline = () => {
+    const last = nodes[nodes.length - 1];
+    const lastIsNewline =
+      last != null &&
+      React.isValidElement(last) &&
+      (last as React.ReactElement<any>).props?.children === '\n';
+    if (!lastIsNewline) {
+      nodes.push(<Text key={keyIdx++} style={textStyle}>{'\n'}</Text>);
+    }
+  };
+
   const pushText = (value: string) => {
     if (!value) return;
+    // Heading font sizes: h1=1.6x, h2=1.45x, h3=1.3x, h4=1.15x, h5=1.05x, h6=1.0x
+    const headingScale = [1.6, 1.45, 1.3, 1.15, 1.05, 1.0];
+    const headingFontSize = currentHeadingLevel > 0
+      ? Math.round(fontSize * (headingScale[currentHeadingLevel - 1] ?? 1.0))
+      : fontSize;
+    // Sub/sup use a smaller font
+    const effectiveFontSize = (isSup || isSub)
+      ? Math.round(headingFontSize * 0.72)
+      : headingFontSize;
+
     const s: any[] = [
       textStyle,
-      { color },
-      isBold && { fontWeight: 'bold' as const },
+      { color, fontSize: effectiveFontSize },
+      (isBold || currentHeadingLevel > 0) && { fontWeight: 'bold' as const },
+      isItalic && { fontStyle: 'italic' as const },
       isUnderline && { textDecorationLine: 'underline' as const },
     ].filter(Boolean);
-    nodes.push(
-      <Text key={keyIdx++} style={s}>{value}</Text>
-    );
+
+    nodes.push(<Text key={keyIdx++} style={s}>{value}</Text>);
   };
 
   const pushTextWithFracs = (rawText: string) => {
-    // First strip math delimiters so \frac is accessible at top level
+    // Strip math delimiters so \frac is accessible at top level
     const stripped = rawText.replace(/\\+\(|\\+\)|\\+\[|\\+\]|\$\$?/g, '');
     const segments = splitIntoSegments(stripped);
 
@@ -622,33 +660,92 @@ function renderContent(
   };
 
   for (const token of tokens) {
+    if (!token) continue;
+
     if (token.startsWith('<')) {
-      const tag = token.toLowerCase().trim();
-      if (tag === '<strong>' || tag === '<b>') { isBold = true; }
-      else if (tag === '</strong>' || tag === '</b>') { isBold = false; }
-      else if (tag === '<u>') { isUnderline = true; }
-      else if (tag === '</u>') { isUnderline = false; }
-      else if (tag === '<br>' || tag === '<br />' || tag === '<br/>') {
+      const tagName = getTagName(token);
+      const isClosing = token.startsWith('</');
+
+      // ── Inline formatting ────────────────────────────────────────────────
+      if (tagName === 'strong' || tagName === 'b') {
+        isBold = !isClosing;
+      } else if (tagName === 'em' || tagName === 'i') {
+        isItalic = !isClosing;
+      } else if (tagName === 'u') {
+        isUnderline = !isClosing;
+      } else if (tagName === 'mark') {
+        // highlight — treat as bold for emphasis
+        isBold = !isClosing;
+
+      // ── Sub / Sup (HTML tags) ─────────────────────────────────────────────
+      } else if (tagName === 'sup') {
+        isSup = !isClosing;
+      } else if (tagName === 'sub') {
+        isSub = !isClosing;
+
+      // ── Line breaks ───────────────────────────────────────────────────────
+      } else if (tagName === 'br') {
         nodes.push(<Text key={keyIdx++} style={textStyle}>{'\n'}</Text>);
-      } else if (tag === '<p>' || tag === '<div>') {
-        if (nodes.length > 0) nodes.push(<Text key={keyIdx++} style={textStyle}>{'\n'}</Text>);
-      } else if (tag === '</p>' || tag === '</div>') {
-        nodes.push(<Text key={keyIdx++} style={textStyle}>{'\n'}</Text>);
-      } else if (tag === '<ul>') {
-        nodes.push(<Text key={keyIdx++} style={textStyle}>{'\n'}</Text>);
-      } else if (tag === '</ul>') {
-        nodes.push(<Text key={keyIdx++} style={textStyle}>{'\n'}</Text>);
-      } else if (tag === '<li>') {
-        pushText('• ');
-      } else if (tag === '</li>') {
-        nodes.push(<Text key={keyIdx++} style={textStyle}>{'\n'}</Text>);
-      } else if (tag.startsWith('<img')) {
+
+      // ── Block elements ────────────────────────────────────────────────────
+      } else if (
+        tagName === 'p' || tagName === 'div' ||
+        tagName === 'section' || tagName === 'article' ||
+        tagName === 'blockquote' || tagName === 'pre'
+      ) {
+        if (!isClosing) {
+          if (nodes.length > 0) pushNewline();
+        } else {
+          pushNewline();
+        }
+
+      // ── Headings h1–h6 ────────────────────────────────────────────────────
+      } else if (/^h[1-6]$/.test(tagName)) {
+        const level = parseInt(tagName[1], 10);
+        if (!isClosing) {
+          if (nodes.length > 0) pushNewline();
+          currentHeadingLevel = level;
+        } else {
+          currentHeadingLevel = 0;
+          pushNewline();
+        }
+
+      // ── Lists ─────────────────────────────────────────────────────────────
+      } else if (tagName === 'ul') {
+        isOl = false;
+        listCounter = 0;
+        if (!isClosing) {
+          if (nodes.length > 0) pushNewline();
+        } else {
+          pushNewline();
+        }
+      } else if (tagName === 'ol') {
+        if (!isClosing) {
+          isOl = true;
+          listCounter = 0;
+          if (nodes.length > 0) pushNewline();
+        } else {
+          isOl = false;
+          pushNewline();
+        }
+      } else if (tagName === 'li') {
+        if (!isClosing) {
+          if (isOl) {
+            listCounter++;
+            pushText(`${listCounter}. `);
+          } else {
+            pushText('• ');
+          }
+        } else {
+          pushNewline();
+        }
+
+      // ── Images ────────────────────────────────────────────────────────────
+      } else if (tagName === 'img' && !isClosing) {
         const srcMatch = token.match(/src=["']([^"']+)["']/i);
         if (srcMatch) {
           let src = srcMatch[1];
-          if (src.startsWith('//')) {
-            src = 'https:' + src;
-          }
+          if (src.startsWith('//')) src = 'https:' + src;
           nodes.push(
             <HtmlImage
               key={keyIdx++}
@@ -657,10 +754,26 @@ function renderContent(
             />
           );
         }
+
+      // ── Horizontal rule ───────────────────────────────────────────────────
+      } else if (tagName === 'hr') {
+        nodes.push(
+          <View
+            key={keyIdx++}
+            style={{
+              width: '100%',
+              height: 1,
+              backgroundColor: isDark ? '#334155' : '#E2E8F0',
+              marginVertical: 6,
+            }}
+          />
+        );
+
+      // ── Span / anchor / abbr / code / kbd etc. — content flows through ────
+      // (tag is silently ignored; text content renders normally)
       }
-      // All other tags (span, sub, sup, etc.) are silently ignored
     } else {
-      // Plain text token – push with fraction support
+      // Plain text token – render with fraction and LaTeX support
       if (token) pushTextWithFracs(token);
     }
   }
