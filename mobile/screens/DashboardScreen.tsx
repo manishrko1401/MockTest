@@ -59,6 +59,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
+import { HtmlText } from '../HtmlText';
 
 interface DashboardScreenProps {
   currentUser: any;
@@ -1598,6 +1599,12 @@ export default function DashboardScreen({
                 .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
                 .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
 
+              const stripHtml = (html: string) => {
+                if (!html) return '';
+                const decoded = decode(html);
+                return decoded.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
+              };
+
               return (
                 <View key={bm.questionId} style={{
                   backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
@@ -1646,7 +1653,7 @@ export default function DashboardScreen({
                       style={{ fontSize: 12, fontWeight: '600', color: isDark ? '#CBD5E1' : '#1E293B', lineHeight: 18 }}
                       numberOfLines={2}
                     >
-                      {decode(questionTextEn)}
+                      {stripHtml(questionTextEn)}
                     </Text>
 
                     {/* Expand toggle */}
@@ -1673,18 +1680,22 @@ export default function DashboardScreen({
                         <Text style={{ fontSize: 9, fontWeight: '800', color: '#3B82F6', textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.4 }}>
                           Question
                         </Text>
-                        <Text style={{ fontSize: 12, color: isDark ? '#E2E8F0' : '#1E293B', lineHeight: 19 }}>
-                          {decode(questionTextEn)}
-                        </Text>
+                        <HtmlText
+                          html={questionTextEn}
+                          isDark={isDark}
+                          style={{ fontSize: 12, color: isDark ? '#E2E8F0' : '#1E293B', lineHeight: 19 }}
+                        />
                         {questionTextHi && questionTextHi !== questionTextEn && (
                           <>
                             <View style={{ height: 1, backgroundColor: isDark ? '#1E293B' : '#E2E8F0', marginVertical: 8 }} />
                             <Text style={{ fontSize: 9, fontWeight: '800', color: '#6366F1', textTransform: 'uppercase', marginBottom: 4, letterSpacing: 0.4 }}>
                               हिंदी
                             </Text>
-                            <Text style={{ fontSize: 12, color: isDark ? '#CBD5E1' : '#374151', lineHeight: 19 }}>
-                              {decode(questionTextHi)}
-                            </Text>
+                            <HtmlText
+                              html={questionTextHi}
+                              isDark={isDark}
+                              style={{ fontSize: 12, color: isDark ? '#CBD5E1' : '#374151', lineHeight: 19 }}
+                            />
                           </>
                         )}
                       </View>
@@ -1712,21 +1723,40 @@ export default function DashboardScreen({
                                     : (isDark ? '#1E293B' : '#E2E8F0'),
                                 }}>
                                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                                    <Text style={{
-                                      flex: 1, fontSize: 12, lineHeight: 18,
-                                      fontWeight: isCorrect ? '700' : '500',
-                                      color: isCorrect
-                                        ? (isDark ? '#34D399' : '#065F46')
-                                        : (isDark ? '#94A3B8' : '#374151')
-                                    }}>
-                                      {String.fromCharCode(65 + oIdx)}. {decode(textEn)}
-                                    </Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1, gap: 4 }}>
+                                      <Text style={{
+                                        fontSize: 12, lineHeight: 18,
+                                        fontWeight: isCorrect ? '700' : '500',
+                                        color: isCorrect
+                                          ? (isDark ? '#34D399' : '#065F46')
+                                          : (isDark ? '#94A3B8' : '#374151')
+                                      }}>
+                                        {String.fromCharCode(65 + oIdx)}.
+                                      </Text>
+                                      <View style={{ flex: 1 }}>
+                                        <HtmlText
+                                          html={textEn}
+                                          isDark={isDark}
+                                          style={{
+                                            fontSize: 12, lineHeight: 18,
+                                            fontWeight: isCorrect ? '700' : '500',
+                                            color: isCorrect
+                                              ? (isDark ? '#34D399' : '#065F46')
+                                              : (isDark ? '#94A3B8' : '#374151')
+                                          }}
+                                        />
+                                      </View>
+                                    </View>
                                     {isCorrect && <CheckSquare size={16} color={isDark ? '#34D399' : '#059669'} />}
                                   </View>
                                   {textHi && textHi !== textEn && (
-                                    <Text style={{ fontSize: 10, color: isDark ? '#64748B' : '#9CA3AF', marginTop: 3 }}>
-                                      {decode(textHi)}
-                                    </Text>
+                                    <View style={{ marginLeft: 16, marginTop: 4 }}>
+                                      <HtmlText
+                                        html={textHi}
+                                        isDark={isDark}
+                                        style={{ fontSize: 10, color: isDark ? '#64748B' : '#9CA3AF' }}
+                                      />
+                                    </View>
                                   )}
                                 </View>
                               );
@@ -1746,16 +1776,20 @@ export default function DashboardScreen({
                             Explanation
                           </Text>
                           {explanationEn && (
-                            <Text style={{ fontSize: 11, color: isDark ? '#CBD5E1' : '#1E293B', lineHeight: 17 }}>
-                              {decode(explanationEn)}
-                            </Text>
+                            <HtmlText
+                              html={explanationEn}
+                              isDark={isDark}
+                              style={{ fontSize: 11, color: isDark ? '#CBD5E1' : '#1E293B', lineHeight: 17 }}
+                            />
                           )}
                           {explanationHi && explanationHi !== explanationEn && (
                             <>
                               <View style={{ height: 1, backgroundColor: isDark ? '#1D4ED8' : '#BFDBFE', marginVertical: 6 }} />
-                              <Text style={{ fontSize: 11, color: isDark ? '#93C5FD' : '#1D4ED8', lineHeight: 17 }}>
-                                {decode(explanationHi)}
-                              </Text>
+                              <HtmlText
+                                html={explanationHi}
+                                isDark={isDark}
+                                style={{ fontSize: 11, color: isDark ? '#93C5FD' : '#1D4ED8', lineHeight: 17 }}
+                              />
                             </>
                           )}
                         </View>
