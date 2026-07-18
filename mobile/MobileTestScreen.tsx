@@ -13,7 +13,8 @@ import {
   AppState,
   ActivityIndicator,
   TextInput,
-  Animated
+  Animated,
+  PanResponder
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -120,8 +121,14 @@ export default function MobileTestScreen({
   const [websiteRating, setWebsiteRating] = useState(0);
   const [examRating, setExamRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
+  const [mockTestTitle, setMockTestTitle] = useState("");
   const [drawerMounted, setDrawerMounted] = useState(false);
   const drawerAnimation = useRef(new Animated.Value(SCREEN_WIDTH * 0.82)).current;
+  const overlayOpacity = drawerAnimation.interpolate({
+    inputRange: [0, SCREEN_WIDTH * 0.82],
+    outputRange: [1, 0],
+    extrapolate: 'clamp'
+  });
 
   const openDrawer = () => {
     setDrawerSectionIdx(currentSectionIdx);
@@ -169,6 +176,26 @@ export default function MobileTestScreen({
   const violationsCountRef = useRef<number>(0);
   const currentSectionIdxLiveRef = useRef<number>(0);
   const currentQuestionIdxLiveRef = useRef<number>(0);
+
+  const handleSaveAndNextRef = useRef<() => void>(() => {});
+  const handlePreviousQuestionRef = useRef<() => void>(() => {});
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        // Capture swipe gestures only when horizontal displacement exceeds 35 and vertical is minimal
+        return Math.abs(gestureState.dx) > 35 && Math.abs(gestureState.dy) < 15;
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dx < -55) {
+          handleSaveAndNextRef.current?.();
+        } else if (gestureState.dx > 55) {
+          handlePreviousQuestionRef.current?.();
+        }
+      },
+    })
+  ).current;
 
   // Network connectivity tracking
   const isOnlineRef = useRef<boolean>(true);
@@ -242,6 +269,33 @@ export default function MobileTestScreen({
       if (isExitingRef.current) return;
       setLoading(true);
       setLoadingText('Loading test...');
+
+      // Find catalog test immediately to get title
+      let initialCatalogTest: any = null;
+      if (examCatalog && examCatalog.length > 0) {
+        for (const cat of examCatalog) {
+          for (const sub of cat.subCategories || []) {
+            const found = (sub.tests || []).find((t: any) => t.id === testId);
+            if (found) { initialCatalogTest = found; break; }
+          }
+          if (initialCatalogTest) break;
+        }
+      }
+      let resolvedTitle = initialCatalogTest?.title;
+      if (!resolvedTitle) {
+        if (testId.includes('ssc')) {
+          resolvedTitle = "SSC CGL 2026 - Tier-I Combined Graduate Level Exam";
+        } else if (testId.includes('rrb') || testId.includes('railway')) {
+          resolvedTitle = "RRB NTPC CBT-1 Stage 1 Practice Simulator";
+        } else if (testId.includes('ugc_net')) {
+          resolvedTitle = "UGC NET Paper-1 Teaching & Research Aptitude";
+        } else if (testId.includes('ctet') || testId.includes('teaching')) {
+          resolvedTitle = "CTET 2026 Paper-I (Primary Class I-V) Mock Paper";
+        } else {
+          resolvedTitle = "General Mock Test Assessment";
+        }
+      }
+      setMockTestTitle(resolvedTitle);
 
       // ──────────────────────────────────────────────────────────────────
       // Shared builder: turns raw API questions into screen state
@@ -736,6 +790,20 @@ export default function MobileTestScreen({
     saveOngoingSessionStateLocally(updatedResponses, timeLeft, violationsCount, nextSecIdx, nextQIdx);
   };
 
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIdx > 0) {
+      setCurrentQuestionIdx(prev => prev - 1);
+    } else if (currentSectionIdx > 0) {
+      const prevSecIdx = currentSectionIdx - 1;
+      const prevSecQs = questions.filter(q => q.sectionId === sections[prevSecIdx].id);
+      setCurrentSectionIdx(prevSecIdx);
+      setCurrentQuestionIdx(prevSecQs.length - 1);
+    }
+  };
+
+  useEffect(() => { handleSaveAndNextRef.current = handleSaveAndNext; }, [handleSaveAndNext]);
+  useEffect(() => { handlePreviousQuestionRef.current = handlePreviousQuestion; }, [handlePreviousQuestion]);
+
   const handleClearResponse = useCallback(() => {
     const qId = activeQuestionIdRef.current;
     if (!qId) return;
@@ -1115,16 +1183,7 @@ export default function MobileTestScreen({
   const options = questionContent?.options || [];
   const activeResp = activeQuestion ? responses[activeQuestion.id] : null;
 
-  let examName = "General Mock Test Assessment";
-  if (testId.includes('ssc')) {
-    examName = "SSC CGL 2026 - Tier-I Combined Graduate Level Exam";
-  } else if (testId.includes('rrb') || testId.includes('railway')) {
-    examName = "RRB NTPC CBT-1 Stage 1 Practice Simulator";
-  } else if (testId.includes('ugc_net')) {
-    examName = "UGC NET Paper-1 Teaching & Research Aptitude";
-  } else if (testId.includes('ctet') || testId.includes('teaching')) {
-    examName = "CTET 2026 Paper-I (Primary Class I-V) Mock Paper";
-  }
+  const examName = mockTestTitle || "General Mock Test Assessment";
 
   if (showInstructions) {
     const t = instructionTexts[lang];
@@ -1401,11 +1460,12 @@ export default function MobileTestScreen({
       </View>
 
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Question ScrollView ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
-      <ScrollView
-        style={[styles.questionContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}
-        contentContainerStyle={styles.questionContentContainer}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+        <ScrollView
+          style={[styles.questionContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}
+          contentContainerStyle={styles.questionContentContainer}
+          showsVerticalScrollIndicator={false}
+        >
         {/* Question number header row */}
         <View style={styles.questionHeaderRow}>
           {/* Blue number badge */}
@@ -1461,6 +1521,7 @@ export default function MobileTestScreen({
           })}
         </View>
       </ScrollView>
+    </View>
 
       {/* — Bottom Navigation Bar — */}
       <View style={[
@@ -1470,16 +1531,7 @@ export default function MobileTestScreen({
       ]}>
         <TouchableOpacity
           style={[styles.footerBtn, styles.footerBtnOutline, isDark && { borderColor: '#334155' }]}
-          onPress={() => {
-            if (currentQuestionIdx > 0) {
-              setCurrentQuestionIdx(prev => prev - 1);
-            } else if (currentSectionIdx > 0) {
-              const prevSecIdx = currentSectionIdx - 1;
-              const prevSecQs = questions.filter(q => q.sectionId === sections[prevSecIdx].id);
-              setCurrentSectionIdx(prevSecIdx);
-              setCurrentQuestionIdx(prevSecQs.length - 1);
-            }
-          }}
+          onPress={handlePreviousQuestion}
         >
           <Text style={[styles.footerBtnOutlineText, isDark && { color: '#94A3B8' }]}>Previous</Text>
         </TouchableOpacity>
@@ -1507,7 +1559,9 @@ export default function MobileTestScreen({
         onRequestClose={closeDrawer}
       >
         <View style={styles.paletteOverlay}>
-          <TouchableOpacity style={styles.paletteOverlayBg} activeOpacity={1} onPress={closeDrawer} />
+          <Animated.View style={[styles.paletteOverlayBg, { opacity: overlayOpacity }]} pointerEvents="auto">
+            <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={closeDrawer} />
+          </Animated.View>
           <Animated.View style={[
             styles.paletteDrawer, 
             isDark && { backgroundColor: '#0F1729' },
@@ -2234,13 +2288,19 @@ const styles = StyleSheet.create({
   paletteOverlay: {
     flex: 1,
     flexDirection: 'row',
+    justifyContent: 'flex-end',
   },
   paletteOverlayBg: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.45)',
   },
   paletteDrawer: {
     width: SCREEN_WIDTH * 0.82,
+    height: '100%',
     backgroundColor: '#FFF',
     flexDirection: 'column',
   },
