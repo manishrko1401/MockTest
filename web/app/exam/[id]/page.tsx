@@ -89,6 +89,15 @@ function TcsIonEngine({ testId }: { testId: string }) {
   const [attemptSaved, setAttemptSaved] = useState(false);
   const [questionLanguages, setQuestionLanguages] = useState<Record<string, 'en' | 'hi'>>({});
   const [dismissedViolationCount, setDismissedViolationCount] = useState(0);
+  const isSubmittedRef = useRef(false);
+
+  const handleManualSubmit = () => {
+    isSubmittedRef.current = true;
+    try {
+      localStorage.removeItem(`ongoing_web_${testId}`);
+    } catch {}
+    submitExam();
+  };
 
   const { isMobile, isMounted } = useIsMobile();
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
@@ -182,15 +191,21 @@ function TcsIonEngine({ testId }: { testId: string }) {
     if (currentViolations > dismissedViolationCount) {
       if (currentViolations === 1 || currentViolations === 2) {
         pauseExam();
+      } else if (currentViolations >= 3) {
+        isSubmittedRef.current = true;
+        try {
+          localStorage.removeItem(`ongoing_web_${testId}`);
+        } catch {}
+        submitExam();
       }
     }
-  }, [state.violationsCount, dismissedViolationCount, pauseExam]);
+  }, [state.violationsCount, dismissedViolationCount, pauseExam, submitExam, testId]);
 
   // Save state to localStorage (instant, works offline) and server on unload/unmount
   useEffect(() => {
     const handleSave = () => {
       const currentState = stateRef.current;
-      if (currentState.session && !currentState.isExamSubmitted) {
+      if (currentState.session && !currentState.isExamSubmitted && !isSubmittedRef.current) {
         // Always save to localStorage immediately (works offline, zero latency)
         const localSnap = {
           testId,
@@ -1474,7 +1489,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                 {/* Submit Block Section */}
                 <div className={`p-4 border-t border-slate-200 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
                   <button
-                    onClick={submitExam}
+                    onClick={handleManualSubmit}
                     className={`w-full text-white font-bold py-2.5 rounded shadow transition cursor-pointer text-xs uppercase tracking-wider active:scale-95 ${
                       !isSsc ? 'bg-[#0D88B9] hover:bg-[#0A739C]' : 'bg-[#1A3B5C] hover:bg-slate-800'
                     }`}

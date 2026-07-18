@@ -194,47 +194,51 @@ export default function MobileTestScreen({
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
-        // ── App went to background: immediately save exam progress ─────────
-        // Always save locally to AsyncStorage (works offline)
-        const snap = {
-          testId,
-          status: 'ONGOING',
-          timeRemaining: timeLeftRef.current,
-          violations: violationsCountRef.current,
-          currentSectionIndex: currentSectionIdxLiveRef.current,
-          currentQuestionIndex: currentQuestionIdxLiveRef.current,
-          responses: Object.fromEntries(
-            Object.entries(responsesRef.current).map(([qId, val]) => [
-              qId,
-              { selectedOptionIndex: val.selectedOptionIndex, elapsedSeconds: val.elapsedSeconds }
-            ])
-          ),
-        };
-        AsyncStorage.setItem(`ongoing_test_${testId}`, JSON.stringify(snap)).catch(() => {});
-
-        // Also sync to server if online
-        if (isOnlineRef.current) {
-          ApiClient.saveOngoingSession({
-            userId: currentUser.id,
-            testId,
-            timeRemaining: timeLeftRef.current,
-            violations: violationsCountRef.current,
-            currentSectionIndex: currentSectionIdxLiveRef.current,
-            currentQuestionIndex: currentQuestionIdxLiveRef.current,
-            responses: snap.responses as any,
-          }).catch(() => {});
-        }
-
-        // Count as a focus violation if exam was active
         if (!isExitingRef.current) {
-          setViolationsCount((prev) => {
-            const next = prev + 1;
-            violationsCountRef.current = next;
-            if (next >= 3) {
-              handleExamSubmit(true); // Force submit on 3 violations
+          const nextViolations = violationsCountRef.current + 1;
+          if (nextViolations >= 3) {
+            // Clear ongoing cache immediately so they can never resume
+            AsyncStorage.removeItem(`ongoing_test_${testId}`).catch(() => {});
+            
+            // Force submit immediately
+            setViolationsCount(3);
+            violationsCountRef.current = 3;
+            handleExamSubmit(true);
+          } else {
+            // Safe to save ongoing session progress
+            const snap = {
+              testId,
+              status: 'ONGOING',
+              timeRemaining: timeLeftRef.current,
+              violations: nextViolations,
+              currentSectionIndex: currentSectionIdxLiveRef.current,
+              currentQuestionIndex: currentQuestionIdxLiveRef.current,
+              responses: Object.fromEntries(
+                Object.entries(responsesRef.current).map(([qId, val]) => [
+                  qId,
+                  { selectedOptionIndex: val.selectedOptionIndex, elapsedSeconds: val.elapsedSeconds }
+                ])
+              ),
+            };
+            AsyncStorage.setItem(`ongoing_test_${testId}`, JSON.stringify(snap)).catch(() => {});
+
+            // Also sync to server if online
+            if (isOnlineRef.current) {
+              ApiClient.saveOngoingSession({
+                userId: currentUser.id,
+                testId,
+                timeRemaining: timeLeftRef.current,
+                violations: nextViolations,
+                currentSectionIndex: currentSectionIdxLiveRef.current,
+                currentQuestionIndex: currentQuestionIdxLiveRef.current,
+                responses: snap.responses as any,
+              }).catch(() => {});
             }
-            return next;
-          });
+
+            // Update state count
+            setViolationsCount(nextViolations);
+            violationsCountRef.current = nextViolations;
+          }
         }
       }
       appState.current = nextAppState;
