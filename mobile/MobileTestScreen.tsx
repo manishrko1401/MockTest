@@ -12,7 +12,8 @@ import {
   StatusBar,
   AppState,
   ActivityIndicator,
-  TextInput
+  TextInput,
+  Animated
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -119,7 +120,36 @@ export default function MobileTestScreen({
   const [websiteRating, setWebsiteRating] = useState(0);
   const [examRating, setExamRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
-  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [drawerMounted, setDrawerMounted] = useState(false);
+  const drawerAnimation = useRef(new Animated.Value(SCREEN_WIDTH * 0.82)).current;
+
+  const openDrawer = () => {
+    setDrawerSectionIdx(currentSectionIdx);
+    setDrawerMounted(true);
+  };
+
+  const closeDrawer = () => {
+    Animated.timing(drawerAnimation, {
+      toValue: SCREEN_WIDTH * 0.82,
+      duration: 220,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) {
+        setDrawerMounted(false);
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (drawerMounted) {
+      Animated.timing(drawerAnimation, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [drawerMounted]);
+
   const [drawerTab, setDrawerTab] = useState<'symbols' | 'instructions'>('symbols');
   const [drawerSectionIdx, setDrawerSectionIdx] = useState(0);
   const [showInstructions, setShowInstructions] = useState(true);
@@ -778,7 +808,7 @@ export default function MobileTestScreen({
 
     setCurrentSectionIdx(secIdx);
     setCurrentQuestionIdx(qIdx);
-    setDrawerVisible(false);
+    setDrawerMounted(false);
   };
 
   // Save progress locally to AsyncStorage (Auto-save)
@@ -1085,19 +1115,19 @@ export default function MobileTestScreen({
   const options = questionContent?.options || [];
   const activeResp = activeQuestion ? responses[activeQuestion.id] : null;
 
+  let examName = "General Mock Test Assessment";
+  if (testId.includes('ssc')) {
+    examName = "SSC CGL 2026 - Tier-I Combined Graduate Level Exam";
+  } else if (testId.includes('rrb') || testId.includes('railway')) {
+    examName = "RRB NTPC CBT-1 Stage 1 Practice Simulator";
+  } else if (testId.includes('ugc_net')) {
+    examName = "UGC NET Paper-1 Teaching & Research Aptitude";
+  } else if (testId.includes('ctet') || testId.includes('teaching')) {
+    examName = "CTET 2026 Paper-I (Primary Class I-V) Mock Paper";
+  }
+
   if (showInstructions) {
     const t = instructionTexts[lang];
-    
-    let examName = "General Mock Test Assessment";
-    if (testId.includes('ssc')) {
-      examName = "SSC CGL 2026 - Tier-I Combined Graduate Level Exam";
-    } else if (testId.includes('rrb') || testId.includes('railway')) {
-      examName = "RRB NTPC CBT-1 Stage 1 Practice Simulator";
-    } else if (testId.includes('ugc_net')) {
-      examName = "UGC NET Paper-1 Teaching & Research Aptitude";
-    } else if (testId.includes('ctet') || testId.includes('teaching')) {
-      examName = "CTET 2026 Paper-I (Primary Class I-V) Mock Paper";
-    }
 
     let maxMarks = 0;
     questions.forEach(q => {
@@ -1284,12 +1314,12 @@ export default function MobileTestScreen({
               hasSectionalTiming && timeLeft <= 120 && styles.headerTimerUrgent
             ]}>{formatTime(timeLeft)}</Text>
           </View>
-          <Text style={styles.headerExamName} numberOfLines={1}>
-            {sections[currentSectionIdx]?.name || 'Mock Test'}
+          <Text style={[styles.headerExamName, { fontSize: rs(10) }]} numberOfLines={1}>
+            {examName}
           </Text>
         </View>
         {/* Right: hamburger to open palette */}
-        <TouchableOpacity style={styles.hamburgerBtn} onPress={() => { setDrawerSectionIdx(currentSectionIdx); setDrawerVisible(true); }}>
+        <TouchableOpacity style={styles.hamburgerBtn} onPress={openDrawer}>
           <AlignJustify size={rs(22)} color="#FFF" />
         </TouchableOpacity>
       </View>
@@ -1432,7 +1462,7 @@ export default function MobileTestScreen({
         </View>
       </ScrollView>
 
-      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Bottom Navigation Bar ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+      {/* — Bottom Navigation Bar — */}
       <View style={[
         styles.footer, 
         isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder },
@@ -1469,16 +1499,20 @@ export default function MobileTestScreen({
         </TouchableOpacity>
       </View>
 
-      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Palette Drawer (right slide-in) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+      {/* Palette Drawer (right slide-in) */}
       <Modal
-        visible={drawerVisible}
-        animationType="slide"
+        visible={drawerMounted}
+        animationType="fade"
         transparent={true}
-        onRequestClose={() => setDrawerVisible(false)}
+        onRequestClose={closeDrawer}
       >
         <View style={styles.paletteOverlay}>
-          <TouchableOpacity style={styles.paletteOverlayBg} activeOpacity={1} onPress={() => setDrawerVisible(false)} />
-          <View style={[styles.paletteDrawer, isDark && { backgroundColor: '#0F1729' }]}>
+          <TouchableOpacity style={styles.paletteOverlayBg} activeOpacity={1} onPress={closeDrawer} />
+          <Animated.View style={[
+            styles.paletteDrawer, 
+            isDark && { backgroundColor: '#0F1729' },
+            { transform: [{ translateX: drawerAnimation }] }
+          ]}>
 
             {/* Section part buttons */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.partScrollRow} contentContainerStyle={{ paddingHorizontal: rs(12), gap: rs(8) }}>
@@ -1568,7 +1602,7 @@ export default function MobileTestScreen({
                       ]}
                       onPress={() => {
                         handleJumpToQuestion(drawerSectionIdx, qIdx);
-                        setDrawerVisible(false);
+                        setDrawerMounted(false);
                       }}
                     >
                       <Text style={[styles.paletteCellText, { color: textColor }]}>{qIdx + 1}</Text>
@@ -1586,11 +1620,11 @@ export default function MobileTestScreen({
             {/* Submit button */}
             <TouchableOpacity
               style={styles.paletteSubmitBtn}
-              onPress={() => { setDrawerVisible(false); handleExamSubmit(false); }}
+              onPress={() => { setDrawerMounted(false); handleExamSubmit(false); }}
             >
               <Text style={styles.paletteSubmitText}>SUBMIT TEST</Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
 
