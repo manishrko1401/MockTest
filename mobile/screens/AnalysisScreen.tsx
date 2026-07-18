@@ -9,7 +9,8 @@ import {
   TextInput,
   Alert,
   Dimensions,
-  Switch
+  Switch,
+  PanResponder
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -71,34 +72,46 @@ export default function AnalysisScreen({
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
   const [selectedSection, setSelectedSection] = useState<string>('All Sections');
 
-  // Swipe gesture detection refs and handlers
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-
-  const handleTouchStart = (e: any) => {
-    touchStartX.current = e.nativeEvent.pageX;
-    touchStartY.current = e.nativeEvent.pageY;
-  };
-
-  const handleTouchEnd = (e: any) => {
-    const diffX = e.nativeEvent.pageX - touchStartX.current;
-    const diffY = e.nativeEvent.pageY - touchStartY.current;
-
-    // Check if it is a horizontal swipe (X movement is significant, and greater than Y movement)
-    if (Math.abs(diffX) > 50 && Math.abs(diffY) < 40) {
-      if (diffX > 0) {
-        // Swipe right -> Go to previous question
-        if (activeQuestionIdx > 0) {
-          setActiveQuestionIdx(activeQuestionIdx - 1);
-        }
-      } else {
-        // Swipe left -> Go to next question
-        if (activeQuestionIdx < filteredQuestions.length - 1) {
-          setActiveQuestionIdx(activeQuestionIdx + 1);
-        }
-      }
+  // Navigation helper functions for swipe gestures
+  const goToNextQuestion = () => {
+    if (activeQuestionIdx < filteredQuestions.length - 1) {
+      setActiveQuestionIdx(prev => prev + 1);
     }
   };
+
+  const goToPrevQuestion = () => {
+    if (activeQuestionIdx > 0) {
+      setActiveQuestionIdx(prev => prev - 1);
+    }
+  };
+
+  // Keep navigation callbacks fresh to avoid stale closures in PanResponder
+  const handleNextQuestionRef = useRef(goToNextQuestion);
+  const handlePrevQuestionRef = useRef(goToPrevQuestion);
+
+  useEffect(() => {
+    handleNextQuestionRef.current = goToNextQuestion;
+    handlePrevQuestionRef.current = goToPrevQuestion;
+  });
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Capture horizontal swipe when X displacement is significant and greater than Y displacement
+        return Math.abs(gestureState.dx) > 30 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -50) {
+          // Swipe left -> Go to next question
+          handleNextQuestionRef.current();
+        } else if (gestureState.dx > 50) {
+          // Swipe right -> Go to previous question
+          handlePrevQuestionRef.current();
+        }
+      },
+    })
+  ).current;
 
   // Abramowitz and Stegun Normal CDF approximation helper
   const calculateNormalCDF = (z: number): number => {
@@ -741,13 +754,12 @@ export default function AnalysisScreen({
             </View>
 
              {/* Question Workspace Panel */}
-            <ScrollView 
-              style={styles.qWorkspace} 
-              contentContainerStyle={styles.qWorkspaceContent}
-              showsVerticalScrollIndicator={false}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-            >
+             <View {...panResponder.panHandlers} style={{ flex: 1 }}>
+               <ScrollView 
+                 style={styles.qWorkspace} 
+                 contentContainerStyle={styles.qWorkspaceContent}
+                 showsVerticalScrollIndicator={false}
+               >
               {activeQuestion ? (
                 <View style={styles.questionCard}>
                   
@@ -893,6 +905,7 @@ export default function AnalysisScreen({
                 </View>
               )}
             </ScrollView>
+          </View>
 
              {/* Bottom Panel: Question count on the left, Arrow navigation keys on the right */}
              <View style={[styles.solBottomBar, isDark && { backgroundColor: ThemeColors.dark.card, borderTopColor: ThemeColors.dark.border }]}>
