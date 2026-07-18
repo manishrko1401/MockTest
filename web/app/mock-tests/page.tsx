@@ -592,7 +592,9 @@ export default function MockTestsCatalog() {
                     const options = language === 'hi' ? optionsHi : optionsEn;
 
                     const isExpanded = !!expandedBookmarks[bm.questionId];
-                    const expl = EXPLANATIONS[bm.questionId] || {};
+                    const explanationEn = rawQ.explanationEn || rawQ.content?.en?.explanationText || EXPLANATIONS[bm.questionId]?.en || '';
+                    const explanationHi = rawQ.explanationHi || rawQ.content?.hi?.explanationText || EXPLANATIONS[bm.questionId]?.hi || explanationEn;
+                    const questionExplanation = language === 'hi' ? explanationHi : explanationEn;
 
                     // Find test title from catalog
                     let testTitle = bm.testId;
@@ -659,12 +661,15 @@ export default function MockTestsCatalog() {
                               </div>
                             )}
                             
-                            {(expl.en || expl.hi) && (
+                            {questionExplanation && (
                               <div className="bg-yellow-50/50 dark:bg-yellow-950/10 border border-yellow-200 dark:border-yellow-900/40 p-2.5 rounded-lg">
-                                <p className="font-extrabold text-[9px] text-yellow-800 dark:text-yellow-400 uppercase">Correct Explanation:</p>
-                                <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed mt-1 font-medium">
-                                  {language === 'hi' ? (expl.hi || 'विवरण उपलब्ध नहीं है।') : (expl.en || 'No explanation text provided.')}
+                                <p className="font-extrabold text-[9px] text-yellow-800 dark:text-yellow-400 uppercase">
+                                  {language === 'hi' ? 'विस्तृत व्याख्या और अवधारणा:' : 'Detailed Explanation & Concept:'}
                                 </p>
+                                <div 
+                                  className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed mt-1 font-medium markup-content"
+                                  dangerouslySetInnerHTML={{ __html: decodeHtml(questionExplanation) }}
+                                />
                               </div>
                             )}
                           </div>
