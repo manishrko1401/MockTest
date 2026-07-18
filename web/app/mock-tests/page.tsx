@@ -380,7 +380,7 @@ export default function MockTestsCatalog() {
     const activeCategoryObj = filteredCatalog.find(c => c.id === selectedCategory);
 
     return (
-      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200">
+      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 mobile-fade-in">
         
         {/* MOBILE HEADER */}
         <header className="h-14 border-b border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
@@ -570,7 +570,7 @@ export default function MockTestsCatalog() {
             <>
               {/* Case 1: No category selected - Render Top Level Category Cards list */}
               {selectedCategory === null ? (
-                <div className="flex-1 overflow-y-auto space-y-4">
+                <div className="flex-1 overflow-y-auto space-y-4 mobile-fade-in">
                   <div className="mb-2">
                     <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
                       Exam Categories
@@ -636,7 +636,7 @@ export default function MockTestsCatalog() {
                 </div>
               ) : selectedSubCategory === null ? (
                 /* Case 2: Category is selected, but Subcategory (Exam) is not - Render Subcategory (Exam) list */
-                <div className="flex-1 overflow-y-auto space-y-4">
+                <div className="flex-1 overflow-y-auto space-y-4 mobile-fade-in">
                   <button
                     onClick={() => setSelectedCategory(null)}
                     className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[10px] uppercase tracking-wider mb-2 cursor-pointer"
@@ -704,7 +704,7 @@ export default function MockTestsCatalog() {
                 </div>
               ) : (
                 /* Case 3: Subcategory (Exam) is selected - Render Tests List under it */
-                <div className="flex-1 overflow-y-auto space-y-4">
+                <div className="flex-1 overflow-y-auto space-y-4 mobile-fade-in">
                   <button
                     onClick={() => setSelectedSubCategory(null)}
                     className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[10px] uppercase tracking-wider mb-2 cursor-pointer"
