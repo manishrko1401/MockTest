@@ -253,39 +253,63 @@ const FractionView: React.FC<FracProps> = ({ num, den, fontSize, color }) => {
 interface HtmlImageProps {
   src: string;
   isDark?: boolean;
+  width?: number;
+  height?: number;
 }
-const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark }) => {
+const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark, width: propWidth, height: propHeight }) => {
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
-    RNImage.getSize(
-      src,
-      (width, height) => {
-        if (width && height) {
-          setDimensions({ width, height });
-          setAspectRatio(width / height);
+    if (propWidth && propHeight) {
+      setDimensions({ width: propWidth, height: propHeight });
+      setAspectRatio(propWidth / propHeight);
+      setLoading(false);
+    } else {
+      RNImage.getSize(
+        src,
+        (width, height) => {
+          if (width && height) {
+            setDimensions({ width, height });
+            setAspectRatio(width / height);
+          }
+          setLoading(false);
+        },
+        (error) => {
+          console.warn('Failed to get image size for:', src, error);
+          setLoading(false);
         }
-        setLoading(false);
-      },
-      (error) => {
-        console.warn('Failed to get image size for:', src, error);
-        setLoading(false);
-      }
-    );
-  }, [src]);
+      );
+    }
+  }, [src, propWidth, propHeight]);
 
-  const isIcon = dimensions && dimensions.width < 150 && dimensions.height < 150;
+  const isIcon =
+    (propWidth && propWidth < 100) ||
+    (dimensions && dimensions.width < 100 && dimensions.height < 100) ||
+    src.toLowerCase().includes('shortcut-trick') ||
+    src.toLowerCase().includes('alternate-methord') ||
+    src.toLowerCase().includes('alternate-method') ||
+    src.toLowerCase().includes('additional-information');
 
   if (loading) {
-    const isUrlLikelyIcon = src.toLowerCase().includes('icon') || src.toLowerCase().includes('bullet') || src.toLowerCase().includes('key') || src.toLowerCase().includes('info');
+    const isUrlLikelyIcon =
+      (propWidth && propWidth < 100) ||
+      src.toLowerCase().includes('icon') ||
+      src.toLowerCase().includes('bullet') ||
+      src.toLowerCase().includes('key') ||
+      src.toLowerCase().includes('info') ||
+      src.toLowerCase().includes('shortcut-trick') ||
+      src.toLowerCase().includes('alternate-methord') ||
+      src.toLowerCase().includes('alternate-method') ||
+      src.toLowerCase().includes('additional-information');
+
     if (isUrlLikelyIcon) {
       return (
         <View
           style={{
-            width: 20,
-            height: 20,
+            width: propWidth ?? 26,
+            height: propHeight ?? 26,
             backgroundColor: isDark ? '#1E293B' : '#E2E8F0',
             borderRadius: 4,
             marginHorizontal: 4,
@@ -312,7 +336,7 @@ const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark }) => {
   }
 
   if (isIcon && aspectRatio) {
-    const targetHeight = 20;
+    const targetHeight = propHeight ?? (dimensions ? Math.min(dimensions.height, 26) : 26);
     const targetWidth = targetHeight * aspectRatio;
     return (
       <Image
@@ -808,11 +832,35 @@ function renderContent(
         if (srcMatch) {
           let src = srcMatch[1];
           if (src.startsWith('//')) src = 'https:' + src;
+
+          // Parse width/height attributes (e.g. width="26px", height="26px" or width="26")
+          const widthMatch = token.match(/width=["']([^"']+)["']/i);
+          const heightMatch = token.match(/height=["']([^"']+)["']/i);
+          const attrWidth = widthMatch ? parseInt(widthMatch[1], 10) : undefined;
+          const attrHeight = heightMatch ? parseInt(heightMatch[1], 10) : undefined;
+
+          // Parse style attributes (e.g. style="width: 164px; height: 122px;")
+          const styleMatch = token.match(/style=["']([^"']+)["']/i);
+          let styleWidth: number | undefined;
+          let styleHeight: number | undefined;
+          if (styleMatch) {
+            const styleStr = styleMatch[1];
+            const wMatch = styleStr.match(/width:\s*(\d+)px/i);
+            const hMatch = styleStr.match(/height:\s*(\d+)px/i);
+            if (wMatch) styleWidth = parseInt(wMatch[1], 10);
+            if (hMatch) styleHeight = parseInt(hMatch[1], 10);
+          }
+
+          const width = styleWidth ?? attrWidth;
+          const height = styleHeight ?? attrHeight;
+
           nodes.push(
             <HtmlImage
               key={keyIdx++}
               src={src}
               isDark={isDark}
+              width={width}
+              height={height}
             />
           );
         }
