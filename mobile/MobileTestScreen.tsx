@@ -179,6 +179,8 @@ export default function MobileTestScreen({
 
   const handleSaveAndNextRef = useRef<() => void>(() => {});
   const handlePreviousQuestionRef = useRef<() => void>(() => {});
+  const questionsPagerRef = useRef<ScrollView>(null);
+  const lastSectionIdxRef = useRef<number>(0);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -577,6 +579,17 @@ export default function MobileTestScreen({
   useEffect(() => { currentSectionIdxLiveRef.current = currentSectionIdx; }, [currentSectionIdx]);
   useEffect(() => { currentQuestionIdxLiveRef.current = currentQuestionIdx; }, [currentQuestionIdx]);
 
+  useEffect(() => {
+    const sectionChanged = lastSectionIdxRef.current !== currentSectionIdx;
+    lastSectionIdxRef.current = currentSectionIdx;
+
+    // Use animated transition only when navigating questions within the same section
+    questionsPagerRef.current?.scrollTo({
+      x: currentQuestionIdx * SCREEN_WIDTH,
+      animated: !sectionChanged
+    });
+  }, [currentQuestionIdx, currentSectionIdx]);
+
   // Timer Tick hook — uses refs to avoid stale closure bugs with sectional timing
   useEffect(() => {
     if (loading || !isTimerRunning) return;
@@ -718,9 +731,8 @@ export default function MobileTestScreen({
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleSelectOption = useCallback((optIdx: number) => {
-    if (!activeQuestionIdRef.current) return;
-    const qId = activeQuestionIdRef.current;
+  const handleSelectOption = useCallback((optIdx: number, qId = activeQuestionIdRef.current) => {
+    if (!qId) return;
     setResponses((prev) => ({
       ...prev,
       [qId]: {
@@ -1460,68 +1472,101 @@ export default function MobileTestScreen({
       </View>
 
       {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Question ScrollView ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
-      <View style={{ flex: 1 }} {...panResponder.panHandlers}>
-        <ScrollView
-          style={[styles.questionContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}
-          contentContainerStyle={styles.questionContentContainer}
-          showsVerticalScrollIndicator={false}
-        >
-        {/* Question number header row */}
-        <View style={styles.questionHeaderRow}>
-          {/* Blue number badge */}
-          <View style={styles.questionNumBadge}>
-            <Text style={styles.questionNumText}>{currentQuestionIdx + 1}</Text>
-          </View>
-          {/* Per-question time spent */}
-          <View style={[styles.qTimerPill, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
-            <Text style={[styles.qTimerIcon, isDark && { color: '#94A3B8' }]}>Q Time:</Text>
-            <Text style={[styles.qTimerVal, isDark && { color: '#3B82F6' }]}>{formatTime(activeResp?.elapsedSeconds || 0)}</Text>
-          </View>
-        </View>
+      <ScrollView
+        ref={questionsPagerRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="fast"
+        bounces={false}
+        keyboardShouldPersistTaps="handled"
+        onMomentumScrollEnd={(e) => {
+          const pageIndex = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+          if (pageIndex !== currentQuestionIdxLiveRef.current) {
+            setCurrentQuestionIdx(pageIndex);
+          }
+        }}
+        style={{ flex: 1 }}
+      >
+        {sectionQuestions.map((q, qIdx) => {
+          const qContentEn = q?.content['en'];
+          const qContentHi = q?.content['hi'];
+          const qContent = lang === 'en'
+            ? (qContentEn?.questionText ? qContentEn : qContentHi)
+            : (qContentHi?.questionText ? qContentHi : qContentEn);
+          const qText = qContent?.questionText || '';
+          const qOptions = qContent?.options || [];
+          const qResp = responses[q.id];
 
-        {/* Question text */}
-        <HtmlText
-          style={[styles.questionBody, isDark && { color: ThemeColors.dark.text }]}
-          isDark={isDark}
-          html={questionText}
-        />
-
-        {/* Options as numbered cards */}
-        <View style={styles.optionsBlock}>
-          {options.map((opt, i) => {
-            const isSelected = activeResp?.tempOptionIndex === i;
-            return (
-              <TouchableOpacity
-                key={i}
-                activeOpacity={0.75}
-                style={[
-                  styles.optionCard,
-                  isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border },
-                  isSelected && styles.optionCardSelected,
-                  isSelected && isDark && { borderColor: '#3B82F6', backgroundColor: '#1E3A8A' },
-                ]}
-                onPress={() => handleSelectOption(i)}
+          return (
+            <View key={q.id} style={{ width: SCREEN_WIDTH, flex: 1 }}>
+              <ScrollView
+                style={[styles.questionContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}
+                contentContainerStyle={styles.questionContentContainer}
+                showsVerticalScrollIndicator={false}
               >
-                <View style={[
-                  styles.optionNumCircle,
-                  isDark && { borderColor: '#475569' },
-                  isSelected && styles.optionNumCircleSelected,
-                ]}>
-                  <Text style={[styles.optionNumText, isSelected && styles.optionNumTextSelected]}>
-                    {i + 1}
-                  </Text>
+                {/* Question number header row */}
+                <View style={styles.questionHeaderRow}>
+                  {/* Blue number badge */}
+                  <View style={styles.questionNumBadge}>
+                    <Text style={styles.questionNumText}>
+                      {lang === 'hi' ? 'प्रश्न ' : 'Q. '}{qIdx + 1}
+                    </Text>
+                  </View>
+                  {/* Per-question time spent */}
+                  <View style={[styles.qTimerPill, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+                    <Text style={[styles.qTimerIcon, isDark && { color: '#94A3B8' }]}>Q Time:</Text>
+                    <Text style={[styles.qTimerVal, isDark && { color: '#3B82F6' }]}>{formatTime(qResp?.elapsedSeconds || 0)}</Text>
+                  </View>
                 </View>
+
+                {/* Question text */}
                 <HtmlText
-                  style={[styles.optionText, isDark && { color: ThemeColors.dark.text }, isSelected && styles.optionTextSelected]}
+                  style={[styles.questionBody, isDark && { color: ThemeColors.dark.text }]}
                   isDark={isDark}
-                  html={opt}
+                  html={qText}
                 />
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+
+                {/* Options as numbered cards */}
+                <View style={styles.optionsBlock}>
+                  {qOptions.map((opt, i) => {
+                    const isSelected = qResp?.tempOptionIndex === i;
+                    return (
+                      <TouchableOpacity
+                        key={i}
+                        activeOpacity={0.75}
+                        style={[
+                          styles.optionCard,
+                          isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border },
+                          isSelected && styles.optionCardSelected,
+                          isSelected && isDark && { borderColor: '#3B82F6', backgroundColor: '#1E3A8A' },
+                        ]}
+                        onPress={() => handleSelectOption(i, q.id)}
+                      >
+                        <View style={[
+                          styles.optionNumCircle,
+                          isDark && { borderColor: '#475569' },
+                          isSelected && styles.optionNumCircleSelected,
+                        ]}>
+                          <Text style={[styles.optionNumText, isSelected && styles.optionNumTextSelected]}>
+                            {i + 1}
+                          </Text>
+                        </View>
+                        <HtmlText
+                          style={[styles.optionText, isDark && { color: ThemeColors.dark.text }, isSelected && styles.optionTextSelected]}
+                          isDark={isDark}
+                          html={opt}
+                        />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            </View>
+          );
+        })}
       </ScrollView>
-    </View>
 
       {/* — Bottom Navigation Bar — */}
       <View style={[
