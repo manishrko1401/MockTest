@@ -300,6 +300,7 @@ model Feedback {
   platformRating Int      // 1-5 rating for web/app
   examRating     Int      // 1-5 rating for exam
   feedbackText   String?
+  source         String   @default("web") // "web" or "app"
   createdAt      DateTime @default(now())
 
   @@map("feedbacks")

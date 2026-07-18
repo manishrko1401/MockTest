@@ -4358,6 +4358,7 @@ export default function AdminAnalytics() {
                       <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Candidate / Date</th>
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mock Test</th>
+                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Source</th>
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">App/Web Rating</th>
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Exam Rating</th>
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Written Feedback</th>
@@ -4366,7 +4367,7 @@ export default function AdminAnalytics() {
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {loadingFeedbacks ? (
                         <tr>
-                          <td colSpan={5} className="py-24 text-center">
+                          <td colSpan={6} className="py-24 text-center">
                             <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-3"></div>
                             <p className="text-xs text-slate-400 font-bold">Loading feedbacks data...</p>
                           </td>
@@ -4384,6 +4385,15 @@ export default function AdminAnalytics() {
                             <td className="py-4 px-4 max-w-[200px]">
                               <p className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">{f.testTitle}</p>
                               <p className="text-[9px] text-slate-400 font-mono mt-0.5 truncate">{f.testId}</p>
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                f.source === 'app'
+                                  ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
+                                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                              }`}>
+                                {f.source === 'app' ? '📱 App' : '🌐 Web'}
+                              </span>
                             </td>
                             <td className="py-4 px-4">
                               <div className="flex gap-0.5 text-amber-500 text-sm">
@@ -4416,7 +4426,7 @@ export default function AdminAnalytics() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={5} className="py-16 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
+                          <td colSpan={6} className="py-16 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
                             No feedbacks or ratings submitted by users yet.
                           </td>
                         </tr>

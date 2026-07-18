@@ -1109,23 +1109,22 @@ export default function MobileTestScreen({
             {
               text: 'View Performance',
               onPress: async () => {
-                // Submit rating/feedback in background
-                if (websiteRating > 0 || examRating > 0 || feedbackText.trim() !== '') {
-                  try {
-                    await fetch(`${BASE_URL}/api/feedback`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        userId: currentUser?.id,
-                        testId: testId,
-                        platformRating: websiteRating,
-                        examRating: examRating,
-                        feedbackText: feedbackText
-                      })
-                    });
-                  } catch (e) {
-                    console.warn("Feedback submission failed:", e);
-                  }
+                // Always submit feedback/rating so every test completion is recorded in admin panel
+                try {
+                  fetch(`${BASE_URL}/api/feedback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      userId: currentUser?.id,
+                      testId: testId,
+                      platformRating: websiteRating || 0,
+                      examRating: examRating || 0,
+                      feedbackText: feedbackText || '',
+                      source: 'app'
+                    })
+                  }).catch(e => console.warn("Feedback submission failed:", e));
+                } catch (e) {
+                  console.warn("Feedback submission error:", e);
                 }
 
                 setModalConfig((prevVal) => ({ ...prevVal, visible: false }));

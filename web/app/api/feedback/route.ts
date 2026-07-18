@@ -4,12 +4,10 @@ import { prisma } from '../../lib/prisma';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("POST /api/feedback request received:", body);
 
-    const { userId, testId, platformRating, examRating, feedbackText } = body;
+    const { userId, testId, platformRating, examRating, feedbackText, source } = body;
 
     if (!userId || !testId || platformRating === undefined || examRating === undefined) {
-      console.warn("POST /api/feedback validation failed. Missing required fields:", { userId, testId, platformRating, examRating });
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -18,14 +16,12 @@ export async function POST(req: Request) {
       where: { id: userId },
       select: { email: true, fullName: true }
     });
-    console.log("Fetched user for feedback:", user);
 
     // Fetch test info to store test title
     const test = await prisma.mockTest.findUnique({
       where: { id: testId },
       select: { title: true }
     });
-    console.log("Fetched test for feedback:", test);
 
     const feedback = await prisma.feedback.create({
       data: {
@@ -37,9 +33,9 @@ export async function POST(req: Request) {
         platformRating: Number(platformRating),
         examRating: Number(examRating),
         feedbackText: feedbackText || '',
+        source: source || 'web',
       }
     });
-    console.log("Created feedback record in database successfully:", feedback);
 
     return NextResponse.json({ success: true, feedback });
   } catch (error: any) {
