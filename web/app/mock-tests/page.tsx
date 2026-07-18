@@ -625,7 +625,7 @@ export default function MockTestsCatalog() {
                           </button>
                         </div>
 
-                        <p className="font-bold text-slate-800 dark:text-slate-200 mt-2 line-clamp-2" dangerouslySetInnerHTML={{ __html: questionText }} />
+                        <p className={`font-bold text-slate-800 dark:text-slate-200 mt-2 ${isExpanded ? 'line-clamp-none' : 'line-clamp-2'}`} dangerouslySetInnerHTML={{ __html: questionText }} />
 
                         <button
                           onClick={() => toggleExpandBookmark(bm.questionId)}
