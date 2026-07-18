@@ -524,49 +524,52 @@ export default function ExamSolutionAnalysisPage() {
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200 select-none pb-12">
       
       {/* 1. NAVIGATION BAR */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 backdrop-blur-md px-6 md:px-12 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-3">
+      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 backdrop-blur-md px-4 md:px-12 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+        <div className="flex items-center gap-3 md:gap-6 min-w-0">
+          <Link href="/" className="flex items-center gap-2 md:gap-3 shrink-0">
             <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
               <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
             </div>
-            <div>
+            <div className="hidden sm:block">
               <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{language === 'hi' ? 'मॉक टेस्ट हब' : 'MOCK TEST HUB'}</h1>
-              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{language === 'hi' ? 'परीक्षा की तैयारी' : 'EXAM PREPARATION'}</p>
+              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase leading-none mt-0.5">{language === 'hi' ? 'परीक्षा की तैयारी' : 'EXAM PREPARATION'}</p>
             </div>
           </Link>
-          <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
+          <span className="hidden md:inline h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
           <button
             onClick={handleBackToTestSeries}
-            className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors cursor-pointer bg-transparent border-none p-0 outline-none"
+            className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors cursor-pointer bg-transparent border-none p-0 outline-none shrink-0"
+            title={language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}
           >
-            <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}
+            <ArrowLeft className="h-4 w-4" /> 
+            <span className="hidden md:inline">{language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}</span>
+            <span className="inline md:hidden">{language === 'hi' ? 'वापस' : 'Back'}</span>
           </button>
-          <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-sm text-slate-900 dark:text-white leading-tight">{examSession.testTitle}</span>
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{language === 'hi' ? 'समाधान और विश्लेषण डैशबोर्ड' : 'Solution & Analysis Dashboard'}</span>
+          <span className="hidden md:inline h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
+          <div className="flex flex-col min-w-0">
+            <span className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white leading-tight truncate">{examSession.testTitle}</span>
+            <span className="hidden md:inline text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{language === 'hi' ? 'समाधान और विश्लेषण डैशबोर्ड' : 'Solution & Analysis Dashboard'}</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4 shrink-0 ml-4">
           {/* Lang Selector */}
-          <div className="flex items-center gap-1.5">
-            <Globe className="h-3.5 w-3.5 text-slate-500" />
+          <div className="flex items-center gap-1 md:gap-1.5">
+            <Globe className="h-3.5 w-3.5 text-slate-500 shrink-0 hidden sm:inline" />
             <select
               value={lang}
               onChange={(e) => handleLangChange(e.target.value as 'en' | 'hi')}
-              className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 outline-none text-xs text-slate-800 dark:text-slate-200 cursor-pointer font-bold transition-colors"
+              className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-1.5 md:px-2.5 py-1 outline-none text-[11px] md:text-xs text-slate-800 dark:text-slate-200 cursor-pointer font-bold transition-colors"
             >
               <option value="en">English</option>
-              <option value="hi">हिंदी (Hindi)</option>
+              <option value="hi">हिंदी</option>
             </select>
           </div>
 
           {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
+            className="p-1.5 md:p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800 shrink-0"
             title={theme === 'light' ? t.themeDark : t.themeLight}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}

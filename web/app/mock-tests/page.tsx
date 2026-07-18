@@ -714,7 +714,22 @@ export default function MockTestsCatalog() {
 
                   {(() => {
                     const activeSubCat = activeCategoryObj?.subCategories.find(s => s.id === selectedSubCategory);
-                    const mockTests = activeSubCat?.tests || [];
+                    
+                    // Let's group tests by their sub-subcategory
+                    const groups = (activeSubCat?.subSubCategories || []).map(subSub => {
+                      const filtered = subSub.tests.filter(t => 
+                        t.title.toLowerCase().includes(searchQuery.toLowerCase())
+                      );
+                      return {
+                        ...subSub,
+                        tests: filtered
+                      };
+                    }).filter(g => g.tests.length > 0);
+
+                    const fallbackTests = (activeSubCat?.tests || []).filter(t => 
+                      t.title.toLowerCase().includes(searchQuery.toLowerCase())
+                    );
+
                     return (
                       <div className="space-y-4">
                         <div>
@@ -726,13 +741,181 @@ export default function MockTestsCatalog() {
                           </p>
                         </div>
 
-                        {mockTests.length === 0 ? (
+                        {groups.length === 0 && fallbackTests.length === 0 ? (
                           <div className="text-center py-12 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-500 text-xs">
                             No tests available for this exam.
                           </div>
+                        ) : groups.length > 0 ? (
+                          <div className="space-y-4">
+                            {/* Horizontal Tab Navigator for Sub-subcategories */}
+                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200 dark:border-slate-800 animate-in fade-in duration-200">
+                              {groups.map(group => {
+                                const isSelected = (activeSubSubId || groups[0]?.id) === group.id;
+                                return (
+                                  <button
+                                    key={group.id}
+                                    onClick={() => setActiveSubSubId(group.id)}
+                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold whitespace-nowrap transition cursor-pointer border ${
+                                      isSelected
+                                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                                        : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
+                                    }`}
+                                  >
+                                    {group.name} ({group.tests.length})
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* Selected Group's Tests */}
+                            {(() => {
+                              const activeGroup = groups.find(g => g.id === (activeSubSubId || groups[0]?.id));
+                              if (!activeGroup) return null;
+                              return (
+                                <div className="space-y-3 animate-in fade-in duration-300">
+                                  {activeGroup.tests.map((test) => {
+                                    const attempts = getTestAttempts(test.id);
+                                    const attemptsCount = attempts.length;
+                                    const status = getTestStatus(test.id);
+                                    const isTestPremium = test.isPremium;
+                                    const completed = isCompleted(test.id);
+                                    const ongoing = status === 'ONGOING';
+                                    const hasPass = currentUser && (
+                                      (test.requiredTier === 'None') ||
+                                      (test.requiredTier === 'Testbook Pass' && (currentUser.subscriptionTier === 'Testbook Pass' || currentUser.subscriptionTier === 'Testbook Pass Pro')) ||
+                                      (test.requiredTier === 'Testbook Pass Pro' && currentUser.subscriptionTier === 'Testbook Pass Pro')
+                                    );
+
+                                    const latestAttempt = attempts.length > 0 ? [...attempts].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())[0] : null;
+                                    const isCleared = completed && latestAttempt && (latestAttempt.score || 0) >= (test.testbookCutoffScore || 0);
+
+                                    const cardStyle = completed
+                                      ? isCleared
+                                        ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-250/60 dark:border-emerald-900/40 border-l-4 border-l-emerald-500'
+                                        : 'bg-rose-50/60 dark:bg-rose-950/20 border border-rose-250/60 dark:border-rose-900/40 border-l-4 border-l-red-500'
+                                      : ongoing
+                                      ? 'bg-sky-50/30 dark:bg-sky-955/10 border border-sky-200/60 dark:border-sky-900/40 border-l-4 border-l-sky-500'
+                                      : 'bg-white dark:bg-slate-900/45 border border-slate-200 dark:border-slate-800 border-l-4 border-l-blue-500';
+
+                                    return (
+                                      <div
+                                        key={test.id}
+                                        className={`p-4.5 rounded-2xl shadow-sm border flex flex-col justify-between items-start gap-4 w-full ${cardStyle}`}
+                                      >
+                                        <div className="space-y-1.5 flex-1 w-full text-left">
+                                          <div className="flex flex-wrap items-center gap-1.5">
+                                            {isTestPremium ? (
+                                              <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-250 dark:border-amber-900/60 uppercase tracking-wider">
+                                                PRO
+                                              </span>
+                                            ) : (
+                                              <span className="bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60 uppercase tracking-wider">
+                                                FREE
+                                              </span>
+                                            )}
+
+                                            {ongoing && (
+                                              <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-250 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                                PAUSED
+                                              </span>
+                                            )}
+
+                                            {completed && (
+                                              <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 border border-green-200 dark:border-green-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                                ✓ ATTEMPTED
+                                              </span>
+                                            )}
+
+                                            <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/60 uppercase tracking-wider font-mono">
+                                              +{test.positiveMarks ?? 2} Right
+                                            </span>
+                                            <span className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-red-200 dark:border-red-900/60 uppercase tracking-wider font-mono">
+                                              -{test.negativeMarks ?? 0.5} Wrong
+                                            </span>
+                                          </div>
+
+                                          <h4 className="font-extrabold text-xs text-slate-850 dark:text-white leading-snug">
+                                            {test.title}
+                                          </h4>
+
+                                          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[8px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
+                                            <span>{test.questionsCount} Qs</span>
+                                            <span>•</span>
+                                            <span>{test.durationMinutes} Mins</span>
+                                            <span>•</span>
+                                            <span>{test.maxMarks} Marks</span>
+                                            <span>•</span>
+                                            <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 EN, HI</span>
+                                          </div>
+
+                                          {attemptsCount > 0 && (() => {
+                                            const lastAttempt = [...attempts].sort((a, b) => b.date.localeCompare(a.date))[0];
+                                            if (!lastAttempt) return null;
+                                            return (
+                                              <div className="inline-flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800/80 px-2 py-0.5 rounded text-[8px] font-bold text-slate-600 dark:text-slate-400">
+                                                <span>Last Attempt:</span>
+                                                <span className="text-blue-600 dark:text-blue-400 font-extrabold">
+                                                  {lastAttempt.score}/{lastAttempt.maxScore} marks
+                                                </span>
+                                              </div>
+                                            );
+                                          })()}
+                                        </div>
+
+                                        <div className="flex items-center gap-2 w-full border-t border-slate-100 dark:border-slate-800/80 pt-3 shrink-0">
+                                          {ongoing ? (
+                                            <>
+                                              <button
+                                                onClick={() => handleStartExam(test)}
+                                                className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer"
+                                              >
+                                                Resume Test
+                                              </button>
+                                              <button
+                                                onClick={() => handleReattemptExam(test)}
+                                                className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                              >
+                                                Reset
+                                              </button>
+                                            </>
+                                          ) : completed ? (
+                                            <>
+                                              <Link
+                                                href={`/exam/${test.id}/analysis`}
+                                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm block"
+                                              >
+                                                View Analysis
+                                              </Link>
+                                              <button
+                                                onClick={() => handleReattemptExam(test)}
+                                                className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                              >
+                                                Reattempt
+                                              </button>
+                                            </>
+                                          ) : (
+                                            <button
+                                              onClick={() => handleStartExam(test)}
+                                              className={`w-full text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer ${
+                                                hasPass 
+                                                  ? 'bg-[#1C3D5A] hover:bg-slate-800' 
+                                                  : 'bg-yellow-600 hover:bg-yellow-700'
+                                              }`}
+                                            >
+                                              {hasPass ? 'Start Practice Test' : 'Unlock with Pass'}
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
+                          </div>
                         ) : (
                           <div className="space-y-3">
-                            {mockTests.map((test) => {
+                            {fallbackTests.map((test) => {
                               const attempts = getTestAttempts(test.id);
                               const attemptsCount = attempts.length;
                               const status = getTestStatus(test.id);
