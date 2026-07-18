@@ -11,7 +11,7 @@ import {
 import { useAuth, TestCategory, MockTestItem } from '../../AuthContext';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Check, ShieldAlert, ShieldCheck, Globe, User, BookOpen, AlertCircle, ArrowLeft, Sun, Moon, Clock, Pause, Play, Menu, X, Trophy } from 'lucide-react';
+import { Check, ShieldAlert, ShieldCheck, Globe, User, BookOpen, AlertCircle, ArrowLeft, Sun, Moon, Clock, Pause, Play, Menu, X, Trophy, Star } from 'lucide-react';
 import { useIsMobile } from '../../useIsMobile';
 
 function decodeHtml(text: string): string {
@@ -88,6 +88,8 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
   const [attemptSaved, setAttemptSaved] = useState(false);
   const [questionLanguages, setQuestionLanguages] = useState<Record<string, 'en' | 'hi'>>({});
+  const [websiteRating, setWebsiteRating] = useState(0);
+  const [examRating, setExamRating] = useState(0);
 
   const { isMobile, isMounted } = useIsMobile();
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
@@ -116,6 +118,8 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
   // Initialize session on mount (checking for resume)
   useEffect(() => {
+    if (state.isExamSubmitted) return;
+
     const initialize = async () => {
       let customQs = null;
       try {
@@ -171,7 +175,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
     };
 
     initialize();
-  }, [initSession, testId, authLanguage, examCatalog, currentUser]);
+  }, [initSession, testId, authLanguage, examCatalog, currentUser, state.isExamSubmitted]);
 
   // Save state to localStorage (instant, works offline) and server on unload/unmount
   useEffect(() => {
@@ -219,6 +223,9 @@ function TcsIonEngine({ testId }: { testId: string }) {
     if (state.isExamSubmitted && state.score && currentUser && !attemptSaved) {
       setAttemptSaved(true);
       
+      // Clear local ongoing snapshot immediately BEFORE updating currentUser / calling addAttempt
+      try { localStorage.removeItem(`ongoing_web_${testId}`); } catch {}
+
       const savedResponses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number }> = {};
       Object.keys(state.responses).forEach(qId => {
         savedResponses[qId] = {
@@ -237,9 +244,6 @@ function TcsIonEngine({ testId }: { testId: string }) {
         state.violationsCount,
         savedResponses
       );
-
-      // Clear local ongoing snapshot now that exam is submitted
-      try { localStorage.removeItem(`ongoing_web_${testId}`); } catch {}
     }
   }, [state.isExamSubmitted, state.score, currentUser, addAttempt, testId, attemptSaved, state.responses, state.session, state.timeRemaining, state.violationsCount]);
 
@@ -525,6 +529,54 @@ function TcsIonEngine({ testId }: { testId: string }) {
               <div className="col-span-2">
                 <p className="text-gray-500 font-semibold">Accuracy Percentage:</p>
                 <p className="text-sm font-bold text-indigo-600">{score?.accuracyPercentage}%</p>
+              </div>
+            </div>
+
+            <div className="my-5 p-4 bg-white rounded-xl border border-slate-200 text-left">
+              <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Feedback & Ratings</h4>
+              
+              <div className="mb-4">
+                <p className="text-[11px] font-bold text-slate-600 mb-1.5">Rate the Website:</p>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setWebsiteRating(star)}
+                      type="button"
+                      className="focus:outline-none transition active:scale-90"
+                    >
+                      <Star
+                        className={`h-5 w-5 ${
+                          star <= websiteRating 
+                            ? 'fill-amber-400 text-amber-400' 
+                            : 'text-slate-300 hover:text-amber-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-bold text-slate-600 mb-1.5">Rate the Exam Experience:</p>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setExamRating(star)}
+                      type="button"
+                      className="focus:outline-none transition active:scale-90"
+                    >
+                      <Star
+                        className={`h-5 w-5 ${
+                          star <= examRating 
+                            ? 'fill-amber-400 text-amber-400' 
+                            : 'text-slate-300 hover:text-amber-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

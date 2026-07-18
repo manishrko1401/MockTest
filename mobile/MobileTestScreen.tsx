@@ -115,6 +115,8 @@ export default function MobileTestScreen({
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [violationsCount, setViolationsCount] = useState(0);
+  const [websiteRating, setWebsiteRating] = useState(0);
+  const [examRating, setExamRating] = useState(0);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [drawerTab, setDrawerTab] = useState<'symbols' | 'instructions'>('symbols');
   const [drawerSectionIdx, setDrawerSectionIdx] = useState(0);
@@ -147,6 +149,7 @@ export default function MobileTestScreen({
     message: string;
     buttons: { text: string; onPress: () => void; style?: 'cancel' | 'default' | 'destructive' }[];
     isPauseModal?: boolean;
+    isSubmittedModal?: boolean;
   }>({
     visible: false,
     title: '',
@@ -881,6 +884,11 @@ export default function MobileTestScreen({
     setIsTimerRunning(false);
 
     const performSubmission = async () => {
+      // Clear ongoing test IMMEDIATELY at start of submission so it can never be resumed
+      try {
+        await AsyncStorage.removeItem(`ongoing_test_${testId}`);
+      } catch {}
+
       setLoading(true);
       setLoadingText('Processing your answers...');
 
@@ -942,7 +950,6 @@ export default function MobileTestScreen({
             `pending_submit_${testId}`,
             JSON.stringify({ ...attemptPayload, queuedAt: Date.now(), correctCount, incorrectCount, totalQs, unattemptedCount })
           );
-          await AsyncStorage.removeItem(`ongoing_test_${testId}`);
         } catch (err) {
           console.warn('[Offline] Failed to queue result locally:', err);
         }
@@ -952,6 +959,7 @@ export default function MobileTestScreen({
           visible: true,
           title: forced ? '⏱ Time Up — Result Saved Offline' : '✅ Result Saved Offline',
           message: `You are currently offline. Your result has been saved on this device.\n\nMarks scored: ${totalMarks.toFixed(1)}\nCorrect answers: ${correctCount}/${totalQs}\nAccuracy: ${accuracy.toFixed(1)}%\n\n📡 Your result will automatically sync to the server when internet is restored.`,
+          isSubmittedModal: true,
           buttons: [
             {
               text: 'Back to Home',
@@ -974,7 +982,6 @@ export default function MobileTestScreen({
 
       if (res.success) {
         try {
-          await AsyncStorage.removeItem(`ongoing_test_${testId}`);
           // Clear any pending offline queue for this test if it existed
           await AsyncStorage.removeItem(`pending_submit_${testId}`);
         } catch {}
@@ -982,6 +989,7 @@ export default function MobileTestScreen({
           visible: true,
           title: forced ? 'Exam Submitted (Violation Limit)' : 'Exam Submitted Successfully',
           message: `Assessment summary:\nMarks scored: ${totalMarks.toFixed(1)}\nCorrect answers: ${correctCount}/${totalQs}\nAccuracy: ${accuracy.toFixed(1)}%`,
+          isSubmittedModal: true,
           buttons: [
             {
               text: 'View Performance',
@@ -1002,12 +1010,12 @@ export default function MobileTestScreen({
             `pending_submit_${testId}`,
             JSON.stringify({ ...attemptPayload, queuedAt: Date.now(), correctCount, incorrectCount, totalQs, unattemptedCount })
           );
-          await AsyncStorage.removeItem(`ongoing_test_${testId}`);
         } catch {}
         setModalConfig({
           visible: true,
           title: 'Saved — Will Sync Later',
           message: `Server returned an error but your result was saved locally.\n\nMarks scored: ${totalMarks.toFixed(1)}\nCorrect: ${correctCount}/${totalQs} | Accuracy: ${accuracy.toFixed(1)}%\n\n📡 Result will sync automatically when connection is restored.`,
+          isSubmittedModal: true,
           buttons: [
             {
               text: 'Back to Home',
@@ -1608,6 +1616,48 @@ export default function MobileTestScreen({
             <Text style={[styles.modalTitle, isDark && { color: ThemeColors.dark.text }]}>{modalConfig.title}</Text>
             <Text style={[styles.modalMessage, isDark && { color: ThemeColors.dark.textMuted }]}>{modalConfig.message}</Text>
             
+            {modalConfig.isSubmittedModal && (
+              <View style={{ marginVertical: 12, width: '100%', alignItems: 'stretch' }}>
+                <Text style={{ fontSize: 13, fontWeight: 'bold', color: isDark ? '#FFF' : '#1E293B', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  {lang === 'hi' ? 'प्रतिक्रिया और रेटिंग' : 'Feedback & Ratings'}
+                </Text>
+                
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', marginBottom: 6 }}>
+                    {lang === 'hi' ? 'वेबसाइट को रेटिंग दें:' : 'Rate the Website:'}
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <TouchableOpacity
+                        key={star}
+                        activeOpacity={0.7}
+                        onPress={() => setWebsiteRating(star)}
+                      >
+                        <Text style={{ fontSize: 24, color: star <= websiteRating ? '#F59E0B' : '#D1D5DB' }}>★</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View>
+                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', marginBottom: 6 }}>
+                    {lang === 'hi' ? 'परीक्षा को रेटिंग दें:' : 'Rate the Exam Experience:'}
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <TouchableOpacity
+                        key={star}
+                        activeOpacity={0.7}
+                        onPress={() => setExamRating(star)}
+                      >
+                        <Text style={{ fontSize: 24, color: star <= examRating ? '#F59E0B' : '#D1D5DB' }}>★</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            )}
+
             <View style={styles.modalButtonsContainer}>
               {modalConfig.buttons.map((btn, idx) => (
                 <TouchableOpacity
