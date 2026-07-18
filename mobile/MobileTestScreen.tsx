@@ -1607,16 +1607,126 @@ export default function MobileTestScreen({
           modalConfig.isPauseModal ? styles.customModalOverlayPaused : styles.customModalOverlayStandard
         ]}>
           <View style={[styles.modalContent, isDark && { backgroundColor: ThemeColors.dark.card }]}>
-            {modalConfig.isPauseModal && (
-              <View style={styles.pauseIconContainer}>
-                <View style={styles.pauseBarsRow}>
-                  <View style={styles.pauseBar} />
-                  <View style={styles.pauseBar} />
+            {modalConfig.isPauseModal ? (
+              <View style={{ marginVertical: 12, width: '100%', alignItems: 'center' }}>
+                <View style={{
+                  height: 48,
+                  width: 48,
+                  borderRadius: 24,
+                  backgroundColor: '#FEF3C7',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 12
+                }}>
+                  <Text style={{ fontSize: 24 }}>⏳</Text>
+                </View>
+                
+                <Text style={[styles.modalTitle, isDark && { color: ThemeColors.dark.text }, { marginBottom: 4 }]}>
+                  {modalConfig.title}
+                </Text>
+                <Text style={{
+                  fontSize: 11,
+                  fontWeight: '600',
+                  color: isDark ? '#94A3B8' : '#64748B',
+                  textAlign: 'center',
+                  marginBottom: 16,
+                  paddingHorizontal: 8,
+                  lineHeight: 16
+                }}>
+                  Your exam timer and questions are hidden. Review your progress summary below to resume.
+                </Text>
+
+                {/* Progress Summary Grid */}
+                <View style={{
+                  flexDirection: 'row',
+                  flexWrap: 'wrap',
+                  justifyContent: 'space-between',
+                  gap: 8,
+                  width: '100%',
+                  borderTopWidth: 1,
+                  borderBottomWidth: 1,
+                  borderColor: isDark ? '#334155' : '#E2E8F0',
+                  paddingVertical: 12,
+                  marginBottom: 16
+                }}>
+                  {/* Total Questions */}
+                  <View style={{
+                    width: '47%',
+                    backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                    borderColor: isDark ? '#334155' : '#E2E8F0',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    padding: 8,
+                  }}>
+                    <Text style={{ fontSize: 9, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', textTransform: 'uppercase' }}>Total Questions:</Text>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', color: isDark ? '#F1F5F9' : '#1E293B', marginTop: 2 }}>{questions.length}</Text>
+                  </View>
+
+                  {/* Time Left */}
+                  <View style={{
+                    width: '47%',
+                    backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                    borderColor: isDark ? '#334155' : '#E2E8F0',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    padding: 8,
+                  }}>
+                    <Text style={{ fontSize: 9, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', textTransform: 'uppercase' }}>Time Left:</Text>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#F59E0B', marginTop: 2, fontFamily: 'monospace' }}>{formatTime(timeLeft)}</Text>
+                  </View>
+
+                  {/* Attempted Qs */}
+                  <View style={{
+                    width: '47%',
+                    backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                    borderColor: isDark ? '#334155' : '#E2E8F0',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    padding: 8,
+                  }}>
+                    <Text style={{ fontSize: 9, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', textTransform: 'uppercase' }}>Attempted Qs:</Text>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#10B981', marginTop: 2 }}>
+                      {Object.values(responses).filter(r => r.state === 3 || r.state === 5).length}
+                    </Text>
+                  </View>
+
+                  {/* Remaining Qs */}
+                  <View style={{
+                    width: '47%',
+                    backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                    borderColor: isDark ? '#334155' : '#E2E8F0',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    padding: 8,
+                  }}>
+                    <Text style={{ fontSize: 9, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', textTransform: 'uppercase' }}>Remaining Qs:</Text>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#EF4444', marginTop: 2 }}>
+                      {questions.length - Object.values(responses).filter(r => r.state === 3 || r.state === 5).length}
+                    </Text>
+                  </View>
+
+                  {/* Marked for Review Qs */}
+                  <View style={{
+                    width: '100%',
+                    backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                    borderColor: isDark ? '#334155' : '#E2E8F0',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    padding: 8,
+                  }}>
+                    <Text style={{ fontSize: 9, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', textTransform: 'uppercase' }}>Marked for Review Qs:</Text>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#6366F1', marginTop: 2 }}>
+                      {Object.values(responses).filter(r => r.state === 4 || r.state === 5).length}
+                    </Text>
+                  </View>
                 </View>
               </View>
+            ) : (
+              <>
+                <Text style={[styles.modalTitle, isDark && { color: ThemeColors.dark.text }]}>{modalConfig.title}</Text>
+                <Text style={[styles.modalMessage, isDark && { color: ThemeColors.dark.textMuted }]}>{modalConfig.message}</Text>
+              </>
             )}
-            <Text style={[styles.modalTitle, isDark && { color: ThemeColors.dark.text }]}>{modalConfig.title}</Text>
-            <Text style={[styles.modalMessage, isDark && { color: ThemeColors.dark.textMuted }]}>{modalConfig.message}</Text>
             
             {modalConfig.isSubmittedModal && (
               <View style={{ marginVertical: 12, width: '100%', alignItems: 'stretch' }}>
@@ -1626,7 +1736,7 @@ export default function MobileTestScreen({
                 
                 <View style={{ marginBottom: 12 }}>
                   <Text style={{ fontSize: 11, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', marginBottom: 6 }}>
-                    {lang === 'hi' ? 'वेबसाइट को रेटिंग दें:' : 'Rate the Website:'}
+                    {lang === 'hi' ? 'ऐप अनुभव को रेटिंग दें:' : 'Rate the App Experience:'}
                   </Text>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     {[1, 2, 3, 4, 5].map((star) => (
