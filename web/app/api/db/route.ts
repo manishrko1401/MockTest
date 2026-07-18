@@ -1474,7 +1474,32 @@ async function getCompiledExamCatalog() {
   const categories = await prisma.category.findMany({ orderBy: { orderIndex: 'asc' } });
   const exams = await prisma.exam.findMany({ orderBy: { orderIndex: 'asc' } });
   const testSeries = await prisma.testSeries.findMany({ orderBy: { orderIndex: 'asc' } });
-  const mockTests = await prisma.mockTest.findMany({ orderBy: { orderIndex: 'asc' } });
+  const mockTests = await prisma.$queryRaw<any[]>`
+    SELECT 
+      "id", 
+      "testSeriesId", 
+      "title", 
+      "durationMinutes", 
+      "passingCutoff", 
+      "questionsCount", 
+      "maxMarks", 
+      "requiredTierName", 
+      "hasSectionalTiming", 
+      "sectionalTimings", 
+      "orderIndex", 
+      "positiveMarks", 
+      "negativeMarks", 
+      "testbookTotalUsers", 
+      "testbookTopperScore", 
+      "testbookAverageScore", 
+      "testbookCutoffScore",
+      CASE 
+        WHEN "customQuestions" IS NULL THEN 0
+        ELSE json_array_length("customQuestions"::json)
+      END as "customQuestionsCount"
+    FROM "mock_tests"
+    ORDER BY "orderIndex" ASC
+  `;
 
   // Group tests by testSeriesId
   const testsBySeries: Record<string, any[]> = {};
@@ -1483,18 +1508,9 @@ async function getCompiledExamCatalog() {
       testsBySeries[t.testSeriesId] = [];
     }
 
-    let customQuestionsCount = 0;
-    if (t.customQuestions) {
-      try {
-        if (typeof t.customQuestions === 'string') {
-          customQuestionsCount = JSON.parse(t.customQuestions).length;
-        } else if (Array.isArray(t.customQuestions)) {
-          customQuestionsCount = t.customQuestions.length;
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
+    const customQuestionsCount = t.customQuestionsCount !== undefined && t.customQuestionsCount !== null
+      ? Number(t.customQuestionsCount)
+      : 0;
 
     testsBySeries[t.testSeriesId].push({
       id: t.id,

@@ -90,6 +90,7 @@ export default function ExamSolutionAnalysisPage() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [customQs, setCustomQs] = useState<any[] | null>(null);
   const [loadingCustomQs, setLoadingCustomQs] = useState(true);
+  const [activeMobileTab, setActiveMobileTab] = useState<'analysis' | 'solutions'>('analysis');
   const t = TRANSLATIONS[lang];
 
   // Find test context in catalog to redirect back precisely
@@ -577,8 +578,32 @@ export default function ExamSolutionAnalysisPage() {
         </div>
       </header>
 
+      {/* Mobile Tab Switcher (Visible only on mobile) */}
+      <div className="flex lg:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-16 z-30 shadow-sm">
+        <button
+          onClick={() => setActiveMobileTab('analysis')}
+          className={`flex-1 py-3 text-xs font-bold transition-all text-center border-b-2 ${
+            activeMobileTab === 'analysis'
+              ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          {language === 'hi' ? 'विश्लेषण' : 'Analysis'}
+        </button>
+        <button
+          onClick={() => setActiveMobileTab('solutions')}
+          className={`flex-1 py-3 text-xs font-bold transition-all text-center border-b-2 ${
+            activeMobileTab === 'solutions'
+              ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'border-transparent text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          {language === 'hi' ? 'समाधान और व्याख्या' : 'Solutions & Analysis'}
+        </button>
+      </div>
+
       {/* 2. STATS OVERVIEW CARDS */}
-      <section className="max-w-6xl w-full mx-auto px-6 mt-8">
+      <section className={`max-w-6xl w-full mx-auto px-6 mt-8 ${activeMobileTab === 'analysis' ? 'block' : 'hidden lg:block'}`}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
           
           <div className="flex items-center gap-3 border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
@@ -620,7 +645,7 @@ export default function ExamSolutionAnalysisPage() {
 
       {/* Testbook Equivalent Benchmarking Card */}
       {sessionRecord.testbookRank && sessionRecord.mockTest && (
-        <section className="max-w-6xl w-full mx-auto px-6 mt-6">
+        <section className={`max-w-6xl w-full mx-auto px-6 mt-6 ${activeMobileTab === 'analysis' ? 'block' : 'hidden lg:block'}`}>
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900/30 dark:to-indigo-950/10 border border-blue-100 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               
@@ -746,7 +771,7 @@ export default function ExamSolutionAnalysisPage() {
 
       {/* Attempt Selector and Comparison Dashboard */}
       {attempts.length >= 1 && (
-        <section className="max-w-6xl w-full mx-auto px-6 mt-6">
+        <section className={`max-w-6xl w-full mx-auto px-6 mt-6 ${activeMobileTab === 'analysis' ? 'block' : 'hidden lg:block'}`}>
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex-1">
               <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{t.analysisAttemptSelector}</h5>
@@ -789,7 +814,7 @@ export default function ExamSolutionAnalysisPage() {
       )}
 
       {/* Subject-wise Breakdown Section */}
-      <section className="max-w-6xl w-full mx-auto px-6 mt-6 animate-in fade-in duration-300">
+      <section className={`max-w-6xl w-full mx-auto px-6 mt-6 animate-in fade-in duration-300 ${activeMobileTab === 'analysis' ? 'block' : 'hidden lg:block'}`}>
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
           <h4 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center gap-2">
             <Award className="h-4.5 w-4.5 text-blue-500" /> {lang === 'hi' ? 'विषयवार प्रदर्शन विश्लेषण' : 'Subject-wise Performance Breakdown'}
@@ -846,8 +871,23 @@ export default function ExamSolutionAnalysisPage() {
         </div>
       </section>
 
+      {/* Mobile-only Solution & Analysis Navigation Button (Visible just below the breakdown on mobile) */}
+      {activeMobileTab === 'analysis' && (
+        <div className="block lg:hidden max-w-6xl w-full mx-auto px-6 mt-6">
+          <button
+            onClick={() => setActiveMobileTab('solutions')}
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all active:scale-98 flex items-center justify-center gap-2 text-xs tracking-wider uppercase border border-blue-500/10"
+          >
+            <HelpCircle className="h-4.5 w-4.5" />
+            {language === 'hi' ? 'समाधान और विश्लेषण' : 'Solution and Analysis'}
+          </button>
+        </div>
+      )}
+
       {/* 3. SPLIT WORKSPACE - QUESTION DETAIL & PALETTE */}
-      <section className="max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start">
+      <section className={`max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start ${
+        activeMobileTab === 'solutions' ? 'flex' : 'hidden lg:flex'
+      }`}>
         
         {/* LEFT WORKSPACE PANEL: QUESTION VIEW */}
         <main className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm min-h-[480px] flex flex-col justify-between w-full">
