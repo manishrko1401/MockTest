@@ -118,9 +118,26 @@ export default function MobileTestScreen({
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [violationsCount, setViolationsCount] = useState(0);
-  const [websiteRating, setWebsiteRating] = useState(0);
-  const [examRating, setExamRating] = useState(0);
-  const [feedbackText, setFeedbackText] = useState("");
+  const [websiteRating, _setWebsiteRating] = useState(0);
+  const [examRating, _setExamRating] = useState(0);
+  const [feedbackText, _setFeedbackText] = useState("");
+
+  const websiteRatingRef = useRef(0);
+  const examRatingRef = useRef(0);
+  const feedbackTextRef = useRef("");
+
+  const setWebsiteRating = (val: number) => {
+    _setWebsiteRating(val);
+    websiteRatingRef.current = val;
+  };
+  const setExamRating = (val: number) => {
+    _setExamRating(val);
+    examRatingRef.current = val;
+  };
+  const setFeedbackText = (val: string) => {
+    _setFeedbackText(val);
+    feedbackTextRef.current = val;
+  };
   const [mockTestTitle, setMockTestTitle] = useState("");
   const [drawerMounted, setDrawerMounted] = useState(false);
   const drawerAnimation = useRef(new Animated.Value(SCREEN_WIDTH * 0.82)).current;
@@ -1117,9 +1134,9 @@ export default function MobileTestScreen({
                     body: JSON.stringify({
                       userId: currentUser?.id,
                       testId: testId,
-                      platformRating: websiteRating || 0,
-                      examRating: examRating || 0,
-                      feedbackText: feedbackText || '',
+                      platformRating: websiteRatingRef.current || 0,
+                      examRating: examRatingRef.current || 0,
+                      feedbackText: feedbackTextRef.current || '',
                       source: 'app'
                     })
                   }).catch(e => console.warn("Feedback submission failed:", e));
