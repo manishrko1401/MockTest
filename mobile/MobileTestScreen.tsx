@@ -115,6 +115,7 @@ export default function MobileTestScreen({
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [violationsCount, setViolationsCount] = useState(0);
+  const [dismissedViolationCount, setDismissedViolationCount] = useState(0);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [drawerTab, setDrawerTab] = useState<'symbols' | 'instructions'>('symbols');
   const [drawerSectionIdx, setDrawerSectionIdx] = useState(0);
@@ -122,6 +123,15 @@ export default function MobileTestScreen({
   const [agreed, setAgreed] = useState(false);
   const activeQuestionIdRef = useRef<string | null>(null);
   const isExitingRef = useRef(false);
+
+  // Auto pause on new violation
+  useEffect(() => {
+    if (violationsCount > dismissedViolationCount) {
+      if (violationsCount === 1 || violationsCount === 2) {
+        setIsTimerRunning(false);
+      }
+    }
+  }, [violationsCount, dismissedViolationCount]);
 
   // Refs to avoid stale closures inside the timer setInterval
   const sectionsRef = useRef<MobileSection[]>([]);
@@ -397,6 +407,7 @@ export default function MobileTestScreen({
         if (ongoing) {
           setTimeLeft(ongoing.timeRemaining ?? durationSeconds);
           setViolationsCount(ongoing.violations ?? 0);
+          setDismissedViolationCount(ongoing.violations ?? 0);
           setCurrentSectionIdx(ongoing.currentSectionIndex ?? 0);
           setCurrentQuestionIdx(ongoing.currentQuestionIndex ?? 0);
           if (ongoing.responses) {
@@ -1617,6 +1628,91 @@ export default function MobileTestScreen({
             >
               <Text style={styles.paletteSubmitText}>SUBMIT TEST</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Violation Warning Modal */}
+      <Modal
+        visible={violationsCount > dismissedViolationCount && (violationsCount === 1 || violationsCount === 2)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={styles.customModalOverlay}>
+          <View style={[styles.modalContent, isDark && { backgroundColor: ThemeColors.dark.card }]}>
+            <View style={[styles.pauseIconContainer, { backgroundColor: '#FEE2E2', borderStyle: 'solid' }]}>
+              <Text style={{ fontSize: 24 }}>⚠️</Text>
+            </View>
+            <Text style={[styles.modalTitle, { color: '#EF4444' }]}>
+              {lang === 'hi' 
+                ? `सुरक्षा उल्लंघन चेतावनी (${violationsCount}/2)` 
+                : `Security Violation Warning (${violationsCount}/2)`}
+            </Text>
+            
+            <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#DC2626', textAlign: 'center', marginVertical: 4 }}>
+              {violationsCount === 1 
+                ? (lang === 'hi' ? 'यह आपकी पहली चेतावनी है!' : 'This is your FIRST warning!') 
+                : (lang === 'hi' ? 'यह आपकी अंतिम चेतावनी है!' : 'This is your FINAL warning!')}
+            </Text>
+
+            <View style={{
+              backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+              borderColor: isDark ? '#334155' : '#E2E8F0',
+              borderWidth: 1,
+              borderRadius: 12,
+              padding: 12,
+              marginVertical: 12,
+              width: '100%',
+            }}>
+              <Text style={{ fontSize: 11, fontWeight: 'bold', color: isDark ? '#F1F5F9' : '#1E293B', marginBottom: 6 }}>
+                {lang === 'hi' 
+                  ? 'निम्नलिखित कारणों से उल्लंघन दर्ज किया गया है:' 
+                  : 'Violation recorded due to one of the following conditions:'}
+              </Text>
+              
+              <Text style={{ fontSize: 10, color: isDark ? '#94A3B8' : '#64748B', lineHeight: 14 }}>
+                • {lang === 'hi' ? 'ऐप से बाहर जाना या बैकग्राउंड में डालना।' : 'Exiting the app or putting it in the background.'}
+                {'\n'}• {lang === 'hi' ? 'टैब बदलना या परीक्षा स्क्रीन से हटना।' : 'Switching tabs or moving away from the exam screen.'}
+                {'\n'}• {lang === 'hi' ? 'स्क्रीनशॉट लेना या अनधिकृत कीबोर्ड दबाना।' : 'Taking screenshots or using unauthorized keys.'}
+              </Text>
+              
+              <Text style={{ fontSize: 9, fontWeight: 'bold', color: '#EF4444', marginTop: 8, textTransform: 'uppercase' }}>
+                {lang === 'hi' 
+                  ? '3 उल्लंघन होने पर आपकी परीक्षा स्वतः सबमिट हो जाएगी।' 
+                  : 'Your exam will be auto-submitted if you reach 3 violations.'}
+              </Text>
+            </View>
+
+            <View style={styles.modalButtonsContainer}>
+              {violationsCount === 1 ? (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={[styles.modalButton, styles.modalButtonDefault, { width: '100%' }]}
+                  onPress={() => {
+                    setDismissedViolationCount(1);
+                    setIsTimerRunning(true);
+                  }}
+                >
+                  <Text style={styles.modalButtonTextDefault}>
+                    {lang === 'hi' ? 'मैं समझता हूँ - परीक्षा जारी रखें' : 'I Understand - Continue Test'}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={[styles.modalButton, { backgroundColor: '#DC2626', width: '100%' }]}
+                  onPress={() => {
+                    setDismissedViolationCount(2);
+                    setIsTimerRunning(true);
+                  }}
+                >
+                  <Text style={styles.modalButtonTextDefault}>
+                    {lang === 'hi' ? 'टेस्ट फिर से शुरू करें' : 'Resume Test'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
       </Modal>

@@ -88,6 +88,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
   const [attemptSaved, setAttemptSaved] = useState(false);
   const [questionLanguages, setQuestionLanguages] = useState<Record<string, 'en' | 'hi'>>({});
+  const [dismissedViolationCount, setDismissedViolationCount] = useState(0);
 
   const { isMobile, isMounted } = useIsMobile();
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
@@ -165,13 +166,25 @@ function TcsIonEngine({ testId }: { testId: string }) {
           currentSectionIndex: resumeSource.currentSectionIndex ?? 0,
           currentQuestionIndex: resumeSource.currentQuestionIndex ?? 0,
         }, authLanguage);
+        setDismissedViolationCount(resumeSource.violations ?? 0);
       } else {
         initSession(examSession, 3, undefined, authLanguage); // 3 violations allowed
+        setDismissedViolationCount(0);
       }
     };
 
     initialize();
   }, [initSession, testId, authLanguage, examCatalog, currentUser]);
+
+  // Auto pause on new violation
+  useEffect(() => {
+    const currentViolations = state.violationsCount;
+    if (currentViolations > dismissedViolationCount) {
+      if (currentViolations === 1 || currentViolations === 2) {
+        pauseExam();
+      }
+    }
+  }, [state.violationsCount, dismissedViolationCount, pauseExam]);
 
   // Save state to localStorage (instant, works offline) and server on unload/unmount
   useEffect(() => {
@@ -452,7 +465,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
       })()}
 
       {/* PAUSE SCREEN BLUR OVERLAY */}
-      {!state.isTimerRunning && !isExamSubmitted && state.session && (
+      {!state.isTimerRunning && !isExamSubmitted && state.session && !(violationsCount > dismissedViolationCount && (violationsCount === 1 || violationsCount === 2)) && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
           <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 md:p-8 text-center text-slate-800">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 text-yellow-600 mb-4 animate-pulse">
@@ -490,6 +503,70 @@ function TcsIonEngine({ testId }: { testId: string }) {
             >
               <Play className="h-4 w-4" /> Resume Test
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* VIOLATION WARNING POPUP MODAL */}
+      {violationsCount > dismissedViolationCount && (violationsCount === 1 || violationsCount === 2) && (
+        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border-2 border-red-500 rounded-3xl max-w-md w-full shadow-2xl p-6 text-center animate-in scale-in duration-200">
+            <div className="h-14 w-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-200">
+              <ShieldAlert className="h-8 w-8 text-red-600 animate-bounce" />
+            </div>
+            
+            <h3 className="text-lg font-black text-slate-900 uppercase tracking-wide">
+              {language === 'hi' 
+                ? `सुरक्षा उल्लंघन चेतावनी (${violationsCount}/2)` 
+                : `Security Violation Warning (${violationsCount}/2)`}
+            </h3>
+            
+            <p className="text-xs text-red-600 font-extrabold mt-1 uppercase tracking-wider">
+              {violationsCount === 1 
+                ? (language === 'hi' ? 'यह आपकी पहली चेतावनी है!' : 'This is your FIRST warning!') 
+                : (language === 'hi' ? 'यह आपकी अंतिम चेतावनी है!' : 'This is your FINAL warning!')}
+            </p>
+
+            <div className="my-5 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-left text-[11px] text-slate-600 space-y-2.5">
+              <p className="font-extrabold text-slate-800">
+                {language === 'hi' 
+                  ? 'निम्नलिखित कारणों से उल्लंघन दर्ज किया गया है:' 
+                  : 'Violation recorded due to one of the following conditions:'}
+              </p>
+              <ul className="list-disc pl-4 space-y-1 font-semibold text-slate-700">
+                <li>{language === 'hi' ? 'ब्राउज़र टैब बदलना या अन्य ऐप खोलना।' : 'Switching browser tabs or opening another application.'}</li>
+                <li>{language === 'hi' ? 'फुल-स्क्रीन मोड से बाहर निकलना।' : 'Exiting full-screen exam mode.'}</li>
+                <li>{language === 'hi' ? 'ब्राउज़र विंडो को छोटा (minimize) करना।' : 'Minimizing the browser window.'}</li>
+                <li>{language === 'hi' ? 'अनधिकृत कीबोर्ड शॉर्टकट का उपयोग करना।' : 'Using unauthorized keyboard shortcuts (e.g. Copy, Paste, PrintScreen).'}</li>
+              </ul>
+              <p className="text-red-500 font-extrabold text-[10px] uppercase pt-1 border-t border-slate-200">
+                {language === 'hi' 
+                  ? '3 उल्लंघन होने पर आपकी परीक्षा स्वतः सबमिट हो जाएगी।' 
+                  : 'Your exam will be auto-submitted if you reach 3 violations.'}
+              </p>
+            </div>
+
+            {violationsCount === 1 ? (
+              <button
+                onClick={() => {
+                  setDismissedViolationCount(1);
+                  resumeExam();
+                }}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-2xl text-xs shadow-md transition active:scale-95 cursor-pointer"
+              >
+                {language === 'hi' ? 'मैं समझता हूँ - परीक्षा जारी रखें' : 'I Understand - Continue Test'}
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setDismissedViolationCount(2);
+                  resumeExam();
+                }}
+                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold rounded-2xl text-xs shadow-md transition active:scale-95 cursor-pointer animate-pulse"
+              >
+                {language === 'hi' ? 'टेस्ट फिर से शुरू करें' : 'Resume Test'}
+              </button>
+            )}
           </div>
         </div>
       )}
