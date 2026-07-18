@@ -382,38 +382,100 @@ const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark }) => {
 // ──────────────────────────────────────────────────────────────────────────────
 // HTML entity decoder (run recursively up to 3 passes for double-encoded text)
 // ──────────────────────────────────────────────────────────────────────────────
+// ── Comprehensive HTML named-entity lookup table ──────────────────────────────
+// Maps every standard HTML4/HTML5 named entity to its Unicode character.
+// Single source of truth — no individual regex chains needed.
+// ─────────────────────────────────────────────────────────────────────────────
+const HTML_ENTITIES: Record<string, string> = {
+  // Basics
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0',
+  // Punctuation & typography
+  iexcl: '¡', cent: '¢', pound: '£', curren: '¤', yen: '¥', brvbar: '¦',
+  sect: '§', uml: '¨', copy: '©', ordf: 'ª', laquo: '«', not: '¬',
+  shy: '\u00ad', reg: '®', macr: '¯', deg: '°', plusmn: '±', sup2: '²',
+  sup3: '³', acute: '´', micro: 'µ', para: '¶', middot: '·', cedil: '¸',
+  sup1: '¹', ordm: 'º', raquo: '»', frac14: '¼', frac12: '½', frac34: '¾',
+  iquest: '¿',
+  // Dashes & spaces
+  ndash: '–', mdash: '—', thinsp: '\u2009', ensp: '\u2002', emsp: '\u2003',
+  zwj: '\u200d', zwnj: '\u200c', lrm: '\u200e', rlm: '\u200f',
+  // Quotes & typographic marks
+  sbquo: '‚', bdquo: '„', hellip: '…', dagger: '†', Dagger: '‡',
+  permil: '‰', lsaquo: '‹', rsaquo: '›', ldquo: '\u201c', rdquo: '\u201d',
+  lsquo: '\u2018', rsquo: '\u2019', bull: '•', prime: '′', Prime: '″',
+  frasl: '⁄', trade: '™', euro: '€',
+  // Math operators
+  minus: '−', times: '×', divide: '÷', radic: '√', infin: '∞',
+  sum: '∑', prod: '∏', int: '∫', part: '∂', nabla: '∇',
+  ne: '≠', le: '≤', ge: '≥', equiv: '≡', asymp: '≈', cong: '≅',
+  sim: '∼', prop: '∝', ang: '∠', perp: '⊥', there4: '∴', because: '∵',
+  approx: '≈',
+  // Logic & set theory
+  forall: '∀', exist: '∃', empty: '∅', isin: '∈', notin: '∉',
+  sub: '⊂', sup: '⊃', nsub: '⊄', sube: '⊆', supe: '⊇',
+  and: '∧', or: '∨', cap: '∩', cup: '∪', oplus: '⊕', otimes: '⊗',
+  // Arrows (simple)
+  larr: '←', uarr: '↑', rarr: '→', darr: '↓', harr: '↔',
+  crarr: '↵', uarrl: '↿', darrl: '⇂',
+  // Double arrows
+  lArr: '⇐', uArr: '⇑', rArr: '⇒', dArr: '⇓', hArr: '⇔',
+  // Diagonal arrows
+  nearr: '↗', searr: '↘', swarr: '↙', nwarr: '↖',
+  // Long arrows
+  xlarr: '⟵', xrarr: '⟶', xharr: '⟷', xlArr: '⟸', xrArr: '⟹', xhArr: '⟺',
+  // Greek lowercase
+  alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', zeta: 'ζ',
+  eta: 'η', theta: 'θ', iota: 'ι', kappa: 'κ', lambda: 'λ', mu: 'μ',
+  nu: 'ν', xi: 'ξ', omicron: 'ο', pi: 'π', rho: 'ρ', sigma: 'σ',
+  tau: 'τ', upsilon: 'υ', phi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω',
+  sigmaf: 'ς', thetasym: 'ϑ', upsih: 'ϒ', piv: 'ϖ',
+  // Greek uppercase
+  Alpha: 'Α', Beta: 'Β', Gamma: 'Γ', Delta: 'Δ', Epsilon: 'Ε', Zeta: 'Ζ',
+  Eta: 'Η', Theta: 'Θ', Iota: 'Ι', Kappa: 'Κ', Lambda: 'Λ', Mu: 'Μ',
+  Nu: 'Ν', Xi: 'Ξ', Omicron: 'Ο', Pi: 'Π', Rho: 'Ρ', Sigma: 'Σ',
+  Tau: 'Τ', Upsilon: 'Υ', Phi: 'Φ', Chi: 'Χ', Psi: 'Ψ', Omega: 'Ω',
+  // Dots & ellipsis
+  ldots: '…', cdots: '⋯', vdots: '⋮', ddots: '⋱', sdot: '⋅', lowast: '∗',
+  // Geometry & misc math
+  loz: '◊', spades: '♠', clubs: '♣', hearts: '♥', diams: '♦',
+  circ: 'ˆ', tilde: '˜',
+  // Subscripts / superscripts
+  fnof: 'ƒ', weierp: '℘', image: 'ℑ', real: 'ℜ', alefsym: 'ℵ',
+  // Fractions
+  frac13: '⅓', frac23: '⅔', frac15: '⅕', frac25: '⅖', frac35: '⅗',
+  frac45: '⅘', frac16: '⅙', frac56: '⅚', frac18: '⅛', frac38: '⅜',
+  frac58: '⅝', frac78: '⅞',
+  // Currencies
+  inr: '₹', rupee: '₹', won: '₩', peso: '₱', bitcoin: '₿', ruble: '₽',
+  // Brackets / delimiters
+  lang: '⟨', rang: '⟩', lceil: '⌈', rceil: '⌉', lfloor: '⌊', rfloor: '⌋',
+  // Latin extended (common)
+  Aacute: 'Á', aacute: 'á', Agrave: 'À', agrave: 'à', Acirc: 'Â',
+  acirc: 'â', Atilde: 'Ã', atilde: 'ã', Auml: 'Ä', auml: 'ä',
+  Aring: 'Å', aring: 'å', AElig: 'Æ', aelig: 'æ', Ccedil: 'Ç',
+  ccedil: 'ç', Eacute: 'É', eacute: 'é', Egrave: 'È', egrave: 'è',
+  Ecirc: 'Ê', ecirc: 'ê', Euml: 'Ë', euml: 'ë', Iacute: 'Í',
+  iacute: 'í', Igrave: 'Ì', igrave: 'ì', Icirc: 'Î', icirc: 'î',
+  Iuml: 'Ï', iuml: 'ï', ETH: 'Ð', eth: 'ð', Ntilde: 'Ñ', ntilde: 'ñ',
+  Oacute: 'Ó', oacute: 'ó', Ograve: 'Ò', ograve: 'ò', Ocirc: 'Ô',
+  ocirc: 'ô', Otilde: 'Õ', otilde: 'õ', Ouml: 'Ö', ouml: 'ö',
+  Oslash: 'Ø', oslash: 'ø', Uacute: 'Ú', uacute: 'ú', Ugrave: 'Ù',
+  ugrave: 'ù', Ucirc: 'Û', ucirc: 'û', Uuml: 'Ü', uuml: 'ü',
+  Yacute: 'Ý', yacute: 'ý', THORN: 'Þ', thorn: 'þ', szlig: 'ß',
+  yuml: 'ÿ', OElig: 'Œ', oelig: 'œ', Scaron: 'Š', scaron: 'š',
+  Yuml: 'Ÿ',
+};
+
 function decodeEntities(text: string): string {
-  return text
-    .replace(/&#([0-9]+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
-    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
-    .replace(/&nbsp;/g, ' ').replace(/&deg;/g, '°')
-    .replace(/&sup1;/g, '¹').replace(/&sup2;/g, '²').replace(/&sup3;/g, '³')
-    .replace(/&times;/g, '×').replace(/&divide;/g, '÷').replace(/&plusmn;/g, '±')
-    .replace(/&minus;/g, '−').replace(/&pi;/g, 'π').replace(/&theta;/g, 'θ')
-    .replace(/&alpha;/g, 'α').replace(/&beta;/g, 'β').replace(/&gamma;/g, 'γ')
-    .replace(/&lambda;/g, 'λ').replace(/&mu;/g, 'μ').replace(/&sigma;/g, 'σ')
-    .replace(/&omega;/g, 'ω').replace(/&delta;/g, 'δ').replace(/&Delta;/g, 'Δ')
-    .replace(/&radic;/g, '√').replace(/&infin;/g, '∞').replace(/&ne;/g, '≠')
-    .replace(/&le;/g, '≤').replace(/&ge;/g, '≥').replace(/&there4;/g, '∴')
-    .replace(/&sum;/g, '∑').replace(/&int;/g, '∫').replace(/&euro;/g, '€')
-    .replace(/&pound;/g, '£').replace(/&yen;/g, '¥').replace(/&cent;/g, '¢')
-    .replace(/&copy;/g, '©').replace(/&reg;/g, '®').replace(/&trade;/g, '™')
-    .replace(/&mdash;/g, '—').replace(/&ndash;/g, '–').replace(/&middot;/g, '·')
-    .replace(/&hellip;/g, '…').replace(/&bull;/g, '•').replace(/&frac12;/g, '½')
-    .replace(/&frac14;/g, '¼').replace(/&frac34;/g, '¾').replace(/&prime;/g, '′')
-    .replace(/&laquo;/g, '«').replace(/&raquo;/g, '»')
-    .replace(/&ang;/g, '\u2220').replace(/&perp;/g, '\u22a5').replace(/&cong;/g, '\u2245')
-    .replace(/&sim;/g, '\u223c').replace(/&asymp;/g, '\u2248').replace(/&equiv;/g, '\u2261')
-    .replace(/&prop;/g, '\u221d').replace(/&forall;/g, '\u2200').replace(/&exist;/g, '\u2203')
-    .replace(/&empty;/g, '\u2205').replace(/&isin;/g, '\u2208').replace(/&notin;/g, '\u2209')
-    .replace(/&sub;/g, '\u2282').replace(/&sup;/g, '\u2283').replace(/&sube;/g, '\u2286')
-    .replace(/&and;/g, '\u2227').replace(/&or;/g, '\u2228').replace(/&cap;/g, '\u2229')
-    .replace(/&cup;/g, '\u222a').replace(/&sdot;/g, '\u22c5').replace(/&lowast;/g, '\u2217')
-    .replace(/&Aring;/g, '\u00c5').replace(/&aring;/g, '\u00e5')
-    .replace(/&rsquo;/g, '\u2019').replace(/&lsquo;/g, '\u2018')
-    .replace(/&rdquo;/g, '\u201d').replace(/&ldquo;/g, '\u201c');
+  // Numeric decimal entities: &#8377; → ₹
+  let out = text.replace(/&#([0-9]+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)));
+  // Numeric hex entities: &#x20B9; → ₹
+  out = out.replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)));
+  // Named entities via lookup table — handles all standard entities
+  out = out.replace(/&([a-zA-Z][a-zA-Z0-9]*);/g, (match, name) => {
+    return HTML_ENTITIES[name] ?? match; // leave unknown entities as-is
+  });
+  return out;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
