@@ -291,15 +291,20 @@ const formatSubCategoryName = (name: string) => {
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const isNewSignup = localStorage.getItem('show_signup_congrats_popup');
-      if (isNewSignup === 'true') {
+      const hasDismissed = sessionStorage.getItem('dismissed_congrats_popup');
+      
+      const shouldShow = isNewSignup === 'true' || 
+        (currentUser && currentUser.subscriptionTier === 'None' && hasDismissed !== 'true');
+
+      if (shouldShow) {
         const timer = setTimeout(() => {
           setShowCongratsPopup(true);
           localStorage.removeItem('show_signup_congrats_popup');
-        }, 7000); // 7 seconds delay
+        }, 3000); // 3 seconds delay for a premium feel
         return () => clearTimeout(timer);
       }
     }
-  }, []);
+  }, [currentUser]);
 
   const { isMobile, isMounted } = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -1619,7 +1624,10 @@ const formatSubCategoryName = (name: string) => {
 
             {/* Close cross */}
             <button
-              onClick={() => setShowCongratsPopup(false)}
+              onClick={() => {
+                setShowCongratsPopup(false);
+                sessionStorage.setItem('dismissed_congrats_popup', 'true');
+              }}
               className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-55 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-350 transition"
             >
               <X className="h-4 w-4" />
