@@ -498,7 +498,7 @@ const formatSubCategoryName = (name: string) => {
             </svg>
           </div>
 
-          <section className="text-center pt-8 pb-4 space-y-4 relative z-10">
+          <section className="text-center pt-8 pb-1 space-y-4 relative z-10">
             <span className="inline-flex items-center gap-1 bg-blue-105 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-black px-3 py-1 rounded-full text-[9px] uppercase tracking-wider">
               {t.heroBadge}
             </span>
@@ -548,7 +548,7 @@ const formatSubCategoryName = (name: string) => {
           </section>
 
           {/* TOPPERS TESTIMONIAL PANEL */}
-          <section className="border border-yellow-250 dark:border-yellow-900/45 p-5.5 rounded-2xl flex flex-col justify-between min-h-[230px] glass-card glow-shadow-amber relative overflow-hidden hover:scale-[1.01] transition-all duration-300">
+          <section className="!mt-3 border border-yellow-250 dark:border-yellow-900/45 p-5.5 rounded-2xl flex flex-col justify-between min-h-[230px] glass-card glow-shadow-amber relative overflow-hidden hover:scale-[1.01] transition-all duration-300">
             {/* Watermarked Graduation Cap */}
             <div className="absolute -bottom-6 -right-6 opacity-[0.06] dark:opacity-[0.03] pointer-events-none">
               <svg className="w-28 h-28 text-yellow-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
