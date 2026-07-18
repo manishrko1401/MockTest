@@ -1007,9 +1007,27 @@ export default function AdminAnalytics() {
         }
         bg-white dark:bg-slate-950 p-6 flex flex-col justify-between h-full shrink-0
       `}>
-        <div>
+        <style dangerouslySetInnerHTML={{ __html: `
+          .custom-sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+          }
+          .custom-sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+          }
+          .dark .custom-sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #334155;
+          }
+          .custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+          }
+        `}} />
+        <div className="flex flex-col flex-1 overflow-y-auto min-h-0 mb-4 pr-1 custom-sidebar-scroll">
           {/* Brand logo */}
-          <div className="flex items-center gap-3 mb-8">
+          <div className="flex items-center gap-3 mb-8 shrink-0">
             <div className="bg-blue-600 p-2 rounded-lg">
               <Database className="h-6 w-6 text-white" />
             </div>
