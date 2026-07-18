@@ -613,15 +613,6 @@ export default function ExamSolutionAnalysisPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 last:border-0">
-            <div className="bg-red-500/10 p-2.5 rounded-xl text-red-600 dark:text-red-400">
-              <ShieldAlert className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisViolations}</p>
-              <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{sessionRecord.violations}</h4>
-            </div>
-          </div>
 
         </div>
       </section>

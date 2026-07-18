@@ -690,14 +690,14 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
 
     const handleBlur = () => {
       // Triggered when focus transitions off browser tab/window
-      addViolation();
+      pauseExam();
     };
 
     window.addEventListener('blur', handleBlur);
     return () => {
       window.removeEventListener('blur', handleBlur);
     };
-  }, [state.isTimerRunning, state.isExamSubmitted, addViolation]);
+  }, [state.isTimerRunning, state.isExamSubmitted, pauseExam]);
 
   // 3. Anti-Cheat: Disables right click context menu & blocks text selection / copy / cut / paste
   useEffect(() => {
