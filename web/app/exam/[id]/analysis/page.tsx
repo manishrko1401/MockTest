@@ -20,7 +20,11 @@ import {
   Award,
   Timer,
   Bookmark,
-  Trophy
+  Trophy,
+  User,
+  Clock,
+  Check,
+  Menu
 } from 'lucide-react';
 import { TRANSLATIONS } from '../../../translations';
 
@@ -92,6 +96,7 @@ export default function ExamSolutionAnalysisPage() {
   const [loadingCustomQs, setLoadingCustomQs] = useState(true);
   const [activeMobileTab, setActiveMobileTab] = useState<'analysis' | 'solutions'>('analysis');
   const [viewMode, setViewMode] = useState<'analysis' | 'solution'>('analysis');
+  const [questionFontSize, setQuestionFontSize] = useState(14); // default 14px
 
   const getAttemptLabel = (idx: number, total: number, attemptLang: 'en' | 'hi' = 'en') => {
     if (idx === 0) {
@@ -589,62 +594,159 @@ export default function ExamSolutionAnalysisPage() {
     return 0;
   })();
 
+  const currentSectionIndex = (() => {
+    if (!activeQuestion) return 0;
+    const idx = examSession.sections.findIndex(s => s.id === activeQuestion.sectionId);
+    return idx >= 0 ? idx : 0;
+  })();
+  const currentSection = examSession.sections[currentSectionIndex] || examSession.sections[0];
+  const currentSectionQuestions = questions.filter(q => q.sectionId === currentSection.id);
+  const currentQuestionIndex = currentSectionQuestions.findIndex(q => q.id === activeQuestion.id);
+
+  const counts = (() => {
+    let correct = 0;
+    let incorrect = 0;
+    let skipped = 0;
+
+    questions.forEach((q) => {
+      const stat = questionStatuses.find(s => s.questionId === q.id);
+      if (!stat || stat.status === 'skipped') {
+        skipped++;
+      } else if (stat.status === 'correct') {
+        correct++;
+      } else {
+        incorrect++;
+      }
+    });
+    return { correct, incorrect, skipped };
+  })();
+
+  const isSolutionView = viewMode === 'solution';
+  const switchSection = (sectionIdx: number) => {
+    const sec = examSession.sections[sectionIdx];
+    if (!sec) return;
+    const firstQIdx = questions.findIndex(q => q.sectionId === sec.id);
+    if (firstQIdx >= 0) {
+      setActiveQuestionIdx(firstQIdx);
+    }
+  };
+
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200 select-none pb-12">
+    <div className={isSolutionView
+      ? "flex h-screen w-screen flex-col overflow-hidden bg-gray-100 font-sans select-none text-xs leading-normal text-slate-800"
+      : "flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200 select-none pb-12"
+    }>
       
       {/* 1. NAVIGATION BAR */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 backdrop-blur-md px-4 md:px-12 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-        <div className="flex items-center gap-3 md:gap-6 min-w-0">
-          <Link href="/" className="flex items-center gap-2 md:gap-3 shrink-0">
-            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
-              <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
+      {isSolutionView ? (
+        <header className="flex h-[72px] items-center justify-between bg-white border-b border-slate-300 px-4 text-slate-800 shrink-0 select-none">
+          {/* Left Part: Mocktest Hub Logo & small sub-title */}
+          <div className="flex flex-col items-start justify-center min-w-0">
+            <div className="flex items-center gap-1.5">
+              <Trophy className="h-5 w-5 text-blue-600 shrink-0" />
+              <span className="font-black text-xs tracking-wider text-slate-900 uppercase leading-none">Mock Test Hub</span>
             </div>
-            <div className="hidden sm:block">
-              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{language === 'hi' ? 'मॉक टेस्ट हब' : 'MOCK TEST HUB'}</h1>
-              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase leading-none mt-0.5">{language === 'hi' ? 'परीक्षा की तैयारी' : 'EXAM PREPARATION'}</p>
-            </div>
-          </Link>
-          <span className="hidden md:inline h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
-          <button
-            onClick={viewMode === 'solution' ? () => setViewMode('analysis') : handleBackToTestSeries}
-            className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors cursor-pointer bg-transparent border-none p-0 outline-none shrink-0"
-            title={viewMode === 'solution' ? (language === 'hi' ? 'विश्लेषण पर वापस जाएं' : 'Back to Analysis') : (language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series')}
-          >
-            <ArrowLeft className="h-4 w-4" /> 
-            <span className="hidden md:inline">{viewMode === 'solution' ? (language === 'hi' ? 'विश्लेषण पर वापस जाएं' : 'Back to Analysis') : (language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series')}</span>
-            <span className="inline md:hidden">{language === 'hi' ? 'वापस' : 'Back'}</span>
-          </button>
-          <span className="hidden md:inline h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
-          <div className="flex flex-col min-w-0">
-            <span className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white leading-tight truncate">{examSession.testTitle}</span>
-            <span className="hidden md:inline text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{language === 'hi' ? 'समाधान और विश्लेषण डैशबोर्ड' : 'Solution & Analysis Dashboard'}</span>
+            <span className="text-[9px] text-slate-500 font-bold mt-1 truncate max-w-[150px]">
+              {examSession.testTitle}
+            </span>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 md:gap-4 shrink-0 ml-4">
-          {/* Lang Selector */}
-          <div className="flex items-center gap-1 md:gap-1.5">
-            <Globe className="h-3.5 w-3.5 text-slate-500 shrink-0 hidden sm:inline" />
-            <select
-              value={lang}
-              onChange={(e) => handleLangChange(e.target.value as 'en' | 'hi')}
-              className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-1.5 md:px-2.5 py-1 outline-none text-[11px] md:text-xs text-slate-800 dark:text-slate-200 cursor-pointer font-bold transition-colors"
+          {/* Center: Test Name + Zoom Buttons + Hub ID */}
+          <div className="flex-1 flex flex-col items-center justify-center px-2 min-w-0">
+            <span className="font-extrabold text-[11px] sm:text-[12px] text-slate-900 text-center leading-snug line-clamp-2 w-full">
+              {examSession.testTitle}
+            </span>
+            <div className="flex items-center gap-3 mt-1 flex-wrap justify-center">
+              <button type="button" onClick={() => setQuestionFontSize(s => Math.min(s + 2, 24))} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (+)</button>
+              <button type="button" onClick={() => setQuestionFontSize(s => Math.max(s - 2, 10))} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (-)</button>
+              <span className="text-[10px] font-semibold text-slate-600 whitespace-nowrap">Hub ID : {currentUser?.candidateCode || currentUser?.id?.slice(0, 12) || 'GUEST_HUB'}</span>
+            </div>
+          </div>
+
+          {/* Right: Section Time + Profile Photos */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex flex-col items-center justify-center">
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Time Spent</span>
+              <span className="font-mono text-sm font-extrabold text-blue-600 tracking-widest">
+                {(() => {
+                  const m = Math.floor(computedTimeTakenSeconds / 60);
+                  const s = computedTimeTakenSeconds % 60;
+                  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                })()}
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 border-l border-slate-200 pl-3">
+              <div className="flex flex-col items-center">
+                <div className="h-10 w-9 bg-slate-100 border border-slate-300 rounded flex items-center justify-center text-slate-400"><User className="h-5 w-5" /></div>
+                <span className="text-[7px] text-slate-400 leading-tight text-center">Registration<br/>Photo</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="h-10 w-9 bg-slate-100 border border-slate-300 rounded flex items-center justify-center text-slate-400"><User className="h-5 w-5" /></div>
+                <span className="text-[7px] text-slate-400 leading-tight text-center">Captured<br/>Photo</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setViewMode('analysis')}
+              className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-extrabold px-3 py-2 rounded text-[10px] uppercase tracking-wider transition cursor-pointer active:scale-95 shrink-0 ml-2"
             >
-              <option value="en">English</option>
-              <option value="hi">हिंदी</option>
-            </select>
+              Dashboard
+            </button>
+          </div>
+        </header>
+      ) : (
+        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 backdrop-blur-md px-4 md:px-12 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+          <div className="flex items-center gap-3 md:gap-6 min-w-0">
+            <Link href="/" className="flex items-center gap-2 md:gap-3 shrink-0">
+              <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
+                <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{language === 'hi' ? 'मॉक टेस्ट हब' : 'MOCK TEST HUB'}</h1>
+                <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase leading-none mt-0.5">{language === 'hi' ? 'परीक्षा की तैयारी' : 'EXAM PREPARATION'}</p>
+              </div>
+            </Link>
+            <span className="hidden md:inline h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
+            <button
+              onClick={handleBackToTestSeries}
+              className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors cursor-pointer bg-transparent border-none p-0 outline-none shrink-0"
+              title={language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}
+            >
+              <ArrowLeft className="h-4 w-4" /> 
+              <span className="hidden md:inline">{language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}</span>
+              <span className="inline md:hidden">{language === 'hi' ? 'वापस' : 'Back'}</span>
+            </button>
+            <span className="hidden md:inline h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
+            <div className="flex flex-col min-w-0">
+              <span className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white leading-tight truncate">{examSession.testTitle}</span>
+              <span className="hidden md:inline text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{language === 'hi' ? 'समाधान और विश्लेषण डैशबोर्ड' : 'Solution & Analysis Dashboard'}</span>
+            </div>
           </div>
 
-          {/* Theme switcher */}
-          <button 
-            onClick={toggleTheme}
-            className="p-1.5 md:p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800 shrink-0"
-            title={theme === 'light' ? t.themeDark : t.themeLight}
-          >
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </button>
-        </div>
-      </header>
+          <div className="flex items-center gap-2 md:gap-4 shrink-0 ml-4">
+            {/* Lang Selector */}
+            <div className="flex items-center gap-1 md:gap-1.5">
+              <Globe className="h-3.5 w-3.5 text-slate-500 shrink-0 hidden sm:inline" />
+              <select
+                value={lang}
+                onChange={(e) => handleLangChange(e.target.value as 'en' | 'hi')}
+                className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-1.5 md:px-2.5 py-1 outline-none text-[11px] md:text-xs text-slate-800 dark:text-slate-200 cursor-pointer font-bold transition-colors"
+              >
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+              </select>
+            </div>
+
+            {/* Theme switcher */}
+            <button 
+              onClick={toggleTheme}
+              className="p-1.5 md:p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800 shrink-0"
+              title={theme === 'light' ? t.themeDark : t.themeLight}
+            >
+              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </button>
+          </div>
+        </header>
+      )}
 
       {/* 2. STATS OVERVIEW CARDS */}
       <section className={`max-w-6xl w-full mx-auto px-6 mt-8 ${viewMode === 'analysis' ? 'block' : 'hidden'}`}>
@@ -929,14 +1031,31 @@ export default function ExamSolutionAnalysisPage() {
       )}
 
       {/* 3. SPLIT WORKSPACE - QUESTION DETAIL & PALETTE */}
-      <section className={`max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start pb-24 ${
-        viewMode === 'solution' ? 'flex' : 'hidden'
-      }`}>
+      <section className={isSolutionView
+        ? "flex flex-col lg:flex-row flex-1 overflow-hidden bg-[#F1F5F9] w-full h-full pb-16 flex"
+        : "max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start pb-24 hidden"
+      }>
         
         {/* LEFT WORKSPACE PANEL: QUESTION VIEW */}
-        <main className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm min-h-[480px] flex flex-col justify-between w-full">
+        <main className={isSolutionView
+          ? "flex-1 flex flex-col bg-white border-r border-slate-205 h-full overflow-y-auto p-6"
+          : "flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm min-h-[480px] flex flex-col justify-between w-full"
+        }>
           
           <div>
+            {isSolutionView && (
+              <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2 text-[11px] font-bold shrink-0 mb-4 -mx-6 -mt-6">
+                <span className="text-[#0747A6] text-xs">Question Type: Multiple Choice Question</span>
+                <div className="flex gap-2">
+                  <span className="text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded">
+                    Marks: +{currentSection.positiveMark}
+                  </span>
+                  <span className="text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                    Negative: -{currentSection.negativeMark}
+                  </span>
+                </div>
+              </div>
+            )}
             {/* Mobile-only Horizontal Question Palette Bar (placed at the top of the question workspace) */}
             <div className="block lg:hidden w-full overflow-x-auto pb-3 mb-5 shrink-0 scrollbar-none border-b border-slate-100 dark:border-slate-800/60">
               <div className="flex gap-2 px-1 min-w-max">
@@ -1035,10 +1154,10 @@ export default function ExamSolutionAnalysisPage() {
               className="mt-4"
             >
               {/* Question Box */}
-              <div className="mb-6 space-y-4">
+              <div className="mb-6 space-y-4" style={{ fontSize: `${questionFontSize}px` }}>
               <MathJaxText
                 component="div"
-                className="text-sm font-semibold text-slate-900 dark:text-white leading-relaxed markup-content"
+                className="font-semibold text-slate-900 dark:text-white leading-relaxed markup-content"
                 content={decodeHtml(activeQuestion.content[lang]?.questionText || activeQuestion.content['en']?.questionText || "")}
               />
 
@@ -1061,7 +1180,7 @@ export default function ExamSolutionAnalysisPage() {
             </div>
 
             {/* Options List */}
-            <div className="space-y-3">
+            <div className="space-y-3" style={{ fontSize: `${questionFontSize}px` }}>
               {((activeQuestion.content[lang]?.options || activeQuestion.content['en']?.options) as any[]).map((opt, optIdx: number) => {
                 const optLabel = typeof opt === 'string' ? opt : opt.text;
                 const isCorrectIndex = optIdx === activeQuestion.correctOptionIndex;
@@ -1078,7 +1197,7 @@ export default function ExamSolutionAnalysisPage() {
                 return (
                   <div
                     key={optIdx}
-                    className={`border rounded-xl p-3.5 flex items-center justify-between text-xs transition ${optionStyle}`}
+                    className={`border rounded-xl p-3.5 flex items-center justify-between transition ${optionStyle}`}
                   >
                     <span className="flex items-center gap-3 font-semibold">
                       <span className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
@@ -1126,96 +1245,198 @@ export default function ExamSolutionAnalysisPage() {
 
           </div>
 
-           {/* Navigation CTAs */}
-           <div className={`justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-5 mt-8 ${viewMode === 'solution' ? 'hidden' : 'flex'}`}>
-            <button
-              onClick={() => setActiveQuestionIdx(prev => Math.max(0, prev - 1))}
-              disabled={activeQuestionIdx === 0}
-              className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-slate-800 dark:text-white"
-            >
-              <ChevronLeft className="h-4 w-4" /> {language === 'hi' ? 'पिछला' : 'Previous'}
-            </button>
-            
-            <span className="text-xs font-bold text-slate-500">
-              {activeQuestionIdx + 1} / {totalQs}
-            </span>
-
-            <button
-              onClick={() => setActiveQuestionIdx(prev => Math.min(totalQs - 1, prev + 1))}
-              disabled={activeQuestionIdx === totalQs - 1}
-              className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-slate-800 dark:text-white"
-            >
-              {language === 'hi' ? 'अगला' : 'Next'} <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-        </main>
-
-        {/* RIGHT WORKSPACE SIDEBAR: QUESTION PALETTE */}
-        <aside className="hidden lg:block w-full lg:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm lg:sticky lg:top-24 lg:self-start">
-          
-          <h4 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2">
-            {t.analysisQuestionsPal}
-          </h4>
-
-          {/* Color Code Legend */}
-          <div className="grid grid-cols-3 gap-2 mb-6 text-[9px] font-bold text-slate-600 dark:text-slate-400">
-            <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-full bg-green-500 animate-pulse"></span>
-              <span>{t.analysisLegendCorrect} ({totalCorrect})</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-full bg-red-600"></span>
-              <span>{t.analysisLegendIncorrect} ({totalIncorrect})</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-full bg-slate-400 dark:bg-slate-600"></span>
-              <span>{t.analysisLegendSkipped} ({totalSkipped})</span>
-            </div>
-          </div>
-
-          {/* Palette grid list */}
-          <div className="grid grid-cols-5 gap-3.5">
-            {questionStatuses.map((stat, idx) => {
-              const isActive = idx === activeQuestionIdx;
+            {/* Navigation CTAs */}
+            <div className={`justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-5 mt-8 ${viewMode === 'solution' ? 'hidden' : 'flex'}`}>
+              <button
+                onClick={() => setActiveQuestionIdx(prev => Math.max(0, prev - 1))}
+                disabled={activeQuestionIdx === 0}
+                className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-slate-800 dark:text-white"
+              >
+                <ChevronLeft className="h-4 w-4" /> {language === 'hi' ? 'पिछला' : 'Previous'}
+              </button>
               
-              let statusBg = 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400';
-              if (stat.status === 'correct') {
-                statusBg = 'bg-green-600 text-white shadow shadow-green-950/20';
-              } else if (stat.status === 'incorrect') {
-                statusBg = 'bg-red-600 text-white shadow shadow-red-950/20';
-              } else if (stat.status === 'skipped') {
-                statusBg = 'bg-slate-400 dark:bg-slate-600 text-white';
-              }
+              <span className="text-xs font-bold text-slate-500">
+                {activeQuestionIdx + 1} / {totalQs}
+              </span>
 
-              return (
-                <button
-                  key={idx}
-                  onClick={() => setActiveQuestionIdx(idx)}
-                  className={`h-9 w-9 rounded-xl flex items-center justify-center text-xs font-black transition-all cursor-pointer ${statusBg} ${
-                    isActive 
-                      ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 transform scale-105 border-2 border-white dark:border-slate-900' 
-                      : 'border border-transparent'
-                  }`}
+              <button
+                onClick={() => setActiveQuestionIdx(prev => Math.min(totalQs - 1, prev + 1))}
+                disabled={activeQuestionIdx === totalQs - 1}
+                className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-slate-800 dark:text-white"
+              >
+                {language === 'hi' ? 'अगला' : 'Next'} <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+
+          </main>
+
+          {/* RIGHT WORKSPACE SIDEBAR: QUESTION PALETTE */}
+          <aside className={isSolutionView
+            ? "hidden lg:flex w-full lg:w-72 bg-[#F1F5F9] p-3 flex-col shrink-0 h-full overflow-y-auto border-l border-slate-300"
+            : "hidden lg:block w-full lg:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm lg:sticky lg:top-24 lg:self-start"
+          }>
+          {isSolutionView ? (
+            <>
+              {/* Candidate Info Card */}
+              <div className="bg-white border border-slate-200 p-3 rounded-lg flex items-center gap-2.5 shadow-sm mb-3">
+                <div className="h-12 w-10 bg-slate-50 border border-slate-200 rounded flex items-center justify-center text-slate-400"><User className="h-6 w-6" /></div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-wider">Candidate</span>
+                  <span className="font-bold text-slate-800 text-xs truncate leading-tight mt-0.5">{currentUser.name || 'Student Name'}</span>
+                  <span className="text-[9px] text-slate-500 truncate mt-0.5">Hub ID: {currentUser.candidateCode || currentUser.id.slice(0, 12)}</span>
+                </div>
+              </div>
+
+              {/* Palette Grid */}
+              <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm flex flex-col flex-1">
+                <div className="mb-3 pb-2 border-b border-slate-100">
+                  <h4 className="font-bold text-slate-800 text-[10px] uppercase tracking-wide">{currentSection.name}</h4>
+                </div>
+                <div className="grid grid-cols-5 gap-2 mb-6">
+                  {currentSectionQuestions.map((q, idx) => {
+                    const stat = questionStatuses.find(s => s.questionId === q.id);
+                    const isActive = q.id === activeQuestion.id;
+
+                    let statusBg = 'bg-[#C8D3E0] text-slate-800';
+                    if (stat?.status === 'correct') {
+                      statusBg = 'bg-[#2E7D32] text-white';
+                    } else if (stat?.status === 'incorrect') {
+                      statusBg = 'bg-[#C62828] text-white';
+                    } else if (stat?.status === 'skipped') {
+                      statusBg = 'bg-slate-400 text-white';
+                    }
+
+                    const globalIdx = questions.findIndex(x => x.id === q.id);
+
+                    return (
+                      <button
+                        key={q.id}
+                        onClick={() => setActiveQuestionIdx(globalIdx)}
+                        className={`flex h-8 w-8 items-center justify-center border font-bold text-xs shadow-sm hover:opacity-90 active:scale-95 transition-all ${statusBg} ${
+                          isActive ? 'ring-2 ring-blue-500 ring-offset-1 z-10 border-white' : 'border-transparent'
+                        }`}
+                      >
+                        {idx + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Legend Table */}
+                <div className="border-t border-slate-100 mt-auto pt-3">
+                  <h5 className="text-[9px] font-black uppercase text-slate-400 tracking-wider mb-2">Palette Legend</h5>
+                  <div className="space-y-1.5 text-[9px] font-bold text-slate-650">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-3 w-3 bg-[#2E7D32] rounded"></span>
+                        <span>Correct ({counts.correct})</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-3 w-3 bg-[#C62828] rounded"></span>
+                        <span>Incorrect ({counts.incorrect})</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-3 w-3 bg-slate-400 rounded"></span>
+                        <span>Skipped ({counts.skipped})</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <h4 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2">
+                {t.analysisQuestionsPal}
+              </h4>
+
+              {/* Color Code Legend */}
+              <div className="grid grid-cols-3 gap-2 mb-6 text-[9px] font-bold text-slate-600 dark:text-slate-400">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full bg-green-500 animate-pulse"></span>
+                  <span>{t.analysisLegendCorrect} ({totalCorrect})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full bg-red-650"></span>
+                  <span>{t.analysisLegendIncorrect} ({totalIncorrect})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full bg-slate-400 dark:bg-slate-600"></span>
+                  <span>{t.analysisLegendSkipped} ({totalSkipped})</span>
+                </div>
+              </div>
+
+              {/* Palette grid list */}
+              <div className="grid grid-cols-5 gap-3.5">
+                {questionStatuses.map((stat, idx) => {
+                  const isActive = idx === activeQuestionIdx;
+                  
+                  let statusBg = 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400';
+                  if (stat.status === 'correct') {
+                    statusBg = 'bg-green-600 text-white shadow shadow-green-950/20';
+                  } else if (stat.status === 'incorrect') {
+                    statusBg = 'bg-red-650 text-white shadow shadow-red-950/20';
+                  } else if (stat.status === 'skipped') {
+                    statusBg = 'bg-slate-400 dark:bg-slate-600 text-white';
+                  }
+
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveQuestionIdx(idx)}
+                      className={`h-9 w-9 rounded-xl flex items-center justify-center text-xs font-black transition-all cursor-pointer ${statusBg} ${
+                        isActive 
+                          ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 transform scale-105 border-2 border-white dark:border-slate-900' 
+                          : 'border border-transparent'
+                      }`}
+                    >
+                      {idx + 1}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="border-t border-slate-200 dark:border-slate-800 mt-6 pt-5">
+                <Link
+                  href="/mock-tests"
+                  className="block w-full text-center py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition active:scale-95"
                 >
-                  {idx + 1}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="border-t border-slate-200 dark:border-slate-800 mt-6 pt-5">
-            <Link
-              href="/mock-tests"
-              className="block w-full text-center py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition active:scale-95"
-            >
-              {t.analysisGoToMockTests}
-            </Link>
-          </div>
-
+                  {t.analysisGoToMockTests}
+                </Link>
+              </div>
+            </>
+          )}
         </aside>
-
       </section>
+
+      {/* FIXED BOTTOM FOOTER - Only in solutions view mode */}
+      {isSolutionView && (
+        <footer className="fixed bottom-0 left-0 right-0 h-[52px] bg-white border-t border-slate-300 z-50 flex items-center justify-between px-4 select-none">
+          <button
+            onClick={() => setActiveQuestionIdx(prev => Math.max(0, prev - 1))}
+            disabled={activeQuestionIdx === 0}
+            className="flex items-center gap-1 bg-[#1a6baf] hover:bg-[#155a96] text-white text-[11px] font-bold px-3 py-1.5 rounded disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </button>
+          <span className="font-bold text-slate-700 text-xs">
+            Question {activeQuestionIdx + 1} of {totalQs}
+          </span>
+          <button
+            onClick={() => setActiveQuestionIdx(prev => Math.min(totalQs - 1, prev + 1))}
+            disabled={activeQuestionIdx === totalQs - 1}
+            className="flex items-center gap-1 bg-[#1a6baf] hover:bg-[#155a96] text-white text-[11px] font-bold px-3 py-1.5 rounded disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </footer>
+      )}
 
       {/* 4. REPORT QUESTION POPUP MODAL */}
       {reportModalOpen && (
