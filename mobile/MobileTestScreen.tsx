@@ -1033,7 +1033,7 @@ export default function MobileTestScreen({
 
       questions.forEach((q) => {
         const resp = responses[q.id];
-        const selected = resp ? resp.selectedOptionIndex : null;
+        const selected = resp ? (resp.selectedOptionIndex !== null ? resp.selectedOptionIndex : resp.tempOptionIndex) : null;
         const qSection = sections.find((s) => s.id === q.sectionId);
         const positiveMark = qSection ? qSection.positiveMark : 2;
         const negativeMark = qSection ? qSection.negativeMark : 0.5;
@@ -1057,7 +1057,7 @@ export default function MobileTestScreen({
       const formattedResponses: Record<string, any> = {};
       Object.entries(responses).forEach(([qId, val]) => {
         formattedResponses[qId] = {
-          selectedOptionIndex: val.selectedOptionIndex,
+          selectedOptionIndex: val.selectedOptionIndex !== null ? val.selectedOptionIndex : val.tempOptionIndex,
           elapsedSeconds: val.elapsedSeconds
         };
       });
@@ -1119,7 +1119,7 @@ export default function MobileTestScreen({
         } catch {}
         setModalConfig({
           visible: true,
-          title: forced ? 'Exam Submitted (Violation Limit)' : 'Exam Submitted Successfully',
+          title: forced ? 'Time Up — Exam Submitted' : 'Exam Submitted Successfully',
           message: `Assessment summary:\nMarks scored: ${totalMarks.toFixed(1)}\nCorrect answers: ${correctCount}/${totalQs}\nAccuracy: ${accuracy.toFixed(1)}%`,
           isSubmittedModal: true,
           buttons: [

@@ -1,0 +1,402 @@
+[
+  {
+    "textEn": "If 17/03/2208 is a Sunday, then 17/03/2202 falls on which day of the week?",
+    "textHi": "यदि 17/03/2208 को रविवार है, तो 17/03/2202 को सप्ताह का कौन सा दिन होगा?",
+    "optionsEn": [
+      "<span style=\"\">Tuesday</span>",
+      "<span style=\"\">Saturday </span>",
+      "<span style=\"\">Monday </span>",
+      "<span style=\"\">Friday</span>"
+    ],
+    "optionsHi": [
+      "<span style=\"\">मंगलवार</span>",
+      "<span style=\"\">शनिवार</span>",
+      "<span style=\"\">सोमवार</span>",
+      "<span style=\"\">शुक्रवार</span>"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "<p>The logic followed here is:</p>\n\n<p>Given <span style=\"\">17/03/2208 is a Sunday,</span></p>\n\n<p><span style=\"\">There are exactly 6 years between 17/03/2208 and 17/03/2202.</span></p>\n\n<p><span style=\"\">Since 2204 and 2208 are leap years, there are 2 leap years and 4 non-leap years.</span></p>\n\n<p><span style=\"\">Leap year odd days = 2</span></p>\n\n<p><span style=\"\">Non-leap year odd day = 1</span></p>\n\n<p><span style=\"\">Numbers of odd days = 2 × 2 + 4 × 1</span></p>\n\n<p><span style=\"\">= 4 + 4</span></p>\n\n<p><span style=\"\">= 8</span></p>\n\n<p><span style=\"\">Now, divide by 7</span></p>\n\n<p><span style=\"\">Now, the number of the odd day is 1.</span></p>\n\n<p>Since you are going back in time, the number of odd days needs to be reduced from Sunday.</p>\n\n<p>Sunday – 1 = <span style=\"\">Saturday</span></p>\n\n<p><span style=\"\">Therefore, 17/03/2202 is on Saturday.</span></p>\n\n<p><span style=\"\">Hence, the correct answer is '<strong>Saturday</strong>'.</span></p>\n\n<p>Number of odd days in a leap year is 2.</p>\n\n<p><span style=\"\">Number of odd days in a nonleap year is 1.</span></p>",
+    "explanationHi": "<p>यहाँ अनुसरण किया गया तर्क है:</p>\n\n<p>दिया गया है कि 17/03/2208 को रविवार है,</p>\n\n<p>17/03/2208 और 17/03/2202 के बीच ठीक 6 वर्ष हैं।</p>\n\n<p>चूँकि 2204 और 2208 <span style=\"\">अधिवर्ष </span>वर्ष हैं, 2 अधिवर्ष और 4 गैर-अधिवर्ष हैं।</p>\n\n<p>अधिवर्ष<span style=\"\"> में</span> विषम दिन = 2</p>\n\n<p>गैर-अधिवर्ष<span style=\"\"> में</span> विषम दिन = 1</p>\n\n<p>विषम दिनों की संख्या = 2 × 2 + 4 × 1</p>\n\n<p>= 4 + 4</p>\n\n<p>= 8</p>\n\n<p>अब, 7 से विभाजित करने पर,</p>\n\n<p>अब विषम दिन की संख्या 1 है।</p>\n\n<p>चूँकि आप समय में पीछे जा रहे हैं, रविवार से विषम दिनों की संख्या कम करने की जरूरत है।</p>\n\n<p>रविवार – 1 = शनिवार</p>\n\n<p>इसलिए, 17/03/2202<span style=\"\"> को</span> शनिवार है।</p>\n\n<p>अतः सही उत्तर '<strong>शनिवार</strong>' है।</p>\n\n<p><img height=\"26px\" src=\"//cdn.testbook.com/resources/lms_creative_elements/hint-text-image.png\" style=\"\" width=\"26px\" /><span style=\"font-weight: 700; \"><span style=\"vertical-align: middle; \"><u>Hint</u></span></span><br />\nअधिवर्ष में विषम दिनों की संख्या 2 होती है।</p>\n\n<p>एक <span style=\"\">गैर-अधिवर्ष </span>में विषम दिनों की संख्या 1 होती है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p>A series is given with one term missing. Select the correct alternative from the given ones that will complete the series.</p>\n\n<p>N13D, Q16G, T19J, W22D, ?</p>",
+    "textHi": "<p>एक श्रंखला दी गई है जिसमें एक पद लुप्त है। दिए गए विकल्पों में से वह सही विकल्प चुनिए जो श्रृंखला को पूरा करे।</p>\n\n<p>N13D, Q16G, T19J, W22D, ?</p>",
+    "optionsEn": [
+      "A26E",
+      "Z25G",
+      "Z23B",
+      "Z26G"
+    ],
+    "optionsHi": [
+      "A26E",
+      "Z25G",
+      "Z23B",
+      "Z26G"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "<p>For this question, we use the table given below-</p>\n\n<p><span id=\"docs-internal-guid-f8c718a0-7fff-a6ac-2629-56e90d16cd63\"><span style=\"  background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;\"><span style=\"border:none;display:inline-block;overflow:hidden;width:498px;height:120px;\"><img src=\"https://lh6.googleusercontent.com/Uxgr_G802QW7RApeBuePNnZtqmR-nsYw6J4D70LKGhSXc9062q3pr1Ofc63TqAjb35BPzX8ShofL2xTr5qP9xtKW4y0YWjJsgxXO-ulQy6PVi7Kl75LyGWr6AFtN__bh5z5mvy-9\" style=\"margin-left: 0px; margin-top: 0px; width: 450px; height: 107px;\" /><br />\n<span style=\"display: none;\"> </span></span></span></span></p>\n\n<p>The pattern followed is:</p>\n\n<p>Steps:</p>\n\n<p>i) <strong>+ 3</strong> is done in the <strong>first letter</strong> to <strong>obtain the next letter</strong> of the series.</p>\n\n<ul>\n\t<li>N + 3 = Q</li>\n\t<li>Q + 3 = T</li>\n\t<li>T + 3 = W</li>\n\t<li><strong>W + 3 = Z</strong></li>\n</ul>\n\n<p><strong>​</strong>ii) <strong>Sum of the digits of the middle number gives the positional value of the last letter.</strong></p>\n\n<ul>\n\t<li>First number: 13 = 1 + 3 = 4. Thus last letter positional value will be 4 which is D.</li>\n\t<li>Second number: 16 = 1 + 6 = 7. <span style=\"\">Thus last letter positional value will be 7 which is G.</span></li>\n\t<li><span style=\"\">Third number: 19 = 1 + 9 = 10. Thus last letter positional value will be 10</span><span style=\"\"> which is J</span><span style=\"\">.</span></li>\n\t<li><span style=\"\">Fourth number: 22 = 2 + 2 = 4. Thus last letter positional value will be 4</span><span style=\"\"> which is D</span><span style=\"\">.</span></li>\n\t<li><span style=\"\">Fifth number: 25 = 2 + 5 = 7. Thus last letter positional value will be 7</span><span style=\"\"> which is G</span><span style=\"\">.</span></li>\n</ul>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Savita_State%20Govt._30-7-22_D1.png\" style=\"width: 101px; height: 453px;\" /></p>\n\n<p>Hence, <strong>Option (2)</strong> is correct.</p>",
+    "explanationHi": "<p>इस प्रश्न के लिए हम नीचे दी गई तालिका का उपयोग करते हैं-</p>\n\n<p><img src=\"https://lh6.googleusercontent.com/Uxgr_G802QW7RApeBuePNnZtqmR-nsYw6J4D70LKGhSXc9062q3pr1Ofc63TqAjb35BPzX8ShofL2xTr5qP9xtKW4y0YWjJsgxXO-ulQy6PVi7Kl75LyGWr6AFtN__bh5z5mvy-9\" style=\"white-space: pre-wrap;  margin-left: 0px; margin-top: 0px; width: 450px; height: 107px;\" /></p>\n\n<p><span style=\"\">अनुसरण किया गया स्वरूप है:</span></p>\n\n<p>चरण:</p>\n\n<p>i) श्रृंखला का <strong>अगला अक्षर प्राप्त करने के लिए पहले अक्षर में +3 </strong>किया जाता है।</p>\n\n<ul style=\"\">\n\t<li>N + 3 = Q</li>\n\t<li>Q + 3 = T</li>\n\t<li>T + 3 = W</li>\n\t<li><span style=\"font-weight: 700;\">W + 3 = Z</span></li>\n</ul>\n\n<p><strong>​ii) मध्य संख्या के अंकों का योग अंतिम अक्षर का स्थानीय मान देता है।</strong></p>\n\n<p>पहली संख्या: 13 = 1 + 3 = 4, इस प्रकार अंतिम अक्षर स्थानीय मान 4 होगा जो कि D है।<br />\nदूसरी संख्या: 16 = 1 + 6 = 7, इस प्रकार अंतिम अक्षर <span style=\"\">स्थानीय </span>मान 7 होगा जो कि G है।<br />\nतीसरी संख्या: 19 = 1 + 9 = 10, इस प्रकार अंतिम अक्षर <span style=\"\">स्थानीय </span>मान 10 होगा जो कि J है।<br />\nचौथी संख्या: 22 = 2 + 2 = 4, इस प्रकार अंतिम अक्षर <span style=\"\">स्थानीय </span>मान 4 होगा जो कि D है।<br />\nपांचवीं संख्या: 25 = 2 + 5 = 7, इस प्रकार अंतिम अक्षर <span style=\"\">स्थानीय </span>मान 7 होगा जो कि G है।</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Savita_State%20Govt._30-7-22_D1.png\" style=\" width: 101px; height: 453px;\" /></p>\n\n<p><span style=\"\">अत:, </span><span style=\"font-weight: 700; \">विकल्प (2) </span><span style=\"\">सही है।</span></p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "Find the ODD one out from the given options.",
+    "textHi": "दिए गए विकल्पों में से विषम विकल्प को चुनिए।",
+    "optionsEn": [
+      "280",
+      "325",
+      "226",
+      "145"
+    ],
+    "optionsHi": [
+      "280",
+      "325",
+      "226",
+      "145"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "<span style=\"font-family: var(--bs-body-font-family); font-size: var(--bs-body-font-size); font-weight: var(--bs-body-font-weight); text-align: var(--bs-body-text-align);\">The</span><span style=\"font-family: var(--bs-body-font-family); font-size: var(--bs-body-font-size); font-weight: var(--bs-body-font-weight); text-align: var(--bs-body-text-align);\"> logic followed here is:</span>\n\n<p style=\"\">280 is not a square number + 1,</p>\n\n<p style=\"\">Whereas,</p>\n\n<p style=\"\">325 = 18<sup>2</sup> + 1, 226 = 15<sup>2</sup> + 1, 145 = 12<sup>2</sup> + 1.</p>\n\n<p style=\"\">So, 280 is odd from the given options.</p>\n\n<p style=\"\">Hence, the correct answer is <span style=\"font-weight: bolder;\">\"Option 1\"</span>.</p>",
+    "explanationHi": "<span style=\"\">यहाँ अनुसरित तर्क निम्न प्रकार है:</span>\n\n<p style=\"\">280 एक वर्ग संख्या नहीं है + 1,</p>\n\n<p style=\"\">जबकि,</p>\n\n<p style=\"\">325 = 18 <sup>2</sup> + 1, 226 = 15 <sup>2</sup> + 1, 145 = 12 <sup>2</sup> + 1</p>\n\n<p style=\"\">अतः, दिए गए विकल्पों में से 280 विषम है।</p>\n\n<p style=\"\">अतः, सही उत्तर <span style=\"font-weight: bolder;\">\"विकल्प 1\"</span> है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p>L is the sister of G. G is the son of M. M is married to D. D is the sister of E. E is the son of C. C is married to S. S is the sister of P.</p>\n\n<p>How is L related to E?</p>",
+    "textHi": "<p><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">L, G की बहन है। G, M का पुत्र है। M का विवाह D से हुआ है। D, E की बहन है। E, C का पुत्र है। C का विवाह S से हुआ है। S, P की बहन है।</font></font></p>\n\n<p><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">L, E से किस प्रकार सम्बन्धित है?</font></font></p>",
+    "optionsEn": [
+      "Wife's sister",
+      "Brother's daughter",
+      "Sister's daughter",
+      "Daughter"
+    ],
+    "optionsHi": [
+      "साली",
+      "भतीजी",
+      "भांजी",
+      "पुत्री"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p style=\"\">Family Chart:</p>\n\n<p style=\"\"><img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage13914.png\" /></p>\n\n<p style=\"\">Given: </p>\n\n<p style=\"\">L is the sister of G, G is the son of M, M is married to D.</p>\n\n<p style=\"\">D is the sister of E, E is the son of C, C is married to S, S is the sister of P.</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/01/F1_Pranali_SSC_30-12-23_D34.png\" style=\"width: 292px; height: 205px;\" /></p>\n\n<p style=\"\">So, L is '<span style=\"\">Sister's daughter'</span> of E.</p>\n\n<p style=\"\">Hence, the correct answer is <span style=\"font-weight: bolder;\">\"Option 3\"</span>.</p>",
+    "explanationHi": "<p style=\"\"><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">वंश-वृक्ष आरेख:</font></font></p>\n\n<p style=\"\"><img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage13914.png\" /></p>\n\n<p style=\"\"><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">दिया गया है:  </font></font></p>\n\n<p style=\"\"><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">L, G की बहन है, G, M का पुत्र है, M का विवाह D से हुआ है।</font></font></p>\n\n<p style=\"\"><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">D, E की बहन है, E, C का पुत्र है, C का विवाह S से हुआ है, S, P की बहन है।</font></font></p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/01/F1_Pranali_SSC_30-12-23_D34.png\" style=\" width: 292px; height: 205px;\" /></p>\n\n<p style=\"\"><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">इसलिए, L, E की '</font></font><span style=\"\">भांजी<font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">'</font></font></span><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\"> है।</font></font></p>\n\n<p style=\"\">अतः, सही उत्तर<strong> \"विकल्प 3\" </strong>है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p style=\"\">Find the missing number:</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/11/F1_Madhuri_State%20Govt._10.11.2022_D2.png\" /></p>",
+    "textHi": "<p>लुप्त संख्या को ज्ञात कीजिए:</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/11/F1_Madhuri_State%20Govt._10.11.2022_D2.png\" style=\"\" /></p>",
+    "optionsEn": [
+      "<span style=\"\">184</span>",
+      "<span style=\"\">376</span>",
+      "<span style=\"\">190</span>",
+      "<span style=\"\">88</span>"
+    ],
+    "optionsHi": [
+      "<span style=\"\">184</span>",
+      "<span style=\"\">376</span>",
+      "<span style=\"\">190</span>",
+      "<span style=\"\">88</span>"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>The logic followed here is given below:</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/11/F1_Madhuri_State%20Govt._10.11.2022_D3.png\" style=\"width: 297px; height: 221px;\" /></p>\n\n<p>Hence, <strong>\"190\"</strong> is the correct answer.</p>",
+    "explanationHi": "<p>यहाँ अनुसरित किया गया तर्क नीचे दिया गया है:</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/11/F1_Madhuri_State%20Govt._10.11.2022_D3.png\" style=\" width: 297px; height: 221px;\" /></p>\n\n<p>अत:, <span style=\"font-weight: 700; \">\"190\" </span><span style=\"\">सही उत्तर </span>है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p>Find the number of triangles in the given figure.</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/04/F2_Madhuri_SSC_01.04.2022_D2.png\" style=\"width: 123px; height: 123px;\" /></p>",
+    "textHi": "<p>दी गई आकृति में त्रिभुजों की संख्या ज्ञात कीजिए।</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/04/F2_Madhuri_SSC_01.04.2022_D2.png\" style=\" width: 123px; height: 123px;\" /></p>",
+    "optionsEn": [
+      "12",
+      "10",
+      "8",
+      "14"
+    ],
+    "optionsHi": [
+      "12",
+      "10",
+      "8",
+      "14"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\">The number of </span>triangles<span style=\"color: rgb(30, 43, 51);\"> in the given figure is:<o:p></o:p></span></p>\n\n<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\"> </span><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/04/F2_Madhuri_SSC_01.04.2022_D1.png\" style=\"width: 383px; height: 427px;\" /></p>\n\n<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\">So</span><span style=\"color: rgb(30, 43, 51);\">, there are a total of 12</span> triangles<span style=\"color: rgb(30, 43, 51);\"> in the figure.</span></p>\n\n<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\">Hence, <span style=\"font-weight: 700;\">'12'</span> is the correct answer.</span></p>",
+    "explanationHi": "<p style=\"background: rgb(255, 255, 255);\">दी गई आकृति में त्रिभुजों की संख्या है:<span style=\"color: rgb(30, 43, 51);\"><o:p></o:p></span></p>\n\n<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\"> </span><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/04/F2_Madhuri_SSC_01.04.2022_D1.png\" style=\"width: 383px; height: 427px;\" /></p>\n\n<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\">इसलिए, </span>आकृति में कुल 12 त्रिभुज हैं।</p>\n\n<p style=\"background: rgb(255, 255, 255);\">अतः, सही उत्तर <span style=\"font-weight: 700;\">'12' </span>है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p>Select the option that is related to the third word in the same way as the second word is related to the first word. (The words must be considered as meaningful English words and must not be related to each other based on the number of letters/number of consonants/vowels in the word)</p>\n\n<p>Ore : Metal :: Milk : ? </p>",
+    "textHi": "<p>उस विकल्प का चयन कीजिए जो तीसरे शब्द से उसी प्रकार संबंधित है जैसे दूसरा शब्द पहले शब्द से संबंधित है। (शब्दों को सार्थक अंग्रेजी शब्द माना जाना चाहिए और शब्द में अक्षरों की संख्या/व्यंजन/स्वरों की संख्या के आधार पर एक-दूसरे से संबंधित नहीं होना चाहिए)</p>\n\n<p>अयस्क : धातु :: दूध : ?</p>",
+    "optionsEn": [
+      "Curd",
+      "Cloth",
+      "Cow",
+      "Glass"
+    ],
+    "optionsHi": [
+      "<span style=\"\">दही</span>",
+      "कपड़ा",
+      "गाय",
+      "काँच"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "<p>The logic followed here is:</p>\n\n<p><strong>Logic:</strong> Second one is extracted from the first one.</p>\n\n<ul>\n\t<li>Ore : Metal &rarr; Ore is a naturally occurring solid material from which a metal or valuable mineral can be profitably extracted.</li>\n</ul>\n\n<p>Similarly,</p>\n\n<ul>\n\t<li><span style=\"\">Milk : ? &rarr; Curd is </span>a soft, white substance formed when milk sours.</li>\n</ul>\n\n<p>Hence, '<strong>Curd</strong>' is the correct answer.</p>",
+    "explanationHi": "<p>यहाँ अनुसरण किया गया तर्क निम्नलिखित है:</p>\n\n<p><strong>तर्क: </strong>पहले वाले से दूसरा निकाला जाता है।</p>\n\n<ul>\n\t<li>अयस्क : धातु &rarr; अयस्क एक प्राकृतिक रूप से पाया जाने वाला ठोस पदार्थ है जिससे धातु या मूल्यवान खनिज लाभप्रद रूप से निकाला जा सकता है।</li>\n</ul>\n\n<p>इसी प्रकार,</p>\n\n<ul>\n\t<li>दूध : ? &rarr; दही एक नरम, सफेद पदार्थ है जो दूध के खट्टा होने पर बनता है।</li>\n</ul>\n\n<p>अतः, <strong>'दही' </strong>सही उत्तर है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p>Choose the appropriate figure from the Answer Figures to replace the question mark (?).</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D16.png\" style=\"width: 317px; height: 82px;\" /></p>",
+    "textHi": "<p>प्रश्न चिह्न (?) के स्थान पर उत्तर आकृतियों में से उचित आकृति चुनिए ।</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D16.png\" style=\"width: 317px; height: 82px;\" /></p>",
+    "optionsEn": [
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D17.png\" style=\"width: 81px; height: 82px;\" />",
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D18.png\" style=\"width: 82px; height: 82px;\" />",
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D19.png\" style=\"width: 81px; height: 82px;\" />",
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D20.png\" style=\"width: 82px; height: 81px;\" />"
+    ],
+    "optionsHi": [
+      "<img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage66d1d60e45b518bc59ddf85a.png\" /><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D17.png\" style=\"width: 81px; height: 82px;\" />",
+      "<img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage66d1d60e45b518bc59ddf85e.png\" /><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D18.png\" style=\"width: 82px; height: 82px;\" />",
+      "<img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage66d1d60f45b518bc59ddf876.png\" /><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D19.png\" style=\"width: 81px; height: 82px;\" />",
+      "<img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage66d1d60f45b518bc59ddf878.png\" /><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D20.png\" style=\"width: 82px; height: 81px;\" />"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "<p style=\"\"><span style=\"font-weight: bolder;\">The logic followed here is :</span></p>\n\n<p style=\"\">1) Elements rotate in the anticlockwise direction.</p>\n\n<p style=\"\">2) Elements rotate in the clockwise direction and are shaded.</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D22.png\" style=\" width: 386px; height: 211px;\" /></p>\n\n<p style=\"\"><span style=\"  font-weight: var(--bs-body-font-weight); text-align: var(--bs-body-text-align);\">Thus, the final series is :</span></p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D21.png\" style=\" width: 318px; height: 82px;\" /></p>\n\n<p style=\"\">Hence, <span style=\"font-weight: bolder;\">\"Option 4\"</span> is the correct answer.</p>",
+    "explanationHi": "<p style=\"\"><span style=\"font-weight: bolder;\">यहाँ अनुसरण किया गया तर्क निम्नलिखित है :</span></p>\n\n<p style=\"\">1) अवयव वामावर्त दिशा में घूमते हैं।</p>\n\n<p style=\"\">2) <span style=\"\">अवयव </span>दक्षिणावर्त दिशा में घूमते हैं और छायांकित होते हैं।</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D22.png\" style=\"width: 386px; height: 211px;\" /></p>\n\n<p style=\"\"><span style=\"  font-weight: var(--bs-body-font-weight); text-align: var(--bs-body-text-align);\">इस प्रकार, अंतिम शृंखला निम्नानुसार है :</span></p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D21.png\" style=\"width: 318px; height: 82px;\" /></p>\n\n<p style=\"\">अतः <span style=\"font-weight: bolder;\">\"विकल्प 4\"</span> सही उत्तर है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "Mohan is facing east. Then he turns right and runs 1 km. Then he turns left and runs 1 km. He again takes a right turn and walks 1 km. Then he takes a right turn and walks 2 km. Finally, he takes a right turn and runs 2 km. In which direction is he from his starting position?<span style=\"\">​</span>",
+    "textHi": "मोहन का मुख पूर्व की ओर है। फिर वह दाएँ मुड़ता है और 1 किमी दौड़ता है। फिर वह बाएँ मुड़ता है और 1 किमी दौड़ता है। वह फिर से दाएँ मुड़ता है और 1 किमी चलता है। फिर वह दाएँ मुड़ता है और 2 किमी चलता है। अंत में, वह दाएँ मुड़ता है और 2 किमी दौड़ता है। वह अपने आरंभिक स्थान से किस दिशा में है?",
+    "optionsEn": [
+      "East",
+      "West",
+      "North",
+      "South"
+    ],
+    "optionsHi": [
+      "पूर्व",
+      "<span style=\"\">पश्चिम</span>",
+      "<span style=\"\">उत्तर</span>",
+      "<span style=\"\">दक्षिण</span>"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "<p>According to the given conditions,</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/12/F7_Vinanti_State%20Govt._12.12.22_D13.png\" style=\"width: 418px; height: 324px;\" /></p>\n\n<p>Clearly, Mohan is to the West of his starting point.</p>\n\n<p>Hence, '<b>West</b>' is the correct answer.</p>",
+    "explanationHi": "<p>दी गई शर्तों के अनुसार,</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/12/F7_Vinanti_State%20Govt._12.12.22_D13.png\" style=\" width: 418px; height: 324px;\" /></p>\n\n<p>स्पष्ट रूप से, मोहन अपने शुरुआती बिंदु के पश्चिम में है।</p>\n\n<p>अतः, <strong>'पश्चिम' </strong>सही उत्तर है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "If in the word BEAUTICIAN, all the consonants are replaced by the previous letter in the alphabet and all the vowels are replaced by the next letter, then all the letters are arranged in the alphabetical order. Then which letter will be fourth from the right end?",
+    "textHi": "यदि BEAUTICIAN शब्द में सभी व्यंजनों को वर्णमाला के पिछले अक्षर से बदल दिया जाए और सभी स्वरों को अगले अक्षर से बदल दिया जाए, फिर सभी अक्षरों को वर्णमाला क्रम में व्यवस्थित किया जाए। तो दाएं छोर से चौथा अक्षर कौन सा होगा?",
+    "optionsEn": [
+      "J",
+      "M",
+      "F",
+      "N"
+    ],
+    "optionsHi": [
+      "J",
+      "M",
+      "F",
+      "N"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "<p><strong>Given word:</strong> BEAUTICIAN</p>\n\n<p style=\"color:  (33, 37, 41);\">According to the question:</p>\n\n<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\" style=\"color: (33, 37, 41);height:50px;width:450px;\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\"><span style=\"font-weight: bolder;\">Given words</span></td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">E</td>\n\t\t\t<td style=\"text-align: center;\">A</td>\n\t\t\t<td style=\"text-align: center;\">U</td>\n\t\t\t<td style=\"text-align: center;\">T</td>\n\t\t\t<td style=\"text-align: center;\">I</td>\n\t\t\t<td style=\"text-align: center;\">C</td>\n\t\t\t<td style=\"text-align: center;\">I</td>\n\t\t\t<td style=\"text-align: center;\">A</td>\n\t\t\t<td style=\"text-align: center;\">N</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\">\n\t\t\t<p>Consonants &rarr; (-1)</p>\n\n\t\t\t<p><span style=\"color:  (33, 37, 41); text-align: center;\">Vowels &rarr; (+1)</span></p>\n\t\t\t</td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\"><span style=\"font-weight: bolder;\">Resultant letters</span></td>\n\t\t\t<td style=\"text-align: center;\">A</td>\n\t\t\t<td style=\"text-align: center;\">F</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">V</td>\n\t\t\t<td style=\"text-align: center;\">S</td>\n\t\t\t<td style=\"text-align: center;\">J</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">J</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">M</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\">Arranged in alphabetic order</td>\n\t\t\t<td style=\"text-align: center;\">A</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">F</td>\n\t\t\t<td style=\"text-align: center;\">J</td>\n\t\t\t<td style=\"text-align: center;\">J</td>\n\t\t\t<td style=\"text-align: center;\">M</td>\n\t\t\t<td style=\"text-align: center;\">S</td>\n\t\t\t<td style=\"text-align: center;\">V</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p style=\"color:  (33, 37, 41);\">So, letter that will be fourth from the right end is <strong>'J'</strong>.</p>\n\n<p style=\"color:  (33, 37, 41);\">Hence, <span style=\"font-weight: bolder;\">\"Option 1\"</span> is the correct answer.</p>",
+    "explanationHi": "<p><strong>दिया गया शब्द:</strong> BEAUTICIAN</p>\n\n<p style=\"color:  (33, 37, 41);\">प्रश्न के अनुसार:</p>\n\n<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\" style=\"color: (33, 37, 41);height:50px;width:450px;\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\"><span style=\"font-weight: bolder;\">दिए गए शब्द</span></td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">इ</td>\n\t\t\t<td style=\"text-align: center;\">ए</td>\n\t\t\t<td style=\"text-align: center;\">यू</td>\n\t\t\t<td style=\"text-align: center;\">टी</td>\n\t\t\t<td style=\"text-align: center;\">मैं</td>\n\t\t\t<td style=\"text-align: center;\">सी</td>\n\t\t\t<td style=\"text-align: center;\">मैं</td>\n\t\t\t<td style=\"text-align: center;\">ए</td>\n\t\t\t<td style=\"text-align: center;\">एन</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\">\n\t\t\t<p>व्यंजन &rarr; (-1)</p>\n\n\t\t\t<p><span style=\"color:  (33, 37, 41); text-align: center;\">स्वर &rarr; (+1)</span></p>\n\t\t\t</td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\"><span style=\"font-weight: bolder;\">परिणामी अक्षर</span></td>\n\t\t\t<td style=\"text-align: center;\">ए</td>\n\t\t\t<td style=\"text-align: center;\">एफ</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">वी</td>\n\t\t\t<td style=\"text-align: center;\">यू</td>\n\t\t\t<td style=\"text-align: center;\">जे</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">जे</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">एम</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\">वर्णमाला क्रम में व्यवस्थित</td>\n\t\t\t<td style=\"text-align: center;\">ए</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">एफ</td>\n\t\t\t<td style=\"text-align: center;\">जे</td>\n\t\t\t<td style=\"text-align: center;\">जे</td>\n\t\t\t<td style=\"text-align: center;\">एम</td>\n\t\t\t<td style=\"text-align: center;\">यू</td>\n\t\t\t<td style=\"text-align: center;\">वी</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p style=\"color:  (33, 37, 41);\">अतः दायें छोर से चौथा अक्षर <strong>'J'</strong> होगा।</p>\n\n<p style=\"color:  (33, 37, 41);\">अतः, <span style=\"font-weight: bolder;\">\"विकल्प 1\"</span> सही उत्तर है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "In certain code language, 'FUNCTION' is written as 'NEZQBSAB'. What is the code for 'NOVEMBER' in that code language?",
+    "textHi": "कुछ कूट भाषा में 'FUNCTION' को 'NEZQBSAB' के रूप में लिखा जाता है। उसी कूट भाषा में 'NOVEMBER' के लिए कूट क्या है?",
+    "optionsEn": [
+      "VYHSULQF",
+      "VFYUSQLF",
+      "VYSFLUFQ",
+      "VYFSUFQL"
+    ],
+    "optionsHi": [
+      "VYHSULQF",
+      "VFYUSQLF",
+      "VYSFLUFQ",
+      "VYFSUFQL"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "<p>The table is alphabets place value:</p>\n\n<p><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/22/01/alphabet.png\" /></p>\n\n<p>'FUNCTION' is written as 'NEZQBSAB'</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Madhuri_State%20Govt_22-7-22_D12.png\" /></p>\n\n<p>Similarly,</p>\n\n<p>'NOVEMBER' = ?</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Madhuri_State%20Govt_22-7-22_D13.png\" /></p>\n\n<p>Hence, 'NOVEMBER' is coded as \"VYHSULQF\".</p>",
+    "explanationHi": "<p>तालिका में वर्णाक्षरों का स्थितीय मान है:</p>\n\n<p><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/22/01/alphabet.png\" /></p>\n\n<p>'FUNCTION' को 'NEZQBSAB' के रूप में लिखा जाता है</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Madhuri_State%20Govt_22-7-22_D12.png\" /></p>\n\n<p>इसी प्रकार,</p>\n\n<p>'NOVEMBER' = ?</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Madhuri_State%20Govt_22-7-22_D13.png\" /></p>\n\n<p>अतः, 'NOVEMBER' को \"VYHSULQF\" के रूप में कूटबद्ध किया जाएगा।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p>In a certain code, if:</p>\n\n<p>'A * B' means 'A is mother of B'.</p>\n\n<p>'A × B' means 'A is husband of B'.</p>\n\n<p>'A ÷ B' means 'B is father of A'.</p>\n\n<p>Then which of the following represents P is the father of Q?</p>",
+    "textHi": "<p>एक निश्चित कूट में, यदि:</p>\n\n<p>'A * B' का अर्थ है कि 'A, B की माता है'l </p>\n\n<p>'A × B' <span style=\"\">का अर्थ है कि 'A, B का पति है'l</span></p>\n\n<p>'A ÷ B' <span style=\"\">का अर्थ है कि 'B, A का पिता है'l</span></p>\n\n<p>तो, निम्नलिखित में से कौन दर्शाता है कि P, Q का पिता है?</p>",
+    "optionsEn": [
+      "P × M * Q",
+      "P * Q",
+      "Q * M × P",
+      "Q * P"
+    ],
+    "optionsHi": [
+      "P × M * Q",
+      "P * Q",
+      "Q * M × P",
+      "Q * P"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "<p>We use the following symbols to draw the family tree diagram,</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/03/Symbol%20Diagram_Blood%20Relation.png\" style=\"width: 206px; height: 279px;\" /></p>\n\n<table border=\"1\" cellpadding=\"0\" cellspacing=\"0\" style=\"\" width=\"290\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td colspan=\"4\" style=\"width: 290px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">A is</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\"><span style=\"font-weight: 700;\">Symbo</span>l</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">*</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">×</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 73px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">÷</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\"><span style=\"font-weight: 700;\">Meaning</span></p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px; text-align: center;\">Mother</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">Husband</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 73px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">B is Father of A</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td colspan=\"4\" style=\"width: 290px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">Of B</p>\n\t\t\t</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p> </p>\n\n<p><strong>Option (1): <span style=\"\">P × M * Q</span></strong></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D47.png\" style=\" width: 123px; height: 104px;\" /></p>\n\n<p>From the above diagram, we can see that <strong>P is the father of Q</strong>. </p>\n\n<p>Option (2): <span style=\"\">P * Q</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D45.png\" style=\" width: 41px; height: 104px;\" /></p>\n\n<p>Option (3): <span style=\"\">Q * M × P</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_State%20Govt._29-6-23_D_48.png\" style=\" width: 122px; height: 120px;\" /></p>\n\n<p>Option (4): <span style=\"\">Q * P</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D46.png\" style=\" width: 41px; height: 105px;\" /></p>\n\n<p>Hence, the correct answer is<strong> \"Option (1)\"</strong>.</p>",
+    "explanationHi": "<p style=\"\">वंश-वृक्ष आरेख बनाने के लिए हम निम्नलिखित प्रतीकों का उपयोग करते हैं,</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/03/Symbol%20Diagram_Blood%20Relation.png\" style=\"width: 206px; height: 279px;\" /></p>\n\n<table border=\"1\" cellpadding=\"0\" cellspacing=\"0\" style=\"\" width=\"290\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td colspan=\"4\" style=\"width: 290px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">A है</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\"><b>प्रतीक</b></p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">*</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">×</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 73px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">÷</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\"><span style=\"font-weight: 700;\">अर्थ</span></p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px; text-align: center;\">माता</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">पति</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 73px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">B, A का पिता है</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td colspan=\"4\" style=\"width: 290px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">B का/की</p>\n\t\t\t</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p style=\"\"> </p>\n\n<p style=\"\"><span style=\"font-weight: 700;\">विकल्प (1): P × M * Q</span></p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D47.png\" style=\"width: 123px; height: 104px;\" /></p>\n\n<p>उपरोक्त आरेख से, हम देख सकते हैं कि<strong> P, Q का पिता है।</strong></p>\n\n<p>विकल्प (2): P * Q</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D45.png\" style=\"width: 41px; height: 104px;\" /></p>\n\n<p style=\"\">विकल्प (3): Q * M × P</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_State%20Govt._29-6-23_D_48.png\" style=\" width: 122px; height: 120px;\" /></p>\n\n<p style=\"\">विकल्प (4): Q * P</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D46.png\" style=\"width: 41px; height: 105px;\" /></p>\n\n<p style=\"\">अतः, सही उत्तर <strong>\"विकल्प (1)\"</strong> है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "If 5 + 8 = 14, 9 + 6 = 21, and 4 + 10 = 13, then 7 + 2 = ?",
+    "textHi": "यदि 5 + 8 = 14, 9 + 6 = 21, और 4 + 10 = 13, तो 7 + 2 = ?",
+    "optionsEn": [
+      "16",
+      "17",
+      "18",
+      "15"
+    ],
+    "optionsHi": [
+      "16",
+      "17",
+      "18",
+      "15"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "<p>The logic followed here is:</p>\n\n<p><strong>Logic:</strong> First Number × 2 + Second Number - (Second Number ÷ 2) = Third Number</p>\n\n<ul>\n\t<li><span style=\"\">5 + 8 = 14 &rarr; 5 </span>× 2 + 8 - (8 ÷ 2) = 10 + 8 - 4 = 18 - 4 = 14</li>\n\t<li><span style=\"\">9 + 6 = 21 &rarr; 9 </span><span style=\"\">×</span><span style=\"\"> 2 + 6 - (6 </span><span style=\"\">÷</span><span style=\"\"> 2) = 18 + 6 - 3 = 24 - 3 = 21</span></li>\n\t<li><span style=\"\">4 + 10 = 13 &rarr; 4 </span><span style=\"\">×</span><span style=\"\"> 2 + 10 - (10 </span><span style=\"\">÷</span><span style=\"\"> 2) = 8 + 10 - 5 = 18 - 5 = 13</span></li>\n</ul>\n\n<p><span style=\"\">Similarly,</span></p>\n\n<ul>\n\t<li><span style=\"\">7 + 2 = ? &rarr; 7 </span><span style=\"\">×</span><span style=\"\"> 2 + 2 - (2 </span><span style=\"\">÷</span><span style=\"\"> 2) = 14 + 2 - 1 = 16 - 1 = 15</span></li>\n</ul>\n\n<p>Hence, '<strong>15</strong>' is the correct answer.</p>",
+    "explanationHi": "<p>यहाँ अनुसरित तर्क है:</p>\n\n<p><strong>तर्क:</strong> पहली संख्या × 2 + दूसरी <span style=\"\">संख्या</span> - (<span style=\"\">दूसरी</span> <span style=\"\">संख्या</span> ÷ 2) = तीसरी <span style=\"\">संख्या</span></p>\n\n<ul>\n\t<li><span style=\"\">5 + 8 = 14 &rarr; 5 </span>× 2 + 8 - (8 ÷ 2) = 10 + 8 - 4 = 18 - 4 = 14</li>\n\t<li><span style=\"\">9 + 6 = 21 &rarr; 9 </span><span style=\"\">×</span><span style=\"\"> 2 + 6 - (6 </span><span style=\"\">÷</span><span style=\"\"> 2) = 18 + 6 - 3 = 24 - 3 = 21</span></li>\n\t<li><span style=\"\">4 + 10 = 13 &rarr; 4 </span><span style=\"\">×</span><span style=\"\"> 2 + 10 - (10 </span><span style=\"\">÷</span><span style=\"\"> 2) = 8 + 10 - 5 = 18 - 5 = 13</span></li>\n</ul>\n\n<p><span style=\"\">इसी प्रकार,</span></p>\n\n<ul>\n\t<li><span style=\"\">7 + 2 = ? &rarr; 7 </span><span style=\"\">×</span><span style=\"\"> 2 + 2 - (2 </span><span style=\"\">÷</span><span style=\"\"> 2) = 14 + 2 - 1 = 16 - 1 = 15</span></li>\n</ul>\n\n<p>अत:, <strong>'15'</strong> सही उत्तर है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p>How many triangles are present in the following figure?</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/19/04/14-Aug_2nd%20Shift_Komal_22q_solution_lakshit%20%20rankawat_22march%20Reviewed_images_q9.PNG\" /></p>",
+    "textHi": "<p>निम्नलिखित आकृति में कितने त्रिभुज हैं?</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/19/04/14-Aug_2nd%20Shift_Komal_22q_solution_lakshit%20%20rankawat_22march%20Reviewed_images_q9.PNG\" /></p>",
+    "optionsEn": [
+      "14",
+      "12",
+      "15",
+      "16"
+    ],
+    "optionsHi": [
+      "14",
+      "12",
+      "15",
+      "16"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/19/04/14-Aug_2nd%20Shift_Komal_22q_solution_lakshit%20%20rankawat_22march%20Reviewed_images_q9a.PNG\" style=\"width: 574px; height: 215px;\" /></p>\n\n<p>Hence, \"15\" triangles are there in the given figure.</p>",
+    "explanationHi": "<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/19/04/14-Aug_2nd%20Shift_Komal_22q_solution_lakshit%20%20rankawat_22march%20Reviewed_images_q9a.PNG\" style=\"width: 574px; height: 215px;\" /></p>\n\n<p>इसलिए, दी गई आकृति में \"15\" त्रिभुज हैं।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p><strong>Direction:</strong> In the question below are given three statements followed by three conclusions I, II, and III. You have to take the given statements to be true even if they seem to be at variance from commonly known facts. Read all the conclusions and then decide which of the given conclusions logically follows from the given statements disregarding commonly known facts.</p>\n\n<p><strong>Statements:</strong></p>\n\n<p>No books are pens.</p>\n\n<p>All pens are pencils.</p>\n\n<p>Some erasers are pencils.</p>\n\n<p><strong>Conclusions:</strong></p>\n\n<p>I. Some books are pencils.</p>\n\n<p>II. Some pens are erasers.</p>\n\n<p>III. No pencils are books.</p>",
+    "textHi": "<p><strong>निर्देश:</strong> नीचे दिए गए प्रश्न में तीन कथन और उसके बाद तीन निष्कर्ष I, II और III दिए गये हैं। आपको दिए गये कथनों को सत्य मानना है, भले ही वे ज्ञात तथ्यों से अलग प्रतीत होते हों। सभी निष्कर्षों को पढ़िए और निर्धारित कीजिये कि दिए गये निष्कर्षों में से कौन-सा/से निष्कर्ष ज्ञात तथ्यों को नजरंदाज करने पर कथनों का तार्किक रूप से अनुसरण करता/करते है/हैं।</p>\n\n<p><strong>कथन</strong><strong>:</strong></p>\n\n<p>कोई पुस्तक पेन नहीं है।</p>\n\n<p>सभी पेन पेंसिल हैं।</p>\n\n<p>कुछ इरेज़र पेंसिल हैं।</p>\n\n<p><strong>निष्कर्ष</strong><strong>:</strong></p>\n\n<p>I. कुछ पुस्तकें पेंसिल हैं।</p>\n\n<p>II. कुछ पेन इरेजर हैं।</p>\nIII. कोई पेंसिल पुस्तक नहीं हैं।",
+    "optionsEn": [
+      "<span style=\"\">Only I follows.</span>",
+      "<span style=\"\">Only II follows.</span>",
+      "Either I or III follows.",
+      "All I, II and II follows"
+    ],
+    "optionsHi": [
+      "<span style=\"\">केवल I अनुसरण करता है। </span>",
+      "<span style=\"\">केवल II अनुसरण करता है।</span>",
+      "या तो I या फिर III अनुसरण करता है।",
+      "सभी I, II, III अनुसरण करते है।"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>The least possible Venn diagram for the given statements is as follows,</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/19/08/Syllogism_Rownak%20Chowdhury_8%20Jan2019_5Q_%E0%A4%B9%E0%A4%BF%E0%A4%82%E0%A4%A6%E0%A5%80_images_archana_D%205.PNG\" /></p>\n\n<p><strong>Conclusions:</strong></p>\n\n<p>I. Some books are pencils. &rarr; False (It is possible but not definite)</p>\n\n<p>II. Some pens are erasers. &rarr; False (It is possible but not definite)</p>\n\n<p>III. No pencils are books. &rarr; False (It is possible but not definite)</p>\n\n<p>Conclusion I and III form complementary pair. Hence, <strong>either I or III follows.</strong></p>\n\n<p><strong><span style=\"display: flex;gap: 6px;align-items: center;\"><img height=\"26px\" src=\"//cdn.testbook.com/resources/lms_creative_elements/important-point-image.png\" width=\"26px\" /><strong><span style=\"vertical-align: middle;font-size: 21px;\"><u>Important Points</u></span></strong></span> </strong><span style=\"font-weight: 700;\">Conditions of Either-or case:</span></p>\n\n<p>1. The elements should be the same in both the statements.</p>\n\n<p>2. Individually both the conclusions must be false.</p>\n\n<p>3. One conclusion should be positive and one conclusion should be negative (Complementary pair)</p>\n\n<p>The two complementary pairs are:</p>\n\n<p><span style=\"font-weight: 700;\">1) All + Some not</span></p>\n\n<p><span style=\"font-weight: 700;\">2) No + Some</span></p>",
+    "explanationHi": "<p>दिए गए कथनों के लिए सबसे कम संभव वेन आरेख इस प्रकार है,</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/21/06/F1_Shailendra%20Rajawat_15.6.21_Pallavi_D2.png\" style=\"width: 213px; height: 95px;\" /></p>\n\n<p><strong>निष्कर्ष:</strong></p>\n\n<p>I. कुछ किताबें पेंसिल हैं। &rarr; गलत (यह संभव है लेकिन निश्चित नहीं है)</p>\n\n<p>II। कुछ पेन इरेज़र हैं। &rarr; गलत (यह संभव है लेकिन निश्चित नहीं है)</p>\n\n<p>III। कोई पेंसिल किताबें नहीं हैं। &rarr; गलत (यह संभव है लेकिन निश्चित नहीं है)</p>\n\n<p>निष्कर्ष I और III पूरक जोड़ी बनाते हैं। इसलिए, <strong>I या III अनुसरण करता है।</strong></p>\n\n<p><span style=\"display: flex;gap: 6px;align-items: center;\"><img height=\"26px\" src=\"//cdn.testbook.com/resources/lms_creative_elements/important-point-image.png\" width=\"26px\" /><strong><span style=\"vertical-align: middle;font-size: 21px;\"><u>Important Points</u></span></strong></span></p>\n\n<p><span style=\"font-weight: 700;\">या तो या मामले की शर्तें:</span></p>\n\n<p>1. दोनों कथनों में तत्व समान होने चाहिए।</p>\n\n<p>2. व्यक्तिगत रूप से दोनों निष्कर्ष झूठे होने चाहिए।</p>\n\n<p>3. एक निष्कर्ष सकारात्मक होना चाहिए और एक निष्कर्ष नकारात्मक होना चाहिए (पूरक जोड़ी)</p>\n\n<p>दो पूरक जोड़े हैं:</p>\n\n<p><span style=\"font-weight: 700;\">1) सभी + कुछ नहीं</span></p>\n\n<p><span style=\"font-weight: 700;\">2) नहीं + कुछ</span></p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p>In the following questions select the correct option from the given alternatives.</p>\n\n<p>DJ ∶ HT ∶∶ HM ∶ ?</p>",
+    "textHi": "<p>निम्नलिखित प्रश्नों में दिए गए विकल्पों में से सही विकल्प का चयन कीजिए।</p>\n\n<p>DJ ∶ HT ∶∶ HM ∶ ?</p>",
+    "optionsEn": [
+      "PY",
+      "JK",
+      "LW",
+      "LP"
+    ],
+    "optionsHi": [
+      "PY",
+      "JK",
+      "LW",
+      "LP"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p style=\"\">According to the English alphabet series and its positional value:</p>\n\n<p style=\"\"><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/20/12/Common_Diagram_28.01.2020_D1.png\" style=\"width: 536px; height: 128px;\" /></p>\n\n<p style=\"\">The logic follows here is: </p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_Defence_28-7-23_D1.png\" style=\"width: 91px; height: 102px;\" /></p>\n\n<p style=\"\">Similarly;</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_Defence_28-7-23_D2.png\" style=\" width: 91px; height: 106px;\" /></p>\n\n<p style=\"\">Hence,  the correct answer is <span style=\" font-weight: 700;\">\"LW\"</span></p>",
+    "explanationHi": "<p style=\"\">अंग्रेजी वर्णमाला और उसके स्थितीय मान के अनुसार:</p>\n\n<p style=\"\"><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/20/12/Common_Diagram_28.01.2020_D1.png\" style=\"width: 536px; height: 128px;\" /></p>\n\n<p style=\"\">यहाँ अनुसरण किया गया तर्क निम्न प्रकार है:</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_Defence_28-7-23_D1.png\" style=\" width: 91px; height: 102px;\" /></p>\n\n<p style=\"\">इसी प्रकार;</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_Defence_28-7-23_D2.png\" style=\"width: 91px; height: 106px;\" /></p>\n\n<p style=\"\">अतः, सही उत्तर <strong>\"LW\"</strong> है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "Pointing towards a person in the photograph, Mrs Rajni said, \"He is the brother's son of my husband's father-in-law Yogi.\" How is the person in the photograph related to Mrs Rajni?",
+    "textHi": "तस्वीर में एक व्यक्ति की ओर इशारा करते हुए श्रीमती रजनी ने कहा, \"वह मेरे पति के ससुर योगी के भाई का पुत्र है।\" तस्वीर में व्यक्ति, श्रीमती रजनी से किस प्रकार संबंधित है?",
+    "optionsEn": [
+      "Father-in-law",
+      "Brother",
+      "Son",
+      "Father's Brother's Son"
+    ],
+    "optionsHi": [
+      "ससुर",
+      "भाई",
+      "पुत्र",
+      "पिता के भाई का पुत्र"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "<p><span style=\"\">Preparing the family tree using the following symbols:</span></p>\n\n<p><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/21/07/Symbol%20Diagram_Blood%20Relation.png\" style=\" width: 206px; height: 279px;\" /></p>\n\n<p><span style=\"\">A possible tree diagram will be</span><strong><span style=\"\">:</span></strong></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_SSC_15-6-23_D1_V2.png\" style=\"width: 274px; height: 128px;\" /></p>\n\n<p>The relationship between Mrs. Rajni and the photograph is <span style=\"\">Father's Brother's Son.</span></p>\n\n<p>Hence, the correct answer is \"<strong><span style=\"\">Father's Brother's Son\".</span></strong></p>",
+    "explanationHi": "<p>निम्नलिखित प्रतीकों का उपयोग करके वंश वृक्ष तैयार करने पर<span style=\"\">:</span></p>\n\n<p><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/21/07/Symbol%20Diagram_Blood%20Relation.png\" style=\" width: 206px; height: 279px;\" /></p>\n\n<p>एक संभावित वृक्ष आरेख इस प्रकार होगा<strong><span style=\"\">:</span></strong></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_SSC_15-6-23_D1_V2.png\" style=\" width: 274px; height: 128px;\" /></p>\n\n<p>श्रीमती रजनी और तस्वीर के व्यक्ति के बीच का संबंध पिता के भाई के पुत्र का है।</p>\n\n<p>अतः, सही उत्तर <strong>\"पिता के भाई का पुत्र\"</strong> है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p>Read the given statements and conclusions carefully. Assuming that the information given in the statements is true, even if it appears to be at variance with commonly known facts, decide which of the given conclusions logically follow(s) from the statements.</p>\n\n<p><strong>Statements:</strong></p>\n\n<p>No atom is a molecule.</p>\n\n<p>No molecule is an element.</p>\n\n<p><strong>Conclusions:</strong></p>\n\n<p>I. It is possible for some atoms to be elements.</p>\n\n<p>II. Some elements are molecules.</p>",
+    "textHi": "<p style=\"\">दिए गए कथनों और निष्कर्षों का ध्यानपूर्वक अध्ययन कीजिए। यह मानते हुए कि कथनों में दी गई जानकारी सत्य है, भले ही यह सामान्य रूप से ज्ञात तथ्यों से भिन्न प्रतीत होती हो, तय कीजिए कि दिए गए निष्कर्षों में से कौन-सा/से कथनों का तार्किक रूप से अनुसरण करता/करते है/हैं।</p>\n\n<p style=\"\"><span style=\"font-weight: 700;\">कथन:</span></p>\n\n<p>कोई परमाणु, अणु नहीं है।</p>\n\n<p>कोई अणु, तत्व नहीं है।</p>\n\n<p><strong>निष्कर्ष:</strong></p>\n\n<p>I. कुछ परमाणु, तत्व हैं यह संभव है।</p>\n\n<p>II. कुछ तत्व, अणु हैं।</p>",
+    "optionsEn": [
+      "Only conclusion I follows",
+      "Both conclusions I and II follow",
+      "Only conclusion II follows",
+      "Neither conclusion I nor II follows"
+    ],
+    "optionsHi": [
+      "केवल निष्कर्ष I अनुसरण करता है।",
+      "दोनों निष्कर्ष I और II अनुसरण करते हैं।",
+      "केवल निष्कर्ष II अनुसरण करता है।",
+      "न तो निष्कर्ष I न ही II अनुसरण करता है।"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "<p style=\"\"><span style=\"font-weight: 700;\">Statement:</span></p>\n\n<p style=\"\">No atom is a molecule.</p>\n\n<p style=\"\">No molecule is an element.</p>\n\n<p style=\"\">The least possible diagram for the given statements is as follows:</p>\n\n<p style=\"\"><br />\n<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_SSC_Amit%20A_08-02-2023_D10.png\" style=\"width: 319px; height: 52px;\" /></p>\n\n<p style=\"\"><span style=\"font-weight: 700;\">Conclusions:</span></p>\n\n<p style=\"\">(i) <span style=\"\">It is possible for some atoms to be elements</span> - <strong>True </strong>(Because there is No direct relation given between Atoms and Elements, so it can be possible).</p>\n\n<p style=\"\">(ii) <span style=\"\">Some elements are molecules</span> - False<span style=\"font-weight: 700;\"> </span>(Because <span style=\"\">No molecule is an element</span>).</p>\n\n<p style=\"\">Here, <span style=\"\">Only conclusion I follows</span>.</p>\n\n<p style=\"\">Hence, the correct answer is <span style=\"font-weight: 700;\">\"Option 1\"</span>.</p>",
+    "explanationHi": "<p style=\"\"><span style=\"font-weight: 700;\">कथन:</span></p>\n\n<p>कोई परमाणु, अणु नहीं है।</p>\n\n<p>कोई अणु, तत्व नहीं है।</p>\n\n<p style=\"\">दिए गए कथनों के लिए न्यूनतम संभावित आरेख इस प्रकार है:</p>\n\n<p style=\"\"><br />\n<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/09/F1_SSC_Savita_5-09-23_D92.png\" style=\"width: 321px; height: 53px;\" /></p>\n\n<p style=\"\"><span style=\"font-weight: 700;\">निष्कर्ष:</span></p>\n\n<p style=\"\">(i) कुछ परमाणु, तत्व हैं यह संभव है - <span style=\"font-weight: 700;\">सत्य </span>(क्योंकि परमाणुओं और तत्वों के बीच कोई सीधा संबंध नहीं दिया गया है, इसलिए यह संभव हो सकता है)।</p>\n\n<p style=\"\">(ii) कुछ तत्व, अणु हैं - असत्य<span style=\"font-weight: 700;\"> </span>(क्योंकि कोई भी अणु, तत्व नहीं है)।</p>\n\n<p>यहाँ, केवल निष्कर्ष I अनुसरण करता है।</p>\n\n<p>अतः, सही उत्तर <strong>\"विकल्प 1\"</strong> है।</p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "<p>Select the figure from the options that can replace the question mark (?) and complete the pattern. (Rotation is not allowed)</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D42.png\" style=\"width: 121px; height: 121px;\" /></p>",
+    "textHi": "<p>विकल्पों में से उस आकृति का चयन करें, जो प्रश्न चिह्न (?) के स्थान पर आ सकती है और पैटर्न को पूर्ण कर सकती है। (घुमाने की अनुमति नहीं है)</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D42.png\" style=\" width: 121px; height: 121px;\" /></p>",
+    "optionsEn": [
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D43.png\" style=\" width: 62px; height: 62px;\" />",
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D44.png\" style=\" width: 62px; height: 62px;\" />",
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D45.png\" style=\" width: 62px; height: 62px;\" />",
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D46.png\" style=\" width: 62px; height: 62px;\" />"
+    ],
+    "optionsHi": [
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D43.png\" style=\"width: 62px; height: 62px;\" />",
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D44.png\" style=\"width: 62px; height: 62px;\" />",
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D45.png\" style=\" width: 62px; height: 62px;\" />",
+      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D46.png\" style=\"width: 62px; height: 62px;\" />"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "<p style=\"\">The image that completes the pattern is:</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D47.png\" style=\"width: 367px; height: 122px;\" /></p>\n\n<p style=\"\">Hence, the correct answer is <span style=\"font-weight: 700;\">\"Option 1\"</span>.</p>",
+    "explanationHi": "<p style=\"\"><span style=\"\">पैटर्न को पूरा करने वाली छवि निम्न है:</span></p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D47.png\" style=\" width: 367px; height: 122px;\" /></p>\n\n<p style=\"\">अतः, सही उत्तर <span style=\"font-weight: 700;\">\"विकल्प 1\" </span>है। </p>",
+    "section": "Test"
+  },
+  {
+    "textEn": "Six persons Aman, Danish, Soniya, Sujit, Ranjan and Yashika are sitting around a circular table facing away from centre. Danish sits fourth to the right of Of Soniya. Yahsika sits to the immediate right of Soniya. Two persons sit between Aman and Ranjan. If Ranjan is an immediate neighbour of Yashika, who sits to the immediate left of Aman?",
+    "textHi": "छह व्यक्ति अमन, दानिश, सोनिया, सुजीत, रंजन और यशिका एक वृत्ताकार मेज के इर्द-गिर्द केंद्र के बाहर की ओर <span style=\"\">उन्मुख</span> होकर बैठे हैं। दानिश, सोनिया के दाएँ से चौथे स्थान पर बैठा है। <span style=\"\">यशिका,</span> सोनिया के निकटस्थ दाएँ बैठी है। अमन और रंजन के बीच दो व्यक्ति बैठे हैं। यदि रंजन, <span style=\"\">यशिका</span> का निकटस्थ पड़ोसी है, तब अमन के <span style=\"\">निकटस्थ</span> <span style=\"\">बाएँ</span><span style=\"\"> कौन </span>बैठा है?",
+    "optionsEn": [
+      "Ranjan",
+      "Sujit",
+      "Danish",
+      "Soniya"
+    ],
+    "optionsHi": [
+      "रंजन",
+      "सुजीत",
+      "<span style=\"\">दानिश</span>",
+      "<span style=\"\">सोनिया</span>"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p><span style=\"\"><strong>Six persons: </strong> Aman, Danish, Soniya, Sujit, Ranjan and Yashika (facing away from centre) </span></p>\n\n<p><span style=\"\">1. Danish sits fourth to the right of Of Soniya. </span></p>\n\n<p><span style=\"\">2. Yahsika sits to the immediate right of Soniya. </span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D21.png\" style=\"height: 235px; width: 235px;\" /></p>\n\n<p><span style=\"\">3. Two persons sit between Aman and Ranjan. </span></p>\n\n<p><span style=\"\">Case 1.</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D22.png\" style=\"height: 233px; width: 263px;\" /></p>\n\n<p><span style=\"\">Case2.</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D23.png\" style=\"height: 234px; width: 269px;\" /></p>\n\n<p>The above two cases will be the final arrangement. </p>\n\n<p>Now, <span style=\"\">If Ranjan is an immediate neighbour of Yashika we will considder case 2. and in that case Danish sits to the immediate left of Aman.</span></p>\n\n<p><span style=\"\">Hence, if Ranjan is an immediate neighbour of Yashika Danish sits to the immediate left of Aman.</span></p>",
+    "explanationHi": "<p><strong>छह व्यक्ति: </strong>अमन, दानिश, सोनिया, सुजीत, रंजन और यशिका (केंद्र के बाहर की ओर उन्मुख)</p>\n\n<p>1. दानिश, सोनिया के दाएँ से चौथे स्थान पर बैठा है।</p>\n\n<p>2. यशिका, सोनिया के <span style=\"\">निकटस्थ</span> दाएँ बैठी है।</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D21.png\" style=\"height: 235px; width: 235px;\" /></p>\n\n<p>3. अमन और रंजन के बीच दो व्यक्ति बैठे हैं।</p>\n\n<p><span style=\"\">स्थिति 1.</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D22.png\" style=\"height: 233px; width: 263px;\" /></p>\n\n<p><span style=\"\">स्थिति 2.</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D23.png\" style=\"height: 234px; width: 269px;\" /></p>\n\n<p>उपरोक्त दोनों स्थितियाँ अंतिम व्यवस्था होगी।</p>\n\n<p>अब, यदि रंजन, यशिका का निकटस्थ पड़ोसी है तब हम स्थिति 2 पर विचार करेंगे और उस स्थिति में दानिश, अमन के <span style=\"\">निकटस्थ</span> <span style=\"\">बाएँ</span><span style=\"\"> </span>बैठा है<span style=\"\">।</span></p>\n\n<p>अतः यदि रंजन, <span style=\"\">यशिका </span>का निकटस्थ पड़ोसी है, तब दानिश, अमन के निकटस्थ <span style=\"\">बाएँ</span><span style=\"\"> </span>बैठा है।</p>",
+    "section": "Test"
+  }
+]
