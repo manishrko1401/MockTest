@@ -378,7 +378,7 @@ const formatSubCategoryName = (name: string) => {
 
   const activeTopper = testimonials[successIndex] || testimonials[0] || SUCCESS_STORIES[0];
 
-  if (isMounted && isMobile) {
+  if (isMobile) {
     return (
       <>
         <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
