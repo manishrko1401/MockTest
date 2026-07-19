@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 // Persistent OTP Cache in global to survive Next.js dev server hot-reloads
 const otpCache = (global as any).otpCache || new Map<string, { code: string; expiresAt: number }>();
@@ -26,6 +27,15 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
+  },
+});
+
+const s3Client = new S3Client({
+  region: "auto",
+  endpoint: process.env.TIGRIS_ENDPOINT || "https://fly.storage.tigris.dev",
+  credentials: {
+    accessKeyId: process.env.TIGRIS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.TIGRIS_SECRET_ACCESS_KEY || "",
   },
 });
 
@@ -1391,10 +1401,43 @@ async function handleReorderMockTests(data: any) {
 async function handleSaveCustomQuestions(data: any) {
   const { testId, questions } = data;
 
+  const bucketName = process.env.TIGRIS_BUCKET_NAME;
+
+  if (bucketName && questions && Array.isArray(questions)) {
+    try {
+      const fileName = `questions_${testId}.json`;
+      const fileBuffer = Buffer.from(JSON.stringify(questions));
+
+      await s3Client.send(
+        new PutObjectCommand({
+          Bucket: bucketName,
+          Key: fileName,
+          Body: fileBuffer,
+          ContentType: "application/json",
+        })
+      );
+
+      const s3Url = `${process.env.TIGRIS_ENDPOINT || "https://fly.storage.tigris.dev"}/${bucketName}/${fileName}`;
+
+      await prisma.mockTest.update({
+        where: { id: testId },
+        data: {
+          customQuestions: { url: s3Url },
+          questionsCount: questions.length,
+        },
+      });
+
+      return NextResponse.json({ success: true });
+    } catch (err: any) {
+      console.error("Failed to upload custom questions to Tigris:", err);
+    }
+  }
+
   await prisma.mockTest.update({
     where: { id: testId },
     data: {
       customQuestions: questions,
+      questionsCount: Array.isArray(questions) ? questions.length : 100,
     },
   });
 
@@ -1413,9 +1456,31 @@ async function handleGetCustomQuestions(data: any) {
     },
   });
 
+  let questions = mockTest?.customQuestions || null;
+
+  if (
+    questions &&
+    typeof questions === 'object' &&
+    !Array.isArray(questions) &&
+    'url' in (questions as any)
+  ) {
+    const url = (questions as any).url;
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        questions = await res.json();
+      } else {
+        console.error(`Tigris fetch returned status: ${res.status}`);
+      }
+    } catch (err) {
+      console.error("Failed to fetch questions from Tigris S3:", err);
+      questions = null;
+    }
+  }
+
   return NextResponse.json({
     success: true,
-    questions: mockTest?.customQuestions || null,
+    questions,
     positiveMarks: mockTest?.positiveMarks ?? null,
     negativeMarks: mockTest?.negativeMarks ?? null,
   });
@@ -1495,7 +1560,9 @@ async function getCompiledExamCatalog() {
       "testbookCutoffScore",
       CASE 
         WHEN "customQuestions" IS NULL THEN 0
-        ELSE json_array_length("customQuestions"::json)
+        WHEN json_typeof("customQuestions"::json) = 'array' THEN json_array_length("customQuestions"::json)
+        WHEN json_typeof("customQuestions"::json) = 'object' AND ("customQuestions"::json)->>'url' IS NOT NULL THEN "questionsCount"
+        ELSE 0
       END as "customQuestionsCount"
     FROM "mock_tests"
     ORDER BY "orderIndex" ASC
