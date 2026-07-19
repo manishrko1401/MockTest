@@ -91,6 +91,7 @@ export default function ExamSolutionAnalysisPage() {
   const [customQs, setCustomQs] = useState<any[] | null>(null);
   const [loadingCustomQs, setLoadingCustomQs] = useState(true);
   const [activeMobileTab, setActiveMobileTab] = useState<'analysis' | 'solutions'>('analysis');
+  const [viewMode, setViewMode] = useState<'analysis' | 'solution'>('analysis');
 
   const getAttemptLabel = (idx: number, total: number, attemptLang: 'en' | 'hi' = 'en') => {
     if (idx === 0) {
@@ -605,12 +606,12 @@ export default function ExamSolutionAnalysisPage() {
           </Link>
           <span className="hidden md:inline h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
           <button
-            onClick={handleBackToTestSeries}
+            onClick={viewMode === 'solution' ? () => setViewMode('analysis') : handleBackToTestSeries}
             className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors cursor-pointer bg-transparent border-none p-0 outline-none shrink-0"
-            title={language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}
+            title={viewMode === 'solution' ? (language === 'hi' ? 'विश्लेषण पर वापस जाएं' : 'Back to Analysis') : (language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series')}
           >
             <ArrowLeft className="h-4 w-4" /> 
-            <span className="hidden md:inline">{language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}</span>
+            <span className="hidden md:inline">{viewMode === 'solution' ? (language === 'hi' ? 'विश्लेषण पर वापस जाएं' : 'Back to Analysis') : (language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series')}</span>
             <span className="inline md:hidden">{language === 'hi' ? 'वापस' : 'Back'}</span>
           </button>
           <span className="hidden md:inline h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
@@ -645,32 +646,8 @@ export default function ExamSolutionAnalysisPage() {
         </div>
       </header>
 
-      {/* Mobile Tab Switcher (Visible only on mobile) */}
-      <div className="flex lg:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-16 z-30 shadow-sm">
-        <button
-          onClick={() => handleTabClick('analysis')}
-          className={`flex-1 py-3 text-xs font-bold transition-all text-center border-b-2 ${
-            activeMobileTab === 'analysis'
-              ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          {language === 'hi' ? 'विश्लेषण' : 'Analysis'}
-        </button>
-        <button
-          onClick={() => handleTabClick('solutions')}
-          className={`flex-1 py-3 text-xs font-bold transition-all text-center border-b-2 ${
-            activeMobileTab === 'solutions'
-              ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          {language === 'hi' ? 'समाधान और व्याख्या' : 'Solutions & Analysis'}
-        </button>
-      </div>
-
       {/* 2. STATS OVERVIEW CARDS */}
-      <section className={`max-w-6xl w-full mx-auto px-6 mt-8 ${activeMobileTab === 'analysis' ? 'block' : 'hidden lg:block'}`}>
+      <section className={`max-w-6xl w-full mx-auto px-6 mt-8 ${viewMode === 'analysis' ? 'block' : 'hidden'}`}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
           
           <div className="flex items-center gap-3 border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
@@ -838,7 +815,7 @@ export default function ExamSolutionAnalysisPage() {
 
       {/* Attempt Selector and Comparison Dashboard */}
       {attempts.length >= 1 && (
-        <section className="max-w-6xl w-full mx-auto px-6 mt-6 block">
+        <section className={`max-w-6xl w-full mx-auto px-6 mt-6 ${viewMode === 'analysis' ? 'block' : 'hidden'}`}>
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex-1">
               <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{t.analysisAttemptSelector}</h5>
@@ -881,7 +858,7 @@ export default function ExamSolutionAnalysisPage() {
       )}
 
       {/* Subject-wise Breakdown Section */}
-      <section className={`max-w-6xl w-full mx-auto px-6 mt-6 animate-in fade-in duration-300 ${activeMobileTab === 'analysis' ? 'block' : 'hidden lg:block'}`}>
+      <section className={`max-w-6xl w-full mx-auto px-6 mt-6 animate-in fade-in duration-300 ${viewMode === 'analysis' ? 'block' : 'hidden'}`}>
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
           <h4 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center gap-2">
             <Award className="h-4.5 w-4.5 text-blue-500" /> {lang === 'hi' ? 'विषयवार प्रदर्शन विश्लेषण' : 'Subject-wise Performance Breakdown'}
@@ -938,22 +915,22 @@ export default function ExamSolutionAnalysisPage() {
         </div>
       </section>
 
-      {/* Mobile-only Solution & Analysis Navigation Button (Visible just below the breakdown on mobile) */}
-      {activeMobileTab === 'analysis' && (
-        <div className="block lg:hidden max-w-6xl w-full mx-auto px-6 mt-6">
+      {/* Universal Solution Page Navigation Button on Analysis Screen */}
+      {viewMode === 'analysis' && (
+        <div className="max-w-6xl w-full mx-auto px-6 mt-6 mb-12">
           <button
-            onClick={() => handleTabClick('solutions')}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all active:scale-98 flex items-center justify-center gap-2 text-xs tracking-wider uppercase border border-blue-500/10"
+            onClick={() => setViewMode('solution')}
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-98 flex items-center justify-center gap-2 border border-blue-500/10 text-xs md:text-sm cursor-pointer"
           >
             <HelpCircle className="h-4.5 w-4.5" />
-            {language === 'hi' ? 'समाधान और विश्लेषण' : 'Solution and Analysis'}
+            {language === 'hi' ? 'सविस्तार समाधान और व्याख्या देखें' : 'View Detailed Solutions & Explanation'}
           </button>
         </div>
       )}
 
       {/* 3. SPLIT WORKSPACE - QUESTION DETAIL & PALETTE */}
-      <section className={`max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start ${
-        activeMobileTab === 'solutions' ? 'flex' : 'hidden lg:flex'
+      <section className={`max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start pb-24 ${
+        viewMode === 'solution' ? 'flex' : 'hidden'
       }`}>
         
         {/* LEFT WORKSPACE PANEL: QUESTION VIEW */}
@@ -1149,8 +1126,8 @@ export default function ExamSolutionAnalysisPage() {
 
           </div>
 
-          {/* Navigation CTAs */}
-          <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-5 mt-8">
+           {/* Navigation CTAs */}
+           <div className={`justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-5 mt-8 ${viewMode === 'solution' ? 'hidden' : 'flex'}`}>
             <button
               onClick={() => setActiveQuestionIdx(prev => Math.max(0, prev - 1))}
               disabled={activeQuestionIdx === 0}
@@ -1175,7 +1152,7 @@ export default function ExamSolutionAnalysisPage() {
         </main>
 
         {/* RIGHT WORKSPACE SIDEBAR: QUESTION PALETTE */}
-        <aside className="hidden lg:block w-full lg:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+        <aside className="hidden lg:block w-full lg:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm lg:sticky lg:top-24 lg:self-start">
           
           <h4 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2">
             {t.analysisQuestionsPal}
@@ -1314,6 +1291,31 @@ export default function ExamSolutionAnalysisPage() {
             </form>
           </div>
         </div>
+      )}
+      {viewMode === 'solution' && (
+        <footer className="fixed bottom-0 inset-x-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-3 px-6 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <button
+              onClick={() => setActiveQuestionIdx(prev => Math.max(0, prev - 1))}
+              disabled={activeQuestionIdx === 0}
+              className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-slate-800 dark:text-white"
+            >
+              <ChevronLeft className="h-4 w-4" /> {language === 'hi' ? 'पिछला' : 'Previous'}
+            </button>
+            
+            <span className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+              {language === 'hi' ? 'प्रश्न' : 'Question'} {activeQuestionIdx + 1} / {totalQs}
+            </span>
+
+            <button
+              onClick={() => setActiveQuestionIdx(prev => Math.min(totalQs - 1, prev + 1))}
+              disabled={activeQuestionIdx === totalQs - 1}
+              className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-slate-800 dark:text-white"
+            >
+              {language === 'hi' ? 'अगला' : 'Next'} <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </footer>
       )}
 
     </div>
