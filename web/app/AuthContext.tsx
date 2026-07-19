@@ -710,6 +710,7 @@ const DEFAULT_NOTICES: Notice[] = [
 
 const CACHE_KEY_CATALOG = 'mth_catalog_v1';
 const CACHE_KEY_NOTICES = 'mth_notices_v1';
+const CACHE_KEY_USER = 'mth_user_v1';
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes — re-fetch if stale
 
 function readCache<T>(key: string): T | null {
@@ -728,7 +729,15 @@ function writeCache(key: string, data: unknown) {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [usersList, setUsersList] = useState<MockUser[]>([]);
-  const [currentUser, setCurrentUser] = useState<MockUser | null>(null);
+  // Pre-populate currentUser from localStorage — shows logged-in state INSTANTLY on refresh
+  const [currentUser, setCurrentUser] = useState<MockUser | null>(() => {
+    if (typeof window === 'undefined') return null;
+    // No TTL on user cache — we always re-validate in background, but show cached state immediately
+    try {
+      const raw = localStorage.getItem(CACHE_KEY_USER);
+      return raw ? (JSON.parse(raw) as MockUser) : null;
+    } catch { return null; }
+  });
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   // Pre-populate from localStorage so the UI renders immediately from cache
   const [noticesList, setNoticesList] = useState<Notice[]>(() => {
@@ -795,12 +804,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (userData && userData.success && userData.user) {
         if (userData.user.isBlocked) {
           document.cookie = "tb_user_id=;path=/;max-age=0";
+          try { localStorage.removeItem(CACHE_KEY_USER); } catch {}
           setCurrentUser(null);
         } else {
+          // 💾 Cache the fresh user so next refresh is instant
+          try { localStorage.setItem(CACHE_KEY_USER, JSON.stringify(userData.user)); } catch {}
           setCurrentUser(userData.user);
         }
       } else if (savedUserId) {
         document.cookie = "tb_user_id=;path=/;max-age=0";
+        try { localStorage.removeItem(CACHE_KEY_USER); } catch {}
         setCurrentUser(null);
       }
     } catch (err) {
@@ -1479,9 +1492,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const data = await res.json();
       if (data.success && data.user) {
+        // 💾 Cache user immediately so refresh is instant
+        try { localStorage.setItem(CACHE_KEY_USER, JSON.stringify(data.user)); } catch {}
         setCurrentUser(data.user);
         document.cookie = "tb_user_id=" + data.user.id + ";path=/;max-age=31536000";
-        fetchUsersList();
+        // Don't call fetchUsersList() here — catalog is already loaded; would cause unnecessary re-fetch
         return { success: true, user: data.user };
       }
       return { success: false, error: data.error || 'Login failed' };
@@ -1503,6 +1518,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const data = await res.json();
       if (data.success && data.user) {
+        // 💾 Cache user immediately so refresh is instant
+        try { localStorage.setItem(CACHE_KEY_USER, JSON.stringify(data.user)); } catch {}
         setCurrentUser(data.user);
         setUsersList(prev => [data.user, ...prev]);
         document.cookie = "tb_user_id=" + data.user.id + ";path=/;max-age=31536000";
@@ -1517,6 +1534,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setCurrentUser(null);
+    try { localStorage.removeItem(CACHE_KEY_USER); } catch {}
     document.cookie = "tb_user_id=;path=/;max-age=0";
   };
 
@@ -1529,6 +1547,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updatedUser = { ...currentUser, name: trimmedName, email: trimmedEmail, mobile: trimmedMobile };
     setCurrentUser(updatedUser);
+    // Keep the user cache in sync so next refresh still shows updated name/email
+    try { localStorage.setItem(CACHE_KEY_USER, JSON.stringify(updatedUser)); } catch {}
 
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
@@ -1603,6 +1623,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updatedSessions = [...prunedThisTestSessions, ...otherSessions];
     const updatedUser = { ...currentUser, testSessions: updatedSessions };
     setCurrentUser(updatedUser);
+    try { localStorage.setItem(CACHE_KEY_USER, JSON.stringify(updatedUser)); } catch {}
 
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
