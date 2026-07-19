@@ -1287,43 +1287,59 @@ export default function ExamSolutionAnalysisPage() {
                 </div>
               </div>
 
-              {/* Palette Grid */}
-              <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm flex flex-col flex-1">
-                <div className="mb-3 pb-2 border-b border-slate-100">
-                  <h4 className="font-bold text-slate-800 text-[10px] uppercase tracking-wide">{currentSection.name}</h4>
-                </div>
-                <div className="grid grid-cols-5 gap-2 mb-6">
-                  {currentSectionQuestions.map((q, idx) => {
-                    const stat = questionStatuses.find(s => s.questionId === q.id);
-                    const isActive = q.id === activeQuestion.id;
-
-                    let statusBg = 'bg-[#C8D3E0] text-slate-800';
-                    if (stat?.status === 'correct') {
-                      statusBg = 'bg-[#2E7D32] text-white';
-                    } else if (stat?.status === 'incorrect') {
-                      statusBg = 'bg-[#C62828] text-white';
-                    } else if (stat?.status === 'skipped') {
-                      statusBg = 'bg-slate-400 text-white';
-                    }
-
-                    const globalIdx = questions.findIndex(x => x.id === q.id);
+              {/* Palette Grid for All Sections */}
+              <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm flex flex-col flex-1 overflow-hidden min-h-0">
+                <div className="flex-1 overflow-y-auto space-y-4 pr-1 mb-3">
+                  {examSession.sections.map((sec) => {
+                    const secQuestions = questions.filter(q => q.sectionId === sec.id);
+                    if (secQuestions.length === 0) return null;
 
                     return (
-                      <button
-                        key={q.id}
-                        onClick={() => setActiveQuestionIdx(globalIdx)}
-                        className={`flex h-8 w-8 items-center justify-center border font-bold text-xs shadow-sm hover:opacity-90 active:scale-95 transition-all ${statusBg} ${
-                          isActive ? 'ring-2 ring-blue-500 ring-offset-1 z-10 border-white' : 'border-transparent'
-                        }`}
-                      >
-                        {idx + 1}
-                      </button>
+                      <div key={sec.id} className="flex flex-col">
+                        <div className="mb-2 pb-1 border-b border-slate-100 flex items-center justify-between">
+                          <h4 className="font-bold text-slate-800 text-[10px] uppercase tracking-wide truncate max-w-[150px]" title={sec.name}>
+                            {sec.name}
+                          </h4>
+                          <span className="text-[8px] text-slate-400 font-bold shrink-0">
+                            ({secQuestions.length} Qs)
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-5 gap-2">
+                          {secQuestions.map((q) => {
+                            const stat = questionStatuses.find(s => s.questionId === q.id);
+                            const isActive = q.id === activeQuestion.id;
+
+                            let statusBg = 'bg-[#C8D3E0] text-slate-800';
+                            if (stat?.status === 'correct') {
+                              statusBg = 'bg-[#2E7D32] text-white';
+                            } else if (stat?.status === 'incorrect') {
+                              statusBg = 'bg-[#C62828] text-white';
+                            } else if (stat?.status === 'skipped') {
+                              statusBg = 'bg-slate-400 text-white';
+                            }
+
+                            const globalIdx = questions.findIndex(x => x.id === q.id);
+
+                            return (
+                              <button
+                                key={q.id}
+                                onClick={() => setActiveQuestionIdx(globalIdx)}
+                                className={`flex h-8 w-8 items-center justify-center border font-bold text-xs shadow-sm hover:opacity-90 active:scale-95 transition-all cursor-pointer ${statusBg} ${
+                                  isActive ? 'ring-2 ring-blue-500 ring-offset-1 z-10 border-white' : 'border-transparent'
+                                }`}
+                              >
+                                {globalIdx + 1}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
 
                 {/* Legend Table */}
-                <div className="border-t border-slate-100 mt-auto pt-3">
+                <div className="border-t border-slate-100 pt-3 shrink-0 mt-auto">
                   <h5 className="text-[9px] font-black uppercase text-slate-400 tracking-wider mb-2">Palette Legend</h5>
                   <div className="space-y-1.5 text-[9px] font-bold text-slate-650">
                     <div className="flex items-center justify-between">
