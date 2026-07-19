@@ -749,7 +749,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                     </div>
 
                     {/* Question Text */}
-                    <div className="mb-4 text-xs text-slate-900 leading-relaxed font-normal bg-slate-50 p-3.5 border border-slate-200 rounded">
+                    <div className="mb-4 text-slate-900 leading-relaxed font-normal bg-slate-50 p-3.5 border border-slate-200 rounded" style={{ fontSize: `${questionFontSize}px` }}>
                       <MathJaxText
                         component="div"
                         className="markup-content font-sans"
@@ -778,7 +778,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                     </div>
 
                     {/* Options Grid */}
-                    <div className="space-y-2">
+                    <div className="space-y-2" style={{ fontSize: `${questionFontSize}px` }}>
                       {(questionLang === 'en'
                         ? currentQuestion.content.en.options
                         : currentQuestion.content.hi.options
@@ -834,9 +834,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                     <Menu className="h-3.5 w-3.5 text-slate-600" />
                     <span className="text-[7px] uppercase mt-0.5 font-bold">Palette</span>
                   </button>
-                  <button onClick={clearResponse} className="font-bold px-3 py-2.5 rounded shadow-sm transition text-[10px] bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer active:scale-95 flex-1 text-center">Clear</button>
-                  <button onClick={markForReviewAndNext} className="font-bold px-3 py-2.5 rounded shadow-sm transition text-[10px] bg-[#636f7a] hover:bg-[#505a63] text-white cursor-pointer active:scale-95 flex-1 text-center">Mark for Review</button>
-                  <button onClick={saveAndNext} className="font-bold px-4 py-2.5 rounded shadow transition text-[10px] bg-[#007600] hover:bg-green-800 text-white cursor-pointer active:scale-95 shrink-0">Save & Next</button>
+                  <button onClick={clearResponse} className="font-bold px-3 py-2.5 rounded shadow-sm transition text-[10px] bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer active:scale-95 flex-1 text-center">Clear Response</button>
                 </footer>
               );
             }
@@ -1023,6 +1021,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
             {/* Subject Tabs Switcher */}
             {(() => {
               const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+              if (isSsc) return null;
               if (!isSsc) {
                 return (
                   <div className="flex h-10 border-b border-slate-200 bg-[#F8FAFC] items-center shrink-0">
