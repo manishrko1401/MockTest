@@ -440,6 +440,15 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
             {/* Right: Section Time + Profile Photos */}
             <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={pauseExam}
+                className="flex items-center gap-1 bg-[#1a6baf] hover:bg-[#155a96] text-white text-[10px] font-extrabold px-2.5 py-1.5 rounded transition cursor-pointer active:scale-95 shrink-0"
+                title="Pause Test"
+              >
+                <Pause className="h-3 w-3 shrink-0" />
+                <span>PAUSE</span>
+              </button>
               <div className="flex flex-col items-center justify-center">
                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Section Time</span>
                 <span className="font-mono text-sm font-extrabold text-red-600 tracking-widest">
