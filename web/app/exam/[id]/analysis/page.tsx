@@ -93,12 +93,11 @@ export default function ExamSolutionAnalysisPage() {
   const [activeMobileTab, setActiveMobileTab] = useState<'analysis' | 'solutions'>('analysis');
 
   const getAttemptLabel = (idx: number, total: number, attemptLang: 'en' | 'hi' = 'en') => {
-    const diff = total - 1 - idx;
-    if (diff === 0) {
+    if (idx === 0) {
       return attemptLang === 'hi' ? 'वर्तमान प्रयास' : 'Current Attempt';
-    } else if (diff === 1) {
+    } else if (idx === 1) {
       return attemptLang === 'hi' ? 'पिछला प्रयास' : 'Previous Attempt';
-    } else if (diff === 2) {
+    } else if (idx === 2) {
       return attemptLang === 'hi' ? 'दूसरा प्रयास' : 'Second Previous';
     }
     return attemptLang === 'hi' ? `प्रयास ${idx + 1}` : `Attempt ${idx + 1}`;
@@ -260,7 +259,7 @@ export default function ExamSolutionAnalysisPage() {
   // Initialize to latest attempt index once attempts load
   useEffect(() => {
     if (attempts.length > 0) {
-      setSelectedAttemptIdx(attempts.length - 1);
+      setSelectedAttemptIdx(0);
     }
   }, [attempts.length]);
 
