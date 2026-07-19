@@ -514,7 +514,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
       })()}
 
       {/* PAUSE SCREEN BLUR OVERLAY */}
-      {!state.isTimerRunning && !isExamSubmitted && state.session && (
+      {!state.isTimerRunning && !isExamSubmitted && !showSubmitConfirm && state.session && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
           <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 md:p-8 text-center text-slate-800">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 text-yellow-600 mb-4 animate-pulse">

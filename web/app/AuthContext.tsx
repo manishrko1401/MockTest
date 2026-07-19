@@ -727,10 +727,40 @@ function writeCache(key: string, data: unknown) {
   try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch { /* quota exceeded — ignore */ }
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProfile?: string | null }> = ({ children, initialUserProfile }) => {
   const [usersList, setUsersList] = useState<MockUser[]>([]);
-  // Pre-populate currentUser from localStorage — shows logged-in state INSTANTLY on refresh
+  
+  const syncUserCookieAndCache = (user: MockUser | null) => {
+    if (typeof window === 'undefined') return;
+    if (user) {
+      try {
+        localStorage.setItem(CACHE_KEY_USER, JSON.stringify(user));
+        const simplifiedUser = {
+          id: user.id,
+          candidateCode: user.candidateCode,
+          name: user.name,
+          email: user.email,
+          mobile: user.mobile,
+          role: user.role,
+          subscriptionTier: user.subscriptionTier,
+          coins: user.coins
+        };
+        document.cookie = "tb_user_profile=" + encodeURIComponent(JSON.stringify(simplifiedUser)) + ";path=/;max-age=31536000";
+      } catch {}
+    } else {
+      try {
+        localStorage.removeItem(CACHE_KEY_USER);
+        document.cookie = "tb_user_profile=;path=/;max-age=0";
+      } catch {}
+    }
+  };
+  // Pre-populate currentUser from server-side cookie prop (first priority) or localStorage
   const [currentUser, setCurrentUser] = useState<MockUser | null>(() => {
+    if (initialUserProfile) {
+      try {
+        return JSON.parse(decodeURIComponent(initialUserProfile)) as MockUser;
+      } catch (e) {}
+    }
     if (typeof window === 'undefined') return null;
     // No TTL on user cache — we always re-validate in background, but show cached state immediately
     try {
@@ -804,17 +834,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (userData && userData.success && userData.user) {
         if (userData.user.isBlocked) {
           document.cookie = "tb_user_id=;path=/;max-age=0";
-          try { localStorage.removeItem(CACHE_KEY_USER); } catch {}
           setCurrentUser(null);
+          syncUserCookieAndCache(null);
         } else {
-          // 💾 Cache the fresh user so next refresh is instant
-          try { localStorage.setItem(CACHE_KEY_USER, JSON.stringify(userData.user)); } catch {}
           setCurrentUser(userData.user);
+          syncUserCookieAndCache(userData.user);
         }
       } else if (savedUserId) {
         document.cookie = "tb_user_id=;path=/;max-age=0";
-        try { localStorage.removeItem(CACHE_KEY_USER); } catch {}
         setCurrentUser(null);
+        syncUserCookieAndCache(null);
       }
     } catch (err) {
       console.error("Fetch data error:", err);
@@ -1479,7 +1508,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLanguageState(lang);
     document.cookie = "tb_lang=" + lang + ";path=/;max-age=31536000";
   };
-
   const login = async (email: string, password?: string): Promise<{ success: boolean; user?: MockUser; error?: string }> => {
     try {
       const res = await fetch('/api/db', {
@@ -1492,11 +1520,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const data = await res.json();
       if (data.success && data.user) {
-        // 💾 Cache user immediately so refresh is instant
-        try { localStorage.setItem(CACHE_KEY_USER, JSON.stringify(data.user)); } catch {}
         setCurrentUser(data.user);
+        syncUserCookieAndCache(data.user);
         document.cookie = "tb_user_id=" + data.user.id + ";path=/;max-age=31536000";
-        // Don't call fetchUsersList() here — catalog is already loaded; would cause unnecessary re-fetch
         return { success: true, user: data.user };
       }
       return { success: false, error: data.error || 'Login failed' };
@@ -1518,9 +1544,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const data = await res.json();
       if (data.success && data.user) {
-        // 💾 Cache user immediately so refresh is instant
-        try { localStorage.setItem(CACHE_KEY_USER, JSON.stringify(data.user)); } catch {}
         setCurrentUser(data.user);
+        syncUserCookieAndCache(data.user);
         setUsersList(prev => [data.user, ...prev]);
         document.cookie = "tb_user_id=" + data.user.id + ";path=/;max-age=31536000";
         return { success: true };
@@ -1534,7 +1559,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setCurrentUser(null);
-    try { localStorage.removeItem(CACHE_KEY_USER); } catch {}
+    syncUserCookieAndCache(null);
     document.cookie = "tb_user_id=;path=/;max-age=0";
   };
 
@@ -1547,8 +1572,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updatedUser = { ...currentUser, name: trimmedName, email: trimmedEmail, mobile: trimmedMobile };
     setCurrentUser(updatedUser);
-    // Keep the user cache in sync so next refresh still shows updated name/email
-    try { localStorage.setItem(CACHE_KEY_USER, JSON.stringify(updatedUser)); } catch {}
+    syncUserCookieAndCache(updatedUser);
 
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
