@@ -147,6 +147,27 @@ export default function AdminAnalytics() {
     }
   };
 
+  const deleteFeedback = async (id: string) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this feedback and rating entry? This action cannot be undone.");
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`/api/feedback?id=${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Feedback deleted successfully.');
+        setFeedbacksList(prev => prev.filter(f => f.id !== id));
+      } else {
+        showToast(data.error || 'Failed to delete feedback.');
+      }
+    } catch (e: any) {
+      console.error('Failed to delete feedback:', e);
+      showToast(e.message || 'Connection error');
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'feedback') {
       fetchFeedbacks();
@@ -4553,12 +4574,13 @@ export default function AdminAnalytics() {
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">App/Web Rating</th>
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Exam Rating</th>
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Written Feedback</th>
+                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {loadingFeedbacks ? (
                         <tr>
-                          <td colSpan={6} className="py-24 text-center">
+                          <td colSpan={7} className="py-24 text-center">
                             <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-3"></div>
                             <p className="text-xs text-slate-400 font-bold">Loading feedbacks data...</p>
                           </td>
@@ -4613,11 +4635,20 @@ export default function AdminAnalytics() {
                                 <span className="text-[10px] text-slate-400 italic">No comment provided</span>
                               )}
                             </td>
+                            <td className="py-4 px-4 text-right">
+                              <button
+                                onClick={() => deleteFeedback(f.id)}
+                                className="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-900/30 dark:text-red-400 font-black text-[9px] uppercase tracking-wider px-2 py-1 rounded-lg transition shadow-sm cursor-pointer"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                Delete
+                              </button>
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={6} className="py-16 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
+                          <td colSpan={7} className="py-16 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
                             No feedbacks or ratings submitted by users yet.
                           </td>
                         </tr>
