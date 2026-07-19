@@ -183,6 +183,7 @@ export default function MobileTestScreen({
 
   // Refs to avoid stale closures inside the timer setInterval
   const sectionsRef = useRef<MobileSection[]>([]);
+  const questionsRef = useRef<MobileQuestion[]>([]);
   const totalDurationRef = useRef<number>(3600);
   const hasSectionalTimingRef = useRef<boolean>(false);
   const currentSectionIdxRef = useRef<number>(0);
@@ -196,6 +197,8 @@ export default function MobileTestScreen({
 
   const handleSaveAndNextRef = useRef<() => void>(() => {});
   const handlePreviousQuestionRef = useRef<() => void>(() => {});
+  // Ref so the timer interval always calls the latest handleExamSubmit without stale closure
+  const handleExamSubmitRef = useRef<(forced?: boolean) => void>(() => {});
   const questionsPagerRef = useRef<ScrollView>(null);
   const lastSectionIdxRef = useRef<number>(0);
 
@@ -585,6 +588,7 @@ export default function MobileTestScreen({
 
   // Keep refs in sync with state so the timer interval always reads fresh values
   useEffect(() => { sectionsRef.current = sections; }, [sections]);
+  useEffect(() => { questionsRef.current = questions; }, [questions]);
   useEffect(() => { totalDurationRef.current = totalDuration; }, [totalDuration]);
   useEffect(() => { hasSectionalTimingRef.current = hasSectionalTiming; }, [hasSectionalTiming]);
   useEffect(() => { currentSectionIdxRef.current = currentSectionIdx; }, [currentSectionIdx]);
@@ -664,13 +668,13 @@ export default function MobileTestScreen({
               }, 50);
               return 0;
             } else {
-              // Last section expired — force submit
-              handleExamSubmit(true);
+              // Last section expired — force submit (use ref to avoid stale closure)
+              handleExamSubmitRef.current(true);
               return 0;
             }
           } else {
-            // Non-sectional: global timer expired
-            handleExamSubmit(true);
+            // Non-sectional: global timer expired (use ref to avoid stale closure)
+            handleExamSubmitRef.current(true);
             return 0;
           }
         }
@@ -1024,6 +1028,14 @@ export default function MobileTestScreen({
       setLoading(true);
       setLoadingText('Processing your answers...');
 
+      // ── Read from REFS not state — avoids stale closure when called from timer ──
+      // The timer interval only depends on [loading, isTimerRunning], so `responses`,
+      // `questions`, `sections` and `violationsCount` would be stale state in that closure.
+      const liveResponses = responsesRef.current;
+      const liveQuestions = questionsRef.current;
+      const liveSections = sectionsRef.current;
+      const liveViolations = violationsCountRef.current;
+
       // Compute stats locally — no network needed
       let correctCount = 0;
       let incorrectCount = 0;
@@ -1031,10 +1043,10 @@ export default function MobileTestScreen({
       let totalMarks = 0;
       let totalMaxScore = 0;
 
-      questions.forEach((q) => {
-        const resp = responses[q.id];
+      liveQuestions.forEach((q) => {
+        const resp = liveResponses[q.id];
         const selected = resp ? (resp.selectedOptionIndex !== null ? resp.selectedOptionIndex : resp.tempOptionIndex) : null;
-        const qSection = sections.find((s) => s.id === q.sectionId);
+        const qSection = liveSections.find((s) => s.id === q.sectionId);
         const positiveMark = qSection ? qSection.positiveMark : 2;
         const negativeMark = qSection ? qSection.negativeMark : 0.5;
 
@@ -1051,18 +1063,18 @@ export default function MobileTestScreen({
         }
       });
 
-      const totalQs = questions.length;
+      const totalQs = liveQuestions.length;
       const accuracy = totalQs > 0 ? (correctCount / (correctCount + incorrectCount || 1)) * 100 : 0;
 
       const formattedResponses: Record<string, any> = {};
-      Object.entries(responses).forEach(([qId, val]) => {
+      Object.entries(liveResponses).forEach(([qId, val]) => {
         formattedResponses[qId] = {
           selectedOptionIndex: val.selectedOptionIndex !== null ? val.selectedOptionIndex : val.tempOptionIndex,
           elapsedSeconds: val.elapsedSeconds
         };
       });
 
-       const totalSpentSeconds = Object.values(responses).reduce((sum, r) => sum + (r.elapsedSeconds || 0), 0);
+       const totalSpentSeconds = Object.values(liveResponses).reduce((sum, r: any) => sum + (r.elapsedSeconds || 0), 0);
 
        const attemptPayload = {
          userId: currentUser.id,
@@ -1071,7 +1083,7 @@ export default function MobileTestScreen({
          maxScore: totalMaxScore,
          accuracy,
          durationSeconds: Math.max(1, totalSpentSeconds),
-         violations: violationsCount,
+         violations: liveViolations,
          responses: formattedResponses
        };
 
@@ -1210,6 +1222,12 @@ export default function MobileTestScreen({
       });
     }
   };
+
+  // Keep handleExamSubmitRef always pointing at the latest handleExamSubmit
+  // so the timer interval can call it without a stale closure
+  useEffect(() => {
+    handleExamSubmitRef.current = handleExamSubmit;
+  });
 
   if (loading) {
     return (
