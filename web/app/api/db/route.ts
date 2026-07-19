@@ -1479,6 +1479,9 @@ async function handleGetCustomQuestions(data: any) {
           Key: key,
         })
       );
+      if (!response.Body) {
+        throw new Error("S3 GetObject response body is undefined");
+      }
       const bodyContents = await response.Body.transformToString();
       questions = JSON.parse(bodyContents);
     } catch (err) {
