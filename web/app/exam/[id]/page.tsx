@@ -426,14 +426,14 @@ function TcsIonEngine({ testId }: { testId: string }) {
             </div>
 
             {/* Center: Test Name + Zoom Buttons + Hub ID */}
-            <div className="flex-1 flex flex-col items-center justify-center px-2">
-              <span className="font-bold text-[11px] sm:text-xs text-slate-900 text-center leading-tight">
+            <div className="flex-1 flex flex-col items-center justify-center px-2 min-w-0">
+              <span className="font-extrabold text-[11px] sm:text-[12px] text-slate-900 text-center leading-snug line-clamp-2 w-full">
                 {session.testTitle}
               </span>
-              <div className="flex items-center gap-3 mt-1">
+              <div className="flex items-center gap-3 mt-1 flex-wrap justify-center">
                 <button type="button" onClick={() => alert('Zoom in not supported.')} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (+)</button>
                 <button type="button" onClick={() => alert('Zoom out not supported.')} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (-)</button>
-                <span className="text-[10px] font-semibold text-slate-600">Hub ID : {currentUser?.candidateCode || currentUser?.id?.slice(0, 12) || 'GUEST_HUB'}</span>
+                <span className="text-[10px] font-semibold text-slate-600 whitespace-nowrap">Hub ID : {currentUser?.candidateCode || currentUser?.id?.slice(0, 12) || 'GUEST_HUB'}</span>
               </div>
             </div>
 
