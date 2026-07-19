@@ -97,6 +97,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [questionFontSize, setQuestionFontSize] = useState(14); // px, default 14px
 
   useEffect(() => {
     const handleFsChange = () => {
@@ -431,8 +432,8 @@ function TcsIonEngine({ testId }: { testId: string }) {
                 {session.testTitle}
               </span>
               <div className="flex items-center gap-3 mt-1 flex-wrap justify-center">
-                <button type="button" onClick={() => alert('Zoom in not supported.')} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (+)</button>
-                <button type="button" onClick={() => alert('Zoom out not supported.')} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (-)</button>
+                <button type="button" onClick={() => setQuestionFontSize(s => Math.min(s + 2, 24))} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (+)</button>
+                <button type="button" onClick={() => setQuestionFontSize(s => Math.max(s - 2, 10))} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (-)</button>
                 <span className="text-[10px] font-semibold text-slate-600 whitespace-nowrap">Hub ID : {currentUser?.candidateCode || currentUser?.id?.slice(0, 12) || 'GUEST_HUB'}</span>
               </div>
             </div>
@@ -473,23 +474,17 @@ function TcsIonEngine({ testId }: { testId: string }) {
         const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
         if (!isSsc) return null;
         return (
-          <div className="flex items-center justify-between bg-white border-b border-slate-300 px-3 py-1.5 shrink-0 text-[11px] select-none gap-2">
-            {/* Left: short test title */}
-            <span className="text-slate-700 font-semibold truncate max-w-[180px] text-[10px] hidden md:inline shrink-0">
-              {session.testTitle.length > 32 ? session.testTitle.slice(0, 32) + '…' : session.testTitle}
+          <div className="flex items-center bg-white border-b border-slate-300 px-3 py-1 shrink-0 select-none gap-2 flex-wrap">
+            {/* Section Name — small green badge box */}
+            <span className="bg-[#007600] text-white text-[10px] font-bold px-2 py-0.5 rounded shrink-0 whitespace-nowrap">
+              {currentSection.name}
             </span>
 
-            {/* Center: Nav links */}
-            <div className="flex items-center gap-3 text-[11px] font-bold shrink-0">
-              <button type="button" onClick={() => alert('Symbols legend')} className="text-blue-700 hover:underline uppercase cursor-pointer">Symbols</button>
-              <button type="button" onClick={() => alert('Instructions')} className="text-blue-700 hover:underline uppercase cursor-pointer">Instructions</button>
-              <button type="button" onClick={() => alert('Overall Test Summary')} className="text-blue-700 hover:underline uppercase cursor-pointer hidden lg:inline">Overall Test Summary</button>
-            </div>
-
-            {/* Right: Action Buttons */}
-            <div className="flex items-center gap-1.5 shrink-0">
+            {/* Action Buttons — same line as section name */}
+            <div className="flex items-center gap-1.5 flex-wrap">
               <button type="button" onClick={markForReviewAndNext} className="bg-[#636f7a] hover:bg-[#505a63] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Mark for Review</button>
               <button type="button" onClick={saveAndNext} className="bg-[#636f7a] hover:bg-[#505a63] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Save &amp; Next</button>
+              <button type="button" onClick={clearResponse} className="bg-[#636f7a] hover:bg-[#505a63] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Clear Response</button>
               <button type="button" onClick={() => { pauseExam(); setShowSubmitConfirm(true); }} className="bg-[#1A3B5C] hover:bg-[#142d47] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Submit Test</button>
             </div>
           </div>
@@ -824,13 +819,29 @@ function TcsIonEngine({ testId }: { testId: string }) {
             )}
           </div>
 
-          {/* 5. STICKY ACTIONS BAR */}
+          {/* 5. STICKY ACTIONS BAR (mobile) */}
           {(() => {
             const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+            if (isSsc) {
+              // SSC mobile footer: only palette button + clear (actions are in sub-header)
+              return (
+                <footer className="fixed bottom-0 inset-x-0 border-t z-20 px-3 py-2 flex items-center gap-2 shadow-inner bg-[#E9ECF2] border-slate-300">
+                  <button
+                    onClick={() => setMobilePaletteOpen(true)}
+                    className="bg-white border border-slate-300 text-slate-700 font-black p-2 rounded shadow-sm hover:bg-slate-50 text-[10px] w-12 flex flex-col items-center justify-center shrink-0 cursor-pointer"
+                    title="Show Palette"
+                  >
+                    <Menu className="h-3.5 w-3.5 text-slate-600" />
+                    <span className="text-[7px] uppercase mt-0.5 font-bold">Palette</span>
+                  </button>
+                  <button onClick={clearResponse} className="font-bold px-3 py-2.5 rounded shadow-sm transition text-[10px] bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer active:scale-95 flex-1 text-center">Clear</button>
+                  <button onClick={markForReviewAndNext} className="font-bold px-3 py-2.5 rounded shadow-sm transition text-[10px] bg-[#636f7a] hover:bg-[#505a63] text-white cursor-pointer active:scale-95 flex-1 text-center">Mark for Review</button>
+                  <button onClick={saveAndNext} className="font-bold px-4 py-2.5 rounded shadow transition text-[10px] bg-[#007600] hover:bg-green-800 text-white cursor-pointer active:scale-95 shrink-0">Save & Next</button>
+                </footer>
+              );
+            }
             return (
-              <footer className={`fixed bottom-0 inset-x-0 border-t z-20 px-3 py-2 flex items-center justify-between gap-2 shadow-inner ${
-                !isSsc ? 'bg-white border-slate-200' : 'bg-[#E9ECF2] border-slate-202'
-              }`}>
+              <footer className="fixed bottom-0 inset-x-0 border-t z-20 px-3 py-2 flex items-center justify-between gap-2 shadow-inner bg-white border-slate-200">
                 <button
                   onClick={() => setMobilePaletteOpen(true)}
                   className="bg-white border border-slate-300 text-slate-700 font-black p-2 rounded shadow-sm hover:bg-slate-50 text-[10px] w-12 flex flex-col items-center justify-center shrink-0 cursor-pointer"
@@ -839,38 +850,11 @@ function TcsIonEngine({ testId }: { testId: string }) {
                   <Menu className="h-3.5 w-3.5 text-slate-600" />
                   <span className="text-[7px] uppercase mt-0.5 font-bold">Palette</span>
                 </button>
-
                 <div className="flex gap-2 flex-1">
-                  <button
-                    onClick={markForReviewAndNext}
-                    className={`font-bold px-2 py-2.5 rounded shadow-sm transition text-[10px] flex-1 text-center cursor-pointer active:scale-95 ${
-                      !isSsc 
-                        ? 'bg-[#B3E5FC]/60 text-[#006064] border border-[#B3E5FC]' 
-                        : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 active:bg-slate-100'
-                    }`}
-                  >
-                    Review & Next
-                  </button>
-                  <button
-                    onClick={clearResponse}
-                    className={`font-bold px-2 py-2.5 rounded shadow-sm transition text-[10px] flex-1 text-center cursor-pointer active:scale-95 ${
-                      !isSsc 
-                        ? 'bg-[#B3E5FC]/60 text-[#006064] border border-[#B3E5FC]' 
-                        : 'bg-white border border-slate-300 text-slate-750 hover:bg-slate-50 active:bg-slate-100'
-                    }`}
-                  >
-                    Clear
-                  </button>
+                  <button onClick={markForReviewAndNext} className="font-bold px-2 py-2.5 rounded shadow-sm transition text-[10px] flex-1 text-center cursor-pointer active:scale-95 bg-[#B3E5FC]/60 text-[#006064] border border-[#B3E5FC]">Review & Next</button>
+                  <button onClick={clearResponse} className="font-bold px-2 py-2.5 rounded shadow-sm transition text-[10px] flex-1 text-center cursor-pointer active:scale-95 bg-[#B3E5FC]/60 text-[#006064] border border-[#B3E5FC]">Clear</button>
                 </div>
-
-                <button
-                  onClick={saveAndNext}
-                  className={`font-bold px-4 py-2.5 rounded shadow transition text-[10px] shrink-0 cursor-pointer active:scale-95 ${
-                    !isSsc ? 'bg-[#0D88B9] hover:bg-[#0A739C] text-white' : 'bg-[#2E7D32] hover:bg-green-800 text-white'
-                  }`}
-                >
-                  Save & Next
-                </button>
+                <button onClick={saveAndNext} className="font-bold px-4 py-2.5 rounded shadow transition text-[10px] shrink-0 cursor-pointer active:scale-95 bg-[#0D88B9] hover:bg-[#0A739C] text-white">Save & Next</button>
               </footer>
             );
           })()}
@@ -1234,7 +1218,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                       </div>
 
                       {/* Render Question Text Based on active Language */}
-                      <div className="mb-6 text-sm text-slate-900 leading-relaxed font-normal bg-slate-50 p-4 border border-slate-200 rounded">
+                      <div className="mb-6 text-slate-900 leading-relaxed font-normal bg-slate-50 p-4 border border-slate-200 rounded" style={{ fontSize: `${questionFontSize}px` }}>
                         <MathJaxText
                           component="div"
                           className="markup-content font-sans"
@@ -1263,7 +1247,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                       </div>
 
                       {/* Options List Grid */}
-                      <div className="space-y-3 pl-2">
+                      <div className="space-y-3 pl-2" style={{ fontSize: `${questionFontSize}px` }}>
                         {(questionLang === 'en'
                           ? currentQuestion.content.en.options
                           : currentQuestion.content.hi.options
@@ -1304,43 +1288,31 @@ function TcsIonEngine({ testId }: { testId: string }) {
               )}
             </div>
 
-            {/* Bottom Actions Row */}
+            {/* Bottom Actions Row — SSC uses sub-header for Mark/Save/Submit, so only Clear Response shown here */}
             {(() => {
               const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+              if (isSsc) {
+                return null; // SSC: actions are in the sub-header bar, no desktop footer needed
+              }
               return (
-                <footer className={`flex flex-col sm:flex-row sm:h-14 items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 sm:py-0 shrink-0 ${
-                  !isSsc ? 'bg-white' : 'bg-[#E9ECF2]'
-                }`}>
+                <footer className="flex flex-col sm:flex-row sm:h-14 items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 sm:py-0 shrink-0 bg-white">
                   <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-start">
                     <button
                       onClick={markForReviewAndNext}
-                      className={`font-bold px-3 sm:px-4 py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs flex-1 sm:flex-none cursor-pointer active:scale-95 ${
-                        !isSsc 
-                          ? 'bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC]' 
-                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 active:bg-slate-100'
-                      }`}
+                      className="font-bold px-3 sm:px-4 py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs flex-1 sm:flex-none cursor-pointer active:scale-95 bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC]"
                     >
                       Mark for Review & Next
                     </button>
                     <button
                       onClick={clearResponse}
-                      className={`font-bold px-3 sm:px-4 py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs flex-1 sm:flex-none cursor-pointer active:scale-95 ${
-                        !isSsc 
-                          ? 'bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC]' 
-                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 active:bg-slate-100'
-                      }`}
+                      className="font-bold px-3 sm:px-4 py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs flex-1 sm:flex-none cursor-pointer active:scale-95 bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC]"
                     >
                       Clear Response
                     </button>
                   </div>
-
                   <button
                     onClick={saveAndNext}
-                    className={`font-bold px-6 py-2.5 rounded shadow transition text-[10px] sm:text-xs w-full sm:w-auto cursor-pointer active:scale-95 ${
-                      !isSsc 
-                        ? 'bg-[#0D88B9] hover:bg-[#0A739C] text-white' 
-                        : 'bg-[#2E7D32] hover:bg-green-800 text-white'
-                    }`}
+                    className="font-bold px-6 py-2.5 rounded shadow transition text-[10px] sm:text-xs w-full sm:w-auto cursor-pointer active:scale-95 bg-[#0D88B9] hover:bg-[#0A739C] text-white"
                   >
                     Save & Next
                   </button>
