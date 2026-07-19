@@ -96,6 +96,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   useEffect(() => {
     const handleFsChange = () => {
@@ -973,7 +974,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                       <button
                         onClick={() => {
                           setMobilePaletteOpen(false);
-                          submitExam();
+                          setShowSubmitConfirm(true);
                         }}
                         className={`w-full text-white font-bold py-3 rounded-xl shadow text-xs uppercase cursor-pointer active:scale-95 transition-all ${
                           !isSsc ? 'bg-[#0D88B9] hover:bg-[#0A739C]' : 'bg-[#1A3B5C] hover:bg-slate-800'
@@ -1474,7 +1475,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                 {/* Submit Block Section */}
                 <div className={`p-4 border-t border-slate-200 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
                   <button
-                    onClick={submitExam}
+                    onClick={() => setShowSubmitConfirm(true)}
                     className={`w-full text-white font-bold py-2.5 rounded shadow transition cursor-pointer text-xs uppercase tracking-wider active:scale-95 ${
                       !isSsc ? 'bg-[#0D88B9] hover:bg-[#0A739C]' : 'bg-[#1A3B5C] hover:bg-slate-800'
                     }`}
@@ -1486,6 +1487,43 @@ function TcsIonEngine({ testId }: { testId: string }) {
               </aside>
             );
           })()}
+        </div>
+      )}
+
+      {showSubmitConfirm && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400 mb-4">
+              <AlertCircle className="h-6 w-6 shrink-0" />
+              <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white">
+                {language === 'hi' ? 'परीक्षा सबमिट करें?' : 'Submit Mock Paper?'}
+              </h4>
+            </div>
+            
+            <p className="text-slate-600 dark:text-slate-350 text-xs leading-relaxed mb-6 font-medium">
+              {language === 'hi'
+                ? 'क्या आप सुनिश्चित हैं कि आप अपनी उत्तर पुस्तिका अभी समाप्त और सबमिट करना चाहते हैं?'
+                : 'Are you sure you want to finish and submit your exam sheet now?'}
+            </p>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowSubmitConfirm(false)}
+                className="bg-slate-100 dark:bg-slate-805 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 border border-slate-200 dark:border-slate-700"
+              >
+                {language === 'hi' ? 'रद्द करें' : 'Cancel'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowSubmitConfirm(false);
+                  submitExam();
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4.5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-500/20 cursor-pointer active:scale-95"
+              >
+                {language === 'hi' ? 'सबमिट करें' : 'Submit Paper'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
