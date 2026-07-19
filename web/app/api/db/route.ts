@@ -299,13 +299,10 @@ async function handleBootstrap() {
 
   // Use memory cache if populated
   if (catalogCache.examCatalog && catalogCache.noticesList) {
-    return NextResponse.json({
-      success: true,
-      usersList: [],
-      noticesList: catalogCache.noticesList,
-      examCatalog: catalogCache.examCatalog,
-      reportedQuestionsList: [],
-    });
+    return NextResponse.json(
+      { success: true, usersList: [], noticesList: catalogCache.noticesList, examCatalog: catalogCache.examCatalog, reportedQuestionsList: [] },
+      { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
+    );
   }
 
   // Fetch all users list is now disabled in public bootstrap to reduce egress and fix security vulnerability.
@@ -342,13 +339,10 @@ async function handleBootstrap() {
   // Admins will fetch this data separately using the 'admin-data' action.
   const reportedQuestionsList: any[] = [];
 
-  return NextResponse.json({
-    success: true,
-    usersList,
-    noticesList,
-    examCatalog,
-    reportedQuestionsList,
-  });
+  return NextResponse.json(
+    { success: true, usersList, noticesList, examCatalog, reportedQuestionsList },
+    { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
+  );
 }
 
 // -----------------------------------------------------------------------------

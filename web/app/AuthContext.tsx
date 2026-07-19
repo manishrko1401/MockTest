@@ -708,13 +708,38 @@ const DEFAULT_NOTICES: Notice[] = [
   { id: 'a3', title: 'IBPS Clerk 2026 Prelims Call Letter Available', date: '19 June 2026', publishDate: '2026-06-19', type: 'CALL LETTER', category: 'admit_card', url: 'https://ibps.in' }
 ];
 
+const CACHE_KEY_CATALOG = 'mth_catalog_v1';
+const CACHE_KEY_NOTICES = 'mth_notices_v1';
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes — re-fetch if stale
+
+function readCache<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL_MS) return null; // expired
+    return data as T;
+  } catch { return null; }
+}
+
+function writeCache(key: string, data: unknown) {
+  try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch { /* quota exceeded — ignore */ }
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [usersList, setUsersList] = useState<MockUser[]>([]);
   const [currentUser, setCurrentUser] = useState<MockUser | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [noticesList, setNoticesList] = useState<Notice[]>([]);
+  // Pre-populate from localStorage so the UI renders immediately from cache
+  const [noticesList, setNoticesList] = useState<Notice[]>(() => {
+    if (typeof window === 'undefined') return [];
+    return readCache<Notice[]>(CACHE_KEY_NOTICES) || [];
+  });
   const [language, setLanguageState] = useState<'en' | 'hi'>('en');
-  const [examCatalog, setExamCatalog] = useState<TestCategory[]>([]);
+  const [examCatalog, setExamCatalog] = useState<TestCategory[]>(() => {
+    if (typeof window === 'undefined') return [];
+    return readCache<TestCategory[]>(CACHE_KEY_CATALOG) || [];
+  });
   const [reportedQuestionsList, setReportedQuestionsList] = useState<ReportedQuestion[]>([]);
 
   const sortNotices = (list: Notice[]) => {
@@ -730,48 +755,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUsersList = async () => {
     try {
-      const res = await fetch('/api/db', {
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return null;
+      };
+      const savedUserId = getCookie('tb_user_id');
+
+      // 🚀 Fire bootstrap + user fetch IN PARALLEL — eliminates the serial waterfall
+      const bootstrapPromise = fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'bootstrap' })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setUsersList([]);
-        setNoticesList(sortNotices(data.noticesList || []));
-        setExamCatalog(data.examCatalog || []);
-        setReportedQuestionsList([]);
+      }).then(r => r.json());
 
-        const getCookie = (name: string) => {
-          const value = `; ${document.cookie}`;
-          const parts = value.split(`; ${name}=`);
-          if (parts.length === 2) return parts.pop()?.split(';').shift();
-          return null;
-        };
-        const savedUserId = getCookie('tb_user_id');
-        if (savedUserId) {
-          // Fetch user details from database directly to avoid exposing all users
-          const userRes = await fetch('/api/db', {
+      const userPromise = savedUserId
+        ? fetch('/api/db', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'get-user-details',
-              data: { userId: savedUserId }
-            })
-          });
-          const userData = await userRes.json();
-          if (userData.success && userData.user) {
-            if (userData.user.isBlocked) {
-              document.cookie = "tb_user_id=;path=/;max-age=0";
-              setCurrentUser(null);
-            } else {
-              setCurrentUser(userData.user);
-            }
-          } else {
-            document.cookie = "tb_user_id=;path=/;max-age=0";
-            setCurrentUser(null);
-          }
+            body: JSON.stringify({ action: 'get-user-details', data: { userId: savedUserId } })
+          }).then(r => r.json())
+        : Promise.resolve(null);
+
+      const [data, userData] = await Promise.all([bootstrapPromise, userPromise]);
+
+      if (data.success) {
+        setUsersList([]);
+        const freshNotices = sortNotices(data.noticesList || []);
+        const freshCatalog = data.examCatalog || [];
+        setNoticesList(freshNotices);
+        setExamCatalog(freshCatalog);
+        setReportedQuestionsList([]);
+        // 💾 Persist to localStorage so the NEXT page load is instant
+        writeCache(CACHE_KEY_NOTICES, freshNotices);
+        writeCache(CACHE_KEY_CATALOG, freshCatalog);
+      }
+
+      if (userData && userData.success && userData.user) {
+        if (userData.user.isBlocked) {
+          document.cookie = "tb_user_id=;path=/;max-age=0";
+          setCurrentUser(null);
+        } else {
+          setCurrentUser(userData.user);
         }
+      } else if (savedUserId) {
+        document.cookie = "tb_user_id=;path=/;max-age=0";
+        setCurrentUser(null);
       }
     } catch (err) {
       console.error("Fetch data error:", err);
@@ -920,6 +950,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updated = sortNotices([newNotice, ...noticesList]);
     setNoticesList(updated);
+    try { localStorage.removeItem(CACHE_KEY_NOTICES); } catch {}
 
     fetch('/api/db', {
       method: 'POST',
@@ -934,6 +965,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteNotice = (id: string) => {
     const updated = sortNotices(noticesList.filter(n => n.id !== id));
     setNoticesList(updated);
+    try { localStorage.removeItem(CACHE_KEY_NOTICES); } catch {}
 
     fetch('/api/db', {
       method: 'POST',
@@ -958,6 +990,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     const updated = [...examCatalog, newCategory];
     setExamCatalog(updated);
+    try { localStorage.removeItem(CACHE_KEY_CATALOG); } catch {}
 
     fetch('/api/db', {
       method: 'POST',
@@ -972,6 +1005,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteCategory = (categoryId: string) => {
     const updated = examCatalog.filter(c => c.id !== categoryId);
     setExamCatalog(updated);
+    try { localStorage.removeItem(CACHE_KEY_CATALOG); } catch {}
 
     fetch('/api/db', {
       method: 'POST',
