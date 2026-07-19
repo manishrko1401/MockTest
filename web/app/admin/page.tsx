@@ -311,6 +311,10 @@ export default function AdminAnalytics() {
   const [testiInitials, setTestiInitials] = useState('');
   const [testiGradient, setTestiGradient] = useState('from-blue-600 to-cyan-500');
   const [testiPhotoUrl, setTestiPhotoUrl] = useState('');
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isUploadingNotice, setIsUploadingNotice] = useState(false);
+  const [isUploadingCategoryLogo, setIsUploadingCategoryLogo] = useState(false);
+  const [isUploadingAnnouncement, setIsUploadingAnnouncement] = useState(false);
   const [testiSearch, setTestiSearch] = useState('');
 
   // User Management state from context
@@ -864,16 +868,55 @@ export default function AdminAnalytics() {
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setTestiPhotoUrl(reader.result as string);
-      showToast("Topper photo uploaded successfully!");
-    };
-    reader.readAsDataURL(file);
+    setIsUploadingPhoto(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTestiPhotoUrl(data.url);
+        showToast("Topper photo uploaded to Tigris successfully!");
+      } else {
+        showToast(`Upload failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (err) {
+      console.error("Photo upload error:", err);
+      showToast("Upload failed due to connection error.");
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const uploadFileToTigrisDirect = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        return data.url;
+      } else {
+        showToast(`Upload failed: ${data.error || "Unknown error"}`);
+        return null;
+      }
+    } catch (err) {
+      console.error("Direct S3 upload error:", err);
+      showToast("Upload failed due to connection error.");
+      return null;
+    }
   };
 
   const handleAddTestimonialSubmit = (e: React.FormEvent) => {
@@ -2533,14 +2576,42 @@ export default function AdminAnalytics() {
                         )}
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Attachment URL (Optional)</label>
-                          <input
-                            type="url"
-                            value={noticeUrl}
-                            onChange={(e) => setNoticeUrl(e.target.value)}
-                            placeholder="https://example.com/advisory"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
-                          />
+                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Attachment URL / File (Optional)</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={noticeUrl}
+                              onChange={(e) => setNoticeUrl(e.target.value)}
+                              placeholder="https://example.com/advisory or upload file"
+                              className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                            />
+                            <input
+                              type="file"
+                              accept="application/pdf,image/*"
+                              id="notice-attachment-upload"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setIsUploadingNotice(true);
+                                const url = await uploadFileToTigrisDirect(file);
+                                if (url) {
+                                  setNoticeUrl(url);
+                                  showToast("Attachment uploaded successfully to Tigris!");
+                                }
+                                setIsUploadingNotice(false);
+                              }}
+                            />
+                            <label
+                              htmlFor={isUploadingNotice ? undefined : "notice-attachment-upload"}
+                              className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
+                                isUploadingNotice ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
+                              }`}
+                            >
+                              <Upload className={`h-3.5 w-3.5 ${isUploadingNotice ? "animate-bounce" : ""}`} />
+                              {isUploadingNotice ? "Uploading..." : "Upload File"}
+                            </label>
+                          </div>
                         </div>
                       </div>
 
@@ -2744,13 +2815,41 @@ export default function AdminAnalytics() {
                         <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
                           Category Logo Image URL
                         </label>
-                        <input
-                          type="text"
-                          value={newCategoryLogoUrl}
-                          onChange={(e) => setNewCategoryLogoUrl(e.target.value)}
-                          placeholder="e.g. https://example.com/logo.png"
-                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newCategoryLogoUrl}
+                            onChange={(e) => setNewCategoryLogoUrl(e.target.value)}
+                            placeholder="e.g. https://example.com/logo.png or upload image"
+                            className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                          />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            id="new-category-logo-upload"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setIsUploadingCategoryLogo(true);
+                              const url = await uploadFileToTigrisDirect(file);
+                              if (url) {
+                                setNewCategoryLogoUrl(url);
+                                showToast("Logo uploaded successfully to Tigris!");
+                              }
+                              setIsUploadingCategoryLogo(false);
+                            }}
+                          />
+                          <label
+                            htmlFor={isUploadingCategoryLogo ? undefined : "new-category-logo-upload"}
+                            className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
+                              isUploadingCategoryLogo ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
+                            }`}
+                          >
+                            <Upload className={`h-3.5 w-3.5 ${isUploadingCategoryLogo ? "animate-bounce" : ""}`} />
+                            {isUploadingCategoryLogo ? "Uploading..." : "Upload Logo"}
+                          </label>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
@@ -2827,13 +2926,41 @@ export default function AdminAnalytics() {
                           {/* Logo */}
                           <td className="py-3.5 px-4">
                             {editingCategoryId === cat.id ? (
-                              <input
-                                type="text"
-                                value={editingCategoryLogoUrl}
-                                onChange={(e) => setEditingCategoryLogoUrl(e.target.value)}
-                                placeholder="e.g. Logo URL"
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-24"
-                              />
+                              <div className="flex items-center gap-1.5 w-36">
+                                <input
+                                  type="text"
+                                  value={editingCategoryLogoUrl}
+                                  onChange={(e) => setEditingCategoryLogoUrl(e.target.value)}
+                                  placeholder="e.g. Logo URL"
+                                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-20 flex-1 min-w-0"
+                                />
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  id={`edit-category-logo-${cat.id}`}
+                                  className="hidden"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    setIsUploadingCategoryLogo(true);
+                                    const url = await uploadFileToTigrisDirect(file);
+                                    if (url) {
+                                      setEditingCategoryLogoUrl(url);
+                                      showToast("Logo uploaded successfully to Tigris!");
+                                    }
+                                    setIsUploadingCategoryLogo(false);
+                                  }}
+                                />
+                                <label
+                                  htmlFor={isUploadingCategoryLogo ? undefined : `edit-category-logo-${cat.id}`}
+                                  className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 p-1.5 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center justify-center cursor-pointer shrink-0 ${
+                                    isUploadingCategoryLogo ? "opacity-50 pointer-events-none" : ""
+                                  }`}
+                                  title="Upload Logo to Tigris"
+                                >
+                                  <Upload className={`h-3.5 w-3.5 ${isUploadingCategoryLogo ? "animate-bounce" : ""}`} />
+                                </label>
+                              </div>
                             ) : cat.logoUrl ? (
                               <img
                                 src={cat.logoUrl}
@@ -3984,14 +4111,42 @@ export default function AdminAnalytics() {
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Image URL (Optional)</label>
-                        <input
-                          type="url"
-                          value={announcementImageUrl}
-                          onChange={(e) => setAnnouncementImageUrl(e.target.value)}
-                          placeholder="https://example.com/image.png"
-                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
-                        />
+                        <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Image URL / Banner (Optional)</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={announcementImageUrl}
+                            onChange={(e) => setAnnouncementImageUrl(e.target.value)}
+                            placeholder="https://example.com/image.png or upload banner"
+                            className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                          />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            id="announcement-banner-upload"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setIsUploadingAnnouncement(true);
+                              const url = await uploadFileToTigrisDirect(file);
+                              if (url) {
+                                setAnnouncementImageUrl(url);
+                                showToast("Banner uploaded successfully to Tigris!");
+                              }
+                              setIsUploadingAnnouncement(false);
+                            }}
+                          />
+                          <label
+                            htmlFor={isUploadingAnnouncement ? undefined : "announcement-banner-upload"}
+                            className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
+                              isUploadingAnnouncement ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
+                            }`}
+                          >
+                            <Upload className={`h-3.5 w-3.5 ${isUploadingAnnouncement ? "animate-bounce" : ""}`} />
+                            {isUploadingAnnouncement ? "Uploading..." : "Upload Banner"}
+                          </label>
+                        </div>
                         <p className="text-[9px] text-slate-500 dark:text-slate-500 mt-1 font-semibold">
                           ≡ƒÆí Perfect size for tile view is 1200x600 (aspect ratio 2:1) for clean coverage.
                         </p>
@@ -4182,12 +4337,17 @@ export default function AdminAnalytics() {
                           id="topper-photo-upload"
                         />
                         <label
-                          htmlFor="topper-photo-upload"
-                          className="cursor-pointer bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-2"
+                          htmlFor={isUploadingPhoto ? undefined : "topper-photo-upload"}
+                          className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-2 ${
+                            isUploadingPhoto ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
+                          }`}
                         >
-                          <Upload className="h-4 w-4" /> Choose Photo
+                          <Upload className={`h-4 w-4 ${isUploadingPhoto ? "animate-bounce" : ""}`} /> 
+                          {isUploadingPhoto ? "Uploading..." : "Choose Photo"}
                         </label>
-                        {testiPhotoUrl ? (
+                        {isUploadingPhoto ? (
+                          <span className="text-[10px] text-blue-500 font-semibold animate-pulse">Uploading to Tigris...</span>
+                        ) : testiPhotoUrl ? (
                           <div className="flex items-center gap-2">
                             <img src={testiPhotoUrl} alt="Topper preview" className="h-10 w-10 rounded-full object-cover border border-slate-205 dark:border-slate-800 shadow" />
                             <button
