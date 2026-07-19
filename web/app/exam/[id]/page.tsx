@@ -414,44 +414,104 @@ function TcsIonEngine({ testId }: { testId: string }) {
         }
 
         return (
-          <header className="flex h-12 items-center justify-between bg-[#0F2942] px-3 sm:px-4 text-white shrink-0">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="hidden sm:block bg-red-600 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider animate-pulse shrink-0">
-                Live Exam
+          <header className="flex h-[72px] items-center justify-between bg-white border-b border-slate-300 px-4 text-slate-800 shrink-0 select-none">
+            {/* Left Part: Mocktest Hub Logo & small sub-title */}
+            <div className="flex flex-col items-start justify-center min-w-0">
+              <div className="flex items-center gap-1.5">
+                <Trophy className="h-5 w-5 text-blue-600 shrink-0" />
+                <span className="font-black text-xs tracking-wider text-slate-900 uppercase leading-none">Mock Test Hub</span>
               </div>
-              <span className="font-bold text-xs sm:text-sm tracking-wide truncate max-w-[120px] sm:max-w-xs md:max-w-none">{session.testTitle}</span>
+              <span className="text-[9px] text-slate-500 font-bold mt-1 truncate max-w-[150px]">
+                {session.testTitle}
+              </span>
             </div>
 
-            {/* Dynamic Countdown Clock & Pause button */}
-            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-              <div className="flex items-center gap-1 sm:gap-2 bg-[#1C3D5A] px-2 sm:px-3 py-1 sm:py-1.5 rounded border border-[#2E587A]">
-                <span className="text-gray-300 text-[9px] sm:text-[10px] uppercase hidden xs:inline sm:inline">
-                  {session.hasSectionalTiming ? `${currentSection.name} Time:` : 'Time Left:'}
-                </span>
-                <span className="font-mono text-sm sm:text-base font-bold text-yellow-400 tracking-wider">
-                  {formatTime(timeRemaining)}
+            {/* Center Part: Complete Mock Test Name, Zoom Buttons, and User Hub ID */}
+            <div className="flex-1 flex flex-col items-center justify-center px-4">
+              <div className="flex items-center gap-3">
+                <span className="font-extrabold text-xs sm:text-sm text-slate-900 text-center">
+                  {session.testTitle}
                 </span>
               </div>
+              
+              <div className="flex items-center gap-4 mt-1.5">
+                {/* Zoom Buttons (Mock) */}
+                <div className="flex items-center gap-1.5">
+                  <button 
+                    type="button" 
+                    onClick={() => alert("Zoom in is not supported by your browser settings.")}
+                    className="bg-blue-650 hover:bg-blue-700 text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full cursor-pointer shadow active:scale-95 transition-all"
+                  >
+                    Zoom (+)
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => alert("Zoom out is not supported by your browser settings.")}
+                    className="bg-blue-650 hover:bg-blue-700 text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full cursor-pointer shadow active:scale-95 transition-all"
+                  >
+                    Zoom (-)
+                  </button>
+                </div>
 
+                {/* Hub ID */}
+                <span className="text-[10px] sm:text-xs font-bold text-slate-700">
+                  Hub ID : {currentUser?.candidateCode || currentUser?.id?.slice(0, 12) || 'GUEST_HUB'}
+                </span>
+              </div>
+            </div>
+
+            {/* Right Part: Maximize, Section Time, and Candidate Photos */}
+            <div className="flex items-center gap-4 shrink-0">
+              
+              {/* Maximize Icon */}
               <button
                 type="button"
-                onClick={pauseExam}
-                className="flex items-center gap-1 bg-yellow-600 hover:bg-yellow-750 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded border border-yellow-500 font-bold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider"
+                onClick={() => {
+                  try {
+                    if (!document.fullscreenElement) {
+                      document.documentElement.requestFullscreen();
+                    } else {
+                      document.exitFullscreen();
+                    }
+                  } catch (e) {
+                    console.warn("Fullscreen toggle error:", e);
+                  }
+                }}
+                className="p-1 rounded border border-blue-200 text-blue-500 hover:bg-blue-50 transition shrink-0 active:scale-95 cursor-pointer"
+                title={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
               >
-                <Pause className="h-3 w-3" /> <span className="hidden sm:inline">Pause</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-fullscreen"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
               </button>
 
-              <div className="flex items-center gap-1 sm:gap-2 border-l border-slate-600 pl-2 sm:pl-4">
-                <Globe className="h-3.5 w-3.5 text-slate-400 hidden sm:inline" />
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-                  className="bg-[#1C3D5A] border border-[#2E587A] rounded px-1 py-0.5 text-[10px] sm:text-xs text-white outline-none cursor-pointer"
-                >
-                  <option value="en">EN</option>
-                  <option value="hi">HI</option>
-                </select>
+              {/* Section Time Countdown */}
+              <div className="flex flex-col items-center justify-center shrink-0">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Section Time</span>
+                <span className="font-mono text-xs sm:text-sm font-extrabold text-red-600 bg-yellow-100 px-2 py-0.5 rounded border border-red-200 mt-0.5 tracking-widest animate-pulse">
+                  {(() => {
+                    const timeStr = formatTime(timeRemaining);
+                    return timeStr.replace(/:/g, ' : ');
+                  })()}
+                </span>
               </div>
+
+              {/* Candidate Silhouette Photos */}
+              <div className="hidden xs:flex items-center gap-2 border-l border-slate-200 pl-3">
+                {/* Registration Photo */}
+                <div className="flex flex-col items-center">
+                  <div className="h-11 w-9 bg-slate-50 border border-slate-300 rounded flex items-center justify-center text-slate-400">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <span className="text-[7px] text-slate-500 font-bold mt-0.5 bg-slate-200 px-1 rounded">Registration Photo</span>
+                </div>
+                {/* Captured Photo */}
+                <div className="flex flex-col items-center">
+                  <div className="h-11 w-9 bg-slate-50 border border-slate-300 rounded flex items-center justify-center text-slate-400">
+                    <User className="h-5 w-5 animate-pulse" />
+                  </div>
+                  <span className="text-[7px] text-slate-500 font-bold mt-0.5 bg-slate-200 px-1 rounded">Captured Photo</span>
+                </div>
+              </div>
+
             </div>
           </header>
         );
@@ -1047,10 +1107,10 @@ function TcsIonEngine({ testId }: { testId: string }) {
                         title={isLocked ? 'Section locked — complete current section first' : undefined}
                         className={`flex items-center px-4 font-bold border-r border-slate-200 transition-colors ${
                           isActive
-                            ? 'bg-white text-blue-800 border-t-2 border-t-orange-500 font-extrabold'
+                            ? 'bg-[#008000] text-white font-extrabold border-none'
                             : isLocked
                             ? 'text-slate-400 bg-[#E9ECF2] cursor-not-allowed opacity-50'
-                            : 'text-slate-600 hover:bg-[#DEE3EC] cursor-pointer'
+                            : 'text-slate-700 hover:bg-[#DEE3EC] bg-white cursor-pointer'
                         }`}
                       >
                         {isLocked && <span className="mr-1 text-[9px]">🔒</span>}
@@ -1161,22 +1221,22 @@ function TcsIonEngine({ testId }: { testId: string }) {
                           }
 
                           return (
-                            <div className="flex items-center gap-2 text-[9px] sm:text-[10px]">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const nextLang = questionLang === 'en' ? 'hi' : 'en';
+                            <div className="flex items-center gap-3 text-[10px] sm:text-xs">
+                              <span className="text-slate-505 font-bold">Select Language</span>
+                              <select
+                                value={questionLang}
+                                onChange={(e) => {
+                                  const nextLang = e.target.value as 'en' | 'hi';
                                   setQuestionLanguages(prev => ({ ...prev, [currentQuestion.id]: nextLang }));
                                 }}
-                                className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded border border-blue-200 text-[9px] sm:text-[10px] transition cursor-pointer active:scale-95 shadow-sm"
-                                title={questionLang === 'en' ? 'Switch question view to Hindi' : 'Switch question view to English'}
+                                className="bg-white border border-slate-350 rounded px-2 py-1 text-[11px] font-bold text-slate-705 outline-none cursor-pointer focus:border-blue-500"
                               >
-                                <Globe className="h-3 w-3 text-blue-500" />
-                                {questionLang === 'en' ? 'हिन्दी' : 'English'}
-                              </button>
+                                <option value="en">English</option>
+                                <option value="hi">Hindi</option>
+                              </select>
 
-                              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-mono px-2 py-0.5 rounded-md">
-                                <Clock className="h-3.5 w-3.5 text-slate-500" />
+                              <div className="flex items-center gap-1 bg-slate-105 border border-slate-200 text-slate-650 font-mono px-2 py-0.5 rounded-md">
+                                <Clock className="h-3.5 w-3.5 text-slate-400" />
                                 <span>Time Spent: {Math.floor((activeResponse?.elapsedSeconds || 0) / 60)}:
                                 {String((activeResponse?.elapsedSeconds || 0) % 60).padStart(2, '0')}</span>
                               </div>
