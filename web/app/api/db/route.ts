@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 
 // Persistent OTP Cache in global to survive Next.js dev server hot-reloads
 const otpCache = (global as any).otpCache || new Map<string, { code: string; expiresAt: number }>();
@@ -1466,12 +1466,21 @@ async function handleGetCustomQuestions(data: any) {
   ) {
     const url = (questions as any).url;
     try {
-      const res = await fetch(url);
-      if (res.ok) {
-        questions = await res.json();
-      } else {
-        console.error(`Tigris fetch returned status: ${res.status}`);
-      }
+      const bucketName = process.env.TIGRIS_BUCKET_NAME || "mocktest-assets";
+      const urlObj = new URL(url);
+      const pathname = decodeURIComponent(urlObj.pathname);
+      const key = pathname.startsWith(`/${bucketName}/`)
+        ? pathname.substring(bucketName.length + 2)
+        : pathname.startsWith('/') ? pathname.substring(1) : pathname;
+
+      const response = await s3Client.send(
+        new GetObjectCommand({
+          Bucket: bucketName,
+          Key: key,
+        })
+      );
+      const bodyContents = await response.Body.transformToString();
+      questions = JSON.parse(bodyContents);
     } catch (err) {
       console.error("Failed to fetch questions from Tigris S3:", err);
       questions = null;
