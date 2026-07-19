@@ -412,7 +412,6 @@ function TcsIonEngine({ testId }: { testId: string }) {
             </header>
           );
         }
-
         return (
           <header className="flex h-[72px] items-center justify-between bg-white border-b border-slate-300 px-4 text-slate-800 shrink-0 select-none">
             {/* Left Part: Mocktest Hub Logo & small sub-title */}
@@ -426,94 +425,74 @@ function TcsIonEngine({ testId }: { testId: string }) {
               </span>
             </div>
 
-            {/* Center Part: Complete Mock Test Name, Zoom Buttons, and User Hub ID */}
-            <div className="flex-1 flex flex-col items-center justify-center px-4">
-              <div className="flex items-center gap-3">
-                <span className="font-extrabold text-xs sm:text-sm text-slate-900 text-center">
-                  {session.testTitle}
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-4 mt-1.5">
-                {/* Zoom Buttons (Mock) */}
-                <div className="flex items-center gap-1.5">
-                  <button 
-                    type="button" 
-                    onClick={() => alert("Zoom in is not supported by your browser settings.")}
-                    className="bg-blue-650 hover:bg-blue-700 text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full cursor-pointer shadow active:scale-95 transition-all"
-                  >
-                    Zoom (+)
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => alert("Zoom out is not supported by your browser settings.")}
-                    className="bg-blue-650 hover:bg-blue-700 text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full cursor-pointer shadow active:scale-95 transition-all"
-                  >
-                    Zoom (-)
-                  </button>
-                </div>
-
-                {/* Hub ID */}
-                <span className="text-[10px] sm:text-xs font-bold text-slate-700">
-                  Hub ID : {currentUser?.candidateCode || currentUser?.id?.slice(0, 12) || 'GUEST_HUB'}
-                </span>
+            {/* Center: Test Name + Zoom Buttons + Hub ID */}
+            <div className="flex-1 flex flex-col items-center justify-center px-2">
+              <span className="font-bold text-[11px] sm:text-xs text-slate-900 text-center leading-tight">
+                {session.testTitle}
+              </span>
+              <div className="flex items-center gap-3 mt-1">
+                <button type="button" onClick={() => alert('Zoom in not supported.')} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (+)</button>
+                <button type="button" onClick={() => alert('Zoom out not supported.')} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (-)</button>
+                <span className="text-[10px] font-semibold text-slate-600">Hub ID : {currentUser?.candidateCode || currentUser?.id?.slice(0, 12) || 'GUEST_HUB'}</span>
               </div>
             </div>
 
-            {/* Right Part: Maximize, Section Time, and Candidate Photos */}
-            <div className="flex items-center gap-4 shrink-0">
-              
-              {/* Maximize Icon */}
+            {/* Right: Section Time + Profile Photos */}
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="flex flex-col items-center justify-center">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Section Time</span>
+                <span className="font-mono text-sm font-extrabold text-red-600 tracking-widest">
+                  {formatTime(timeRemaining)}
+                </span>
+              </div>
               <button
                 type="button"
-                onClick={() => {
-                  try {
-                    if (!document.fullscreenElement) {
-                      document.documentElement.requestFullscreen();
-                    } else {
-                      document.exitFullscreen();
-                    }
-                  } catch (e) {
-                    console.warn("Fullscreen toggle error:", e);
-                  }
-                }}
-                className="p-1 rounded border border-blue-200 text-blue-500 hover:bg-blue-50 transition shrink-0 active:scale-95 cursor-pointer"
+                onClick={() => { try { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { document.exitFullscreen(); } } catch(e) {} }}
+                className="p-1 rounded text-slate-500 hover:bg-slate-100 transition cursor-pointer hidden sm:block"
                 title={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-fullscreen"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
               </button>
-
-              {/* Section Time Countdown */}
-              <div className="flex flex-col items-center justify-center shrink-0">
-                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wide">Section Time</span>
-                <span className="font-mono text-xs sm:text-sm font-extrabold text-red-600 bg-yellow-100 px-2 py-0.5 rounded border border-red-200 mt-0.5 tracking-widest animate-pulse">
-                  {(() => {
-                    const timeStr = formatTime(timeRemaining);
-                    return timeStr.replace(/:/g, ' : ');
-                  })()}
-                </span>
-              </div>
-
-              {/* Candidate Silhouette Photos */}
-              <div className="hidden xs:flex items-center gap-2 border-l border-slate-200 pl-3">
-                {/* Registration Photo */}
+              <div className="hidden sm:flex items-center gap-2 border-l border-slate-200 pl-3">
                 <div className="flex flex-col items-center">
-                  <div className="h-11 w-9 bg-slate-50 border border-slate-300 rounded flex items-center justify-center text-slate-400">
-                    <User className="h-5 w-5" />
-                  </div>
-                  <span className="text-[7px] text-slate-500 font-bold mt-0.5 bg-slate-200 px-1 rounded">Registration Photo</span>
+                  <div className="h-10 w-9 bg-slate-100 border border-slate-300 rounded flex items-center justify-center text-slate-400"><User className="h-5 w-5" /></div>
+                  <span className="text-[7px] text-slate-400 leading-tight text-center">Registration<br/>Photo</span>
                 </div>
-                {/* Captured Photo */}
                 <div className="flex flex-col items-center">
-                  <div className="h-11 w-9 bg-slate-50 border border-slate-300 rounded flex items-center justify-center text-slate-400">
-                    <User className="h-5 w-5 animate-pulse" />
-                  </div>
-                  <span className="text-[7px] text-slate-500 font-bold mt-0.5 bg-slate-200 px-1 rounded">Captured Photo</span>
+                  <div className="h-10 w-9 bg-slate-100 border border-slate-300 rounded flex items-center justify-center text-slate-400"><User className="h-5 w-5" /></div>
+                  <span className="text-[7px] text-slate-400 leading-tight text-center">Captured<br/>Photo</span>
                 </div>
               </div>
-
             </div>
           </header>
+        );
+      })()}
+
+      {/* SSC SUB-HEADER BAR (Row 2) — only for SSC tests */}
+      {(() => {
+        const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+        if (!isSsc) return null;
+        return (
+          <div className="flex items-center justify-between bg-white border-b border-slate-300 px-3 py-1.5 shrink-0 text-[11px] select-none gap-2">
+            {/* Left: short test title */}
+            <span className="text-slate-700 font-semibold truncate max-w-[180px] text-[10px] hidden md:inline shrink-0">
+              {session.testTitle.length > 32 ? session.testTitle.slice(0, 32) + '…' : session.testTitle}
+            </span>
+
+            {/* Center: Nav links */}
+            <div className="flex items-center gap-3 text-[11px] font-bold shrink-0">
+              <button type="button" onClick={() => alert('Symbols legend')} className="text-blue-700 hover:underline uppercase cursor-pointer">Symbols</button>
+              <button type="button" onClick={() => alert('Instructions')} className="text-blue-700 hover:underline uppercase cursor-pointer">Instructions</button>
+              <button type="button" onClick={() => alert('Overall Test Summary')} className="text-blue-700 hover:underline uppercase cursor-pointer hidden lg:inline">Overall Test Summary</button>
+            </div>
+
+            {/* Right: Action Buttons */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button type="button" onClick={markForReviewAndNext} className="bg-[#636f7a] hover:bg-[#505a63] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Mark for Review</button>
+              <button type="button" onClick={saveAndNext} className="bg-[#636f7a] hover:bg-[#505a63] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Save &amp; Next</button>
+              <button type="button" onClick={() => { pauseExam(); setShowSubmitConfirm(true); }} className="bg-[#1A3B5C] hover:bg-[#142d47] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Submit Test</button>
+            </div>
+          </div>
         );
       })()}
 
@@ -1095,29 +1074,35 @@ function TcsIonEngine({ testId }: { testId: string }) {
               }
 
               return (
-                <div className="flex h-10 border-b border-slate-200 bg-[#E9ECF2] shrink-0">
-                  {session.sections.map((sec, idx) => {
-                    const isActive = idx === currentSectionIndex;
-                    const isLocked = session.hasSectionalTiming && !isActive;
-                    return (
-                      <button
-                        key={sec.id}
-                        onClick={() => !isLocked && switchSection(idx)}
-                        disabled={isLocked}
-                        title={isLocked ? 'Section locked — complete current section first' : undefined}
-                        className={`flex items-center px-4 font-bold border-r border-slate-200 transition-colors ${
-                          isActive
-                            ? 'bg-[#008000] text-white font-extrabold border-none'
-                            : isLocked
-                            ? 'text-slate-400 bg-[#E9ECF2] cursor-not-allowed opacity-50'
-                            : 'text-slate-700 hover:bg-[#DEE3EC] bg-white cursor-pointer'
-                        }`}
-                      >
-                        {isLocked && <span className="mr-1 text-[9px]">🔒</span>}
-                        {sec.name}
-                      </button>
-                    );
-                  })}
+                <div className="flex h-10 border-b border-slate-200 bg-[#E9ECF2] shrink-0 items-center">
+                  <div className="flex flex-1 overflow-x-auto scrollbar-none h-full">
+                    {session.sections.map((sec, idx) => {
+                      const isActive = idx === currentSectionIndex;
+                      const isLocked = session.hasSectionalTiming && !isActive;
+                      return (
+                        <button
+                          key={sec.id}
+                          onClick={() => !isLocked && switchSection(idx)}
+                          disabled={isLocked}
+                          title={isLocked ? 'Section locked — complete current section first' : undefined}
+                          className={`flex items-center px-4 h-full font-bold border-r border-slate-200 transition-colors whitespace-nowrap text-[11px] ${
+                            isActive
+                              ? 'bg-[#008000] text-white font-extrabold border-none'
+                              : isLocked
+                              ? 'text-slate-400 bg-[#E9ECF2] cursor-not-allowed opacity-50'
+                              : 'text-slate-700 hover:bg-[#DEE3EC] bg-white cursor-pointer'
+                          }`}
+                        >
+                          {isLocked && <span className="mr-1 text-[9px]">🔒</span>}
+                          {sec.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Total Answered shown on right like screenshot */}
+                  <span className="px-3 text-[10px] font-semibold text-slate-600 whitespace-nowrap shrink-0 border-l border-slate-200">
+                    Total Questions Answered: <span className="font-extrabold text-green-700">{counts.answered}</span>
+                  </span>
                 </div>
               );
             })()}
@@ -1471,12 +1456,20 @@ function TcsIonEngine({ testId }: { testId: string }) {
                 )}
 
                 {/* Active Palette Section Grid */}
-                <div className={`flex-1 p-4 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-white'}`}>
-                  <h4 className="font-bold text-[#0F2942] uppercase text-[10px] tracking-wide mb-3">
-                    Question Palette - {currentSection.name}
-                  </h4>
+                <div className={`flex-1 p-3 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-white'}`}>
+                  {/* Section Name Header - matches screenshot style */}
+                  {isSsc && (
+                    <div className="mb-3 pb-2 border-b border-slate-200">
+                      <h4 className="font-bold text-slate-800 text-[11px]">{currentSection.name}</h4>
+                    </div>
+                  )}
+                  {!isSsc && (
+                    <h4 className="font-bold text-[#0F2942] uppercase text-[10px] tracking-wide mb-3">
+                      Question Palette - {currentSection.name}
+                    </h4>
+                  )}
                   
-                  <div className="grid grid-cols-5 gap-2.5">
+                  <div className="grid grid-cols-5 gap-2">
                     {currentSectionQuestions.map((q, idx) => {
                       const resp = responses[q.id];
                       const stateCode = resp?.state ?? 1;
@@ -1489,7 +1482,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                         case 1: // Not Visited
                           styleClass = !isSsc 
                             ? "bg-white border-slate-300 text-slate-800 rounded" 
-                            : "bg-gray-200 border-gray-400 text-slate-800";
+                            : "bg-[#C8D3E0] border-[#94a3b8] text-slate-800";
                           break;
                         case 2: // Not Answered
                           styleClass = !isSsc 
@@ -1532,6 +1525,37 @@ function TcsIonEngine({ testId }: { testId: string }) {
                     })}
                   </div>
                 </div>
+
+                {/* Legend Table — SSC style matches screenshot */}
+                {isSsc && (
+                  <div className="px-3 pb-2 bg-white border-t border-slate-200">
+                    <table className="w-full text-[10px] mt-2">
+                      <tbody>
+                        <tr className="border-b border-slate-100">
+                          <td className="py-1 pr-2"><div className="h-5 w-5 bg-[#C8D3E0] border border-[#94a3b8] text-slate-800 flex items-center justify-center font-bold text-[9px]">{counts.notVisited}</div></td>
+                          <td className="py-1 text-slate-700">Not Visited</td>
+                          <td className="py-1 pr-2 pl-3"><div className="h-5 w-5 bg-[#C62828] text-white flex items-center justify-center font-bold text-[9px] rounded-t-md">{counts.notAnswered}</div></td>
+                          <td className="py-1 text-slate-700">Not Answered</td>
+                        </tr>
+                        <tr className="border-b border-slate-100">
+                          <td className="py-1 pr-2"><div className="h-5 w-5 bg-[#2E7D32] text-white flex items-center justify-center font-bold text-[9px] rounded-b-md">{counts.answered}</div></td>
+                          <td className="py-1 text-slate-700">Answered</td>
+                          <td className="py-1 pr-2 pl-3"><div className="h-5 w-5 bg-[#4527A0] text-white flex items-center justify-center font-bold text-[9px] rounded-full">{counts.marked}</div></td>
+                          <td className="py-1 text-slate-700">Marked for Review</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 pr-2">
+                            <div className="relative h-5 w-5 bg-[#4527A0] text-white flex items-center justify-center font-bold text-[9px] rounded-full">
+                              {counts.markedAndAnswered}
+                              <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white"><Check className="h-1.5 w-1.5" /></span>
+                            </div>
+                          </td>
+                          <td className="py-1 text-slate-700 col-span-3" colSpan={3}>Answered &amp; Marked for Review</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
 
                 {/* Submit Block Section */}
                 <div className={`p-4 border-t border-slate-200 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
