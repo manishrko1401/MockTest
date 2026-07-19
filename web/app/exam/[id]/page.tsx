@@ -343,7 +343,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
       
       {/* 1. TOP HEADER BANNER */}
       {(() => {
-        const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+        const isSsc = (testId.includes('ssc') || testId.toLowerCase().includes('ssc')) && !isMobile;
         if (!isSsc) {
           return (
             <header className="flex h-14 items-center justify-between bg-white border-b border-slate-200 px-3 sm:px-4 text-slate-800 shrink-0">
@@ -471,7 +471,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
       {/* SSC SUB-HEADER BAR (Row 2) — only for SSC tests */}
       {(() => {
-        const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+        const isSsc = (testId.includes('ssc') || testId.toLowerCase().includes('ssc')) && !isMobile;
         if (!isSsc) return null;
         return (
           <div className="flex items-center justify-between bg-white border-b border-slate-300 px-3 py-1.5 shrink-0 select-none gap-2 flex-wrap">
@@ -1012,7 +1012,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
                 <div className="pt-4 border-t border-slate-100 mt-6">
                   {(() => {
-                    const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+                    const isSsc = (testId.includes('ssc') || testId.toLowerCase().includes('ssc')) && !isMobile;
                     return (
                       <button
                         onClick={() => {
@@ -1042,7 +1042,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
             
             {/* Subject Tabs Switcher */}
             {(() => {
-              const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+              const isSsc = (testId.includes('ssc') || testId.toLowerCase().includes('ssc')) && !isMobile;
               if (isSsc) return null;
               if (!isSsc) {
                 return (
@@ -1344,7 +1344,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
           {/* RIGHT PANEL (25% WIDTH) - CANDIDATE IDENTITY & QUESTION PALETTE GRID */}
           {(() => {
-            const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+            const isSsc = (testId.includes('ssc') || testId.toLowerCase().includes('ssc')) && !isMobile;
             return (
               <aside className={`flex w-full lg:w-[25%] flex-col border-t lg:border-t-0 lg:border-l border-slate-200 lg:overflow-y-auto overflow-y-visible ${
                 !isSsc ? 'bg-[#EBF5FA]' : 'bg-[#F3F4F6]'

@@ -5,6 +5,7 @@ import { useAuth, MockUser, MockTestRecord } from '../../../AuthContext';
 import { generateExamSession, EXPLANATIONS } from '../../../lib/examUtils';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useIsMobile } from '../../../useIsMobile';
 import {
   ArrowLeft,
   ChevronLeft,
@@ -81,6 +82,7 @@ export default function ExamSolutionAnalysisPage() {
   const testId = (params?.id as string) || "ssc_cgl_tier1";
   const { currentUser, theme, toggleTheme, toggleBookmark, language, setLanguage, reportQuestion, examCatalog } = useAuth();
   const router = useRouter();
+  const { isMobile } = useIsMobile();
 
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
@@ -621,7 +623,7 @@ export default function ExamSolutionAnalysisPage() {
     return { correct, incorrect, skipped };
   })();
 
-  const isSolutionView = viewMode === 'solution';
+  const isSolutionView = viewMode === 'solution' && !isMobile;
   const switchSection = (sectionIdx: number) => {
     const sec = examSession.sections[sectionIdx];
     if (!sec) return;
@@ -1030,10 +1032,9 @@ export default function ExamSolutionAnalysisPage() {
         </div>
       )}
 
-      {/* 3. SPLIT WORKSPACE - QUESTION DETAIL & PALETTE */}
       <section className={isSolutionView
         ? "flex flex-col lg:flex-row flex-1 overflow-hidden bg-[#F1F5F9] w-full h-full pb-16 flex"
-        : "max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start pb-24 hidden"
+        : `max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start pb-24 ${viewMode === 'solution' ? 'flex' : 'hidden'}`
       }>
         
         {/* LEFT WORKSPACE PANEL: QUESTION VIEW */}
@@ -1246,7 +1247,7 @@ export default function ExamSolutionAnalysisPage() {
           </div>
 
             {/* Navigation CTAs */}
-            <div className={`justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-5 mt-8 ${viewMode === 'solution' ? 'hidden' : 'flex'}`}>
+            <div className={`justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-5 mt-8 ${isSolutionView ? 'hidden' : 'flex'}`}>
               <button
                 onClick={() => setActiveQuestionIdx(prev => Math.max(0, prev - 1))}
                 disabled={activeQuestionIdx === 0}
