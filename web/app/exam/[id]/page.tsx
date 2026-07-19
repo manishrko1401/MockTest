@@ -474,18 +474,40 @@ function TcsIonEngine({ testId }: { testId: string }) {
         const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
         if (!isSsc) return null;
         return (
-          <div className="flex items-center bg-white border-b border-slate-300 px-3 py-1 shrink-0 select-none gap-2 flex-wrap">
-            {/* Section Name — small green badge box */}
-            <span className="bg-[#007600] text-white text-[10px] font-bold px-2 py-0.5 rounded shrink-0 whitespace-nowrap">
-              {currentSection.name}
-            </span>
-
-            {/* Action Buttons — same line as section name */}
+          <div className="flex items-center justify-between bg-white border-b border-slate-300 px-3 py-1.5 shrink-0 select-none gap-2 flex-wrap">
+            {/* Left: Section name boxes styled like ssc design.html */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              <button type="button" onClick={markForReviewAndNext} className="bg-[#636f7a] hover:bg-[#505a63] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Mark for Review</button>
-              <button type="button" onClick={saveAndNext} className="bg-[#636f7a] hover:bg-[#505a63] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Save &amp; Next</button>
-              <button type="button" onClick={clearResponse} className="bg-[#636f7a] hover:bg-[#505a63] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Clear Response</button>
-              <button type="button" onClick={() => { pauseExam(); setShowSubmitConfirm(true); }} className="bg-[#1A3B5C] hover:bg-[#142d47] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Submit Test</button>
+              {session.sections.map((sec, idx) => {
+                const isActive = idx === currentSectionIndex;
+                const isLocked = session.hasSectionalTiming && !isActive;
+                let partLabel = `PART-${String.fromCharCode(65 + idx)}`; // PART-A, PART-B, etc.
+                return (
+                  <button
+                    key={sec.id}
+                    onClick={() => !isLocked && switchSection(idx)}
+                    disabled={isLocked}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded shrink-0 whitespace-nowrap transition-all border ${
+                      isActive
+                        ? 'bg-[#008001] text-white border-[#008001]'
+                        : isLocked
+                        ? 'bg-[#f5f5f5] text-[#999] border-[#ddd] cursor-not-allowed opacity-50'
+                        : 'bg-[#2E66CC] text-white border-[#2E66CC] hover:bg-[#1a4da6] cursor-pointer'
+                    }`}
+                  >
+                    {partLabel}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right: Action Buttons (Submit Test removed from here) — shifted to right side */}
+            <div className="flex items-center gap-1.5 flex-wrap ml-auto">
+              {currentQuestionIndex > 0 && (
+                <button type="button" onClick={() => jumpToQuestion(currentSectionIndex, currentQuestionIndex - 1)} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Previous</button>
+              )}
+              <button type="button" onClick={markForReviewAndNext} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Mark for Review</button>
+              <button type="button" onClick={saveAndNext} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Save &amp; Next</button>
+              <button type="button" onClick={clearResponse} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Clear Response</button>
             </div>
           </div>
         );
