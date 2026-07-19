@@ -8,7 +8,7 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 // 1. Manually parse .env variables
 const envPath = path.join(__dirname, '.env');
 if (fs.existsSync(envPath)) {
-  const envConfig = fs.readFileSync(envPath, 'utf8');
+  const envConfig = fs.readFileSync(envPath, 'utf8').replace(/\r/g, '');
   for (const line of envConfig.split('\n')) {
     const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
     if (match) {
@@ -89,6 +89,29 @@ async function uploadBase64(base64Str, prefix) {
     return s3Url;
   } catch (err) {
     console.error(`❌ Upload error:`, err);
+    return null;
+  }
+}
+
+// Helper: upload JSON array to S3
+async function uploadJSON(jsonArray, prefix) {
+  try {
+    const fileName = `${prefix}.json`;
+    const buffer = Buffer.from(JSON.stringify(jsonArray));
+
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: fileName,
+        Body: buffer,
+        ContentType: "application/json",
+      })
+    );
+
+    const s3Url = `${endpoint}/${bucketName}/${fileName}`;
+    return s3Url;
+  } catch (err) {
+    console.error(`❌ JSON Upload error:`, err);
     return null;
   }
 }
@@ -177,6 +200,36 @@ async function runMigration() {
         console.log(`❌ Failed to migrate category ID: ${cat.id}`);
       }
     }
+
+    // ==========================================
+    // 4. Migrate MockTest custom questions JSON
+    // ==========================================
+    console.log("🔍 Scanning mocktests table for custom questions...");
+    const mockTests = await prisma.mockTest.findMany();
+
+    let migratedTestsCount = 0;
+    for (const test of mockTests) {
+      const questions = test.customQuestions;
+      
+      if (questions && Array.isArray(questions)) {
+        console.log(`⏳ Migrating questions JSON for mocktest ID: ${test.id} - "${test.title}" (${questions.length} questions)`);
+        const s3Url = await uploadJSON(questions, `questions_${test.id}`);
+        if (s3Url) {
+          await prisma.mockTest.update({
+            where: { id: test.id },
+            data: {
+              customQuestions: { url: s3Url },
+              questionsCount: questions.length,
+            },
+          });
+          console.log(`✅ Success! Migrated to S3 URL: ${s3Url}`);
+          migratedTestsCount++;
+        } else {
+          console.log(`❌ Failed to migrate mocktest ID: ${test.id}`);
+        }
+      }
+    }
+    console.log(`💡 Finished mock tests migration. Total JSON tests offloaded to S3: ${migratedTestsCount}`);
 
     console.log("🎉 Migration process completed successfully!");
   } catch (err) {
