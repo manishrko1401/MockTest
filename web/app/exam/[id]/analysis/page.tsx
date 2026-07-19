@@ -91,6 +91,18 @@ export default function ExamSolutionAnalysisPage() {
   const [customQs, setCustomQs] = useState<any[] | null>(null);
   const [loadingCustomQs, setLoadingCustomQs] = useState(true);
   const [activeMobileTab, setActiveMobileTab] = useState<'analysis' | 'solutions'>('analysis');
+
+  const getAttemptLabel = (idx: number, total: number, attemptLang: 'en' | 'hi' = 'en') => {
+    const diff = total - 1 - idx;
+    if (diff === 0) {
+      return attemptLang === 'hi' ? 'वर्तमान प्रयास' : 'Current Attempt';
+    } else if (diff === 1) {
+      return attemptLang === 'hi' ? 'पिछला प्रयास' : 'Previous Attempt';
+    } else if (diff === 2) {
+      return attemptLang === 'hi' ? 'दूसरा प्रयास' : 'Second Previous';
+    }
+    return attemptLang === 'hi' ? `प्रयास ${idx + 1}` : `Attempt ${idx + 1}`;
+  };
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
 
@@ -827,7 +839,7 @@ export default function ExamSolutionAnalysisPage() {
 
       {/* Attempt Selector and Comparison Dashboard */}
       {attempts.length >= 1 && (
-        <section className={`max-w-6xl w-full mx-auto px-6 mt-6 ${activeMobileTab === 'analysis' ? 'block' : 'hidden lg:block'}`}>
+        <section className="max-w-6xl w-full mx-auto px-6 mt-6 block">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex-1">
               <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{t.analysisAttemptSelector}</h5>
@@ -842,7 +854,7 @@ export default function ExamSolutionAnalysisPage() {
                         : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-350 border-slate-200 dark:border-slate-800'
                     }`}
                   >
-                    {t.analysisAttempt} {idx + 1} ({att.date})
+                    {getAttemptLabel(idx, attempts.length, language)} ({att.date})
                   </button>
                 ))}
               </div>
@@ -855,7 +867,7 @@ export default function ExamSolutionAnalysisPage() {
                   const isCurrent = selectedAttemptIdx === idx;
                   return (
                     <div key={att.id} className={`flex items-center justify-between text-xs p-2.5 rounded-xl font-bold border transition-colors ${isCurrent ? 'bg-blue-50/50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/80' : 'bg-slate-50 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400 border-slate-100 dark:border-slate-850'}`}>
-                      <span>{t.analysisAttempt} {idx + 1} {isCurrent && (language === 'hi' ? '(अवलोकन)' : '(Viewing)')}</span>
+                      <span>{getAttemptLabel(idx, attempts.length, language)} {isCurrent && (language === 'hi' ? '(अवलोकन)' : '(Viewing)')}</span>
                       <div className="flex items-center gap-4">
                         <span>{language === 'hi' ? 'अंक:' : 'Score:'} <strong className="text-slate-850 dark:text-slate-200">{att.score}/{att.maxScore}</strong></span>
                         <span>{language === 'hi' ? 'सटीकता:' : 'Accuracy:'} <strong className="text-slate-850 dark:text-slate-200">{att.accuracy}%</strong></span>

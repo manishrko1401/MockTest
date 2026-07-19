@@ -138,13 +138,19 @@ export default function AnalysisScreen({
       .slice(0, 3);
   }, [currentUser?.testSessions, attempt.testId]);
 
-  const initialIndex = testAttempts.findIndex((x: any) => x.id === attempt.id);
-  const [activeAttemptIndex, setActiveAttemptIndex] = useState(initialIndex !== -1 ? initialIndex : 0);
+  // Always default activeAttemptIndex to 0 (which is the latest/current attempt in the descending sorted list)
+  const [activeAttemptIndex, setActiveAttemptIndex] = useState(0);
 
-  useEffect(() => {
-    const newIdx = testAttempts.findIndex((x: any) => x.id === attempt.id);
-    setActiveAttemptIndex(newIdx !== -1 ? newIdx : 0);
-  }, [attempt.id, testAttempts]);
+  const getAttemptLabel = (idx: number, attemptLang: 'en' | 'hi' = 'en') => {
+    if (idx === 0) {
+      return attemptLang === 'hi' ? 'वर्तमान प्रयास' : 'Current Attempt';
+    } else if (idx === 1) {
+      return attemptLang === 'hi' ? 'पिछला प्रयास' : 'Previous Attempt';
+    } else if (idx === 2) {
+      return attemptLang === 'hi' ? 'दूसरा प्रयास' : 'Second Previous';
+    }
+    return attemptLang === 'hi' ? `प्रयास ${idx + 1}` : `Attempt ${idx + 1}`;
+  };
 
   const activeAttempt = testAttempts[activeAttemptIndex] || attempt;
 
@@ -490,7 +496,7 @@ export default function AnalysisScreen({
                         onPress={() => setActiveAttemptIndex(idx)}
                       >
                         <Text style={[styles.attemptPillText, isSelected ? { color: '#FFF', fontWeight: 'bold' } : (isDark ? { color: '#E2E8F0' } : { color: '#475569' })]}>
-                          Attempt {testAttempts.length - idx} ({dateStr})
+                          {getAttemptLabel(idx, lang)} ({dateStr})
                         </Text>
                       </TouchableOpacity>
                     );
