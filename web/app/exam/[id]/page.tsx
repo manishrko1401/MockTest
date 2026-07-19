@@ -974,6 +974,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                       <button
                         onClick={() => {
                           setMobilePaletteOpen(false);
+                          pauseExam();
                           setShowSubmitConfirm(true);
                         }}
                         className={`w-full text-white font-bold py-3 rounded-xl shadow text-xs uppercase cursor-pointer active:scale-95 transition-all ${
@@ -1475,7 +1476,10 @@ function TcsIonEngine({ testId }: { testId: string }) {
                 {/* Submit Block Section */}
                 <div className={`p-4 border-t border-slate-200 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
                   <button
-                    onClick={() => setShowSubmitConfirm(true)}
+                    onClick={() => {
+                      pauseExam();
+                      setShowSubmitConfirm(true);
+                    }}
                     className={`w-full text-white font-bold py-2.5 rounded shadow transition cursor-pointer text-xs uppercase tracking-wider active:scale-95 ${
                       !isSsc ? 'bg-[#0D88B9] hover:bg-[#0A739C]' : 'bg-[#1A3B5C] hover:bg-slate-800'
                     }`}
@@ -1508,7 +1512,10 @@ function TcsIonEngine({ testId }: { testId: string }) {
             
             <div className="flex justify-end gap-3">
               <button
-                onClick={() => setShowSubmitConfirm(false)}
+                onClick={() => {
+                  setShowSubmitConfirm(false);
+                  resumeExam();
+                }}
                 className="bg-slate-100 dark:bg-slate-805 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 border border-slate-200 dark:border-slate-700"
               >
                 {language === 'hi' ? 'रद्द करें' : 'Cancel'}
