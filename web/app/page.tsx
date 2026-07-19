@@ -378,6 +378,14 @@ const formatSubCategoryName = (name: string) => {
 
   const activeTopper = testimonials[successIndex] || testimonials[0] || SUCCESS_STORIES[0];
 
+  if (!isMounted) {
+    return (
+      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 items-center justify-center">
+        <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   if (isMobile) {
     return (
       <>
@@ -1150,7 +1158,7 @@ const formatSubCategoryName = (name: string) => {
       <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* HEADER SECTION */}
-      <header className="h-16 sticky top-0 z-40 px-6 md:px-12 flex items-center justify-between shadow-sm glass-header transition-all duration-350">
+      <header className="hidden md:flex h-16 sticky top-0 z-40 px-6 md:px-12 items-center justify-between shadow-sm glass-header transition-all duration-350">
         <div className="flex items-center gap-8">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
