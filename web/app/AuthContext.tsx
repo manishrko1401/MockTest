@@ -29,6 +29,7 @@ export interface TestSubSubCategory {
 export interface TestSubCategory {
   id: string;
   name: string;
+  logoUrl?: string;
   subSubCategories: TestSubSubCategory[];
   tests: MockTestItem[];
 }

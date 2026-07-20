@@ -9,8 +9,7 @@ import {
   TextInput,
   Alert,
   Dimensions,
-  Switch,
-  PanResponder
+  Switch
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -72,46 +71,15 @@ export default function AnalysisScreen({
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
   const [selectedSection, setSelectedSection] = useState<string>('All Sections');
 
-  // Navigation helper functions for swipe gestures
-  const goToNextQuestion = () => {
-    if (activeQuestionIdx < filteredQuestions.length - 1) {
-      setActiveQuestionIdx(prev => prev + 1);
-    }
+  // Ref for the horizontal paging ScrollView — same technique as the notice screen
+  const solutionScrollRef = useRef<ScrollView>(null);
+  const pageWidth = Dimensions.get('window').width;
+
+  // Scroll to a specific question page with a smooth native slide animation
+  const scrollToQuestion = (idx: number) => {
+    setActiveQuestionIdx(idx);
+    solutionScrollRef.current?.scrollTo({ x: idx * pageWidth, animated: true });
   };
-
-  const goToPrevQuestion = () => {
-    if (activeQuestionIdx > 0) {
-      setActiveQuestionIdx(prev => prev - 1);
-    }
-  };
-
-  // Keep navigation callbacks fresh to avoid stale closures in PanResponder
-  const handleNextQuestionRef = useRef(goToNextQuestion);
-  const handlePrevQuestionRef = useRef(goToPrevQuestion);
-
-  useEffect(() => {
-    handleNextQuestionRef.current = goToNextQuestion;
-    handlePrevQuestionRef.current = goToPrevQuestion;
-  });
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Capture horizontal swipe when X displacement is significant and greater than Y displacement
-        return Math.abs(gestureState.dx) > 30 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx < -50) {
-          // Swipe left -> Go to next question
-          handleNextQuestionRef.current();
-        } else if (gestureState.dx > 50) {
-          // Swipe right -> Go to previous question
-          handlePrevQuestionRef.current();
-        }
-      },
-    })
-  ).current;
 
   // Abramowitz and Stegun Normal CDF approximation helper
   const calculateNormalCDF = (z: number): number => {
@@ -723,231 +691,205 @@ export default function AnalysisScreen({
                     const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
                     const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
                     const isCorrect = selectedIdx === correctIdx;
-                    const isUnattempted = selectedIdx === null || selectedIdx === undefined;
+                     const isUnattempted = selectedIdx === null || selectedIdx === undefined;
 
-                    let bgStyle = styles.circleNeutral;
-                    let textCol = '#64748B';
+                     let bgStyle = styles.circleNeutral;
+                     let textCol = '#64748B';
 
-                    if (isSelected) {
-                      bgStyle = styles.circleActive;
-                      textCol = '#FFFFFF';
-                    } else if (!reattemptMode && !revealedSolutions[q.id]) {
-                      if (isUnattempted) {
-                        bgStyle = styles.circleUnattempted;
-                      } else if (isCorrect) {
-                        bgStyle = styles.circleCorrect;
-                        textCol = '#15803D';
-                      } else {
-                        bgStyle = styles.circleIncorrect;
-                        textCol = '#B91C1C';
-                      }
-                    }
-
-                    return (
-                      <TouchableOpacity
-                        key={q.id || idx}
-                        style={[styles.circleNav, bgStyle]}
-                        onPress={() => {
-                          setActiveQuestionIdx(idx);
-                        }}
-                      >
-                        <Text style={[styles.circleNavText, { color: textCol }]}>{idx + 1}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-              )}
-            </View>
-
-             {/* Question Workspace Panel */}
-             <View {...panResponder.panHandlers} style={{ flex: 1 }}>
-               <ScrollView 
-                 style={styles.qWorkspace} 
-                 contentContainerStyle={styles.qWorkspaceContent}
-                 showsVerticalScrollIndicator={false}
-               >
-              {activeQuestion ? (
-                <View style={styles.questionCard}>
-                  
-                  {/* Question stats details bar */}
-                  <View style={styles.questionMetaRow}>
-                    <View style={styles.metaBadgeCircle}>
-                      <Text style={styles.metaBadgeCircleText}>{activeQuestionIdx + 1}</Text>
-                    </View>
-                    
-                     {(() => {
-                       const userResponse = activeAttempt.responses ? activeAttempt.responses[activeQuestion.id] : null;
-                       const elapsed = userResponse ? Number(userResponse.elapsedSeconds) || 0 : 0;
-                       if (elapsed >= 60) {
-                         return <Text style={styles.metaText}>{Math.floor(elapsed / 60)}m {elapsed % 60}s</Text>;
+                     if (isSelected) {
+                       bgStyle = styles.circleActive;
+                       textCol = '#FFFFFF';
+                     } else if (!reattemptMode && !revealedSolutions[q.id]) {
+                       if (isUnattempted) {
+                         bgStyle = styles.circleUnattempted;
+                       } else if (isCorrect) {
+                         bgStyle = styles.circleCorrect;
+                         textCol = '#15803D';
+                       } else {
+                         bgStyle = styles.circleIncorrect;
+                         textCol = '#B91C1C';
                        }
-                       return <Text style={styles.metaText}>{elapsed}s</Text>;
-                     })()}
-                    <Text style={[styles.metaText, { color: '#22C55E', fontWeight: 'bold' }]}>+1.0</Text>
-                    <Text style={[styles.metaText, { color: '#EF4444', fontWeight: 'bold' }]}>-0.25</Text>
-
-                    <View style={styles.metaIcons}>
-                      <TouchableOpacity style={styles.iconBtn} onPress={handleOpenReportModal}>
-                        <AlertTriangle size={17} color="#64748B" />
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={styles.iconBtn}
-                        onPress={() => onToggleBookmark(activeAttempt.testId, activeQuestion.id)}
-                      >
-                        <Bookmark 
-                          size={17} 
-                          color={isBookmarked(activeQuestion.id) ? '#F59E0B' : '#64748B'}
-                          fill={isBookmarked(activeQuestion.id) ? '#F59E0B' : 'transparent'}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-                  {/* Question Title */}
-                  <HtmlText 
-                    style={styles.questionText} 
-                    isDark={isDark} 
-                    html={lang === 'en' ? activeQuestion.textEn || activeQuestion.content?.en?.questionText : activeQuestion.textHi || activeQuestion.content?.hi?.questionText} 
-                  />
-
-                  {/* Options List */}
-                  <View style={styles.optionsContainer}>
-                    {(lang === 'en' ? activeQuestion.optionsEn || activeQuestion.content?.en?.options : activeQuestion.optionsHi || activeQuestion.content?.hi?.options)?.map((opt: any, optIdx: number) => {
-                      const optText = typeof opt === 'string' ? opt : opt.text;
-                      const correctIdx = activeQuestion.correctOptionIndex !== undefined ? activeQuestion.correctOptionIndex : activeQuestion.correctIndex;
-                      
-                      // Identify selected option in current reattempt or historical responses
-                      const userResponse = activeAttempt.responses ? activeAttempt.responses[activeQuestion.id] : null;
-                      const submittedIdx = userResponse ? userResponse.selectedOptionIndex : null;
-                      
-                      const isTempSelected = selectedOptions[activeQuestion.id] === optIdx;
-                      const isSubmittedSelected = submittedIdx === optIdx;
-                      
-                      const isCorrectOpt = optIdx === correctIdx;
-                      const isSolutionRevealed = !reattemptMode || revealedSolutions[activeQuestion.id];
-
-                      let borderCol = '#E2E8F0';
-                      let bgCol = '#FFFFFF';
-                      let labelCol = '#64748B';
-
-                      if (isSolutionRevealed) {
-                        if (isCorrectOpt) {
-                          borderCol = '#22C55E';
-                          bgCol = '#F0FDF4';
-                          labelCol = '#15803D';
-                        } else if (reattemptMode ? isTempSelected : isSubmittedSelected) {
-                          borderCol = '#EF4444';
-                          bgCol = '#FEF2F2';
-                          labelCol = '#B91C1C';
-                        }
-                      } else {
-                        // Not revealed yet (Reattempt Mode on)
-                        if (isTempSelected) {
-                          borderCol = '#2563EB';
-                          bgCol = '#EFF6FF';
-                          labelCol = '#1D4ED8';
-                        }
-                      }
+                     }
 
                       return (
                         <TouchableOpacity
-                          key={optIdx}
-                          disabled={isSolutionRevealed}
-                          style={[styles.optionCard, { borderColor: borderCol, backgroundColor: bgCol }]}
-                          onPress={() => {
-                            setSelectedOptions(prev => ({ ...prev, [activeQuestion.id]: optIdx }));
-                          }}
+                          key={q.id || idx}
+                          style={[styles.circleNav, bgStyle]}
+                          onPress={() => scrollToQuestion(idx)}
                         >
-                          <Text style={[styles.optionIndexLabel, { color: labelCol }]}>
-                            {optIdx + 1}.
-                          </Text>
-                          <HtmlText 
-                            style={styles.optionText} 
-                            isDark={isDark} 
-                            html={optText} 
-                          />
-                          {isSolutionRevealed && isCorrectOpt && (
-                            <CircleCheck size={16} color="#22C55E" style={{ marginLeft: 'auto' }} />
-                          )}
-                          {isSolutionRevealed && !isCorrectOpt && (reattemptMode ? isTempSelected : isSubmittedSelected) && (
-                            <CircleX size={16} color="#EF4444" style={{ marginLeft: 'auto' }} />
-                          )}
+                          <Text style={[styles.circleNavText, { color: textCol }]}>{idx + 1}</Text>
                         </TouchableOpacity>
                       );
-                    })}
-                  </View>
+                   })}
+                 </ScrollView>
+               )}
+             </View>
 
-                  {/* Solution block and explanations */}
-                  {(!reattemptMode || revealedSolutions[activeQuestion.id]) ? (
-                    <View style={styles.explanationBox}>
-                      <Text style={styles.explanationTitle}>Explanation</Text>
-                      <HtmlText 
-                        style={styles.explanationText} 
-                        isDark={isDark} 
-                        html={lang === 'en' ? activeQuestion.explanationEn || activeQuestion.explanation?.en : activeQuestion.explanationHi || activeQuestion.explanation?.hi} 
-                      />
-                    </View>
-                  ) : (
-                    <View style={styles.viewSolutionBtnArea}>
-                      <TouchableOpacity 
-                        style={styles.viewSolutionBtn}
-                        onPress={() => {
-                          setRevealedSolutions(prev => ({ ...prev, [activeQuestion.id]: true }));
-                        }}
-                      >
-                        <Text style={styles.viewSolutionBtnText}>View Solution</Text>
-                      </TouchableOpacity>
-                      
-                      <Text style={styles.reattemptHint}>
-                        Re-attempt mode is ON. Turn OFF the Re-attempt mode or re-attempt the question to see the solutions.
-                      </Text>
-                    </View>
-                  )}
+             {/* Question Workspace Panel — horizontal paging ScrollView, same as the notice screen */}
+             <ScrollView
+               ref={solutionScrollRef}
+               horizontal
+               pagingEnabled
+               showsHorizontalScrollIndicator={false}
+               scrollEventThrottle={16}
+               decelerationRate="fast"
+               bounces={false}
+               style={{ flex: 1 }}
+               onMomentumScrollEnd={(e) => {
+                 const newIdx = Math.round(e.nativeEvent.contentOffset.x / pageWidth);
+                 if (newIdx !== activeQuestionIdx) {
+                   setActiveQuestionIdx(newIdx);
+                 }
+               }}
+             >
+               {filteredQuestions.map((question, qIdx) => {
+                 const userResp = activeAttempt.responses ? activeAttempt.responses[question.id] : null;
+                 const submittedIdx = userResp ? userResp.selectedOptionIndex : null;
+                 const elapsed = userResp ? Number(userResp.elapsedSeconds) || 0 : 0;
+                 const correctIdx = question.correctOptionIndex !== undefined ? question.correctOptionIndex : question.correctIndex;
+                 const isSolutionRevealed = !reattemptMode || revealedSolutions[question.id];
 
-                </View>
-              ) : (
-                <View style={{ flex: 1, paddingVertical: 80, alignItems: 'center' }}>
-                  <Text style={styles.grayText}>No question loaded.</Text>
-                </View>
-              )}
-            </ScrollView>
-          </View>
+                 return (
+                   <ScrollView
+                     key={question.id || qIdx}
+                     style={[styles.qWorkspace, { width: pageWidth }]}
+                     contentContainerStyle={styles.qWorkspaceContent}
+                     showsVerticalScrollIndicator={false}
+                     nestedScrollEnabled
+                   >
+                     <View style={styles.questionCard}>
+
+                       {/* Question stats details bar */}
+                       <View style={styles.questionMetaRow}>
+                         <View style={styles.metaBadgeCircle}>
+                           <Text style={styles.metaBadgeCircleText}>{qIdx + 1}</Text>
+                         </View>
+                         {elapsed >= 60
+                           ? <Text style={styles.metaText}>{Math.floor(elapsed / 60)}m {elapsed % 60}s</Text>
+                           : <Text style={styles.metaText}>{elapsed}s</Text>
+                         }
+                         <Text style={[styles.metaText, { color: '#22C55E', fontWeight: 'bold' }]}>+1.0</Text>
+                         <Text style={[styles.metaText, { color: '#EF4444', fontWeight: 'bold' }]}>-0.25</Text>
+                         <View style={styles.metaIcons}>
+                           <TouchableOpacity style={styles.iconBtn} onPress={handleOpenReportModal}>
+                             <AlertTriangle size={17} color="#64748B" />
+                           </TouchableOpacity>
+                           <TouchableOpacity
+                             style={styles.iconBtn}
+                             onPress={() => onToggleBookmark(activeAttempt.testId, question.id)}
+                           >
+                             <Bookmark
+                               size={17}
+                               color={isBookmarked(question.id) ? '#F59E0B' : '#64748B'}
+                               fill={isBookmarked(question.id) ? '#F59E0B' : 'transparent'}
+                             />
+                           </TouchableOpacity>
+                         </View>
+                       </View>
+
+                       {/* Question Title */}
+                       <HtmlText
+                         style={styles.questionText}
+                         isDark={isDark}
+                         html={lang === 'en' ? question.textEn || question.content?.en?.questionText : question.textHi || question.content?.hi?.questionText}
+                       />
+
+                       {/* Options List */}
+                       <View style={styles.optionsContainer}>
+                         {(lang === 'en' ? question.optionsEn || question.content?.en?.options : question.optionsHi || question.content?.hi?.options)?.map((opt: any, optIdx: number) => {
+                           const optText = typeof opt === 'string' ? opt : opt.text;
+                           const isTempSelected = selectedOptions[question.id] === optIdx;
+                           const isSubmittedSelected = submittedIdx === optIdx;
+                           const isCorrectOpt = optIdx === correctIdx;
+
+                           let borderCol = '#E2E8F0';
+                           let bgCol = '#FFFFFF';
+                           let labelCol = '#64748B';
+
+                           if (isSolutionRevealed) {
+                             if (isCorrectOpt) {
+                               borderCol = '#22C55E'; bgCol = '#F0FDF4'; labelCol = '#15803D';
+                             } else if (reattemptMode ? isTempSelected : isSubmittedSelected) {
+                               borderCol = '#EF4444'; bgCol = '#FEF2F2'; labelCol = '#B91C1C';
+                             }
+                           } else if (isTempSelected) {
+                             borderCol = '#2563EB'; bgCol = '#EFF6FF'; labelCol = '#1D4ED8';
+                           }
+
+                           return (
+                             <TouchableOpacity
+                               key={optIdx}
+                               disabled={isSolutionRevealed}
+                               style={[styles.optionCard, { borderColor: borderCol, backgroundColor: bgCol }]}
+                               onPress={() => setSelectedOptions(prev => ({ ...prev, [question.id]: optIdx }))}
+                             >
+                               <Text style={[styles.optionIndexLabel, { color: labelCol }]}>{optIdx + 1}.</Text>
+                               <HtmlText style={styles.optionText} isDark={isDark} html={optText} />
+                               {isSolutionRevealed && isCorrectOpt && (
+                                 <CircleCheck size={16} color="#22C55E" style={{ marginLeft: 'auto' }} />
+                               )}
+                               {isSolutionRevealed && !isCorrectOpt && (reattemptMode ? isTempSelected : isSubmittedSelected) && (
+                                 <CircleX size={16} color="#EF4444" style={{ marginLeft: 'auto' }} />
+                               )}
+                             </TouchableOpacity>
+                           );
+                         })}
+                       </View>
+
+                       {/* Solution / Explanation block */}
+                       {isSolutionRevealed ? (
+                         <View style={styles.explanationBox}>
+                           <Text style={styles.explanationTitle}>Explanation</Text>
+                           <HtmlText
+                             style={styles.explanationText}
+                             isDark={isDark}
+                             html={lang === 'en' ? question.explanationEn || question.explanation?.en : question.explanationHi || question.explanation?.hi}
+                           />
+                         </View>
+                       ) : (
+                         <View style={styles.viewSolutionBtnArea}>
+                           <TouchableOpacity
+                             style={styles.viewSolutionBtn}
+                             onPress={() => setRevealedSolutions(prev => ({ ...prev, [question.id]: true }))}
+                           >
+                             <Text style={styles.viewSolutionBtnText}>View Solution</Text>
+                           </TouchableOpacity>
+                           <Text style={styles.reattemptHint}>
+                             Re-attempt mode is ON. Turn OFF the Re-attempt mode or re-attempt the question to see the solutions.
+                           </Text>
+                         </View>
+                       )}
+
+                     </View>
+                   </ScrollView>
+                 );
+               })}
+             </ScrollView>
 
              {/* Bottom Panel: Question count on the left, Arrow navigation keys on the right */}
              <View style={[styles.solBottomBar, isDark && { backgroundColor: ThemeColors.dark.card, borderTopColor: ThemeColors.dark.border }]}>
                <Text style={[styles.questionCountText, isDark && { color: ThemeColors.dark.text }]}>
                  {filteredQuestions.length > 0 ? `Question ${activeQuestionIdx + 1} of ${filteredQuestions.length}` : '0 of 0'}
                </Text>
-
                <View style={styles.arrowKeysContainer}>
-                 <TouchableOpacity 
+                 <TouchableOpacity
                    style={[styles.arrowKeyBtn, activeQuestionIdx === 0 && styles.arrowKeyBtnDisabled, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}
                    disabled={activeQuestionIdx === 0}
-                   onPress={() => {
-                     if (activeQuestionIdx > 0) {
-                       setActiveQuestionIdx(activeQuestionIdx - 1);
-                     }
-                   }}
+                   onPress={() => { if (activeQuestionIdx > 0) scrollToQuestion(activeQuestionIdx - 1); }}
                  >
                    <ChevronLeft size={22} color={activeQuestionIdx === 0 ? (isDark ? "#475569" : "#94A3B8") : (isDark ? "#E2E8F0" : "#1E293B")} />
                  </TouchableOpacity>
-                 <TouchableOpacity 
+                 <TouchableOpacity
                    style={[styles.arrowKeyBtn, activeQuestionIdx === filteredQuestions.length - 1 && styles.arrowKeyBtnDisabled, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}
                    disabled={activeQuestionIdx === filteredQuestions.length - 1}
-                   onPress={() => {
-                     if (activeQuestionIdx < filteredQuestions.length - 1) {
-                       setActiveQuestionIdx(activeQuestionIdx + 1);
-                     }
-                   }}
+                   onPress={() => { if (activeQuestionIdx < filteredQuestions.length - 1) scrollToQuestion(activeQuestionIdx + 1); }}
                  >
                    <ChevronRight size={22} color={activeQuestionIdx === filteredQuestions.length - 1 ? (isDark ? "#475569" : "#94A3B8") : (isDark ? "#E2E8F0" : "#1E293B")} />
                  </TouchableOpacity>
                </View>
              </View>
-          </View>
+           </View>
         )}
-
-
       </View>
 
       {/* 4. MODALS & DROPDOWNS */}
@@ -973,6 +915,7 @@ export default function AnalysisScreen({
                 onPress={() => {
                   setSelectedSection(sec);
                   setActiveQuestionIdx(0);
+                  solutionScrollRef.current?.scrollTo({ x: 0, animated: false });
                   setSectionDropdownVisible(false);
                 }}
               >
@@ -1011,6 +954,7 @@ export default function AnalysisScreen({
                 onPress={() => {
                   setFilterType(filt.id as any);
                   setActiveQuestionIdx(0);
+                  solutionScrollRef.current?.scrollTo({ x: 0, animated: false });
                   setFilterDropdownVisible(false);
                 }}
               >

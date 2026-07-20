@@ -826,12 +826,15 @@ export default function MobileTestScreen({
   const handlePreviousQuestion = () => {
     if (currentQuestionIdx > 0) {
       setCurrentQuestionIdx(prev => prev - 1);
-    } else if (currentSectionIdx > 0) {
+    } else if (!hasSectionalTiming && currentSectionIdx > 0) {
+      // Only allow going back to previous section when sectional timing is NOT active
       const prevSecIdx = currentSectionIdx - 1;
       const prevSecQs = questions.filter(q => q.sectionId === sections[prevSecIdx].id);
       setCurrentSectionIdx(prevSecIdx);
       setCurrentQuestionIdx(prevSecQs.length - 1);
     }
+    // When hasSectionalTiming is true and we are on question 0, do nothing —
+    // the user cannot navigate back to a section whose timer has already expired.
   };
 
   useEffect(() => { handleSaveAndNextRef.current = handleSaveAndNext; }, [handleSaveAndNext]);

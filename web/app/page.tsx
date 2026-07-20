@@ -915,9 +915,10 @@ const formatSubCategoryName = (name: string) => {
                 <div className="space-y-2.5">
                   {(() => {
                     const dbCategory = examCatalog?.find(c => c.id === selectedModalCategory);
+                    const parentCategoryLogo = dbCategory?.logoUrl || null;
                     const itemsToRender = dbCategory && dbCategory.subCategories?.length > 0
-                      ? dbCategory.subCategories.map(sub => ({ id: sub.id, name: sub.name, href: `/mock-tests?cat=${selectedModalCategory}&sub=${sub.id}` }))
-                      : EXAMS_BY_CATEGORY[selectedModalCategory]?.map(exam => ({ id: exam.id, name: exam.name, href: `/mock-tests?cat=${selectedModalCategory}` })) || [];
+                      ? dbCategory.subCategories.map(sub => ({ id: sub.id, name: sub.name, href: `/mock-tests?cat=${selectedModalCategory}&sub=${sub.id}`, logoUrl: sub.logoUrl || parentCategoryLogo }))
+                      : EXAMS_BY_CATEGORY[selectedModalCategory]?.map(exam => ({ id: exam.id, name: exam.name, href: `/mock-tests?cat=${selectedModalCategory}`, logoUrl: parentCategoryLogo })) || [];
 
                     if (itemsToRender.length === 0) {
                       return <p className="text-xs text-slate-400 italic text-center py-4">No subcategories available yet.</p>;
@@ -930,7 +931,12 @@ const formatSubCategoryName = (name: string) => {
                         onClick={handleCloseCategoryModal}
                         className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-bold text-slate-800 dark:text-slate-200"
                       >
-                        <span className="flex-1 pr-2">{item.name}</span>
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                          {item.logoUrl && (
+                            <img src={item.logoUrl} alt="" className="w-5 h-5 object-contain shrink-0 rounded" />
+                          )}
+                          <span className="truncate">{item.name}</span>
+                        </div>
                         <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
                       </Link>
                     ));
@@ -1787,9 +1793,10 @@ const formatSubCategoryName = (name: string) => {
               <div className="space-y-3">
                 {(() => {
                   const dbCategory = examCatalog?.find(c => c.id === selectedModalCategory);
+                  const parentCategoryLogo = dbCategory?.logoUrl || null;
                   const itemsToRender = dbCategory && dbCategory.subCategories?.length > 0
-                    ? dbCategory.subCategories.map(sub => ({ id: sub.id, name: sub.name, href: `/mock-tests?cat=${selectedModalCategory}&sub=${sub.id}` }))
-                    : EXAMS_BY_CATEGORY[selectedModalCategory]?.map(exam => ({ id: exam.id, name: exam.name, href: `/mock-tests?cat=${selectedModalCategory}` })) || [];
+                    ? dbCategory.subCategories.map(sub => ({ id: sub.id, name: sub.name, href: `/mock-tests?cat=${selectedModalCategory}&sub=${sub.id}`, logoUrl: sub.logoUrl || parentCategoryLogo }))
+                    : EXAMS_BY_CATEGORY[selectedModalCategory]?.map(exam => ({ id: exam.id, name: exam.name, href: `/mock-tests?cat=${selectedModalCategory}`, logoUrl: parentCategoryLogo })) || [];
 
                   if (itemsToRender.length === 0) {
                     return <p className="text-xs text-slate-400 italic text-center py-4">No subcategories available yet.</p>;
@@ -1802,8 +1809,13 @@ const formatSubCategoryName = (name: string) => {
                       onClick={() => setSelectedModalCategory(null)}
                       className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-blue-955/20 hover:border-blue-300 dark:hover:border-blue-900/60 rounded-xl transition group text-xs font-bold text-slate-800 dark:text-slate-200"
                     >
-                      <span>{item.name}</span>
-                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition group-hover:text-blue-600" />
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                        {item.logoUrl && (
+                          <img src={item.logoUrl} alt="" className="w-5 h-5 object-contain shrink-0 rounded" />
+                        )}
+                        <span className="truncate">{item.name}</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition group-hover:text-blue-600 shrink-0" />
                     </Link>
                   ));
                 })()}

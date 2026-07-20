@@ -107,7 +107,16 @@ const getCategoryTheme = (catId: string | null) => {
   };
 };
 
-const getSubCatIcon = (name: string) => {
+const getSubCatIcon = (name: string, logoUrl?: string | null) => {
+  if (logoUrl) {
+    return (
+      <img
+        src={logoUrl}
+        alt={`${name} logo`}
+        className="w-full h-full object-contain p-1"
+      />
+    );
+  }
   const n = name.toLowerCase();
   if (n.includes('cgl') || n.includes('cpo')) return <Award className="h-5.5 w-5.5" />;
   if (n.includes('ntpc') || n.includes('group d') || n.includes('alp') || n.includes('si')) return <Trophy className="h-5.5 w-5.5" />;
@@ -789,8 +798,8 @@ export default function MockTestsCatalog() {
                           />
 
                           {/* Icon Container */}
-                          <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md ${themeInfo.iconBg}`}>
-                            {getSubCatIcon(subCat.name)}
+                          <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md overflow-hidden ${themeInfo.iconBg}`}>
+                            {getSubCatIcon(subCat.name, subCat.logoUrl || activeCategoryObj?.logoUrl)}
                           </div>
 
                           {/* Exam Title */}
@@ -1601,8 +1610,8 @@ export default function MockTestsCatalog() {
                       />
 
                       {/* Icon Container */}
-                      <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md ${themeInfo.iconBg}`}>
-                        {getSubCatIcon(subCat.name)}
+                      <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md overflow-hidden ${themeInfo.iconBg}`}>
+                        {getSubCatIcon(subCat.name, subCat.logoUrl || currentCategoryObj?.logoUrl)}
                       </div>
 
                       {/* Exam Title */}
