@@ -102,6 +102,7 @@ type EngineAction =
   | { type: 'MARK_FOR_REVIEW_AND_NEXT' }
   | { type: 'JUMP_TO_QUESTION'; payload: { sectionIndex: number; questionIndex: number } }
   | { type: 'SWITCH_SECTION'; payload: { sectionIndex: number } }
+  | { type: 'SUBMIT_SECTION' }
   | { type: 'ADD_VIOLATION' }
   | { type: 'SUBMIT_EXAM' }
   | { type: 'SET_SYNCING'; payload: boolean }
