@@ -478,16 +478,16 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
               <div className="space-y-1">
                 <div className="flex items-center gap-2 mb-3">
                   <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Answer Options</h4>
-                  <span className="text-[9px] text-slate-450">(Options 1-4 required · Option 5 optional)</span>
+                  <span className="text-[9px] text-slate-450">(Options A-B required · Options C-E optional)</span>
                 </div>
                 {[
-                  { en: opt1En, setEn: setOpt1En, hi: opt1Hi, setHi: setOpt1Hi, idx: 0, label: 'A' },
-                  { en: opt2En, setEn: setOpt2En, hi: opt2Hi, setHi: setOpt2Hi, idx: 1, label: 'B' },
-                  { en: opt3En, setEn: setOpt3En, hi: opt3Hi, setHi: setOpt3Hi, idx: 2, label: 'C' },
-                  { en: opt4En, setEn: setOpt4En, hi: opt4Hi, setHi: setOpt4Hi, idx: 3, label: 'D' },
-                  { en: opt5En, setEn: setOpt5En, hi: opt5Hi, setHi: setOpt5Hi, idx: 4, label: 'E' },
-                ].map(({ en, setEn, hi, setHi, idx, label }) => (
-                  <div key={label} className={`flex items-center gap-3 ${label === 'E' ? 'mt-2 pt-2 border-t border-dashed border-slate-200 dark:border-slate-800' : ''}`}>
+                  { en: opt1En, setEn: setOpt1En, hi: opt1Hi, setHi: setOpt1Hi, idx: 0, label: 'A', req: true },
+                  { en: opt2En, setEn: setOpt2En, hi: opt2Hi, setHi: setOpt2Hi, idx: 1, label: 'B', req: true },
+                  { en: opt3En, setEn: setOpt3En, hi: opt3Hi, setHi: setOpt3Hi, idx: 2, label: 'C', req: false },
+                  { en: opt4En, setEn: setOpt4En, hi: opt4Hi, setHi: setOpt4Hi, idx: 3, label: 'D', req: false },
+                  { en: opt5En, setEn: setOpt5En, hi: opt5Hi, setHi: setOpt5Hi, idx: 4, label: 'E', req: false },
+                ].map(({ en, setEn, hi, setHi, idx, label, req }) => (
+                  <div key={label} className={`flex items-center gap-3 ${!req ? 'mt-1 pt-1' : ''}`}>
                     <button
                       type="button"
                       onClick={() => setFormCorrectIndex(idx)}
@@ -504,14 +504,14 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                       type="text"
                       value={en}
                       onChange={(e) => setEn(e.target.value)}
-                      placeholder={`Option ${label} (English)${label === 'E' ? ' — optional' : ''}`}
+                      placeholder={`Option ${label} (English)${!req ? ' — optional' : ''}`}
                       className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-855 dark:text-slate-205 focus:outline-none focus:border-blue-500 font-medium"
                     />
                     <input
                       type="text"
                       value={hi}
                       onChange={(e) => setHi(e.target.value)}
-                      placeholder={`विकल्प ${label} (Hindi)${label === 'E' ? ' — वैकल्पिक' : ''}`}
+                      placeholder={`विकल्प ${label} (Hindi)${!req ? ' — वैकल्पिक' : ''}`}
                       className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-855 dark:text-slate-205 focus:outline-none focus:border-blue-500 font-medium"
                     />
                   </div>

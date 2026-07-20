@@ -709,8 +709,8 @@ export default function AdminAnalytics() {
         if (!item.textEn || !item.textHi || !item.optionsEn || !item.optionsHi || item.correctIndex === undefined) {
           throw new Error('All questions must map textEn, textHi, optionsEn, optionsHi, and correctIndex.');
         }
-        if (!Array.isArray(item.optionsEn) || item.optionsEn.length < 4) {
-          throw new Error('optionsEn must be an array of at least 4 strings.');
+        if (!Array.isArray(item.optionsEn) || item.optionsEn.length < 2) {
+          throw new Error('optionsEn must be an array of at least 2 strings.');
         }
       }
 
@@ -760,7 +760,7 @@ export default function AdminAnalytics() {
           window.location.reload();
         }, 1500);
       } else {
-        showToast('Error saving questions.');
+        showToast('Error: ' + (data.error || 'Failed to save questions to database.'));
       }
     } catch (e) {
       showToast('Error saving questions.');
@@ -772,22 +772,22 @@ export default function AdminAnalytics() {
     const template = [
       {
         textEn: "What is the unit of electric current?",
-        textHi: "αñ╡αñ┐αñªαÑìαñ»αÑüαññ αñºαñ╛αñ░αñ╛ αñòαÑÇ αñçαñòαñ╛αñê αñòαÑìαñ»αñ╛ αñ╣αÑê?",
+        textHi: "विद्युत धारा की इकाई क्या है?",
         optionsEn: ["Ampere", "Volt", "Ohm", "Watt"],
-        optionsHi: ["αñÅαñ«αÑìαñ¬αÑÇαñ»αñ░", "αñ╡αÑïαñ▓αÑìαñƒ", "αñôαñ«", "αñ╡αñ╛αñƒ"],
+        optionsHi: ["ऐम्पियर", "वोल्ट", "ओम", "वाट"],
         correctIndex: 0,
         explanationEn: "Ampere is the base unit of electric current.",
-        explanationHi: "αñÅαñ«αÑìαñ¬αÑÇαñ»αñ░ αñ╡αñ┐αñªαÑìαñ»αÑüαññ αñºαñ╛αñ░αñ╛ αñòαÑÇ αñ«αÑéαñ▓ αñçαñòαñ╛αñê αñ╣αÑêαÑñ",
+        explanationHi: "ऐम्पियर विद्युत धारा की मूल इकाई है।",
         section: "General Studies"
       },
       {
-        textEn: "Which planet is known as the Red Planet?",
-        textHi: "αñòαñ┐αñ╕ αñùαÑìαñ░αñ╣ αñòαÑï αñ▓αñ╛αñ▓ αñùαÑìαñ░αñ╣ αñòαÑç αñ¿αñ╛αñ« αñ╕αÑç αñ£αñ╛αñ¿αñ╛ αñ£αñ╛αññαñ╛ αñ╣αÑê?",
-        optionsEn: ["Earth", "Mars", "Jupiter", "Saturn"],
-        optionsHi: ["αñ¬αÑâαñÑαÑìαñ╡αÑÇ", "αñ«αñéαñùαñ▓", "αñ¼αÑâαñ╣αñ╕αÑìαñ¬αññαñ┐", "αñ╢αñ¿αñ┐"],
-        correctIndex: 1,
-        explanationEn: "Mars is called the Red Planet due to iron oxide on its surface.",
-        explanationHi: "αñ«αñéαñùαñ▓ αñòαÑï αñëαñ╕αñòαÑÇ αñ╕αññαñ╣ αñ¬αñ░ αñåαñ»αñ░αñ¿ αñæαñòαÑìαñ╕αñ╛αñçαñí αñòαÑç αñòαñ╛αñ░αñú αñ▓αñ╛αñ▓ αñùαÑìαñ░αñ╣ αñòαñ╣αñ╛ αñ£αñ╛αññαñ╛ αñ╣αÑêαÑñ",
+        textEn: "Is light an electromagnetic wave?",
+        textHi: "क्या प्रकाश एक विद्युत चुंबकीय तरंग है?",
+        optionsEn: ["Yes", "No"],
+        optionsHi: ["हाँ", "नहीं"],
+        correctIndex: 0,
+        explanationEn: "Yes, light is an electromagnetic wave.",
+        explanationHi: "हाँ, प्रकाश एक विद्युत चुंबकीय तरंग है।",
         section: "General Studies"
       }
     ];
@@ -802,20 +802,25 @@ export default function AdminAnalytics() {
       return;
     }
 
-    if (!opt1En.trim() || !opt1Hi.trim() ||
-        !opt2En.trim() || !opt2Hi.trim() ||
-        !opt3En.trim() || !opt3Hi.trim() ||
-        !opt4En.trim() || !opt4Hi.trim()) {
-      showToast("First 4 options are required in both English and Hindi");
+    if (!opt1En.trim() || !opt1Hi.trim() || !opt2En.trim() || !opt2Hi.trim()) {
+      showToast("First 2 options are required in both English and Hindi");
       return;
     }
 
-    const optionsEn = [opt1En.trim(), opt2En.trim(), opt3En.trim(), opt4En.trim()];
-    const optionsHi = [opt1Hi.trim(), opt2Hi.trim(), opt3Hi.trim(), opt4Hi.trim()];
+    const optionsEn = [opt1En.trim(), opt2En.trim()];
+    const optionsHi = [opt1Hi.trim(), opt2Hi.trim()];
 
+    if (opt3En.trim() || opt3Hi.trim()) {
+      optionsEn.push(opt3En.trim() || "Option 3");
+      optionsHi.push(opt3Hi.trim() || "विकल्प 3");
+    }
+    if (opt4En.trim() || opt4Hi.trim()) {
+      optionsEn.push(opt4En.trim() || "Option 4");
+      optionsHi.push(opt4Hi.trim() || "विकल्प 4");
+    }
     if (opt5En.trim() || opt5Hi.trim()) {
       optionsEn.push(opt5En.trim() || "Option 5");
-      optionsHi.push(opt5Hi.trim() || "αñ╡αñ┐αñòαñ▓αÑìαñ¬ 5");
+      optionsHi.push(opt5Hi.trim() || "विकल्प 5");
     }
 
     if (formCorrectIndex >= optionsEn.length) {

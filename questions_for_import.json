@@ -3265,14 +3265,12 @@
     "optionsEn": [
       "Always",
       "Sometimes",
-      "Never",
-      "Option 4"
+      "Never"
     ],
     "optionsHi": [
       "हमेशा",
       "कभी - कभी",
-      "कभी - नहीं",
-      "Option 4"
+      "कभी - नहीं"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3285,14 +3283,12 @@
     "optionsEn": [
       "I am child",
       "I am against dowry",
-      "I will not get married",
-      "Option 4"
+      "I will not get married"
     ],
     "optionsHi": [
       "मैं बच्चा हूं",
       "मैं दहेज का विरोधी हूं",
-      "मेरी शादी नहीं होगी",
-      "Option 4"
+      "मेरी शादी नहीं होगी"
     ],
     "correctIndex": 1,
     "explanationEn": "",
@@ -3305,14 +3301,12 @@
     "optionsEn": [
       "Black and beautiful",
       "White and beautiful",
-      "Honest and helpful",
-      "Option 4"
+      "Honest and helpful"
     ],
     "optionsHi": [
       "काले व सुंदर",
       "गोरे व सुंदर",
-      "ईमानदार व सहयोगी",
-      "Option 4"
+      "ईमानदार व सहयोगी"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3325,14 +3319,12 @@
     "optionsEn": [
       "Always",
       "Sometimes",
-      "Never",
-      "Option 4"
+      "Never"
     ],
     "optionsHi": [
       "हमेशा",
       "कभी - कभी",
-      "कभी - नहीं",
-      "Option 4"
+      "कभी - नहीं"
     ],
     "correctIndex": 0,
     "explanationEn": "",
@@ -3345,14 +3337,12 @@
     "optionsEn": [
       "Always",
       "Sometimes",
-      "Never",
-      "Option 4"
+      "Never"
     ],
     "optionsHi": [
       "हमेशा",
       "कभी-कभी",
-      "कभी नहीं",
-      "Option 4"
+      "कभी नहीं"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3365,14 +3355,12 @@
     "optionsEn": [
       "स्वयं के वाहन से",
       "By public transport",
-      "On foot",
-      "Option 4"
+      "On foot"
     ],
     "optionsHi": [
       "स्वयं के वाहन से",
       "पब्लिक ट्रांसपोर्ट से",
-      "पैदल",
-      "Option 4"
+      "पैदल"
     ],
     "correctIndex": 1,
     "explanationEn": "",
@@ -3385,14 +3373,12 @@
     "optionsEn": [
       "I keep changing colors like a chameleon",
       "I am a very tough person",
-      "It's not like that",
-      "Option 4"
+      "It's not like that"
     ],
     "optionsHi": [
       "मैं गिरगिट की तरह रंग बदलता रहता हूं -",
       "मैं बहुत ही कठिन प्रवृत्ति का व्यक्ति हूं -",
-      "ऐसा नहीं है",
-      "Option 4"
+      "ऐसा नहीं है"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3405,14 +3391,12 @@
     "optionsEn": [
       "Water",
       "Fish",
-      "Depth",
-      "Option 4"
+      "Depth"
     ],
     "optionsHi": [
       "जल",
       "मछली",
-      "गहराई",
-      "Option 4"
+      "गहराई"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3425,14 +3409,12 @@
     "optionsEn": [
       "Hateful",
       "voilent",
-      "Sweet",
-      "Option 4"
+      "Sweet"
     ],
     "optionsHi": [
       "घृणा पूर्ण",
       "हिंसक",
-      "मधुर",
-      "Option 4"
+      "मधुर"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3445,14 +3427,12 @@
     "optionsEn": [
       "True",
       "False",
-      "between the two",
-      "Option 4"
+      "between the two"
     ],
     "optionsHi": [
       "सत्य है",
       "असत्य है",
-      "दोनों के बीच",
-      "Option 4"
+      "दोनों के बीच"
     ],
     "correctIndex": 1,
     "explanationEn": "",
@@ -3465,14 +3445,12 @@
     "optionsEn": [
       "Always",
       "Sometimes",
-      "Never",
-      "Option 4"
+      "Never"
     ],
     "optionsHi": [
       "हमेशा",
       "कभी-कभी",
-      "कभी - नहीं",
-      "Option 4"
+      "कभी - नहीं"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3485,14 +3463,12 @@
     "optionsEn": [
       "to get happiness",
       "to show confidence in others",
-      "under compulsion",
-      "Option 4"
+      "under compulsion"
     ],
     "optionsHi": [
       "खुशी प्राप्ति के लिए",
       "दूसरों के प्रति विश्वास दिखाने के लिए",
-      "मजबूरी में आकर",
-      "Option 4"
+      "मजबूरी में आकर"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3505,14 +3481,12 @@
     "optionsEn": [
       "will jump in the water",
       "will call someone",
-      "will do nothing",
-      "Option 4"
+      "will do nothing"
     ],
     "optionsHi": [
       "पानी में कूद जाएंगे",
       "किसी को बुलाएंगे",
-      "कुछ नहीं करेंगे",
-      "Option 4"
+      "कुछ नहीं करेंगे"
     ],
     "correctIndex": 1,
     "explanationEn": "",
@@ -3525,14 +3499,12 @@
     "optionsEn": [
       "get nervous",
       "run away seeing",
-      "face the tough",
-      "Option 4"
+      "face the tough"
     ],
     "optionsHi": [
       "घबरा जाते हैं",
       "देख कर भाग जाते हैं",
-      "डटकर सामना करते हैं",
-      "Option 4"
+      "डटकर सामना करते हैं"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3545,14 +3517,12 @@
     "optionsEn": [
       "True",
       "False",
-      "Do not know",
-      "Option 4"
+      "Do not know"
     ],
     "optionsHi": [
       "सत्य है",
       "असत्य है",
-      "पता नहीं",
-      "Option 4"
+      "पता नहीं"
     ],
     "correctIndex": 1,
     "explanationEn": "",
@@ -3565,14 +3535,12 @@
     "optionsEn": [
       "True",
       "False",
-      "Do not know",
-      "Option 4"
+      "Do not know"
     ],
     "optionsHi": [
       "सत्य है",
       "असत्य है",
-      "पता नहीं",
-      "Option 4"
+      "पता नहीं"
     ],
     "correctIndex": 0,
     "explanationEn": "",
@@ -3585,14 +3553,12 @@
     "optionsEn": [
       "Yes",
       "No",
-      "Never",
-      "Option 4"
+      "Never"
     ],
     "optionsHi": [
       "हां",
       "नहीं",
-      "कभी नहीं",
-      "Option 4"
+      "कभी नहीं"
     ],
     "correctIndex": 0,
     "explanationEn": "",
@@ -3605,14 +3571,12 @@
     "optionsEn": [
       "उनसे पीटकर पूछेंगे",
       "tempted to ask",
-      "will ask wisely",
-      "Option 4"
+      "will ask wisely"
     ],
     "optionsHi": [
       "उनसे पीटकर पूछेंगे",
       "प्रलोभन देकर पूछेंगे",
-      "समझदारी से पूछेंगे",
-      "Option 4"
+      "समझदारी से पूछेंगे"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3625,14 +3589,12 @@
     "optionsEn": [
       "Agree",
       "Disagree",
-      "Do not know",
-      "Option 4"
+      "Do not know"
     ],
     "optionsHi": [
       "सहमत हैं",
       "असहमत हैं",
-      "पता नहीं",
-      "Option 4"
+      "पता नहीं"
     ],
     "correctIndex": 0,
     "explanationEn": "",
@@ -3645,14 +3607,12 @@
     "optionsEn": [
       "who passed 12th exam",
       "Who Passed RRB Exam",
-      "who did adventures",
-      "Option 4"
+      "who did adventures"
     ],
     "optionsHi": [
       "जिन्होंने 12वीं की परीक्षा उत्तीर्ण की",
       "जिन्होंने आरआर बी परीक्षा पास की",
-      "जिन्होंने साहसिक कार्य किए",
-      "Option 4"
+      "जिन्होंने साहसिक कार्य किए"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3665,14 +3625,12 @@
     "optionsEn": [
       "True",
       "False",
-      "between the two",
-      "Option 4"
+      "between the two"
     ],
     "optionsHi": [
       "सत्य है",
       "असत्य है",
-      "दोनों के बीच",
-      "Option 4"
+      "दोनों के बीच"
     ],
     "correctIndex": 0,
     "explanationEn": "",
@@ -3685,14 +3643,12 @@
     "optionsEn": [
       "True",
       "False",
-      "between the two",
-      "Option 4"
+      "between the two"
     ],
     "optionsHi": [
       "सत्य",
       "असत्य",
-      "दोनों के बीच",
-      "Option 4"
+      "दोनों के बीच"
     ],
     "correctIndex": 0,
     "explanationEn": "",
@@ -3705,14 +3661,12 @@
     "optionsEn": [
       "Yes",
       "Sometimes",
-      "Never",
-      "Option 4"
+      "Never"
     ],
     "optionsHi": [
       "हां",
       "कभी-कभी",
-      "कभी- नहीं",
-      "Option 4"
+      "कभी- नहीं"
     ],
     "correctIndex": 0,
     "explanationEn": "",
@@ -3725,14 +3679,12 @@
     "optionsEn": [
       "having fun",
       "keep thinking about work",
-      "remember the cheaters",
-      "Option 4"
+      "remember the cheaters"
     ],
     "optionsHi": [
       "मौज मस्ती करता हूं",
       "कार्य के बारे में सोचता रहता हूं",
-      "धोखा देने वालों को याद करता हूं",
-      "Option 4"
+      "धोखा देने वालों को याद करता हूं"
     ],
     "correctIndex": 0,
     "explanationEn": "",
@@ -3745,14 +3697,12 @@
     "optionsEn": [
       "corrupted",
       "corruption free",
-      "between the two",
-      "Option 4"
+      "between the two"
     ],
     "optionsHi": [
       "भ्रष्टाचार युक्त",
       "भ्रष्टाचार मुक्त",
-      "दोनों के बीच",
-      "Option 4"
+      "दोनों के बीच"
     ],
     "correctIndex": 1,
     "explanationEn": "",
@@ -3765,14 +3715,12 @@
     "optionsEn": [
       "Sometimes",
       "Always",
-      "Never",
-      "Option 4"
+      "Never"
     ],
     "optionsHi": [
       "कभी-कभी",
       "हमेशा",
-      "कभी नहीं",
-      "Option 4"
+      "कभी नहीं"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3785,14 +3733,12 @@
     "optionsEn": [
       "Yes",
       "Sometimes",
-      "No",
-      "Option 4"
+      "No"
     ],
     "optionsHi": [
       "हां",
       "कभी-कभी",
-      "नहीं",
-      "Option 4"
+      "नहीं"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3805,14 +3751,12 @@
     "optionsEn": [
       "Will jump and become smart",
       "Will read and write, will become illiterate",
-      "Will play, will jump and become a illiterate",
-      "Option 4"
+      "Will play, will jump and become a illiterate"
     ],
     "optionsHi": [
       "खेलेंगे कूदेंगे बनेंगे होशियार",
       "पढ़ेंगे लिखेंगे बनेंगे गवार",
-      "खेलेंगे कूदेंगे बनोगे गवार",
-      "Option 4"
+      "खेलेंगे कूदेंगे बनोगे गवार"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3825,14 +3769,12 @@
     "optionsEn": [
       "have sympathy for them",
       "should serve them",
-      "should support their access to rights",
-      "Option 4"
+      "should support their access to rights"
     ],
     "optionsHi": [
       "उनके प्रति सहानुभूति रखनी चाहिए",
       "उनकी सेवा करनी चाहिए",
-      "उनकी अधिकारों तक पहुंच में सहयोग करना चाहिए",
-      "Option 4"
+      "उनकी अधिकारों तक पहुंच में सहयोग करना चाहिए"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3845,14 +3787,12 @@
     "optionsEn": [
       "will leave them on their own",
       "will call their parents",
-      "settle the dispute",
-      "Option 4"
+      "settle the dispute"
     ],
     "optionsHi": [
       "उन्हें उनके हाल पर छोड़ देंगे",
       "उनके माता-पिता को बुला कर लाएंगे",
-      "झगड़ा शांत कराएंगे",
-      "Option 4"
+      "झगड़ा शांत कराएंगे"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3865,14 +3805,12 @@
     "optionsEn": [
       "We consider sex education inferior",
       "Contrary to patriarchy",
-      "We bow before our culture and civilization",
-      "Option 4"
+      "We bow before our culture and civilization"
     ],
     "optionsHi": [
       "सैक्स शिक्षा को हम हीन मानते हैं",
       "पितृसत्ता के विपरीत मानते हैं",
-      "हम अपने संस्कार और सभ्यता के सामने झुक जाते हैं",
-      "Option 4"
+      "हम अपने संस्कार और सभ्यता के सामने झुक जाते हैं"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3885,14 +3823,12 @@
     "optionsEn": [
       "Yes",
       "Sometimes",
-      "No",
-      "Option 4"
+      "No"
     ],
     "optionsHi": [
       "हां",
       "कभी-कभी",
-      "नहीं",
-      "Option 4"
+      "नहीं"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3905,14 +3841,12 @@
     "optionsEn": [
       "Will leave him as poor",
       "Will release by giving corporal punishment",
-      "Take appropriate action.",
-      "Option 4"
+      "Take appropriate action."
     ],
     "optionsHi": [
       "गरीब समझकर छोड़ देंगे।",
       "शारीरिक दण्ड देकर छोड़ देंगे।",
-      "उचित कार्यवाही करेंगे।",
-      "Option 4"
+      "उचित कार्यवाही करेंगे।"
     ],
     "correctIndex": 2,
     "explanationEn": "",
@@ -3925,14 +3859,12 @@
     "optionsEn": [
       "Will refuse to cooperate due to being off duty",
       "You will do everything possible to notify the incharge of the accident site.",
-      "Do not tell anyone that you are Station Master.",
-      "Option 4"
+      "Do not tell anyone that you are Station Master."
     ],
     "optionsHi": [
       "ऑफ ड्यूटी होने के कारण सहयोग करने से इनकार कर देंगे।",
       "आप दुर्घटना साइट के इंचार्ज को सूचित कर हर संभव मदद करेंगे।",
-      "किसी को नहीं बतायेंगे कि आप सहायक स्टेशन मास्टर हैं।",
-      "Option 4"
+      "किसी को नहीं बतायेंगे कि आप सहायक स्टेशन मास्टर हैं।"
     ],
     "correctIndex": 1,
     "explanationEn": "",
@@ -3945,14 +3877,12 @@
     "optionsEn": [
       "Dress",
       "Crockery",
-      "Clothing configuration",
-      "Option 4"
+      "Clothing configuration"
     ],
     "optionsHi": [
       "पोशाक",
       "क्रोकरी",
-      "वस्त्र विन्यास",
-      "Option 4"
+      "वस्त्र विन्यास"
     ],
     "correctIndex": 2,
     "explanationEn": "",

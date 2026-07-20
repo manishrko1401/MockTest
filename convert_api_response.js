@@ -128,8 +128,8 @@ function processNkPsychoOrTestbookFile(filePath) {
             }
           }
 
-          while (optionsEn.length < 4) optionsEn.push(`Option ${optionsEn.length + 1}`);
-          while (optionsHi.length < 4) optionsHi.push(`Option ${optionsHi.length + 1}`);
+          while (optionsEn.length < 2) optionsEn.push(`Option ${optionsEn.length + 1}`);
+          while (optionsHi.length < 2) optionsHi.push(`Option ${optionsHi.length + 1}`);
 
           // Solution / Explanation
           const expEn = cleanHtml(q.english_solution || q.question_solution || "");
@@ -207,8 +207,8 @@ function processNkPsychoOrTestbookFile(filePath) {
           optionsHiList = [...optionsEnList];
         }
 
-        while (optionsEnList.length < 4) optionsEnList.push(`Option ${optionsEnList.length + 1}`);
-        while (optionsHiList.length < 4) optionsHiList.push(`Option ${optionsHiList.length + 1}`);
+        while (optionsEnList.length < 2) optionsEnList.push(`Option ${optionsEnList.length + 1}`);
+        while (optionsHiList.length < 2) optionsHiList.push(`Option ${optionsHiList.length + 1}`);
 
         let correctIndex = 0;
         let explanationEn = "";
