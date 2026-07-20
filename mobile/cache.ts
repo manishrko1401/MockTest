@@ -17,29 +17,24 @@ const USER_KEY     = 'user_profile_cache';
 const SYNC_TS_KEY  = 'catalog_last_synced_at';
 
 // ── TTL settings ───────────────────────────────────────────────────────────
-const QUESTIONS_TTL_MS = 48 * 60 * 60 * 1000;  // 48 hours
-const CATALOG_TTL_MS   = 24 * 60 * 60 * 1000;  // 24 hours
+const QUESTIONS_TTL_MS = 30 * 24 * 60 * 60 * 1000;  // 30 days
+const CATALOG_TTL_MS   = 24 * 60 * 60 * 1000;       // 24 hours
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  QUESTIONS  (raw API response — the exact array from getCustomQuestions)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Returns cached questions for a testId, or null if not cached / expired.
+ * Returns cached questions for a testId from device storage.
+ * Returns questions instantly to allow 0ms local rendering.
  */
 export async function getCachedQuestions(testId: string): Promise<any[] | null> {
   try {
     const raw = await AsyncStorage.getItem(`${Q_KEY_PREFIX}${testId}`);
     if (!raw) return null;
 
-    const { questions, savedAt } = JSON.parse(raw);
-    if (!questions || !savedAt) return null;
-
-    // Expire check — stale data triggers background re-fetch
-    if (Date.now() - savedAt > QUESTIONS_TTL_MS) {
-      await AsyncStorage.removeItem(`${Q_KEY_PREFIX}${testId}`);
-      return null;
-    }
+    const { questions } = JSON.parse(raw);
+    if (!questions || !Array.isArray(questions) || questions.length === 0) return null;
 
     return questions;
   } catch {
@@ -49,14 +44,14 @@ export async function getCachedQuestions(testId: string): Promise<any[] | null> 
 
 /**
  * Proactively prunes older question caches to prevent hitting storage limits.
- * Retains only the 12 most recently saved test question sets.
+ * Retains the 50 most recently saved test question sets on device storage.
  */
 async function pruneQuestionsCache(): Promise<void> {
   try {
     const allKeys = await AsyncStorage.getAllKeys();
     const qKeys = allKeys.filter(k => k.startsWith(Q_KEY_PREFIX));
     
-    if (qKeys.length > 3) {
+    if (qKeys.length > 50) {
       const items: { key: string; savedAt: number }[] = [];
       for (const key of qKeys) {
         const val = await AsyncStorage.getItem(key);
@@ -73,11 +68,11 @@ async function pruneQuestionsCache(): Promise<void> {
       // Sort oldest first
       items.sort((a, b) => a.savedAt - b.savedAt);
       
-      // Keep only the most recent 3 items, remove the rest
-      const toRemove = items.slice(0, items.length - 3).map(i => i.key);
+      // Keep the 50 most recent items, remove the rest
+      const toRemove = items.slice(0, items.length - 50).map(i => i.key);
       if (toRemove.length > 0) {
         await AsyncStorage.multiRemove(toRemove);
-        console.log(`[Cache] Proactively pruned ${toRemove.length} old test caches. Storing max 3 tests.`);
+        console.log(`[Cache] Proactively pruned ${toRemove.length} old test caches. Storing max 50 tests.`);
       }
     }
   } catch (err) {

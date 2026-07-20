@@ -323,6 +323,11 @@ export default function MobileTestScreen({
       // Shared builder: turns raw API questions into screen state
       // ──────────────────────────────────────────────────────────────────
       const buildScreenFromApiQuestions = (rawQuestions: any[]) => {
+        // Save questions to local device storage for 0ms offline/instant rendering next time
+        if (Array.isArray(rawQuestions) && rawQuestions.length > 0) {
+          saveQuestionsToCache(testId, rawQuestions);
+        }
+
         // Find test details in catalog to get correct duration & timing config
         let catalogTest: any = null;
         if (examCatalog && examCatalog.length > 0) {

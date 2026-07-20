@@ -236,51 +236,63 @@ export default function AnalysisScreen({
     seed += seedString.charCodeAt(i);
   }
 
-  // Load questions
+  // Load questions — Stale-While-Revalidate pattern (0ms local storage load + background revalidation)
   useEffect(() => {
+    let isMounted = true;
     const fetchQuestions = async () => {
-      setLoadingQs(true);
+      // Step 1: Render immediately from device local storage if present
       const cached = await getCachedQuestions(activeAttempt.testId);
       if (cached && Array.isArray(cached) && cached.length > 0) {
-        setQuestions(cached.map((q: any, idx: number) => ({
-          ...q,
-          id: q.id || `q_custom_${idx}`
-        })));
-        setLoadingQs(false);
-        return;
+        if (isMounted) {
+          setQuestions(cached.map((q: any, idx: number) => ({
+            ...q,
+            id: q.id || `q_custom_${idx}`
+          })));
+          setLoadingQs(false);
+        }
+      } else {
+        if (isMounted) setLoadingQs(true);
       }
 
-      const res = await ApiClient.getCustomQuestions(activeAttempt.testId);
-      // Store admin-configured marks returned alongside questions
-      if (res.positiveMarks !== null && res.positiveMarks !== undefined) {
-        setTestPositiveMarks(Number(res.positiveMarks));
+      // Step 2: Background revalidation & fetching fresh marks/explanations
+      try {
+        const res = await ApiClient.getCustomQuestions(activeAttempt.testId);
+        if (!isMounted) return;
+
+        if (res.positiveMarks !== null && res.positiveMarks !== undefined) {
+          setTestPositiveMarks(Number(res.positiveMarks));
+        }
+        if (res.negativeMarks !== null && res.negativeMarks !== undefined) {
+          setTestNegativeMarks(Number(res.negativeMarks));
+        }
+        if (res.success && res.questions && Array.isArray(res.questions)) {
+          const mappedQuestions = res.questions.map((q: any, idx: number) => ({
+            ...q,
+            id: q.id || `q_custom_${idx}`
+          }));
+          setQuestions(mappedQuestions);
+          saveQuestionsToCache(activeAttempt.testId, res.questions);
+        } else if (!cached || cached.length === 0) {
+          const fallbackList = activeAttempt.testId.includes('ssc') 
+            ? [
+                { id: "q_q1", textEn: "The Nagpur seminar was 5 days before the Indore seminar. The Bhopal seminar was 2 days before the Nagpur seminar. If Indore seminar was held on 22nd May, what was the date of the Bhopal seminar?", optionsEn: ["14th May", "15th May", "16th May", "17th May"], correctIndex: 1, explanationEn: "Nagpur seminar = 22 - 5 = 17th May. Bhopal seminar = 17 - 2 = 15th May.", textHi: "नागपुर संगोष्ठी इंदौर संगोष्ठी से 5 दिन पहले थी। भोपाल संगोष्ठी नागपुर संगोष्ठी से 2 दिन पहले थी। यदि इंदौर संगोष्ठी 22 मई को आयोजित की गई थी, तो भोपाल संगोष्ठी की तारीख क्या थी?", optionsHi: ["14 मई", "15 मई", "16 मई", "17 मई"], explanationHi: "नागपुर संगोष्ठी = 22 - 5 = 17 मई। भोपाल संगोष्ठी = 17 - 2 = 15 मई।" },
+                { id: "q_q2", textEn: "The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A's present age?", optionsEn: ["20 years", "25 years", "30 years", "15 years"], correctIndex: 0, explanationEn: "Let age be 4k and 5k. (4k+5)/(5k+5) = 5/6 => 24k + 30 = 25k + 25 => k = 5. A = 4k = 20.", textHi: "A और B की वर्तमान आयु का अनुपात 4:5 है। 5 वर्ष बाद, अनुपात 5:6 हो जाता है। A की वर्तमान आयु क्या है?", optionsHi: ["20 वर्ष", "25 वर्ष", "30 वर्ष", "15 वर्ष"], explanationHi: "माना वर्तमान आयु 4k और 5k है। (4k+5)/(5k+5) = 5/6 => 24k + 30 = 25k + 25 => k = 5. A = 4k = 20 वर्ष।" }
+              ]
+            : [
+                { id: "q_gen1", textEn: "What is the unit of electric current?", optionsEn: ["Volt", "Ampere", "Ohm", "Watt"], correctIndex: 1, explanationEn: "Electric current is measured in Ampere.", textHi: "विद्युत धारा की इकाई क्या है?", optionsHi: ["वोल्ट", "एम्पीयर", "ओम", "वाट"], explanationHi: "विद्युत धारा की इकाई एम्पीयर है।" },
+                { id: "q_gen2", textEn: "Which planet is known as the Red Planet?", optionsEn: ["Earth", "Mars", "Jupiter", "Saturn"], correctIndex: 1, explanationEn: "Mars has iron oxide on its surface giving it a reddish look.", textHi: "किस ग्रह को लाल ग्रह के नाम से जाना जाता है?", optionsHi: ["पृथ्वी", "मंगल", "बृहस्पति", "शनि"], explanationHi: "लोहे के ऑक्साइड के कारण मंगल ग्रह लाल दिखता है।" }
+              ];
+          setQuestions(fallbackList);
+        }
+      } catch (err) {
+        console.warn("[Cache] Background revalidation fetch failed, keeping local questions:", err);
+      } finally {
+        if (isMounted) setLoadingQs(false);
       }
-      if (res.negativeMarks !== null && res.negativeMarks !== undefined) {
-        setTestNegativeMarks(Number(res.negativeMarks));
-      }
-      if (res.success && res.questions && Array.isArray(res.questions)) {
-        const mappedQuestions = res.questions.map((q: any, idx: number) => ({
-          ...q,
-          id: q.id || `q_custom_${idx}`
-        }));
-        setQuestions(mappedQuestions);
-        saveQuestionsToCache(activeAttempt.testId, res.questions);
-      } else {
-        const fallbackList = activeAttempt.testId.includes('ssc') 
-          ? [
-              { id: "q_q1", textEn: "The Nagpur seminar was 5 days before the Indore seminar. The Bhopal seminar was 2 days before the Nagpur seminar. If Indore seminar was held on 22nd May, what was the date of the Bhopal seminar?", optionsEn: ["14th May", "15th May", "16th May", "17th May"], correctIndex: 1, explanationEn: "Nagpur seminar = 22 - 5 = 17th May. Bhopal seminar = 17 - 2 = 15th May.", textHi: "नागपुर संगोष्ठी इंदौर संगोष्ठी से 5 दिन पहले थी। भोपाल संगोष्ठी नागपुर संगोष्ठी से 2 दिन पहले थी। यदि इंदौर संगोष्ठी 22 मई को आयोजित की गई थी, तो भोपाल संगोष्ठी की तारीख क्या थी?", optionsHi: ["14 मई", "15 मई", "16 मई", "17 मई"], explanationHi: "नागपुर संगोष्ठी = 22 - 5 = 17 मई। भोपाल संगोष्ठी = 17 - 2 = 15 मई।" },
-              { id: "q_q2", textEn: "The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A's present age?", optionsEn: ["20 years", "25 years", "30 years", "15 years"], correctIndex: 0, explanationEn: "Let age be 4k and 5k. (4k+5)/(5k+5) = 5/6 => 24k + 30 = 25k + 25 => k = 5. A = 4k = 20.", textHi: "A और B की वर्तमान आयु का अनुपात 4:5 है। 5 वर्ष बाद, अनुपात 5:6 हो जाता है। A की वर्तमान आयु क्या है?", optionsHi: ["20 वर्ष", "25 वर्ष", "30 वर्ष", "15 वर्ष"], explanationHi: "माना वर्तमान आयु 4k और 5k है। (4k+5)/(5k+5) = 5/6 => 24k + 30 = 25k + 25 => k = 5. A = 4k = 20 वर्ष।" }
-            ]
-          : [
-              { id: "q_gen1", textEn: "What is the unit of electric current?", optionsEn: ["Volt", "Ampere", "Ohm", "Watt"], correctIndex: 1, explanationEn: "Electric current is measured in Ampere.", textHi: "विद्युत धारा की इकाई क्या है?", optionsHi: ["वोल्ट", "एम्पीयर", "ओम", "वाट"], explanationHi: "विद्युत धारा की इकाई एम्पीयर है।" },
-              { id: "q_gen2", textEn: "Which planet is known as the Red Planet?", optionsEn: ["Earth", "Mars", "Jupiter", "Saturn"], correctIndex: 1, explanationEn: "Mars has iron oxide on its surface giving it a reddish look.", textHi: "किस ग्रह को लाल ग्रह के नाम से जाना जाता है?", optionsHi: ["पृथ्वी", "मंगल", "बृहस्पति", "शनि"], explanationHi: "लोहे के ऑक्साइड के कारण मंगल ग्रह लाल दिखता है।" }
-            ];
-        setQuestions(fallbackList);
-      }
-      setLoadingQs(false);
     };
 
     fetchQuestions();
+    return () => { isMounted = false; };
   }, [activeAttempt.testId]);
 
   // Unique list of sections dynamically found in the test
