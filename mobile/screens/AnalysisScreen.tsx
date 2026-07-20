@@ -33,7 +33,8 @@ import {
   Filter,
   CircleCheck,
   CircleX,
-  Clock
+  Clock,
+  Menu
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { getCachedQuestions, saveQuestionsToCache } from '../cache';
@@ -70,6 +71,7 @@ export default function AnalysisScreen({
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
   const [selectedSection, setSelectedSection] = useState<string>('All Sections');
+  const [paletteVisible, setPaletteVisible] = useState(false);
 
   // Ref for the horizontal paging ScrollView — same technique as the notice screen
   const solutionScrollRef = useRef<ScrollView>(null);
@@ -407,6 +409,16 @@ export default function AnalysisScreen({
               <Text style={styles.langIconText}>{lang === 'en' ? 'E' : 'अ'}</Text>
             </View>
           </TouchableOpacity>
+
+          {activeTab === 'solutions' && (
+            <TouchableOpacity 
+              style={[styles.langToggleBtn, { marginLeft: 8 }]} 
+              onPress={() => setPaletteVisible(true)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Menu size={22} color="#FFF" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -648,7 +660,7 @@ export default function AnalysisScreen({
         {activeTab === 'solutions' && (
           <View style={styles.solutionsContainer}>
             
-            {/* Top Toolbar: Dropdown Switcher, Filters */}
+            {/* Top Toolbar: Dropdown Switcher, Filters, and Question Palette Menu */}
             <View style={styles.solToolbar}>
               <TouchableOpacity 
                 style={styles.dropdownTrigger}
@@ -665,6 +677,16 @@ export default function AnalysisScreen({
                 <Filter size={13} color="#475569" />
                 <Text style={styles.filtersBtnText}>
                   {filterType === 'all' ? 'Filters' : filterType.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.filtersBtn, { backgroundColor: isDark ? '#1E293B' : '#EFF6FF', borderColor: isDark ? '#334155' : '#BFDBFE' }]}
+                onPress={() => setPaletteVisible(true)}
+              >
+                <Menu size={13} color="#2563EB" />
+                <Text style={[styles.filtersBtnText, { color: '#2563EB', fontWeight: 'bold' }]}>
+                  Palette
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1006,6 +1028,247 @@ export default function AnalysisScreen({
                 </Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 5. QUESTION PALETTE DRAWER (RIGHT-SIDE MODAL) */}
+      <Modal
+        visible={paletteVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPaletteVisible(false)}
+      >
+        <View style={styles.paletteModalOverlay}>
+          {/* Dimmed backdrop on left */}
+          <TouchableOpacity
+            style={styles.paletteBackdrop}
+            activeOpacity={1}
+            onPress={() => setPaletteVisible(false)}
+          />
+
+          {/* Right side Drawer */}
+          <View style={[styles.paletteDrawerCard, isDark && { backgroundColor: ThemeColors.dark.bg, borderColor: ThemeColors.dark.border }]}>
+            
+            {/* Drawer Header */}
+            <View style={[styles.paletteHeader, isDark && { borderBottomColor: ThemeColors.dark.border }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <ClipboardList size={18} color={isDark ? '#60A5FA' : '#2563EB'} />
+                <Text style={[styles.paletteTitleText, isDark && { color: ThemeColors.dark.text }]}>
+                  {lang === 'hi' ? 'प्रश्न तालिका' : 'Question Palette'}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setPaletteVisible(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <X size={20} color={isDark ? '#94A3B8' : '#64748B'} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
+              
+              {/* Stats Summary Bar */}
+              {(() => {
+                let correctCount = 0;
+                let incorrectCount = 0;
+                let unattemptedCount = 0;
+
+                filteredQuestions.forEach((q) => {
+                  const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
+                  const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
+                  const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
+
+                  if (selectedIdx === null || selectedIdx === undefined) {
+                    unattemptedCount++;
+                  } else if (selectedIdx === correctIdx) {
+                    correctCount++;
+                  } else {
+                    incorrectCount++;
+                  }
+                });
+
+                return (
+                  <View style={styles.paletteStatsRow}>
+                    <View style={[styles.paletteStatChip, { backgroundColor: '#DCFCE7', borderColor: '#86EFAC' }]}>
+                      <Text style={[styles.paletteStatCount, { color: '#15803D' }]}>{correctCount}</Text>
+                      <Text style={[styles.paletteStatLabel, { color: '#166534' }]}>{lang === 'hi' ? 'सही' : 'Correct'}</Text>
+                    </View>
+
+                    <View style={[styles.paletteStatChip, { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' }]}>
+                      <Text style={[styles.paletteStatCount, { color: '#B91C1C' }]}>{incorrectCount}</Text>
+                      <Text style={[styles.paletteStatLabel, { color: '#991B1B' }]}>{lang === 'hi' ? 'गलत' : 'Incorrect'}</Text>
+                    </View>
+
+                    <View style={[styles.paletteStatChip, { backgroundColor: '#F1F5F9', borderColor: '#CBD5E1' }]}>
+                      <Text style={[styles.paletteStatCount, { color: '#475569' }]}>{unattemptedCount}</Text>
+                      <Text style={[styles.paletteStatLabel, { color: '#334155' }]}>{lang === 'hi' ? 'छूटे' : 'Skipped'}</Text>
+                    </View>
+                  </View>
+                );
+              })()}
+
+              {/* Section picker indicator in drawer if sections > 1 */}
+              {testSections.length > 1 && (
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={[styles.paletteSubLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
+                    {lang === 'hi' ? 'अनुभाग चुनें:' : 'SELECT SECTION:'}
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                    {testSections.map((sec) => (
+                      <TouchableOpacity
+                        key={sec}
+                        style={[
+                          styles.paletteSecPill,
+                          selectedSection === sec && styles.paletteSecPillActive,
+                          isDark && selectedSection !== sec && { backgroundColor: '#1E293B', borderColor: '#334155' }
+                        ]}
+                        onPress={() => {
+                          setSelectedSection(sec);
+                          setActiveQuestionIdx(0);
+                          solutionScrollRef.current?.scrollTo({ x: 0, animated: false });
+                        }}
+                      >
+                        <Text style={[
+                          styles.paletteSecPillText,
+                          selectedSection === sec && { color: '#FFFFFF', fontWeight: 'bold' },
+                          isDark && selectedSection !== sec && { color: '#94A3B8' }
+                        ]}>
+                          {sec}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* Filter Pills */}
+              <View style={{ marginBottom: 16 }}>
+                <Text style={[styles.paletteSubLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
+                  {lang === 'hi' ? 'फ़िल्टर:' : 'FILTER BY:'}
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {[
+                    { id: 'all', label: lang === 'hi' ? 'सभी' : 'All' },
+                    { id: 'correct', label: lang === 'hi' ? 'सही' : 'Correct' },
+                    { id: 'incorrect', label: lang === 'hi' ? 'गलत' : 'Incorrect' },
+                    { id: 'unattempted', label: lang === 'hi' ? 'छूटे' : 'Unattempted' }
+                  ].map((f) => (
+                    <TouchableOpacity
+                      key={f.id}
+                      style={[
+                        styles.paletteFilterChip,
+                        filterType === f.id && styles.paletteFilterChipActive,
+                        isDark && filterType !== f.id && { backgroundColor: '#1E293B', borderColor: '#334155' }
+                      ]}
+                      onPress={() => {
+                        setFilterType(f.id as any);
+                        setActiveQuestionIdx(0);
+                        solutionScrollRef.current?.scrollTo({ x: 0, animated: false });
+                      }}
+                    >
+                      <Text style={[
+                        styles.paletteFilterChipText,
+                        filterType === f.id && { color: '#FFFFFF', fontWeight: 'bold' },
+                        isDark && filterType !== f.id && { color: '#94A3B8' }
+                      ]}>
+                        {f.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Questions Grid */}
+              <Text style={[styles.paletteSubLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
+                {lang === 'hi' ? 'प्रश्न तालिका (प्रश्न पर टैप करें):' : 'QUESTIONS (TAP TO GO):'}
+              </Text>
+
+              {filteredQuestions.length === 0 ? (
+                <View style={{ paddingVertical: 30, alignItems: 'center' }}>
+                  <Text style={styles.grayText}>{lang === 'hi' ? 'कोई प्रश्न उपलब्ध नहीं हैं' : 'No questions match filter'}</Text>
+                </View>
+              ) : (
+                <View style={styles.paletteGridContainer}>
+                  {filteredQuestions.map((q, idx) => {
+                    const isSelected = activeQuestionIdx === idx;
+                    const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
+                    const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
+                    const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
+                    const isCorrect = selectedIdx === correctIdx;
+                    const isUnattempted = selectedIdx === null || selectedIdx === undefined;
+
+                    let bgStyle: any = { backgroundColor: '#F1F5F9' };
+                    let textCol = '#64748B';
+                    let borderCol = '#CBD5E1';
+
+                    if (isSelected) {
+                      bgStyle = { backgroundColor: '#2563EB' };
+                      textCol = '#FFFFFF';
+                      borderCol = '#1D4ED8';
+                    } else if (!reattemptMode && !revealedSolutions[q.id]) {
+                      if (isUnattempted) {
+                        bgStyle = { backgroundColor: '#F1F5F9' };
+                        borderCol = '#CBD5E1';
+                        textCol = '#475569';
+                      } else if (isCorrect) {
+                        bgStyle = { backgroundColor: '#DCFCE7' };
+                        borderCol = '#22C55E';
+                        textCol = '#15803D';
+                      } else {
+                        bgStyle = { backgroundColor: '#FEE2E2' };
+                        borderCol = '#EF4444';
+                        textCol = '#B91C1C';
+                      }
+                    }
+
+                    return (
+                      <TouchableOpacity
+                        key={q.id || idx}
+                        style={[
+                          styles.paletteGridItem,
+                          bgStyle,
+                          { borderColor: borderCol },
+                          isSelected && { borderWidth: 2.5, shadowColor: '#2563EB', shadowOpacity: 0.3, shadowRadius: 4, elevation: 4 }
+                        ]}
+                        onPress={() => {
+                          scrollToQuestion(idx);
+                          setPaletteVisible(false);
+                        }}
+                      >
+                        <Text style={[styles.paletteGridItemText, { color: textCol }, isSelected && { fontWeight: '900' }]}>
+                          {idx + 1}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
+              {/* Color Legend */}
+              <View style={[styles.paletteLegendBox, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+                <Text style={[styles.paletteLegendTitle, isDark && { color: ThemeColors.dark.text }]}>LEGEND:</Text>
+                <View style={styles.paletteLegendRow}>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#DCFCE7', borderColor: '#22C55E' }]} />
+                    <Text style={[styles.legendText, isDark && { color: '#94A3B8' }]}>Correct</Text>
+                  </View>
+
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#FEE2E2', borderColor: '#EF4444' }]} />
+                    <Text style={[styles.legendText, isDark && { color: '#94A3B8' }]}>Incorrect</Text>
+                  </View>
+
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#F1F5F9', borderColor: '#CBD5E1' }]} />
+                    <Text style={[styles.legendText, isDark && { color: '#94A3B8' }]}>Unattempted</Text>
+                  </View>
+
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#2563EB', borderColor: '#1D4ED8' }]} />
+                    <Text style={[styles.legendText, isDark && { color: '#94A3B8' }]}>Active</Text>
+                  </View>
+                </View>
+              </View>
+
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -1889,5 +2152,161 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#94A3B8'
+  },
+  // Palette Drawer Overlay (Right Side Modal)
+  paletteModalOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+  },
+  paletteBackdrop: {
+    flex: 1,
+  },
+  paletteDrawerCard: {
+    width: '84%',
+    maxWidth: 360,
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    borderLeftWidth: 1,
+    borderLeftColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: -4, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  paletteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  paletteTitleText: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#0F172A',
+  },
+  paletteStatsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  paletteStatChip: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  paletteStatCount: {
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  paletteStatLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
+  paletteSubLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748B',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  paletteSecPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  paletteSecPillActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
+  },
+  paletteSecPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  paletteFilterChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  paletteFilterChipActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
+  },
+  paletteFilterChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  paletteGridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 20,
+    paddingTop: 4,
+  },
+  paletteGridItem: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paletteGridItemText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  paletteLegendBox: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 12,
+    marginTop: 8,
+    marginBottom: 30,
+  },
+  paletteLegendTitle: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#64748B',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  paletteLegendRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 3,
+    borderWidth: 1,
+  },
+  legendText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
   }
 });
