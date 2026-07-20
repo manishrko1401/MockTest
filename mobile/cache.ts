@@ -146,6 +146,9 @@ export async function getCachedCatalog(): Promise<{
     const raw = await AsyncStorage.getItem(CAT_KEY);
     if (!raw) return null;
 
+    const parsed = JSON.parse(raw);
+    const { data, savedAt } = parsed || {};
+
     if (!data || !savedAt || !data.examCatalog || data.examCatalog.length === 0) {
       await AsyncStorage.removeItem(CAT_KEY);
       return null;
