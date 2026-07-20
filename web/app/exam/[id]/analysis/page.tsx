@@ -661,6 +661,19 @@ export default function ExamSolutionAnalysisPage() {
             <div className="flex items-center gap-3 mt-1 flex-wrap justify-center">
               <button type="button" onClick={() => setQuestionFontSize(s => Math.min(s + 2, 24))} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (+)</button>
               <button type="button" onClick={() => setQuestionFontSize(s => Math.max(s - 2, 10))} className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all">Zoom (-)</button>
+              <button
+                type="button"
+                onClick={() => {
+                  const newLang = lang === 'en' ? 'hi' : 'en';
+                  setLang(newLang);
+                  if (setLanguage) setLanguage(newLang);
+                }}
+                className="bg-[#1a6baf] hover:bg-[#155a96] text-white text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer active:scale-95 transition-all flex items-center gap-1"
+                title="Change Question Language"
+              >
+                <Globe className="h-3 w-3" />
+                <span>{lang === 'en' ? 'हिंदी (अ)' : 'English (E)'}</span>
+              </button>
               <span className="text-[10px] font-semibold text-slate-600 whitespace-nowrap">Hub ID : {currentUser?.candidateCode || currentUser?.id?.slice(0, 12) || 'GUEST_HUB'}</span>
             </div>
           </div>
@@ -1118,13 +1131,27 @@ export default function ExamSolutionAnalysisPage() {
                 </div>
               </div>
 
-              {/* Time stats and Bookmark button */}
+              {/* Time stats, Language switch, and Bookmark button */}
               <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                 <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 dark:text-slate-400">
                   <span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded">
                     {language === 'hi' ? 'आपका समय: ' : 'Your Time: '}<strong className="text-slate-800 dark:text-white font-bold">{userTime > 0 ? `${userTime}s` : (language === 'hi' ? 'N/A' : 'N/A')}</strong>
                   </span>
                 </div>
+
+                {/* Change Language Button near Bookmark button */}
+                <button
+                  onClick={() => {
+                    const newLang = lang === 'en' ? 'hi' : 'en';
+                    setLang(newLang);
+                    if (setLanguage) setLanguage(newLang);
+                  }}
+                  className="flex items-center gap-1.5 text-[10px] font-extrabold px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800/80 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                  title="Switch Language (English / Hindi)"
+                >
+                  <Globe className="h-3.5 w-3.5 text-blue-500" />
+                  <span>{lang === 'en' ? 'हिंदी' : 'English'}</span>
+                </button>
 
                 <button
                   onClick={() => toggleBookmark(testId, activeQuestion.id)}
