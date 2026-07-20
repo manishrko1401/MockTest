@@ -101,9 +101,9 @@ export async function POST(request: Request) {
       case 'toggle-bookmark':
         return await handleToggleBookmark(data);
       case 'add-attempt':
-        return await handleAddAttempt(data);
+        return await handleAddAttempt(data, request);
       case 'save-ongoing-session':
-        return await handleSaveOngoingSession(data);
+        return await handleSaveOngoingSession(data, request);
       case 'clear-ongoing-session':
         return await handleClearOngoingSession(data);
       case 'reset-attempt':
@@ -826,8 +826,21 @@ async function handleToggleBookmark(data: any) {
   return NextResponse.json({ success: true });
 }
 
-async function handleAddAttempt(data: any) {
+async function handleAddAttempt(data: any, request?: Request) {
   const { userId, testId, title, score, maxScore, accuracy, durationSeconds, violations, responses } = data;
+
+  let source = data.source;
+  if (!source && request) {
+    const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
+    if (userAgent.includes('okhttp') || userAgent.includes('cfnetwork') || userAgent.includes('expo') || !userAgent.includes('mozilla')) {
+      source = 'app';
+    } else if (userAgent.includes('mobile') || userAgent.includes('android') || userAgent.includes('iphone') || userAgent.includes('ipad')) {
+      source = 'mobile_web';
+    } else {
+      source = 'web';
+    }
+  }
+  if (!source) source = 'web';
 
   // Remove any ongoing session first
   await prisma.userTestSession.deleteMany({
@@ -888,7 +901,7 @@ async function handleAddAttempt(data: any) {
       completedAt: new Date(),
       testbookRank,
       testbookPercentile,
-      source: data.source || 'web',
+      source,
     },
   });
 
@@ -1015,8 +1028,21 @@ async function handleAddAttempt(data: any) {
   });
 }
 
-async function handleSaveOngoingSession(data: any) {
+async function handleSaveOngoingSession(data: any, request?: Request) {
   const { userId, testId, title, timeRemaining, violations, responses, currentSectionIndex, currentQuestionIndex } = data;
+
+  let source = data.source;
+  if (!source && request) {
+    const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
+    if (userAgent.includes('okhttp') || userAgent.includes('cfnetwork') || userAgent.includes('expo') || !userAgent.includes('mozilla')) {
+      source = 'app';
+    } else if (userAgent.includes('mobile') || userAgent.includes('android') || userAgent.includes('iphone') || userAgent.includes('ipad')) {
+      source = 'mobile_web';
+    } else {
+      source = 'web';
+    }
+  }
+  if (!source) source = 'web';
 
   const existing = await prisma.userTestSession.findFirst({
     where: {
@@ -1054,7 +1080,7 @@ async function handleSaveOngoingSession(data: any) {
         violationsCount: violations,
         currentSectionIndex: currentSectionIndex ?? 0,
         currentQuestionIndex: currentQuestionIndex ?? 0,
-        source: data.source || 'web',
+        source,
       },
     });
     sessionId = created.id;

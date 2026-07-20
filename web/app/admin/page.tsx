@@ -4886,13 +4886,12 @@ export default function AdminAnalytics() {
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Start / End Time</th>
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Attempt Stats</th>
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {loadingAttempts ? (
                         <tr>
-                          <td colSpan={7} className="py-24 text-center">
+                          <td colSpan={6} className="py-24 text-center">
                             <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-3"></div>
                             <p className="text-xs text-slate-400 font-bold">Loading test attempt logs...</p>
                           </td>
@@ -4919,7 +4918,7 @@ export default function AdminAnalytics() {
                         if (filteredAttempts.length === 0) {
                           return (
                             <tr>
-                              <td colSpan={7} className="py-16 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
+                              <td colSpan={6} className="py-16 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
                                 No test attempts found matching current search and filters.
                               </td>
                             </tr>
@@ -5019,27 +5018,6 @@ export default function AdminAnalytics() {
                               }`}>
                                 {a.status}
                               </span>
-                            </td>
-
-                            {/* Actions */}
-                            <td className="py-4 px-4 text-right">
-                              {a.status === 'ONGOING' ? (
-                                <button
-                                  onClick={() => handleAdminClearSession(a.userId, a.mockTestId, a.user?.fullName || 'Unknown', a.mockTest?.title || 'Unknown Test')}
-                                  className="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-900/30 dark:text-red-450 font-black text-[9px] uppercase tracking-wider px-2 py-1 rounded-lg transition shadow-sm cursor-pointer border border-transparent"
-                                >
-                                  <X className="h-3 w-3" />
-                                  Clear Session
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleAdminResetAttempt(a.userId, a.id, a.user?.fullName || 'Unknown', a.mockTest?.title || 'Unknown Test')}
-                                  className="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-950/20 dark:hover:bg-blue-900/30 dark:text-blue-400 font-black text-[9px] uppercase tracking-wider px-2 py-1 rounded-lg transition shadow-sm cursor-pointer border border-transparent"
-                                >
-                                  <RefreshCw className="h-3 w-3" />
-                                  Reset Attempt
-                                </button>
-                              )}
                             </td>
                           </tr>
                         ));
