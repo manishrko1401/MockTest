@@ -221,6 +221,24 @@ function TcsIonEngine({ testId }: { testId: string }) {
     };
   }, [testId]);
 
+  // Alert on sectional transitions when sectional timing is active
+  const lastSectionIndexRef = useRef(state.currentSectionIndex);
+  useEffect(() => {
+    if (state.session?.hasSectionalTiming && state.currentSectionIndex !== lastSectionIndexRef.current) {
+      const prevIdx = lastSectionIndexRef.current;
+      const prevSecName = state.session.sections[prevIdx]?.name;
+      const newSecName = state.session.sections[state.currentSectionIndex]?.name;
+      if (prevSecName && newSecName && state.currentSectionIndex > prevIdx) {
+        alert(
+          state.language === 'hi'
+            ? `समय समाप्त! "${prevSecName}" का समय समाप्त हो गया है। अब "${newSecName}" शुरू हो रहा है।`
+            : `Section Time Up! Time for "${prevSecName}" has expired. Now starting: "${newSecName}".`
+        );
+      }
+    }
+    lastSectionIndexRef.current = state.currentSectionIndex;
+  }, [state.currentSectionIndex, state.session, state.language]);
+
   // Sync attempt score on exam submission
   useEffect(() => {
     if (state.isExamSubmitted && state.score && currentUser && !attemptSaved) {

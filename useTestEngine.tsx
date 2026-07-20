@@ -35,6 +35,7 @@ export interface Section {
   orderIndex: number;
   positiveMark: number;
   negativeMark: number;
+  durationSeconds?: number;
 }
 
 export interface ActiveSession {
@@ -44,6 +45,7 @@ export interface ActiveSession {
   totalDurationSeconds: number;
   sections: Section[];
   questions: Question[];
+  hasSectionalTiming?: boolean;
 }
 
 /**
@@ -168,6 +170,11 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
             state: 2, // NOT_ANSWERED
           };
         }
+
+        // If sectional timing, initialize timeRemaining to first section's duration
+        if (session.hasSectionalTiming && session.sections.length > 0) {
+          initialTimeRemaining = session.sections[0].durationSeconds || session.totalDurationSeconds;
+        }
       }
 
       return {
@@ -209,8 +216,39 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         };
       }
 
-      // Automatically submit when timer hits zero
+      // Automatically submit or transition when timer hits zero
       if (nextTimeRemaining === 0) {
+        if (session.hasSectionalTiming) {
+          const nextSectionIndex = state.currentSectionIndex + 1;
+          if (nextSectionIndex < session.sections.length) {
+            // Revert temporary changes to saved value for current question (if any)
+            if (activeQuestion) {
+              updatedResponses[activeQuestion.id].tempOptionIndex = updatedResponses[activeQuestion.id].selectedOptionIndex;
+            }
+
+            // Transition to the next section
+            const nextSection = session.sections[nextSectionIndex];
+            const nextSectionQuestions = getSectionQuestions(session, nextSectionIndex);
+            
+            // Mark the first question of the next section as NOT_ANSWERED (2) if it was NOT_VISITED (1)
+            if (nextSectionQuestions.length > 0) {
+              const firstQ = nextSectionQuestions[0];
+              if (updatedResponses[firstQ.id].state === 1) {
+                updatedResponses[firstQ.id].state = 2;
+              }
+              updatedResponses[firstQ.id].tempOptionIndex = updatedResponses[firstQ.id].selectedOptionIndex;
+            }
+
+            return {
+              ...state,
+              currentSectionIndex: nextSectionIndex,
+              currentQuestionIndex: 0,
+              timeRemaining: nextSection.durationSeconds || 0,
+              responses: updatedResponses,
+            };
+          }
+        }
+
         return engineReducer(
           {
             ...state,
@@ -267,7 +305,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
       if (nextQuestionIndex >= activeSectionQuestions.length) {
         // Move to next section if available
-        if (nextSectionIndex + 1 < session.sections.length) {
+        if (!session.hasSectionalTiming && nextSectionIndex + 1 < session.sections.length) {
           nextSectionIndex += 1;
           nextQuestionIndex = 0;
         } else {
@@ -343,7 +381,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       let nextSectionIndex = state.currentSectionIndex;
 
       if (nextQuestionIndex >= activeSectionQuestions.length) {
-        if (nextSectionIndex + 1 < session.sections.length) {
+        if (!session.hasSectionalTiming && nextSectionIndex + 1 < session.sections.length) {
           nextSectionIndex += 1;
           nextQuestionIndex = 0;
         } else {
