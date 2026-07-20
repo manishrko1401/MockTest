@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ── Cache version prefix (bump this string if question data shape changes) ─
 const Q_KEY_PREFIX = 'qs_v2_';   // "v2" auto-busts any old v1 cache
-const CAT_KEY      = 'catalog_v2';
+const CAT_KEY      = 'catalog_v3';
 const USER_KEY     = 'user_profile_cache';
 const SYNC_TS_KEY  = 'catalog_last_synced_at';
 
@@ -146,8 +146,10 @@ export async function getCachedCatalog(): Promise<{
     const raw = await AsyncStorage.getItem(CAT_KEY);
     if (!raw) return null;
 
-    const { data, savedAt } = JSON.parse(raw);
-    if (!data || !savedAt) return null;
+    if (!data || !savedAt || !data.examCatalog || data.examCatalog.length === 0) {
+      await AsyncStorage.removeItem(CAT_KEY);
+      return null;
+    }
 
     if (Date.now() - savedAt > CATALOG_TTL_MS) {
       await AsyncStorage.removeItem(CAT_KEY);
