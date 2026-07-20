@@ -842,6 +842,80 @@ export default function MobileTestScreen({
     // the user cannot navigate back to a section whose timer has already expired.
   };
 
+  const confirmNextSection = () => {
+    if (currentSectionIdx < sections.length - 1) {
+      const nextSecIdx = currentSectionIdx + 1;
+      const nextSec = sections[nextSecIdx];
+      const nextSecQs = questions.filter(q => q.sectionId === nextSec.id).sort((a,b) => a.orderIndex - b.orderIndex);
+      
+      setResponses(prev => {
+        const updated = { ...prev };
+        if (nextSecQs.length > 0 && updated[nextSecQs[0].id]?.state === 1) {
+          updated[nextSecQs[0].id].state = 2;
+        }
+        return updated;
+      });
+
+      setCurrentSectionIdx(nextSecIdx);
+      setCurrentQuestionIdx(0);
+
+      // Reset section timer if sectional timing is active
+      if (hasSectionalTiming && nextSec.durationSeconds) {
+        setTimeLeft(nextSec.durationSeconds);
+      }
+    } else {
+      handleExamSubmit(false);
+    }
+  };
+
+  const handleSubmitSection = () => {
+    const activeSec = sections[currentSectionIdx];
+    if (!activeSec) {
+      confirmNextSection();
+      return;
+    }
+
+    // Pause timer while section submit confirmation modal is active
+    setIsTimerRunning(false);
+
+    const secQs = questions.filter(q => q.sectionId === activeSec.id);
+    const secTime = secQs.reduce((acc, q) => acc + (responses[q.id]?.elapsedSeconds || 0), 0);
+    const m = Math.floor(secTime / 60);
+    const s = secTime % 60;
+    const timeStr = `${m}m ${s}s`;
+
+    const answeredCount = secQs.filter(q => responses[q.id]?.state === 3 || responses[q.id]?.state === 5).length;
+    const markedCount = secQs.filter(q => responses[q.id]?.state === 4).length;
+    const unattemptedCount = secQs.length - answeredCount - markedCount;
+
+    const isLastSection = currentSectionIdx >= sections.length - 1;
+
+    setModalConfig({
+      visible: true,
+      title: isLastSection ? 'Submit Final Section?' : `Submit Section: ${activeSec.name}?`,
+      message: `Section Performance Summary:\n⏱ Time Utilized: ${timeStr}\n✅ Answered: ${answeredCount}/${secQs.length}\n🔖 Marked for Review: ${markedCount}\n⚪ Unattempted: ${unattemptedCount}\n\nDo you want to submit this section now?`,
+      buttons: [
+        {
+          text: 'Cancel',
+          onPress: () => {
+            setModalConfig(prev => ({ ...prev, visible: false }));
+            setIsTimerRunning(true);
+          },
+          style: 'cancel'
+        },
+        {
+          text: isLastSection ? 'Submit Test' : 'Submit Section',
+          onPress: () => {
+            setModalConfig(prev => ({ ...prev, visible: false }));
+            confirmNextSection();
+            setIsTimerRunning(true);
+          },
+          style: 'default'
+        }
+      ]
+    });
+  };
+
   useEffect(() => { handleSaveAndNextRef.current = handleSaveAndNext; }, [handleSaveAndNext]);
   useEffect(() => { handlePreviousQuestionRef.current = handlePreviousQuestion; }, [handlePreviousQuestion]);
 
@@ -1776,6 +1850,22 @@ export default function MobileTestScreen({
                 })}
               </View>
             </ScrollView>
+
+            {/* Submit section button if test has multiple sections */}
+            {sections && sections.length > 1 && (
+              <TouchableOpacity
+                style={[styles.paletteSubmitBtn, { backgroundColor: '#059669', marginBottom: 10 }]}
+                onPress={() => {
+                  setDrawerMounted(false);
+                  handleSubmitSection();
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.paletteSubmitText}>
+                  {currentSectionIdx < sections.length - 1 ? 'SUBMIT SECTION' : 'SUBMIT FINAL SECTION'}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* Submit button */}
             <TouchableOpacity

@@ -2310,15 +2310,11 @@ async function handleSendSupportMessage(data: any) {
 
 async function handleGetSupportUsers() {
   const users = await prisma.user.findMany({
-    where: {
-      supportMessages: {
-        some: {}
-      }
-    },
     select: {
       id: true,
       fullName: true,
       email: true,
+      candidateCode: true,
       supportMessages: {
         orderBy: {
           createdAt: 'desc'
@@ -2340,8 +2336,9 @@ async function handleGetSupportUsers() {
 
   const sorted = users.map(u => ({
     id: u.id,
-    name: u.fullName,
-    email: u.email,
+    name: u.fullName || ('User ' + u.id.slice(0, 6)),
+    email: u.email || 'No email',
+    candidateCode: u.candidateCode || null,
     lastMessage: u.supportMessages[0] ? {
       id: u.supportMessages[0].id,
       message: u.supportMessages[0].message,
@@ -2351,9 +2348,12 @@ async function handleGetSupportUsers() {
     } : null,
     unseenCount: u._count.supportMessages
   })).sort((a, b) => {
+    // Sort users with unseen messages first, then by last message time, then alphabetically
+    if (a.unseenCount !== b.unseenCount) return b.unseenCount - a.unseenCount;
     const dateA = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;
     const dateB = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;
-    return dateB - dateA;
+    if (dateA !== dateB) return dateB - dateA;
+    return a.name.localeCompare(b.name);
   });
 
   return NextResponse.json({ success: true, users: sorted });

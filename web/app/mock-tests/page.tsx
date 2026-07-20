@@ -130,8 +130,13 @@ export default function MockTestsCatalog() {
   const router = useRouter();
   const t = TRANSLATIONS[language];
   
+  const [mounted, setMounted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [examSearchQuery, setExamSearchQuery] = useState('');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Filter exam catalog by search query (checks category name or subcategory exam name)
   const getFilteredCatalogForSearch = () => {
@@ -478,6 +483,8 @@ export default function MockTestsCatalog() {
   });
 
   const { isMobile, isMounted } = useIsMobile();
+
+  if (!mounted) return null;
 
   if (isMounted && isMobile) {
     // Filter tests by search query

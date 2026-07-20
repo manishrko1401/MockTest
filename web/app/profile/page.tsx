@@ -142,9 +142,10 @@ export default function StudentProfilePage() {
 
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-0.5 bg-red-100/50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/40 text-red-650 dark:text-red-400 px-2.5 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer"
+              className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 border border-red-200/80 dark:border-red-900/40 text-red-600 dark:text-red-400 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold cursor-pointer active:scale-95 transition"
             >
-              <LogOut className="h-3 w-3" />
+              <LogOut className="h-3.5 w-3.5" />
+              <span>{language === 'hi' ? 'साइन आउट' : 'Sign Out'}</span>
             </button>
           </div>
         </header>

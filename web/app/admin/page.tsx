@@ -102,6 +102,7 @@ export default function AdminAnalytics() {
   const [supportLoading, setSupportLoading] = useState(false);
   const [supportUsersLoading, setSupportUsersLoading] = useState(false);
   const [supportSending, setSupportSending] = useState(false);
+  const [supportSearchQuery, setSupportSearchQuery] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingMessageText, setEditingMessageText] = useState('');
 
@@ -3902,20 +3903,48 @@ export default function AdminAnalytics() {
               <div className="w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full bg-slate-50/50 dark:bg-slate-950">
                 <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                   <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <MessageSquare className="h-4.5 w-4.5 text-blue-500" /> Conversations
+                    <MessageSquare className="h-4.5 w-4.5 text-blue-500" /> Conversations ({supportUsers.length})
                   </h3>
                   {supportUsersLoading && (
                     <RefreshCw className="h-3.5 w-3.5 text-slate-400 animate-spin" />
                   )}
                 </div>
 
+                <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+                  <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs">
+                    <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Search any user name or email..."
+                      value={supportSearchQuery}
+                      onChange={(e) => setSupportSearchQuery(e.target.value)}
+                      className="bg-transparent w-full focus:outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400 text-xs font-medium"
+                    />
+                  </div>
+                </div>
+
                 <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-900">
-                  {supportUsers.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-slate-400 dark:text-slate-500 font-semibold italic">
-                      No customer chat tickets found.
-                    </div>
-                  ) : (
-                    supportUsers.map((user) => {
+                  {(() => {
+                    const filteredUsers = supportUsers.filter(u => {
+                      if (!supportSearchQuery) return true;
+                      const q = supportSearchQuery.toLowerCase();
+                      return (
+                        u.name?.toLowerCase().includes(q) ||
+                        u.email?.toLowerCase().includes(q) ||
+                        u.id?.toLowerCase().includes(q) ||
+                        u.candidateCode?.toLowerCase().includes(q)
+                      );
+                    });
+
+                    if (filteredUsers.length === 0) {
+                      return (
+                        <div className="p-8 text-center text-xs text-slate-400 dark:text-slate-500 font-semibold italic">
+                          No users found matching "{supportSearchQuery}".
+                        </div>
+                      );
+                    }
+
+                    return filteredUsers.map((user) => {
                       const isSelected = selectedSupportUserId === user.id;
                       const initials = user.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'ST';
                       
@@ -3994,8 +4023,8 @@ export default function AdminAnalytics() {
                           </div>
                         </div>
                       );
-                    })
-                  )}
+                    });
+                  })()}
                 </div>
               </div>
 

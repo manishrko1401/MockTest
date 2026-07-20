@@ -13,6 +13,15 @@ export default function AuthPage() {
   const router = useRouter();
   const t = TRANSLATIONS[language];
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'signup' || params.get('mode') === 'signup') {
+        setActiveTab('signup');
+      }
+    }
+  }, []);
   
   // Form states
   const [email, setEmail] = useState('');

@@ -463,6 +463,35 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       });
     }
 
+    case 'SUBMIT_SECTION': {
+      if (state.isExamSubmitted) return state;
+      const nextSectionIndex = state.currentSectionIndex + 1;
+      if (session && nextSectionIndex < session.sections.length) {
+        const nextSection = session.sections[nextSectionIndex];
+        const nextSectionDuration = session.hasSectionalTiming && nextSection.durationSeconds
+          ? nextSection.durationSeconds
+          : state.timeRemaining;
+        const nextSectionQuestions = getSectionQuestions(session, nextSectionIndex);
+        const updatedResponses = { ...state.responses };
+        if (nextSectionQuestions.length > 0) {
+          const firstQ = nextSectionQuestions[0];
+          if (updatedResponses[firstQ.id]?.state === 1) {
+            updatedResponses[firstQ.id] = { ...updatedResponses[firstQ.id], state: 2 };
+          }
+        }
+        return {
+          ...state,
+          currentSectionIndex: nextSectionIndex,
+          currentQuestionIndex: 0,
+          timeRemaining: nextSectionDuration,
+          responses: updatedResponses,
+          isTimerRunning: true,
+        };
+      } else {
+        return engineReducer(state, { type: 'SUBMIT_EXAM' });
+      }
+    }
+
     case 'ADD_VIOLATION': {
       if (state.isExamSubmitted) return state;
 
@@ -576,6 +605,7 @@ interface TestEngineContextType {
   markForReviewAndNext: () => void;
   jumpToQuestion: (sectionIndex: number, questionIndex: number) => void;
   switchSection: (sectionIndex: number) => void;
+  submitSection: () => void;
   setLanguage: (lang: 'en' | 'hi') => void;
   addViolation: () => void;
   submitExam: () => void;
@@ -651,6 +681,10 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
 
   const switchSection = useCallback((sectionIndex: number) => {
     dispatch({ type: 'SWITCH_SECTION', payload: { sectionIndex } });
+  }, []);
+
+  const submitSection = useCallback(() => {
+    dispatch({ type: 'SUBMIT_SECTION' });
   }, []);
 
   const setLanguage = useCallback((lang: 'en' | 'hi') => {
@@ -783,6 +817,7 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
         markForReviewAndNext,
         jumpToQuestion,
         switchSection,
+        submitSection,
         setLanguage,
         addViolation,
         submitExam,

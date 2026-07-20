@@ -49,17 +49,20 @@ export default function App() {
   const [activeTestId, setActiveTestId] = useState<string>('');
   const [dashboardTab, setDashboardTab] = useState<'home' | 'tests' | 'notices' | 'bookmarks' | 'profile'>('home');
   const [dashboardCategoryId, setDashboardCategoryId] = useState<string | null>(null);
+  const [unreadSupportCount, setUnreadSupportCount] = useState<number>(0);
 
   // Helper to prefetch questions for completed/ongoing test sessions so they load instantly offline
   const prefetchCompletedTests = async (user: any) => {
     if (!user || !user.testSessions || !Array.isArray(user.testSessions)) return;
     
+    const bookmarkedTestIds = (user.bookmarkedQuestions || []).map((b: any) => b.testId);
     const uniqueTestIds = Array.from(
-      new Set(
-        user.testSessions
+      new Set([
+        ...user.testSessions
           .filter((s: any) => s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED')
-          .map((s: any) => s.testId)
-      )
+          .map((s: any) => s.testId),
+        ...bookmarkedTestIds
+      ])
     ) as string[];
 
     for (const testId of uniqueTestIds) {
@@ -441,7 +444,10 @@ export default function App() {
     // Check for new support messages from admin
     const checkNewSupportMessages = async () => {
       // Don't show notifications if user is already chatting
-      if (viewMode === 'support_chat') return;
+      if (viewMode === 'support_chat') {
+        setUnreadSupportCount(0);
+        return;
+      }
 
       try {
         // Fetch support messages but don't mark them as read yet (markAsRead = false)
@@ -450,6 +456,9 @@ export default function App() {
 
         if (res.success && res.messages) {
           const messagesList = res.messages;
+          const unreadMsgs = messagesList.filter((m: any) => m.sender === 'ADMIN' && !m.isRead);
+          setUnreadSupportCount(unreadMsgs.length);
+
           const storageKey = `seen_messages_${currentUser.id}`;
           const stored = await AsyncStorage.getItem(storageKey);
           let seenIds: string[] = stored ? JSON.parse(stored) : [];
@@ -723,7 +732,10 @@ export default function App() {
             onRefreshUser={refreshUserData}
             isDark={isDark}
             onToggleTheme={handleToggleTheme}
-            onOpenSupportChat={() => setViewMode('support_chat')}
+            onOpenSupportChat={() => {
+              setUnreadSupportCount(0);
+              setViewMode('support_chat');
+            }}
             activeTab={dashboardTab}
             setActiveTab={setDashboardTab}
             selectedCategoryId={dashboardCategoryId}
@@ -734,6 +746,7 @@ export default function App() {
               setLanguage(lang);
               await AsyncStorage.setItem('app_language', lang);
             }}
+            unreadSupportCount={unreadSupportCount}
           />
         )}
 

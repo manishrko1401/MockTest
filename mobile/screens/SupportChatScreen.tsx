@@ -160,6 +160,10 @@ export default function SupportChatScreen({
             keyExtractor={item => item.id}
             renderItem={renderItem}
             contentContainerStyle={styles.listContent}
+            removeClippedSubviews={true}
+            initialNumToRender={15}
+            maxToRenderPerBatch={15}
+            windowSize={5}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
             onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
             ListEmptyComponent={

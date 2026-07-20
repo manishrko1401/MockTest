@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin } from 'lucide-react';
+import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
 import { useIsMobile } from './useIsMobile';
 
@@ -188,7 +188,7 @@ export default function HomeLandingPage() {
   
   const [successIndex, setSuccessIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedModalCategory, setSelectedModalCategory] = useState<string | null>(null);
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [claiming, setClaiming] = useState(false);
 
@@ -326,22 +326,8 @@ const formatSubCategoryName = (name: string) => {
     }
   };
 
-  const handleOpenCategoryModal = (catId: string) => {
-    setSelectedModalCategory(catId);
-    if (typeof window !== 'undefined') {
-      window.location.hash = `cat-${catId}`;
-    }
-  };
-
-  const handleCloseCategoryModal = () => {
-    setSelectedModalCategory(null);
-    if (typeof window !== 'undefined') {
-      if (window.location.hash.startsWith('#cat-')) {
-        window.history.back();
-      } else {
-        window.location.hash = '';
-      }
-    }
+  const handleToggleExpandCategory = (catId: string) => {
+    setExpandedCategoryId(prev => prev === catId ? null : catId);
   };
 
   React.useEffect(() => {
@@ -349,13 +335,6 @@ const formatSubCategoryName = (name: string) => {
 
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash.startsWith('#cat-')) {
-        const catId = hash.replace('#cat-', '');
-        setSelectedModalCategory(catId);
-      } else {
-        setSelectedModalCategory(null);
-      }
-
       if (hash === '#menu') {
         setMobileMenuOpen(true);
       } else {
@@ -406,10 +385,29 @@ const formatSubCategoryName = (name: string) => {
           </Link>
 
           <div className="flex items-center gap-2">
+            {/* Login / Profile Header Action Button */}
+            {currentUser ? (
+              <Link
+                href="/profile"
+                className="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/40 text-blue-600 dark:text-blue-400 text-[11px] font-extrabold flex items-center gap-1.5 active:scale-95 transition"
+              >
+                <UserCheck className="h-3.5 w-3.5" />
+                <span>{language === 'hi' ? 'प्रोफाइल' : 'Profile'}</span>
+              </Link>
+            ) : (
+              <Link
+                href="/auth"
+                className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-[11px] font-extrabold flex items-center gap-1.5 active:scale-95 transition shadow-xs"
+              >
+                <User className="h-3.5 w-3.5" />
+                <span>{t.logIn}</span>
+              </Link>
+            )}
+
             {/* Hamburger Button */}
             <button
               onClick={() => handleToggleMenu(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-350 border border-slate-200 dark:border-slate-800 active:scale-95"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-350 border border-slate-200 dark:border-slate-800 active:scale-95 cursor-pointer"
             >
               {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
             </button>
@@ -466,7 +464,7 @@ const formatSubCategoryName = (name: string) => {
               </div>
             </div>
             <Link
-              href="/auth"
+              href={currentUser ? "/profile" : "/auth?tab=signup"}
               className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-sm"
             >
               {language === 'hi' ? 'दावा करें' : 'Claim Now'}
@@ -680,7 +678,7 @@ const formatSubCategoryName = (name: string) => {
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">{t.popularDesc}</p>
             </div>
 
-            <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
               {displayCategories.map(cat => {
                 const style = getWebCategoryStyle(cat.id);
                 const IconComponent = 
@@ -700,18 +698,18 @@ const formatSubCategoryName = (name: string) => {
                   cat.id.includes('ugc_net') ? 'glow-shadow-blue' : 'glow-shadow-purple';
 
                 return (
-                  <button
-                    onClick={() => handleOpenCategoryModal(cat.id)}
+                  <Link
                     key={cat.id}
-                    className={`border p-4.5 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full relative overflow-hidden active:scale-[0.99] cursor-pointer ${style.bg} ${shadowStyle}`}
+                    href={`/mock-tests?cat=${cat.id}`}
+                    className={`border p-3.5 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full relative overflow-hidden active:scale-[0.98] cursor-pointer ${style.bg} ${shadowStyle}`}
                   >
                     {/* Decorative background circle art (watermark) */}
-                    <div className="absolute -top-6 -right-6 w-16 h-16 rounded-full bg-current opacity-[0.03] dark:opacity-[0.015] pointer-events-none group-hover:scale-110 transition-transform duration-300" />
+                    <div className="absolute -top-6 -right-6 w-14 h-14 rounded-full bg-current opacity-[0.03] dark:opacity-[0.015] pointer-events-none group-hover:scale-110 transition-transform duration-300" />
                     
                     <div className="w-full">
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center justify-between mb-2.5">
                         {cat.logoUrl ? (
-                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                          <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-0.5 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
                             <img
                               src={cat.logoUrl}
                               alt={`${cat.name} logo`}
@@ -719,24 +717,23 @@ const formatSubCategoryName = (name: string) => {
                             />
                           </div>
                         ) : (
-                          <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
-                            <IconComponent className="h-4.5 w-4.5 animate-pulse" />
+                          <div className={`p-2 rounded-lg ${style.iconBg}`}>
+                            <IconComponent className="h-4 w-4 animate-pulse" />
                           </div>
                         )}
-                        <span className={`text-[10px] font-black tracking-wider ${style.accentText}`}>
+                        <span className={`text-[9px] font-black tracking-wider ${style.accentText}`}>
                           {cat.count}
                         </span>
                       </div>
-                      <h4 className="font-extrabold text-xs text-slate-900 dark:text-white mb-1.5">{cat.name}</h4>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
-                      
+                      <h4 className="font-extrabold text-xs text-slate-900 dark:text-white mb-1 line-clamp-1">{cat.name}</h4>
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-tight font-semibold line-clamp-2">{cat.desc}</p>
+                    </div>
 
+                    <div className={`flex items-center justify-between font-bold text-[8px] uppercase tracking-wider mt-3 pt-2 border-t border-slate-200/50 dark:border-slate-800/40 w-full ${style.accentText}`}>
+                      <span>{t.exploreTests}</span>
+                      <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform shrink-0" />
                     </div>
-                    
-                    <div className={`flex items-center gap-1 font-bold text-[9px] uppercase tracking-wider mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-800/40 w-full ${style.accentText}`}>
-                      {t.exploreTests} <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
@@ -890,69 +887,7 @@ const formatSubCategoryName = (name: string) => {
           <p className="font-bold">© 2026 Mock Test CBT Portal. All rights reserved.</p>
         </footer>
 
-        {/* Categories modal logic remains exactly same, styled adaptively */}
-        {selectedModalCategory && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm p-0">
-            <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-6 w-full max-w-md shadow-2xl animate-in slide-in-from-bottom duration-250 flex flex-col justify-between max-h-[85vh] overflow-y-auto">
-              <div>
-                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
-                  <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <GraduationCap className="h-4.5 w-4.5 text-blue-600" />
-                    {(examCatalog?.find(c => c.id === selectedModalCategory) || CATEGORIES.find(c => c.id === selectedModalCategory))?.name || 'Exam'} Options
-                  </h4>
-                  <button
-                    onClick={handleCloseCategoryModal}
-                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
 
-                <p className="text-[10px] text-slate-505 leading-normal mb-4 font-semibold">
-                  Select an exam category option:
-                </p>
-
-                <div className="space-y-2.5">
-                  {(() => {
-                    const dbCategory = examCatalog?.find(c => c.id === selectedModalCategory);
-                    const parentCategoryLogo = dbCategory?.logoUrl || null;
-                    const itemsToRender = dbCategory && dbCategory.subCategories?.length > 0
-                      ? dbCategory.subCategories.map(sub => ({ id: sub.id, name: sub.name, href: `/mock-tests?cat=${selectedModalCategory}&sub=${sub.id}`, logoUrl: sub.logoUrl || parentCategoryLogo }))
-                      : EXAMS_BY_CATEGORY[selectedModalCategory]?.map(exam => ({ id: exam.id, name: exam.name, href: `/mock-tests?cat=${selectedModalCategory}`, logoUrl: parentCategoryLogo })) || [];
-
-                    if (itemsToRender.length === 0) {
-                      return <p className="text-xs text-slate-400 italic text-center py-4">No subcategories available yet.</p>;
-                    }
-
-                    return itemsToRender.map((item) => (
-                      <Link
-                        key={item.id}
-                        href={item.href}
-                        onClick={handleCloseCategoryModal}
-                        className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-bold text-slate-800 dark:text-slate-200"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
-                          {item.logoUrl && (
-                            <img src={item.logoUrl} alt="" className="w-5 h-5 object-contain shrink-0 rounded" />
-                          )}
-                          <span className="truncate">{item.name}</span>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
-                      </Link>
-                    ));
-                  })()}
-                </div>
-              </div>
-
-              <button
-                onClick={() => { setSelectedModalCategory(null); window.history.back(); }}
-                className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 py-3 rounded-xl text-xs font-bold mt-6"
-              >
-                Close View
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* NEW SIGNUP CONGRATULATIONS POPUP (MOBILE VIEW ONLY) */}
         {showCongratsPopup && (
@@ -1152,6 +1087,8 @@ const formatSubCategoryName = (name: string) => {
           </div>
         </div>
       )}
+      {/* Floating Support Team Overlay Widget on Mobile Home Screen */}
+      <HomeSupportWidget />
     </>
   );
 }
@@ -1440,46 +1377,44 @@ const formatSubCategoryName = (name: string) => {
               cat.id.includes('teaching') ? 'glow-shadow-amber' :
               cat.id.includes('ugc_net') ? 'glow-shadow-blue' : 'glow-shadow-purple';
 
-            return (
-              <button
-                onClick={() => setSelectedModalCategory(cat.id)}
-                key={cat.id}
-                className={`border hover:scale-[1.03] p-5 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full cursor-pointer relative overflow-hidden ${style.bg} ${shadowStyle}`}
-              >
-                {/* Decorative background circle art (watermark) */}
-                <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-current opacity-[0.03] dark:opacity-[0.015] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
-                <div className="absolute -bottom-8 -left-8 w-16 h-16 rounded-full bg-current opacity-[0.02] dark:opacity-[0.01] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
-                <div>
-                  <div className="flex items-center justify-between mb-3.5">
-                    {cat.logoUrl ? (
-                      <div className="w-11 h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-                        <img
-                          src={cat.logoUrl}
-                          alt={`${cat.name} logo`}
-                          className="w-full h-full object-contain"
-                        />
+                return (
+                  <Link
+                    key={cat.id}
+                    href={`/mock-tests?cat=${cat.id}`}
+                    className={`border hover:scale-[1.03] p-5 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full cursor-pointer relative overflow-hidden ${style.bg} ${shadowStyle}`}
+                  >
+                    {/* Decorative background circle art (watermark) */}
+                    <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-current opacity-[0.03] dark:opacity-[0.015] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
+                    <div className="absolute -bottom-8 -left-8 w-16 h-16 rounded-full bg-current opacity-[0.02] dark:opacity-[0.01] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
+                    <div>
+                      <div className="flex items-center justify-between mb-3.5">
+                        {cat.logoUrl ? (
+                          <div className="w-11 h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                            <img
+                              src={cat.logoUrl}
+                              alt={`${cat.name} logo`}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
+                            <IconComponent className="h-5 w-5 animate-pulse" />
+                          </div>
+                        )}
+                        <span className={`text-[10px] font-black tracking-wider group-hover:underline ${style.accentText}`}>
+                          {cat.count}
+                        </span>
                       </div>
-                    ) : (
-                      <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
-                        <IconComponent className="h-5 w-5 animate-pulse" />
-                      </div>
-                    )}
-                    <span className={`text-[10px] font-black tracking-wider group-hover:underline ${style.accentText}`}>
-                      {cat.count}
-                    </span>
-                  </div>
-                  <h4 className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white mb-1.5">{cat.name}</h4>
-                  <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
-                  
+                      <h4 className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white mb-1.5">{cat.name}</h4>
+                      <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
+                    </div>
 
-                </div>
-                
-                <div className={`flex items-center gap-1.5 font-bold text-[9px] md:text-[10px] uppercase tracking-wider mt-5 pt-3 border-t w-full ${style.btnAccent}`}>
-                  {t.exploreTests} <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
-                </div>
-              </button>
-            );
-          })}
+                    <div className={`flex items-center gap-1.5 font-bold text-[9px] md:text-[10px] uppercase tracking-wider mt-5 pt-3 border-t w-full ${style.btnAccent}`}>
+                      {t.exploreTests} <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+                    </div>
+                  </Link>
+                );
+              })}
         </div>
       </section>
 
@@ -1768,71 +1703,7 @@ const formatSubCategoryName = (name: string) => {
         <p className="mt-1">Developed to simulate real-world government selection computer based assessments.</p>
       </footer>
 
-      {/* Category Exams Popup Modal */}
-      {selectedModalCategory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl animate-in fade-in zoom-in duration-200 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
-                <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5 text-blue-600" />
-                  {(examCatalog?.find(c => c.id === selectedModalCategory) || CATEGORIES.find(c => c.id === selectedModalCategory))?.name || 'Exam'} Options
-                </h4>
-                <button
-                  onClick={() => setSelectedModalCategory(null)}
-                  className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
 
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 font-semibold">
-                Select an exam category option to redirect to its dedicated mock sittings and full solutions:
-              </p>
-
-              <div className="space-y-3">
-                {(() => {
-                  const dbCategory = examCatalog?.find(c => c.id === selectedModalCategory);
-                  const parentCategoryLogo = dbCategory?.logoUrl || null;
-                  const itemsToRender = dbCategory && dbCategory.subCategories?.length > 0
-                    ? dbCategory.subCategories.map(sub => ({ id: sub.id, name: sub.name, href: `/mock-tests?cat=${selectedModalCategory}&sub=${sub.id}`, logoUrl: sub.logoUrl || parentCategoryLogo }))
-                    : EXAMS_BY_CATEGORY[selectedModalCategory]?.map(exam => ({ id: exam.id, name: exam.name, href: `/mock-tests?cat=${selectedModalCategory}`, logoUrl: parentCategoryLogo })) || [];
-
-                  if (itemsToRender.length === 0) {
-                    return <p className="text-xs text-slate-400 italic text-center py-4">No subcategories available yet.</p>;
-                  }
-
-                  return itemsToRender.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      onClick={() => setSelectedModalCategory(null)}
-                      className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-blue-955/20 hover:border-blue-300 dark:hover:border-blue-900/60 rounded-xl transition group text-xs font-bold text-slate-800 dark:text-slate-200"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
-                        {item.logoUrl && (
-                          <img src={item.logoUrl} alt="" className="w-5 h-5 object-contain shrink-0 rounded" />
-                        )}
-                        <span className="truncate">{item.name}</span>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition group-hover:text-blue-600 shrink-0" />
-                    </Link>
-                  ));
-                })()}
-              </div>
-            </div>
-
-            <div className="flex justify-end mt-6 border-t border-slate-200 dark:border-slate-800 pt-4">
-              <button
-                onClick={() => setSelectedModalCategory(null)}
-                className="bg-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer"
-              >
-                Close View
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* NEW SIGNUP CONGRATULATIONS POPUP */}
       {showCongratsPopup && (
@@ -1934,6 +1805,253 @@ const formatSubCategoryName = (name: string) => {
         </div>
       )}
 
+      {/* Floating Support Team Overlay Widget on Home Screen */}
+      <HomeSupportWidget />
+    </div>
+  );
+}
+
+function HomeSupportWidget() {
+  const { currentUser, language } = useAuth();
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [sending, setSending] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const autoOpenedRef = useRef<string | null>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const fetchMessages = async (markRead = false) => {
+    if (!currentUser?.id) return;
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'get-support-messages',
+          data: {
+            userId: currentUser.id,
+            readerRole: 'STUDENT',
+            markAsRead: markRead || chatOpen
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.messages)) {
+        setMessages(data.messages);
+        
+        const unreadAdminMsgs = data.messages.filter((m: any) => m.sender === 'ADMIN' && !m.isRead);
+        setUnreadCount(unreadAdminMsgs.length);
+
+        const latestAdminMsg = data.messages.filter((m: any) => m.sender === 'ADMIN').pop();
+        if (latestAdminMsg) {
+          // If there are unread admin messages and we haven't auto-opened for this message ID yet
+          if (unreadAdminMsgs.length > 0 && autoOpenedRef.current !== latestAdminMsg.id) {
+            autoOpenedRef.current = latestAdminMsg.id;
+            setChatOpen(true);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Support message fetch error:", err);
+    }
+  };
+
+  // Poll for messages every 4 seconds when user is logged in
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    fetchMessages(chatOpen);
+
+    const interval = setInterval(() => {
+      fetchMessages(chatOpen);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [currentUser?.id, chatOpen]);
+
+  useEffect(() => {
+    if (chatOpen) {
+      scrollToBottom();
+      setUnreadCount(0);
+      if (currentUser?.id) {
+        fetchMessages(true);
+      }
+    }
+  }, [chatOpen, messages.length]);
+
+  const handleSend = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!inputText.trim() || !currentUser?.id || sending) return;
+
+    const text = inputText.trim();
+    setInputText('');
+    setSending(true);
+
+    // Optimistic UI update
+    const tempMsg = {
+      id: 'temp-' + Date.now(),
+      userId: currentUser.id,
+      sender: 'STUDENT',
+      message: text,
+      isRead: false,
+      createdAt: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, tempMsg]);
+    setTimeout(scrollToBottom, 50);
+
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send-support-message',
+          data: {
+            userId: currentUser.id,
+            sender: 'STUDENT',
+            message: text
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.message) {
+        setMessages(prev => prev.map(m => m.id === tempMsg.id ? data.message : m));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Only show support chat floating button if user is logged in
+  if (!currentUser) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[999] font-sans select-none">
+      {/* CHAT OVERLAY WINDOW */}
+      {chatOpen && (
+        <div className="fixed bottom-20 right-3 left-3 sm:left-auto sm:right-6 w-[calc(100vw-1.5rem)] sm:w-[380px] h-[480px] max-h-[75vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 z-[9999]">
+          
+          {/* Header */}
+          <div className="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between shadow-md">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center font-black border border-white/30 text-white shadow-inner">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-blue-600"></span>
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm tracking-wide leading-tight">
+                  {language === 'hi' ? 'मॉकटेस्ट हब टीम' : 'MockTest Hub Team'}
+                </h4>
+                <p className="text-[10px] text-blue-100 font-semibold flex items-center gap-1">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                  {language === 'hi' ? 'ऑनलाइन • व्यक्तिगत सहायता' : 'Online • Personal Support'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setChatOpen(false)}
+              className="p-1.5 rounded-full hover:bg-white/20 transition cursor-pointer text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Messages Body */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/60 dark:bg-slate-950/40">
+            {messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
+                  <MessageSquare className="h-6 w-6" />
+                </div>
+                <p className="font-extrabold text-xs text-slate-800 dark:text-slate-200">
+                  {language === 'hi' ? 'तकनीकी सहायता टीम से बात करें' : 'Chat with Technical Support'}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-xs font-medium">
+                  {language === 'hi' ? 'तकनीकी टीम से सवाल पूछें या सहायता प्राप्त करें।' : 'Send your question below to chat directly with our technical team.'}
+                </p>
+              </div>
+            ) : (
+              messages.map((msg) => {
+                const isUser = msg.sender === 'STUDENT';
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] p-3.5 rounded-2xl text-xs font-medium shadow-xs leading-relaxed ${
+                        isUser
+                          ? 'bg-blue-600 text-white rounded-br-xs'
+                          : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-xs'
+                      }`}
+                    >
+                      {!isUser && (
+                        <p className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
+                          Technical Support
+                        </p>
+                      )}
+                      <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                      <p
+                        className={`text-[9px] mt-1 text-right font-mono ${
+                          isUser ? 'text-blue-100' : 'text-slate-400'
+                        }`}
+                      >
+                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Box */}
+          <form onSubmit={handleSend} className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
+            <input
+              type="text"
+              placeholder={language === 'hi' ? 'यहाँ संदेश लिखें...' : 'Type message here...'}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-2xl px-4 py-2.5 text-xs font-medium focus:outline-none border border-transparent focus:border-blue-500"
+            />
+            <button
+              type="submit"
+              disabled={!inputText.trim() || sending}
+              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white p-2.5 rounded-2xl transition cursor-pointer shrink-0 shadow-md active:scale-95"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </form>
+
+        </div>
+      )}
+
+      {/* FLOATING OVERLAY BUTTON */}
+      <button
+        onClick={() => setChatOpen(prev => !prev)}
+        className="relative group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-full shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
+      >
+        <div className="relative flex items-center justify-center">
+          <MessageSquare className="h-4.5 w-4.5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 animate-bounce">
+              {unreadCount}
+            </span>
+          )}
+        </div>
+        <span className="font-extrabold text-[10px] tracking-wider uppercase hidden sm:inline-block">
+          {language === 'hi' ? 'मॉकटेस्ट हब टीम' : 'MockTest Hub Team'}
+        </span>
+      </button>
     </div>
   );
 }

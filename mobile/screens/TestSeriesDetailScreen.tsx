@@ -6,7 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Dimensions
+  Dimensions,
+  Image
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -188,6 +189,16 @@ export default function TestSeriesDetailScreen({
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
           <ArrowLeft color="#FFF" size={20} />
         </TouchableOpacity>
+        {series.logoUrl ? (
+          <View style={{
+            width: 32, height: 32, borderRadius: 16,
+            backgroundColor: '#FFFFFF',
+            marginRight: 10, justifyContent: 'center', alignItems: 'center',
+            overflow: 'hidden'
+          }}>
+            <Image source={{ uri: series.logoUrl }} style={{ width: 32, height: 32, borderRadius: 16, resizeMode: 'cover' }} />
+          </View>
+        ) : null}
         <View style={styles.headerInfo}>
           <Text style={styles.headerCategory}>{series.categoryName}</Text>
           <Text style={styles.headerTitle} numberOfLines={1}>{series.name} {language === 'en' ? 'Series' : 'सीरीज'}</Text>

@@ -635,7 +635,8 @@ function getTagName(token: string): string {
 function renderContent(
   html: string,
   textStyle: any,
-  isDark: boolean | undefined
+  isDark: boolean | undefined,
+  keyPrefix: string = 'h'
 ): React.ReactNode[] {
   // Recursive entity decoding
   let clean = html;
@@ -653,14 +654,14 @@ function renderContent(
   if (chunks.some(c => c.type === 'table')) {
     // Has at least one table – process chunk by chunk
     const allNodes: React.ReactNode[] = [];
-    let tableCount = 0;
+    let chunkCount = 0;
     for (const chunk of chunks) {
       if (chunk.type === 'table') {
-        const tblNode = renderTableHtml(chunk.content, textStyle, isDark, `tbl-${tableCount++}`);
+        const tblNode = renderTableHtml(chunk.content, textStyle, isDark, `${keyPrefix}-tbl-${chunkCount++}`);
         if (tblNode) allNodes.push(tblNode);
       } else if (chunk.content.trim()) {
         // Recurse for non-table text (strips tables from input so no infinite loop)
-        allNodes.push(...renderContent(chunk.content, textStyle, isDark));
+        allNodes.push(...renderContent(chunk.content, textStyle, isDark, `${keyPrefix}-chk-${chunkCount++}`));
       }
     }
     return allNodes;
@@ -668,20 +669,24 @@ function renderContent(
 
   // ── No table: proceed with normal token-based rendering ─────────────────────
 
-  // Split by HTML tags (handles tags with attributes correctly)
-  const tokens = clean.split(/(<[^>]+>)/g);
+  // Tokenize: split by HTML tags vs text
+  const tokenRegex = /(<[^>]+>)/g;
+  const tokens = clean.split(tokenRegex);
 
+  // Formatting state
   let isBold = false;
   let isItalic = false;
   let isUnderline = false;
   let isSup = false;
   let isSub = false;
+
   let isOl = false;
   let listCounter = 0;
   let currentHeadingLevel = 0; // 0 = not a heading
 
   const nodes: React.ReactNode[] = [];
   let keyIdx = 0;
+  const getKey = () => `${keyPrefix}-${keyIdx++}`;
 
   const color: string = isDark ? '#E5E7EB' : '#1F2937';
   const fontSize: number = textStyle?.fontSize ?? 14;
@@ -694,7 +699,7 @@ function renderContent(
       React.isValidElement(last) &&
       (last as React.ReactElement<any>).props?.children === '\n';
     if (!lastIsNewline) {
-      nodes.push(<Text key={keyIdx++} style={textStyle}>{'\n'}</Text>);
+      nodes.push(<Text key={getKey()} style={textStyle}>{'\n'}</Text>);
     }
   };
 
@@ -718,7 +723,7 @@ function renderContent(
       isUnderline && { textDecorationLine: 'underline' as const },
     ].filter(Boolean);
 
-    nodes.push(<Text key={keyIdx++} style={s}>{value}</Text>);
+    nodes.push(<Text key={getKey()} style={s}>{value}</Text>);
   };
 
   const pushTextWithFracs = (rawText: string) => {
@@ -730,7 +735,7 @@ function renderContent(
       if (seg.type === 'frac') {
         nodes.push(
           <FractionView
-            key={keyIdx++}
+            key={getKey()}
             num={seg.num}
             den={seg.den}
             fontSize={fontSize}
@@ -771,7 +776,7 @@ function renderContent(
 
       // ── Line breaks ───────────────────────────────────────────────────────
       } else if (tagName === 'br') {
-        nodes.push(<Text key={keyIdx++} style={textStyle}>{'\n'}</Text>);
+        nodes.push(<Text key={getKey()} style={textStyle}>{'\n'}</Text>);
 
       // ── Block elements ────────────────────────────────────────────────────
       } else if (
@@ -856,7 +861,7 @@ function renderContent(
 
           nodes.push(
             <HtmlImage
-              key={keyIdx++}
+              key={getKey()}
               src={src}
               isDark={isDark}
               width={width}
@@ -869,7 +874,7 @@ function renderContent(
       } else if (tagName === 'hr') {
         nodes.push(
           <View
-            key={keyIdx++}
+            key={getKey()}
             style={{
               width: '100%',
               height: 1,

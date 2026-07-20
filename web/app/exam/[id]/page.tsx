@@ -11,7 +11,7 @@ import {
 import { useAuth, TestCategory, MockTestItem } from '../../AuthContext';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Check, ShieldAlert, ShieldCheck, Globe, User, BookOpen, AlertCircle, ArrowLeft, Sun, Moon, Clock, Pause, Play, Menu, X, Trophy, Star } from 'lucide-react';
+import { Check, CheckCircle2, ShieldAlert, ShieldCheck, Globe, User, BookOpen, AlertCircle, ArrowLeft, Sun, Moon, Clock, Pause, Play, Menu, X, Trophy, Star } from 'lucide-react';
 import { useIsMobile } from '../../useIsMobile';
 
 function decodeHtml(text: string): string {
@@ -78,6 +78,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
     jumpToQuestion,
     switchSection,
     setLanguage,
+    submitSection,
     submitExam,
     pauseExam,
     resumeExam,
@@ -97,6 +98,8 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showSectionSubmitConfirm, setShowSectionSubmitConfirm] = useState(false);
+  const [isManuallyPaused, setIsManuallyPaused] = useState(false);
   const [questionFontSize, setQuestionFontSize] = useState(14); // px, default 14px
 
   useEffect(() => {
@@ -108,6 +111,31 @@ function TcsIonEngine({ testId }: { testId: string }) {
       document.removeEventListener('fullscreenchange', handleFsChange);
     };
   }, []);
+
+  // Automatically pause exam and display pause popup when tab is switched, browser minimized, or window focus lost
+  useEffect(() => {
+    if (state.isExamSubmitted) return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden || document.visibilityState === 'hidden') {
+        pauseExam();
+        setIsManuallyPaused(true);
+      }
+    };
+
+    const handleBlur = () => {
+      pauseExam();
+      setIsManuallyPaused(true);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [state.isExamSubmitted, pauseExam]);
 
   const stateRef = useRef(state);
   useEffect(() => {
@@ -221,23 +249,11 @@ function TcsIonEngine({ testId }: { testId: string }) {
     };
   }, [testId]);
 
-  // Alert on sectional transitions when sectional timing is active
+  // Track sectional transitions when sectional timing is active
   const lastSectionIndexRef = useRef(state.currentSectionIndex);
   useEffect(() => {
-    if (state.session?.hasSectionalTiming && state.currentSectionIndex !== lastSectionIndexRef.current) {
-      const prevIdx = lastSectionIndexRef.current;
-      const prevSecName = state.session.sections[prevIdx]?.name;
-      const newSecName = state.session.sections[state.currentSectionIndex]?.name;
-      if (prevSecName && newSecName && state.currentSectionIndex > prevIdx) {
-        alert(
-          state.language === 'hi'
-            ? `समय समाप्त! "${prevSecName}" का समय समाप्त हो गया है। अब "${newSecName}" शुरू हो रहा है।`
-            : `Section Time Up! Time for "${prevSecName}" has expired. Now starting: "${newSecName}".`
-        );
-      }
-    }
     lastSectionIndexRef.current = state.currentSectionIndex;
-  }, [state.currentSectionIndex, state.session, state.language]);
+  }, [state.currentSectionIndex]);
 
   // Sync attempt score on exam submission
   useEffect(() => {
@@ -278,7 +294,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
     : null;
 
 
-  if (!state.session) {
+  if (!state.session || !isMounted) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-100 font-sans">
         <div className="text-center">
@@ -407,13 +423,13 @@ function TcsIonEngine({ testId }: { testId: string }) {
                   onClick={() => {
                     try {
                       if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen();
+                        const p = document.documentElement.requestFullscreen();
+                        if (p && typeof p.catch === 'function') p.catch(() => {});
                       } else {
-                        document.exitFullscreen();
+                        const p = document.exitFullscreen();
+                        if (p && typeof p.catch === 'function') p.catch(() => {});
                       }
-                    } catch (e) {
-                      console.warn("Toggle fullscreen error:", e);
-                    }
+                    } catch (e) {}
                   }}
                   className="border border-[#0D88B9] text-[#0D88B9] bg-white hover:bg-[#E3F2FD] px-2.5 py-1.5 rounded font-extrabold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider hidden sm:inline-block"
                 >
@@ -422,7 +438,10 @@ function TcsIonEngine({ testId }: { testId: string }) {
                 
                 <button
                   type="button"
-                  onClick={pauseExam}
+                  onClick={() => {
+                    pauseExam();
+                    setIsManuallyPaused(true);
+                  }}
                   className="border border-[#0D88B9] text-[#0D88B9] bg-white hover:bg-[#E3F2FD] px-2.5 py-1.5 rounded font-extrabold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider"
                 >
                   Pause
@@ -460,7 +479,10 @@ function TcsIonEngine({ testId }: { testId: string }) {
             <div className="flex items-center gap-3 shrink-0">
               <button
                 type="button"
-                onClick={pauseExam}
+                onClick={() => {
+                  pauseExam();
+                  setIsManuallyPaused(true);
+                }}
                 className="flex items-center gap-1 bg-[#1a6baf] hover:bg-[#155a96] text-white text-[10px] font-extrabold px-2.5 py-1.5 rounded transition cursor-pointer active:scale-95 shrink-0"
                 title="Pause Test"
               >
@@ -475,7 +497,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
               </div>
               <button
                 type="button"
-                onClick={() => { try { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { document.exitFullscreen(); } } catch(e) {} }}
+                onClick={() => { try { if (!document.fullscreenElement) { const p = document.documentElement.requestFullscreen(); if (p && typeof p.catch === 'function') p.catch(() => {}); } else { const p = document.exitFullscreen(); if (p && typeof p.catch === 'function') p.catch(() => {}); } } catch(e) {} }}
                 className="p-1 rounded text-slate-500 hover:bg-slate-100 transition cursor-pointer hidden sm:block"
                 title={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
               >
@@ -541,7 +563,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
       })()}
 
       {/* PAUSE SCREEN BLUR OVERLAY */}
-      {!state.isTimerRunning && !isExamSubmitted && !showSubmitConfirm && state.session && (
+      {isManuallyPaused && !isExamSubmitted && !showSubmitConfirm && !showSectionSubmitConfirm && state.session && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
           <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 md:p-8 text-center text-slate-800">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 text-yellow-600 mb-4 animate-pulse">
@@ -574,7 +596,10 @@ function TcsIonEngine({ testId }: { testId: string }) {
             </div>
 
             <button
-              onClick={resumeExam}
+              onClick={() => {
+                resumeExam();
+                setIsManuallyPaused(false);
+              }}
               className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 rounded-lg shadow-lg hover:shadow-blue-500/20 active:scale-95 transition cursor-pointer text-xs uppercase tracking-wider"
             >
               <Play className="h-4 w-4" /> Resume Test
@@ -697,19 +722,23 @@ function TcsIonEngine({ testId }: { testId: string }) {
                 }
 
                 try {
-                  const doc = document as any;
-                  if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                  } else if (doc.mozCancelFullScreen) {
-                    doc.mozCancelFullScreen();
-                  } else if (doc.webkitExitFullscreen) {
-                    doc.webkitExitFullscreen();
-                  } else if (doc.msExitFullscreen) {
-                    doc.msExitFullscreen();
+                  if (typeof document !== 'undefined' && document.fullscreenElement) {
+                    const doc = document as any;
+                    let p: Promise<void> | null = null;
+                    if (document.exitFullscreen) {
+                      p = document.exitFullscreen();
+                    } else if (doc.mozCancelFullScreen) {
+                      p = doc.mozCancelFullScreen();
+                    } else if (doc.webkitExitFullscreen) {
+                      p = doc.webkitExitFullscreen();
+                    } else if (doc.msExitFullscreen) {
+                      p = doc.msExitFullscreen();
+                    }
+                    if (p && typeof p.catch === 'function') {
+                      p.catch(() => {});
+                    }
                   }
-                } catch (e) {
-                  console.warn("Exit fullscreen failed:", e);
-                }
+                } catch (e) {}
                 router.push(`/exam/${testId}/analysis`);
               }}
               className="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg shadow hover:bg-blue-750 transition"
@@ -1578,7 +1607,26 @@ function TcsIonEngine({ testId }: { testId: string }) {
                 )}
 
                 {/* Submit Block Section */}
-                <div className={`p-4 border-t border-slate-200 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
+                <div className={`p-4 border-t border-slate-200 flex flex-col gap-2.5 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
+                  {session && session.sections && session.sections.length > 1 && (
+                    <button
+                      onClick={() => {
+                        pauseExam();
+                        const isLastSection = currentSectionIndex + 1 >= session.sections.length;
+                        if (isLastSection) {
+                          setShowSubmitConfirm(true);
+                        } else {
+                          setShowSectionSubmitConfirm(true);
+                        }
+                      }}
+                      className="w-full text-white font-bold py-2.5 rounded shadow transition cursor-pointer text-xs uppercase tracking-wider active:scale-95 bg-emerald-600 hover:bg-emerald-700 border border-emerald-500/20"
+                    >
+                      {currentSectionIndex + 1 < session.sections.length
+                        ? (language === 'hi' ? 'सेक्शन सबमिट करें' : 'Submit Section')
+                        : (language === 'hi' ? 'अंतिम सेक्शन सबमिट करें' : 'Submit Final Section')}
+                    </button>
+                  )}
+
                   <button
                     onClick={() => {
                       pauseExam();
@@ -1595,6 +1643,86 @@ function TcsIonEngine({ testId }: { testId: string }) {
               </aside>
             );
           })()}
+        </div>
+      )}
+
+      {/* Section Submit Confirmation Modal with Utilized Time & Stats */}
+      {showSectionSubmitConfirm && currentSection && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400 mb-3">
+              <CheckCircle2 className="h-6 w-6 shrink-0" />
+              <div>
+                <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white">
+                  {language === 'hi' ? 'सेक्शन सबमिट पुष्टि' : 'Submit Section Confirmation'}
+                </h4>
+                <p className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                  {currentSection.name}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 my-4 space-y-2 text-xs">
+              <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
+                <span className="font-semibold">{language === 'hi' ? 'सेक्शन में उपयोग समय:' : 'Time Utilized in Section:'}</span>
+                <span className="font-mono font-extrabold text-blue-600 dark:text-blue-400">
+                  {(() => {
+                    const secQuestions = session?.questions.filter(q => q.sectionId === currentSection.id) || [];
+                    const secTime = secQuestions.reduce((acc, q) => acc + (responses[q.id]?.elapsedSeconds || 0), 0);
+                    const m = Math.floor(secTime / 60);
+                    const s = secTime % 60;
+                    return `${m}m ${s}s`;
+                  })()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
+                <span className="font-semibold">{language === 'hi' ? 'उत्तर दिए गए प्रश्न:' : 'Answered Questions:'}</span>
+                <span className="font-extrabold text-green-600 dark:text-green-400">
+                  {session?.questions.filter(q => q.sectionId === currentSection.id && (responses[q.id]?.state === 3 || responses[q.id]?.state === 5)).length || 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
+                <span className="font-semibold">{language === 'hi' ? 'समीक्षा हेतु चिह्नित:' : 'Marked for Review:'}</span>
+                <span className="font-extrabold text-purple-600 dark:text-purple-400">
+                  {session?.questions.filter(q => q.sectionId === currentSection.id && responses[q.id]?.state === 4).length || 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
+                <span className="font-semibold">{language === 'hi' ? 'छोड़े गए प्रश्न:' : 'Unattempted:'}</span>
+                <span className="font-extrabold text-slate-500">
+                  {session?.questions.filter(q => q.sectionId === currentSection.id && responses[q.id]?.state !== 3 && responses[q.id]?.state !== 5 && responses[q.id]?.state !== 4).length || 0}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-slate-600 dark:text-slate-350 text-[11px] leading-relaxed mb-6 font-medium">
+              {language === 'hi'
+                ? 'क्या आप इस सेक्शन को सबमिट करके अगले सेक्शन को शुरू करना चाहते हैं?'
+                : 'Are you sure you want to submit this section and begin the next section now?'}
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowSectionSubmitConfirm(false);
+                  resumeExam();
+                }}
+                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              >
+                {language === 'hi' ? 'रद्द करें' : 'Cancel'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowSectionSubmitConfirm(false);
+                  setIsManuallyPaused(false);
+                  submitSection();
+                }}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow cursor-pointer active:scale-95"
+              >
+                {language === 'hi' ? 'हाँ, सेक्शन सबमिट करें' : 'Submit Section'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1646,6 +1774,11 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
   const { theme, toggleTheme, language: authLang, setLanguage: setAuthLang } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync instruction selection with default auth context language
   useEffect(() => {
@@ -1653,6 +1786,8 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
       setLang(authLang);
     }
   }, [authLang]);
+
+  if (!mounted) return null;
 
   const handleLangChange = (newLang: 'en' | 'hi') => {
     setLang(newLang);
@@ -1843,7 +1978,16 @@ export default function DynamicExamPage() {
   const testId = (params?.id as string) || "ssc_cgl_tier1";
   const { saveOngoingSession } = useAuth();
   
+  const [mounted, setMounted] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   // Callback when Engine triggers background timer saves
   const handleSaveSync = async (engineState: any) => {

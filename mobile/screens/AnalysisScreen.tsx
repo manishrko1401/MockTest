@@ -422,15 +422,7 @@ export default function AnalysisScreen({
             </View>
           </TouchableOpacity>
 
-          {activeTab === 'solutions' && (
-            <TouchableOpacity 
-              style={[styles.langToggleBtn, { marginLeft: 8 }]} 
-              onPress={() => setPaletteVisible(true)}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Menu size={22} color="#FFF" />
-            </TouchableOpacity>
-          )}
+
         </View>
       </View>
 

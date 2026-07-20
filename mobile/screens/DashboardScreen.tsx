@@ -58,6 +58,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { ApiClient } from '../api';
+import { getCachedQuestions, saveQuestionsToCache } from '../cache';
 import { ThemeColors } from '../theme';
 import { HtmlText } from '../HtmlText';
 
@@ -81,6 +82,7 @@ interface DashboardScreenProps {
   onToggleBookmark?: (testId: string, questionId: string) => void;
   language: 'en' | 'hi';
   onChangeLanguage: (lang: 'en' | 'hi') => void;
+  unreadSupportCount?: number;
 }
 
 const LOCALIZATION = {
@@ -403,6 +405,7 @@ export default function DashboardScreen({
   onToggleBookmark,
   language,
   onChangeLanguage,
+  unreadSupportCount = 0,
 }: DashboardScreenProps) {
 
   const insets = useSafeAreaInsets();
@@ -636,8 +639,15 @@ export default function DashboardScreen({
     Promise.all(
       missingIds.map(async (testId) => {
         try {
+          // 1. Check local device storage first (0ms latency, works offline)
+          const cached = await getCachedQuestions(testId);
+          if (cached && Array.isArray(cached) && cached.length > 0) {
+            return { testId, questions: cached };
+          }
+          // 2. Fetch from server if not cached locally
           const res = await ApiClient.getCustomQuestions(testId);
           if (res.success && Array.isArray(res.questions) && res.questions.length > 0) {
+            await saveQuestionsToCache(testId, res.questions);
             return { testId, questions: res.questions };
           }
         } catch (e) { /* ignore */ }
@@ -1150,6 +1160,10 @@ export default function DashboardScreen({
               contentContainerStyle={[styles.listContainer, { paddingTop: 4 }]}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
+              removeClippedSubviews={true}
+              initialNumToRender={8}
+              maxToRenderPerBatch={10}
+              windowSize={5}
               extraData={pinnedCategoryIds}
               renderItem={({ item: category }) => {
                 const catStyle = getCategoryStyle(category.name, isDark);
@@ -1265,8 +1279,13 @@ export default function DashboardScreen({
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          removeClippedSubviews={true}
+          initialNumToRender={8}
+          maxToRenderPerBatch={10}
+          windowSize={5}
           renderItem={({ item: sub }) => {
             const catStyle = getCategoryStyle(selectedCategory.name, isDark);
+            const logoUri = sub.logoUrl || selectedCategory.logoUrl || null;
             return (
               <TouchableOpacity
                 style={[
@@ -1279,19 +1298,27 @@ export default function DashboardScreen({
                   },
                 ]}
                 activeOpacity={0.82}
-                onPress={() => onSelectTestSeries({ ...sub, categoryName: selectedCategory.name })}
+                onPress={() => onSelectTestSeries({ ...sub, categoryName: selectedCategory.name, logoUrl: logoUri })}
               >
                 <View style={styles.seriesCardLeft}>
-                  {/* Icon box */}
+                  {/* Icon / Logo circle */}
                   <View style={{
-                    width: 44, height: 44, borderRadius: 12,
+                    width: 44, height: 44, borderRadius: 22,
                     backgroundColor: isDark ? '#111D38' : '#FFFFFF',
                     borderColor: catStyle.borderColor, borderWidth: 1.5,
                     justifyContent: 'center', alignItems: 'center', marginRight: 12,
+                    overflow: 'hidden',
                     shadowColor: '#4F6EF7', shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: 0.1, shadowRadius: 3, elevation: 1,
                   }}>
-                    <BookOpen color={catStyle.iconColor} size={20} />
+                    {logoUri ? (
+                      <Image
+                        source={{ uri: logoUri }}
+                        style={{ width: 44, height: 44, borderRadius: 22, resizeMode: 'cover' }}
+                      />
+                    ) : (
+                      <BookOpen color={catStyle.iconColor} size={20} />
+                    )}
                   </View>
                   <View style={styles.seriesDetails}>
                     <Text style={[styles.seriesTitle, { color: isDark ? '#F1F5F9' : '#1E293B' }]}>
@@ -1493,6 +1520,10 @@ export default function DashboardScreen({
                   keyExtractor={(item) => item.id}
                   contentContainerStyle={styles.listContainer}
                   showsVerticalScrollIndicator={false}
+                  removeClippedSubviews={true}
+                  initialNumToRender={8}
+                  maxToRenderPerBatch={10}
+                  windowSize={5}
                   renderItem={({ item }) => renderNoticeCard(item)}
                   ListEmptyComponent={
                     <Text style={[styles.noNoticesText, isDark && { color: ThemeColors.dark.textMuted }]}>
@@ -2215,9 +2246,28 @@ export default function DashboardScreen({
 
         {/* Support Chat Card */}
         <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
-          <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>
-            {language === 'en' ? '💬 Talk to Support Team' : '💬 सहायता टीम से बात करें'}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }, { flex: 1 }]}>
+              {language === 'en' ? '💬 Talk to Support Team' : '💬 सहायता टीम से बात करें'}
+            </Text>
+            {unreadSupportCount > 0 && (
+              <View style={{
+                backgroundColor: '#EF4444',
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4
+              }}>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFF' }} />
+                <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>
+                  {unreadSupportCount} {language === 'en' ? 'New' : 'नया'}
+                </Text>
+              </View>
+            )}
+          </View>
+
           <Text style={[styles.sysDetailLabel, { marginTop: 6, marginBottom: 12, textTransform: 'none', lineHeight: 16 }, isDark && { color: ThemeColors.dark.textMuted }]}>
             {language === 'en' 
               ? 'Have any questions, doubts, or technical issues? Get in touch with our support representatives directly.' 
@@ -2228,7 +2278,9 @@ export default function DashboardScreen({
             onPress={onOpenSupportChat}
           >
             <Text style={styles.formSubmitBtnText}>
-              {language === 'en' ? 'Start Chatting' : 'चैट शुरू करें'}
+              {language === 'en' 
+                ? (unreadSupportCount > 0 ? `Start Chatting (${unreadSupportCount} New)` : 'Start Chatting')
+                : (unreadSupportCount > 0 ? `चैट शुरू करें (${unreadSupportCount} नया)` : 'चैट शुरू करें')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -2650,7 +2702,29 @@ export default function DashboardScreen({
           ]}
           onPress={() => setActiveTab('profile')}
         >
-          <User size={20} color={activeTab === 'profile' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#6B7280')} />
+          <View style={{ position: 'relative' }}>
+            <User size={20} color={activeTab === 'profile' ? (isDark ? '#60A5FA' : '#2563EB') : (isDark ? '#94A3B8' : '#6B7280')} />
+            {unreadSupportCount > 0 && (
+              <View style={{
+                position: 'absolute',
+                top: -4,
+                right: -6,
+                backgroundColor: '#EF4444',
+                borderRadius: 7,
+                minWidth: 14,
+                height: 14,
+                paddingHorizontal: 2,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 1.5,
+                borderColor: isDark ? ThemeColors.dark.headerBg : '#FFFFFF',
+              }}>
+                <Text style={{ color: '#FFF', fontSize: 8, fontWeight: '900', lineHeight: 10 }}>
+                  {unreadSupportCount > 9 ? '9+' : unreadSupportCount}
+                </Text>
+              </View>
+            )}
+          </View>
           <Text style={[
             styles.navText, 
             activeTab === 'profile' && styles.navTextActive,

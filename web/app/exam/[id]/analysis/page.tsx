@@ -218,6 +218,10 @@ export default function ExamSolutionAnalysisPage() {
     }
   };
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Sync selector language with auth context
   useEffect(() => {
     if (language) {
@@ -633,6 +637,8 @@ export default function ExamSolutionAnalysisPage() {
     }
   };
 
+  if (!mounted) return null;
+
   return (
     <div className={isSolutionView
       ? "flex h-screen w-screen flex-col overflow-hidden bg-gray-100 font-sans select-none text-xs leading-normal text-slate-800"
@@ -802,6 +808,19 @@ export default function ExamSolutionAnalysisPage() {
 
         </div>
       </section>
+
+      {/* Solution Page Navigation Button placed right below Score Tile */}
+      {viewMode === 'analysis' && (
+        <div className="max-w-6xl w-full mx-auto px-6 mt-4">
+          <button
+            onClick={() => setViewMode('solution')}
+            className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-98 flex items-center justify-center gap-2 border border-blue-500/10 text-xs md:text-sm cursor-pointer"
+          >
+            <HelpCircle className="h-4.5 w-4.5" />
+            {language === 'hi' ? 'सविस्तार समाधान और व्याख्या देखें' : 'View Detailed Solutions & Explanation'}
+          </button>
+        </div>
+      )}
 
 
       {/* Testbook Equivalent Benchmarking Card */}
@@ -1031,19 +1050,6 @@ export default function ExamSolutionAnalysisPage() {
           </div>
         </div>
       </section>
-
-      {/* Universal Solution Page Navigation Button on Analysis Screen */}
-      {viewMode === 'analysis' && (
-        <div className="max-w-6xl w-full mx-auto px-6 mt-6 mb-12">
-          <button
-            onClick={() => setViewMode('solution')}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-98 flex items-center justify-center gap-2 border border-blue-500/10 text-xs md:text-sm cursor-pointer"
-          >
-            <HelpCircle className="h-4.5 w-4.5" />
-            {language === 'hi' ? 'सविस्तार समाधान और व्याख्या देखें' : 'View Detailed Solutions & Explanation'}
-          </button>
-        </div>
-      )}
 
       <section className={isSolutionView
         ? "flex flex-col lg:flex-row flex-1 overflow-hidden bg-[#F1F5F9] w-full h-full pb-16 flex"
