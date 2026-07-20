@@ -1,402 +1,3962 @@
 [
   {
-    "textEn": "If 17/03/2208 is a Sunday, then 17/03/2202 falls on which day of the week?",
-    "textHi": "यदि 17/03/2208 को रविवार है, तो 17/03/2202 को सप्ताह का कौन सा दिन होगा?",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335791839.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335791839.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
     "optionsEn": [
-      "<span style=\"\">Tuesday</span>",
-      "<span style=\"\">Saturday </span>",
-      "<span style=\"\">Monday </span>",
-      "<span style=\"\">Friday</span>"
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
     ],
     "optionsHi": [
-      "<span style=\"\">मंगलवार</span>",
-      "<span style=\"\">शनिवार</span>",
-      "<span style=\"\">सोमवार</span>",
-      "<span style=\"\">शुक्रवार</span>"
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
     ],
-    "correctIndex": 1,
-    "explanationEn": "<p>The logic followed here is:</p>\n\n<p>Given <span style=\"\">17/03/2208 is a Sunday,</span></p>\n\n<p><span style=\"\">There are exactly 6 years between 17/03/2208 and 17/03/2202.</span></p>\n\n<p><span style=\"\">Since 2204 and 2208 are leap years, there are 2 leap years and 4 non-leap years.</span></p>\n\n<p><span style=\"\">Leap year odd days = 2</span></p>\n\n<p><span style=\"\">Non-leap year odd day = 1</span></p>\n\n<p><span style=\"\">Numbers of odd days = 2 × 2 + 4 × 1</span></p>\n\n<p><span style=\"\">= 4 + 4</span></p>\n\n<p><span style=\"\">= 8</span></p>\n\n<p><span style=\"\">Now, divide by 7</span></p>\n\n<p><span style=\"\">Now, the number of the odd day is 1.</span></p>\n\n<p>Since you are going back in time, the number of odd days needs to be reduced from Sunday.</p>\n\n<p>Sunday – 1 = <span style=\"\">Saturday</span></p>\n\n<p><span style=\"\">Therefore, 17/03/2202 is on Saturday.</span></p>\n\n<p><span style=\"\">Hence, the correct answer is '<strong>Saturday</strong>'.</span></p>\n\n<p>Number of odd days in a leap year is 2.</p>\n\n<p><span style=\"\">Number of odd days in a nonleap year is 1.</span></p>",
-    "explanationHi": "<p>यहाँ अनुसरण किया गया तर्क है:</p>\n\n<p>दिया गया है कि 17/03/2208 को रविवार है,</p>\n\n<p>17/03/2208 और 17/03/2202 के बीच ठीक 6 वर्ष हैं।</p>\n\n<p>चूँकि 2204 और 2208 <span style=\"\">अधिवर्ष </span>वर्ष हैं, 2 अधिवर्ष और 4 गैर-अधिवर्ष हैं।</p>\n\n<p>अधिवर्ष<span style=\"\"> में</span> विषम दिन = 2</p>\n\n<p>गैर-अधिवर्ष<span style=\"\"> में</span> विषम दिन = 1</p>\n\n<p>विषम दिनों की संख्या = 2 × 2 + 4 × 1</p>\n\n<p>= 4 + 4</p>\n\n<p>= 8</p>\n\n<p>अब, 7 से विभाजित करने पर,</p>\n\n<p>अब विषम दिन की संख्या 1 है।</p>\n\n<p>चूँकि आप समय में पीछे जा रहे हैं, रविवार से विषम दिनों की संख्या कम करने की जरूरत है।</p>\n\n<p>रविवार – 1 = शनिवार</p>\n\n<p>इसलिए, 17/03/2202<span style=\"\"> को</span> शनिवार है।</p>\n\n<p>अतः सही उत्तर '<strong>शनिवार</strong>' है।</p>\n\n<p><img height=\"26px\" src=\"//cdn.testbook.com/resources/lms_creative_elements/hint-text-image.png\" style=\"\" width=\"26px\" /><span style=\"font-weight: 700; \"><span style=\"vertical-align: middle; \"><u>Hint</u></span></span><br />\nअधिवर्ष में विषम दिनों की संख्या 2 होती है।</p>\n\n<p>एक <span style=\"\">गैर-अधिवर्ष </span>में विषम दिनों की संख्या 1 होती है।</p>",
-    "section": "Test"
+    "correctIndex": 2,
+    "explanationEn": "<p>Option C has two stars</p>",
+    "explanationHi": "<p>विकल्प स में दो स्टार है</p>",
+    "section": "Classification Test"
   },
   {
-    "textEn": "<p>A series is given with one term missing. Select the correct alternative from the given ones that will complete the series.</p>\n\n<p>N13D, Q16G, T19J, W22D, ?</p>",
-    "textHi": "<p>एक श्रंखला दी गई है जिसमें एक पद लुप्त है। दिए गए विकल्पों में से वह सही विकल्प चुनिए जो श्रृंखला को पूरा करे।</p>\n\n<p>N13D, Q16G, T19J, W22D, ?</p>",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335898981.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335898981.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
     "optionsEn": [
-      "A26E",
-      "Z25G",
-      "Z23B",
-      "Z26G"
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
     ],
     "optionsHi": [
-      "A26E",
-      "Z25G",
-      "Z23B",
-      "Z26G"
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
     ],
-    "correctIndex": 1,
-    "explanationEn": "<p>For this question, we use the table given below-</p>\n\n<p><span id=\"docs-internal-guid-f8c718a0-7fff-a6ac-2629-56e90d16cd63\"><span style=\"  background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; vertical-align: baseline; white-space: pre-wrap;\"><span style=\"border:none;display:inline-block;overflow:hidden;width:498px;height:120px;\"><img src=\"https://lh6.googleusercontent.com/Uxgr_G802QW7RApeBuePNnZtqmR-nsYw6J4D70LKGhSXc9062q3pr1Ofc63TqAjb35BPzX8ShofL2xTr5qP9xtKW4y0YWjJsgxXO-ulQy6PVi7Kl75LyGWr6AFtN__bh5z5mvy-9\" style=\"margin-left: 0px; margin-top: 0px; width: 450px; height: 107px;\" /><br />\n<span style=\"display: none;\"> </span></span></span></span></p>\n\n<p>The pattern followed is:</p>\n\n<p>Steps:</p>\n\n<p>i) <strong>+ 3</strong> is done in the <strong>first letter</strong> to <strong>obtain the next letter</strong> of the series.</p>\n\n<ul>\n\t<li>N + 3 = Q</li>\n\t<li>Q + 3 = T</li>\n\t<li>T + 3 = W</li>\n\t<li><strong>W + 3 = Z</strong></li>\n</ul>\n\n<p><strong>​</strong>ii) <strong>Sum of the digits of the middle number gives the positional value of the last letter.</strong></p>\n\n<ul>\n\t<li>First number: 13 = 1 + 3 = 4. Thus last letter positional value will be 4 which is D.</li>\n\t<li>Second number: 16 = 1 + 6 = 7. <span style=\"\">Thus last letter positional value will be 7 which is G.</span></li>\n\t<li><span style=\"\">Third number: 19 = 1 + 9 = 10. Thus last letter positional value will be 10</span><span style=\"\"> which is J</span><span style=\"\">.</span></li>\n\t<li><span style=\"\">Fourth number: 22 = 2 + 2 = 4. Thus last letter positional value will be 4</span><span style=\"\"> which is D</span><span style=\"\">.</span></li>\n\t<li><span style=\"\">Fifth number: 25 = 2 + 5 = 7. Thus last letter positional value will be 7</span><span style=\"\"> which is G</span><span style=\"\">.</span></li>\n</ul>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Savita_State%20Govt._30-7-22_D1.png\" style=\"width: 101px; height: 453px;\" /></p>\n\n<p>Hence, <strong>Option (2)</strong> is correct.</p>",
-    "explanationHi": "<p>इस प्रश्न के लिए हम नीचे दी गई तालिका का उपयोग करते हैं-</p>\n\n<p><img src=\"https://lh6.googleusercontent.com/Uxgr_G802QW7RApeBuePNnZtqmR-nsYw6J4D70LKGhSXc9062q3pr1Ofc63TqAjb35BPzX8ShofL2xTr5qP9xtKW4y0YWjJsgxXO-ulQy6PVi7Kl75LyGWr6AFtN__bh5z5mvy-9\" style=\"white-space: pre-wrap;  margin-left: 0px; margin-top: 0px; width: 450px; height: 107px;\" /></p>\n\n<p><span style=\"\">अनुसरण किया गया स्वरूप है:</span></p>\n\n<p>चरण:</p>\n\n<p>i) श्रृंखला का <strong>अगला अक्षर प्राप्त करने के लिए पहले अक्षर में +3 </strong>किया जाता है।</p>\n\n<ul style=\"\">\n\t<li>N + 3 = Q</li>\n\t<li>Q + 3 = T</li>\n\t<li>T + 3 = W</li>\n\t<li><span style=\"font-weight: 700;\">W + 3 = Z</span></li>\n</ul>\n\n<p><strong>​ii) मध्य संख्या के अंकों का योग अंतिम अक्षर का स्थानीय मान देता है।</strong></p>\n\n<p>पहली संख्या: 13 = 1 + 3 = 4, इस प्रकार अंतिम अक्षर स्थानीय मान 4 होगा जो कि D है।<br />\nदूसरी संख्या: 16 = 1 + 6 = 7, इस प्रकार अंतिम अक्षर <span style=\"\">स्थानीय </span>मान 7 होगा जो कि G है।<br />\nतीसरी संख्या: 19 = 1 + 9 = 10, इस प्रकार अंतिम अक्षर <span style=\"\">स्थानीय </span>मान 10 होगा जो कि J है।<br />\nचौथी संख्या: 22 = 2 + 2 = 4, इस प्रकार अंतिम अक्षर <span style=\"\">स्थानीय </span>मान 4 होगा जो कि D है।<br />\nपांचवीं संख्या: 25 = 2 + 5 = 7, इस प्रकार अंतिम अक्षर <span style=\"\">स्थानीय </span>मान 7 होगा जो कि G है।</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Savita_State%20Govt._30-7-22_D1.png\" style=\" width: 101px; height: 453px;\" /></p>\n\n<p><span style=\"\">अत:, </span><span style=\"font-weight: 700; \">विकल्प (2) </span><span style=\"\">सही है।</span></p>",
-    "section": "Test"
+    "correctIndex": 4,
+    "explanationEn": "<p>In the option both the black parts are on one side of the middle line</p>",
+    "explanationHi": "<p>विकल्प में दोनों काले भाग बीच वाली लाइन के एक तरफ है</p>",
+    "section": "Classification Test"
   },
   {
-    "textEn": "Find the ODD one out from the given options.",
-    "textHi": "दिए गए विकल्पों में से विषम विकल्प को चुनिए।",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335907197.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335907197.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
     "optionsEn": [
-      "280",
-      "325",
-      "226",
-      "145"
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
     ],
     "optionsHi": [
-      "280",
-      "325",
-      "226",
-      "145"
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>In option C, the hands of the clock are in a\r\nstraight line.</p>",
+    "explanationHi": "<p>विकल्प C में घड़ी की सुई सीधी रेखा में हैं।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335915476.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335915476.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>Option C has a black dot next to the arrow.</p>",
+    "explanationHi": "<p>विकल्प C में तीर के आगे की तरफ काली बिंदी है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335924393.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335924393.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "<p>Option E has black figure.</p>",
+    "explanationHi": "<p>विकल्प E में काली आकृति हैं।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335934217.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335934217.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "<p>The arrow line in option E does not have a trailing\r\ncut line.</p>",
+    "explanationHi": "<p>विकल्प E में तीर वाली लाइन पर पीछे कट लाइन नहीं है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335941614.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335941614.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "<p>In option D, both the arrow and the cut line are on\r\nthe same line.</p>",
+    "explanationHi": "<p>विकल्प D में तीर और कट लाइन दोनों एक ही लाइन पर हैं।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335948554.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335948554.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "<p>In option D, the middle figure is black.</p><p><br></p>",
+    "explanationHi": "<p>विकल्प D में बीच वाली आकृति काली है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335961541.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335961541.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>Option C cannot be obtained by rotating.</p>",
+    "explanationHi": "<p>विकल्प C को घुमाकर प्राप्त नहीं किया जा सकता है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335976129.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335976129.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "<p>The mirror image of Option E will be different.</p>",
+    "explanationHi": "<p>विकल्प E की मिरर इमेज अलग बनेगी।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335996167.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760335996167.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
     ],
     "correctIndex": 0,
-    "explanationEn": "<span style=\"font-family: var(--bs-body-font-family); font-size: var(--bs-body-font-size); font-weight: var(--bs-body-font-weight); text-align: var(--bs-body-text-align);\">The</span><span style=\"font-family: var(--bs-body-font-family); font-size: var(--bs-body-font-size); font-weight: var(--bs-body-font-weight); text-align: var(--bs-body-text-align);\"> logic followed here is:</span>\n\n<p style=\"\">280 is not a square number + 1,</p>\n\n<p style=\"\">Whereas,</p>\n\n<p style=\"\">325 = 18<sup>2</sup> + 1, 226 = 15<sup>2</sup> + 1, 145 = 12<sup>2</sup> + 1.</p>\n\n<p style=\"\">So, 280 is odd from the given options.</p>\n\n<p style=\"\">Hence, the correct answer is <span style=\"font-weight: bolder;\">\"Option 1\"</span>.</p>",
-    "explanationHi": "<span style=\"\">यहाँ अनुसरित तर्क निम्न प्रकार है:</span>\n\n<p style=\"\">280 एक वर्ग संख्या नहीं है + 1,</p>\n\n<p style=\"\">जबकि,</p>\n\n<p style=\"\">325 = 18 <sup>2</sup> + 1, 226 = 15 <sup>2</sup> + 1, 145 = 12 <sup>2</sup> + 1</p>\n\n<p style=\"\">अतः, दिए गए विकल्पों में से 280 विषम है।</p>\n\n<p style=\"\">अतः, सही उत्तर <span style=\"font-weight: bolder;\">\"विकल्प 1\"</span> है।</p>",
-    "section": "Test"
+    "explanationEn": "<p>Option A cannot be obtained by rotating.</p>",
+    "explanationHi": "<p>विकल्प A को घुमाकर प्राप्त नहीं किया जा सकता है।</p>",
+    "section": "Classification Test"
   },
   {
-    "textEn": "<p>L is the sister of G. G is the son of M. M is married to D. D is the sister of E. E is the son of C. C is married to S. S is the sister of P.</p>\n\n<p>How is L related to E?</p>",
-    "textHi": "<p><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">L, G की बहन है। G, M का पुत्र है। M का विवाह D से हुआ है। D, E की बहन है। E, C का पुत्र है। C का विवाह S से हुआ है। S, P की बहन है।</font></font></p>\n\n<p><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">L, E से किस प्रकार सम्बन्धित है?</font></font></p>",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336005567.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336005567.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
     "optionsEn": [
-      "Wife's sister",
-      "Brother's daughter",
-      "Sister's daughter",
-      "Daughter"
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
     ],
     "optionsHi": [
-      "साली",
-      "भतीजी",
-      "भांजी",
-      "पुत्री"
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
     ],
-    "correctIndex": 2,
-    "explanationEn": "<p style=\"\">Family Chart:</p>\n\n<p style=\"\"><img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage13914.png\" /></p>\n\n<p style=\"\">Given: </p>\n\n<p style=\"\">L is the sister of G, G is the son of M, M is married to D.</p>\n\n<p style=\"\">D is the sister of E, E is the son of C, C is married to S, S is the sister of P.</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/01/F1_Pranali_SSC_30-12-23_D34.png\" style=\"width: 292px; height: 205px;\" /></p>\n\n<p style=\"\">So, L is '<span style=\"\">Sister's daughter'</span> of E.</p>\n\n<p style=\"\">Hence, the correct answer is <span style=\"font-weight: bolder;\">\"Option 3\"</span>.</p>",
-    "explanationHi": "<p style=\"\"><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">वंश-वृक्ष आरेख:</font></font></p>\n\n<p style=\"\"><img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage13914.png\" /></p>\n\n<p style=\"\"><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">दिया गया है:  </font></font></p>\n\n<p style=\"\"><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">L, G की बहन है, G, M का पुत्र है, M का विवाह D से हुआ है।</font></font></p>\n\n<p style=\"\"><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">D, E की बहन है, E, C का पुत्र है, C का विवाह S से हुआ है, S, P की बहन है।</font></font></p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/01/F1_Pranali_SSC_30-12-23_D34.png\" style=\" width: 292px; height: 205px;\" /></p>\n\n<p style=\"\"><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">इसलिए, L, E की '</font></font><span style=\"\">भांजी<font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\">'</font></font></span><font style=\"vertical-align: inherit;\"><font style=\"vertical-align: inherit;\"> है।</font></font></p>\n\n<p style=\"\">अतः, सही उत्तर<strong> \"विकल्प 3\" </strong>है।</p>",
-    "section": "Test"
+    "correctIndex": 3,
+    "explanationEn": "<p>The arrow in\r\noption D is not parallel to the line.</p>",
+    "explanationHi": "<p>विकल्प D में तीर लाइन के समान समांतर नहीं है।</p>",
+    "section": "Classification Test"
   },
   {
-    "textEn": "<p style=\"\">Find the missing number:</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/11/F1_Madhuri_State%20Govt._10.11.2022_D2.png\" /></p>",
-    "textHi": "<p>लुप्त संख्या को ज्ञात कीजिए:</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/11/F1_Madhuri_State%20Govt._10.11.2022_D2.png\" style=\"\" /></p>",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336014340.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336014340.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
     "optionsEn": [
-      "<span style=\"\">184</span>",
-      "<span style=\"\">376</span>",
-      "<span style=\"\">190</span>",
-      "<span style=\"\">88</span>"
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
     ],
     "optionsHi": [
-      "<span style=\"\">184</span>",
-      "<span style=\"\">376</span>",
-      "<span style=\"\">190</span>",
-      "<span style=\"\">88</span>"
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
     ],
-    "correctIndex": 2,
-    "explanationEn": "<p>The logic followed here is given below:</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/11/F1_Madhuri_State%20Govt._10.11.2022_D3.png\" style=\"width: 297px; height: 221px;\" /></p>\n\n<p>Hence, <strong>\"190\"</strong> is the correct answer.</p>",
-    "explanationHi": "<p>यहाँ अनुसरित किया गया तर्क नीचे दिया गया है:</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/11/F1_Madhuri_State%20Govt._10.11.2022_D3.png\" style=\" width: 297px; height: 221px;\" /></p>\n\n<p>अत:, <span style=\"font-weight: 700; \">\"190\" </span><span style=\"\">सही उत्तर </span>है।</p>",
-    "section": "Test"
+    "correctIndex": 4,
+    "explanationEn": "<p>Option E is in the sub direction.</p>",
+    "explanationHi": "<p>विकल्प E उप दिशा में है।</p>",
+    "section": "Classification Test"
   },
   {
-    "textEn": "<p>Find the number of triangles in the given figure.</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/04/F2_Madhuri_SSC_01.04.2022_D2.png\" style=\"width: 123px; height: 123px;\" /></p>",
-    "textHi": "<p>दी गई आकृति में त्रिभुजों की संख्या ज्ञात कीजिए।</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/04/F2_Madhuri_SSC_01.04.2022_D2.png\" style=\" width: 123px; height: 123px;\" /></p>",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336023187.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336023187.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
     "optionsEn": [
-      "12",
-      "10",
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "<p>In option E, the\r\narrow is in a vertical line.</p>",
+    "explanationHi": "<p>विकल्प E में तीर वर्टिकल लाइन में है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336033138.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336033138.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>Option C has a black dot in front of the short\r\nline.</p>",
+    "explanationHi": "<p>विकल्प\r\nC में छोटी लाइन के सामने काली बिंदी है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336048565.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336048565.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "<p>Option A and C\r\nare opposite to B and E, Option D is different.</p>",
+    "explanationHi": "<p>विकल्प A और C, B और E अपोजिट हैं, विकल्प D अलग है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336059913.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336059913.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "<p>Option A is\r\nplaced in the sub-direction.</p>",
+    "explanationHi": "<p>विकल्प A उप दिशा में रखा है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336067463.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336067463.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>Option C has two\r\nstars.</p>",
+    "explanationHi": "<p>विकल्प C में दो स्टार हैं।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336083266.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336083266.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>The black parts\r\nin option C are different.</p>",
+    "explanationHi": "<p>विकल्प C में काले भाग अलग हैं।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336094347.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336094347.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "<p>In option B,\r\nboth the arrows have the same direction.</p>",
+    "explanationHi": "<p>विकल्प E में लाइने आपस में काट नहीं रही हैं।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336102819.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336102819.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "<p>The line in option E is incomplete.</p>",
+    "explanationHi": "<p>विकल्प\r\nD में आकृतियों की दिशा समान है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336112361.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336112361.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "<p>In option E, both the lines are intersecting\r\neach other.</p>",
+    "explanationHi": "<p>विकल्प\r\nE में दोनों रेखा एक दूसरे को काट रही हैं।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336123739.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336123739.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>Option C has white circle.</p>",
+    "explanationHi": "<p>विकल्प\r\nC में सफेद वृत्त है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336132771.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336132771.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "<p>Option B is in the main direction.</p>",
+    "explanationHi": "<p>विकल्प\r\nB मुख्य दिशा में है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336143600.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336143600.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "<p>Option D is in the sub direction.</p>",
+    "explanationHi": "<p>विकल्प\r\nD उप दिशा में है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336158126.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336158126.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>Option C cannot be obtained by rotating.</p>",
+    "explanationHi": "<p>विकल्प\r\nC को घुमाकर प्राप्त नहीं किया जा सकता है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336167456.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336167456.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>Option C's water image will be different.</p>",
+    "explanationHi": "<p>विकल्प\r\nC की वाटर इमेज अलग बनेगी।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336177308.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336177308.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "<p>There are no two\r\nequal parts of the figure in option E.</p>",
+    "explanationHi": "<p>विकल्प E में आकृति के दो समान भाग नहीं हैं।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336184956.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336184956.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>Option C has a\r\ndifferent first line.</p>",
+    "explanationHi": "<p>विकल्प C में पहली लाइन अलग है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336194673.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336194673.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "<p>Option D has two\r\nwhite circles.</p>",
+    "explanationHi": "<p>विकल्प D में दो सफेद वृत्त हैं।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336203259.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336203259.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "<p>Option A and E, B and C are same among\r\nthemselves, Option D is different.</p>",
+    "explanationHi": "<p>विकल्प\r\nA और E, B और C आपस में समान हैं, विकल्प\r\nD अलग है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336212951.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336212951.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "<p>Option A and B,\r\nD and E are same, Option C is different.</p>",
+    "explanationHi": "<p>विकल्प A और B, D और E समान हैं, विकल्प C अलग है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336223064.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336223064.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "<p>In option D, the arrow is pointing towards the\r\ndotted line.</p>",
+    "explanationHi": "<p>विकल्प D में तीर की दिशा डॉटेड लाइन की तरफ है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336233272.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336233272.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "<p>Option E has\r\ntwo stars.</p>",
+    "explanationHi": "<p>विकल्प E में दो स्टार हैं।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336242976.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1760336242976.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "optionsHi": [
+      "अ",
+      "ब",
+      "स",
+      "द",
+      "ई"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "<p>Option E does not have a black dot behind each\r\narrow.</p>",
+    "explanationHi": "<p>विकल्प E में प्रत्येक तीर के पीछे काली बिंदी\r\nनहीं है।</p>",
+    "section": "Classification Test"
+  },
+  {
+    "textEn": "2 5 4 1 6 3 8 4 3 7 5 4 1 4 7 6 2 1 4 3 2 7 1 4 7 2 5 6 1 4 1 4 7 2 1 6 1 4 1 7",
+    "textHi": "2 5 4 1 6 3 8 4 3 7 5 4 1 4 7 6 2 1 4 3 2 7 1 4 7 2 5 6 1 4 1 4 7 2 1 6 1 4 1 7",
+    "optionsEn": [
+      "72",
+      "75",
+      "79",
+      "76",
+      "74"
+    ],
+    "optionsHi": [
+      "72",
+      "75",
+      "79",
+      "76",
+      "74"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "1 4 7 1 5 3 2 7 2 3 7 4 2 3 6 8 3 6 4 1 7 2 4 3 2 7 2 1 7 2 6 7 4 1 4 7 3 2 6",
+    "textHi": "1 4 7 1 5 3 2 7 2 3 7 4 2 3 6 8 3 6 4 1 7 2 4 3 2 7 2 1 7 2 6 7 4 1 4 7 3 2 6",
+    "optionsEn": [
+      "81",
+      "88",
+      "84",
+      "85",
+      "83"
+    ],
+    "optionsHi": [
+      "81",
+      "88",
+      "84",
+      "85",
+      "83"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "2 1 3 6 7 2 4 5 2 7 2 1 2 5 6 8 2 3 5 2 6 2 3 6 7 2 3 5 4 1 6 2 7 2 6 1 6 1 4",
+    "textHi": "2 1 3 6 7 2 4 5 2 7 2 1 2 5 6 8 2 3 5 2 6 2 3 6 7 2 3 5 4 1 6 2 7 2 6 1 6 1 4",
+    "optionsEn": [
+      "65",
+      "62",
+      "69",
+      "66",
+      "64"
+    ],
+    "optionsHi": [
+      "65",
+      "62",
+      "69",
+      "66",
+      "64"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "1 6 4 3 7 6 1 4 3 8 2 5 2 4 3 7 6 2 1 5 2 6 5 8 1 6 2 3 7 2 8 1 3 4 6 2 5 3",
+    "textHi": "1 6 4 3 7 6 1 4 3 8 2 5 2 4 3 7 6 2 1 5 2 6 5 8 1 6 2 3 7 2 8 1 3 4 6 2 5 3",
+    "optionsEn": [
+      "61",
+      "65",
+      "68",
+      "64",
+      "63"
+    ],
+    "optionsHi": [
+      "61",
+      "65",
+      "68",
+      "64",
+      "63"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "6 2 1 7 3 4 8 1 6 5 2 4 3 8 5 4 2 1 7 6 4 3 8 2 3 7 2 6 3 8 2 3 8 5 4 2 1 5",
+    "textHi": "6 2 1 7 3 4 8 1 6 5 2 4 3 8 5 4 2 1 7 6 4 3 8 2 3 7 2 6 3 8 2 3 8 5 4 2 1 5",
+    "optionsEn": [
+      "60",
+      "63",
+      "67",
+      "64",
+      "62"
+    ],
+    "optionsHi": [
+      "60",
+      "63",
+      "67",
+      "64",
+      "62"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "5 8 2 3 7 6 4 2 8 3 6 7 2 8 5 1 6 2 8 1 4 6 2 7 6 2 4 3 5 1 8 2 7 3 5 2 8 6",
+    "textHi": "5 8 2 3 7 6 4 2 8 3 6 7 2 8 5 1 6 2 8 1 4 6 2 7 6 2 4 3 5 1 8 2 7 3 5 2 8 6",
+    "optionsEn": [
+      "63",
+      "60",
+      "67",
+      "64",
+      "62"
+    ],
+    "optionsHi": [
+      "63",
+      "60",
+      "67",
+      "64",
+      "62"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "2 8 4 6 3 7 8 2 5 3 1 6 8 5 2 8 5 6 1 4 2 7 2 8 4 1 6 5 8 2 1 7 2 8 6 1 5 8",
+    "textHi": "2 8 4 6 3 7 8 2 5 3 1 6 8 5 2 8 5 6 1 4 2 7 2 8 4 1 6 5 8 2 1 7 2 8 6 1 5 8",
+    "optionsEn": [
+      "54",
+      "56",
+      "61",
+      "58",
+      "57"
+    ],
+    "optionsHi": [
+      "54",
+      "56",
+      "61",
+      "58",
+      "57"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "8 6 1 7 3 5 4 6 2 5 3 2 8 4 3 7 5 8 2 4 1 6 2 5 3 8 4 2 8 3 1 8 5 2 4 5 3 7",
+    "textHi": "8 6 1 7 3 5 4 6 2 5 3 2 8 4 3 7 5 8 2 4 1 6 2 5 3 8 4 2 8 3 1 8 5 2 4 5 3 7",
+    "optionsEn": [
+      "69",
+      "74",
+      "72",
+      "73",
+      "71"
+    ],
+    "optionsHi": [
+      "69",
+      "74",
+      "72",
+      "73",
+      "71"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "7 6 4 2 7 3 4 6 2 7 8 1 3 8 2 5 7 8 6 2 7 3 8 5 7 2 6 5 4 2 8 3 4 6 4 3 5 8",
+    "textHi": "7 6 4 2 7 3 4 6 2 7 8 1 3 8 2 5 7 8 6 2 7 3 8 5 7 2 6 5 4 2 8 3 4 6 4 3 5 8",
+    "optionsEn": [
+      "78",
+      "74",
+      "82",
+      "79",
+      "77"
+    ],
+    "optionsHi": [
+      "78",
+      "74",
+      "82",
+      "79",
+      "77"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "1 4 2 6 8 3 4 6 5 2 1 2 1 3 4 6 8 5 3 2 5 4 6 8 2 5 4 3 1 2 4 6 8 3 2 1 6 5",
+    "textHi": "1 4 2 6 8 3 4 6 5 2 1 2 1 3 4 6 8 5 3 2 5 4 6 8 2 5 4 3 1 2 4 6 8 3 2 1 6 5",
+    "optionsEn": [
+      "42",
+      "48",
+      "45",
+      "46",
+      "44"
+    ],
+    "optionsHi": [
+      "42",
+      "48",
+      "45",
+      "46",
+      "44"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "7 8 2 5 3 1 6 8 1 6 5 2 4 1 6 5 5 3 2 8 6 1 4 2 5 2 4 3 8 4 3 5 1 8 2 8 5 6",
+    "textHi": "7 8 2 5 3 1 6 8 1 6 5 2 4 1 6 5 5 3 2 8 6 1 4 2 5 2 4 3 8 4 3 5 1 8 2 8 5 6",
+    "optionsEn": [
+      "56",
+      "58",
+      "63",
+      "60",
+      "59"
+    ],
+    "optionsHi": [
+      "56",
+      "58",
+      "63",
+      "60",
+      "59"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "1 6 2 6 4 3 8 2 3 7 7 3 5 4 6 8 3 1 2 8 4 3 2 7 8 1 3 8 2 7 6 2 4 3 1 6 8 3",
+    "textHi": "1 6 2 6 4 3 8 2 3 7 7 3 5 4 6 8 3 1 2 8 4 3 2 7 8 1 3 8 2 7 6 2 4 3 1 6 8 3",
+    "optionsEn": [
+      "58",
+      "64",
+      "61",
+      "62",
+      "60"
+    ],
+    "optionsHi": [
+      "58",
+      "64",
+      "61",
+      "62",
+      "60"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "8 4 3 7 5 2 3 7 4 2 3 6 2 5 3 8 5 7 2 8 1 3 4 1 7 2 4 3 2 8 4 3 8 4 6 2 7 2 6",
+    "textHi": "8 4 3 7 5 2 3 7 4 2 3 6 2 5 3 8 5 7 2 8 1 3 4 1 7 2 4 3 2 8 4 3 8 4 6 2 7 2 6",
+    "optionsEn": [
+      "73",
+      "70",
+      "77",
+      "74",
+      "72"
+    ],
+    "optionsHi": [
+      "73",
+      "70",
+      "77",
+      "74",
+      "72"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "2 4 6 8 3 2 5 3 4 1 2 2 2 4 6 1 2 3 6 3 2 6 4 8 3 2 1 2 2 4 6 8 5 2 1 3 2 4",
+    "textHi": "2 4 6 8 3 2 5 3 4 1 2 2 2 4 6 1 2 3 6 3 2 6 4 8 3 2 1 2 2 4 6 8 5 2 1 3 2 4",
+    "optionsEn": [
+      "29",
+      "35",
+      "36",
+      "32",
+      "31"
+    ],
+    "optionsHi": [
+      "29",
+      "35",
+      "36",
+      "32",
+      "31"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "5 4 6 8 3 2 7 2 1 3 6 3 7 5 8 2 2 8 1 3 6 5 4 2 8 1 3 8 2 6 2 4 3 5 1 7 2 8 5",
+    "textHi": "5 4 6 8 3 2 7 2 1 3 6 3 7 5 8 2 2 8 1 3 6 5 4 2 8 1 3 8 2 6 2 4 3 5 1 7 2 8 5",
+    "optionsEn": [
+      "65",
+      "67",
+      "72",
+      "69",
+      "68"
+    ],
+    "optionsHi": [
+      "65",
+      "67",
+      "72",
+      "69",
+      "68"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "2 7 2 8 4 1 6 5 8 2 5 3 5 8 2 1 8 4 3 4 6 2 7 5 8 4 4 8 6 3 4 5 2 8 1 6 7 2",
+    "textHi": "2 7 2 8 4 1 6 5 8 2 5 3 5 8 2 1 8 4 3 4 6 2 7 5 8 4 4 8 6 3 4 5 2 8 1 6 7 2",
+    "optionsEn": [
+      "55",
+      "62",
+      "58",
+      "59",
+      "57"
+    ],
+    "optionsHi": [
+      "55",
+      "62",
+      "58",
+      "59",
+      "57"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "5 8 2 6 3 7 5 4 2 8 3 7 6 8 1 5 2 8 4 3 7 6 2 5 8 2 4 6 7 2 5 6 7 2 5 7 6 3 8",
+    "textHi": "5 8 2 6 3 7 5 4 2 8 3 7 6 8 1 5 2 8 4 3 7 6 2 5 8 2 4 6 7 2 5 6 7 2 5 7 6 3 8",
+    "optionsEn": [
+      "82",
+      "85",
+      "89",
+      "86",
+      "84"
+    ],
+    "optionsHi": [
+      "82",
+      "85",
+      "89",
+      "86",
+      "84"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "2 6 7 3 8 1 6 2 8 5 7 2 8 3 7 6 5 8 1 3 7 2 8 5 4 6 2 7 6 2 8 4 3 5 2 8 1 6",
+    "textHi": "2 6 7 3 8 1 6 2 8 5 7 2 8 3 7 6 5 8 1 3 7 2 8 5 4 6 2 7 6 2 8 4 3 5 2 8 1 6",
+    "optionsEn": [
+      "67",
+      "71",
+      "74",
+      "70",
+      "69"
+    ],
+    "optionsHi": [
+      "67",
+      "71",
+      "74",
+      "70",
+      "69"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "3 8 5 7 8 2 1 8 3 6 2 7 1 5 6 2 8 4 3 4 8 2 9 4 3 7 2 8 4 6 1 5 7 3 2 6 4 3",
+    "textHi": "3 8 5 7 8 2 1 8 3 6 2 7 1 5 6 2 8 4 3 4 8 2 9 4 3 7 2 8 4 6 1 5 7 3 2 6 4 3",
+    "optionsEn": [
+      "70",
+      "73",
+      "77",
+      "74",
+      "72"
+    ],
+    "optionsHi": [
+      "70",
+      "73",
+      "77",
+      "74",
+      "72"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "7 6 2 8 1 3 5 4 2 8 3 1 6 2 4 3 8 5 4 6 2 1 7 5 6 8 4 3 5 2 6 4 3 8 4 6 2 1 7",
+    "textHi": "7 6 2 8 1 3 5 4 2 8 3 1 6 2 4 3 8 5 4 6 2 1 7 5 6 8 4 3 5 2 6 4 3 8 4 6 2 1 7",
+    "optionsEn": [
+      "60",
+      "57",
+      "64",
+      "61",
+      "59"
+    ],
+    "optionsHi": [
+      "60",
+      "57",
+      "64",
+      "61",
+      "59"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "2 2 5 4 3 8 2 8 5 6 7 2 8 6 1 3 4 6 2 7 8 1 2 3 6 2 8 5 4 8 2 7 6 2 7 3 8 2 1",
+    "textHi": "2 2 5 4 3 8 2 8 5 6 7 2 8 6 1 3 4 6 2 7 8 1 2 3 6 2 8 5 4 8 2 7 6 2 7 3 8 2 1",
+    "optionsEn": [
+      "55",
+      "59",
+      "62",
+      "58",
+      "57"
+    ],
+    "optionsHi": [
+      "55",
+      "59",
+      "62",
+      "58",
+      "57"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "6 4 5 7 2 8 3 6 4 2 7 6 2 8 3 6 1 5 2 7 8 4 3 7 2 8 2 8 3 7 2 4 1 6 4 2 7 3 5",
+    "textHi": "6 4 5 7 2 8 3 6 4 2 7 6 2 8 3 6 1 5 2 7 8 4 3 7 2 8 2 8 3 7 2 4 1 6 4 2 7 3 5",
+    "optionsEn": [
+      "71",
+      "73",
+      "78",
+      "75",
+      "74"
+    ],
+    "optionsHi": [
+      "71",
+      "73",
+      "78",
+      "75",
+      "74"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "3 4 6 2 7 6 2 7 3 8 2 7 4 8 2 3 4 5 8 6 4 3 2 1 7 8 6 2 5 4 8 6 3 7 2 8 5 3 7 6 8",
+    "textHi": "3 4 6 2 7 6 2 7 3 8 2 7 4 8 2 3 4 5 8 6 4 3 2 1 7 8 6 2 5 4 8 6 3 7 2 8 5 3 7 6 8",
+    "optionsEn": [
+      "73",
+      "80",
+      "76",
+      "77",
+      "75"
+    ],
+    "optionsHi": [
+      "73",
+      "80",
+      "76",
+      "77",
+      "75"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "2 7 3 5 4 8 2 5 1 8 3 7 6 4 2 7 5 1 6 4 8 3 5 7 2 4 5 2 8 6 4 3 7 2 8 4 3 5 6 1 4",
+    "textHi": "2 7 3 5 4 8 2 5 1 8 3 7 6 4 2 7 5 1 6 4 8 3 5 7 2 4 5 2 8 6 4 3 7 2 8 4 3 5 6 1 4",
+    "optionsEn": [
+      "80",
+      "83",
+      "87",
+      "84",
+      "82"
+    ],
+    "optionsHi": [
+      "80",
+      "83",
+      "87",
+      "84",
+      "82"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "4 2 5 7 6 4 3 2 1 2 4 6 3 2 1 8 5 2 4 5 6 7 5 3 2 6 8 4 6 8 2 5 7 2 8 4 3 7 6 5 2",
+    "textHi": "4 2 5 7 6 4 3 2 1 2 4 6 3 2 1 8 5 2 4 5 6 7 5 3 2 6 8 4 6 8 2 5 7 2 8 4 3 7 6 5 2",
+    "optionsEn": [
+      "72",
+      "69",
+      "76",
+      "73",
+      "71"
+    ],
+    "optionsHi": [
+      "72",
+      "69",
+      "76",
+      "73",
+      "71"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "7 8 1 2 3 2 7 5 1 8 6 2 3 4 7 8 6 4 5 3 7 3 4 8 5 2 4 7 3 1 6 4 2 8 4 3 5 7 2 4 6",
+    "textHi": "7 8 1 2 3 2 7 5 1 8 6 2 3 4 7 8 6 4 5 3 7 3 4 8 5 2 4 7 3 1 6 4 2 8 4 3 5 7 2 4 6",
+    "optionsEn": [
+      "80",
+      "85",
+      "87",
+      "83",
+      "82"
+    ],
+    "optionsHi": [
+      "80",
+      "85",
+      "87",
+      "83",
+      "82"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "6 1 5 3 7 5 8 4 6 2 7 5 8 3 4 6 7 2 4 6 8 4 5 2 8 4 3 5 8 6 2 7 5 4 3 8 5 4 2 7",
+    "textHi": "6 1 5 3 7 5 8 4 6 2 7 5 8 3 4 6 7 2 4 6 8 4 5 2 8 4 3 5 8 6 2 7 5 4 3 8 5 4 2 7",
+    "optionsEn": [
+      "80",
+      "87",
+      "83",
+      "84",
+      "82"
+    ],
+    "optionsHi": [
+      "80",
+      "87",
+      "83",
+      "84",
+      "82"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "1 8 5 2 5 7 3 7 6 5 2 4 6 3 1 8 2 7 6 4 3 8 2 6 4 8 3 5 7 2 6 4 8 1 3 5 3 7 8 4",
+    "textHi": "1 8 5 2 5 7 3 7 6 5 2 4 6 3 1 8 2 7 6 4 3 8 2 6 4 8 3 5 7 2 6 4 8 1 3 5 3 7 8 4",
+    "optionsEn": [
+      "78",
+      "81",
+      "85",
+      "82",
+      "80"
+    ],
+    "optionsHi": [
+      "78",
+      "81",
+      "85",
+      "82",
+      "80"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "7 6 5 1 2 3 4 3 2 7 5 6 8 4 2 6 1 3 5 8 4 3 5 8 2 4 1 5 7 6 2 4 3 8 2 4 7 6 2 3 7",
+    "textHi": "7 6 5 1 2 3 4 3 2 7 5 6 8 4 2 6 1 3 5 8 4 3 5 8 2 4 1 5 7 6 2 4 3 8 2 4 7 6 2 3 7",
+    "optionsEn": [
+      "81",
+      "78",
+      "85",
+      "82",
+      "80"
+    ],
+    "optionsHi": [
+      "81",
+      "78",
+      "85",
+      "82",
+      "80"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "5 8 6 2 7 5 4 7 8 2 4 1 3 5 6 7 8 5 3 2 8 4 5 7 6 4 1 3 5 6 4 8 7 5 1 4 6 8 2 5 1 8",
+    "textHi": "5 8 6 2 7 5 4 7 8 2 4 1 3 5 6 7 8 5 3 2 8 4 5 7 6 4 1 3 5 6 4 8 7 5 1 4 6 8 2 5 1 8",
+    "optionsEn": [
+      "85",
+      "88",
+      "92",
+      "89",
+      "87"
+    ],
+    "optionsHi": [
+      "85",
+      "88",
+      "92",
+      "89",
+      "87"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Add of Odd Numbers Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>U - S = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>U - S = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
       "8",
-      "14"
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "12",
-      "10",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
       "8",
-      "14"
+      "9",
+      "10"
     ],
-    "correctIndex": 0,
-    "explanationEn": "<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\">The number of </span>triangles<span style=\"color: rgb(30, 43, 51);\"> in the given figure is:<o:p></o:p></span></p>\n\n<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\"> </span><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/04/F2_Madhuri_SSC_01.04.2022_D1.png\" style=\"width: 383px; height: 427px;\" /></p>\n\n<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\">So</span><span style=\"color: rgb(30, 43, 51);\">, there are a total of 12</span> triangles<span style=\"color: rgb(30, 43, 51);\"> in the figure.</span></p>\n\n<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\">Hence, <span style=\"font-weight: 700;\">'12'</span> is the correct answer.</span></p>",
-    "explanationHi": "<p style=\"background: rgb(255, 255, 255);\">दी गई आकृति में त्रिभुजों की संख्या है:<span style=\"color: rgb(30, 43, 51);\"><o:p></o:p></span></p>\n\n<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\"> </span><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/04/F2_Madhuri_SSC_01.04.2022_D1.png\" style=\"width: 383px; height: 427px;\" /></p>\n\n<p style=\"background: rgb(255, 255, 255);\"><span style=\"color: rgb(30, 43, 51);\">इसलिए, </span>आकृति में कुल 12 त्रिभुज हैं।</p>\n\n<p style=\"background: rgb(255, 255, 255);\">अतः, सही उत्तर <span style=\"font-weight: 700;\">'12' </span>है।</p>",
-    "section": "Test"
+    "correctIndex": 9,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "<p>Select the option that is related to the third word in the same way as the second word is related to the first word. (The words must be considered as meaningful English words and must not be related to each other based on the number of letters/number of consonants/vowels in the word)</p>\n\n<p>Ore : Metal :: Milk : ? </p>",
-    "textHi": "<p>उस विकल्प का चयन कीजिए जो तीसरे शब्द से उसी प्रकार संबंधित है जैसे दूसरा शब्द पहले शब्द से संबंधित है। (शब्दों को सार्थक अंग्रेजी शब्द माना जाना चाहिए और शब्द में अक्षरों की संख्या/व्यंजन/स्वरों की संख्या के आधार पर एक-दूसरे से संबंधित नहीं होना चाहिए)</p>\n\n<p>अयस्क : धातु :: दूध : ?</p>",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>A - K = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>A - K = ?",
     "optionsEn": [
-      "Curd",
-      "Cloth",
-      "Cow",
-      "Glass"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "<span style=\"\">दही</span>",
-      "कपड़ा",
-      "गाय",
-      "काँच"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "correctIndex": 0,
-    "explanationEn": "<p>The logic followed here is:</p>\n\n<p><strong>Logic:</strong> Second one is extracted from the first one.</p>\n\n<ul>\n\t<li>Ore : Metal &rarr; Ore is a naturally occurring solid material from which a metal or valuable mineral can be profitably extracted.</li>\n</ul>\n\n<p>Similarly,</p>\n\n<ul>\n\t<li><span style=\"\">Milk : ? &rarr; Curd is </span>a soft, white substance formed when milk sours.</li>\n</ul>\n\n<p>Hence, '<strong>Curd</strong>' is the correct answer.</p>",
-    "explanationHi": "<p>यहाँ अनुसरण किया गया तर्क निम्नलिखित है:</p>\n\n<p><strong>तर्क: </strong>पहले वाले से दूसरा निकाला जाता है।</p>\n\n<ul>\n\t<li>अयस्क : धातु &rarr; अयस्क एक प्राकृतिक रूप से पाया जाने वाला ठोस पदार्थ है जिससे धातु या मूल्यवान खनिज लाभप्रद रूप से निकाला जा सकता है।</li>\n</ul>\n\n<p>इसी प्रकार,</p>\n\n<ul>\n\t<li>दूध : ? &rarr; दही एक नरम, सफेद पदार्थ है जो दूध के खट्टा होने पर बनता है।</li>\n</ul>\n\n<p>अतः, <strong>'दही' </strong>सही उत्तर है।</p>",
-    "section": "Test"
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "<p>Choose the appropriate figure from the Answer Figures to replace the question mark (?).</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D16.png\" style=\"width: 317px; height: 82px;\" /></p>",
-    "textHi": "<p>प्रश्न चिह्न (?) के स्थान पर उत्तर आकृतियों में से उचित आकृति चुनिए ।</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D16.png\" style=\"width: 317px; height: 82px;\" /></p>",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>F-J = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>F-J = ?",
     "optionsEn": [
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D17.png\" style=\"width: 81px; height: 82px;\" />",
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D18.png\" style=\"width: 82px; height: 82px;\" />",
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D19.png\" style=\"width: 81px; height: 82px;\" />",
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D20.png\" style=\"width: 82px; height: 81px;\" />"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "<img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage66d1d60e45b518bc59ddf85a.png\" /><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D17.png\" style=\"width: 81px; height: 82px;\" />",
-      "<img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage66d1d60e45b518bc59ddf85e.png\" /><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D18.png\" style=\"width: 82px; height: 82px;\" />",
-      "<img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage66d1d60f45b518bc59ddf876.png\" /><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D19.png\" style=\"width: 81px; height: 82px;\" />",
-      "<img alt=\"\" src=\"//cdn.testbook.com/images/production/quesImages/qImage66d1d60f45b518bc59ddf878.png\" /><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D20.png\" style=\"width: 82px; height: 81px;\" />"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>D - L = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>D - L = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 6,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>M - R = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>M - R = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 7,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>L - R =?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>L - R =?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>Y - W =?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>Y - W =?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 5,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>J - L = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>J - L = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "correctIndex": 3,
-    "explanationEn": "<p style=\"\"><span style=\"font-weight: bolder;\">The logic followed here is :</span></p>\n\n<p style=\"\">1) Elements rotate in the anticlockwise direction.</p>\n\n<p style=\"\">2) Elements rotate in the clockwise direction and are shaded.</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D22.png\" style=\" width: 386px; height: 211px;\" /></p>\n\n<p style=\"\"><span style=\"  font-weight: var(--bs-body-font-weight); text-align: var(--bs-body-text-align);\">Thus, the final series is :</span></p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D21.png\" style=\" width: 318px; height: 82px;\" /></p>\n\n<p style=\"\">Hence, <span style=\"font-weight: bolder;\">\"Option 4\"</span> is the correct answer.</p>",
-    "explanationHi": "<p style=\"\"><span style=\"font-weight: bolder;\">यहाँ अनुसरण किया गया तर्क निम्नलिखित है :</span></p>\n\n<p style=\"\">1) अवयव वामावर्त दिशा में घूमते हैं।</p>\n\n<p style=\"\">2) <span style=\"\">अवयव </span>दक्षिणावर्त दिशा में घूमते हैं और छायांकित होते हैं।</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D22.png\" style=\"width: 386px; height: 211px;\" /></p>\n\n<p style=\"\"><span style=\"  font-weight: var(--bs-body-font-weight); text-align: var(--bs-body-text-align);\">इस प्रकार, अंतिम शृंखला निम्नानुसार है :</span></p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/24/10/F1_Savita_State%20G_1-10-24_D21.png\" style=\"width: 318px; height: 82px;\" /></p>\n\n<p style=\"\">अतः <span style=\"font-weight: bolder;\">\"विकल्प 4\"</span> सही उत्तर है।</p>",
-    "section": "Test"
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "Mohan is facing east. Then he turns right and runs 1 km. Then he turns left and runs 1 km. He again takes a right turn and walks 1 km. Then he takes a right turn and walks 2 km. Finally, he takes a right turn and runs 2 km. In which direction is he from his starting position?<span style=\"\">​</span>",
-    "textHi": "मोहन का मुख पूर्व की ओर है। फिर वह दाएँ मुड़ता है और 1 किमी दौड़ता है। फिर वह बाएँ मुड़ता है और 1 किमी दौड़ता है। वह फिर से दाएँ मुड़ता है और 1 किमी चलता है। फिर वह दाएँ मुड़ता है और 2 किमी चलता है। अंत में, वह दाएँ मुड़ता है और 2 किमी दौड़ता है। वह अपने आरंभिक स्थान से किस दिशा में है?",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>X - L = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>X - L = ?",
     "optionsEn": [
-      "East",
-      "West",
-      "North",
-      "South"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "पूर्व",
-      "<span style=\"\">पश्चिम</span>",
-      "<span style=\"\">उत्तर</span>",
-      "<span style=\"\">दक्षिण</span>"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 8,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>H - J = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874540837.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>H - J = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>B - X = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>B - X = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "correctIndex": 1,
-    "explanationEn": "<p>According to the given conditions,</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/12/F7_Vinanti_State%20Govt._12.12.22_D13.png\" style=\"width: 418px; height: 324px;\" /></p>\n\n<p>Clearly, Mohan is to the West of his starting point.</p>\n\n<p>Hence, '<b>West</b>' is the correct answer.</p>",
-    "explanationHi": "<p>दी गई शर्तों के अनुसार,</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/12/F7_Vinanti_State%20Govt._12.12.22_D13.png\" style=\" width: 418px; height: 324px;\" /></p>\n\n<p>स्पष्ट रूप से, मोहन अपने शुरुआती बिंदु के पश्चिम में है।</p>\n\n<p>अतः, <strong>'पश्चिम' </strong>सही उत्तर है।</p>",
-    "section": "Test"
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "If in the word BEAUTICIAN, all the consonants are replaced by the previous letter in the alphabet and all the vowels are replaced by the next letter, then all the letters are arranged in the alphabetical order. Then which letter will be fourth from the right end?",
-    "textHi": "यदि BEAUTICIAN शब्द में सभी व्यंजनों को वर्णमाला के पिछले अक्षर से बदल दिया जाए और सभी स्वरों को अगले अक्षर से बदल दिया जाए, फिर सभी अक्षरों को वर्णमाला क्रम में व्यवस्थित किया जाए। तो दाएं छोर से चौथा अक्षर कौन सा होगा?",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>F - L = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>F - L = ?",
     "optionsEn": [
-      "J",
-      "M",
-      "F",
-      "N"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "J",
-      "M",
-      "F",
-      "N"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "correctIndex": 0,
-    "explanationEn": "<p><strong>Given word:</strong> BEAUTICIAN</p>\n\n<p style=\"color:  (33, 37, 41);\">According to the question:</p>\n\n<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\" style=\"color: (33, 37, 41);height:50px;width:450px;\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\"><span style=\"font-weight: bolder;\">Given words</span></td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">E</td>\n\t\t\t<td style=\"text-align: center;\">A</td>\n\t\t\t<td style=\"text-align: center;\">U</td>\n\t\t\t<td style=\"text-align: center;\">T</td>\n\t\t\t<td style=\"text-align: center;\">I</td>\n\t\t\t<td style=\"text-align: center;\">C</td>\n\t\t\t<td style=\"text-align: center;\">I</td>\n\t\t\t<td style=\"text-align: center;\">A</td>\n\t\t\t<td style=\"text-align: center;\">N</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\">\n\t\t\t<p>Consonants &rarr; (-1)</p>\n\n\t\t\t<p><span style=\"color:  (33, 37, 41); text-align: center;\">Vowels &rarr; (+1)</span></p>\n\t\t\t</td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\"><span style=\"font-weight: bolder;\">Resultant letters</span></td>\n\t\t\t<td style=\"text-align: center;\">A</td>\n\t\t\t<td style=\"text-align: center;\">F</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">V</td>\n\t\t\t<td style=\"text-align: center;\">S</td>\n\t\t\t<td style=\"text-align: center;\">J</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">J</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">M</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\">Arranged in alphabetic order</td>\n\t\t\t<td style=\"text-align: center;\">A</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">B</td>\n\t\t\t<td style=\"text-align: center;\">F</td>\n\t\t\t<td style=\"text-align: center;\">J</td>\n\t\t\t<td style=\"text-align: center;\">J</td>\n\t\t\t<td style=\"text-align: center;\">M</td>\n\t\t\t<td style=\"text-align: center;\">S</td>\n\t\t\t<td style=\"text-align: center;\">V</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p style=\"color:  (33, 37, 41);\">So, letter that will be fourth from the right end is <strong>'J'</strong>.</p>\n\n<p style=\"color:  (33, 37, 41);\">Hence, <span style=\"font-weight: bolder;\">\"Option 1\"</span> is the correct answer.</p>",
-    "explanationHi": "<p><strong>दिया गया शब्द:</strong> BEAUTICIAN</p>\n\n<p style=\"color:  (33, 37, 41);\">प्रश्न के अनुसार:</p>\n\n<table border=\"1\" cellpadding=\"1\" cellspacing=\"1\" style=\"color: (33, 37, 41);height:50px;width:450px;\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\"><span style=\"font-weight: bolder;\">दिए गए शब्द</span></td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">इ</td>\n\t\t\t<td style=\"text-align: center;\">ए</td>\n\t\t\t<td style=\"text-align: center;\">यू</td>\n\t\t\t<td style=\"text-align: center;\">टी</td>\n\t\t\t<td style=\"text-align: center;\">मैं</td>\n\t\t\t<td style=\"text-align: center;\">सी</td>\n\t\t\t<td style=\"text-align: center;\">मैं</td>\n\t\t\t<td style=\"text-align: center;\">ए</td>\n\t\t\t<td style=\"text-align: center;\">एन</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\">\n\t\t\t<p>व्यंजन &rarr; (-1)</p>\n\n\t\t\t<p><span style=\"color:  (33, 37, 41); text-align: center;\">स्वर &rarr; (+1)</span></p>\n\t\t\t</td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(+1)</span></td>\n\t\t\t<td style=\"text-align: center;\"><span style=\"color:  (33, 37, 41); text-align: center;\">(-1)</span></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\"><span style=\"font-weight: bolder;\">परिणामी अक्षर</span></td>\n\t\t\t<td style=\"text-align: center;\">ए</td>\n\t\t\t<td style=\"text-align: center;\">एफ</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">वी</td>\n\t\t\t<td style=\"text-align: center;\">यू</td>\n\t\t\t<td style=\"text-align: center;\">जे</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">जे</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">एम</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"text-align: center;\">वर्णमाला क्रम में व्यवस्थित</td>\n\t\t\t<td style=\"text-align: center;\">ए</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">बी</td>\n\t\t\t<td style=\"text-align: center;\">एफ</td>\n\t\t\t<td style=\"text-align: center;\">जे</td>\n\t\t\t<td style=\"text-align: center;\">जे</td>\n\t\t\t<td style=\"text-align: center;\">एम</td>\n\t\t\t<td style=\"text-align: center;\">यू</td>\n\t\t\t<td style=\"text-align: center;\">वी</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p style=\"color:  (33, 37, 41);\">अतः दायें छोर से चौथा अक्षर <strong>'J'</strong> होगा।</p>\n\n<p style=\"color:  (33, 37, 41);\">अतः, <span style=\"font-weight: bolder;\">\"विकल्प 1\"</span> सही उत्तर है।</p>",
-    "section": "Test"
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "In certain code language, 'FUNCTION' is written as 'NEZQBSAB'. What is the code for 'NOVEMBER' in that code language?",
-    "textHi": "कुछ कूट भाषा में 'FUNCTION' को 'NEZQBSAB' के रूप में लिखा जाता है। उसी कूट भाषा में 'NOVEMBER' के लिए कूट क्या है?",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>R - I = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>R - I = ?",
     "optionsEn": [
-      "VYHSULQF",
-      "VFYUSQLF",
-      "VYSFLUFQ",
-      "VYFSUFQL"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "VYHSULQF",
-      "VFYUSQLF",
-      "VYSFLUFQ",
-      "VYFSUFQL"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 8,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>A - X = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>A - X = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>W - R = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>W - R = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 5,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>D - J = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>D - J = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 7,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>P - I = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>P - I = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>G - Z = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>G - Z = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "correctIndex": 0,
-    "explanationEn": "<p>The table is alphabets place value:</p>\n\n<p><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/22/01/alphabet.png\" /></p>\n\n<p>'FUNCTION' is written as 'NEZQBSAB'</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Madhuri_State%20Govt_22-7-22_D12.png\" /></p>\n\n<p>Similarly,</p>\n\n<p>'NOVEMBER' = ?</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Madhuri_State%20Govt_22-7-22_D13.png\" /></p>\n\n<p>Hence, 'NOVEMBER' is coded as \"VYHSULQF\".</p>",
-    "explanationHi": "<p>तालिका में वर्णाक्षरों का स्थितीय मान है:</p>\n\n<p><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/22/01/alphabet.png\" /></p>\n\n<p>'FUNCTION' को 'NEZQBSAB' के रूप में लिखा जाता है</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Madhuri_State%20Govt_22-7-22_D12.png\" /></p>\n\n<p>इसी प्रकार,</p>\n\n<p>'NOVEMBER' = ?</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/07/F1_Madhuri_State%20Govt_22-7-22_D13.png\" /></p>\n\n<p>अतः, 'NOVEMBER' को \"VYHSULQF\" के रूप में कूटबद्ध किया जाएगा।</p>",
-    "section": "Test"
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "<p>In a certain code, if:</p>\n\n<p>'A * B' means 'A is mother of B'.</p>\n\n<p>'A × B' means 'A is husband of B'.</p>\n\n<p>'A ÷ B' means 'B is father of A'.</p>\n\n<p>Then which of the following represents P is the father of Q?</p>",
-    "textHi": "<p>एक निश्चित कूट में, यदि:</p>\n\n<p>'A * B' का अर्थ है कि 'A, B की माता है'l </p>\n\n<p>'A × B' <span style=\"\">का अर्थ है कि 'A, B का पति है'l</span></p>\n\n<p>'A ÷ B' <span style=\"\">का अर्थ है कि 'B, A का पिता है'l</span></p>\n\n<p>तो, निम्नलिखित में से कौन दर्शाता है कि P, Q का पिता है?</p>",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>C - E = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>C - E = ?",
     "optionsEn": [
-      "P × M * Q",
-      "P * Q",
-      "Q * M × P",
-      "Q * P"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "P × M * Q",
-      "P * Q",
-      "Q * M × P",
-      "Q * P"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
-    "correctIndex": 0,
-    "explanationEn": "<p>We use the following symbols to draw the family tree diagram,</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/03/Symbol%20Diagram_Blood%20Relation.png\" style=\"width: 206px; height: 279px;\" /></p>\n\n<table border=\"1\" cellpadding=\"0\" cellspacing=\"0\" style=\"\" width=\"290\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td colspan=\"4\" style=\"width: 290px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">A is</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\"><span style=\"font-weight: 700;\">Symbo</span>l</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">*</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">×</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 73px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">÷</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\"><span style=\"font-weight: 700;\">Meaning</span></p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px; text-align: center;\">Mother</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">Husband</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 73px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">B is Father of A</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td colspan=\"4\" style=\"width: 290px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">Of B</p>\n\t\t\t</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p> </p>\n\n<p><strong>Option (1): <span style=\"\">P × M * Q</span></strong></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D47.png\" style=\" width: 123px; height: 104px;\" /></p>\n\n<p>From the above diagram, we can see that <strong>P is the father of Q</strong>. </p>\n\n<p>Option (2): <span style=\"\">P * Q</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D45.png\" style=\" width: 41px; height: 104px;\" /></p>\n\n<p>Option (3): <span style=\"\">Q * M × P</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_State%20Govt._29-6-23_D_48.png\" style=\" width: 122px; height: 120px;\" /></p>\n\n<p>Option (4): <span style=\"\">Q * P</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D46.png\" style=\" width: 41px; height: 105px;\" /></p>\n\n<p>Hence, the correct answer is<strong> \"Option (1)\"</strong>.</p>",
-    "explanationHi": "<p style=\"\">वंश-वृक्ष आरेख बनाने के लिए हम निम्नलिखित प्रतीकों का उपयोग करते हैं,</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/03/Symbol%20Diagram_Blood%20Relation.png\" style=\"width: 206px; height: 279px;\" /></p>\n\n<table border=\"1\" cellpadding=\"0\" cellspacing=\"0\" style=\"\" width=\"290\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td colspan=\"4\" style=\"width: 290px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">A है</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\"><b>प्रतीक</b></p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">*</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">×</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 73px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">÷</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\"><span style=\"font-weight: 700;\">अर्थ</span></p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 72px; height: 17px; text-align: center;\">माता</td>\n\t\t\t<td style=\"width: 72px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">पति</p>\n\t\t\t</td>\n\t\t\t<td style=\"width: 73px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">B, A का पिता है</p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td colspan=\"4\" style=\"width: 290px; height: 17px;\">\n\t\t\t<p style=\"text-align: center;\">B का/की</p>\n\t\t\t</td>\n\t\t</tr>\n\t</tbody>\n</table>\n\n<p style=\"\"> </p>\n\n<p style=\"\"><span style=\"font-weight: 700;\">विकल्प (1): P × M * Q</span></p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D47.png\" style=\"width: 123px; height: 104px;\" /></p>\n\n<p>उपरोक्त आरेख से, हम देख सकते हैं कि<strong> P, Q का पिता है।</strong></p>\n\n<p>विकल्प (2): P * Q</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D45.png\" style=\"width: 41px; height: 104px;\" /></p>\n\n<p style=\"\">विकल्प (3): Q * M × P</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_State%20Govt._29-6-23_D_48.png\" style=\" width: 122px; height: 120px;\" /></p>\n\n<p style=\"\">विकल्प (4): Q * P</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_State%20Govt._29-6-23_D46.png\" style=\"width: 41px; height: 105px;\" /></p>\n\n<p style=\"\">अतः, सही उत्तर <strong>\"विकल्प (1)\"</strong> है।</p>",
-    "section": "Test"
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "If 5 + 8 = 14, 9 + 6 = 21, and 4 + 10 = 13, then 7 + 2 = ?",
-    "textHi": "यदि 5 + 8 = 14, 9 + 6 = 21, और 4 + 10 = 13, तो 7 + 2 = ?",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>O - K = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874554430.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>O - K = ?",
     "optionsEn": [
-      "16",
-      "17",
-      "18",
-      "15"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "16",
-      "17",
-      "18",
-      "15"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 6,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>A - E = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>A - E = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "correctIndex": 3,
-    "explanationEn": "<p>The logic followed here is:</p>\n\n<p><strong>Logic:</strong> First Number × 2 + Second Number - (Second Number ÷ 2) = Third Number</p>\n\n<ul>\n\t<li><span style=\"\">5 + 8 = 14 &rarr; 5 </span>× 2 + 8 - (8 ÷ 2) = 10 + 8 - 4 = 18 - 4 = 14</li>\n\t<li><span style=\"\">9 + 6 = 21 &rarr; 9 </span><span style=\"\">×</span><span style=\"\"> 2 + 6 - (6 </span><span style=\"\">÷</span><span style=\"\"> 2) = 18 + 6 - 3 = 24 - 3 = 21</span></li>\n\t<li><span style=\"\">4 + 10 = 13 &rarr; 4 </span><span style=\"\">×</span><span style=\"\"> 2 + 10 - (10 </span><span style=\"\">÷</span><span style=\"\"> 2) = 8 + 10 - 5 = 18 - 5 = 13</span></li>\n</ul>\n\n<p><span style=\"\">Similarly,</span></p>\n\n<ul>\n\t<li><span style=\"\">7 + 2 = ? &rarr; 7 </span><span style=\"\">×</span><span style=\"\"> 2 + 2 - (2 </span><span style=\"\">÷</span><span style=\"\"> 2) = 14 + 2 - 1 = 16 - 1 = 15</span></li>\n</ul>\n\n<p>Hence, '<strong>15</strong>' is the correct answer.</p>",
-    "explanationHi": "<p>यहाँ अनुसरित तर्क है:</p>\n\n<p><strong>तर्क:</strong> पहली संख्या × 2 + दूसरी <span style=\"\">संख्या</span> - (<span style=\"\">दूसरी</span> <span style=\"\">संख्या</span> ÷ 2) = तीसरी <span style=\"\">संख्या</span></p>\n\n<ul>\n\t<li><span style=\"\">5 + 8 = 14 &rarr; 5 </span>× 2 + 8 - (8 ÷ 2) = 10 + 8 - 4 = 18 - 4 = 14</li>\n\t<li><span style=\"\">9 + 6 = 21 &rarr; 9 </span><span style=\"\">×</span><span style=\"\"> 2 + 6 - (6 </span><span style=\"\">÷</span><span style=\"\"> 2) = 18 + 6 - 3 = 24 - 3 = 21</span></li>\n\t<li><span style=\"\">4 + 10 = 13 &rarr; 4 </span><span style=\"\">×</span><span style=\"\"> 2 + 10 - (10 </span><span style=\"\">÷</span><span style=\"\"> 2) = 8 + 10 - 5 = 18 - 5 = 13</span></li>\n</ul>\n\n<p><span style=\"\">इसी प्रकार,</span></p>\n\n<ul>\n\t<li><span style=\"\">7 + 2 = ? &rarr; 7 </span><span style=\"\">×</span><span style=\"\"> 2 + 2 - (2 </span><span style=\"\">÷</span><span style=\"\"> 2) = 14 + 2 - 1 = 16 - 1 = 15</span></li>\n</ul>\n\n<p>अत:, <strong>'15'</strong> सही उत्तर है।</p>",
-    "section": "Test"
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "<p>How many triangles are present in the following figure?</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/19/04/14-Aug_2nd%20Shift_Komal_22q_solution_lakshit%20%20rankawat_22march%20Reviewed_images_q9.PNG\" /></p>",
-    "textHi": "<p>निम्नलिखित आकृति में कितने त्रिभुज हैं?</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/19/04/14-Aug_2nd%20Shift_Komal_22q_solution_lakshit%20%20rankawat_22march%20Reviewed_images_q9.PNG\" /></p>",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>D -J = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>D -J = ?",
     "optionsEn": [
-      "14",
-      "12",
-      "15",
-      "16"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "14",
-      "12",
-      "15",
-      "16"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 7,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>M - J = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>M - J = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 7,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>Q - K = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>Q - K = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>S - P = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>S - P = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>W - D = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>W - D = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 9,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>O - W = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>O - W = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "correctIndex": 2,
-    "explanationEn": "<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/19/04/14-Aug_2nd%20Shift_Komal_22q_solution_lakshit%20%20rankawat_22march%20Reviewed_images_q9a.PNG\" style=\"width: 574px; height: 215px;\" /></p>\n\n<p>Hence, \"15\" triangles are there in the given figure.</p>",
-    "explanationHi": "<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/19/04/14-Aug_2nd%20Shift_Komal_22q_solution_lakshit%20%20rankawat_22march%20Reviewed_images_q9a.PNG\" style=\"width: 574px; height: 215px;\" /></p>\n\n<p>इसलिए, दी गई आकृति में \"15\" त्रिभुज हैं।</p>",
-    "section": "Test"
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "<p><strong>Direction:</strong> In the question below are given three statements followed by three conclusions I, II, and III. You have to take the given statements to be true even if they seem to be at variance from commonly known facts. Read all the conclusions and then decide which of the given conclusions logically follows from the given statements disregarding commonly known facts.</p>\n\n<p><strong>Statements:</strong></p>\n\n<p>No books are pens.</p>\n\n<p>All pens are pencils.</p>\n\n<p>Some erasers are pencils.</p>\n\n<p><strong>Conclusions:</strong></p>\n\n<p>I. Some books are pencils.</p>\n\n<p>II. Some pens are erasers.</p>\n\n<p>III. No pencils are books.</p>",
-    "textHi": "<p><strong>निर्देश:</strong> नीचे दिए गए प्रश्न में तीन कथन और उसके बाद तीन निष्कर्ष I, II और III दिए गये हैं। आपको दिए गये कथनों को सत्य मानना है, भले ही वे ज्ञात तथ्यों से अलग प्रतीत होते हों। सभी निष्कर्षों को पढ़िए और निर्धारित कीजिये कि दिए गये निष्कर्षों में से कौन-सा/से निष्कर्ष ज्ञात तथ्यों को नजरंदाज करने पर कथनों का तार्किक रूप से अनुसरण करता/करते है/हैं।</p>\n\n<p><strong>कथन</strong><strong>:</strong></p>\n\n<p>कोई पुस्तक पेन नहीं है।</p>\n\n<p>सभी पेन पेंसिल हैं।</p>\n\n<p>कुछ इरेज़र पेंसिल हैं।</p>\n\n<p><strong>निष्कर्ष</strong><strong>:</strong></p>\n\n<p>I. कुछ पुस्तकें पेंसिल हैं।</p>\n\n<p>II. कुछ पेन इरेजर हैं।</p>\nIII. कोई पेंसिल पुस्तक नहीं हैं।",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>R - W = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>R - W = ?",
     "optionsEn": [
-      "<span style=\"\">Only I follows.</span>",
-      "<span style=\"\">Only II follows.</span>",
-      "Either I or III follows.",
-      "All I, II and II follows"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "<span style=\"\">केवल I अनुसरण करता है। </span>",
-      "<span style=\"\">केवल II अनुसरण करता है।</span>",
-      "या तो I या फिर III अनुसरण करता है।",
-      "सभी I, II, III अनुसरण करते है।"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
-    "correctIndex": 2,
-    "explanationEn": "<p>The least possible Venn diagram for the given statements is as follows,</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/19/08/Syllogism_Rownak%20Chowdhury_8%20Jan2019_5Q_%E0%A4%B9%E0%A4%BF%E0%A4%82%E0%A4%A6%E0%A5%80_images_archana_D%205.PNG\" /></p>\n\n<p><strong>Conclusions:</strong></p>\n\n<p>I. Some books are pencils. &rarr; False (It is possible but not definite)</p>\n\n<p>II. Some pens are erasers. &rarr; False (It is possible but not definite)</p>\n\n<p>III. No pencils are books. &rarr; False (It is possible but not definite)</p>\n\n<p>Conclusion I and III form complementary pair. Hence, <strong>either I or III follows.</strong></p>\n\n<p><strong><span style=\"display: flex;gap: 6px;align-items: center;\"><img height=\"26px\" src=\"//cdn.testbook.com/resources/lms_creative_elements/important-point-image.png\" width=\"26px\" /><strong><span style=\"vertical-align: middle;font-size: 21px;\"><u>Important Points</u></span></strong></span> </strong><span style=\"font-weight: 700;\">Conditions of Either-or case:</span></p>\n\n<p>1. The elements should be the same in both the statements.</p>\n\n<p>2. Individually both the conclusions must be false.</p>\n\n<p>3. One conclusion should be positive and one conclusion should be negative (Complementary pair)</p>\n\n<p>The two complementary pairs are:</p>\n\n<p><span style=\"font-weight: 700;\">1) All + Some not</span></p>\n\n<p><span style=\"font-weight: 700;\">2) No + Some</span></p>",
-    "explanationHi": "<p>दिए गए कथनों के लिए सबसे कम संभव वेन आरेख इस प्रकार है,</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/21/06/F1_Shailendra%20Rajawat_15.6.21_Pallavi_D2.png\" style=\"width: 213px; height: 95px;\" /></p>\n\n<p><strong>निष्कर्ष:</strong></p>\n\n<p>I. कुछ किताबें पेंसिल हैं। &rarr; गलत (यह संभव है लेकिन निश्चित नहीं है)</p>\n\n<p>II। कुछ पेन इरेज़र हैं। &rarr; गलत (यह संभव है लेकिन निश्चित नहीं है)</p>\n\n<p>III। कोई पेंसिल किताबें नहीं हैं। &rarr; गलत (यह संभव है लेकिन निश्चित नहीं है)</p>\n\n<p>निष्कर्ष I और III पूरक जोड़ी बनाते हैं। इसलिए, <strong>I या III अनुसरण करता है।</strong></p>\n\n<p><span style=\"display: flex;gap: 6px;align-items: center;\"><img height=\"26px\" src=\"//cdn.testbook.com/resources/lms_creative_elements/important-point-image.png\" width=\"26px\" /><strong><span style=\"vertical-align: middle;font-size: 21px;\"><u>Important Points</u></span></strong></span></p>\n\n<p><span style=\"font-weight: 700;\">या तो या मामले की शर्तें:</span></p>\n\n<p>1. दोनों कथनों में तत्व समान होने चाहिए।</p>\n\n<p>2. व्यक्तिगत रूप से दोनों निष्कर्ष झूठे होने चाहिए।</p>\n\n<p>3. एक निष्कर्ष सकारात्मक होना चाहिए और एक निष्कर्ष नकारात्मक होना चाहिए (पूरक जोड़ी)</p>\n\n<p>दो पूरक जोड़े हैं:</p>\n\n<p><span style=\"font-weight: 700;\">1) सभी + कुछ नहीं</span></p>\n\n<p><span style=\"font-weight: 700;\">2) नहीं + कुछ</span></p>",
-    "section": "Test"
+    "correctIndex": 8,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "<p>In the following questions select the correct option from the given alternatives.</p>\n\n<p>DJ ∶ HT ∶∶ HM ∶ ?</p>",
-    "textHi": "<p>निम्नलिखित प्रश्नों में दिए गए विकल्पों में से सही विकल्प का चयन कीजिए।</p>\n\n<p>DJ ∶ HT ∶∶ HM ∶ ?</p>",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>A - I = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>A - I = ?",
     "optionsEn": [
-      "PY",
-      "JK",
-      "LW",
-      "LP"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "PY",
-      "JK",
-      "LW",
-      "LP"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
-    "correctIndex": 2,
-    "explanationEn": "<p style=\"\">According to the English alphabet series and its positional value:</p>\n\n<p style=\"\"><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/20/12/Common_Diagram_28.01.2020_D1.png\" style=\"width: 536px; height: 128px;\" /></p>\n\n<p style=\"\">The logic follows here is: </p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_Defence_28-7-23_D1.png\" style=\"width: 91px; height: 102px;\" /></p>\n\n<p style=\"\">Similarly;</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_Defence_28-7-23_D2.png\" style=\" width: 91px; height: 106px;\" /></p>\n\n<p style=\"\">Hence,  the correct answer is <span style=\" font-weight: 700;\">\"LW\"</span></p>",
-    "explanationHi": "<p style=\"\">अंग्रेजी वर्णमाला और उसके स्थितीय मान के अनुसार:</p>\n\n<p style=\"\"><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/20/12/Common_Diagram_28.01.2020_D1.png\" style=\"width: 536px; height: 128px;\" /></p>\n\n<p style=\"\">यहाँ अनुसरण किया गया तर्क निम्न प्रकार है:</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_Defence_28-7-23_D1.png\" style=\" width: 91px; height: 102px;\" /></p>\n\n<p style=\"\">इसी प्रकार;</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/07/F1_Savita_Defence_28-7-23_D2.png\" style=\"width: 91px; height: 106px;\" /></p>\n\n<p style=\"\">अतः, सही उत्तर <strong>\"LW\"</strong> है।</p>",
-    "section": "Test"
+    "correctIndex": 6,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "Pointing towards a person in the photograph, Mrs Rajni said, \"He is the brother's son of my husband's father-in-law Yogi.\" How is the person in the photograph related to Mrs Rajni?",
-    "textHi": "तस्वीर में एक व्यक्ति की ओर इशारा करते हुए श्रीमती रजनी ने कहा, \"वह मेरे पति के ससुर योगी के भाई का पुत्र है।\" तस्वीर में व्यक्ति, श्रीमती रजनी से किस प्रकार संबंधित है?",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>P - R = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874565155.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>P - R = ?",
     "optionsEn": [
-      "Father-in-law",
-      "Brother",
-      "Son",
-      "Father's Brother's Son"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "ससुर",
-      "भाई",
-      "पुत्र",
-      "पिता के भाई का पुत्र"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 8,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>A - D = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>A - D = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>G - A = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>G - A = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>Y - I = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>Y - I = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "correctIndex": 3,
-    "explanationEn": "<p><span style=\"\">Preparing the family tree using the following symbols:</span></p>\n\n<p><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/21/07/Symbol%20Diagram_Blood%20Relation.png\" style=\" width: 206px; height: 279px;\" /></p>\n\n<p><span style=\"\">A possible tree diagram will be</span><strong><span style=\"\">:</span></strong></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_SSC_15-6-23_D1_V2.png\" style=\"width: 274px; height: 128px;\" /></p>\n\n<p>The relationship between Mrs. Rajni and the photograph is <span style=\"\">Father's Brother's Son.</span></p>\n\n<p>Hence, the correct answer is \"<strong><span style=\"\">Father's Brother's Son\".</span></strong></p>",
-    "explanationHi": "<p>निम्नलिखित प्रतीकों का उपयोग करके वंश वृक्ष तैयार करने पर<span style=\"\">:</span></p>\n\n<p><img alt=\"\" src=\"https://storage.googleapis.com/tb-img/production/21/07/Symbol%20Diagram_Blood%20Relation.png\" style=\" width: 206px; height: 279px;\" /></p>\n\n<p>एक संभावित वृक्ष आरेख इस प्रकार होगा<strong><span style=\"\">:</span></strong></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/06/F1_Savita_SSC_15-6-23_D1_V2.png\" style=\" width: 274px; height: 128px;\" /></p>\n\n<p>श्रीमती रजनी और तस्वीर के व्यक्ति के बीच का संबंध पिता के भाई के पुत्र का है।</p>\n\n<p>अतः, सही उत्तर <strong>\"पिता के भाई का पुत्र\"</strong> है।</p>",
-    "section": "Test"
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "<p>Read the given statements and conclusions carefully. Assuming that the information given in the statements is true, even if it appears to be at variance with commonly known facts, decide which of the given conclusions logically follow(s) from the statements.</p>\n\n<p><strong>Statements:</strong></p>\n\n<p>No atom is a molecule.</p>\n\n<p>No molecule is an element.</p>\n\n<p><strong>Conclusions:</strong></p>\n\n<p>I. It is possible for some atoms to be elements.</p>\n\n<p>II. Some elements are molecules.</p>",
-    "textHi": "<p style=\"\">दिए गए कथनों और निष्कर्षों का ध्यानपूर्वक अध्ययन कीजिए। यह मानते हुए कि कथनों में दी गई जानकारी सत्य है, भले ही यह सामान्य रूप से ज्ञात तथ्यों से भिन्न प्रतीत होती हो, तय कीजिए कि दिए गए निष्कर्षों में से कौन-सा/से कथनों का तार्किक रूप से अनुसरण करता/करते है/हैं।</p>\n\n<p style=\"\"><span style=\"font-weight: 700;\">कथन:</span></p>\n\n<p>कोई परमाणु, अणु नहीं है।</p>\n\n<p>कोई अणु, तत्व नहीं है।</p>\n\n<p><strong>निष्कर्ष:</strong></p>\n\n<p>I. कुछ परमाणु, तत्व हैं यह संभव है।</p>\n\n<p>II. कुछ तत्व, अणु हैं।</p>",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>K - E = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>K - E = ?",
     "optionsEn": [
-      "Only conclusion I follows",
-      "Both conclusions I and II follow",
-      "Only conclusion II follows",
-      "Neither conclusion I nor II follows"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "केवल निष्कर्ष I अनुसरण करता है।",
-      "दोनों निष्कर्ष I और II अनुसरण करते हैं।",
-      "केवल निष्कर्ष II अनुसरण करता है।",
-      "न तो निष्कर्ष I न ही II अनुसरण करता है।"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
-    "correctIndex": 0,
-    "explanationEn": "<p style=\"\"><span style=\"font-weight: 700;\">Statement:</span></p>\n\n<p style=\"\">No atom is a molecule.</p>\n\n<p style=\"\">No molecule is an element.</p>\n\n<p style=\"\">The least possible diagram for the given statements is as follows:</p>\n\n<p style=\"\"><br />\n<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_SSC_Amit%20A_08-02-2023_D10.png\" style=\"width: 319px; height: 52px;\" /></p>\n\n<p style=\"\"><span style=\"font-weight: 700;\">Conclusions:</span></p>\n\n<p style=\"\">(i) <span style=\"\">It is possible for some atoms to be elements</span> - <strong>True </strong>(Because there is No direct relation given between Atoms and Elements, so it can be possible).</p>\n\n<p style=\"\">(ii) <span style=\"\">Some elements are molecules</span> - False<span style=\"font-weight: 700;\"> </span>(Because <span style=\"\">No molecule is an element</span>).</p>\n\n<p style=\"\">Here, <span style=\"\">Only conclusion I follows</span>.</p>\n\n<p style=\"\">Hence, the correct answer is <span style=\"font-weight: 700;\">\"Option 1\"</span>.</p>",
-    "explanationHi": "<p style=\"\"><span style=\"font-weight: 700;\">कथन:</span></p>\n\n<p>कोई परमाणु, अणु नहीं है।</p>\n\n<p>कोई अणु, तत्व नहीं है।</p>\n\n<p style=\"\">दिए गए कथनों के लिए न्यूनतम संभावित आरेख इस प्रकार है:</p>\n\n<p style=\"\"><br />\n<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/09/F1_SSC_Savita_5-09-23_D92.png\" style=\"width: 321px; height: 53px;\" /></p>\n\n<p style=\"\"><span style=\"font-weight: 700;\">निष्कर्ष:</span></p>\n\n<p style=\"\">(i) कुछ परमाणु, तत्व हैं यह संभव है - <span style=\"font-weight: 700;\">सत्य </span>(क्योंकि परमाणुओं और तत्वों के बीच कोई सीधा संबंध नहीं दिया गया है, इसलिए यह संभव हो सकता है)।</p>\n\n<p style=\"\">(ii) कुछ तत्व, अणु हैं - असत्य<span style=\"font-weight: 700;\"> </span>(क्योंकि कोई भी अणु, तत्व नहीं है)।</p>\n\n<p>यहाँ, केवल निष्कर्ष I अनुसरण करता है।</p>\n\n<p>अतः, सही उत्तर <strong>\"विकल्प 1\"</strong> है।</p>",
-    "section": "Test"
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "<p>Select the figure from the options that can replace the question mark (?) and complete the pattern. (Rotation is not allowed)</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D42.png\" style=\"width: 121px; height: 121px;\" /></p>",
-    "textHi": "<p>विकल्पों में से उस आकृति का चयन करें, जो प्रश्न चिह्न (?) के स्थान पर आ सकती है और पैटर्न को पूर्ण कर सकती है। (घुमाने की अनुमति नहीं है)</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D42.png\" style=\" width: 121px; height: 121px;\" /></p>",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>L - R = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>L - R = ?",
     "optionsEn": [
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D43.png\" style=\" width: 62px; height: 62px;\" />",
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D44.png\" style=\" width: 62px; height: 62px;\" />",
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D45.png\" style=\" width: 62px; height: 62px;\" />",
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D46.png\" style=\" width: 62px; height: 62px;\" />"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D43.png\" style=\"width: 62px; height: 62px;\" />",
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D44.png\" style=\"width: 62px; height: 62px;\" />",
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D45.png\" style=\" width: 62px; height: 62px;\" />",
-      "<img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D46.png\" style=\"width: 62px; height: 62px;\" />"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
-    "correctIndex": 0,
-    "explanationEn": "<p style=\"\">The image that completes the pattern is:</p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D47.png\" style=\"width: 367px; height: 122px;\" /></p>\n\n<p style=\"\">Hence, the correct answer is <span style=\"font-weight: 700;\">\"Option 1\"</span>.</p>",
-    "explanationHi": "<p style=\"\"><span style=\"\">पैटर्न को पूरा करने वाली छवि निम्न है:</span></p>\n\n<p style=\"\"><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/23/02/F1_Savita_SSC_7-2-23_D47.png\" style=\" width: 367px; height: 122px;\" /></p>\n\n<p style=\"\">अतः, सही उत्तर <span style=\"font-weight: 700;\">\"विकल्प 1\" </span>है। </p>",
-    "section": "Test"
+    "correctIndex": 9,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
   },
   {
-    "textEn": "Six persons Aman, Danish, Soniya, Sujit, Ranjan and Yashika are sitting around a circular table facing away from centre. Danish sits fourth to the right of Of Soniya. Yahsika sits to the immediate right of Soniya. Two persons sit between Aman and Ranjan. If Ranjan is an immediate neighbour of Yashika, who sits to the immediate left of Aman?",
-    "textHi": "छह व्यक्ति अमन, दानिश, सोनिया, सुजीत, रंजन और यशिका एक वृत्ताकार मेज के इर्द-गिर्द केंद्र के बाहर की ओर <span style=\"\">उन्मुख</span> होकर बैठे हैं। दानिश, सोनिया के दाएँ से चौथे स्थान पर बैठा है। <span style=\"\">यशिका,</span> सोनिया के निकटस्थ दाएँ बैठी है। अमन और रंजन के बीच दो व्यक्ति बैठे हैं। यदि रंजन, <span style=\"\">यशिका</span> का निकटस्थ पड़ोसी है, तब अमन के <span style=\"\">निकटस्थ</span> <span style=\"\">बाएँ</span><span style=\"\"> कौन </span>बैठा है?",
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>Q - C = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>Q - C = ?",
     "optionsEn": [
-      "Ranjan",
-      "Sujit",
-      "Danish",
-      "Soniya"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "optionsHi": [
-      "रंजन",
-      "सुजीत",
-      "<span style=\"\">दानिश</span>",
-      "<span style=\"\">सोनिया</span>"
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
     ],
     "correctIndex": 2,
-    "explanationEn": "<p><span style=\"\"><strong>Six persons: </strong> Aman, Danish, Soniya, Sujit, Ranjan and Yashika (facing away from centre) </span></p>\n\n<p><span style=\"\">1. Danish sits fourth to the right of Of Soniya. </span></p>\n\n<p><span style=\"\">2. Yahsika sits to the immediate right of Soniya. </span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D21.png\" style=\"height: 235px; width: 235px;\" /></p>\n\n<p><span style=\"\">3. Two persons sit between Aman and Ranjan. </span></p>\n\n<p><span style=\"\">Case 1.</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D22.png\" style=\"height: 233px; width: 263px;\" /></p>\n\n<p><span style=\"\">Case2.</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D23.png\" style=\"height: 234px; width: 269px;\" /></p>\n\n<p>The above two cases will be the final arrangement. </p>\n\n<p>Now, <span style=\"\">If Ranjan is an immediate neighbour of Yashika we will considder case 2. and in that case Danish sits to the immediate left of Aman.</span></p>\n\n<p><span style=\"\">Hence, if Ranjan is an immediate neighbour of Yashika Danish sits to the immediate left of Aman.</span></p>",
-    "explanationHi": "<p><strong>छह व्यक्ति: </strong>अमन, दानिश, सोनिया, सुजीत, रंजन और यशिका (केंद्र के बाहर की ओर उन्मुख)</p>\n\n<p>1. दानिश, सोनिया के दाएँ से चौथे स्थान पर बैठा है।</p>\n\n<p>2. यशिका, सोनिया के <span style=\"\">निकटस्थ</span> दाएँ बैठी है।</p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D21.png\" style=\"height: 235px; width: 235px;\" /></p>\n\n<p>3. अमन और रंजन के बीच दो व्यक्ति बैठे हैं।</p>\n\n<p><span style=\"\">स्थिति 1.</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D22.png\" style=\"height: 233px; width: 263px;\" /></p>\n\n<p><span style=\"\">स्थिति 2.</span></p>\n\n<p><img alt=\"\" src=\"//storage.googleapis.com/tb-img/production/22/08/F1_Savita_Railways_29-8-22_D23.png\" style=\"height: 234px; width: 269px;\" /></p>\n\n<p>उपरोक्त दोनों स्थितियाँ अंतिम व्यवस्था होगी।</p>\n\n<p>अब, यदि रंजन, यशिका का निकटस्थ पड़ोसी है तब हम स्थिति 2 पर विचार करेंगे और उस स्थिति में दानिश, अमन के <span style=\"\">निकटस्थ</span> <span style=\"\">बाएँ</span><span style=\"\"> </span>बैठा है<span style=\"\">।</span></p>\n\n<p>अतः यदि रंजन, <span style=\"\">यशिका </span>का निकटस्थ पड़ोसी है, तब दानिश, अमन के निकटस्थ <span style=\"\">बाएँ</span><span style=\"\"> </span>बैठा है।</p>",
-    "section": "Test"
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>S - K = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>S - K = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 6,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>C - J = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>C - J = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>H - D = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>H - D = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 5,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>W - E = ?",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758874575622.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p>W - E = ?",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Short Route Test"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392184071.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392184071.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392290507.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392290507.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392302939.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392302939.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392320079.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392320079.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392331601.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392331601.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392345527.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392345527.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392357927.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392357927.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392370183.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392370183.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392382430.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392382430.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392396417.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392396417.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392409935.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392409935.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392421443.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392421443.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392434334.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392434334.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392446130.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392446130.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392458877.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392458877.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392472844.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392472844.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392492374.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392492374.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392512876.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392512876.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392528266.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759392528266.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393043833.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393043833.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 4,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393055703.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393055703.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393067991.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393067991.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393080464.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393080464.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393091050.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393091050.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393100918.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "textHi": "<p><img src=\"https://api.nkpsychoclasses.com/uploads/questionset/1758810320382.jpg\" alt=\"Reference Image\" style=\"max-width: 100%; height: auto;\" /></p><p><img src=\"https://api.nkpsychoclasses.com/uploads/question/1759393100918.jpg\" alt=\"Question Image\" style=\"max-width: 100%; height: auto;\" /></p>",
+    "optionsEn": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "optionsHi": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correctIndex": 3,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Information Ordering Type -I"
+  },
+  {
+    "textEn": "I get frustrated after making a mistake-",
+    "textHi": "मैं गलती हो जाने के बाद निराश हो जाता हूं-",
+    "optionsEn": [
+      "Always",
+      "Sometimes",
+      "Never",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "हमेशा",
+      "कभी - कभी",
+      "कभी - नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "I will not take dowery in marriage because-",
+    "textHi": "मैं शादी में दहेज नहीं लूंगा क्योंकि-",
+    "optionsEn": [
+      "I am child",
+      "I am against dowry",
+      "I will not get married",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "मैं बच्चा हूं",
+      "मैं दहेज का विरोधी हूं",
+      "मेरी शादी नहीं होगी",
+      "Option 4"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "I like to make friends who are",
+    "textHi": "मैं ऐसे दोस्त बनाना पसंद करता हूं जो हैं",
+    "optionsEn": [
+      "Black and beautiful",
+      "White and beautiful",
+      "Honest and helpful",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "काले व सुंदर",
+      "गोरे व सुंदर",
+      "ईमानदार व सहयोगी",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "I try to help even unknown people in times of trouble.",
+    "textHi": "मैं अनजान व्यक्तियों का भी कष्ट की स्थिति में सहयोग करने की कोशिश करता हूं-",
+    "optionsEn": [
+      "Always",
+      "Sometimes",
+      "Never",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "हमेशा",
+      "कभी - कभी",
+      "कभी - नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "I like to participate in political movements -",
+    "textHi": "मैं राजनीतिक आंदोलनों में भाग लेना पसंद करता हूं -",
+    "optionsEn": [
+      "Always",
+      "Sometimes",
+      "Never",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "हमेशा",
+      "कभी-कभी",
+      "कभी नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "I travel mostly-",
+    "textHi": "मैं अधिकतर यात्रा करता हूं-",
+    "optionsEn": [
+      "स्वयं के वाहन से",
+      "By public transport",
+      "On foot",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "स्वयं के वाहन से",
+      "पब्लिक ट्रांसपोर्ट से",
+      "पैदल",
+      "Option 4"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "My friends don't understand me because-",
+    "textHi": "मेरे दोस्त मुझे समझ नहीं पाते हैं क्योंकि-",
+    "optionsEn": [
+      "I keep changing colors like a chameleon",
+      "I am a very tough person",
+      "It's not like that",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "मैं गिरगिट की तरह रंग बदलता रहता हूं -",
+      "मैं बहुत ही कठिन प्रवृत्ति का व्यक्ति हूं -",
+      "ऐसा नहीं है",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "There is always in the pit",
+    "textHi": "गड्ढे में हमेशा होता है",
+    "optionsEn": [
+      "Water",
+      "Fish",
+      "Depth",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "जल",
+      "मछली",
+      "गहराई",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Relations between two neighboring countries should be-",
+    "textHi": "दो पड़ोसी देशों के बीच संबंध होने चाहिएं-",
+    "optionsEn": [
+      "Hateful",
+      "voilent",
+      "Sweet",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "घृणा पूर्ण",
+      "हिंसक",
+      "मधुर",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "I am often restless and disturbed-",
+    "textHi": "मैं अक्सर बेचैन व अशांत रहता हूं-",
+    "optionsEn": [
+      "True",
+      "False",
+      "between the two",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "सत्य है",
+      "असत्य है",
+      "दोनों के बीच",
+      "Option 4"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "My friends consider me lazy and useless-",
+    "textHi": "मेरे दोस्त मुझे आलसी व निकम्मा समझते हैं-",
+    "optionsEn": [
+      "Always",
+      "Sometimes",
+      "Never",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "हमेशा",
+      "कभी-कभी",
+      "कभी - नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "I have to do evil to others -",
+    "textHi": "मुझे दूसरों की बुराई करनी पड़ती है -",
+    "optionsEn": [
+      "to get happiness",
+      "to show confidence in others",
+      "under compulsion",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "खुशी प्राप्ति के लिए",
+      "दूसरों के प्रति विश्वास दिखाने के लिए",
+      "मजबूरी में आकर",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Someone is drowning in the water in front of you and you do not know how to swim, then to save him-",
+    "textHi": "आपके सामने कोई पानी में डूब रहा है और आपको तैरना नहीं आता है तो आप उसे बचाने के लिए-",
+    "optionsEn": [
+      "will jump in the water",
+      "will call someone",
+      "will do nothing",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "पानी में कूद जाएंगे",
+      "किसी को बुलाएंगे",
+      "कुछ नहीं करेंगे",
+      "Option 4"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "If you see any accident-",
+    "textHi": "आप किसी भी दुर्घटना को देखकर-",
+    "optionsEn": [
+      "get nervous",
+      "run away seeing",
+      "face the tough",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "घबरा जाते हैं",
+      "देख कर भाग जाते हैं",
+      "डटकर सामना करते हैं",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "The water of all the lakes is salty-",
+    "textHi": "सभी झीलों का पानी खारा होता है-",
+    "optionsEn": [
+      "True",
+      "False",
+      "Do not know",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "सत्य है",
+      "असत्य है",
+      "पता नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Mahatma Gandhi started the Civil Disobedience Movement in 1930 by-",
+    "textHi": "महात्मा गांधी ने 1930 में सविनय अवज्ञा आंदोलन चलाया था -",
+    "optionsEn": [
+      "True",
+      "False",
+      "Do not know",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "सत्य है",
+      "असत्य है",
+      "पता नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Should we follow good habits of elders-",
+    "textHi": "क्या हमें बड़ों की अच्छी आदतों का आचरण करना चाहिए-",
+    "optionsEn": [
+      "Yes",
+      "No",
+      "Never",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "हां",
+      "नहीं",
+      "कभी नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "If children hide something from you, then you -",
+    "textHi": "यदि बच्चे आपसे कोई बात छुपाएं तो आप -",
+    "optionsEn": [
+      "उनसे पीटकर पूछेंगे",
+      "tempted to ask",
+      "will ask wisely",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "उनसे पीटकर पूछेंगे",
+      "प्रलोभन देकर पूछेंगे",
+      "समझदारी से पूछेंगे",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Culture has its own beliefs which represent specific customs and practices-",
+    "textHi": "संस्कृति की अपनी मान्यताएं हैं जो विशिष्ट रीति-रिवाजों एवं प्रथाओं का प्रतिनिधित्व करती हैं-",
+    "optionsEn": [
+      "Agree",
+      "Disagree",
+      "Do not know",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "सहमत हैं",
+      "असहमत हैं",
+      "पता नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "The Governor rewarded those children -",
+    "textHi": "राज्यपाल महोदय ने उन बच्चों को पुरस्कृत किया -",
+    "optionsEn": [
+      "who passed 12th exam",
+      "Who Passed RRB Exam",
+      "who did adventures",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "जिन्होंने 12वीं की परीक्षा उत्तीर्ण की",
+      "जिन्होंने आरआर बी परीक्षा पास की",
+      "जिन्होंने साहसिक कार्य किए",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Moral beliefs and good conduct are the only means that help a person in achieving the goal-",
+    "textHi": "नैतिक मान्यताएं व सदाचरण ही वे साधन हैं जो लक्ष्य को पाने में व्यक्ति की सहायता करते हैं-",
+    "optionsEn": [
+      "True",
+      "False",
+      "between the two",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "सत्य है",
+      "असत्य है",
+      "दोनों के बीच",
+      "Option 4"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Morality is for man and not for man morality -",
+    "textHi": "नैतिकता मनुष्य के लिए है न कि मनुष्य के लिए नैतिकता -",
+    "optionsEn": [
+      "True",
+      "False",
+      "between the two",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "सत्य",
+      "असत्य",
+      "दोनों के बीच",
+      "Option 4"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Do we need to continue environmental duties for future generations-",
+    "textHi": "क्या भविष्य की पीढ़ियों के लिए हमें पर्यावरणीय कर्तव्यों को जारी रखने की आवश्यकता है-",
+    "optionsEn": [
+      "Yes",
+      "Sometimes",
+      "Never",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "हां",
+      "कभी-कभी",
+      "कभी- नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Me in free time -",
+    "textHi": "मैं फ्री समय में -",
+    "optionsEn": [
+      "having fun",
+      "keep thinking about work",
+      "remember the cheaters",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "मौज मस्ती करता हूं",
+      "कार्य के बारे में सोचता रहता हूं",
+      "धोखा देने वालों को याद करता हूं",
+      "Option 4"
+    ],
+    "correctIndex": 0,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "The conduct of an officer or employee should be-",
+    "textHi": "एक पदाधिकारी या कर्मचारी का आचरण होना चाहिए-",
+    "optionsEn": [
+      "corrupted",
+      "corruption free",
+      "between the two",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "भ्रष्टाचार युक्त",
+      "भ्रष्टाचार मुक्त",
+      "दोनों के बीच",
+      "Option 4"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Child marriage can prove helpful in eradicating poverty-",
+    "textHi": "बाल विवाह गरीबी दूर करने में सहायक सिद्ध हो सकता है-",
+    "optionsEn": [
+      "Sometimes",
+      "Always",
+      "Never",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "कभी-कभी",
+      "हमेशा",
+      "कभी नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Should cybercriminals be barred from using the internet again when they have completed their sentence -",
+    "textHi": "क्या उन साइबर अपराधियों को फिर से इंटरनेट प्रयोग करने से रोका जाना चाहिए जब उसने अपनी सजा पूरी कर ली हो -",
+    "optionsEn": [
+      "Yes",
+      "Sometimes",
+      "No",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "हां",
+      "कभी-कभी",
+      "नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "There is a saying about sports -",
+    "textHi": "एक कहावत खेलों के प्रति प्रचलित है -",
+    "optionsEn": [
+      "Will jump and become smart",
+      "Will read and write, will become illiterate",
+      "Will play, will jump and become a illiterate",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "खेलेंगे कूदेंगे बनेंगे होशियार",
+      "पढ़ेंगे लिखेंगे बनेंगे गवार",
+      "खेलेंगे कूदेंगे बनोगे गवार",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "The percentage of handicapped as a percentage of the population is less, so we have to -",
+    "textHi": "जनसंख्या के प्रतिशत के रूप में विकलांगों का प्रतिशत कम है अतः हमें -",
+    "optionsEn": [
+      "have sympathy for them",
+      "should serve them",
+      "should support their access to rights",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "उनके प्रति सहानुभूति रखनी चाहिए",
+      "उनकी सेवा करनी चाहिए",
+      "उनकी अधिकारों तक पहुंच में सहयोग करना चाहिए",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "While returning from your office, you see that your neighbour's children are fighting amongst themselves, then you -",
+    "textHi": "आपके ऑफिस से लौटते वक्त आप देखते हैं कि आपके पड़ोसी के बच्चे आपस में लड़ रहे हैं तो आप -",
+    "optionsEn": [
+      "will leave them on their own",
+      "will call their parents",
+      "settle the dispute",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "उन्हें उनके हाल पर छोड़ देंगे",
+      "उनके माता-पिता को बुला कर लाएंगे",
+      "झगड़ा शांत कराएंगे",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "We often don't want to talk about sex education because-",
+    "textHi": "हम अक्सर सैक्स शिक्षा पर बात नहीं करना चाहते हैं क्योंकि-",
+    "optionsEn": [
+      "We consider sex education inferior",
+      "Contrary to patriarchy",
+      "We bow before our culture and civilization",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "सैक्स शिक्षा को हम हीन मानते हैं",
+      "पितृसत्ता के विपरीत मानते हैं",
+      "हम अपने संस्कार और सभ्यता के सामने झुक जाते हैं",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Is it justified for an employee to be fired for making a minor mistake in the first place-",
+    "textHi": "क्या किसी कर्मचारी को पहली बार छोटी गलती करने पर नौकरी से निकाला जाना उचित है-",
+    "optionsEn": [
+      "Yes",
+      "Sometimes",
+      "No",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "हां",
+      "कभी-कभी",
+      "नहीं",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "If you are a ticket collector in Indian Railways and you caught a person without a ticket, who has no money to pay the fine what will you do?",
+    "textHi": "यदि आप भारतीय रेलवे में एक टिकिट कलेक्टर हैं और आप किसी ऐसे व्यक्ति को बिना टिकिट पकड़ते हैं, जिसके पास जुर्माना भरने के लिए पैसे नहीं हैं, आप क्या करेंगे-",
+    "optionsEn": [
+      "Will leave him as poor",
+      "Will release by giving corporal punishment",
+      "Take appropriate action.",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "गरीब समझकर छोड़ देंगे।",
+      "शारीरिक दण्ड देकर छोड़ देंगे।",
+      "उचित कार्यवाही करेंगे।",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "If you are working as a Station Master in Indian Railways and you are travelling in an off-duty train, in case of an accident involving that train-",
+    "textHi": "यदि आप भारतीय रेलवे में स्टेशन मास्टर के पद पर कार्यरत हैं और आप ऑफ ड्यूटी ट्रेन में यात्रा कर रहे हैं, उस ट्रेन की दुर्घटना होने पर-",
+    "optionsEn": [
+      "Will refuse to cooperate due to being off duty",
+      "You will do everything possible to notify the incharge of the accident site.",
+      "Do not tell anyone that you are Station Master.",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "ऑफ ड्यूटी होने के कारण सहयोग करने से इनकार कर देंगे।",
+      "आप दुर्घटना साइट के इंचार्ज को सूचित कर हर संभव मदद करेंगे।",
+      "किसी को नहीं बतायेंगे कि आप सहायक स्टेशन मास्टर हैं।",
+      "Option 4"
+    ],
+    "correctIndex": 1,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
+  },
+  {
+    "textEn": "Chair is related to furniture in the same way as curtain is related to-",
+    "textHi": "जिस प्रकार कुर्सी संबंधित है फर्नीचर से उसी प्रकार पर्दा किससे संबंधित है-",
+    "optionsEn": [
+      "Dress",
+      "Crockery",
+      "Clothing configuration",
+      "Option 4"
+    ],
+    "optionsHi": [
+      "पोशाक",
+      "क्रोकरी",
+      "वस्त्र विन्यास",
+      "Option 4"
+    ],
+    "correctIndex": 2,
+    "explanationEn": "",
+    "explanationHi": "",
+    "section": "Personality Test"
   }
 ]

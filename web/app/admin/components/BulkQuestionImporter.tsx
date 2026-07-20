@@ -141,16 +141,46 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   setFormQuestionsList,
   setParsedQuestions,
 }) => {
+  const [selCatId, setSelCatId] = React.useState<string>('');
+  const [selSubId, setSelSubId] = React.useState<string>('');
+  const [selSubSubId, setSelSubSubId] = React.useState<string>('');
+
+  React.useEffect(() => {
+    if (selectedUploadTestId) {
+      for (const cat of examCatalog) {
+        for (const sub of cat.subCategories || []) {
+          for (const subsub of sub.subSubCategories || []) {
+            if ((subsub.tests || []).some((t: any) => t.id === selectedUploadTestId)) {
+              setSelCatId(cat.id);
+              setSelSubId(sub.id);
+              setSelSubSubId(subsub.id);
+              return;
+            }
+          }
+        }
+      }
+    }
+  }, [selectedUploadTestId, examCatalog]);
+
+  const currentCategory = examCatalog.find(c => c.id === selCatId);
+  const availableSubCategories = currentCategory ? currentCategory.subCategories || [] : [];
+  
+  const currentSubCategory = availableSubCategories.find((s: any) => s.id === selSubId);
+  const availableSubSubCategories = currentSubCategory ? currentSubCategory.subSubCategories || [] : [];
+
+  const currentSubSubCategory = availableSubSubCategories.find((ss: any) => ss.id === selSubSubId);
+  const availableTests = currentSubSubCategory ? currentSubSubCategory.tests || [] : [];
+
   const allTests: { id: string; title: string; categoryName: string; subCategoryName: string }[] = [];
   examCatalog.forEach(cat => {
-    cat.subCategories.forEach((sub: any) => {
+    (cat.subCategories || []).forEach((sub: any) => {
       (sub.subSubCategories || []).forEach((subsub: any) => {
-        subsub.tests.forEach((t: any) => {
+        (subsub.tests || []).forEach((t: any) => {
           allTests.push({
             id: t.id,
             title: t.title,
             categoryName: cat.name,
-            subCategoryName: `${sub.name} > ${subsub.name}`
+            subCategoryName: `${sub.name} › ${subsub.name}`
           });
         });
       });
@@ -195,33 +225,102 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
             </span>
           )}
         </div>
-        <select
-          value={selectedUploadTestId}
-          onChange={(e) => setSelectedUploadTestId(e.target.value)}
-          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold transition-colors font-sans"
-        >
-          <option value="">— Select a Mock Test to upload questions into —</option>
-          {examCatalog.map(cat => (
-            <optgroup key={cat.id} label={cat.name}>
-              {cat.subCategories.flatMap((sub: any) =>
-                (sub.subSubCategories || []).flatMap((subsub: any) =>
-                  subsub.tests.map((t: any) => (
-                    <option key={t.id} value={t.id}>
-                      {sub.name} › {subsub.name} › {t.title}
-                    </option>
-                  ))
-                )
-              )}
-            </optgroup>
-          ))}
-        </select>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* 1. Exam Category */}
+          <div>
+            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+              1. Category
+            </label>
+            <select
+              value={selCatId}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelCatId(val);
+                setSelSubId('');
+                setSelSubSubId('');
+                setSelectedUploadTestId('');
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
+            >
+              <option value="">— Select Category —</option>
+              {examCatalog.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* 2. Sub Category */}
+          <div>
+            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+              2. Sub Category
+            </label>
+            <select
+              value={selSubId}
+              disabled={!selCatId}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelSubId(val);
+                setSelSubSubId('');
+                setSelectedUploadTestId('');
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">— Select Sub Category —</option>
+              {availableSubCategories.map((sub: any) => (
+                <option key={sub.id} value={sub.id}>{sub.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* 3. Sub Sub Category */}
+          <div>
+            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+              3. Sub-Sub Category
+            </label>
+            <select
+              value={selSubSubId}
+              disabled={!selSubId}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelSubSubId(val);
+                setSelectedUploadTestId('');
+              }}
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">— Select Sub-Sub Category —</option>
+              {availableSubSubCategories.map((subsub: any) => (
+                <option key={subsub.id} value={subsub.id}>{subsub.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* 4. Mock Test */}
+          <div>
+            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+              4. Target Mock Test
+            </label>
+            <select
+              value={selectedUploadTestId}
+              disabled={!selSubSubId}
+              onChange={(e) => setSelectedUploadTestId(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">— Select Mock Test —</option>
+              {availableTests.map((t: any) => (
+                <option key={t.id} value={t.id}>{t.title}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {selectedTest && (
-          <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold">
+          <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-bold">
             <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50 px-2.5 py-1 rounded-lg">{selectedTest.categoryName}</span>
             <span className="text-slate-400 dark:text-slate-650 self-center">›</span>
             <span className="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg">{selectedTest.subCategoryName}</span>
             <span className="text-slate-400 dark:text-slate-650 self-center">›</span>
-            <span className="bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/50 px-2.5 py-1 rounded-lg">{selectedTest.title}</span>
+            <span className="bg-green-50 dark:bg-green-955/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/50 px-2.5 py-1 rounded-lg">{selectedTest.title}</span>
           </div>
         )}
       </div>
