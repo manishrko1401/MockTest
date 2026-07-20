@@ -297,8 +297,8 @@ async function handleBootstrap() {
     });
   }
 
-  // Use memory cache if populated
-  if (catalogCache.examCatalog && catalogCache.noticesList) {
+  // Use memory cache if populated with actual items
+  if (catalogCache.examCatalog && catalogCache.examCatalog.length > 0 && catalogCache.noticesList) {
     return NextResponse.json(
       { success: true, usersList: [], noticesList: catalogCache.noticesList, examCatalog: catalogCache.examCatalog, reportedQuestionsList: [] },
       { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
