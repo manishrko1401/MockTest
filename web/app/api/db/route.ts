@@ -170,6 +170,8 @@ export async function POST(request: Request) {
         return await handleGetUserDetails(data);
       case 'admin-data':
         return await handleAdminData(data);
+      case 'get-attempts':
+        return await handleGetAttempts();
       case 'db-stats':
         return await handleDbStats();
       default:
@@ -886,6 +888,7 @@ async function handleAddAttempt(data: any) {
       completedAt: new Date(),
       testbookRank,
       testbookPercentile,
+      source: data.source || 'web',
     },
   });
 
@@ -1051,6 +1054,7 @@ async function handleSaveOngoingSession(data: any) {
         violationsCount: violations,
         currentSectionIndex: currentSectionIndex ?? 0,
         currentQuestionIndex: currentQuestionIndex ?? 0,
+        source: data.source || 'web',
       },
     });
     sessionId = created.id;
@@ -2533,6 +2537,69 @@ async function handleAdminData(data: any) {
     success: true,
     usersList,
     reportedQuestionsList,
+  });
+}
+
+async function handleGetAttempts() {
+  const sessions = await prisma.userTestSession.findMany({
+    include: {
+      user: {
+        select: {
+          fullName: true,
+          email: true,
+          candidateCode: true,
+          mobile: true,
+        }
+      },
+      mockTest: {
+        select: {
+          title: true,
+          maxMarks: true,
+        }
+      }
+    },
+    orderBy: {
+      startedAt: 'desc'
+    }
+  });
+
+  return NextResponse.json({
+    success: true,
+    attempts: sessions.map((s: any) => ({
+      id: s.id,
+      userId: s.userId,
+      mockTestId: s.mockTestId,
+      status: s.status,
+      startedAt: s.startedAt.toISOString(),
+      completedAt: s.completedAt ? s.completedAt.toISOString() : null,
+      remainingSeconds: s.remainingSeconds,
+      violationsCount: s.violationsCount,
+      finalScore: s.finalScore,
+      accuracyPercentage: s.accuracyPercentage,
+      timeSpentSeconds: s.timeSpentSeconds,
+      createdAt: s.createdAt.toISOString(),
+      testbookRank: s.testbookRank,
+      testbookPercentile: s.testbookPercentile,
+      source: s.source || 'web',
+      user: s.user ? {
+        fullName: s.user.fullName,
+        email: s.user.email,
+        candidateCode: s.user.candidateCode,
+        mobile: s.user.mobile
+      } : {
+        fullName: 'Unknown',
+        email: '',
+        candidateCode: '',
+        mobile: ''
+      },
+      mockTest: s.mockTest ? {
+        title: s.mockTest.title,
+        maxMarks: s.mockTest.maxMarks
+      } : {
+        title: 'Unknown Test',
+        maxMarks: 200
+      }
+    }))
   });
 }
 

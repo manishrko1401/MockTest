@@ -1652,6 +1652,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
 
+    const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const source = isMobileView ? 'mobile_web' : 'web';
+
     fetch('/api/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1666,7 +1669,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           accuracy,
           durationSeconds,
           violations,
-          responses
+          responses,
+          source
         }
       })
     })
@@ -1734,6 +1738,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
 
+    const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const source = isMobileView ? 'mobile_web' : 'web';
+
     fetch('/api/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1747,7 +1754,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           violations,
           responses,
           currentSectionIndex,
-          currentQuestionIndex
+          currentQuestionIndex,
+          source
         }
       })
     }).catch(err => console.error("Save ongoing session error:", err));

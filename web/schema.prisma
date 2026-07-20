@@ -226,6 +226,7 @@ model UserTestSession {
   currentQuestionIndex       Int                     @default(0)
   testbookRank               Int?
   testbookPercentile         Float?
+  source                     String                  @default("web")
 
   @@map("user_test_sessions")
 }

@@ -121,7 +121,7 @@ export const ApiClient = {
     responses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number }>;
     currentSectionIndex: number;
     currentQuestionIndex: number;
-  }) => postRequest('save-ongoing-session', params),
+  }) => postRequest('save-ongoing-session', { source: 'app', ...params }),
 
   /**
    * Submits a completed mock test session
@@ -135,7 +135,7 @@ export const ApiClient = {
     durationSeconds: number;
     violations: number;
     responses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number }>;
-  }) => postRequest('add-attempt', params),
+  }) => postRequest('add-attempt', { source: 'app', ...params }),
 
   /**
    * Deletes an ongoing session state when exiting/pausing completely

@@ -217,6 +217,7 @@ model UserTestSession {
   createdAt                  DateTime                @default(now())
   currentSectionIndex        Int                     @default(0)
   currentQuestionIndex       Int                     @default(0)
+  source                     String                  @default("web")
 
   @@map("user_test_sessions")
 }
