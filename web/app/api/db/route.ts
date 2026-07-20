@@ -341,7 +341,7 @@ async function handleBootstrap() {
 
   return NextResponse.json(
     { success: true, usersList, noticesList, examCatalog, reportedQuestionsList },
-    { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
+    { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
   );
 }
 
