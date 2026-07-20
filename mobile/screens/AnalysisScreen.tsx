@@ -746,31 +746,46 @@ export default function AnalysisScreen({
                  </ScrollView>
                )}
              </View>
+              {/* Question Workspace Panel — horizontal paging ScrollView with 60fps windowed virtualization */}
+              <ScrollView
+                ref={solutionScrollRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                scrollEventThrottle={16}
+                decelerationRate="fast"
+                bounces={false}
+                style={{ flex: 1 }}
+                onScroll={(e) => {
+                  const newIdx = Math.round(e.nativeEvent.contentOffset.x / pageWidth);
+                  if (newIdx !== activeQuestionIdx && newIdx >= 0 && newIdx < filteredQuestions.length) {
+                    setActiveQuestionIdx(newIdx);
+                  }
+                }}
+                onMomentumScrollEnd={(e) => {
+                  const newIdx = Math.round(e.nativeEvent.contentOffset.x / pageWidth);
+                  if (newIdx !== activeQuestionIdx && newIdx >= 0 && newIdx < filteredQuestions.length) {
+                    setActiveQuestionIdx(newIdx);
+                  }
+                }}
+              >
+                {filteredQuestions.map((question, qIdx) => {
+                  // Windowing optimization: Only mount full HTML tree for current & adjacent (+/- 1) pages
+                  const isNearby = Math.abs(qIdx - activeQuestionIdx) <= 1;
+                  if (!isNearby) {
+                    return (
+                      <View
+                        key={question.id || qIdx}
+                        style={{ width: pageWidth, flex: 1 }}
+                      />
+                    );
+                  }
 
-             {/* Question Workspace Panel — horizontal paging ScrollView, same as the notice screen */}
-             <ScrollView
-               ref={solutionScrollRef}
-               horizontal
-               pagingEnabled
-               showsHorizontalScrollIndicator={false}
-               scrollEventThrottle={16}
-               decelerationRate="fast"
-               bounces={false}
-               style={{ flex: 1 }}
-               onMomentumScrollEnd={(e) => {
-                 const newIdx = Math.round(e.nativeEvent.contentOffset.x / pageWidth);
-                 if (newIdx !== activeQuestionIdx) {
-                   setActiveQuestionIdx(newIdx);
-                 }
-               }}
-             >
-               {filteredQuestions.map((question, qIdx) => {
-                 const userResp = activeAttempt.responses ? activeAttempt.responses[question.id] : null;
-                 const submittedIdx = userResp ? userResp.selectedOptionIndex : null;
-                 const elapsed = userResp ? Number(userResp.elapsedSeconds) || 0 : 0;
-                 const correctIdx = question.correctOptionIndex !== undefined ? question.correctOptionIndex : question.correctIndex;
-                 const isSolutionRevealed = !reattemptMode || revealedSolutions[question.id];
-
+                  const userResp = activeAttempt.responses ? activeAttempt.responses[question.id] : null;
+                  const submittedIdx = userResp ? userResp.selectedOptionIndex : null;
+                  const elapsed = userResp ? Number(userResp.elapsedSeconds) || 0 : 0;
+                  const correctIdx = question.correctOptionIndex !== undefined ? question.correctOptionIndex : question.correctIndex;
+                  const isSolutionRevealed = !reattemptMode || revealedSolutions[question.id];
                  return (
                    <ScrollView
                      key={question.id || qIdx}
