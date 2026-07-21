@@ -96,6 +96,8 @@ export interface MockUser {
   isBlocked?: boolean;
   coins: number;
   referralCoinsCredited: boolean;
+  lastSeen?: string | null;
+  lastPlatform?: string | null;
 }
 
 export interface ReportedQuestion {
