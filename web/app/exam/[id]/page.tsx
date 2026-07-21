@@ -31,6 +31,7 @@ function decodeHtml(text: string): string {
   return decoded;
 }
 
+
 // Targeted, memoized component for MathJax rendering to prevent React re-render clashing
 const MathJaxText = React.memo(({ content, className, component: Component = 'span' }: { content: string, className?: string, component?: 'span' | 'div' }) => {
   const containerRef = useRef<HTMLElement>(null);
@@ -67,6 +68,7 @@ MathJaxText.displayName = 'MathJaxText';
 // ============================================================================
 import { generateExamSession } from '../../lib/examUtils';
 
+
 function TcsIonEngine({ testId }: { testId: string }) {
   const {
     state,
@@ -101,6 +103,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
   const [showSectionSubmitConfirm, setShowSectionSubmitConfirm] = useState(false);
   const [isManuallyPaused, setIsManuallyPaused] = useState(false);
   const [questionFontSize, setQuestionFontSize] = useState(14); // px, default 14px
+
 
   useEffect(() => {
     const handleFsChange = () => {
@@ -306,6 +309,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
   }
 
   const { session, currentSectionIndex, currentQuestionIndex, responses, timeRemaining, language, violationsCount, isExamSubmitted, score } = state;
+
   const currentSection = session.sections[currentSectionIndex];
 
   // Helper to extract questions in current section

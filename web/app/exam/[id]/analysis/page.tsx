@@ -46,6 +46,7 @@ function decodeHtml(text: string): string {
   return decoded;
 }
 
+
 // Targeted, memoized component for MathJax rendering to prevent React re-render clashing
 const MathJaxText = React.memo(({ content, className, component: Component = 'span' }: { content: string, className?: string, component?: 'span' | 'div' }) => {
   const containerRef = useRef<HTMLElement>(null);
@@ -1189,29 +1190,29 @@ export default function ExamSolutionAnalysisPage() {
             >
               {/* Question Box */}
               <div className="mb-6 space-y-4" style={{ fontSize: `${questionFontSize}px` }}>
-              <MathJaxText
-                component="div"
-                className="font-semibold text-slate-900 dark:text-white leading-relaxed markup-content"
-                content={decodeHtml(activeQuestion.content[lang]?.questionText || activeQuestion.content['en']?.questionText || "")}
-              />
+                <MathJaxText
+                  component="div"
+                  className="font-semibold text-slate-900 dark:text-white leading-relaxed markup-content"
+                  content={decodeHtml(activeQuestion.content[lang]?.questionText || activeQuestion.content['en']?.questionText || "")}
+                />
 
-              {activeQuestion.content[lang]?.mathLatex && (
-                <div className="bg-slate-100 dark:bg-slate-800/40 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800/80 font-mono text-xs text-blue-600 dark:text-blue-400">
-                  Latex: {activeQuestion.content[lang].mathLatex}
-                </div>
-              )}
+                {activeQuestion.content[lang]?.mathLatex && (
+                  <div className="bg-slate-100 dark:bg-slate-800/40 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800/80 font-mono text-xs text-blue-600 dark:text-blue-400">
+                    Latex: {activeQuestion.content[lang].mathLatex}
+                  </div>
+                )}
 
-              {/* Optional Question Image */}
-              {(activeQuestion.content[lang]?.imageUrl || activeQuestion.content['en']?.imageUrl) && (
-                <div className="flex justify-center bg-slate-50 dark:bg-slate-850 p-2 border border-slate-200 dark:border-slate-800 rounded-md">
-                  <img
-                    src={activeQuestion.content[lang]?.imageUrl || activeQuestion.content['en']?.imageUrl}
-                    alt="Question Visual"
-                    className="max-h-72 object-contain"
-                  />
-                </div>
-              )}
-            </div>
+                {/* Optional Question Image */}
+                {(activeQuestion.content[lang]?.imageUrl || activeQuestion.content['en']?.imageUrl) && (
+                  <div className="flex justify-center bg-slate-50 dark:bg-slate-850 p-2 border border-slate-200 dark:border-slate-800 rounded-md">
+                    <img
+                      src={activeQuestion.content[lang]?.imageUrl || activeQuestion.content['en']?.imageUrl}
+                      alt="Question Visual"
+                      className="max-h-72 object-contain"
+                    />
+                  </div>
+                )}
+              </div>
 
             {/* Options List */}
             <div className="space-y-3" style={{ fontSize: `${questionFontSize}px` }}>

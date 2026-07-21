@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send } from 'lucide-react';
+import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
 import { useIsMobile } from './useIsMobile';
 
@@ -1818,15 +1818,69 @@ function HomeSupportWidget() {
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const autoOpenedRef = useRef<string | null>(null);
+
+  // Suggestion Box states
+  const [suggestionModalOpen, setSuggestionModalOpen] = useState(false);
+  const [suggName, setSuggName] = useState(currentUser?.name || '');
+  const [suggEmail, setSuggEmail] = useState(currentUser?.email || '');
+  const [suggCategory, setSuggCategory] = useState('General');
+  const [suggMessage, setSuggMessage] = useState('');
+  const [suggSubmitting, setSuggSubmitting] = useState(false);
+  const [suggSuccess, setSuggSuccess] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.name) setSuggName(currentUser.name);
+      if (currentUser.email) setSuggEmail(currentUser.email);
+    }
+  }, [currentUser]);
+
+  const handleSuggestionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!suggMessage.trim() || !currentUser || suggSubmitting) return;
+
+    setSuggSubmitting(true);
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'submit-suggestion',
+          data: {
+            userId: currentUser.id,
+            name: currentUser.name || 'Registered Candidate',
+            email: currentUser.email || '',
+            category: suggCategory,
+            message: suggMessage,
+            source: (typeof window !== 'undefined' && window.innerWidth < 768) ? 'mobile_web' : 'web',
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSuggSuccess(true);
+        setSuggMessage('');
+        setTimeout(() => {
+          setSuggSuccess(false);
+          setSuggestionModalOpen(false);
+        }, 2200);
+      } else {
+        alert(data.error || 'Failed to submit suggestion');
+      }
+    } catch (err) {
+      console.error('Suggestion submit error:', err);
+      alert('Error submitting suggestion');
+    } finally {
+      setSuggSubmitting(false);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const fetchMessages = async (markRead = false) => {
+  const fetchMessages = async (markAsRead = false) => {
     if (!currentUser?.id) return;
     try {
       const res = await fetch('/api/db', {
@@ -1834,45 +1888,31 @@ function HomeSupportWidget() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'get-support-messages',
-          data: {
-            userId: currentUser.id,
-            readerRole: 'STUDENT',
-            markAsRead: markRead || chatOpen
-          }
+          data: { userId: currentUser.id, markAsRead }
         })
       });
       const data = await res.json();
       if (data.success && Array.isArray(data.messages)) {
         setMessages(data.messages);
-        
-        const unreadAdminMsgs = data.messages.filter((m: any) => m.sender === 'ADMIN' && !m.isRead);
-        setUnreadCount(unreadAdminMsgs.length);
-
-        const latestAdminMsg = data.messages.filter((m: any) => m.sender === 'ADMIN').pop();
-        if (latestAdminMsg) {
-          // If there are unread admin messages and we haven't auto-opened for this message ID yet
-          if (unreadAdminMsgs.length > 0 && autoOpenedRef.current !== latestAdminMsg.id) {
-            autoOpenedRef.current = latestAdminMsg.id;
-            setChatOpen(true);
-          }
+        if (!chatOpen) {
+          const unread = data.messages.filter((m: any) => m.sender === 'ADMIN' && !m.isRead).length;
+          setUnreadCount(unread);
+        } else {
+          setUnreadCount(0);
         }
       }
     } catch (err) {
-      console.error("Support message fetch error:", err);
+      console.error(err);
     }
   };
 
-  // Poll for messages every 4 seconds when user is logged in
   useEffect(() => {
-    if (!currentUser?.id) return;
-    fetchMessages(chatOpen);
-
-    const interval = setInterval(() => {
-      fetchMessages(chatOpen);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [currentUser?.id, chatOpen]);
+    if (currentUser?.id) {
+      fetchMessages();
+      const interval = setInterval(() => fetchMessages(false), 8000);
+      return () => clearInterval(interval);
+    }
+  }, [currentUser?.id]);
 
   useEffect(() => {
     if (chatOpen) {
@@ -1892,7 +1932,6 @@ function HomeSupportWidget() {
     setInputText('');
     setSending(true);
 
-    // Optimistic UI update
     const tempMsg = {
       id: 'temp-' + Date.now(),
       userId: currentUser.id,
@@ -1928,14 +1967,138 @@ function HomeSupportWidget() {
     }
   };
 
-  // Only show support chat floating button if user is logged in
+  // Only show support chat & suggestion floating buttons if user is logged in
   if (!currentUser) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[999] font-sans select-none">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[999] font-sans select-none flex flex-col items-end gap-3">
+      
+      {/* SUGGESTION BOX MODAL DIALOG */}
+      {suggestionModalOpen && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+            <button
+              onClick={() => setSuggestionModalOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {suggSuccess ? (
+              <div className="py-8 text-center space-y-4">
+                <div className="h-16 w-16 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto animate-bounce">
+                  <CheckCircle className="h-8 w-8" />
+                </div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  {language === 'hi' ? 'धन्यवाद! सुझाव भेजा गया' : 'Thank You! Suggestion Sent'}
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
+                  {language === 'hi'
+                    ? 'आपका बहुमूल्य सुझाव मॉकटेस्ट हब टीम को प्राप्त हो गया है।'
+                    : 'Your valuable suggestion has been successfully submitted to the MockTest Hub Team.'}
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSuggestionSubmit} className="space-y-4">
+                <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                  <div className="p-3 bg-amber-500/10 text-amber-500 rounded-2xl">
+                    <Lightbulb className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 dark:text-white">
+                      {language === 'hi' ? 'सुझाव पेटिका' : 'Suggestion Box'}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      {language === 'hi'
+                        ? 'मॉकटेस्ट हब टीम को अपना सुझाव भेजें'
+                        : 'Share your feedback with MockTest Hub Team'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-1">
+                  {/* Registered Candidate Default Details (Read-Only) */}
+                  <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-full bg-amber-500 text-white font-black flex items-center justify-center text-xs shadow-sm">
+                        {(currentUser.name || currentUser.email || 'U').slice(0, 1).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-xs font-black text-slate-900 dark:text-white leading-tight">
+                          {currentUser.name || 'Registered Candidate'}
+                        </p>
+                        <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                          {currentUser.email || 'Registered User'}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded-md shrink-0">
+                      Default User
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={suggCategory}
+                      onChange={(e) => setSuggCategory(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="General">General Suggestion / सामान्य सुझाव</option>
+                      <option value="New Exam Request">New Exam Request / नई परीक्षा का अनुरोध</option>
+                      <option value="Feature Request">Feature Request / नई सुविधा का अनुरोध</option>
+                      <option value="UI/UX Improvement">UI/UX Improvement / वेबसाइट डिज़ाइन सुधार</option>
+                      <option value="Bug Report">Bug Report / त्रुटि रिपोर्ट</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">
+                      Your Suggestion
+                    </label>
+                    <textarea
+                      required
+                      rows={4}
+                      value={suggMessage}
+                      onChange={(e) => setSuggMessage(e.target.value)}
+                      placeholder={
+                        language === 'hi'
+                          ? 'यहाँ अपना सुझाव या अनुरोध विस्तार से लिखें...'
+                          : 'Write your suggestion or feedback in detail...'
+                      }
+                      className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 leading-relaxed resize-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSuggestionModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-extrabold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!suggMessage.trim() || suggSubmitting}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center gap-2"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    <span>{suggSubmitting ? 'Submitting...' : 'Submit Suggestion'}</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* CHAT OVERLAY WINDOW */}
       {chatOpen && (
-        <div className="fixed bottom-20 right-3 left-3 sm:left-auto sm:right-6 w-[calc(100vw-1.5rem)] sm:w-[380px] h-[480px] max-h-[75vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 z-[9999]">
+        <div className="fixed bottom-24 right-3 left-3 sm:left-auto sm:right-6 w-[calc(100vw-1.5rem)] sm:w-[380px] h-[480px] max-h-[75vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 z-[9999]">
           
           {/* Header */}
           <div className="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between shadow-md">
@@ -2035,9 +2198,28 @@ function HomeSupportWidget() {
         </div>
       )}
 
-      {/* FLOATING OVERLAY BUTTON */}
+      {/* FLOATING BUTTON 1: SUGGESTION BOX (JUST ABOVE CHAT) */}
       <button
-        onClick={() => setChatOpen(prev => !prev)}
+        onClick={() => {
+          setChatOpen(false);
+          setSuggestionModalOpen(true);
+        }}
+        className="relative group flex items-center gap-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-full shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
+      >
+        <div className="relative flex items-center justify-center">
+          <Lightbulb className="h-4.5 w-4.5 text-amber-100 animate-pulse" />
+        </div>
+        <span className="font-extrabold text-[10px] tracking-wider uppercase hidden sm:inline-block">
+          {language === 'hi' ? 'सुझाव पेटिका' : 'Suggestion Box'}
+        </span>
+      </button>
+
+      {/* FLOATING BUTTON 2: MOCKTEST HUB TEAM SUPPORT CHAT */}
+      <button
+        onClick={() => {
+          setSuggestionModalOpen(false);
+          setChatOpen(prev => !prev);
+        }}
         className="relative group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-full shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
       >
         <div className="relative flex items-center justify-center">

@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
@@ -75,9 +75,32 @@ const computeExactTimeSpent = (session: any): number => {
     ) as number;
     if (total > 0) return total;
   }
-  // Fallback: timer-elapsed (totalDuration - timeRemaining)
+  // Fallback 1: timeSpentSeconds if recorded
+  if (session.timeSpentSeconds && session.timeSpentSeconds > 0) return session.timeSpentSeconds;
+  // Fallback 2: timer-elapsed (totalDuration - timeRemaining)
   if (session.durationSeconds && session.durationSeconds > 0) return session.durationSeconds;
   return 0;
+};
+
+const isUserOnline = (lastSeenStr?: string | null): boolean => {
+  if (!lastSeenStr) return false;
+  const lastSeen = new Date(lastSeenStr).getTime();
+  if (isNaN(lastSeen)) return false;
+  return (Date.now() - lastSeen) <= 5 * 60 * 1000;
+};
+
+const formatTimeAgo = (dateStr?: string | null): string => {
+  if (!dateStr) return 'Never';
+  const time = new Date(dateStr).getTime();
+  if (isNaN(time)) return 'Never';
+  const diffMs = Date.now() - time;
+  const mins = Math.floor(diffMs / (1000 * 60));
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 };
 
 // ============================================================================
@@ -86,9 +109,9 @@ const computeExactTimeSpent = (session: any): number => {
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -487,6 +510,7 @@ export default function AdminAnalytics() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [tierFilter, setTierFilter] = useState<string>('ALL');
+  const [presenceFilter, setPresenceFilter] = useState<'ALL' | 'ONLINE' | 'OFFLINE'>('ALL');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // Detail editor states
@@ -608,12 +632,89 @@ export default function AdminAnalytics() {
       return ['upload', 'categories', 'subcategories', 'subsubcategories', 'mocks'].includes(tab);
     }
     if (role === 'SUPPORT_TEAM') {
-      return ['support'].includes(tab);
+      return ['support', 'suggestions'].includes(tab);
     }
     if (role === 'NOTICES_MANAGER') {
       return ['notices', 'announcements', 'testimonials'].includes(tab);
     }
     return false;
+  };
+
+  // Suggestion Box state & API handlers
+  const [suggestionsList, setSuggestionsList] = useState<any[]>([]);
+  const [suggestionStatusFilter, setSuggestionStatusFilter] = useState<'ALL' | 'PENDING' | 'REVIEWED' | 'RESOLVED'>('ALL');
+  const [suggestionCategoryFilter, setSuggestionCategoryFilter] = useState<string>('ALL');
+  const [suggestionSearch, setSuggestionSearch] = useState<string>('');
+  const [suggestionReplyingId, setSuggestionReplyingId] = useState<string | null>(null);
+  const [suggestionReplyText, setSuggestionReplyText] = useState<string>('');
+
+  const fetchSuggestions = async () => {
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get-suggestions' }),
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.suggestions)) {
+        setSuggestionsList(data.suggestions);
+      }
+    } catch (err) {
+      console.error('Error fetching suggestions:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchSuggestions();
+    }
+  }, [currentUser]);
+
+  const handleUpdateSuggestionStatus = async (id: string, status: string, adminReply?: string) => {
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update-suggestion-status',
+          data: { id, status, adminReply }
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Suggestion updated successfully`);
+        fetchSuggestions();
+        setSuggestionReplyingId(null);
+        setSuggestionReplyText('');
+      } else {
+        showToast(`Failed: ${data.error}`);
+      }
+    } catch (err) {
+      showToast('Error updating suggestion');
+    }
+  };
+
+  const handleDeleteSuggestion = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this suggestion?')) return;
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete-suggestion',
+          data: { id }
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Suggestion deleted');
+        fetchSuggestions();
+      } else {
+        showToast(`Failed: ${data.error}`);
+      }
+    } catch (err) {
+      showToast('Error deleting suggestion');
+    }
   };
 
   // Toast & Modal confirmation states
@@ -1128,15 +1229,6 @@ export default function AdminAnalytics() {
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 overflow-hidden transition-colors duration-200">
-      {/* TEMP DEBUG BAR - shows current data state */}
-      <div style={{position:'fixed',bottom:0,left:0,right:0,zIndex:9999,background:'#111',color:'#0f0',fontSize:'11px',padding:'4px 12px',display:'flex',gap:'16px'}}>
-        <span>≡ƒæñ User: {currentUser ? `${currentUser.name} (${currentUser.role})` : 'NOT LOGGED IN'}</span>
-        <span>≡ƒôï usersList: {usersList.length}</span>
-        <span>≡ƒôÜ catalog: {examCatalog.length}</span>
-        <span>≡ƒöö notices: {noticesList.length}</span>
-        <span>≡ƒöæ tab: {activeTab}</span>
-        <span>≡ƒöÆ hasAccess: {hasAdminAccess ? 'YES' : 'NO'}</span>
-      </div>
       
       {/* SIDEBAR NAVIGATION BACKDROP ON MOBILE */}
       {isMounted && isMobile && mobileSidebarOpen && (
@@ -1373,6 +1465,26 @@ export default function AdminAnalytics() {
               >
                 <MessageCircle className="h-4 w-4" />
                 User Feedbacks
+              </button>
+            )}
+            {hasTabAccess('suggestions') && (
+              <button
+                onClick={() => selectTab('suggestions')}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'suggestions'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Lightbulb className="h-4 w-4" />
+                  <span>{language === 'hi' ? 'सुझाव पेटिका' : 'Suggestion Box'}</span>
+                </div>
+                {suggestionsList.filter(s => s.status === 'PENDING').length > 0 && (
+                  <span className="bg-amber-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center animate-pulse">
+                    {suggestionsList.filter(s => s.status === 'PENDING').length}
+                  </span>
+                )}
               </button>
             )}
             {hasTabAccess('attempts') && (
@@ -1717,6 +1829,39 @@ export default function AdminAnalytics() {
                 </div>
               </div>
 
+              {/* Live Presence Summary Cards */}
+              {(() => {
+                const onlineUsers = usersList.filter(u => isUserOnline(u.lastSeen));
+                const onlineApp = onlineUsers.filter(u => u.lastPlatform === 'app').length;
+                const onlineWeb = onlineUsers.filter(u => u.lastPlatform !== 'app').length;
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total Users</p>
+                      <h4 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{usersList.length}</h4>
+                    </div>
+                    <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-xl p-3 shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Live Online</p>
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                      </div>
+                      <h4 className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-0.5">{onlineUsers.length} online</h4>
+                    </div>
+                    <div className="bg-violet-50/60 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-900/40 rounded-xl p-3 shadow-xs">
+                      <p className="text-[10px] font-black text-violet-600 dark:text-violet-400 uppercase tracking-wider">📱 Mobile App</p>
+                      <h4 className="text-xl font-black text-violet-700 dark:text-violet-300 mt-0.5">{onlineApp} active</h4>
+                    </div>
+                    <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl p-3 shadow-xs">
+                      <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">💻 Website</p>
+                      <h4 className="text-xl font-black text-blue-700 dark:text-blue-300 mt-0.5">{onlineWeb} active</h4>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Collapsible Edit Profile Form */}
               {!selectedUserId && (
                 <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-sm overflow-hidden">
@@ -1997,6 +2142,16 @@ export default function AdminAnalytics() {
                       <option value="Testbook Pass">Pass</option>
                       <option value="Testbook Pass Pro">Pass Pro</option>
                     </select>
+
+                    <select
+                      value={presenceFilter}
+                      onChange={(e: any) => setPresenceFilter(e.target.value)}
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto font-bold"
+                    >
+                      <option value="ALL">All Online & Offline</option>
+                      <option value="ONLINE">🟢 Online Now</option>
+                      <option value="OFFLINE">⚪ Offline</option>
+                    </select>
                   </div>
                 </div>
 
@@ -2020,7 +2175,9 @@ export default function AdminAnalytics() {
                                                 (u.candidateCode && u.candidateCode.toLowerCase().includes(searchTerm.toLowerCase()));
                           const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
                           const matchesTier = tierFilter === 'ALL' || u.subscriptionTier === tierFilter;
-                          return matchesSearch && matchesRole && matchesTier;
+                          const onlineStatus = isUserOnline(u.lastSeen);
+                          const matchesPresence = presenceFilter === 'ALL' || (presenceFilter === 'ONLINE' ? onlineStatus : !onlineStatus);
+                          return matchesSearch && matchesRole && matchesTier && matchesPresence;
                         })
                         .map(user => {
                           const isSelected = selectedUserId === user.id;
@@ -2050,6 +2207,16 @@ export default function AdminAnalytics() {
                               <td className="py-3.5 px-4">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <p className="font-bold text-slate-905 dark:text-white text-xs">{user.name}</p>
+                                  {isUserOnline(user.lastSeen) ? (
+                                    <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                      Online ({user.lastPlatform === 'app' ? '📱 App' : user.lastPlatform === 'mobile_web' ? '📱 Web Mobile' : '💻 Web'})
+                                    </span>
+                                  ) : (
+                                    <span className="text-[8px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded">
+                                      Active: {formatTimeAgo(user.lastSeen)}
+                                    </span>
+                                  )}
                                   {user.isBlocked && (
                                     <span className="bg-red-50 dark:bg-red-955/45 border border-red-200 dark:border-red-808 text-red-650 dark:text-red-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
                                       Blocked
@@ -5025,7 +5192,7 @@ export default function AdminAnalytics() {
                                     Score: <span className="text-blue-600 dark:text-blue-400">{a.finalScore ?? 0}</span> / {a.mockTest?.maxMarks || 200}
                                   </p>
                                   <p className="text-[9px] text-slate-500 dark:text-slate-450 font-semibold">
-                                    Accuracy: {a.accuracyPercentage ?? 0}% | Time: {formatExactTime(a.timeSpentSeconds)}
+                                    Accuracy: {a.accuracyPercentage ?? 0}% | Time: {formatExactTime(computeExactTimeSpent(a))}
                                   </p>
                                   {a.violationsCount > 0 && (
                                     <span className="text-[9px] bg-red-100 text-red-700 dark:bg-red-950/20 dark:text-red-400 font-black px-1 rounded">
@@ -5054,6 +5221,297 @@ export default function AdminAnalytics() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* SUGGESTION BOX TAB CONTENT */}
+          {activeTab === 'suggestions' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Top Bar / Header */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-amber-500/10 text-amber-500 rounded-2xl">
+                    <Lightbulb className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                      Suggestion Box / सुझाव पेटिका
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+                      User suggestions, feature requests, and feedback submitted to MockTest Hub Team
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={fetchSuggestions}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer self-start md:self-auto"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span>Refresh Suggestions</span>
+                </button>
+              </div>
+
+              {/* Metric Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Suggestions</p>
+                    <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{suggestionsList.length}</p>
+                  </div>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 text-blue-600 rounded-xl">
+                    <Lightbulb className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider">Pending (New)</p>
+                    <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
+                      {suggestionsList.filter(s => s.status === 'PENDING').length}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-600 rounded-xl">
+                    <AlertCircle className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-extrabold text-blue-500 uppercase tracking-wider">Reviewed</p>
+                    <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">
+                      {suggestionsList.filter(s => s.status === 'REVIEWED').length}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 text-blue-600 rounded-xl">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-extrabold text-emerald-500 uppercase tracking-wider">Resolved</p>
+                    <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                      {suggestionsList.filter(s => s.status === 'RESOLVED').length}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-xl">
+                    <Award className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Filter & Search Controls */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                {/* Search Input */}
+                <div className="relative w-full md:w-80">
+                  <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={suggestionSearch}
+                    onChange={(e) => setSuggestionSearch(e.target.value)}
+                    placeholder="Search by name, email, keyword..."
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-2 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                  {(['ALL', 'PENDING', 'REVIEWED', 'RESOLVED'] as const).map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setSuggestionStatusFilter(status)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+                        suggestionStatusFilter === status
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                      }`}
+                    >
+                      {status === 'ALL' ? 'All Status' : status}
+                    </button>
+                  ))}
+
+                  <select
+                    value={suggestionCategoryFilter}
+                    onChange={(e) => setSuggestionCategoryFilter(e.target.value)}
+                    className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none"
+                  >
+                    <option value="ALL">All Categories</option>
+                    <option value="General">General</option>
+                    <option value="New Exam Request">New Exam Request</option>
+                    <option value="Feature Request">Feature Request</option>
+                    <option value="UI/UX Improvement">UI/UX Improvement</option>
+                    <option value="Bug Report">Bug Report</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Suggestions List */}
+              <div className="space-y-4">
+                {(() => {
+                  let filtered = suggestionsList.filter((s) => {
+                    if (suggestionStatusFilter !== 'ALL' && s.status !== suggestionStatusFilter) return false;
+                    if (suggestionCategoryFilter !== 'ALL' && s.category !== suggestionCategoryFilter) return false;
+                    if (suggestionSearch.trim()) {
+                      const q = suggestionSearch.toLowerCase().trim();
+                      const nameMatch = (s.name || '').toLowerCase().includes(q);
+                      const emailMatch = (s.email || '').toLowerCase().includes(q);
+                      const msgMatch = (s.message || '').toLowerCase().includes(q);
+                      const catMatch = (s.category || '').toLowerCase().includes(q);
+                      if (!nameMatch && !emailMatch && !msgMatch && !catMatch) return false;
+                    }
+                    return true;
+                  });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center text-slate-400 dark:text-slate-500">
+                        <Lightbulb className="h-10 w-10 mx-auto mb-3 text-slate-300 dark:text-slate-700" />
+                        <p className="font-bold text-sm text-slate-600 dark:text-slate-400">No suggestions found</p>
+                        <p className="text-xs mt-1">Try adjusting your filters or search query.</p>
+                      </div>
+                    );
+                  }
+
+                  return filtered.map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition-all"
+                    >
+                      {/* Header / Info Row */}
+                      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-black flex items-center justify-center text-sm shadow-md">
+                            {(item.name || item.email || 'U').slice(0, 1).toUpperCase()}
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                              {item.name || 'Anonymous User'}
+                            </h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                              {item.email || 'No email provided'} {item.userId && `• User ID: ${item.userId}`}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {/* Platform Source Badge */}
+                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider ${
+                            item.source === 'app'
+                              ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50'
+                              : item.source === 'mobile_web'
+                              ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-900/50'
+                              : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900/50'
+                          }`}>
+                            {item.source === 'app' ? '📱 Mobile App' : item.source === 'mobile_web' ? '📱 Mobile Web' : '💻 Website'}
+                          </span>
+
+                          {/* Category Badge */}
+                          <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                            {item.category || 'General'}
+                          </span>
+
+                          {/* Status Badge */}
+                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider ${
+                            item.status === 'RESOLVED'
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                              : item.status === 'REVIEWED'
+                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
+                              : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 animate-pulse'
+                          }`}>
+                            {item.status}
+                          </span>
+
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {new Date(item.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Suggestion Body */}
+                      <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800/60">
+                        <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">
+                          {item.message}
+                        </p>
+                      </div>
+
+                      {/* Admin Reply Note if present */}
+                      {item.adminReply && (
+                        <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 p-3 rounded-xl text-xs space-y-1">
+                          <p className="font-extrabold text-[10px] text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+                            Admin Note / Internal Action:
+                          </p>
+                          <p className="text-slate-700 dark:text-slate-300 font-medium">{item.adminReply}</p>
+                        </div>
+                      )}
+
+                      {/* Admin Action Buttons */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                        <div className="flex items-center gap-2">
+                          {item.status !== 'REVIEWED' && (
+                            <button
+                              onClick={() => handleUpdateSuggestionStatus(item.id, 'REVIEWED')}
+                              className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-600 dark:text-blue-300 font-extrabold text-xs transition cursor-pointer border border-blue-200 dark:border-blue-900/50"
+                            >
+                              Mark Reviewed
+                            </button>
+                          )}
+
+                          {item.status !== 'RESOLVED' && (
+                            <button
+                              onClick={() => handleUpdateSuggestionStatus(item.id, 'RESOLVED')}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-600 dark:text-emerald-300 font-extrabold text-xs transition cursor-pointer border border-emerald-200 dark:border-emerald-900/50"
+                            >
+                              Mark Resolved
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              if (suggestionReplyingId === item.id) {
+                                setSuggestionReplyingId(null);
+                              } else {
+                                setSuggestionReplyingId(item.id);
+                                setSuggestionReplyText(item.adminReply || '');
+                              }
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition cursor-pointer"
+                          >
+                            {suggestionReplyingId === item.id ? 'Close Note' : 'Add Note'}
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => handleDeleteSuggestion(item.id)}
+                          className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/30 hover:bg-red-100 text-red-600 dark:text-red-400 font-extrabold text-xs transition cursor-pointer border border-red-200 dark:border-red-900/50 flex items-center gap-1.5"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+
+                      {/* Note input box */}
+                      {suggestionReplyingId === item.id && (
+                        <div className="pt-2 space-y-2 border-t border-slate-100 dark:border-slate-800">
+                          <textarea
+                            rows={2}
+                            value={suggestionReplyText}
+                            onChange={(e) => setSuggestionReplyText(e.target.value)}
+                            placeholder="Enter internal admin note or status update details..."
+                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                          />
+                          <button
+                            onClick={() => handleUpdateSuggestionStatus(item.id, item.status, suggestionReplyText)}
+                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-extrabold text-xs transition cursor-pointer"
+                          >
+                            Save Note
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
           )}

@@ -413,6 +413,43 @@ export default function DashboardScreen({
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [claiming, setClaiming] = useState(false);
 
+  const [suggestionModalOpen, setSuggestionModalOpen] = useState(false);
+  const [suggCategory, setSuggCategory] = useState('General');
+  const [suggMessage, setSuggMessage] = useState('');
+  const [suggSubmitting, setSuggSubmitting] = useState(false);
+  const [suggSuccess, setSuggSuccess] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+  const handleAppSuggestionSubmit = async () => {
+    if (!suggMessage.trim() || suggSubmitting) return;
+    setSuggSubmitting(true);
+    try {
+      const res = await ApiClient.submitSuggestion({
+        userId: currentUser.id,
+        name: currentUser.name || 'Registered Candidate',
+        email: currentUser.email || '',
+        category: suggCategory,
+        message: suggMessage.trim(),
+        source: 'app',
+      });
+      if (res && res.success) {
+        setSuggSuccess(true);
+        setSuggMessage('');
+        setTimeout(() => {
+          setSuggSuccess(false);
+          setSuggestionModalOpen(false);
+        }, 2000);
+      } else {
+        Alert.alert('Error', res?.error || 'Failed to submit suggestion');
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Failed to submit suggestion. Please try again.');
+    } finally {
+      setSuggSubmitting(false);
+    }
+  };
+
   const [pinnedCategoryIds, setPinnedCategoryIds] = useState<string[]>([]);
   useEffect(() => {
     const loadPinned = async () => {
@@ -2243,6 +2280,264 @@ export default function DashboardScreen({
             );
           })()}
         </View>
+
+        {/* Suggestion Box Card */}
+        <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }, { flex: 1 }]}>
+              {language === 'en' ? '💡 Suggestion Box' : '💡 सुझाव पेटिका'}
+            </Text>
+          </View>
+
+          <Text style={[styles.sysDetailLabel, { marginTop: 6, marginBottom: 12, textTransform: 'none', lineHeight: 16 }, isDark && { color: ThemeColors.dark.textMuted }]}>
+            {language === 'en' 
+              ? 'Share your valuable suggestions, feature requests, or new exam requests with the MockTest Hub Team.' 
+              : 'मॉकटेस्ट हब टीम के साथ अपने बहुमूल्य सुझाव या नई परीक्षा के अनुरोध साझा करें।'}
+          </Text>
+          <TouchableOpacity 
+            style={[styles.formSubmitBtn, { backgroundColor: '#F59E0B', marginTop: 0 }]} 
+            onPress={() => setSuggestionModalOpen(true)}
+          >
+            <Text style={styles.formSubmitBtnText}>
+              {language === 'en' ? 'Submit Suggestion' : 'सुझाव भेजें'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* SUGGESTION BOX MODAL */}
+        <Modal
+          visible={suggestionModalOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setSuggestionModalOpen(false)}
+        >
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+            <View style={{
+              width: '100%',
+              maxWidth: 420,
+              backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+              borderRadius: 24,
+              padding: 20,
+              borderWidth: 1,
+              borderColor: isDark ? '#334155' : '#E2E8F0',
+              elevation: 10,
+            }}>
+              {/* Modal Header */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(245, 158, 11, 0.15)', justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 18 }}>💡</Text>
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 15, fontWeight: '900', color: isDark ? '#FFF' : '#0F172A' }}>
+                      {language === 'en' ? 'Suggestion Box' : 'सुझाव पेटिका'}
+                    </Text>
+                    <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#94A3B8' : '#64748B' }}>
+                      {language === 'en' ? 'Share feedback with MockTest Hub Team' : 'मॉकटेस्ट हब टीम को सुझाव भेजें'}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => setSuggestionModalOpen(false)} style={{ padding: 6 }}>
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              {suggSuccess ? (
+                <View style={{ paddingVertical: 24, alignItems: 'center', gap: 10 }}>
+                  <Text style={{ fontSize: 40 }}>✅</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '900', color: isDark ? '#FFF' : '#0F172A', textAlign: 'center' }}>
+                    {language === 'en' ? 'Thank You! Suggestion Sent' : 'धन्यवाद! सुझाव भेजा गया'}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: isDark ? '#94A3B8' : '#64748B', textAlign: 'center', lineHeight: 18 }}>
+                    {language === 'en'
+                      ? 'Your valuable suggestion has been submitted to MockTest Hub Team.'
+                      : 'आपका बहुमूल्य सुझाव मॉकटेस्ट हब टीम को प्राप्त हो गया है।'}
+                  </Text>
+                </View>
+              ) : (
+                <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+                  {/* User Default Details Badge (Read-Only) */}
+                  <View style={{
+                    backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
+                    padding: 12,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: isDark ? '#334155' : '#E2E8F0',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 14,
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                      <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#F59E0B', justifyContent: 'center', alignItems: 'center' }}>
+                        <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 14 }}>
+                          {(currentUser.name || currentUser.email || 'U').slice(0, 1).toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '900', color: isDark ? '#FFF' : '#0F172A' }} numberOfLines={1}>
+                          {currentUser.name || 'Registered Candidate'}
+                        </Text>
+                        <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#94A3B8' : '#64748B' }} numberOfLines={1}>
+                          {currentUser.email || 'Registered User'}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                      <Text style={{ fontSize: 9, fontWeight: '900', color: '#D97706' }}>📱 APP</Text>
+                    </View>
+                  </View>
+
+                  {/* Category Dropdown Selection (Matching Website) */}
+                  <Text style={{ fontSize: 10, fontWeight: '900', color: isDark ? '#94A3B8' : '#475569', marginBottom: 6, textTransform: 'uppercase' }}>
+                    Category / श्रेणी
+                  </Text>
+                  <View style={{ marginBottom: 14 }}>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                      style={{
+                        backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
+                        paddingHorizontal: 12,
+                        paddingVertical: 12,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: showCategoryDropdown ? '#F59E0B' : (isDark ? '#334155' : '#CBD5E1'),
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: isDark ? '#FFF' : '#0F172A' }} numberOfLines={1}>
+                        {[
+                          { id: 'General', label: 'General Suggestion / सामान्य सुझाव' },
+                          { id: 'New Exam Request', label: 'New Exam Request / नई परीक्षा का अनुरोध' },
+                          { id: 'Feature Request', label: 'Feature Request / नई सुविधा का अनुरोध' },
+                          { id: 'UI/UX Improvement', label: 'UI/UX Improvement / वेबसाइट डिज़ाइन सुधार' },
+                          { id: 'Bug Report', label: 'Bug Report / त्रुटि रिपोर्ट' },
+                        ].find(c => c.id === suggCategory)?.label || 'General Suggestion / सामान्य सुझाव'}
+                      </Text>
+                      <Text style={{ fontSize: 10, fontWeight: '900', color: isDark ? '#94A3B8' : '#64748B' }}>
+                        {showCategoryDropdown ? '▲' : '▼'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {showCategoryDropdown && (
+                      <View style={{
+                        backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: isDark ? '#334155' : '#E2E8F0',
+                        marginTop: 6,
+                        overflow: 'hidden',
+                        elevation: 6,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.15,
+                        shadowRadius: 8,
+                      }}>
+                        {[
+                          { id: 'General', label: 'General Suggestion / सामान्य सुझाव' },
+                          { id: 'New Exam Request', label: 'New Exam Request / नई परीक्षा का अनुरोध' },
+                          { id: 'Feature Request', label: 'Feature Request / नई सुविधा का अनुरोध' },
+                          { id: 'UI/UX Improvement', label: 'UI/UX Improvement / वेबसाइट डिज़ाइन सुधार' },
+                          { id: 'Bug Report', label: 'Bug Report / त्रुटि रिपोर्ट' },
+                        ].map((cat, idx, arr) => {
+                          const isSelected = suggCategory === cat.id;
+                          return (
+                            <TouchableOpacity
+                              key={cat.id}
+                              onPress={() => {
+                                setSuggCategory(cat.id);
+                                setShowCategoryDropdown(false);
+                              }}
+                              style={{
+                                paddingHorizontal: 14,
+                                paddingVertical: 11,
+                                backgroundColor: isSelected ? (isDark ? '#1E293B' : '#FEF3C7') : 'transparent',
+                                borderBottomWidth: idx < arr.length - 1 ? 1 : 0,
+                                borderBottomColor: isDark ? '#1E293B' : '#F1F5F9',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                              }}
+                            >
+                              <Text style={{
+                                fontSize: 11,
+                                fontWeight: isSelected ? '800' : '600',
+                                color: isSelected ? '#D97706' : (isDark ? '#E2E8F0' : '#334155'),
+                                flex: 1,
+                              }}>
+                                {cat.label}
+                              </Text>
+                              {isSelected && <Text style={{ color: '#D97706', fontWeight: '900', fontSize: 12, marginLeft: 6 }}>✓</Text>}
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Message Textarea */}
+                  <Text style={{ fontSize: 10, fontWeight: '900', color: isDark ? '#94A3B8' : '#475569', marginBottom: 6, textTransform: 'uppercase' }}>
+                    Your Suggestion
+                  </Text>
+                  <TextInput
+                    multiline
+                    numberOfLines={4}
+                    value={suggMessage}
+                    onChangeText={setSuggMessage}
+                    placeholder={language === 'en' ? 'Type your suggestion or request here...' : 'यहाँ अपना सुझाव या अनुरोध लिखें...'}
+                    placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
+                    style={{
+                      backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: isDark ? '#334155' : '#CBD5E1',
+                      padding: 12,
+                      fontSize: 13,
+                      color: isDark ? '#FFF' : '#0F172A',
+                      minHeight: 90,
+                      textAlignVertical: 'top',
+                      marginBottom: 16,
+                    }}
+                  />
+
+                  {/* Action Buttons */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10 }}>
+                    <TouchableOpacity
+                      onPress={() => setSuggestionModalOpen(false)}
+                      style={{
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: isDark ? '#334155' : '#CBD5E1',
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: isDark ? '#CBD5E1' : '#475569' }}>Cancel</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      disabled={!suggMessage.trim() || suggSubmitting}
+                      onPress={handleAppSuggestionSubmit}
+                      style={{
+                        backgroundColor: suggMessage.trim() ? '#F59E0B' : '#94A3B8',
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 12,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '900', color: '#FFF' }}>
+                        {suggSubmitting ? 'Submitting...' : 'Submit'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </ScrollView>
+              )}
+            </View>
+          </View>
+        </Modal>
 
         {/* Support Chat Card */}
         <View style={[styles.formCard, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>

@@ -2,10 +2,10 @@
  * API client to communicate with the shared Next.js backend database endpoints.
  */
 
-// Replace this with your computer's local IP address if testing on a physical device,
-// or your production domain name if deployed to Vercel/Supabase.
-export const BASE_URL = 'https://mock-test-three-indol.vercel.app';
-export const API_URL = `${BASE_URL}/api/db`;
+export const LOCAL_API_URL = 'http://192.168.1.14:3000/api/db';
+export const PROD_API_URL = 'https://mock-test-three-indol.vercel.app/api/db';
+
+export const API_URL = LOCAL_API_URL;
 
 let activeUserId: string | null = null;
 let activeSessionId: string | null = null;
@@ -21,38 +21,43 @@ export function onSessionInvalidated(callback: () => void) {
 }
 
 async function postRequest(action: string, data: any = {}) {
-  try {
-    // Automatically inject active session identifier for verification
-    if (activeUserId && activeSessionId && action !== 'login' && action !== 'signup') {
-      data = {
-        userId: data.userId || activeUserId,
-        sessionId: activeSessionId,
-        ...data
-      };
-    }
+  const endpoints = [LOCAL_API_URL, PROD_API_URL].filter((v, i, a) => a.indexOf(v) === i);
 
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ action, data }),
-    });
-
-    const result = await response.json();
-
-    // Catch centralized session invalidation alerts
-    if (result && result.error === 'SESSION_INVALIDATED') {
-      if (sessionInvalidatedCallback) {
-        sessionInvalidatedCallback();
-      }
-    }
-
-    return result;
-  } catch (error) {
-    console.error(`API Error on action [${action}]:`, error);
-    return { success: false, error: 'Network request failed. Please verify your server is running.' };
+  if (activeUserId && activeSessionId && action !== 'login' && action !== 'signup') {
+    data = {
+      userId: data.userId || activeUserId,
+      sessionId: activeSessionId,
+      ...data
+    };
   }
+
+  let lastErrorResult: any = null;
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action, data }),
+      });
+
+      const result = await response.json();
+
+      if (result && (!result.error || !result.error.includes('Invalid action'))) {
+        if (result.error === 'SESSION_INVALIDATED' && sessionInvalidatedCallback) {
+          sessionInvalidatedCallback();
+        }
+        return result;
+      }
+      lastErrorResult = result;
+    } catch (err) {
+      console.warn(`Attempt failed on ${endpoint}:`, err);
+    }
+  }
+
+  return lastErrorResult || { success: false, error: 'Network request failed. Please verify your server is running.' };
 }
 
 export const ApiClient = {
@@ -197,4 +202,16 @@ export const ApiClient = {
    */
   confirmPasswordReset: (email: string, otp: string, newPassword: string) =>
     postRequest('confirm-password-reset', { email, otp, newPassword }),
+
+  /**
+   * Submits a user suggestion to MockTest Hub Team
+   */
+  submitSuggestion: (params: {
+    userId?: string;
+    name: string;
+    email: string;
+    category: string;
+    message: string;
+    source?: string;
+  }) => postRequest('submit-suggestion', { ...params, source: params.source || 'app' }),
 };

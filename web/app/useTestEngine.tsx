@@ -148,7 +148,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       let initialQuestionIndex = 0;
 
       if (resumeData) {
-        initialResponses = resumeData.responses;
+        initialResponses = { ...resumeData.responses };
         initialTimeRemaining = resumeData.timeRemaining;
         initialViolationsCount = resumeData.violationsCount;
         if (resumeData.currentSectionIndex !== undefined) {
@@ -157,18 +157,21 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         if (resumeData.currentQuestionIndex !== undefined) {
           initialQuestionIndex = resumeData.currentQuestionIndex;
         }
-      } else {
-        // Initialize all questions to state 1 (NOT_VISITED)
-        session.questions.forEach((q) => {
-          initialResponses[q.id] = {
-            questionId: q.id,
-            selectedOptionIndex: null,
-            tempOptionIndex: null,
-            state: 1, // NOT_VISITED
-            elapsedSeconds: 0,
-          };
-        });
+      }
 
+      // Ensure every question has a valid response object with tempOptionIndex defined
+      session.questions.forEach((q) => {
+        const existing = initialResponses[q.id];
+        initialResponses[q.id] = {
+          questionId: q.id,
+          selectedOptionIndex: existing?.selectedOptionIndex ?? null,
+          tempOptionIndex: existing?.tempOptionIndex ?? existing?.selectedOptionIndex ?? null,
+          state: existing?.state ?? 1, // NOT_VISITED
+          elapsedSeconds: existing?.elapsedSeconds ?? 0,
+        };
+      });
+
+      if (!resumeData) {
         // Mark the very first question of the first section as state 2 (NOT_ANSWERED)
         const firstSectionQuestions = getSectionQuestions(session, 0);
         if (firstSectionQuestions.length > 0) {
@@ -271,8 +274,16 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       if (!activeQuestion) return state;
 
       const updatedResponses = { ...state.responses };
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+
       updatedResponses[activeQuestion.id] = {
-        ...updatedResponses[activeQuestion.id],
+        ...currentResp,
         tempOptionIndex: action.payload.optionIndex,
       };
 
@@ -288,13 +299,19 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       if (!activeQuestion) return state;
 
       const updatedResponses = { ...state.responses };
-      const currentResp = updatedResponses[activeQuestion.id];
-      const hasSelection = currentResp.tempOptionIndex !== null;
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+      const hasSelection = currentResp?.tempOptionIndex !== undefined && currentResp?.tempOptionIndex !== null;
 
       // Update state: ANSWERED (3) if selected, else NOT_ANSWERED (2)
       updatedResponses[activeQuestion.id] = {
         ...currentResp,
-        selectedOptionIndex: currentResp.tempOptionIndex,
+        selectedOptionIndex: currentResp.tempOptionIndex ?? null,
         state: hasSelection ? 3 : 2,
       };
 
@@ -317,16 +334,19 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       const nextQuestion = nextSectionQuestions[nextQuestionIndex];
 
       if (nextQuestion) {
-        const nextResp = updatedResponses[nextQuestion.id];
+        const nextResp = updatedResponses[nextQuestion.id] || {
+          questionId: nextQuestion.id,
+          selectedOptionIndex: null,
+          tempOptionIndex: null,
+          state: 1,
+          elapsedSeconds: 0,
+        };
         // If next question was NOT_VISITED (1), set to NOT_ANSWERED (2)
-        if (nextResp.state === 1) {
-          updatedResponses[nextQuestion.id] = {
-            ...nextResp,
-            state: 2,
-          };
-        }
-        // Initialize temp option from saved option
-        updatedResponses[nextQuestion.id].tempOptionIndex = updatedResponses[nextQuestion.id].selectedOptionIndex;
+        updatedResponses[nextQuestion.id] = {
+          ...nextResp,
+          state: nextResp.state === 1 ? 2 : nextResp.state,
+          tempOptionIndex: nextResp.selectedOptionIndex,
+        };
       }
 
       return {
@@ -343,9 +363,17 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       if (!activeQuestion) return state;
 
       const updatedResponses = { ...state.responses };
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+
       // Flush selections and set state to NOT_ANSWERED (2)
       updatedResponses[activeQuestion.id] = {
-        ...updatedResponses[activeQuestion.id],
+        ...currentResp,
         selectedOptionIndex: null,
         tempOptionIndex: null,
         state: 2,
@@ -363,15 +391,21 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       if (!activeQuestion) return state;
 
       const updatedResponses = { ...state.responses };
-      const currentResp = updatedResponses[activeQuestion.id];
-      const hasSelection = currentResp.tempOptionIndex !== null;
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+      const hasSelection = currentResp?.tempOptionIndex !== undefined && currentResp?.tempOptionIndex !== null;
 
       // 5-State Rule:
       // Option chosen: ANSWERED_AND_MARKED_FOR_REVIEW (5)
       // No option chosen: MARKED_FOR_REVIEW (4)
       updatedResponses[activeQuestion.id] = {
         ...currentResp,
-        selectedOptionIndex: currentResp.tempOptionIndex,
+        selectedOptionIndex: currentResp.tempOptionIndex ?? null,
         state: hasSelection ? 5 : 4,
       };
 
@@ -392,14 +426,18 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       const nextQuestion = nextSectionQuestions[nextQuestionIndex];
 
       if (nextQuestion) {
-        const nextResp = updatedResponses[nextQuestion.id];
-        if (nextResp.state === 1) {
-          updatedResponses[nextQuestion.id] = {
-            ...nextResp,
-            state: 2,
-          };
-        }
-        updatedResponses[nextQuestion.id].tempOptionIndex = updatedResponses[nextQuestion.id].selectedOptionIndex;
+        const nextResp = updatedResponses[nextQuestion.id] || {
+          questionId: nextQuestion.id,
+          selectedOptionIndex: null,
+          tempOptionIndex: null,
+          state: 1,
+          elapsedSeconds: 0,
+        };
+        updatedResponses[nextQuestion.id] = {
+          ...nextResp,
+          state: nextResp.state === 1 ? 2 : nextResp.state,
+          tempOptionIndex: nextResp.selectedOptionIndex,
+        };
       }
 
       return {
@@ -428,23 +466,35 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       const currentQuestions = getSectionQuestions(session, state.currentSectionIndex);
       const currentActiveQuestion = currentQuestions[state.currentQuestionIndex];
       if (currentActiveQuestion) {
-        const activeResp = updatedResponses[currentActiveQuestion.id];
+        const activeResp = updatedResponses[currentActiveQuestion.id] || {
+          questionId: currentActiveQuestion.id,
+          selectedOptionIndex: null,
+          tempOptionIndex: null,
+          state: 1,
+          elapsedSeconds: 0,
+        };
         // Revert temporary changes to saved value
-        activeResp.tempOptionIndex = activeResp.selectedOptionIndex;
-
-        // If the question was left active without selection/saving, it becomes NOT_ANSWERED (2)
-        if (activeResp.state === 1) {
-          activeResp.state = 2;
-        }
+        updatedResponses[currentActiveQuestion.id] = {
+          ...activeResp,
+          tempOptionIndex: activeResp.selectedOptionIndex,
+          state: activeResp.state === 1 ? 2 : activeResp.state,
+        };
       }
 
       // Prepare target question
-      const targetResp = updatedResponses[targetQuestion.id];
-      if (targetResp.state === 1) {
-        targetResp.state = 2; // Transition target question from NOT_VISITED to NOT_ANSWERED
-      }
-      // Populate tempOptionIndex with saved selection
-      targetResp.tempOptionIndex = targetResp.selectedOptionIndex;
+      const targetResp = updatedResponses[targetQuestion.id] || {
+        questionId: targetQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+      
+      updatedResponses[targetQuestion.id] = {
+        ...targetResp,
+        state: targetResp.state === 1 ? 2 : targetResp.state,
+        tempOptionIndex: targetResp.selectedOptionIndex,
+      };
 
       return {
         ...state,

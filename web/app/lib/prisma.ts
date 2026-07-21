@@ -10,7 +10,7 @@ const connectionString = process.env.DATABASE_URL ? process.env.DATABASE_URL.tri
 
 let prismaInstance: PrismaClient;
 
-if (globalForPrisma.prisma) {
+if (globalForPrisma.prisma && (globalForPrisma.prisma as any).suggestion) {
   prismaInstance = globalForPrisma.prisma;
 } else {
   const pool = new Pool({

@@ -52,6 +52,32 @@ function formatDateTime(date: Date) {
   }
 }
 
+// In-Memory Throttle Cache for User Presence (updates DB at most once per 2 minutes per user)
+const lastSeenCache = new Map<string, number>();
+
+async function touchUserLastSeen(userId?: string, platform?: string): Promise<void> {
+  if (!userId || typeof userId !== 'string' || !userId.trim()) return;
+  const now = Date.now();
+  const lastUpdated = lastSeenCache.get(userId) || 0;
+  
+  // 2-minute throttle — only write to DB if user was last seen more than 2 minutes ago
+  if (now - lastUpdated > 2 * 60 * 1000) {
+    lastSeenCache.set(userId, now); // Update cache immediately so concurrent calls don't double-write
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          lastSeen: new Date(),
+          lastPlatform: platform || 'web'
+        }
+      });
+    } catch (e) {
+      // Silently ignore — don't fail the main request over a presence update
+      lastSeenCache.delete(userId); // Allow retry on next request
+    }
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -59,6 +85,36 @@ export async function POST(request: Request) {
 
     if (!action) {
       return NextResponse.json({ success: false, error: 'No action provided' }, { status: 400 });
+    }
+
+    // Lazy / Action-Based Online Presence Tracking
+    // Extract userId from any position in the request body
+    const activeUserId = 
+      data?.userId ||
+      data?.id ||
+      body?.userId ||
+      body?.id ||
+      null;
+    const activePlatform = 
+      data?.source ||
+      data?.platform ||
+      body?.source ||
+      body?.platform ||
+      'web';
+
+    // Fire-and-forget: update lastSeen without blocking the response
+    if (activeUserId && action !== 'ping') {
+      touchUserLastSeen(activeUserId, activePlatform); // Intentionally NOT awaited
+    }
+
+    // Handle dedicated ping action first (lightest possible action)
+    if (action === 'ping') {
+      const pingUserId = data?.userId || body?.userId;
+      const pingPlatform = data?.platform || body?.platform || 'web';
+      if (pingUserId) {
+        await touchUserLastSeen(pingUserId, pingPlatform); // Awaited so it's confirmed
+      }
+      return NextResponse.json({ success: true });
     }
 
 
@@ -172,6 +228,14 @@ export async function POST(request: Request) {
         return await handleAdminData(data);
       case 'get-attempts':
         return await handleGetAttempts();
+      case 'submit-suggestion':
+        return await handleSubmitSuggestion(data);
+      case 'get-suggestions':
+        return await handleGetSuggestions();
+      case 'update-suggestion-status':
+        return await handleUpdateSuggestionStatus(data);
+      case 'delete-suggestion':
+        return await handleDeleteSuggestion(data);
       case 'db-stats':
         return await handleDbStats();
       default:
@@ -887,6 +951,15 @@ async function handleAddAttempt(data: any, request?: Request) {
     console.error("Failed to estimate Testbook rank on attempt:", err);
   }
 
+  // Calculate actual time spent from responses if available
+  let actualTimeSpent = durationSeconds;
+  if (responses && typeof responses === 'object' && Object.keys(responses).length > 0) {
+    const sumElapsed = Object.values(responses).reduce((sum: number, r: any) => sum + (r?.elapsedSeconds ?? 0), 0);
+    if (sumElapsed > 0) {
+      actualTimeSpent = sumElapsed;
+    }
+  }
+
   // Create completed session
   const session = await prisma.userTestSession.create({
     data: {
@@ -895,7 +968,7 @@ async function handleAddAttempt(data: any, request?: Request) {
       status: 'COMPLETED',
       finalScore: score,
       accuracyPercentage: accuracy,
-      timeSpentSeconds: durationSeconds,
+      timeSpentSeconds: actualTimeSpent,
       violationsCount: violations,
       remainingSeconds: 0,
       completedAt: new Date(),
@@ -2537,6 +2610,8 @@ async function handleAdminData(data: any) {
     referralCoinsCredited: u.referralCoinsCredited,
     password: u.passwordHash,
     bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
+    lastSeen: u.lastSeen ? u.lastSeen.toISOString() : null,
+    lastPlatform: u.lastPlatform || 'web',
     testSessions: [], // Loaded lazily via get-user-details action
   }));
 
@@ -2563,69 +2638,6 @@ async function handleAdminData(data: any) {
     success: true,
     usersList,
     reportedQuestionsList,
-  });
-}
-
-async function handleGetAttempts() {
-  const sessions = await prisma.userTestSession.findMany({
-    include: {
-      user: {
-        select: {
-          fullName: true,
-          email: true,
-          candidateCode: true,
-          mobile: true,
-        }
-      },
-      mockTest: {
-        select: {
-          title: true,
-          maxMarks: true,
-        }
-      }
-    },
-    orderBy: {
-      startedAt: 'desc'
-    }
-  });
-
-  return NextResponse.json({
-    success: true,
-    attempts: sessions.map((s: any) => ({
-      id: s.id,
-      userId: s.userId,
-      mockTestId: s.mockTestId,
-      status: s.status,
-      startedAt: s.startedAt.toISOString(),
-      completedAt: s.completedAt ? s.completedAt.toISOString() : null,
-      remainingSeconds: s.remainingSeconds,
-      violationsCount: s.violationsCount,
-      finalScore: s.finalScore,
-      accuracyPercentage: s.accuracyPercentage,
-      timeSpentSeconds: s.timeSpentSeconds,
-      createdAt: s.createdAt.toISOString(),
-      testbookRank: s.testbookRank,
-      testbookPercentile: s.testbookPercentile,
-      source: s.source || 'web',
-      user: s.user ? {
-        fullName: s.user.fullName,
-        email: s.user.email,
-        candidateCode: s.user.candidateCode,
-        mobile: s.user.mobile
-      } : {
-        fullName: 'Unknown',
-        email: '',
-        candidateCode: '',
-        mobile: ''
-      },
-      mockTest: s.mockTest ? {
-        title: s.mockTest.title,
-        maxMarks: s.mockTest.maxMarks
-      } : {
-        title: 'Unknown Test',
-        maxMarks: 200
-      }
-    }))
   });
 }
 
@@ -2726,6 +2738,204 @@ async function handleConfirmPasswordReset(data: any) {
   } catch (error: any) {
     console.error('Database update error during password reset:', error);
     return NextResponse.json({ success: false, error: 'Failed to reset password.' }, { status: 500 });
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Test Attempt Logs Handler
+// -----------------------------------------------------------------------------
+
+async function handleGetAttempts() {
+  try {
+    if ((prisma as any).userTestSession) {
+      const attempts = await (prisma as any).userTestSession.findMany({
+        orderBy: { startedAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              candidateCode: true,
+              mobile: true,
+            },
+          },
+          mockTest: {
+            select: {
+              id: true,
+              title: true,
+              maxMarks: true,
+            },
+          },
+          responses: {
+            select: {
+              questionId: true,
+              selectedOptionIndex: true,
+              state: true,
+              elapsedSeconds: true,
+            },
+          },
+        },
+      });
+      return NextResponse.json({ success: true, attempts });
+    }
+
+    // Fail-safe Raw SQL Fallback
+    const rawSessions: any[] = await prisma.$queryRawUnsafe(`
+      SELECT 
+        uts.id, uts."userId", uts."mockTestId", uts.status, uts."startedAt", uts."completedAt",
+        uts."remainingSeconds", uts."violationsCount", uts."finalScore", uts."accuracyPercentage",
+        uts."timeSpentSeconds", uts.source, uts."createdAt",
+        json_build_object(
+          'id', u.id,
+          'fullName', u."fullName",
+          'email', u.email,
+          'candidateCode', u."candidateCode",
+          'mobile', u.mobile
+        ) as user,
+        json_build_object(
+          'id', mt.id,
+          'title', mt.title,
+          'maxMarks', mt."maxMarks"
+        ) as "mockTest"
+      FROM user_test_sessions uts
+      LEFT JOIN users u ON uts."userId" = u.id
+      LEFT JOIN mock_tests mt ON uts."mockTestId" = mt.id
+      ORDER BY uts."startedAt" DESC
+    `);
+
+    return NextResponse.json({ success: true, attempts: rawSessions });
+  } catch (error: any) {
+    console.error('Error fetching test attempts:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to fetch test attempts' }, { status: 500 });
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Suggestion Box Handlers
+// -----------------------------------------------------------------------------
+
+async function handleSubmitSuggestion(data: any) {
+  const { userId, name, email, category, message, source } = data || {};
+  if (!message || !message.trim()) {
+    return NextResponse.json({ success: false, error: 'Suggestion message is required' }, { status: 400 });
+  }
+
+  const id = crypto.randomUUID();
+  const uId = userId || null;
+  const sName = name ? name.trim() : '';
+  const sEmail = email ? email.trim() : '';
+  const sCat = category ? category.trim() : 'General';
+  const sMsg = message.trim();
+  const sStatus = 'PENDING';
+  const sSource = source ? source.trim() : 'web';
+
+  try {
+    if ((prisma as any).suggestion) {
+      const suggestion = await (prisma as any).suggestion.create({
+        data: {
+          id,
+          userId: uId,
+          name: sName,
+          email: sEmail,
+          category: sCat,
+          message: sMsg,
+          status: sStatus,
+          source: sSource,
+        },
+      });
+      return NextResponse.json({ success: true, suggestion });
+    }
+
+    // Fail-safe Raw SQL Fallback
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO suggestions (id, "userId", name, email, category, message, status, source, "createdAt") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+      id, uId, sName, sEmail, sCat, sMsg, sStatus, sSource
+    );
+
+    return NextResponse.json({
+      success: true,
+      suggestion: { id, userId: uId, name: sName, email: sEmail, category: sCat, message: sMsg, status: sStatus, source: sSource, createdAt: new Date() }
+    });
+  } catch (error: any) {
+    console.error('Error saving suggestion:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to submit suggestion' }, { status: 500 });
+  }
+}
+
+async function handleGetSuggestions() {
+  try {
+    if ((prisma as any).suggestion) {
+      const suggestions = await (prisma as any).suggestion.findMany({
+        orderBy: { createdAt: 'desc' },
+      });
+      return NextResponse.json({ success: true, suggestions });
+    }
+
+    // Fail-safe Raw SQL Fallback
+    const suggestions: any[] = await prisma.$queryRawUnsafe(
+      `SELECT * FROM suggestions ORDER BY "createdAt" DESC`
+    );
+
+    return NextResponse.json({ success: true, suggestions });
+  } catch (error: any) {
+    console.error('Error fetching suggestions:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to fetch suggestions' }, { status: 500 });
+  }
+}
+
+async function handleUpdateSuggestionStatus(data: any) {
+  const { id, status, adminReply } = data || {};
+  if (!id) {
+    return NextResponse.json({ success: false, error: 'Suggestion ID is required' }, { status: 400 });
+  }
+
+  try {
+    if ((prisma as any).suggestion) {
+      const suggestion = await (prisma as any).suggestion.update({
+        where: { id },
+        data: {
+          ...(status ? { status } : {}),
+          ...(adminReply !== undefined ? { adminReply } : {}),
+        },
+      });
+      return NextResponse.json({ success: true, suggestion });
+    }
+
+    // Fail-safe Raw SQL Fallback
+    if (status && adminReply !== undefined) {
+      await prisma.$executeRawUnsafe(`UPDATE suggestions SET status = $1, "adminReply" = $2 WHERE id = $3`, status, adminReply, id);
+    } else if (status) {
+      await prisma.$executeRawUnsafe(`UPDATE suggestions SET status = $1 WHERE id = $2`, status, id);
+    } else if (adminReply !== undefined) {
+      await prisma.$executeRawUnsafe(`UPDATE suggestions SET "adminReply" = $1 WHERE id = $2`, adminReply, id);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error updating suggestion status:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to update suggestion status' }, { status: 500 });
+  }
+}
+
+async function handleDeleteSuggestion(data: any) {
+  const { id } = data || {};
+  if (!id) {
+    return NextResponse.json({ success: false, error: 'Suggestion ID is required' }, { status: 400 });
+  }
+
+  try {
+    if ((prisma as any).suggestion) {
+      await (prisma as any).suggestion.delete({ where: { id } });
+      return NextResponse.json({ success: true });
+    }
+
+    // Fail-safe Raw SQL Fallback
+    await prisma.$executeRawUnsafe(`DELETE FROM suggestions WHERE id = $1`, id);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error deleting suggestion:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to delete suggestion' }, { status: 500 });
   }
 }
 

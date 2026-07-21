@@ -804,10 +804,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       const savedUserId = getCookie('tb_user_id');
 
       // 🚀 Fire bootstrap + user fetch IN PARALLEL — eliminates the serial waterfall
+      // Include userId in bootstrap so presence tracking works on every page load
       const bootstrapPromise = fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'bootstrap' })
+        body: JSON.stringify({
+          action: 'bootstrap',
+          ...(savedUserId ? { userId: savedUserId } : {})
+        })
       }).then(r => r.json());
 
       const userPromise = savedUserId
@@ -915,6 +919,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       setLanguageState('en');
     }
   }, []);
+
+  // Presence Ping: update lastSeen when user returns to the tab or logs in
+  // This is lazy — fires only on real user interaction (tab switch / login), NOT a timer
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const platform = isMobileView ? 'mobile_web' : 'web';
+
+    // Immediate ping on login or page mount
+    const sendPing = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'ping',
+          data: { userId: currentUser.id, platform }
+        })
+      }).catch(() => {}); // Silent fail
+    };
+
+    // Fire immediately when user is logged in
+    sendPing();
+
+    // Fire when user returns to the tab (switches back from another app/tab)
+    document.addEventListener('visibilitychange', sendPing);
+
+    return () => {
+      document.removeEventListener('visibilitychange', sendPing);
+    };
+  }, [currentUser?.id]);
 
   // Load admin data only if the logged-in user is an administrator/staff
   useEffect(() => {
