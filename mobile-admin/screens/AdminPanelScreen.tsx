@@ -77,6 +77,13 @@ export default function AdminPanelScreen({
   // Modal actions (User)
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [editUserModalVisible, setEditUserModalVisible] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editMobile, setEditMobile] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editReferralCode, setEditReferralCode] = useState('');
+  const [editReferredBy, setEditReferredBy] = useState('');
+  const [editReferralsCount, setEditReferralsCount] = useState('0');
   const [editTier, setEditTier] = useState('None');
   const [editCoins, setEditCoins] = useState('0');
   const [editBlocked, setEditBlocked] = useState(false);
@@ -155,6 +162,13 @@ export default function AdminPanelScreen({
   // Modify User profile
   const openEditUserModal = (user: any) => {
     setSelectedUser(user);
+    setEditName(user.name || '');
+    setEditEmail(user.email || '');
+    setEditMobile(user.mobile || '');
+    setEditPassword(user.password || '');
+    setEditReferralCode(user.referralCode || '');
+    setEditReferredBy(user.referredBy || '');
+    setEditReferralsCount(String(user.referralsCount ?? 0));
     setEditTier(user.subscriptionTier || 'None');
     setEditCoins(String(user.coins ?? 0));
     setEditBlocked(user.isBlocked ?? false);
@@ -192,17 +206,17 @@ export default function AdminPanelScreen({
 
       const params = {
         userId: selectedUser.id,
-        name: selectedUser.name,
-        email: selectedUser.email,
-        mobile: selectedUser.mobile || '',
-        referralCode: selectedUser.referralCode || '',
-        referredBy: selectedUser.referredBy || null,
-        referralsCount: selectedUser.referralsCount || 0,
+        name: editName.trim(),
+        email: editEmail.trim(),
+        mobile: editMobile.trim(),
+        referralCode: editReferralCode.trim(),
+        referredBy: editReferredBy.trim() || null,
+        referralsCount: parseInt(editReferralsCount) || 0,
         role: editRole,
         tier: editTier,
         purchasedAt: parsedPurchasedAt,
         expiry: parsedExpiresAt,
-        password: selectedUser.password || 'password123',
+        password: editPassword.trim() || 'password123',
         isBlocked: editBlocked,
         coins: parsedCoins
       };
@@ -215,12 +229,19 @@ export default function AdminPanelScreen({
             u.id === selectedUser.id
               ? {
                   ...u,
+                  name: editName.trim(),
+                  email: editEmail.trim(),
+                  mobile: editMobile.trim(),
+                  referralCode: editReferralCode.trim(),
+                  referredBy: editReferredBy.trim() || null,
+                  referralsCount: parseInt(editReferralsCount) || 0,
                   role: editRole,
                   subscriptionTier: editTier,
                   coins: parsedCoins,
                   isBlocked: editBlocked,
                   subscriptionPurchasedAt: parsedPurchasedAt,
-                  subscriptionExpiresAt: parsedExpiresAt
+                  subscriptionExpiresAt: parsedExpiresAt,
+                  password: editPassword.trim()
                 }
               : u
           )
@@ -865,96 +886,171 @@ export default function AdminPanelScreen({
             <Text style={[styles.modalTitle, { color: theme.text }]}>Modify User Privileges</Text>
             {selectedUser && (
               <View style={{ width: '100%' }}>
-                <Text style={[styles.modalUserDesc, { color: theme.textMuted }]}>
+                <Text style={[styles.modalUserDesc, { color: theme.textMuted, marginBottom: 12 }]}>
                   {selectedUser.name} ({selectedUser.email})
                 </Text>
 
-                {/* Role */}
-                <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Access Role</Text>
-                <View style={styles.pickerRow}>
-                  {['STUDENT', 'ADMIN', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].map((r) => (
-                    <TouchableOpacity
-                      key={r}
-                      onPress={() => setEditRole(r)}
-                      style={[
-                        styles.pickerBadge,
-                        { backgroundColor: editRole === r ? theme.primary : theme.inputBg, borderColor: theme.border }
-                      ]}
-                    >
-                      <Text style={[styles.pickerBadgeText, { color: editRole === r ? '#FFF' : theme.text }]}>
-                        {r.replace('_', ' ')}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
+                  {/* Full Name */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Full Name</Text>
+                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.text }]}
+                      value={editName}
+                      onChangeText={setEditName}
+                    />
+                  </View>
 
-                {/* Subscription pass tier */}
-                <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Subscription Pass Tier</Text>
-                <View style={styles.pickerRow}>
-                  {['None', 'Testbook Pass', 'Testbook Pass Pro'].map((t) => (
-                    <TouchableOpacity
-                      key={t}
-                      onPress={() => setEditTier(t)}
-                      style={[
-                        styles.pickerBadge,
-                        { backgroundColor: editTier === t ? theme.primary : theme.inputBg, borderColor: theme.border }
-                      ]}
-                    >
-                      <Text style={[styles.pickerBadgeText, { color: editTier === t ? '#FFF' : theme.text }]}>
-                        {t}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                  {/* Email Address */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Email Address</Text>
+                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.text }]}
+                      keyboardType="email-address"
+                      value={editEmail}
+                      onChangeText={setEditEmail}
+                    />
+                  </View>
 
-                {/* Coins */}
-                <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Coins Balance</Text>
-                <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                  <TextInput
-                    style={[styles.modalInput, { color: theme.text }]}
-                    keyboardType="number-pad"
-                    value={editCoins}
-                    onChangeText={setEditCoins}
-                  />
-                </View>
+                  {/* Mobile Number */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Mobile Number</Text>
+                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.text }]}
+                      keyboardType="phone-pad"
+                      value={editMobile}
+                      onChangeText={setEditMobile}
+                    />
+                  </View>
 
-                {/* Pass Purchased Date */}
-                <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Pass Purchased Date (YYYY-MM-DD)</Text>
-                <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                  <TextInput
-                    style={[styles.modalInput, { color: theme.text }]}
-                    placeholder="YYYY-MM-DD (e.g. 2026-07-23)"
-                    placeholderTextColor={theme.textMuted}
-                    value={editPurchasedAt}
-                    onChangeText={setEditPurchasedAt}
-                  />
-                </View>
+                  {/* Password */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Plaintext Password</Text>
+                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.text }]}
+                      value={editPassword}
+                      onChangeText={setEditPassword}
+                    />
+                  </View>
 
-                {/* Pass Expiry Date */}
-                <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Pass Expiry Date (YYYY-MM-DD)</Text>
-                <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                  <TextInput
-                    style={[styles.modalInput, { color: theme.text }]}
-                    placeholder="YYYY-MM-DD (e.g. 2027-07-23)"
-                    placeholderTextColor={theme.textMuted}
-                    value={editExpiresAt}
-                    onChangeText={setEditExpiresAt}
-                  />
-                </View>
+                  {/* Role */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Access Role</Text>
+                  <View style={styles.pickerRow}>
+                    {['STUDENT', 'ADMIN', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].map((r) => (
+                      <TouchableOpacity
+                        key={r}
+                        onPress={() => setEditRole(r)}
+                        style={[
+                          styles.pickerBadge,
+                          { backgroundColor: editRole === r ? theme.primary : theme.inputBg, borderColor: theme.border }
+                        ]}
+                      >
+                        <Text style={[styles.pickerBadgeText, { color: editRole === r ? '#FFF' : theme.text }]}>
+                          {r.replace('_', ' ')}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
 
-                {/* Block switch */}
-                <View style={styles.switchRow}>
-                  <Text style={[styles.switchLabel, { color: theme.text }]}>Block Account Access</Text>
-                  <Switch
-                    value={editBlocked}
-                    onValueChange={setEditBlocked}
-                    trackColor={{ false: '#767577', true: theme.accentRed }}
-                    thumbColor={editBlocked ? theme.accentRed : '#f4f3f4'}
-                  />
-                </View>
+                  {/* Subscription pass tier */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Subscription Pass Tier</Text>
+                  <View style={styles.pickerRow}>
+                    {['None', 'Testbook Pass', 'Testbook Pass Pro'].map((t) => (
+                      <TouchableOpacity
+                        key={t}
+                        onPress={() => setEditTier(t)}
+                        style={[
+                          styles.pickerBadge,
+                          { backgroundColor: editTier === t ? theme.primary : theme.inputBg, borderColor: theme.border }
+                        ]}
+                      >
+                        <Text style={[styles.pickerBadgeText, { color: editTier === t ? '#FFF' : theme.text }]}>
+                          {t}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  {/* Coins */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Coins Balance</Text>
+                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.text }]}
+                      keyboardType="number-pad"
+                      value={editCoins}
+                      onChangeText={setEditCoins}
+                    />
+                  </View>
+
+                  {/* Referral Code */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Referral Code</Text>
+                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.text }]}
+                      value={editReferralCode}
+                      onChangeText={setEditReferralCode}
+                    />
+                  </View>
+
+                  {/* Referred By */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Referred By Code</Text>
+                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.text }]}
+                      value={editReferredBy}
+                      onChangeText={setEditReferredBy}
+                    />
+                  </View>
+
+                  {/* Referrals Count */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Referrals Count</Text>
+                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.text }]}
+                      keyboardType="number-pad"
+                      value={editReferralsCount}
+                      onChangeText={setEditReferralsCount}
+                    />
+                  </View>
+
+                  {/* Pass Purchased Date */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Pass Purchased Date (YYYY-MM-DD)</Text>
+                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.text }]}
+                      placeholder="YYYY-MM-DD (e.g. 2026-07-23)"
+                      placeholderTextColor={theme.textMuted}
+                      value={editPurchasedAt}
+                      onChangeText={setEditPurchasedAt}
+                    />
+                  </View>
+
+                  {/* Pass Expiry Date */}
+                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Pass Expiry Date (YYYY-MM-DD)</Text>
+                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.text }]}
+                      placeholder="YYYY-MM-DD (e.g. 2027-07-23)"
+                      placeholderTextColor={theme.textMuted}
+                      value={editExpiresAt}
+                      onChangeText={setEditExpiresAt}
+                    />
+                  </View>
+
+                  {/* Block switch */}
+                  <View style={styles.switchRow}>
+                    <Text style={[styles.switchLabel, { color: theme.text }]}>Block Account Access</Text>
+                    <Switch
+                      value={editBlocked}
+                      onValueChange={setEditBlocked}
+                      trackColor={{ false: '#767577', true: theme.accentRed }}
+                      thumbColor={editBlocked ? theme.accentRed : '#f4f3f4'}
+                    />
+                  </View>
+                </ScrollView>
 
                 {/* Modal Buttons */}
-                <View style={styles.modalActionRow}>
+                <View style={[styles.modalActionRow, { marginTop: 12 }]}>
                   <TouchableOpacity
                     onPress={() => setEditUserModalVisible(false)}
                     style={[styles.modalBtn, styles.modalBtnCancel, { borderColor: theme.border }]}
