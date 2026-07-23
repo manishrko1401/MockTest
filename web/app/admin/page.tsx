@@ -5644,7 +5644,7 @@ export default function AdminAnalytics() {
                 type="button"
                 onClick={submitSaveProfile}
                 disabled={savingProfile}
-                className="px-5 py-2 text-xs font-bold rounded-lg bg-blue-650 hover:bg-blue-700 text-white shadow transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                className="px-5 py-2 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
               >
                 {savingProfile ? (
                   <>
