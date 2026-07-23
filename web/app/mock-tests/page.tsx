@@ -1522,7 +1522,7 @@ export default function MockTestsCatalog() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 animate-in fade-in duration-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 animate-in fade-in duration-300">
                 {getFilteredCatalogForSearch().map(cat => {
                   const isSsc = cat.id === 'ssc';
                   const isRailways = cat.id === 'railways';
