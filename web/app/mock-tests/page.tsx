@@ -156,7 +156,7 @@ export default function MockTestsCatalog() {
   }, []);
 
   // Filter exam catalog by search query (checks category name or subcategory exam name)
-  const getFilteredCatalogForSearch = () => {
+  const getFilteredCatalogForSearch = React.useMemo(() => {
     const query = examSearchQuery.toLowerCase().trim();
     if (!query) return examCatalog;
     
@@ -177,16 +177,20 @@ export default function MockTestsCatalog() {
       }
       return null;
     }).filter(Boolean) as TestCategory[];
-  };
+  }, [examCatalog, examSearchQuery]);
 
-  const getFilteredSubCategories = () => {
+  const currentCategoryObj = React.useMemo(() => {
+    return examCatalog.find(c => c.id === selectedCategory);
+  }, [examCatalog, selectedCategory]);
+
+  const getFilteredSubCategories = React.useMemo(() => {
     if (!currentCategoryObj) return [];
     const query = examSearchQuery.toLowerCase().trim();
     if (!query) return currentCategoryObj.subCategories || [];
     return (currentCategoryObj.subCategories || []).filter(sub => 
       sub.name.toLowerCase().includes(query)
     );
-  };
+  }, [currentCategoryObj, examSearchQuery]);
 
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
   const [activeSubSubId, setActiveSubSubId] = useState<string | null>(null);
@@ -331,7 +335,6 @@ export default function MockTestsCatalog() {
   };
 
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [categorySearchQuery, setCategorySearchQuery] = useState<string>('');
   const [upgradePopupOpen, setUpgradePopupOpen] = useState(false);
   const [requiredTierInfo, setRequiredTierInfo] = useState<string>('');
 
@@ -419,8 +422,6 @@ export default function MockTestsCatalog() {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [expandedBookmarks]);
-
-  const currentCategoryObj = examCatalog.find(c => c.id === selectedCategory);
   
   const handleStartExam = (test: MockTestItem) => {
     if (!currentUser) {
@@ -499,24 +500,7 @@ export default function MockTestsCatalog() {
     router.push(`/exam/${test.id}`);
   };
 
-  const filteredSidebarCategories = examCatalog.filter(category => {
-    const query = categorySearchQuery.toLowerCase().trim();
-    if (!query) return true;
-    
-    if (category.name.toLowerCase().includes(query)) return true;
-    
-    return category.subCategories.some(sub => {
-      if (sub.name.toLowerCase().includes(query)) return true;
-      
-      const matchSubSub = sub.subSubCategories?.some(subsub => 
-        subsub.name.toLowerCase().includes(query) ||
-        subsub.tests?.some(t => t.title.toLowerCase().includes(query))
-      );
-      if (matchSubSub) return true;
-      
-      return sub.tests?.some(t => t.title.toLowerCase().includes(query));
-    });
-  });
+
 
   const { isMobile, isMounted } = useIsMobile();
 
@@ -1523,7 +1507,7 @@ export default function MockTestsCatalog() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 animate-in fade-in duration-300">
-                {getFilteredCatalogForSearch().map(cat => {
+                {getFilteredCatalogForSearch.map(cat => {
                   const isSsc = cat.id === 'ssc';
                   const isRailways = cat.id === 'railways';
                   const isBanking = cat.id === 'banking';
@@ -1649,7 +1633,7 @@ export default function MockTestsCatalog() {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 animate-in fade-in duration-300">
-                {getFilteredSubCategories().map(subCat => {
+                {getFilteredSubCategories.map(subCat => {
                   const count = subCat.tests.length;
                   const countStr = count === 1 
                     ? (language === 'hi' ? `1 ${t.mocksCount}` : `1 Mock Test`)
