@@ -987,9 +987,6 @@ async function handleSaveProfileAdmin(data: any, requesterUserId: string | null,
   await prisma.user.update({
     where: { id: userId },
     data: {
-      fullName: name,
-      email: email.trim().toLowerCase(),
-      mobile,
       referralCode,
       referredBy,
       referralsCount,
@@ -997,7 +994,6 @@ async function handleSaveProfileAdmin(data: any, requesterUserId: string | null,
       subscriptionTier: tier,
       subscriptionPurchasedAt: purchasedAt,
       subscriptionExpiresAt: expiry,
-      passwordHash: password,
       isBlocked,
       coins: coins !== undefined ? Number(coins) : undefined
     },
