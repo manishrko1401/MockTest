@@ -1522,7 +1522,7 @@ export default function MockTestsCatalog() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 animate-in fade-in duration-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 animate-in fade-in duration-300">
                 {getFilteredCatalogForSearch().map(cat => {
                   const isSsc = cat.id === 'ssc';
                   const isRailways = cat.id === 'railways';
@@ -1545,13 +1545,13 @@ export default function MockTestsCatalog() {
                         setSelectedCategory(cat.id);
                         setSelectedSubCategory(null);
                       }}
-                      className={`bg-white dark:bg-slate-950 border border-slate-205 dark:border-slate-800 hover:border-blue-550 dark:hover:border-blue-500 p-4 sm:p-5 rounded-2xl flex flex-row justify-between gap-4 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
+                      className={`bg-white dark:bg-slate-950 border border-slate-205 dark:border-slate-800 hover:border-blue-550 dark:hover:border-blue-500 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
                     >
                       {/* Left details */}
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                           {/* Logo/Icon Container */}
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-855 shadow-sm overflow-hidden mb-3 bg-slate-55 dark:bg-slate-900 transition duration-300">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-855 shadow-sm overflow-hidden mb-2 bg-slate-55 dark:bg-slate-900 transition duration-300">
                             {cat.logoUrl ? (
                               <img
                                 src={cat.logoUrl}
@@ -1560,37 +1560,37 @@ export default function MockTestsCatalog() {
                               />
                             ) : (
                               <div className="text-blue-500">
-                                {isSsc && <Award className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />}
-                                {isRailways && <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />}
-                                {isBanking && <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />}
-                                {isTeaching && <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />}
-                                {isUgcNet && <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-sky-500" />}
-                                {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-pink-500" />}
+                                {isSsc && <Award className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-orange-500" />}
+                                {isRailways && <TrendingUp className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-indigo-500" />}
+                                {isBanking && <Coins className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-emerald-500" />}
+                                {isTeaching && <BookOpen className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-amber-500" />}
+                                {isUgcNet && <GraduationCap className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-sky-500" />}
+                                {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-pink-500" />}
                               </div>
                             )}
                           </div>
-                          <h4 className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white mb-1.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                          <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
                             {cat.name}
                           </h4>
-                          <span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2.5 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
+                          <span className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
                             {cat.subCategories?.length || 0} Exams
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[9px] uppercase tracking-wider mt-4 pt-2 border-t border-slate-155 dark:border-slate-800/60 w-full">
-                          {language === 'hi' ? "कैटेगरी देखें" : "View Category"} <ChevronRight className="h-3 w-3 transition group-hover:translate-x-1" />
+                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[8.5px] uppercase tracking-wider mt-3 pt-1.5 border-t border-slate-155 dark:border-slate-800/60 w-full">
+                          {language === 'hi' ? "कैटेगरी देखें" : "View Category"} <ChevronRight className="h-2.5 w-2.5 transition group-hover:translate-x-0.5" />
                         </div>
                       </div>
 
                       {/* Right side subcategories */}
                       {cat.subCategories && cat.subCategories.length > 0 && (
-                        <div className="border-l border-slate-200/50 dark:border-slate-800/40 pl-4 flex flex-col justify-center min-w-[130px] max-w-[155px] shrink-0">
-                          <span className="text-[8px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Exams List</span>
-                          <div className="flex flex-col gap-1.5">
+                        <div className="border-l border-slate-200/50 dark:border-slate-800/40 pl-2.5 flex flex-col justify-center min-w-[100px] max-w-[125px] shrink-0">
+                          <span className="text-[7.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">Exams List</span>
+                          <div className="flex flex-col gap-1">
                             {cat.subCategories.slice(0, 5).map((sub: any) => (
-                              <div key={sub.id} className="flex items-center gap-1.5">
-                                <div className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-450 shrink-0"></div>
-                                <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[115px]" title={sub.name}>
+                              <div key={sub.id} className="flex items-center gap-1">
+                                <div className="h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-450 shrink-0"></div>
+                                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={sub.name}>
                                   {formatSubCategoryName(sub.name)}
                                 </span>
                               </div>
