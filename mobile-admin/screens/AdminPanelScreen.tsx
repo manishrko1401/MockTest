@@ -11,7 +11,8 @@ import {
   ActivityIndicator,
   Alert,
   Switch,
-  Platform
+  Platform,
+  RefreshControl
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -32,7 +33,7 @@ import {
   Edit3,
   Calendar,
   Layers,
-  MapPin
+  BarChart2
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
@@ -42,6 +43,7 @@ interface AdminPanelScreenProps {
   onBack: () => void;
   isDark?: boolean;
   onOpenSupportChat: (studentUser: any) => void;
+  onOpenAnalytics: () => void;
 }
 
 type TabType = 'users' | 'support' | 'reports' | 'feedback' | 'suggestions' | 'attempts';
@@ -49,8 +51,9 @@ type TabType = 'users' | 'support' | 'reports' | 'feedback' | 'suggestions' | 'a
 export default function AdminPanelScreen({
   currentUser,
   onBack,
-  isDark = false,
-  onOpenSupportChat
+  isDark = true,
+  onOpenSupportChat,
+  onOpenAnalytics
 }: AdminPanelScreenProps) {
   const insets = useSafeAreaInsets();
   const theme = isDark ? ThemeColors.dark : ThemeColors.light;
@@ -71,7 +74,7 @@ export default function AdminPanelScreen({
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
 
-  // Modal actions
+  // Modal actions (User)
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [editUserModalVisible, setEditUserModalVisible] = useState(false);
   const [editTier, setEditTier] = useState('None');
@@ -80,16 +83,18 @@ export default function AdminPanelScreen({
   const [editRole, setEditRole] = useState('STUDENT');
   const [updatingUser, setUpdatingUser] = useState(false);
 
-  // Suggestion Modal actions
+  // Modal actions (Suggestion)
   const [selectedSuggestion, setSelectedSuggestion] = useState<any | null>(null);
   const [suggestionModalVisible, setSuggestionModalVisible] = useState(false);
   const [suggStatus, setSuggStatus] = useState('PENDING');
   const [suggReply, setSuggReply] = useState('');
   const [updatingSugg, setUpdatingSugg] = useState(false);
 
-  // Load all logs from the backend
+  // Load all data logs from the backend
   const loadAdminLogs = async (silent = false) => {
     if (!silent) setLoading(true);
+    else setRefreshing(true);
+
     try {
       // 1. Fetch Admin Data (users & reported questions)
       const res = await ApiClient.fetchAdminData(currentUser.id);
@@ -123,7 +128,8 @@ export default function AdminPanelScreen({
       }
 
     } catch (err: any) {
-      console.warn("Failed to fetch admin data logs:", err);
+      console.warn("Failed to fetch admin logs:", err);
+      Alert.alert("Sync Error", "Could not fetch administrative logs from backend.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -176,7 +182,7 @@ export default function AdminPanelScreen({
               : u
           )
         );
-        Alert.alert('Success', 'User profile details ingested.');
+        Alert.alert('Success', 'User profile modifications applied.');
       } else {
         Alert.alert('Error', res.error || 'Failed to update user profile');
       }
@@ -213,9 +219,9 @@ export default function AdminPanelScreen({
               : s
           )
         );
-        Alert.alert('Success', 'Suggestion status updated.');
+        Alert.alert('Success', 'Suggestion details updated.');
       } else {
-        Alert.alert('Error', res.error || 'Failed to update suggestion status');
+        Alert.alert('Error', res.error || 'Failed to update suggestion');
       }
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Operation failed');
@@ -225,22 +231,18 @@ export default function AdminPanelScreen({
   };
 
   const handleDeleteSuggestionLog = async (id: string) => {
-    Alert.alert('Delete Suggestion', 'Are you sure you want to delete this suggestion log permanently?', [
+    Alert.alert('Delete Suggestion', 'Delete this suggestion permanently?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
-          setUpdatingSugg(true);
           const res = await ApiClient.deleteSuggestion(id);
           if (res.success) {
-            setSuggestionModalVisible(false);
             setSuggestions(prev => prev.filter(s => s.id !== id));
-            Alert.alert('Success', 'Suggestion deleted successfully.');
           } else {
             Alert.alert('Error', res.error || 'Failed to delete suggestion');
           }
-          setUpdatingSugg(false);
         }
       }
     ]);
@@ -248,7 +250,7 @@ export default function AdminPanelScreen({
 
   // Delete Feedback
   const handleDeleteFeedbackLog = async (id: string) => {
-    Alert.alert('Delete Feedback', 'Are you sure you want to delete this feedback log entry?', [
+    Alert.alert('Delete Feedback', 'Delete this feedback log entry?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -257,9 +259,8 @@ export default function AdminPanelScreen({
           const res = await ApiClient.deleteFeedback(id);
           if (res.success) {
             setFeedbacks(prev => prev.filter(f => f.id !== id));
-            Alert.alert('Success', 'Feedback deleted.');
           } else {
-            Alert.alert('Error', res.error || 'Failed to delete feedback entry');
+            Alert.alert('Error', res.error || 'Failed to delete feedback');
           }
         }
       }
@@ -268,7 +269,7 @@ export default function AdminPanelScreen({
 
   // Resolve Reported Question
   const handleResolveReport = async (id: string) => {
-    Alert.alert('Resolve Flag', 'Mark this question report as resolved and delete the log?', [
+    Alert.alert('Resolve Flag', 'Mark this question report as resolved?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Resolve',
@@ -277,17 +278,35 @@ export default function AdminPanelScreen({
           const res = await ApiClient.deleteReportedQuestion(id);
           if (res.success) {
             setReportedQs(prev => prev.filter(r => r.id !== id));
-            Alert.alert('Success', 'Question report log cleared.');
           } else {
-            Alert.alert('Error', res.error || 'Failed to delete reported log');
+            Alert.alert('Error', res.error || 'Failed to clear report log');
           }
         }
       }
     ]);
   };
 
+  // Reset Attempt
+  const handleResetAttemptLog = async (userId: string, sessionId: string, userName: string) => {
+    Alert.alert('Reset Attempt', `Allow ${userName} to re-take this exam session?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Reset',
+        style: 'destructive',
+        onPress: async () => {
+          const res = await ApiClient.resetAttempt(userId, sessionId);
+          if (res.success) {
+            setAttempts(prev => prev.filter(a => a.id !== sessionId));
+            Alert.alert('Success', 'Test attempt reset. Student can re-attempt.');
+          } else {
+            Alert.alert('Error', res.error || 'Failed to reset attempt');
+          }
+        }
+      }
+    ]);
+  };
 
-  // Filter segment rules for users list
+  // Filters for user list
   const filteredUsers = users.filter(user => {
     const term = searchQuery.toLowerCase();
     const matchesSearch =
@@ -308,7 +327,7 @@ export default function AdminPanelScreen({
       { id: 'reports', label: 'Reported Qs' },
       { id: 'feedback', label: 'Feedback' },
       { id: 'suggestions', label: 'Suggestions' },
-      { id: 'attempts', label: 'Attempt Logs' }
+      { id: 'attempts', label: 'Attempts' }
     ];
 
     return (
@@ -340,13 +359,12 @@ export default function AdminPanelScreen({
   const renderUsersView = () => {
     return (
       <View style={styles.tabViewContainer}>
-        {/* Search & Filter segment bar */}
         <View style={[styles.searchContainer, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
           <View style={[styles.searchBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
             <Search size={18} color={theme.textMuted} style={{ marginRight: 8 }} />
             <TextInput
               style={[styles.searchInput, { color: theme.text }]}
-              placeholder="Search by name, email, CC, mobile..."
+              placeholder="Search users..."
               placeholderTextColor={theme.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -373,6 +391,9 @@ export default function AdminPanelScreen({
         <FlatList
           data={filteredUsers}
           keyExtractor={item => item.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => loadAdminLogs(true)} tintColor={theme.primary} />
+          }
           renderItem={({ item }) => {
             const isPremium = item.subscriptionTier !== 'None';
             return (
@@ -382,15 +403,15 @@ export default function AdminPanelScreen({
                     <View style={styles.flexRowAlign}>
                       <Text style={[styles.userName, { color: theme.text }]}>{item.name}</Text>
                       {item.isBlocked && (
-                        <View style={[styles.badge, { backgroundColor: '#FEE2E2' }]}>
-                          <Text style={[styles.badgeText, { color: '#EF4444' }]}>Blocked</Text>
+                        <View style={[styles.badge, { backgroundColor: 'rgba(239, 68, 68, 0.15)' }]}>
+                          <Text style={[styles.badgeText, { color: theme.accentRed }]}>Blocked</Text>
                         </View>
                       )}
                     </View>
                     <Text style={[styles.userEmail, { color: theme.textMuted }]}>{item.email}</Text>
                   </View>
                   <TouchableOpacity onPress={() => openEditUserModal(item)}>
-                    <View style={[styles.actionBtn, { borderColor: theme.border }]}>
+                    <View style={[styles.actionBtn, { borderColor: theme.primary }]}>
                       <Text style={[styles.actionBtnText, { color: theme.primary }]}>Modify</Text>
                     </View>
                   </TouchableOpacity>
@@ -401,8 +422,8 @@ export default function AdminPanelScreen({
                     <Text style={[styles.statValue, { color: theme.text }]}>{item.coins ?? 0} coins</Text>
                   </View>
                   <View style={styles.flexRowAlign}>
-                    <Shield size={14} color={isPremium ? '#10B981' : theme.textMuted} style={{ marginRight: 4 }} />
-                    <Text style={[styles.statValue, { color: isPremium ? '#10B981' : theme.textMuted }]}>
+                    <Shield size={14} color={isPremium ? theme.accentGreen : theme.textMuted} style={{ marginRight: 4 }} />
+                    <Text style={[styles.statValue, { color: isPremium ? theme.accentGreen : theme.textMuted }]}>
                       {item.subscriptionTier || 'None'}
                     </Text>
                   </View>
@@ -416,7 +437,7 @@ export default function AdminPanelScreen({
                   </Text>
                   {item.lastSeen && (
                     <Text style={[styles.candidateText, { color: theme.textMuted }]}>
-                      Last seen: {new Date(item.lastSeen).toLocaleDateString()}
+                      Seen: {new Date(item.lastSeen).toLocaleDateString()}
                     </Text>
                   )}
                 </View>
@@ -427,9 +448,7 @@ export default function AdminPanelScreen({
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Users color={theme.textMuted} size={48} />
-              <Text style={[styles.emptyText, { color: theme.textMuted, marginTop: 12 }]}>
-                No users found.
-              </Text>
+              <Text style={[styles.emptyText, { color: theme.textMuted }]}>No users found.</Text>
             </View>
           }
         />
@@ -443,6 +462,9 @@ export default function AdminPanelScreen({
       <FlatList
         data={supportConversations}
         keyExtractor={item => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => loadAdminLogs(true)} tintColor={theme.primary} />
+        }
         renderItem={({ item }) => (
           <TouchableOpacity
             style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}
@@ -454,19 +476,16 @@ export default function AdminPanelScreen({
                 <Text style={[styles.userEmail, { color: theme.textMuted }]}>{item.email}</Text>
               </View>
               {item.unseenCount > 0 && (
-                <View style={styles.unseenBadge}>
+                <View style={[styles.unseenBadge, { backgroundColor: theme.primary }]}>
                   <Text style={styles.unseenBadgeText}>{item.unseenCount}</Text>
                 </View>
               )}
             </View>
             {item.lastMessage && (
-              <View style={styles.secondaryBox}>
+              <View style={[styles.secondaryBox, { backgroundColor: theme.inputBg }]}>
                 <Text style={[styles.secondaryBoxText, { color: theme.text }]} numberOfLines={1}>
                   {item.lastMessage.sender === 'STUDENT' ? 'Student: ' : 'Admin: '}
                   {item.lastMessage.message}
-                </Text>
-                <Text style={[styles.secondaryBoxTime, { color: theme.textMuted }]}>
-                  {new Date(item.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </Text>
               </View>
             )}
@@ -475,7 +494,7 @@ export default function AdminPanelScreen({
                 CC: {item.candidateCode || 'N/A'}
               </Text>
               <View style={styles.flexRowAlign}>
-                <Text style={[styles.linkText, { color: theme.primary }]}>Reply Message</Text>
+                <Text style={[styles.linkText, { color: theme.primary }]}>Open Chat</Text>
                 <ChevronRight size={14} color={theme.primary} />
               </View>
             </View>
@@ -485,9 +504,7 @@ export default function AdminPanelScreen({
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <MessageSquare color={theme.textMuted} size={48} />
-            <Text style={[styles.emptyText, { color: theme.textMuted, marginTop: 12 }]}>
-              No support conversations threads.
-            </Text>
+            <Text style={[styles.emptyText, { color: theme.textMuted }]}>No support threads.</Text>
           </View>
         }
       />
@@ -500,35 +517,42 @@ export default function AdminPanelScreen({
       <FlatList
         data={reportedQs}
         keyExtractor={item => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => loadAdminLogs(true)} tintColor={theme.primary} />
+        }
         renderItem={({ item }) => (
           <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={styles.cardHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.userName, { color: theme.text, fontSize: 13 }]}>
+                <Text style={[styles.userName, { color: theme.text, fontSize: 14 }]}>
                   Test: {item.mockTestTitle || 'Mock Test'}
                 </Text>
-                <Text style={[styles.userEmail, { color: theme.textMuted, fontSize: 11 }]}>
-                  Question ID: {item.questionId}
+                <Text style={[styles.userEmail, { color: theme.textMuted }]}>
+                  By candidate CC: {item.candidateCode || 'Guest'}
                 </Text>
               </View>
               <TouchableOpacity onPress={() => handleResolveReport(item.id)}>
-                <View style={styles.badgeBtnDanger}>
-                  <Text style={styles.badgeBtnDangerText}>Resolve</Text>
+                <View style={[styles.actionBtn, { borderColor: theme.accentGreen }]}>
+                  <Text style={[styles.actionBtnText, { color: theme.accentGreen }]}>Resolve</Text>
                 </View>
               </TouchableOpacity>
             </View>
-            <View style={styles.secondaryBox}>
-              <Text style={[styles.boxLabel, { color: theme.text }]}>Flagged Question:</Text>
-              <Text style={[styles.boxText, { color: theme.textMuted }]}>{item.questionText || 'No question text'}</Text>
-              <Text style={[styles.boxLabel, { color: theme.text, marginTop: 6 }]}>Student Report:</Text>
-              <Text style={[styles.boxText, { color: '#EF4444' }]}>"{item.message}"</Text>
+
+            <View style={[styles.secondaryBox, { backgroundColor: theme.inputBg }]}>
+              <Text style={[styles.secondaryBoxText, { color: theme.text, fontWeight: 'bold' }]}>
+                Question: {item.questionText || 'See question ID'}
+              </Text>
+              <Text style={[styles.secondaryBoxText, { color: theme.accentRed, marginTop: 4 }]}>
+                Issue: {item.message}
+              </Text>
             </View>
+
             <View style={styles.cardFooter}>
               <Text style={[styles.candidateText, { color: theme.textMuted }]}>
-                Student CC: {item.candidateCode || 'N/A'}
+                Reported ID: {item.questionId.substring(0, 8)}...
               </Text>
               <Text style={[styles.candidateText, { color: theme.textMuted }]}>
-                Logged: {item.createdAt}
+                Date: {new Date(item.createdAt).toLocaleDateString()}
               </Text>
             </View>
           </View>
@@ -537,9 +561,7 @@ export default function AdminPanelScreen({
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <AlertTriangle color={theme.textMuted} size={48} />
-            <Text style={[styles.emptyText, { color: theme.textMuted, marginTop: 12 }]}>
-              No questions reported yet.
-            </Text>
+            <Text style={[styles.emptyText, { color: theme.textMuted }]}>No reported questions.</Text>
           </View>
         }
       />
@@ -552,58 +574,44 @@ export default function AdminPanelScreen({
       <FlatList
         data={feedbacks}
         keyExtractor={item => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => loadAdminLogs(true)} tintColor={theme.primary} />
+        }
         renderItem={({ item }) => (
           <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={styles.cardHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.userName, { color: theme.text }]}>{item.userFullName || 'Student User'}</Text>
-                <Text style={[styles.userEmail, { color: theme.textMuted }]}>{item.userEmail || 'No email'}</Text>
+                <Text style={[styles.userName, { color: theme.text }]}>{item.userFullName || 'Anonymous'}</Text>
+                <Text style={[styles.userEmail, { color: theme.textMuted }]}>{item.userEmail || 'N/A'}</Text>
               </View>
               <TouchableOpacity onPress={() => handleDeleteFeedbackLog(item.id)}>
-                <Trash2 size={18} color="#EF4444" />
+                <Trash2 size={16} color={theme.accentRed} />
               </TouchableOpacity>
             </View>
-            <View style={styles.ratingRow}>
-              <View style={styles.ratingBox}>
-                <Text style={[styles.ratingLabel, { color: theme.textMuted }]}>App Rating:</Text>
-                <View style={styles.starsContainer}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      size={12}
-                      color={star <= (item.platformRating ?? 0) ? '#F59E0B' : '#CBD5E1'}
-                      fill={star <= (item.platformRating ?? 0) ? '#F59E0B' : 'transparent'}
-                    />
-                  ))}
-                  <Text style={[styles.ratingValText, { color: theme.text }]}> {item.platformRating ?? 0}/5</Text>
-                </View>
+
+            <View style={styles.cardStatsRow}>
+              <View style={styles.flexRowAlign}>
+                <Star size={14} color="#F59E0B" fill="#F59E0B" style={{ marginRight: 4 }} />
+                <Text style={[styles.statValue, { color: theme.text }]}>Platform: {item.platformRating}/5</Text>
               </View>
-              <View style={styles.ratingBox}>
-                <Text style={[styles.ratingLabel, { color: theme.textMuted }]}>Exam Rating:</Text>
-                <View style={styles.starsContainer}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      size={12}
-                      color={star <= (item.examRating ?? 0) ? '#EC4899' : '#CBD5E1'}
-                      fill={star <= (item.examRating ?? 0) ? '#EC4899' : 'transparent'}
-                    />
-                  ))}
-                  <Text style={[styles.ratingValText, { color: theme.text }]}> {item.examRating ?? 0}/5</Text>
-                </View>
+              <View style={styles.flexRowAlign}>
+                <Star size={14} color="#FBBF24" fill="#FBBF24" style={{ marginRight: 4 }} />
+                <Text style={[styles.statValue, { color: theme.text }]}>Exam content: {item.examRating}/5</Text>
               </View>
             </View>
-            {item.feedbackText ? (
-              <View style={styles.secondaryBox}>
-                <Text style={[styles.boxText, { color: theme.text }]}>"{item.feedbackText}"</Text>
+
+            {item.feedbackText && (
+              <View style={[styles.secondaryBox, { backgroundColor: theme.inputBg }]}>
+                <Text style={[styles.secondaryBoxText, { color: theme.text }]}>"{item.feedbackText}"</Text>
               </View>
-            ) : null}
+            )}
+
             <View style={styles.cardFooter}>
               <Text style={[styles.candidateText, { color: theme.textMuted }]}>
-                Platform: {item.source || 'web'}
+                Test: {item.testTitle || 'N/A'}
               </Text>
               <Text style={[styles.candidateText, { color: theme.textMuted }]}>
-                Date: {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
+                Platform: {item.source || 'web'}
               </Text>
             </View>
           </View>
@@ -612,9 +620,7 @@ export default function AdminPanelScreen({
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Star color={theme.textMuted} size={48} />
-            <Text style={[styles.emptyText, { color: theme.textMuted, marginTop: 12 }]}>
-              No feedbacks or ratings recorded.
-            </Text>
+            <Text style={[styles.emptyText, { color: theme.textMuted }]}>No feedbacks logged.</Text>
           </View>
         }
       />
@@ -627,58 +633,57 @@ export default function AdminPanelScreen({
       <FlatList
         data={suggestions}
         keyExtractor={item => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => loadAdminLogs(true)} tintColor={theme.primary} />
+        }
         renderItem={({ item }) => {
-          let badgeBg = '#FEF3C7';
-          let badgeColor = '#D97706';
-          if (item.status === 'APPROVED') {
-            badgeBg = '#D1FAE5';
-            badgeColor = '#10B981';
-          } else if (item.status === 'REJECTED') {
-            badgeBg = '#FEE2E2';
-            badgeColor = '#EF4444';
-          }
+          const isPending = item.status === 'PENDING';
           return (
             <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <View style={styles.cardHeader}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.userName, { color: theme.text }]}>
-                    {item.name || 'Anonymous'} ({item.email || 'No email'})
-                  </Text>
-                  <Text style={[styles.userEmail, { color: theme.textMuted }]}>
-                    Category: {item.category || 'General'}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => openSuggestionModal(item)}>
-                  <View style={[styles.badge, { backgroundColor: badgeBg }]}>
-                    <Text style={[styles.badgeText, { color: badgeColor }]}>{item.status}</Text>
+                  <View style={styles.flexRowAlign}>
+                    <Text style={[styles.userName, { color: theme.text }]}>{item.name || 'Visitor'}</Text>
+                    <View style={[styles.badge, { backgroundColor: isPending ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)' }]}>
+                      <Text style={[styles.badgeText, { color: isPending ? theme.accentAmber : theme.accentGreen }]}>
+                        {item.status}
+                      </Text>
+                    </View>
                   </View>
-                </TouchableOpacity>
+                  <Text style={[styles.userEmail, { color: theme.textMuted }]}>{item.email || 'N/A'}</Text>
+                </View>
+                <View style={styles.flexRowAlign}>
+                  <TouchableOpacity onPress={() => openSuggestionModal(item)} style={{ marginRight: 16 }}>
+                    <Edit3 size={16} color={theme.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleDeleteSuggestionLog(item.id)}>
+                    <Trash2 size={16} color={theme.accentRed} />
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              <View style={styles.secondaryBox}>
-                <Text style={[styles.boxLabel, { color: theme.text }]}>Suggestion Message:</Text>
-                <Text style={[styles.boxText, { color: theme.text }]}>"{item.message}"</Text>
-
-                {item.adminReply ? (
-                  <View style={{ marginTop: 6, borderTopWidth: 1, borderTopColor: isDark ? '#334155' : '#F1F5F9', paddingTop: 6 }}>
-                    <Text style={[styles.boxLabel, { color: theme.text }]}>Admin Reply:</Text>
-                    <Text style={[styles.boxText, { color: theme.primary, fontWeight: 'bold' }]}>"{item.adminReply}"</Text>
+              <View style={[styles.secondaryBox, { backgroundColor: theme.inputBg }]}>
+                <Text style={[styles.secondaryBoxText, { color: theme.text, fontWeight: '600' }]}>
+                  Category: {item.category}
+                </Text>
+                <Text style={[styles.secondaryBoxText, { color: theme.text, marginTop: 4 }]}>
+                  "{item.message}"
+                </Text>
+                {item.adminReply && (
+                  <View style={[styles.replyBox, { borderLeftColor: theme.primary }]}>
+                    <Text style={[styles.replyTitle, { color: theme.primary }]}>Admin Reply:</Text>
+                    <Text style={[styles.replyText, { color: theme.text }]}>{item.adminReply}</Text>
                   </View>
-                ) : null}
+                )}
               </View>
 
               <View style={styles.cardFooter}>
                 <Text style={[styles.candidateText, { color: theme.textMuted }]}>
-                  Source: {item.source || 'app'}
+                  Source: {item.source || 'web'}
                 </Text>
-                <View style={styles.flexRowAlign}>
-                  <TouchableOpacity onPress={() => openSuggestionModal(item)} style={{ marginRight: 16 }}>
-                    <Text style={[styles.linkText, { color: theme.primary }]}>Review</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleDeleteSuggestionLog(item.id)}>
-                    <Trash2 size={14} color="#EF4444" />
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.candidateText, { color: theme.textMuted }]}>
+                  Date: {new Date(item.createdAt).toLocaleDateString()}
+                </Text>
               </View>
             </View>
           );
@@ -687,34 +692,39 @@ export default function AdminPanelScreen({
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <FileText color={theme.textMuted} size={48} />
-            <Text style={[styles.emptyText, { color: theme.textMuted, marginTop: 12 }]}>
-              No suggestions in suggestion box yet.
-            </Text>
+            <Text style={[styles.emptyText, { color: theme.textMuted }]}>No suggestions logged.</Text>
           </View>
         }
       />
     );
   };
 
-  // 6. Test Attempts logs view
+  // 6. Attempts list view
   const renderAttemptsView = () => {
     return (
       <FlatList
         data={attempts}
         keyExtractor={item => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => loadAdminLogs(true)} tintColor={theme.primary} />
+        }
         renderItem={({ item }) => {
-          const userName = item.user?.fullName || 'Student Candidate';
+          const userName = item.user?.fullName || 'Student';
           const testTitle = item.mockTest?.title || 'Mock Test';
           return (
             <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <View style={styles.cardHeader}>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.userName, { color: theme.text }]}>{userName}</Text>
-                  <Text style={[styles.userEmail, { color: theme.textMuted }]}>
-                    Test: {testTitle} (CC: {item.user?.candidateCode || 'N/A'})
+                  <Text style={[styles.userEmail, { color: theme.textMuted }]} numberOfLines={1}>
+                    Test: {testTitle}
                   </Text>
                 </View>
-
+                <TouchableOpacity onPress={() => handleResetAttemptLog(item.userId, item.id, userName)}>
+                  <View style={[styles.actionBtn, { borderColor: theme.accentRed }]}>
+                    <Text style={[styles.actionBtnText, { color: theme.accentRed }]}>Reset</Text>
+                  </View>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.attemptDetailsRow}>
@@ -736,7 +746,7 @@ export default function AdminPanelScreen({
                 </View>
                 <View style={styles.attemptDetailBox}>
                   <Text style={[styles.detailLabel, { color: theme.textMuted }]}>Warnings</Text>
-                  <Text style={[styles.detailVal, { color: item.violationsCount > 0 ? '#EF4444' : theme.text }]}>
+                  <Text style={[styles.detailVal, { color: item.violationsCount > 0 ? theme.accentRed : theme.text }]}>
                     {item.violationsCount ?? 0}
                   </Text>
                 </View>
@@ -744,10 +754,10 @@ export default function AdminPanelScreen({
 
               <View style={styles.cardFooter}>
                 <Text style={[styles.candidateText, { color: theme.textMuted }]}>
-                  Platform: {item.source || 'web'} | Status: {item.status}
+                  Platform: {item.source || 'web'} | CC: {item.user?.candidateCode || 'N/A'}
                 </Text>
                 <Text style={[styles.candidateText, { color: theme.textMuted }]}>
-                  Date: {item.startedAt ? `${new Date(item.startedAt).toLocaleDateString()} ${new Date(item.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'N/A'}
+                  Date: {item.startedAt ? new Date(item.startedAt).toLocaleDateString() : 'N/A'}
                 </Text>
               </View>
             </View>
@@ -757,9 +767,7 @@ export default function AdminPanelScreen({
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Calendar color={theme.textMuted} size={48} />
-            <Text style={[styles.emptyText, { color: theme.textMuted, marginTop: 12 }]}>
-              No test attempts logged by candidates.
-            </Text>
+            <Text style={[styles.emptyText, { color: theme.textMuted }]}>No attempts registered.</Text>
           </View>
         }
       />
@@ -777,19 +785,24 @@ export default function AdminPanelScreen({
           <Text style={[styles.headerTitle, { color: theme.headerText }]}>Admin Control Suite</Text>
           <Text style={styles.headerSubtitle}>System administration terminal</Text>
         </View>
-        <TouchableOpacity onPress={() => loadAdminLogs(false)} style={styles.refreshBtn}>
-          <RefreshCw color={theme.headerText} size={18} />
-        </TouchableOpacity>
+        <View style={styles.flexRowAlign}>
+          <TouchableOpacity onPress={onOpenAnalytics} style={[styles.headerIconBtn, { marginRight: 16 }]}>
+            <BarChart2 color={theme.headerText} size={20} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => loadAdminLogs(false)} style={styles.headerIconBtn}>
+            <RefreshCw color={theme.headerText} size={18} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Dynamic scrolling tab bar */}
+      {/* Tab bar */}
       {renderTabHeader()}
 
-      {/* View router */}
+      {/* Loader or Content */}
       {loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={[styles.loadingText, { color: theme.textMuted }]}>Ingesting administration logs...</Text>
+          <Text style={[styles.loadingText, { color: theme.textMuted }]}>Ingesting logs...</Text>
         </View>
       ) : (
         <View style={{ flex: 1 }}>
@@ -810,15 +823,15 @@ export default function AdminPanelScreen({
         onRequestClose={() => setEditUserModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+          <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>Modify User Privileges</Text>
             {selectedUser && (
               <View style={{ width: '100%' }}>
-                <Text style={[styles.modalUserDesc, { color: theme.text }]}>
+                <Text style={[styles.modalUserDesc, { color: theme.textMuted }]}>
                   {selectedUser.name} ({selectedUser.email})
                 </Text>
 
-                {/* Role selection */}
+                {/* Role */}
                 <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Access Role</Text>
                 <View style={styles.pickerRow}>
                   {['STUDENT', 'ADMIN', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].map((r) => (
@@ -827,17 +840,17 @@ export default function AdminPanelScreen({
                       onPress={() => setEditRole(r)}
                       style={[
                         styles.pickerBadge,
-                        editRole === r ? { backgroundColor: theme.primary } : { backgroundColor: theme.inputBg, borderColor: theme.border }
+                        { backgroundColor: editRole === r ? theme.primary : theme.inputBg, borderColor: theme.border }
                       ]}
                     >
-                      <Text style={[styles.pickerBadgeText, editRole === r ? { color: '#FFF' } : { color: theme.text }]}>
+                      <Text style={[styles.pickerBadgeText, { color: editRole === r ? '#FFF' : theme.text }]}>
                         {r.replace('_', ' ')}
                       </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
 
-                {/* Pass Tier Selection */}
+                {/* Subscription pass tier */}
                 <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Subscription Pass Tier</Text>
                 <View style={styles.pickerRow}>
                   {['None', 'Testbook Pass', 'Testbook Pass Pro'].map((t) => (
@@ -846,18 +859,18 @@ export default function AdminPanelScreen({
                       onPress={() => setEditTier(t)}
                       style={[
                         styles.pickerBadge,
-                        editTier === t ? { backgroundColor: theme.primary } : { backgroundColor: theme.inputBg, borderColor: theme.border }
+                        { backgroundColor: editTier === t ? theme.primary : theme.inputBg, borderColor: theme.border }
                       ]}
                     >
-                      <Text style={[styles.pickerBadgeText, editTier === t ? { color: '#FFF' } : { color: theme.text }]}>
+                      <Text style={[styles.pickerBadgeText, { color: editTier === t ? '#FFF' : theme.text }]}>
                         {t}
                       </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
 
-                {/* Coins Text Input */}
-                <Text style={[styles.inputLabel, { color: theme.textMuted }]}>User Coins Balance</Text>
+                {/* Coins */}
+                <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Coins Balance</Text>
                 <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
                   <TextInput
                     style={[styles.modalInput, { color: theme.text }]}
@@ -867,14 +880,14 @@ export default function AdminPanelScreen({
                   />
                 </View>
 
-                {/* Block Switch */}
+                {/* Block switch */}
                 <View style={styles.switchRow}>
                   <Text style={[styles.switchLabel, { color: theme.text }]}>Block Account Access</Text>
                   <Switch
                     value={editBlocked}
                     onValueChange={setEditBlocked}
-                    trackColor={{ false: '#767577', true: '#EF4444' }}
-                    thumbColor={editBlocked ? '#F43F5E' : '#f4f3f4'}
+                    trackColor={{ false: '#767577', true: theme.accentRed }}
+                    thumbColor={editBlocked ? theme.accentRed : '#f4f3f4'}
                   />
                 </View>
 
@@ -894,7 +907,7 @@ export default function AdminPanelScreen({
                     {updatingUser ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
-                      <Text style={[styles.modalBtnText, { color: '#FFF' }]}>Ingest Changes</Text>
+                      <Text style={[styles.modalBtnText, { color: '#FFF' }]}>Apply Changes</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -912,8 +925,8 @@ export default function AdminPanelScreen({
         onRequestClose={() => setSuggestionModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>Review Suggestion Box Log</Text>
+          <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Review Suggestion Log</Text>
             {selectedSuggestion && (
               <View style={{ width: '100%' }}>
                 <Text style={[styles.modalUserDesc, { color: theme.textMuted }]}>
@@ -929,10 +942,10 @@ export default function AdminPanelScreen({
                       onPress={() => setSuggStatus(st)}
                       style={[
                         styles.pickerBadge,
-                        suggStatus === st ? { backgroundColor: theme.primary } : { backgroundColor: theme.inputBg, borderColor: theme.border }
+                        { backgroundColor: suggStatus === st ? theme.primary : theme.inputBg, borderColor: theme.border }
                       ]}
                     >
-                      <Text style={[styles.pickerBadgeText, suggStatus === st ? { color: '#FFF' } : { color: theme.text }]}>
+                      <Text style={[styles.pickerBadgeText, { color: suggStatus === st ? '#FFF' : theme.text }]}>
                         {st}
                       </Text>
                     </TouchableOpacity>
@@ -940,25 +953,20 @@ export default function AdminPanelScreen({
                 </View>
 
                 {/* Reply Input */}
-                <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Admin Response Reply</Text>
+                <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Admin Reply Response</Text>
                 <TextInput
                   style={[
-                    styles.modalInput,
+                    styles.modalInputTextarea,
                     {
                       backgroundColor: theme.inputBg,
                       borderColor: theme.inputBorder,
-                      borderWidth: 1,
-                      borderRadius: 8,
-                      padding: 12,
-                      minHeight: 80,
-                      color: theme.text,
-                      textAlignVertical: 'top',
-                      marginBottom: 16
+                      color: theme.text
                     }
                   ]}
                   multiline
-                  placeholder="Type administrative response reply here..."
-                  placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
+                  numberOfLines={4}
+                  placeholder="Enter response reply..."
+                  placeholderTextColor={theme.textMuted}
                   value={suggReply}
                   onChangeText={setSuggReply}
                 />
@@ -979,7 +987,7 @@ export default function AdminPanelScreen({
                     {updatingSugg ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
-                      <Text style={[styles.modalBtnText, { color: '#FFF' }]}>Update Status</Text>
+                      <Text style={[styles.modalBtnText, { color: '#FFF' }]}>Save Reply</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -999,38 +1007,37 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     borderBottomWidth: 1,
   },
   backBtn: {
-    marginRight: 16,
-  },
-  refreshBtn: {
-    marginLeft: 'auto',
-    padding: 6,
+    padding: 4,
   },
   headerTitleContainer: {
-    justifyContent: 'center',
+    flex: 1,
+    marginLeft: 12,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   headerSubtitle: {
     fontSize: 11,
     color: '#94A3B8',
-    marginTop: 1,
+  },
+  headerIconBtn: {
+    padding: 6,
   },
   tabBar: {
     borderBottomWidth: 1,
   },
   tabScroll: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
   },
   tabItem: {
     paddingHorizontal: 16,
     paddingVertical: 14,
-    alignItems: 'center',
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
@@ -1038,18 +1045,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
   },
   tabText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  loadingText: {
-    fontSize: 13,
-    marginTop: 12,
+    fontSize: 14,
+    fontWeight: '600',
   },
   tabViewContainer: {
     flex: 1,
@@ -1061,207 +1058,186 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
+    height: 44,
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    height: 40,
+    borderRadius: 10,
+    paddingHorizontal: 12,
     marginBottom: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
-    paddingVertical: 0,
+    fontSize: 14,
+    height: '100%',
   },
   filterScroll: {
     paddingVertical: 4,
-    gap: 8,
   },
   filterBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 1,
-    marginRight: 6,
+    marginRight: 8,
   },
   filterBadgeText: {
-    fontSize: 11,
-    fontWeight: 'bold',
+    fontSize: 12,
+    fontWeight: '600',
   },
   listPadding: {
-    padding: 12,
+    padding: 16,
     paddingBottom: 32,
   },
   userCard: {
+    borderRadius: 14,
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
-  },
-  userName: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginRight: 8,
-  },
-  userEmail: {
-    fontSize: 11,
-    marginTop: 1,
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   flexRowAlign: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  userName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
+  },
+  userEmail: {
+    fontSize: 13,
+    marginTop: 2,
+  },
   badge: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 6,
   },
   badgeText: {
-    fontSize: 9,
-    fontWeight: 'bold',
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   actionBtn: {
     borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   actionBtnText: {
-    fontSize: 11,
-    fontWeight: 'bold',
+    fontSize: 12,
+    fontWeight: '700',
   },
   cardStatsRow: {
     flexDirection: 'row',
-    marginTop: 12,
-    gap: 16,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(148, 163, 184, 0.15)',
+    marginVertical: 4,
   },
   statValue: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   cardFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(148, 163, 184, 0.1)',
-    paddingTop: 8,
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 10,
   },
   candidateText: {
-    fontSize: 10,
-  },
-  linkText: {
     fontSize: 11,
-    fontWeight: 'bold',
-    marginRight: 2,
   },
   unseenBadge: {
-    backgroundColor: '#EF4444',
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     alignItems: 'center',
-    paddingHorizontal: 4,
+    justifyContent: 'center',
   },
   unseenBadgeText: {
     color: '#FFF',
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 'bold',
   },
   secondaryBox: {
-    backgroundColor: 'rgba(148, 163, 184, 0.05)',
-    padding: 8,
-    borderRadius: 6,
-    marginTop: 8,
+    borderRadius: 8,
+    padding: 10,
+    marginVertical: 8,
   },
   secondaryBoxText: {
-    fontSize: 11,
-    flex: 1,
-    marginRight: 8,
+    fontSize: 13,
+    lineHeight: 18,
   },
-  secondaryBoxTime: {
-    fontSize: 9,
+  replyBox: {
+    marginTop: 8,
+    borderLeftWidth: 3,
+    paddingLeft: 8,
+  },
+  replyTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  replyText: {
+    fontSize: 12,
     marginTop: 2,
-    alignSelf: 'flex-end',
+  },
+  linkText: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginRight: 2,
+  },
+  attemptDetailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  attemptDetailBox: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  detailVal: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginTop: 2,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 80,
-    paddingHorizontal: 32,
+    paddingVertical: 64,
   },
   emptyText: {
-    textAlign: 'center',
-    fontSize: 12,
+    fontSize: 14,
+    fontWeight: '500',
+    marginTop: 12,
   },
-  badgeBtnDanger: {
-    backgroundColor: '#EF4444',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  badgeBtnDangerText: {
-    color: '#FFF',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  boxLabel: {
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  boxText: {
-    fontSize: 11,
-    lineHeight: 16,
-    marginTop: 2,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    marginTop: 8,
-    gap: 16,
-  },
-  ratingBox: {
+  centerContainer: {
     flex: 1,
-  },
-  ratingLabel: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  starsContainer: {
-    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    padding: 24,
   },
-  ratingValText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    marginLeft: 2,
-  },
-  attemptDetailsRow: {
-    flexDirection: 'row',
-    marginTop: 10,
-    backgroundColor: 'rgba(148, 163, 184, 0.05)',
-    padding: 10,
-    borderRadius: 8,
-    gap: 8,
-  },
-  attemptDetailBox: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  detailLabel: {
-    fontSize: 9,
-    fontWeight: 'bold',
-  },
-  detailVal: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    marginTop: 2,
+  loadingText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 16,
   },
   modalOverlay: {
     flex: 1,
@@ -1269,84 +1245,95 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderWidth: 1,
+    padding: 24,
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
-    alignItems: 'center',
   },
   modalTitle: {
-    fontSize: 15,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   modalUserDesc: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 16,
-    textAlign: 'center',
+    fontSize: 13,
+    marginBottom: 20,
   },
   inputLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    marginTop: 12,
-    marginBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
   },
   pickerRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 6,
+    marginBottom: 20,
   },
   pickerBadge: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
+    marginRight: 8,
+    marginBottom: 8,
   },
   pickerBadgeText: {
-    fontSize: 11,
-    fontWeight: 'bold',
+    fontSize: 13,
+    fontWeight: '600',
   },
   modalInputBox: {
+    height: 48,
     borderWidth: 1,
-    borderRadius: 8,
-    height: 44,
+    borderRadius: 10,
+    paddingHorizontal: 14,
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    marginBottom: 20,
   },
   modalInput: {
-    fontSize: 13,
-    fontWeight: 'bold',
+    fontSize: 15,
+    height: '100%',
+  },
+  modalInputTextarea: {
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 14,
+    height: 100,
+    textAlignVertical: 'top',
+    marginBottom: 20,
   },
   switchRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    marginBottom: 24,
   },
   switchLabel: {
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '600',
   },
   modalActionRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
+    justifyContent: 'space-between',
   },
   modalBtn: {
     flex: 1,
-    height: 44,
-    borderRadius: 8,
-    justifyContent: 'center',
+    height: 48,
+    borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
   modalBtnCancel: {
     borderWidth: 1,
+    marginLeft: 0,
+    marginRight: 8,
   },
   modalBtnText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 'bold',
   },
 });

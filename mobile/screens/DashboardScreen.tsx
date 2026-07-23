@@ -75,7 +75,6 @@ interface DashboardScreenProps {
   isDark?: boolean;
   onToggleTheme?: (dark: boolean) => void;
   onOpenSupportChat: () => void;
-  onOpenAdminPanel?: () => void;
   activeTab: 'home' | 'tests' | 'notices' | 'bookmarks' | 'profile';
   setActiveTab: (tab: 'home' | 'tests' | 'notices' | 'bookmarks' | 'profile') => void;
   selectedCategoryId: string | null;
@@ -399,7 +398,6 @@ export default function DashboardScreen({
   isDark = false,
   onToggleTheme,
   onOpenSupportChat,
-  onOpenAdminPanel,
   activeTab,
   setActiveTab,
   selectedCategoryId,
@@ -2772,22 +2770,7 @@ export default function DashboardScreen({
           )}
         </View>
 
-        {currentUser?.role === 'ADMIN' && (
-          <TouchableOpacity 
-            style={[
-              styles.logoutBtn, 
-              isDark 
-                ? { backgroundColor: '#16223F', borderColor: ThemeColors.dark.primary, marginTop: 12 } 
-                : { backgroundColor: '#EFF6FF', borderColor: ThemeColors.light.primary, marginTop: 12 }
-            ]} 
-            onPress={onOpenAdminPanel}
-          >
-            <Shield size={16} color={isDark ? ThemeColors.dark.primary : ThemeColors.light.primary} />
-            <Text style={[styles.logoutText, { color: isDark ? ThemeColors.dark.primary : ThemeColors.light.primary }]}>
-              {language === 'en' ? 'Open Admin Control Panel' : 'एडमिन कंट्रोल पैनल खोलें'}
-            </Text>
-          </TouchableOpacity>
-        )}
+
 
         <TouchableOpacity style={[styles.logoutBtn, isDark && { backgroundColor: '#3F1F1F', borderColor: '#EF4444' }]} onPress={onLogout}>
           <LogOut size={16} color="#EF4444" />

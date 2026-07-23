@@ -117,6 +117,85 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
+    // =========================================================================
+    // SECURITY HARDENING: Role & Session Validations
+    // =========================================================================
+    const adminActions = [
+      'admin-data', 'get-attempts', 'get-suggestions', 
+      'update-suggestion-status', 'delete-suggestion', 
+      'delete-reported-question', 'get-support-users', 
+      'delete-support-conversation', 'edit-support-message',
+      'add-notice', 'delete-notice', 
+      'add-category', 'edit-category', 'delete-category',
+      'add-subcategory', 'edit-subcategory', 'delete-subcategory',
+      'add-subsubcategory', 'edit-subsubcategory', 'delete-subsubcategory',
+      'add-mocktest', 'edit-mocktest-title', 'delete-mocktest',
+      'save-custom-questions', 'save-profile-admin', 'db-stats'
+    ];
+
+    const userOwnedActions = [
+      'update-profile', 'update-password', 'toggle-bookmark', 
+      'add-attempt', 'save-ongoing-session', 'clear-ongoing-session',
+      'get-support-messages', 'send-support-message', 'get-user-details'
+    ];
+
+    // Helper: Parse cookie manually
+    const getCookieValue = (cookieStr: string, name: string): string | null => {
+      const match = cookieStr.match(new RegExp(`(^|;)\\s*${name}\\s*=\\s*([^;]+)`));
+      return match ? match[2] : null;
+    };
+
+    const cookieHeader = request.headers.get('cookie') || '';
+    const webUserId = getCookieValue(cookieHeader, 'tb_user_id');
+
+    let isRequesterAdmin = false;
+    let requesterUserId: string | null = null;
+
+    // 1. Resolve requester identity and check if admin
+    if (webUserId) {
+      requesterUserId = webUserId;
+      const webUser = await prisma.user.findUnique({
+        where: { id: webUserId },
+        select: { role: true }
+      });
+      if (webUser && webUser.role !== 'STUDENT') {
+        isRequesterAdmin = true;
+      }
+    } else {
+      const reqSessionId = data?.sessionId || body?.sessionId;
+      if (reqSessionId) {
+        const sessionUser = await prisma.user.findFirst({
+          where: { currentSessionId: reqSessionId },
+          select: { id: true, role: true }
+        });
+        if (sessionUser) {
+          requesterUserId = sessionUser.id;
+          if (sessionUser.role !== 'STUDENT') {
+            isRequesterAdmin = true;
+          }
+        }
+      }
+    }
+
+    // 2. Validate Admin Actions
+    if (adminActions.includes(action)) {
+      if (!isRequesterAdmin) {
+        console.warn(`Blocked unauthorized admin action: ${action} by user: ${requesterUserId}`);
+        return NextResponse.json({ success: false, error: 'Forbidden: Admin role required' }, { status: 403 });
+      }
+    }
+
+    // 3. Validate User-Owned Actions
+    if (userOwnedActions.includes(action)) {
+      const targetUserId = data?.userId || body?.userId;
+      if (targetUserId) {
+        const isSelf = requesterUserId === targetUserId;
+        if (!isSelf && !isRequesterAdmin) {
+          console.warn(`Blocked unauthorized action: ${action} targeting: ${targetUserId} by user: ${requesterUserId}`);
+          return NextResponse.json({ success: false, error: 'Forbidden: Unauthorized action' }, { status: 403 });
+        }
+      }
+    }
 
     if (action) {
       const writeActions = [
