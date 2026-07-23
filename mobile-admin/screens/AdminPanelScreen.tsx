@@ -81,6 +81,8 @@ export default function AdminPanelScreen({
   const [editCoins, setEditCoins] = useState('0');
   const [editBlocked, setEditBlocked] = useState(false);
   const [editRole, setEditRole] = useState('STUDENT');
+  const [editPurchasedAt, setEditPurchasedAt] = useState('');
+  const [editExpiresAt, setEditExpiresAt] = useState('');
   const [updatingUser, setUpdatingUser] = useState(false);
 
   // Modal actions (Suggestion)
@@ -140,6 +142,16 @@ export default function AdminPanelScreen({
     loadAdminLogs();
   }, []);
 
+  const formatDateString = (dateVal: any) => {
+    if (!dateVal) return '';
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Modify User profile
   const openEditUserModal = (user: any) => {
     setSelectedUser(user);
@@ -147,6 +159,8 @@ export default function AdminPanelScreen({
     setEditCoins(String(user.coins ?? 0));
     setEditBlocked(user.isBlocked ?? false);
     setEditRole(user.role || 'STUDENT');
+    setEditPurchasedAt(formatDateString(user.subscriptionPurchasedAt));
+    setEditExpiresAt(formatDateString(user.subscriptionExpiresAt));
     setEditUserModalVisible(true);
   };
 
@@ -155,6 +169,27 @@ export default function AdminPanelScreen({
     setUpdatingUser(true);
     try {
       const parsedCoins = parseInt(editCoins) || 0;
+
+      const parseDateParam = (val: string) => {
+        if (!val.trim()) return null;
+        const d = new Date(val.trim());
+        if (isNaN(d.getTime())) {
+          throw new Error(`Invalid date format entered: "${val}". Please use YYYY-MM-DD format.`);
+        }
+        return d.toISOString();
+      };
+
+      let parsedPurchasedAt = null;
+      let parsedExpiresAt = null;
+      try {
+        parsedPurchasedAt = parseDateParam(editPurchasedAt);
+        parsedExpiresAt = parseDateParam(editExpiresAt);
+      } catch (err: any) {
+        Alert.alert('Invalid Date', err.message);
+        setUpdatingUser(false);
+        return;
+      }
+
       const params = {
         userId: selectedUser.id,
         name: selectedUser.name,
@@ -165,8 +200,8 @@ export default function AdminPanelScreen({
         referralsCount: selectedUser.referralsCount || 0,
         role: editRole,
         tier: editTier,
-        purchasedAt: selectedUser.subscriptionPurchasedAt || null,
-        expiry: selectedUser.subscriptionExpiresAt || null,
+        purchasedAt: parsedPurchasedAt,
+        expiry: parsedExpiresAt,
         password: selectedUser.password || 'password123',
         isBlocked: editBlocked,
         coins: parsedCoins
@@ -178,7 +213,15 @@ export default function AdminPanelScreen({
         setUsers(prev =>
           prev.map(u =>
             u.id === selectedUser.id
-              ? { ...u, role: editRole, subscriptionTier: editTier, coins: parsedCoins, isBlocked: editBlocked }
+              ? {
+                  ...u,
+                  role: editRole,
+                  subscriptionTier: editTier,
+                  coins: parsedCoins,
+                  isBlocked: editBlocked,
+                  subscriptionPurchasedAt: parsedPurchasedAt,
+                  subscriptionExpiresAt: parsedExpiresAt
+                }
               : u
           )
         );
@@ -872,6 +915,30 @@ export default function AdminPanelScreen({
                     keyboardType="number-pad"
                     value={editCoins}
                     onChangeText={setEditCoins}
+                  />
+                </View>
+
+                {/* Pass Purchased Date */}
+                <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Pass Purchased Date (YYYY-MM-DD)</Text>
+                <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                  <TextInput
+                    style={[styles.modalInput, { color: theme.text }]}
+                    placeholder="YYYY-MM-DD (e.g. 2026-07-23)"
+                    placeholderTextColor={theme.textMuted}
+                    value={editPurchasedAt}
+                    onChangeText={setEditPurchasedAt}
+                  />
+                </View>
+
+                {/* Pass Expiry Date */}
+                <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Pass Expiry Date (YYYY-MM-DD)</Text>
+                <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
+                  <TextInput
+                    style={[styles.modalInput, { color: theme.text }]}
+                    placeholder="YYYY-MM-DD (e.g. 2027-07-23)"
+                    placeholderTextColor={theme.textMuted}
+                    value={editExpiresAt}
+                    onChangeText={setEditExpiresAt}
                   />
                 </View>
 
