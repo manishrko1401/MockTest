@@ -96,6 +96,16 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const adminPassword = prompt("Please enter your administrator password to authorize these dossier changes:");
+    if (adminPassword === null) {
+      return;
+    }
+    if (!adminPassword.trim()) {
+      alert("Dossier update canceled: Admin password verification is required.");
+      return;
+    }
+
     setSaving(true);
     setSaveStatus(null);
 
@@ -122,7 +132,8 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
             expiry,
             password: editPassword,
             isBlocked: editIsBlocked,
-            coins: Number(editCoins)
+            coins: Number(editCoins),
+            adminConfirmPassword: adminPassword.trim()
           }
         })
       });

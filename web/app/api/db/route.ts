@@ -238,7 +238,7 @@ export async function POST(request: Request) {
       case 'update-password':
         return await handleUpdatePassword(data);
       case 'save-profile-admin':
-        return await handleSaveProfileAdmin(data);
+        return await handleSaveProfileAdmin(data, requesterUserId, !!webUserId);
       case 'toggle-bookmark':
         return await handleToggleBookmark(data);
       case 'add-attempt':
@@ -950,7 +950,7 @@ async function handleUpdatePassword(data: any) {
   return NextResponse.json({ success: true });
 }
 
-async function handleSaveProfileAdmin(data: any) {
+async function handleSaveProfileAdmin(data: any, requesterUserId: string | null, isWebRequest = false) {
   console.log("handleSaveProfileAdmin received data:", data);
   const {
     userId,
@@ -966,8 +966,23 @@ async function handleSaveProfileAdmin(data: any) {
     expiry,
     password,
     isBlocked,
-    coins
+    coins,
+    adminConfirmPassword
   } = data;
+
+  // Enforce password confirmation for web requests
+  if (isWebRequest) {
+    if (!requesterUserId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Session missing' }, { status: 401 });
+    }
+    const adminUser = await prisma.user.findUnique({
+      where: { id: requesterUserId },
+      select: { passwordHash: true }
+    });
+    if (!adminUser || adminUser.passwordHash !== adminConfirmPassword) {
+      return NextResponse.json({ success: false, error: 'Authentication failed: Invalid administrator verification password.' }, { status: 401 });
+    }
+  }
 
   await prisma.user.update({
     where: { id: userId },
