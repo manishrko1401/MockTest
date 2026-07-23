@@ -48,6 +48,11 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
   // Reset confirmation state
   const [resetTargetSessionId, setResetTargetSessionId] = useState<string | null>(null);
 
+  // Custom password authorization modal states
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
   const fetchUserDetails = async () => {
     try {
       setLoading(true);
@@ -94,19 +99,21 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     }
   }, [userId]);
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
+  const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsPasswordModalOpen(true);
+    setAdminPasswordInput('');
+    setPasswordError(null);
+  };
 
-    const adminPassword = prompt("Please enter your administrator password to authorize these dossier changes:");
-    if (adminPassword === null) {
-      return;
-    }
-    if (!adminPassword.trim()) {
-      alert("Dossier update canceled: Admin password verification is required.");
+  const submitSaveProfile = async () => {
+    if (!adminPasswordInput.trim()) {
+      setPasswordError("Password is required to verify changes.");
       return;
     }
 
     setSaving(true);
+    setPasswordError(null);
     setSaveStatus(null);
 
     const expiry = editTier === 'None' ? null : (editExpiry || new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0]);
@@ -133,19 +140,20 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
             password: editPassword,
             isBlocked: editIsBlocked,
             coins: Number(editCoins),
-            adminConfirmPassword: adminPassword.trim()
+            adminConfirmPassword: adminPasswordInput.trim()
           }
         })
       });
       const data = await res.json();
       if (data.success) {
         setSaveStatus({ type: 'success', message: 'User profile updated successfully!' });
+        setIsPasswordModalOpen(false);
         fetchUserDetails();
       } else {
-        setSaveStatus({ type: 'error', message: data.error || 'Failed to save profile' });
+        setPasswordError(data.error || 'Failed to save profile. Check admin password.');
       }
     } catch (err: any) {
-      setSaveStatus({ type: 'error', message: err.message || 'An error occurred while saving profile' });
+      setPasswordError(err.message || 'An error occurred while saving profile');
     } finally {
       setSaving(false);
     }
@@ -643,6 +651,82 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
           )}
         </div>
       </div>
+
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Key className="h-5 w-5 text-amber-300" />
+                <h3 className="font-extrabold text-sm uppercase tracking-wider">Confirm Administration Authorization</h3>
+              </div>
+              <button 
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="text-white hover:text-slate-200 transition cursor-pointer text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                You are about to modify the profile dossier for <span className="font-bold text-slate-900 dark:text-white">{editName}</span>. Please verify your administrator credentials to proceed.
+              </p>
+
+              <div>
+                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Administrator Password</label>
+                <input 
+                  type="password"
+                  required
+                  placeholder="Enter admin password"
+                  value={adminPasswordInput}
+                  onChange={(e) => setAdminPasswordInput(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 font-mono"
+                  autoFocus
+                />
+              </div>
+
+              {passwordError && (
+                <div className="p-3 bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-808/40 text-red-650 dark:text-red-400 rounded-lg text-xs font-bold flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4 shrink-0" />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 border-t border-slate-100 dark:border-slate-808 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-808 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitSaveProfile}
+                disabled={saving}
+                className="px-5 py-2 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {saving ? (
+                  <>
+                    <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Authorize & Save</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
