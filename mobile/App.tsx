@@ -12,7 +12,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Updates from 'expo-updates';
-import { ApiClient } from './api';
+import { ApiClient, onSessionInvalidated } from './api';
 import NetInfo from '@react-native-community/netinfo';
 import { getCachedCatalog, saveCatalogToCache, clearAllCache, getLastSyncTimestamp, setLastSyncTimestamp, mergeCatalogDelta, invalidateQuestionsCache, getCachedUser, saveUserToCache, getCachedQuestions, saveQuestionsToCache } from './cache';
 import AuthScreen from './screens/AuthScreen';
@@ -300,6 +300,17 @@ export default function App() {
     };
 
     initializeApp();
+  }, []);
+
+  // Listen for session invalidation events from the API client
+  useEffect(() => {
+    onSessionInvalidated(() => {
+      Alert.alert(
+        'Session Expired',
+        'Your session has expired or you signed in on another device. Please sign in again.',
+        [{ text: 'OK', onPress: () => handleLogout() }]
+      );
+    });
   }, []);
 
   // Listen for network reconnection and flush any queued offline submissions

@@ -139,8 +139,16 @@ export default function AuthScreen({ onLoginSuccess, onContinueAsGuest, isDark =
       setError('Please enter your email address');
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginEmail.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
     if (!loginPass) {
       setError('Please enter your password');
+      return;
+    }
+    if (loginPass.length < 4) {
+      setError('Password must be at least 4 characters long.');
       return;
     }
     setLoading(true);
@@ -182,6 +190,14 @@ export default function AuthScreen({ onLoginSuccess, onContinueAsGuest, isDark =
       setError('Please enter a valid 10-digit mobile number.');
       return;
     }
+    if (!password) {
+      setError('Please enter a password.');
+      return;
+    }
+    if (password.length < 4) {
+      setError('Password must be at least 4 characters long.');
+      return;
+    }
     setLoading(true);
     setError('');
     setSuccess('');
@@ -202,6 +218,7 @@ export default function AuthScreen({ onLoginSuccess, onContinueAsGuest, isDark =
   };
 
   const handleSubmit = () => {
+    if (loading) return;
     if (activeTab === 'login') {
       handleLogin(email, password);
     } else {

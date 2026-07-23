@@ -10,6 +10,12 @@ if (process.env.NODE_ENV !== 'production') {
   (global as any).otpCache = otpCache;
 }
 
+// Persistent Login Attempts tracker to lock brute-force attempts
+const loginAttempts = (global as any).loginAttempts || new Map<string, { count: number; lockedUntil: number }>();
+if (process.env.NODE_ENV !== 'production') {
+  (global as any).loginAttempts = loginAttempts;
+}
+
 // Persistent Exam Catalog and Notices Cache to survive Next.js dev server hot-reloads
 const catalogCache = (global as any).catalogCache || {
   examCatalog: null,
@@ -721,6 +727,16 @@ async function handleLogin(data: any) {
   const { email, password } = data;
   const trimmedEmail = email.trim().toLowerCase();
 
+  const now = Date.now();
+  const attempt = loginAttempts.get(trimmedEmail);
+  if (attempt && attempt.lockedUntil > now) {
+    const minsLeft = Math.ceil((attempt.lockedUntil - now) / 60000);
+    return NextResponse.json({
+      success: false,
+      error: `Too many failed login attempts. Account locked. Please try again in ${minsLeft} minutes.`
+    }, { status: 429 });
+  }
+
   // Fetch user WITH sessions for single-user login (fast, and required for profile history / analysis)
   const user = await prisma.user.findUnique({
     where: { email: trimmedEmail },
@@ -752,8 +768,27 @@ async function handleLogin(data: any) {
   }
 
   if (!password || user.passwordHash !== password) {
-    return NextResponse.json({ success: false, error: 'Invalid password. Please check your credentials.' }, { status: 401 });
+    const currentAttempt = attempt || { count: 0, lockedUntil: 0 };
+    currentAttempt.count += 1;
+    if (currentAttempt.count >= 5) {
+      currentAttempt.lockedUntil = now + 15 * 60 * 1000; // 15-minute lock
+      loginAttempts.set(trimmedEmail, currentAttempt);
+      return NextResponse.json({
+        success: false,
+        error: 'Too many failed login attempts. This account has been locked for 15 minutes.'
+      }, { status: 429 });
+    } else {
+      loginAttempts.set(trimmedEmail, currentAttempt);
+      const remaining = 5 - currentAttempt.count;
+      return NextResponse.json({
+        success: false,
+        error: `Invalid password. ${remaining} attempts remaining before account lock.`
+      }, { status: 401 });
+    }
   }
+
+  // Clear attempts tracker on success
+  loginAttempts.delete(trimmedEmail);
 
   // If the client already has a valid session ID for this user (e.g., app restart / background re-auth),
   // reuse the existing session to avoid invalidating it unnecessarily.
