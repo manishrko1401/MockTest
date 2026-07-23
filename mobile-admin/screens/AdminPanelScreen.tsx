@@ -720,11 +720,6 @@ export default function AdminPanelScreen({
                     Test: {testTitle}
                   </Text>
                 </View>
-                <TouchableOpacity onPress={() => handleResetAttemptLog(item.userId, item.id, userName)}>
-                  <View style={[styles.actionBtn, { borderColor: theme.accentRed }]}>
-                    <Text style={[styles.actionBtnText, { color: theme.accentRed }]}>Reset</Text>
-                  </View>
-                </TouchableOpacity>
               </View>
 
               <View style={styles.attemptDetailsRow}>
@@ -757,7 +752,7 @@ export default function AdminPanelScreen({
                   Platform: {item.source || 'web'} | CC: {item.user?.candidateCode || 'N/A'}
                 </Text>
                 <Text style={[styles.candidateText, { color: theme.textMuted }]}>
-                  Date: {item.startedAt ? new Date(item.startedAt).toLocaleDateString() : 'N/A'}
+                  Date: {item.startedAt ? `${new Date(item.startedAt).toLocaleDateString()} ${new Date(item.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'N/A'}
                 </Text>
               </View>
             </View>
