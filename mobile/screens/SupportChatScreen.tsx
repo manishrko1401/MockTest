@@ -20,12 +20,16 @@ interface SupportChatScreenProps {
   currentUser: any;
   onBack: () => void;
   isDark?: boolean;
+  isAdminMode?: boolean;
+  studentUser?: any;
 }
 
 export default function SupportChatScreen({
   currentUser,
   onBack,
-  isDark = false
+  isDark = false,
+  isAdminMode = false,
+  studentUser
 }: SupportChatScreenProps) {
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<any[]>([]);
@@ -34,9 +38,12 @@ export default function SupportChatScreen({
   const [sending, setSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
+  const targetUserId = isAdminMode && studentUser ? studentUser.id : currentUser.id;
+  const readerRole = isAdminMode ? 'ADMIN' : 'STUDENT';
+
   const loadMessages = async (showLoading = false) => {
     if (showLoading) setLoading(true);
-    const res = await ApiClient.getSupportMessages(currentUser.id, true);
+    const res = await ApiClient.getSupportMessages(targetUserId, true, readerRole);
     if (res.success) {
       setMessages(res.messages || []);
       
@@ -44,7 +51,7 @@ export default function SupportChatScreen({
       try {
         const messageIds = (res.messages || []).map((m: any) => m.id);
         if (messageIds.length > 0) {
-          const storageKey = `seen_messages_${currentUser.id}`;
+          const storageKey = `seen_messages_${targetUserId}`;
           const stored = await AsyncStorage.getItem(storageKey);
           let seenIds: string[] = stored ? JSON.parse(stored) : [];
           
@@ -83,7 +90,8 @@ export default function SupportChatScreen({
     setInputText('');
     setSending(true);
 
-    const res = await ApiClient.sendSupportMessage(currentUser.id, 'STUDENT', text);
+    const senderRole = isAdminMode ? 'ADMIN' : 'STUDENT';
+    const res = await ApiClient.sendSupportMessage(targetUserId, senderRole, text);
     if (res.success) {
       // Append the message locally
       setMessages(prev => [...prev, res.message]);
@@ -98,7 +106,7 @@ export default function SupportChatScreen({
   };
 
   const renderItem = ({ item }: { item: any }) => {
-    const isMe = item.sender === 'STUDENT';
+    const isMe = item.sender === (isAdminMode ? 'ADMIN' : 'STUDENT');
     return (
       <View style={[
         styles.messageContainer,
@@ -139,8 +147,12 @@ export default function SupportChatScreen({
           <ArrowLeft color={isDark ? '#60A5FA' : '#2563EB'} size={24} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={[styles.headerTitle, isDark && { color: ThemeColors.dark.text }]}>Support Team</Text>
-          <Text style={styles.headerSubtitle}>Real-time assistance</Text>
+          <Text style={[styles.headerTitle, isDark && { color: ThemeColors.dark.text }]}>
+            {isAdminMode && studentUser ? `Chat with ${studentUser.name}` : 'Support Team'}
+          </Text>
+          <Text style={styles.headerSubtitle}>
+            {isAdminMode && studentUser ? `Candidate: ${studentUser.candidateCode || 'N/A'}` : 'Real-time assistance'}
+          </Text>
         </View>
       </View>
 

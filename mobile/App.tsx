@@ -21,18 +21,21 @@ import TestSeriesDetailScreen from './screens/TestSeriesDetailScreen';
 import MobileTestScreen from './MobileTestScreen';
 import AnalysisScreen from './screens/AnalysisScreen';
 import SupportChatScreen from './screens/SupportChatScreen';
+import AdminPanelScreen from './screens/AdminPanelScreen';
 import { Trophy } from 'lucide-react-native';
 import { ThemeColors } from './theme';
 import { requestNotificationPermissions, triggerLocalNotification, addNotificationResponseListener } from './notifications';
 import { registerBackgroundFetchAsync } from './backgroundTask';
 
-type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis' | 'support_chat';
+type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis' | 'support_chat' | 'admin_panel';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('auth');
   const [previousViewMode, setPreviousViewMode] = useState<ViewMode>('dashboard');
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [selectedSupportUser, setSelectedSupportUser] = useState<any>(null);
+  const [supportChatIsAdminMode, setSupportChatIsAdminMode] = useState<boolean>(false);
   
   // Theme state
   const [isDark, setIsDark] = useState(false);
@@ -339,13 +342,17 @@ export default function App() {
         return true;
       }
 
-      if (viewMode === 'analysis') {
-        setViewMode(previousViewMode);
+      if (viewMode === 'admin_panel') {
+        setViewMode('dashboard');
         return true;
       }
 
       if (viewMode === 'support_chat') {
-        setViewMode('dashboard');
+        setViewMode(supportChatIsAdminMode ? 'admin_panel' : 'dashboard');
+        if (supportChatIsAdminMode) {
+          setSupportChatIsAdminMode(false);
+          setSelectedSupportUser(null);
+        }
         return true;
       }
 
@@ -747,6 +754,7 @@ export default function App() {
               await AsyncStorage.setItem('app_language', lang);
             }}
             unreadSupportCount={unreadSupportCount}
+            onOpenAdminPanel={() => setViewMode('admin_panel')}
           />
         )}
 
@@ -828,8 +836,29 @@ export default function App() {
         {viewMode === 'support_chat' && currentUser && (
           <SupportChatScreen
             currentUser={currentUser}
+            onBack={() => {
+              setViewMode(supportChatIsAdminMode ? 'admin_panel' : 'dashboard');
+              if (supportChatIsAdminMode) {
+                setSupportChatIsAdminMode(false);
+                setSelectedSupportUser(null);
+              }
+            }}
+            isDark={isDark}
+            isAdminMode={supportChatIsAdminMode}
+            studentUser={selectedSupportUser}
+          />
+        )}
+
+        {viewMode === 'admin_panel' && currentUser && currentUser.role === 'ADMIN' && (
+          <AdminPanelScreen
+            currentUser={currentUser}
             onBack={() => setViewMode('dashboard')}
             isDark={isDark}
+            onOpenSupportChat={(studentUser) => {
+              setSelectedSupportUser(studentUser);
+              setSupportChatIsAdminMode(true);
+              setViewMode('support_chat');
+            }}
           />
         )}
       </View>

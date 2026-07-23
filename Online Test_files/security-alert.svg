@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="18px" height="20px" viewBox="0 0 18 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.3 (67297) - http://www.bohemiancoding.com/sketch -->
+
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Multiple-Login_Message" transform="translate(-630.000000, -357.000000)">
+            <g id="Group-2" transform="translate(630.000000, 346.000000)">
+                <g id="Security-Alert" transform="translate(0.000000, 11.000000)">
+                    <g id="shield-2">
+                        <path d="M9,20 C14.3959442,17.9586719 17.9720343,12.7445703 17.9720343,6.91847656 L17.9720343,3.38734375 C16.1221288,3.38734375 14.6224893,1.87078125 14.6224893,0 L9,0 L3.37751073,0 C3.37751073,1.87078125 1.87787124,3.38734375 0.0279656652,3.38734375 L0.0279656652,6.9184375 C0.0279656652,12.7445703 3.60405579,17.9586719 9,20 Z" id="Path" fill="#FFDB0C"></path>
+                        <path d="M9,20 C14.3959442,17.9586719 17.9720343,12.7445703 17.9720343,6.91847656 L17.9720343,3.38734375 C16.1221288,3.38734375 14.6224893,1.87078125 14.6224893,0 L9,0 C9,0 9,15.546875 9,20 Z" id="Path" fill="#FFC300"></path>
+                    </g>
+                    <g id="Group" transform="translate(7.920000, 4.285714)" fill="#FFFFFF">
+                        <rect id="Rectangle" x="0" y="0" width="2.16" height="7.14285714"></rect>
+                        <rect id="Rectangle-Copy" x="0" y="8.57142857" width="2.16" height="2.14285714" rx="1.07142857"></rect>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

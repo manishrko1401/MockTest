@@ -52,19 +52,35 @@ const MathJaxText = React.memo(({ content, className, component: Component = 'sp
   const containerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (containerRef.current && typeof window !== 'undefined' && (window as any).MathJax?.typesetPromise) {
+    let active = true;
+    let timeoutId: any = null;
+
+    const triggerTypeset = () => {
+      if (!containerRef.current || !active) return;
       const MathJax = (window as any).MathJax;
-      try {
-        MathJax.typesetClear([containerRef.current]);
-        MathJax.typesetPromise([containerRef.current]).catch((err: any) => {
-          console.warn("MathJax typeset error:", err);
-        });
-      } catch (e) {
-        MathJax.typesetPromise([containerRef.current]).catch((err: any) => {
-          console.warn("MathJax typeset error:", err);
-        });
+      if (MathJax?.typesetPromise) {
+        try {
+          MathJax.typesetClear([containerRef.current]);
+          MathJax.typesetPromise([containerRef.current]).catch((err: any) => {
+            console.warn("MathJax typeset error:", err);
+          });
+        } catch (e) {
+          MathJax.typesetPromise([containerRef.current]).catch((err: any) => {
+            console.warn("MathJax typeset error:", err);
+          });
+        }
+      } else {
+        // MathJax not loaded yet, retry in 100ms
+        timeoutId = setTimeout(triggerTypeset, 100);
       }
-    }
+    };
+
+    triggerTypeset();
+
+    return () => {
+      active = false;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [content]);
 
   return (

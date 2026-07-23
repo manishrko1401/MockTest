@@ -6,6 +6,7 @@ export const LOCAL_API_URL = 'http://192.168.1.14:3000/api/db';
 export const PROD_API_URL = 'https://mock-test-three-indol.vercel.app/api/db';
 
 export const API_URL = LOCAL_API_URL;
+export const BASE_URL = API_URL.replace('/api/db', '');
 
 let activeUserId: string | null = null;
 let activeSessionId: string | null = null;
@@ -176,8 +177,8 @@ export const ApiClient = {
   /**
    * Fetches support chat messages for user
    */
-  getSupportMessages: (userId: string, markAsRead = true) => 
-    postRequest('get-support-messages', { userId, markAsRead, readerRole: 'STUDENT' }),
+  getSupportMessages: (userId: string, markAsRead = true, readerRole: 'STUDENT' | 'ADMIN' = 'STUDENT') => 
+    postRequest('get-support-messages', { userId, markAsRead, readerRole }),
 
   /**
    * Sends a new support chat message
@@ -214,4 +215,128 @@ export const ApiClient = {
     message: string;
     source?: string;
   }) => postRequest('submit-suggestion', { ...params, source: params.source || 'app' }),
+
+  /**
+   * Fetch administrative panel data (users list, reported questions)
+   */
+  fetchAdminData: (userId: string) => postRequest('admin-data', { userId }),
+
+
+  /**
+   * Triggers a manual notice sync crawl on the server
+   */
+  triggerSyncNotices: async () => {
+    const endpoints = [LOCAL_API_URL, PROD_API_URL].filter((v, i, a) => a.indexOf(v) === i);
+    let success = false;
+    let errorMsg = '';
+    let details: any = null;
+
+    for (const endpoint of endpoints) {
+      try {
+        const syncUrl = endpoint.replace('/api/db', '/api/cron/sync');
+        const response = await fetch(syncUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        const result = await response.json();
+        if (result && result.success) {
+          success = true;
+          details = result;
+          break;
+        }
+        errorMsg = result?.error || 'Unknown sync error';
+      } catch (err: any) {
+        errorMsg = err.message || 'Sync request failed';
+      }
+    }
+    return { success, error: errorMsg, details };
+  },
+
+  /**
+   * Delete a reported question log
+   */
+  deleteReportedQuestion: (id: string) => postRequest('delete-reported-question', { id }),
+
+  /**
+   * Fetch all support users for Admin view
+   */
+  getSupportUsers: () => postRequest('get-support-users'),
+
+  /**
+   * Fetch user feedbacks & ratings
+   */
+  fetchFeedbacks: async () => {
+    const endpoints = [LOCAL_API_URL, PROD_API_URL].filter((v, i, a) => a.indexOf(v) === i);
+    let errorMsg = '';
+    for (const endpoint of endpoints) {
+      try {
+        const feedbackUrl = endpoint.replace('/api/db', '/api/feedback');
+        const response = await fetch(feedbackUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        const result = await response.json();
+        if (result && result.success) {
+          return result;
+        }
+        errorMsg = result?.error || 'Failed to fetch feedbacks';
+      } catch (err: any) {
+        errorMsg = err.message || 'Feedback fetch failed';
+      }
+    }
+    return { success: false, error: errorMsg };
+  },
+
+  /**
+   * Delete a user feedback log
+   */
+  deleteFeedback: async (id: string) => {
+    const endpoints = [LOCAL_API_URL, PROD_API_URL].filter((v, i, a) => a.indexOf(v) === i);
+    let errorMsg = '';
+    for (const endpoint of endpoints) {
+      try {
+        const feedbackUrl = endpoint.replace('/api/db', `/api/feedback?id=${id}`);
+        const response = await fetch(feedbackUrl, {
+          method: 'DELETE',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        const result = await response.json();
+        if (result && result.success) {
+          return result;
+        }
+        errorMsg = result?.error || 'Failed to delete feedback';
+      } catch (err: any) {
+        errorMsg = err.message || 'Feedback deletion failed';
+      }
+    }
+    return { success: false, error: errorMsg };
+  },
+
+  /**
+   * Fetch all test attempt logs
+   */
+  getAttempts: () => postRequest('get-attempts'),
+
+  /**
+   * Fetch user suggestions
+   */
+  getSuggestions: () => postRequest('get-suggestions'),
+
+  /**
+   * Update suggestion status / add admin reply
+   */
+  updateSuggestionStatus: (id: string, status: string, adminReply?: string) => 
+    postRequest('update-suggestion-status', { id, status, adminReply }),
+
+  /**
+   * Delete a suggestion log
+   */
+  deleteSuggestion: (id: string) => postRequest('delete-suggestion', { id }),
 };
+

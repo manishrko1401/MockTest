@@ -8,6 +8,7 @@ import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, Chevron
 import { generateExamSession, EXPLANATIONS } from '../lib/examUtils';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
+import HomeSupportWidget from '../components/HomeSupportWidget';
 
 function decodeHtml(text: string): string {
   if (!text) return "";
@@ -375,13 +376,32 @@ export default function MockTestsCatalog() {
 
   // Trigger MathJax typesetting whenever bookmarks are expanded
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).MathJax) {
-      try {
-        (window as any).MathJax.typesetPromise();
-      } catch (err) {
-        console.warn("MathJax typesetting failed:", err);
+    let active = true;
+    let timeoutId: any = null;
+
+    const triggerTypeset = () => {
+      if (!active) return;
+      const MathJax = (window as any).MathJax;
+      if (MathJax?.typesetPromise) {
+        try {
+          MathJax.typesetPromise().catch((err: any) => {
+            console.warn("MathJax typesetting failed:", err);
+          });
+        } catch (err) {
+          console.warn("MathJax typesetting failed:", err);
+        }
+      } else if (typeof window !== 'undefined') {
+        // MathJax not loaded yet, retry in 100ms
+        timeoutId = setTimeout(triggerTypeset, 100);
       }
-    }
+    };
+
+    triggerTypeset();
+
+    return () => {
+      active = false;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [expandedBookmarks]);
 
   const currentCategoryObj = examCatalog.find(c => c.id === selectedCategory);
@@ -2064,6 +2084,8 @@ if (!activeGroup) return null;
         </div>
       )}
 
+      {/* Floating Support Action Menu */}
+      <HomeSupportWidget variant="expandable" />
     </div>
   );
 }
