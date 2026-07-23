@@ -74,16 +74,7 @@ export default function AdminPanelScreen({
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
 
-  // Modal actions (User)
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [editUserModalVisible, setEditUserModalVisible] = useState(false);
-  const [editTier, setEditTier] = useState('None');
-  const [editCoins, setEditCoins] = useState('0');
-  const [editBlocked, setEditBlocked] = useState(false);
-  const [editRole, setEditRole] = useState('STUDENT');
-  const [editPurchasedAt, setEditPurchasedAt] = useState('');
-  const [editExpiresAt, setEditExpiresAt] = useState('');
-  const [updatingUser, setUpdatingUser] = useState(false);
+
 
   // Modal actions (Suggestion)
   const [selectedSuggestion, setSelectedSuggestion] = useState<any | null>(null);
@@ -152,89 +143,7 @@ export default function AdminPanelScreen({
     return `${year}-${month}-${day}`;
   };
 
-  // Modify User profile
-  const openEditUserModal = (user: any) => {
-    setSelectedUser(user);
-    setEditTier(user.subscriptionTier || 'None');
-    setEditCoins(String(user.coins ?? 0));
-    setEditBlocked(user.isBlocked ?? false);
-    setEditRole(user.role || 'STUDENT');
-    setEditPurchasedAt(formatDateString(user.subscriptionPurchasedAt));
-    setEditExpiresAt(formatDateString(user.subscriptionExpiresAt));
-    setEditUserModalVisible(true);
-  };
 
-  const handleSaveUser = async () => {
-    if (!selectedUser) return;
-    setUpdatingUser(true);
-    try {
-      const parsedCoins = parseInt(editCoins) || 0;
-
-      const parseDateParam = (val: string) => {
-        if (!val.trim()) return null;
-        const d = new Date(val.trim());
-        if (isNaN(d.getTime())) {
-          throw new Error(`Invalid date format entered: "${val}". Please use YYYY-MM-DD format.`);
-        }
-        return d.toISOString();
-      };
-
-      let parsedPurchasedAt = null;
-      let parsedExpiresAt = null;
-      try {
-        parsedPurchasedAt = parseDateParam(editPurchasedAt);
-        parsedExpiresAt = parseDateParam(editExpiresAt);
-      } catch (err: any) {
-        Alert.alert('Invalid Date', err.message);
-        setUpdatingUser(false);
-        return;
-      }
-
-      const params = {
-        userId: selectedUser.id,
-        name: selectedUser.name,
-        email: selectedUser.email,
-        mobile: selectedUser.mobile || '',
-        referralCode: selectedUser.referralCode || '',
-        referredBy: selectedUser.referredBy || null,
-        referralsCount: selectedUser.referralsCount || 0,
-        role: editRole,
-        tier: editTier,
-        purchasedAt: parsedPurchasedAt,
-        expiry: parsedExpiresAt,
-        password: selectedUser.password || 'password123',
-        isBlocked: editBlocked,
-        coins: parsedCoins
-      };
-
-      const res = await ApiClient.saveProfileAdmin(params);
-      if (res.success) {
-        setEditUserModalVisible(false);
-        setUsers(prev =>
-          prev.map(u =>
-            u.id === selectedUser.id
-              ? {
-                  ...u,
-                  role: editRole,
-                  subscriptionTier: editTier,
-                  coins: parsedCoins,
-                  isBlocked: editBlocked,
-                  subscriptionPurchasedAt: parsedPurchasedAt,
-                  subscriptionExpiresAt: parsedExpiresAt
-                }
-              : u
-          )
-        );
-        Alert.alert('Success', 'User profile modifications applied.');
-      } else {
-        Alert.alert('Error', res.error || 'Failed to update user profile');
-      }
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'Operation failed');
-    } finally {
-      setUpdatingUser(false);
-    }
-  };
 
   // Modify Suggestion Status / Reply
   const openSuggestionModal = (sugg: any) => {
@@ -453,11 +362,6 @@ export default function AdminPanelScreen({
                     </View>
                     <Text style={[styles.userEmail, { color: theme.textMuted }]}>{item.email}</Text>
                   </View>
-                  <TouchableOpacity onPress={() => openEditUserModal(item)}>
-                    <View style={[styles.actionBtn, { borderColor: theme.primary }]}>
-                      <Text style={[styles.actionBtnText, { color: theme.primary }]}>Modify</Text>
-                    </View>
-                  </TouchableOpacity>
                 </View>
                 <View style={styles.cardStatsRow}>
                   <View style={styles.flexRowAlign}>
@@ -853,133 +757,7 @@ export default function AdminPanelScreen({
         </View>
       )}
 
-      {/* Modify User modal */}
-      <Modal
-        visible={editUserModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setEditUserModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>Modify User Privileges</Text>
-            {selectedUser && (
-              <View style={{ width: '100%' }}>
-                <Text style={[styles.modalUserDesc, { color: theme.textMuted, marginBottom: 12 }]}>
-                  {selectedUser.name} ({selectedUser.email})
-                </Text>
 
-                <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
-                  {/* Role */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Access Role</Text>
-                  <View style={styles.pickerRow}>
-                    {['STUDENT', 'ADMIN', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].map((r) => (
-                      <TouchableOpacity
-                        key={r}
-                        onPress={() => setEditRole(r)}
-                        style={[
-                          styles.pickerBadge,
-                          { backgroundColor: editRole === r ? theme.primary : theme.inputBg, borderColor: theme.border }
-                        ]}
-                      >
-                        <Text style={[styles.pickerBadgeText, { color: editRole === r ? '#FFF' : theme.text }]}>
-                          {r.replace('_', ' ')}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-
-                  {/* Subscription pass tier */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Subscription Pass Tier</Text>
-                  <View style={styles.pickerRow}>
-                    {['None', 'Testbook Pass', 'Testbook Pass Pro'].map((t) => (
-                      <TouchableOpacity
-                        key={t}
-                        onPress={() => setEditTier(t)}
-                        style={[
-                          styles.pickerBadge,
-                          { backgroundColor: editTier === t ? theme.primary : theme.inputBg, borderColor: theme.border }
-                        ]}
-                      >
-                        <Text style={[styles.pickerBadgeText, { color: editTier === t ? '#FFF' : theme.text }]}>
-                          {t}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-
-                  {/* Coins */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Coins Balance</Text>
-                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                    <TextInput
-                      style={[styles.modalInput, { color: theme.text }]}
-                      keyboardType="number-pad"
-                      value={editCoins}
-                      onChangeText={setEditCoins}
-                    />
-                  </View>
-
-                  {/* Pass Purchased Date */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Pass Purchased Date (YYYY-MM-DD)</Text>
-                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                    <TextInput
-                      style={[styles.modalInput, { color: theme.text }]}
-                      placeholder="YYYY-MM-DD (e.g. 2026-07-23)"
-                      placeholderTextColor={theme.textMuted}
-                      value={editPurchasedAt}
-                      onChangeText={setEditPurchasedAt}
-                    />
-                  </View>
-
-                  {/* Pass Expiry Date */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Pass Expiry Date (YYYY-MM-DD)</Text>
-                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                    <TextInput
-                      style={[styles.modalInput, { color: theme.text }]}
-                      placeholder="YYYY-MM-DD (e.g. 2027-07-23)"
-                      placeholderTextColor={theme.textMuted}
-                      value={editExpiresAt}
-                      onChangeText={setEditExpiresAt}
-                    />
-                  </View>
-
-                  {/* Block switch */}
-                  <View style={styles.switchRow}>
-                    <Text style={[styles.switchLabel, { color: theme.text }]}>Block Account Access</Text>
-                    <Switch
-                      value={editBlocked}
-                      onValueChange={setEditBlocked}
-                      trackColor={{ false: '#767577', true: theme.accentRed }}
-                      thumbColor={editBlocked ? theme.accentRed : '#f4f3f4'}
-                    />
-                  </View>
-                </ScrollView>
-
-                {/* Modal Buttons */}
-                <View style={[styles.modalActionRow, { marginTop: 12 }]}>
-                  <TouchableOpacity
-                    onPress={() => setEditUserModalVisible(false)}
-                    style={[styles.modalBtn, styles.modalBtnCancel, { borderColor: theme.border }]}
-                  >
-                    <Text style={[styles.modalBtnText, { color: theme.text }]}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleSaveUser}
-                    style={[styles.modalBtn, { backgroundColor: theme.primary }]}
-                    disabled={updatingUser}
-                  >
-                    {updatingUser ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <Text style={[styles.modalBtnText, { color: '#FFF' }]}>Apply Changes</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
 
       {/* Modify Suggestion Modal */}
       <Modal
