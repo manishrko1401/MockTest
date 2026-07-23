@@ -2420,36 +2420,32 @@ export default function AdminAnalytics() {
                           <form onSubmit={handleSaveProfile} className="space-y-5">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name (Read-Only)</label>
                                 <input
                                   type="text"
-                                  required
+                                  readOnly
                                   value={editName}
-                                  onChange={(e) => setEditName(e.target.value)}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Email Address (Read-Only)</label>
                                 <input
                                   type="email"
-                                  required
+                                  readOnly
                                   value={editEmail}
-                                  onChange={(e) => setEditEmail(e.target.value)}
-                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Mobile Number</label>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Mobile Number (Read-Only)</label>
                                 <input
                                   type="text"
-                                  required
-                                  maxLength={10}
+                                  readOnly
                                   value={editMobile}
-                                  onChange={(e) => setEditMobile(e.target.value.replace(/\D/g, ''))}
-                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
                                 />
                               </div>
 
@@ -2526,13 +2522,12 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Account Password</label>
+                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Account Password (Read-Only)</label>
                                 <input
                                   type="text"
-                                  required
+                                  readOnly
                                   value={editPassword}
-                                  onChange={(e) => setEditPassword(e.target.value)}
-                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
                                 />
                               </div>
                             </div>
