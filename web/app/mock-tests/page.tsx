@@ -1551,7 +1551,7 @@ export default function MockTestsCatalog() {
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                           {/* Logo/Icon Container */}
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-855 shadow-sm overflow-hidden mb-2 bg-slate-55 dark:bg-slate-900 transition duration-300">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-855 shadow-sm overflow-hidden mb-2 bg-slate-55 dark:bg-slate-900 transition duration-300">
                             {cat.logoUrl ? (
                               <img
                                 src={cat.logoUrl}
@@ -1560,12 +1560,12 @@ export default function MockTestsCatalog() {
                               />
                             ) : (
                               <div className="text-blue-500">
-                                {isSsc && <Award className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-orange-500" />}
-                                {isRailways && <TrendingUp className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-indigo-500" />}
-                                {isBanking && <Coins className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-emerald-500" />}
-                                {isTeaching && <BookOpen className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-amber-500" />}
-                                {isUgcNet && <GraduationCap className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-sky-500" />}
-                                {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-pink-500" />}
+                                {isSsc && <Award className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-orange-500" />}
+                                {isRailways && <TrendingUp className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-indigo-500" />}
+                                {isBanking && <Coins className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-emerald-500" />}
+                                {isTeaching && <BookOpen className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-amber-500" />}
+                                {isUgcNet && <GraduationCap className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-sky-500" />}
+                                {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-pink-500" />}
                               </div>
                             )}
                           </div>
