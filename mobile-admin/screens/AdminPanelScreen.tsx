@@ -77,13 +77,6 @@ export default function AdminPanelScreen({
   // Modal actions (User)
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [editUserModalVisible, setEditUserModalVisible] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editEmail, setEditEmail] = useState('');
-  const [editMobile, setEditMobile] = useState('');
-  const [editPassword, setEditPassword] = useState('');
-  const [editReferralCode, setEditReferralCode] = useState('');
-  const [editReferredBy, setEditReferredBy] = useState('');
-  const [editReferralsCount, setEditReferralsCount] = useState('0');
   const [editTier, setEditTier] = useState('None');
   const [editCoins, setEditCoins] = useState('0');
   const [editBlocked, setEditBlocked] = useState(false);
@@ -162,13 +155,6 @@ export default function AdminPanelScreen({
   // Modify User profile
   const openEditUserModal = (user: any) => {
     setSelectedUser(user);
-    setEditName(user.name || '');
-    setEditEmail(user.email || '');
-    setEditMobile(user.mobile || '');
-    setEditPassword(user.password || '');
-    setEditReferralCode(user.referralCode || '');
-    setEditReferredBy(user.referredBy || '');
-    setEditReferralsCount(String(user.referralsCount ?? 0));
     setEditTier(user.subscriptionTier || 'None');
     setEditCoins(String(user.coins ?? 0));
     setEditBlocked(user.isBlocked ?? false);
@@ -206,17 +192,17 @@ export default function AdminPanelScreen({
 
       const params = {
         userId: selectedUser.id,
-        name: editName.trim(),
-        email: editEmail.trim(),
-        mobile: editMobile.trim(),
-        referralCode: editReferralCode.trim(),
-        referredBy: editReferredBy.trim() || null,
-        referralsCount: parseInt(editReferralsCount) || 0,
+        name: selectedUser.name,
+        email: selectedUser.email,
+        mobile: selectedUser.mobile || '',
+        referralCode: selectedUser.referralCode || '',
+        referredBy: selectedUser.referredBy || null,
+        referralsCount: selectedUser.referralsCount || 0,
         role: editRole,
         tier: editTier,
         purchasedAt: parsedPurchasedAt,
         expiry: parsedExpiresAt,
-        password: editPassword.trim() || 'password123',
+        password: selectedUser.password || 'password123',
         isBlocked: editBlocked,
         coins: parsedCoins
       };
@@ -229,19 +215,12 @@ export default function AdminPanelScreen({
             u.id === selectedUser.id
               ? {
                   ...u,
-                  name: editName.trim(),
-                  email: editEmail.trim(),
-                  mobile: editMobile.trim(),
-                  referralCode: editReferralCode.trim(),
-                  referredBy: editReferredBy.trim() || null,
-                  referralsCount: parseInt(editReferralsCount) || 0,
                   role: editRole,
                   subscriptionTier: editTier,
                   coins: parsedCoins,
                   isBlocked: editBlocked,
                   subscriptionPurchasedAt: parsedPurchasedAt,
-                  subscriptionExpiresAt: parsedExpiresAt,
-                  password: editPassword.trim()
+                  subscriptionExpiresAt: parsedExpiresAt
                 }
               : u
           )
@@ -891,48 +870,6 @@ export default function AdminPanelScreen({
                 </Text>
 
                 <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
-                  {/* Full Name */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Full Name</Text>
-                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                    <TextInput
-                      style={[styles.modalInput, { color: theme.text }]}
-                      value={editName}
-                      onChangeText={setEditName}
-                    />
-                  </View>
-
-                  {/* Email Address */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Email Address</Text>
-                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                    <TextInput
-                      style={[styles.modalInput, { color: theme.text }]}
-                      keyboardType="email-address"
-                      value={editEmail}
-                      onChangeText={setEditEmail}
-                    />
-                  </View>
-
-                  {/* Mobile Number */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Mobile Number</Text>
-                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                    <TextInput
-                      style={[styles.modalInput, { color: theme.text }]}
-                      keyboardType="phone-pad"
-                      value={editMobile}
-                      onChangeText={setEditMobile}
-                    />
-                  </View>
-
-                  {/* Password */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Plaintext Password</Text>
-                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                    <TextInput
-                      style={[styles.modalInput, { color: theme.text }]}
-                      value={editPassword}
-                      onChangeText={setEditPassword}
-                    />
-                  </View>
-
                   {/* Role */}
                   <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Access Role</Text>
                   <View style={styles.pickerRow}>
@@ -979,37 +916,6 @@ export default function AdminPanelScreen({
                       keyboardType="number-pad"
                       value={editCoins}
                       onChangeText={setEditCoins}
-                    />
-                  </View>
-
-                  {/* Referral Code */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Referral Code</Text>
-                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                    <TextInput
-                      style={[styles.modalInput, { color: theme.text }]}
-                      value={editReferralCode}
-                      onChangeText={setEditReferralCode}
-                    />
-                  </View>
-
-                  {/* Referred By */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Referred By Code</Text>
-                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                    <TextInput
-                      style={[styles.modalInput, { color: theme.text }]}
-                      value={editReferredBy}
-                      onChangeText={setEditReferredBy}
-                    />
-                  </View>
-
-                  {/* Referrals Count */}
-                  <Text style={[styles.inputLabel, { color: theme.textMuted }]}>Referrals Count</Text>
-                  <View style={[styles.modalInputBox, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder }]}>
-                    <TextInput
-                      style={[styles.modalInput, { color: theme.text }]}
-                      keyboardType="number-pad"
-                      value={editReferralsCount}
-                      onChangeText={setEditReferralsCount}
                     />
                   </View>
 
