@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
@@ -523,6 +523,12 @@ export default function AdminAnalytics() {
   const [editIsBlocked, setEditIsBlocked] = useState(false);
   const [editCoins, setEditCoins] = useState<number>(0);
 
+  // Custom password authorization modal states for profile dossier updates
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+
   // Category management form states
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryLogoUrl, setNewCategoryLogoUrl] = useState('');
@@ -824,27 +830,54 @@ export default function AdminAnalytics() {
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUserId) return;
-    
+    setIsPasswordModalOpen(true);
+    setAdminPasswordInput('');
+    setPasswordError(null);
+  };
+
+  const submitSaveProfile = async () => {
+    if (!selectedUserId) return;
+    if (!adminPasswordInput.trim()) {
+      setPasswordError("Password is required to verify changes.");
+      return;
+    }
+
+    setSavingProfile(true);
+    setPasswordError(null);
+
     const expiry = editTier === 'None' ? null : (editExpiry || new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0]);
     const purchasedAt = editTier === 'None' ? null : (editPurchasedAt || new Date().toISOString().split('T')[0]);
-    saveUserProfileByAdmin(
-      selectedUserId,
-      editName,
-      editEmail,
-      editMobile.trim(),
-      editReferralCode.trim(),
-      editReferredBy.trim() || null,
-      Number(editReferralsCount),
-      editRole,
-      editTier,
-      purchasedAt,
-      expiry,
-      editPassword.trim(),
-      editIsBlocked,
-      Number(editCoins)
-    );
-    
-    showToast('User profile updated successfully!');
+
+    try {
+      const result = await saveUserProfileByAdmin(
+        selectedUserId,
+        editName,
+        editEmail,
+        editMobile.trim(),
+        editReferralCode.trim(),
+        editReferredBy.trim() || null,
+        Number(editReferralsCount),
+        editRole,
+        editTier,
+        purchasedAt,
+        expiry,
+        editPassword.trim(),
+        editIsBlocked,
+        Number(editCoins),
+        adminPasswordInput.trim()
+      );
+
+      if (result && result.success) {
+        showToast('User profile updated successfully!');
+        setIsPasswordModalOpen(false);
+      } else {
+        setPasswordError(result?.error || 'Failed to save profile. Check admin password.');
+      }
+    } catch (err: any) {
+      setPasswordError(err.message || 'An error occurred while saving profile');
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   const handleResetAttempt = (userId: string, sessionId: string) => {
@@ -5548,6 +5581,82 @@ export default function AdminAnalytics() {
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg shadow-red-900/20"
               >
                 Confirm Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Key className="h-5 w-5 text-amber-300" />
+                <h3 className="font-extrabold text-sm uppercase tracking-wider">Confirm Administration Authorization</h3>
+              </div>
+              <button 
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="text-white hover:text-slate-200 transition cursor-pointer text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 text-left">
+                You are about to modify the profile dossier for <span className="font-bold text-slate-900 dark:text-white">{editName}</span>. Please verify your administrator credentials to proceed.
+              </p>
+
+              <div className="text-left">
+                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Administrator Password</label>
+                <input 
+                  type="password"
+                  required
+                  placeholder="Enter admin password"
+                  value={adminPasswordInput}
+                  onChange={(e) => setAdminPasswordInput(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 font-mono"
+                  autoFocus
+                />
+              </div>
+
+              {passwordError && (
+                <div className="p-3 bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-808/40 text-red-650 dark:text-red-400 rounded-lg text-xs font-bold flex items-center gap-2 text-left">
+                  <ShieldAlert className="h-4 w-4 shrink-0 animate-bounce" />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 border-t border-slate-100 dark:border-slate-808 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-808 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitSaveProfile}
+                disabled={savingProfile}
+                className="px-5 py-2 text-xs font-bold rounded-lg bg-blue-650 hover:bg-blue-700 text-white shadow transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {savingProfile ? (
+                  <>
+                    <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Authorize & Save</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

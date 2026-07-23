@@ -159,8 +159,9 @@ interface AuthContextType {
     expiry: string | null,
     password?: string,
     isBlocked?: boolean,
-    coins?: number
-  ) => void;
+    coins?: number,
+    adminConfirmPassword?: string
+  ) => Promise<any>;
   saveOngoingSession: (
     testId: string,
     title: string,
@@ -1889,7 +1890,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     expiry: string | null,
     password?: string,
     isBlocked?: boolean,
-    coins?: number
+    coins?: number,
+    adminConfirmPassword?: string
   ) => {
     const updatedList = usersList.map(u => {
       if (u.id === userId) {
@@ -1918,9 +1920,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       return u;
     });
 
-    setUsersList(updatedList);
-
-    fetch('/api/db', {
+    return fetch('/api/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1939,17 +1939,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           expiry,
           password,
           isBlocked,
-          coins
+          coins,
+          adminConfirmPassword
         }
       })
     })
     .then(res => res.json())
     .then(resData => {
       if (resData.success) {
+        setUsersList(updatedList);
         fetchAdminData();
       }
+      return resData;
     })
-    .catch(err => console.error("Save profile admin error:", err));
+    .catch(err => {
+      console.error("Save profile admin error:", err);
+      return { success: false, error: err.message };
+    });
   };
 
   // Merge lazily-loaded sessions into a user entry in usersList (no API call)
