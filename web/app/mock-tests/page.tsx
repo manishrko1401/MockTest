@@ -27,6 +27,22 @@ function decodeHtml(text: string): string {
   return decoded;
 }
 
+const formatSubCategoryName = (name: string) => {
+  let cleanName = name
+    .replace(/\s*(?:2025|2026)\s*/g, ' ')
+    .split(' - ')[0]
+    .split(' (')[0]
+    .replace(/(?:Full-Length|Full Length|Practice|Simulator|Mock|Paper-I|Paper-II|Paper 1|Paper-1|Paper 2|Paper-II|Test Paper|Teaching & Research Aptitude|Computer Science & Applications)/gi, '')
+    .trim();
+  
+  // Specific fallbacks to make sure it looks short and recognizable
+  if (name.includes('Paper-1') || name.includes('Paper 1')) cleanName += ' Paper 1';
+  if (name.includes('Paper-II') || name.includes('Paper 2')) cleanName += ' Paper 2';
+  if (name.includes('Paper-I') || name.includes('Paper 1')) cleanName += ' Paper 1';
+  
+  return cleanName || name;
+};
+
 // Helper functions for premium subcategory card styling
 const getCategoryTheme = (catId: string | null) => {
   const id = catId?.toLowerCase() || '';
@@ -1506,7 +1522,7 @@ export default function MockTestsCatalog() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 animate-in fade-in duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 animate-in fade-in duration-300">
                 {getFilteredCatalogForSearch().map(cat => {
                   const isSsc = cat.id === 'ssc';
                   const isRailways = cat.id === 'railways';
@@ -1529,39 +1545,59 @@ export default function MockTestsCatalog() {
                         setSelectedCategory(cat.id);
                         setSelectedSubCategory(null);
                       }}
-                      className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 p-4 sm:p-6 rounded-2xl flex flex-col justify-between group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.03] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
+                      className={`bg-white dark:bg-slate-950 border border-slate-205 dark:border-slate-800 hover:border-blue-550 dark:hover:border-blue-500 p-4 sm:p-5 rounded-2xl flex flex-row justify-between gap-4 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
                     >
-                      <div>
-                        {/* Logo/Icon Container */}
-                        <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-3 bg-slate-50 dark:bg-slate-900 transition duration-300">
-                          {cat.logoUrl ? (
-                            <img
-                              src={cat.logoUrl}
-                              alt={`${cat.name} logo`}
-                              className="w-full h-full object-contain p-1"
-                            />
-                          ) : (
-                            <div className="text-blue-500">
-                              {isSsc && <Award className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />}
-                              {isRailways && <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />}
-                              {isBanking && <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />}
-                              {isTeaching && <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />}
-                              {isUgcNet && <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-sky-500" />}
-                              {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-pink-500" />}
-                            </div>
-                          )}
+                      {/* Left details */}
+                      <div className="flex-1 flex flex-col justify-between min-w-0">
+                        <div>
+                          {/* Logo/Icon Container */}
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-855 shadow-sm overflow-hidden mb-3 bg-slate-55 dark:bg-slate-900 transition duration-300">
+                            {cat.logoUrl ? (
+                              <img
+                                src={cat.logoUrl}
+                                alt={`${cat.name} logo`}
+                                className="w-full h-full object-contain p-1"
+                              />
+                            ) : (
+                              <div className="text-blue-500">
+                                {isSsc && <Award className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />}
+                                {isRailways && <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />}
+                                {isBanking && <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />}
+                                {isTeaching && <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />}
+                                {isUgcNet && <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-sky-500" />}
+                                {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-pink-500" />}
+                              </div>
+                            )}
+                          </div>
+                          <h4 className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white mb-1.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                            {cat.name}
+                          </h4>
+                          <span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2.5 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
+                            {cat.subCategories?.length || 0} Exams
+                          </span>
                         </div>
-                        <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
-                          {cat.name}
-                        </h4>
-                        <span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border border-slate-100 dark:border-slate-800">
-                          {cat.subCategories?.length || 0} Exams
-                        </span>
+                        
+                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[9px] uppercase tracking-wider mt-4 pt-2 border-t border-slate-155 dark:border-slate-800/60 w-full">
+                          {language === 'hi' ? "कैटेगरी देखें" : "View Category"} <ChevronRight className="h-3 w-3 transition group-hover:translate-x-1" />
+                        </div>
                       </div>
-                      
-                      <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[9px] uppercase tracking-wider mt-4 pt-2.5 border-t border-slate-150 dark:border-slate-800/60 w-full">
-                        {language === 'hi' ? "कैटेगरी देखें" : "View Category"} <ChevronRight className="h-3 w-3 transition group-hover:translate-x-1" />
-                      </div>
+
+                      {/* Right side subcategories */}
+                      {cat.subCategories && cat.subCategories.length > 0 && (
+                        <div className="border-l border-slate-200/50 dark:border-slate-800/40 pl-4 flex flex-col justify-center min-w-[130px] max-w-[155px] shrink-0">
+                          <span className="text-[8px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Exams List</span>
+                          <div className="flex flex-col gap-1.5">
+                            {cat.subCategories.slice(0, 5).map((sub: any) => (
+                              <div key={sub.id} className="flex items-center gap-1.5">
+                                <div className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-450 shrink-0"></div>
+                                <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[115px]" title={sub.name}>
+                                  {formatSubCategoryName(sub.name)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </button>
                   );
                 })}
