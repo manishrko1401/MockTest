@@ -8,6 +8,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.mocktesthub",
       "infoPlist": {
         "UIBackgroundModes": [
           "fetch",
