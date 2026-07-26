@@ -86,11 +86,17 @@ function analyzeFile(filePath) {
     
     function findSections(obj) {
       if (!obj || typeof obj !== 'object') return null;
+      if (Array.isArray(obj)) return [{ name: "General Studies", questions: obj }];
       if (obj.sections && Array.isArray(obj.sections)) return obj.sections;
       if (obj.questions && Array.isArray(obj.questions)) return [{ name: "General Studies", questions: obj.questions }];
+      if (obj.test_questions && Array.isArray(obj.test_questions)) return [{ name: "General Studies", questions: obj.test_questions }];
+      if (obj.testQuestions && Array.isArray(obj.testQuestions)) return [{ name: "General Studies", questions: obj.testQuestions }];
+      if (obj.question_list && Array.isArray(obj.question_list)) return [{ name: "General Studies", questions: obj.question_list }];
       for (const key in obj) {
-        const found = findSections(obj[key]);
-        if (found) return found;
+        if (typeof obj[key] === 'object') {
+          const found = findSections(obj[key]);
+          if (found) return found;
+        }
       }
       return null;
     }
@@ -200,8 +206,8 @@ try {
     
     questionsList.forEach((q, qIdx) => {
       // 1. Question Text
-      const rawTextEn = q.en ? (q.en.value || "") : "";
-      const rawTextHi = q.hn ? (q.hn.value || "") : "";
+      const rawTextEn = q.textEn || (q.en ? q.en.value : null) || q.questionText || q.question || q.title || q.question_text || q.text || "";
+      const rawTextHi = q.textHi || (q.hn ? q.hn.value : null) || q.questionText || q.question || q.title || q.question_text || q.text || rawTextEn;
       const cleanTextEn = cleanHtml(rawTextEn);
       const cleanTextHi = cleanHtml(rawTextHi);
       
@@ -210,12 +216,12 @@ try {
       let imageUrlHi = "";
       const imgRegex = /<img[^>]+src=["']([^"']+)["']/i;
       
-      const imgMatchEn = rawTextEn.match(imgRegex);
+      const imgMatchEn = String(rawTextEn).match(imgRegex);
       if (imgMatchEn) {
         imageUrlEn = imgMatchEn[1];
         if (imageUrlEn.startsWith('//')) imageUrlEn = 'https:' + imageUrlEn;
       }
-      const imgMatchHi = rawTextHi.match(imgRegex);
+      const imgMatchHi = String(rawTextHi).match(imgRegex);
       if (imgMatchHi) {
         imageUrlHi = imgMatchHi[1];
         if (imageUrlHi.startsWith('//')) imageUrlHi = 'https:' + imageUrlHi;
@@ -225,11 +231,22 @@ try {
       let optionsEnList = [];
       let optionsHiList = [];
       
-      if (q.en && Array.isArray(q.en.options)) {
-        optionsEnList = q.en.options.map(opt => cleanHtml(opt.value || ""));
+      if (q.optionsEn && Array.isArray(q.optionsEn)) {
+        optionsEnList = q.optionsEn.map(opt => cleanHtml(String(opt)));
+      } else if (q.options && Array.isArray(q.options)) {
+        optionsEnList = q.options.map(opt => cleanHtml(typeof opt === 'object' ? (opt.option || opt.text || String(opt)) : String(opt)));
+      } else if (q.en && Array.isArray(q.en.options)) {
+        optionsEnList = q.en.options.map(opt => cleanHtml(opt.value || String(opt)));
+      } else if (q.option1 || q.opt1) {
+        optionsEnList = [q.option1 || q.opt1, q.option2 || q.opt2, q.option3 || q.opt3, q.option4 || q.opt4].filter(Boolean).map(opt => cleanHtml(String(opt)));
       }
-      if (q.hn && Array.isArray(q.hn.options)) {
-        optionsHiList = q.hn.options.map(opt => cleanHtml(opt.value || ""));
+
+      if (q.optionsHi && Array.isArray(q.optionsHi)) {
+        optionsHiList = q.optionsHi.map(opt => cleanHtml(String(opt)));
+      } else if (q.hn && Array.isArray(q.hn.options)) {
+        optionsHiList = q.hn.options.map(opt => cleanHtml(opt.value || String(opt)));
+      } else {
+        optionsHiList = [...optionsEnList];
       }
       
       while (optionsEnList.length < 4) {
@@ -244,23 +261,35 @@ try {
       let explanationEn = "";
       let explanationHi = "";
       
-      const qId = q._id;
-      if (solutionsMap[qId]) {
+      const qId = q._id || q.id;
+      if (qId && solutionsMap[qId]) {
         correctIndex = solutionsMap[qId].correctIndex;
         explanationEn = solutionsMap[qId].explanationEn;
         explanationHi = solutionsMap[qId].explanationHi;
       } else {
-        if (q.answers && Array.isArray(q.answers) && q.answers.length > 0) {
+        if (typeof q.correctIndex === 'number') {
+          correctIndex = q.correctIndex;
+        } else if (typeof q.correctAnswer === 'number') {
+          correctIndex = q.correctAnswer;
+        } else if (typeof q.answer === 'number') {
+          correctIndex = q.answer;
+        } else if (q.answers && Array.isArray(q.answers) && q.answers.length > 0) {
           correctIndex = parseInt(q.answers[0], 10) - 1;
         } else if (q.correctOptionIndex !== undefined) {
           correctIndex = parseInt(q.correctOptionIndex, 10);
-        } else if (q.correctOption !== undefined) {
-          const val = parseInt(q.correctOption, 10);
+        } else if (q.correctOption !== undefined || q.correct_option !== undefined || q.correct_answer !== undefined) {
+          const val = parseInt(q.correctOption || q.correct_option || q.correct_answer, 10);
           correctIndex = val > 0 ? val - 1 : 0;
+        } else if (q.correctAnswer || q.answer) {
+          const str = String(q.correctAnswer || q.answer).trim().toUpperCase();
+          if (str === 'A' || str === '1' || str === 'OPT1' || str === 'OPTION 1' || str === 'OPTION A') correctIndex = 0;
+          else if (str === 'B' || str === '2' || str === 'OPT2' || str === 'OPTION 2' || str === 'OPTION B') correctIndex = 1;
+          else if (str === 'C' || str === '3' || str === 'OPT3' || str === 'OPTION 3' || str === 'OPTION C') correctIndex = 2;
+          else if (str === 'D' || str === '4' || str === 'OPT4' || str === 'OPTION 4' || str === 'OPTION D') correctIndex = 3;
         }
         
-        let rawExpEn = q.solution || q.explanation || q.solDesc || q.solutionDesc || "";
-        let rawExpHi = q.solutionHi || q.explanationHi || q.solDescHi || "";
+        let rawExpEn = q.explanationEn || q.explanation || q.solution || q.answer_explanation || q.sol || q.solDesc || q.solutionDesc || "";
+        let rawExpHi = q.explanationHi || q.explanation || q.solution || q.answer_explanation || q.sol || q.solDescHi || "";
         
         if (!rawExpEn && q.en) {
           rawExpEn = q.en.solution || q.en.explanation || q.en.solDesc || "";
@@ -270,7 +299,7 @@ try {
         }
         
         explanationEn = cleanHtml(rawExpEn);
-        explanationHi = cleanHtml(rawExpHi);
+        explanationHi = cleanHtml(rawExpHi || rawExpEn);
       }
       
       if (isNaN(correctIndex) || correctIndex < 0 || correctIndex >= optionsEnList.length) {
