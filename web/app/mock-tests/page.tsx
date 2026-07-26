@@ -143,7 +143,7 @@ const getSubCatIcon = (name: string, logoUrl?: string | null) => {
 };
 
 export default function MockTestsCatalog() {
-  const { currentUser, saveUserProfileByAdmin, theme, toggleTheme, toggleBookmark, clearOngoingSession, language, setLanguage, examCatalog } = useAuth();
+  const { currentUser, claimPassPro, theme, toggleTheme, toggleBookmark, clearOngoingSession, language, setLanguage, examCatalog } = useAuth();
   const router = useRouter();
   const t = TRANSLATIONS[language];
   
@@ -447,27 +447,13 @@ export default function MockTestsCatalog() {
     router.push(`/exam/${test.id}`);
   };
 
-  const handlePurchasePass = () => {
+  const handlePurchasePass = async () => {
     if (!currentUser) return;
     
     // Simulate upgrading tier on the spot
     const newTier = requiredTierInfo === 'Testbook Pass Pro' ? 'Testbook Pass Pro' : 'Testbook Pass';
-    const expiry = new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0];
-    const purchasedAt = new Date().toISOString().split('T')[0];
     
-    saveUserProfileByAdmin(
-      currentUser.id,
-      currentUser.name,
-      currentUser.email,
-      currentUser.mobile,
-      currentUser.referralCode,
-      currentUser.referredBy,
-      currentUser.referralsCount,
-      currentUser.role,
-      newTier,
-      purchasedAt,
-      expiry
-    );
+    await claimPassPro(currentUser.id, newTier);
     
     setUpgradePopupOpen(false);
     alert(`Success! You have unlocked ${newTier.replace('Testbook', 'Mock Test')}. You can now start the mock test.`);

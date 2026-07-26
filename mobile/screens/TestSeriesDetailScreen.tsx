@@ -145,22 +145,12 @@ export default function TestSeriesDetailScreen({
             const nextTier = requiredTierName;
             const updatedCoins = userCoins - unlockCost;
 
-            const res = await ApiClient.saveProfileAdmin({
-              userId: currentUser.id,
-              name: currentUser.name,
-              email: currentUser.email,
-              mobile: currentUser.mobile,
-              referralCode: currentUser.referralCode,
-              referredBy: currentUser.referredBy,
-              referralsCount: currentUser.referralsCount,
-              role: currentUser.role,
-              tier: nextTier,
-              purchasedAt: new Date().toISOString().split('T')[0],
-              expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days validity
-              password: currentUser.password,
-              isBlocked: currentUser.isBlocked,
-              coins: updatedCoins
-            });
+            const res = await ApiClient.claimPassPro(
+              currentUser.id,
+              nextTier,
+              updatedCoins,
+              new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            );
 
             if (res.success) {
               Alert.alert('Unlocked!', `You have successfully unlocked "${requiredTierName}"!`);

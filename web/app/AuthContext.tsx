@@ -78,6 +78,7 @@ export interface Notice {
 
 export interface MockUser {
   id: string;
+  currentSessionId?: string;
   candidateCode: string;
   name: string;
   email: string;
@@ -145,6 +146,7 @@ interface AuthContextType {
   ) => void;
   toggleBookmark: (testId: string, questionId: string) => void;
   resetAttempt: (userId: string, sessionId: string) => void;
+  claimPassPro: (userId: string, tier?: string, coins?: number, expiry?: string) => Promise<{ success: boolean; error?: string }>;
   saveUserProfileByAdmin: (
     userId: string,
     name: string,
@@ -1958,6 +1960,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     });
   };
 
+  const claimPassPro = async (userId: string, tier = 'Testbook Pass Pro', coins?: number, expiry?: string) => {
+    const purchasedAt = new Date().toISOString().split('T')[0];
+    const expiryDate = new Date();
+    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+    const defaultExpiry = expiryDate.toISOString().split('T')[0];
+    const finalExpiry = expiry || defaultExpiry;
+
+    const updatedList = usersList.map(u => {
+      if (u.id === userId) {
+        return {
+          ...u,
+          subscriptionTier: tier as MockUser['subscriptionTier'],
+          subscriptionPurchasedAt: purchasedAt,
+          subscriptionExpiresAt: finalExpiry,
+          coins: coins !== undefined ? coins : u.coins ?? 0,
+        };
+      }
+      return u;
+    });
+
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'claim-pass-pro',
+          data: {
+            userId,
+            tier,
+            coins,
+            expiry: finalExpiry,
+            sessionId: currentUser?.currentSessionId
+          }
+        })
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        setUsersList(updatedList);
+        if (currentUser && currentUser.id === userId) {
+          const updatedCurrentUser: MockUser = {
+            ...currentUser,
+            subscriptionTier: tier as MockUser['subscriptionTier'],
+            subscriptionPurchasedAt: purchasedAt,
+            subscriptionExpiresAt: finalExpiry,
+            coins: coins !== undefined ? coins : currentUser.coins ?? 0,
+          };
+          setCurrentUser(updatedCurrentUser);
+          syncUserCookieAndCache(updatedCurrentUser);
+        }
+      } else {
+        console.error("Claim pass pro API returned error:", resData.error);
+      }
+      return resData;
+    } catch (err: any) {
+      console.error("Claim pass pro error:", err);
+      return { success: false, error: err.message || 'Claim failed' };
+    }
+  };
+
   // Merge lazily-loaded sessions into a user entry in usersList (no API call)
   const mergeUserSessions = (userId: string, sessions: MockUser['testSessions']) => {
     setUsersList(prev => prev.map(u =>
@@ -2046,6 +2107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         language,
         setLanguage,
         saveUserProfileByAdmin,
+        claimPassPro,
         examCatalog,
         addCategory,
         editCategory,

@@ -490,46 +490,29 @@ export default function DashboardScreen({
   };
 
   useEffect(() => {
-    let timer: any;
-    const checkNewSignup = async () => {
-      try {
-        const isNew = await AsyncStorage.getItem('show_signup_congrats_popup');
-        if (isNew === 'true') {
-          timer = setTimeout(() => {
-            setShowCongratsPopup(true);
-            AsyncStorage.removeItem('show_signup_congrats_popup');
-          }, 7000); // 7 seconds delay
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    checkNewSignup();
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, []);
+    if (!currentUser) {
+      setShowCongratsPopup(false);
+      return;
+    }
+
+    if (currentUser.subscriptionTier === 'Testbook Pass Pro') {
+      setShowCongratsPopup(false);
+      return;
+    }
+
+    // Show popup every time user opens dashboard/app if user hasn't claimed 1-Year Pass Pro yet
+    const timer = setTimeout(() => {
+      setShowCongratsPopup(true);
+    }, 1500); // 1.5s delay for smooth UI load
+
+    return () => clearTimeout(timer);
+  }, [currentUser?.id, currentUser?.subscriptionTier]);
 
   const handleClaimPassPro = async () => {
     if (!currentUser) return;
     setClaiming(true);
     try {
-      const expiry = new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0];
-      const purchasedAt = new Date().toISOString().split('T')[0];
-
-      const res = await ApiClient.saveProfileAdmin({
-        userId: currentUser.id,
-        name: currentUser.name || currentUser.fullName,
-        email: currentUser.email,
-        mobile: currentUser.mobile,
-        referralCode: currentUser.referralCode,
-        referredBy: currentUser.referredBy,
-        referralsCount: currentUser.referralsCount,
-        role: currentUser.role,
-        tier: 'Testbook Pass Pro',
-        purchasedAt,
-        expiry
-      });
+      const res = await ApiClient.claimPassPro(currentUser.id, 'Testbook Pass Pro');
 
       if (res.success) {
         await onRefreshUser(currentUser.id);

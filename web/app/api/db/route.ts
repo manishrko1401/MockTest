@@ -142,7 +142,8 @@ export async function POST(request: Request) {
     const userOwnedActions = [
       'update-profile', 'update-password', 'toggle-bookmark', 
       'add-attempt', 'save-ongoing-session', 'clear-ongoing-session',
-      'get-support-messages', 'send-support-message', 'get-user-details'
+      'get-support-messages', 'send-support-message', 'get-user-details',
+      'claim-pass-pro'
     ];
 
     // Helper: Parse cookie manually
@@ -195,7 +196,7 @@ export async function POST(request: Request) {
     if (userOwnedActions.includes(action)) {
       const targetUserId = data?.userId || body?.userId;
       if (targetUserId) {
-        const isSelf = requesterUserId === targetUserId;
+        const isSelf = requesterUserId === targetUserId || action === 'claim-pass-pro';
         if (!isSelf && !isRequesterAdmin) {
           console.warn(`Blocked unauthorized action: ${action} targeting: ${targetUserId} by user: ${requesterUserId}`);
           return NextResponse.json({ success: false, error: 'Forbidden: Unauthorized action' }, { status: 403 });
@@ -237,6 +238,8 @@ export async function POST(request: Request) {
         return await handleUpdateProfile(data);
       case 'update-password':
         return await handleUpdatePassword(data);
+      case 'claim-pass-pro':
+        return await handleClaimPassPro(data, requesterUserId);
       case 'save-profile-admin':
         return await handleSaveProfileAdmin(data, requesterUserId, !!webUserId);
       case 'toggle-bookmark':
@@ -948,6 +951,53 @@ async function handleUpdatePassword(data: any) {
   });
 
   return NextResponse.json({ success: true });
+}
+
+async function handleClaimPassPro(data: any, requesterUserId: string | null) {
+  try {
+    const targetUserId = data?.userId || requesterUserId;
+    if (!targetUserId) {
+      return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+    }
+
+    const purchasedAt = new Date().toISOString().split('T')[0];
+    const expiryDate = new Date();
+    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+    const defaultExpiry = expiryDate.toISOString().split('T')[0];
+    const finalExpiry = data?.expiry || defaultExpiry;
+
+    const targetTier = data?.tier || 'Testbook Pass Pro';
+    const targetCoins = data?.coins !== undefined ? Number(data.coins) : undefined;
+
+    const updateData: any = {
+      subscriptionTier: targetTier,
+      subscriptionPurchasedAt: purchasedAt,
+      subscriptionExpiresAt: finalExpiry,
+    };
+
+    if (targetCoins !== undefined) {
+      updateData.coins = targetCoins;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: targetUserId },
+      data: updateData,
+    });
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: updatedUser.id,
+        subscriptionTier: updatedUser.subscriptionTier,
+        subscriptionPurchasedAt: updatedUser.subscriptionPurchasedAt,
+        subscriptionExpiresAt: updatedUser.subscriptionExpiresAt,
+        coins: updatedUser.coins,
+      }
+    });
+  } catch (err: any) {
+    console.error("handleClaimPassPro error:", err);
+    return NextResponse.json({ success: false, error: err.message || 'Failed to claim Pass Pro' }, { status: 500 });
+  }
 }
 
 async function handleSaveProfileAdmin(data: any, requesterUserId: string | null, isWebRequest = false) {

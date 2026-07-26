@@ -112,6 +112,12 @@ export const ApiClient = {
   saveProfileAdmin: (params: any) => postRequest('save-profile-admin', params),
 
   /**
+   * Claims pass pro for user
+   */
+  claimPassPro: (userId: string, tier?: string, coins?: number, expiry?: string) =>
+    postRequest('claim-pass-pro', { userId, tier, coins, expiry }),
+
+  /**
    * Fetches questions for a given mock test
    */
   getCustomQuestions: (testId: string) => postRequest('get-custom-questions', { testId }),

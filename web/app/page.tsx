@@ -183,7 +183,7 @@ const getWebCategoryStyle = (id: string) => {
 };
 
 export default function HomeLandingPage() {
-  const { currentUser, logout, theme, toggleTheme, noticesList, language, setLanguage, saveUserProfileByAdmin, examCatalog } = useAuth();
+  const { currentUser, logout, theme, toggleTheme, noticesList, language, setLanguage, claimPassPro, examCatalog } = useAuth();
   const router = useRouter();
   const t = TRANSLATIONS[language];
   
@@ -232,26 +232,14 @@ const formatSubCategoryName = (name: string) => {
     if (!currentUser) return;
     setClaiming(true);
     try {
-      const expiry = new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0];
-      const purchasedAt = new Date().toISOString().split('T')[0];
-
-      await saveUserProfileByAdmin(
-        currentUser.id,
-        currentUser.name,
-        currentUser.email,
-        currentUser.mobile,
-        currentUser.referralCode,
-        currentUser.referredBy,
-        currentUser.referralsCount,
-        currentUser.role,
-        'Testbook Pass Pro',
-        purchasedAt,
-        expiry
-      );
-
-      alert(language === 'hi' ? 'बधाई हो! आपका 1 वर्ष का मॉक टेस्ट पास प्रो सफलतापूर्वक सक्रिय कर दिया गया है।' : 'Success! Your 1-Year Mock Test Pass Pro has been claimed and activated.');
-      setShowCongratsPopup(false);
-      router.push('/profile');
+      const res = await claimPassPro(currentUser.id, 'Testbook Pass Pro');
+      if (res.success) {
+        alert(language === 'hi' ? 'बधाई हो! आपका 1 वर्ष का मॉक टेस्ट पास प्रो सफलतापूर्वक सक्रिय कर दिया गया है।' : 'Success! Your 1-Year Mock Test Pass Pro has been claimed and activated.');
+        setShowCongratsPopup(false);
+        router.push('/profile');
+      } else {
+        alert(res.error || 'Claim failed. Please try again.');
+      }
     } catch (err) {
       console.error(err);
       alert('Claim failed. Please try again.');
@@ -290,22 +278,23 @@ const formatSubCategoryName = (name: string) => {
   }, [testimonials.length]);
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const isNewSignup = localStorage.getItem('show_signup_congrats_popup');
-      const hasDismissed = sessionStorage.getItem('dismissed_congrats_popup');
-      
-      const shouldShow = isNewSignup === 'true' || 
-        (currentUser && currentUser.subscriptionTier === 'None' && hasDismissed !== 'true');
-
-      if (shouldShow) {
-        const timer = setTimeout(() => {
-          setShowCongratsPopup(true);
-          localStorage.removeItem('show_signup_congrats_popup');
-        }, 3000); // 3 seconds delay for a premium feel
-        return () => clearTimeout(timer);
-      }
+    if (!currentUser) {
+      setShowCongratsPopup(false);
+      return;
     }
-  }, [currentUser]);
+
+    if (currentUser.subscriptionTier === 'Testbook Pass Pro') {
+      setShowCongratsPopup(false);
+      return;
+    }
+
+    // Show popup every time on load/refresh if user hasn't claimed 1-Year Pass Pro yet
+    const timer = setTimeout(() => {
+      setShowCongratsPopup(true);
+    }, 1500); // 1.5s delay for smooth page rendering
+
+    return () => clearTimeout(timer);
+  }, [currentUser?.id, currentUser?.subscriptionTier]);
 
   const { isMobile, isMounted } = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
