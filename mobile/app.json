@@ -10,6 +10,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.mocktesthub",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
           "fetch",
           "fetch"
