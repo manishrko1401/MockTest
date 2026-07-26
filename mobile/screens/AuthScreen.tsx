@@ -158,11 +158,8 @@ export default function AuthScreen({ onLoginSuccess, onContinueAsGuest, isDark =
     const res = await ApiClient.login(loginEmail, loginPass);
 
     if (res.success && res.user) {
-      setSuccess('Logged in successfully!');
-      setTimeout(() => {
-        setLoading(false);
-        onLoginSuccess(res.user);
-      }, 1500);
+      setLoading(false);
+      onLoginSuccess(res.user);
     } else {
       setLoading(false);
       setError(res.error || 'Login failed. Please verify credentials.');
@@ -206,11 +203,8 @@ export default function AuthScreen({ onLoginSuccess, onContinueAsGuest, isDark =
 
     if (res.success && res.user) {
       await AsyncStorage.setItem('show_signup_congrats_popup', 'true');
-      setSuccess('Signed up successfully!');
-      setTimeout(() => {
-        setLoading(false);
-        onLoginSuccess(res.user);
-      }, 1500);
+      setLoading(false);
+      onLoginSuccess(res.user);
     } else {
       setLoading(false);
       setError(res.error || 'Registration failed. Email might already be taken.');

@@ -909,21 +909,58 @@ export default function AdminAnalytics() {
 
     try {
       const parsedData = JSON.parse(jsonInput);
-      const questionsArray = (Array.isArray(parsedData) ? parsedData : [parsedData]).map((q: any) => ({
-        ...q,
-        id: q.id || 'q_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 6),
-        section: q.section || 'General Studies'
-      }));
+      const questionsArray = (Array.isArray(parsedData) ? parsedData : [parsedData]).map((q: any) => {
+        const textEn = (q.textEn || q.questionText || q.question || q.text || q.question_text || q.textHi || "").toString().trim();
+        const textHi = (q.textHi || q.questionText || q.question || q.text || q.question_text || textEn).toString().trim();
+        
+        let rawOpts = q.optionsEn || q.options || q.optionsHi;
+        if (!Array.isArray(rawOpts) || rawOpts.length < 2) {
+          if (q.option1 || q.opt1) {
+            rawOpts = [q.option1 || q.opt1, q.option2 || q.opt2, q.option3 || q.opt3, q.option4 || q.opt4, q.option5].filter(Boolean);
+          }
+        }
+        const optionsEn = Array.isArray(rawOpts) && rawOpts.length >= 2 ? rawOpts.map((o: any) => String(o).trim()) : ["Option A", "Option B", "Option C", "Option D"];
+        const optionsHi = Array.isArray(q.optionsHi) && q.optionsHi.length >= 2 ? q.optionsHi.map((o: any) => String(o).trim()) : optionsEn;
+        
+        let correctIndex = 0;
+        if (typeof q.correctIndex === 'number') {
+          correctIndex = q.correctIndex;
+        } else if (typeof q.correctAnswer === 'number') {
+          correctIndex = q.correctAnswer;
+        } else if (typeof q.answer === 'number') {
+          correctIndex = q.answer;
+        } else if (typeof q.correct_option === 'number') {
+          correctIndex = Math.max(0, q.correct_option - 1);
+        } else if (typeof q.correct_answer === 'number') {
+          correctIndex = Math.max(0, q.correct_answer - 1);
+        } else if (q.correctAnswer || q.answer || q.correct_option || q.correct_answer) {
+          const str = (q.correctAnswer || q.answer || q.correct_option || q.correct_answer).toString().trim().toUpperCase();
+          if (str === 'A' || str === '1' || str === 'OPT1' || str === 'OPTION 1' || str === 'OPTION A') correctIndex = 0;
+          else if (str === 'B' || str === '2' || str === 'OPT2' || str === 'OPTION 2' || str === 'OPTION B') correctIndex = 1;
+          else if (str === 'C' || str === '3' || str === 'OPT3' || str === 'OPTION 3' || str === 'OPTION C') correctIndex = 2;
+          else if (str === 'D' || str === '4' || str === 'OPT4' || str === 'OPTION 4' || str === 'OPTION D') correctIndex = 3;
+          else {
+            const matchIdx = optionsEn.findIndex(o => o.toUpperCase() === str);
+            if (matchIdx !== -1) correctIndex = matchIdx;
+          }
+        }
+        if (correctIndex < 0 || correctIndex >= optionsEn.length) correctIndex = 0;
 
-      // Validate core fields mapping to database schema
-      for (const item of questionsArray) {
-        if (!item.textEn || !item.textHi || !item.optionsEn || !item.optionsHi || item.correctIndex === undefined) {
-          throw new Error('All questions must map textEn, textHi, optionsEn, optionsHi, and correctIndex.');
-        }
-        if (!Array.isArray(item.optionsEn) || item.optionsEn.length < 2) {
-          throw new Error('optionsEn must be an array of at least 2 strings.');
-        }
-      }
+        const explanationEn = (q.explanationEn || q.explanation || q.solution || q.answer_explanation || q.sol || "").toString().trim();
+        const explanationHi = (q.explanationHi || q.explanation || q.solution || q.answer_explanation || q.sol || explanationEn).toString().trim();
+
+        return {
+          id: q.id || 'q_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 6),
+          textEn,
+          textHi,
+          optionsEn,
+          optionsHi,
+          correctIndex,
+          explanationEn,
+          explanationHi,
+          section: q.section || 'General Studies'
+        };
+      });
 
       setParsedQuestions(questionsArray);
       setFormQuestionsList(questionsArray);
@@ -931,7 +968,7 @@ export default function AdminAnalytics() {
       setPreviewQuestionIndex(0);
       setUploadStatus({
         type: 'success',
-        message: `Questions successfully verified and loaded in the Live Preview! Review on the right, then click 'Confirm & Ingest Question Paper' below to save.`
+        message: `Successfully verified and loaded ${questionsArray.length} questions into Live Preview!`
       });
     } catch (err: any) {
       setUploadStatus({

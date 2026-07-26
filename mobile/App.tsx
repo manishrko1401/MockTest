@@ -613,20 +613,25 @@ export default function App() {
 
   const handleLoginSuccess = async (user: any) => {
     setCurrentUser(user);
-    ApiClient.setApiSession(user.id, user.currentSessionId);
-    prefetchCompletedTests(user);
-    await saveUserToCache(user);
-    await SecureStore.setItemAsync('tb_user_email', user.email);
-    await SecureStore.setItemAsync('tb_user_password', user.password);
-    
-    // Refresh catalog bootstrap data
-    const bootRes = await ApiClient.bootstrap();
-    if (bootRes.success) {
-      setNotices(bootRes.noticesList || []);
-      setExamCatalog(bootRes.examCatalog || []);
-      setUsersList(bootRes.usersList || []);
-    }
     setViewMode('dashboard');
+    ApiClient.setApiSession(user.id, user.currentSessionId);
+    
+    prefetchCompletedTests(user);
+    saveUserToCache(user);
+    if (user.email) {
+      SecureStore.setItemAsync('tb_user_email', user.email);
+    }
+    if (user.password) {
+      SecureStore.setItemAsync('tb_user_password', user.password);
+    }
+    
+    ApiClient.bootstrap().then(bootRes => {
+      if (bootRes.success) {
+        setNotices(bootRes.noticesList || []);
+        setExamCatalog(bootRes.examCatalog || []);
+        setUsersList(bootRes.usersList || []);
+      }
+    }).catch(err => console.warn('Bootstrap background sync error:', err));
   };
 
   const handleLogout = async () => {

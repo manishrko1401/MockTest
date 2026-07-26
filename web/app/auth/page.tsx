@@ -146,10 +146,7 @@ export default function AuthPage() {
       }
       const res = await login(email, password);
       if (res.success) {
-        setSuccessMsg(t.authLoginSuccess || 'Successfully logged in! Redirecting...');
-        setTimeout(() => {
-          router.push('/');
-        }, 1500);
+        router.push('/');
       } else {
         setErrorMsg(res.error || t.authLoginFail || 'Invalid credentials. Please register or sign up.');
       }
@@ -177,11 +174,8 @@ export default function AuthPage() {
       
       const res = await signup(name, email.trim(), mobile.trim(), password, referralCodeInput.trim() || undefined);
       if (res.success) {
-        setSuccessMsg(t.authSignupSuccess || 'Account registered successfully! Redirecting...');
         localStorage.setItem('show_signup_congrats_popup', 'true');
-        setTimeout(() => {
-          router.push('/');
-        }, 1500);
+        router.push('/');
       } else {
         setErrorMsg(res.error || t.authSignupFail || 'Email address already registered. Please login.');
       }
