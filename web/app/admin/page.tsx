@@ -18,11 +18,13 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
 import { DatabaseMonitor } from './components/DatabaseMonitor';
+import { VocabManager } from './components/VocabManager';
+import { PracticeSeriesManager } from './components/PracticeSeriesManager';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -109,9 +111,9 @@ const formatTimeAgo = (dateStr?: string | null): string => {
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -1004,9 +1006,7 @@ export default function AdminAnalytics() {
           type: 'success',
           message: `Custom question paper of ${parsedQuestions.length} question(s) successfully uploaded and saved for the target mock test!`
         });
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+        refreshCatalog();
       } else {
         showToast('Error: ' + (data.error || 'Failed to save questions to database.'));
       }
@@ -1374,6 +1374,28 @@ export default function AdminAnalytics() {
                 Bulk Question Importer
               </button>
             )}
+            <button
+              onClick={() => selectTab('vocab')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                activeTab === 'vocab'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <BookOpen className="h-4 w-4" />
+              Vocab Upload & Manager
+            </button>
+            <button
+              onClick={() => selectTab('practice_series')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                activeTab === 'practice_series'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Zap className="h-4 w-4 text-amber-400 fill-amber-400" />
+              Practice Series Manager
+            </button>
             {hasTabAccess('users') && (
               <button
                 onClick={() => selectTab('users')}
@@ -1630,6 +1652,8 @@ export default function AdminAnalytics() {
                 ? (language === 'hi' ? 'αñåαñºαñ┐αñòαñ╛αñ░αñ┐αñò αñÿαÑïαñ╖αñúαñ╛ αñ¬αÑìαñ░αñòαñ╛αñ╢αñò' : 'Official Announcements Publisher')
                 : activeTab === 'support'
                 ? (language === 'hi' ? 'सपोर्ट टीम हेल्पडेस्क' : 'Support Team Helpdesk')
+                : activeTab === 'vocab'
+                ? (language === 'hi' ? 'वोकैब अपलोड और शब्दावली प्रबंधक' : 'Vocab Upload & Catalog Manager')
                 : activeTab === 'attempts'
                 ? (language === 'hi' ? 'टेस्ट एटेम्पटेड लॉग्स' : 'Test Attempt Logs & Active Sittings')
                 : (language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions')}
@@ -1869,6 +1893,20 @@ export default function AdminAnalytics() {
               showToast={showToast}
               setFormQuestionsList={setFormQuestionsList}
               setParsedQuestions={setParsedQuestions}
+            />
+          )}
+
+          {/* TAB: VOCABULARY MANAGEMENT PORTAL */}
+          {activeTab === 'vocab' && (
+            <VocabManager />
+          )}
+
+          {/* TAB: PRACTICE SERIES MANAGER PORTAL */}
+          {activeTab === 'practice_series' && (
+            <PracticeSeriesManager
+              examCatalog={examCatalog}
+              showToast={showToast}
+              onRefreshCatalog={refreshCatalog}
             />
           )}
 

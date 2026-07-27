@@ -5,6 +5,7 @@ export const TRANSLATIONS = {
     logoSub: "Exam Preparation",
     navHome: "Home",
     navTestSeries: "Test Series",
+    navPracticeSeries: "Practice Series",
     navUpdates: "Notices & Announcements",
     navProfile: "My Profile",
     navAdmin: "Admin Panel",
@@ -34,6 +35,9 @@ export const TRANSLATIONS = {
     liveUpdatesTitle: "Live Updates & Exam Alerts",
     liveUpdatesDesc: "Stay updated with the latest exam notices, admit cards release, and result declarations in real-time.",
     viewAllUpdates: "View All Updates",
+    vocabTitle: "Daily Exam Vocabulary Booster",
+    vocabDesc: "Master high-frequency vocabulary words for SSC CGL, Bank PO, and Competitive Exams.",
+    vocabBadge: "📚 DAILY VOCABULARY",
 
     // Updates Page
     updatesTitle: "Live Updates & Examination Alerts",
@@ -47,7 +51,7 @@ export const TRANSLATIONS = {
     visitPortal: "Visit Official Portal",
 
     // Mock Tests Page
-    bookmarks: "Bookmarks",
+    bookmarks: "Bookmark Questions",
     searchMocksPlaceholder: "Search mock exams...",
     examCategories: "Exam Categories",
     unlockAll: "Unlock All Tests",
@@ -219,6 +223,7 @@ export const TRANSLATIONS = {
     logoSub: "परीक्षा की तैयारी",
     navHome: "मुख्य पृष्ठ",
     navTestSeries: "टेस्ट सीरीज",
+    navPracticeSeries: "अभ्यास सीरीज़",
     navUpdates: "सूचनाएं और घोषणाएं",
     navProfile: "मेरी प्रोफाइल",
     navAdmin: "एडमिन पैनल",
@@ -246,8 +251,11 @@ export const TRANSLATIONS = {
     popularDesc: "हम सभी प्रमुख क्षेत्रों के लिए पूर्ण अनुभागीय मॉक बैठकें, हल किए गए प्रश्न पत्र और लाइव विश्लेषण प्रदान करते हैं।",
     exploreTests: "टेस्ट एक्सप्लोर करें",
     liveUpdatesTitle: "लाइव अपडेट और परीक्षा अलर्ट",
-    liveUpdatesDesc: "नवीनतम परीक्षा सूचनाओं, एडमिट कार्ड जारी होने और परीक्षा परिणामों की घोषणाओं से वास्तविक समय में अपडेट रहें।",
+    liveUpdatesDesc: "नवीनतम परीक्षा सूचनाओं, प्रवेश पत्र जारी होने और परिणाम की घोषणाओं के साथ वास्तविक समय में अपडेट रहें।",
     viewAllUpdates: "सभी अपडेट देखें",
+    vocabTitle: "दैनिक परीक्षा शब्दावली बूस्टर",
+    vocabDesc: "SSC CGL, बैंक PO और प्रतियोगी परीक्षाओं के लिए महत्वपूर्ण शब्दों को सीखें।",
+    vocabBadge: "📚 दैनिक शब्दावली",
 
     // Updates Page
     updatesTitle: "लाइव अपडेट और परीक्षा अलर्ट",
@@ -261,7 +269,7 @@ export const TRANSLATIONS = {
     visitPortal: "आधिकारिक पोर्टल पर जाएं",
 
     // Mock Tests Page
-    bookmarks: "बुकमार्क",
+    bookmarks: "बुकमार्क प्रश्न",
     searchMocksPlaceholder: "मॉक परीक्षा खोजें...",
     examCategories: "परीक्षा श्रेणियां",
     unlockAll: "सभी टेस्ट अनलॉक करें",

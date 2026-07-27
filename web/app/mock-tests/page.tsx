@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth, TestCategory, TestSubCategory, MockTestItem } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu, TrendingUp, Coins, MapPin, Sparkles, Trophy } from 'lucide-react';
+import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu, TrendingUp, Coins, MapPin, Sparkles, Trophy, Star } from 'lucide-react';
 import { generateExamSession, EXPLANATIONS } from '../lib/examUtils';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
@@ -537,7 +537,6 @@ export default function MockTestsCatalog() {
                 </span>
               ) : null}
             </button>
-
             {/* Language Selector */}
             <select
               value={language}
@@ -1282,8 +1281,6 @@ export default function MockTestsCatalog() {
             ) : null}
           </button>
 
-
-
           {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
@@ -1618,50 +1615,78 @@ export default function MockTestsCatalog() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 animate-in fade-in duration-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 animate-in fade-in duration-300">
                 {getFilteredSubCategories.map(subCat => {
                   const count = subCat.tests.length;
                   const countStr = count === 1 
                     ? (language === 'hi' ? `1 ${t.mocksCount}` : `1 Mock Test`)
                     : (language === 'hi' ? `${count} ${t.mocksCount}` : `${count} Mock Tests`);
                   
-                  const themeInfo = getCategoryTheme(selectedCategory);
+                  const isSsc = selectedCategory === 'ssc' || subCat.id.includes('ssc');
+                  const isRailways = selectedCategory === 'railways' || subCat.id.includes('railway');
+                  const isBanking = selectedCategory === 'banking' || subCat.id.includes('bank');
+                  const isTeaching = selectedCategory === 'teaching' || subCat.id.includes('teach');
+                  const isUgcNet = selectedCategory === 'ugc_net' || subCat.id.includes('ugc') || subCat.id.includes('state');
+
+                  const accentColor = 
+                    isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
+                    isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
+                    isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
+                    isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
+                    isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
+                    'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
+
+                  const subSubList = (subCat.subSubCategories && subCat.subSubCategories.length > 0)
+                    ? subCat.subSubCategories.map((ssc: any) => ssc.title || ssc.name)
+                    : (subCat.tests || []).map((t: any) => t.title);
 
                   return (
                     <button
                       key={subCat.id}
                       onClick={() => setSelectedSubCategory(subCat.id)}
-                      className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
+                      className={`bg-white dark:bg-slate-950 border border-slate-205 dark:border-slate-800 hover:border-blue-550 dark:hover:border-blue-500 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
                     >
-                      {/* Accent Gradient Border at top */}
-                      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${themeInfo.gradient}`} />
-                      
-                      {/* Radial Glow on Hover */}
-                      <div 
-                        className="absolute -right-16 -top-16 w-32 h-32 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                        style={{ backgroundColor: themeInfo.accentGlow }}
-                      />
+                      {/* Left details */}
+                      <div className="flex-1 flex flex-col justify-between min-w-0">
+                        <div>
+                          {/* Icon Container */}
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-2 bg-slate-50 dark:bg-slate-900 transition duration-300">
+                            {getSubCatIcon(subCat.name, subCat.logoUrl || currentCategoryObj?.logoUrl)}
+                          </div>
 
-                      {/* Icon Container */}
-                      <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md overflow-hidden ${themeInfo.iconBg}`}>
-                        {getSubCatIcon(subCat.name, subCat.logoUrl || currentCategoryObj?.logoUrl)}
+                          {/* Exam Title */}
+                          <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
+                            {subCat.name}
+                          </h4>
+
+                          {/* Test Count Badge */}
+                          <span className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
+                            {countStr}
+                          </span>
+                        </div>
+
+                        {/* CTA Prompt */}
+                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[8.5px] uppercase tracking-wider mt-3 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 w-full">
+                          {language === 'hi' ? "तैयारी शुरू करें" : "Start Practice"} <ChevronRight className="h-2.5 w-2.5 transition group-hover:translate-x-0.5" />
+                        </div>
                       </div>
 
-                      {/* Exam Title */}
-                      <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-850 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2.5 leading-snug line-clamp-2">
-                        {subCat.name}
-                      </h4>
-
-                      {/* Test Count Badge */}
-                      <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 sm:px-3.5 sm:py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg} group-hover:scale-105`}>
-                        {countStr}
-                      </span>
-
-                      {/* Practice CTA Prompt */}
-                      <div className="flex items-center gap-1 text-[9px] uppercase font-black text-blue-600 dark:text-blue-400 tracking-wider mt-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                        {language === 'hi' ? "तैयारी शुरू करें" : "Start Practice"}
-                        <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 duration-200" />
-                      </div>
+                      {/* Right side sub-subcategories / test series list */}
+                      {subSubList && subSubList.length > 0 && (
+                        <div className="border-l border-slate-200/50 dark:border-slate-800/40 pl-2.5 flex flex-col justify-center min-w-[100px] max-w-[125px] shrink-0">
+                          <span className="text-[7.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">Series List</span>
+                          <div className="flex flex-col gap-1">
+                            {subSubList.slice(0, 5).map((itemTitle: string, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1">
+                                <div className="h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-450 shrink-0"></div>
+                                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={itemTitle}>
+                                  {formatSubCategoryName(itemTitle)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </button>
                   );
                 })}

@@ -39,6 +39,7 @@ export interface TestCategory {
   name: string;
   logoUrl?: string;
   isPopular?: boolean;
+  isPracticeSeries?: boolean;
   description?: string;
   countText?: string;
   subCategories: TestSubCategory[];

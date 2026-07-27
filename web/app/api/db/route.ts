@@ -136,7 +136,7 @@ export async function POST(request: Request) {
       'add-subcategory', 'edit-subcategory', 'delete-subcategory',
       'add-subsubcategory', 'edit-subsubcategory', 'delete-subsubcategory',
       'add-mocktest', 'edit-mocktest-title', 'delete-mocktest',
-      'save-custom-questions', 'save-profile-admin', 'db-stats'
+      'save-custom-questions', 'bulk-import-questions', 'save-profile-admin', 'db-stats'
     ];
 
     const userOwnedActions = [
@@ -281,7 +281,8 @@ export async function POST(request: Request) {
       case 'delete-mocktest':
         return await handleDeleteMockTest(data);
       case 'save-custom-questions':
-        return await handleSaveCustomQuestions(data);
+      case 'bulk-import-questions':
+        return await handleSaveCustomQuestions(data || body);
       case 'get-custom-questions':
         return await handleGetCustomQuestions(data);
       case 'reorder-categories':
@@ -324,6 +325,10 @@ export async function POST(request: Request) {
         return await handleUpdateSuggestionStatus(data);
       case 'delete-suggestion':
         return await handleDeleteSuggestion(data);
+      case 'save-practice-attempt':
+        return await handleSavePracticeAttempt(data);
+      case 'get-practice-attempts':
+        return await handleGetPracticeAttempts(data);
       case 'db-stats':
         return await handleDbStats();
       default:
@@ -394,7 +399,80 @@ async function handleDbStats() {
 
     return NextResponse.json({ success: true, stats });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message ?? 'Failed to query db stats' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+async function handleSavePracticeAttempt(data: any) {
+  try {
+    const { userId, categoryId, sectionIndex, correct, wrong, unattempted, attempted, total, accuracy, responses } = data || {};
+    if (!categoryId) {
+      return NextResponse.json({ success: false, error: 'Category ID is required' }, { status: 400 });
+    }
+
+    const uid = userId && userId !== 'guest' ? userId : null;
+
+    // If we have a real userId, upsert into practice_sessions table
+    if (uid && (prisma as any).practiceSession) {
+      const record = await (prisma as any).practiceSession.upsert({
+        where: {
+          userId_categoryId_sectionIndex: {
+            userId: uid,
+            categoryId,
+            sectionIndex: sectionIndex ?? 0
+          }
+        },
+        update: {
+          correct: correct ?? 0,
+          wrong: wrong ?? 0,
+          unattempted: unattempted ?? 0,
+          attempted: attempted ?? 0,
+          total: total ?? 25,
+          accuracy: accuracy ?? 0,
+          responses: responses ?? null,
+          completedAt: new Date()
+        },
+        create: {
+          userId: uid,
+          categoryId,
+          sectionIndex: sectionIndex ?? 0,
+          correct: correct ?? 0,
+          wrong: wrong ?? 0,
+          unattempted: unattempted ?? 0,
+          attempted: attempted ?? 0,
+          total: total ?? 25,
+          accuracy: accuracy ?? 0,
+          responses: responses ?? null,
+          completedAt: new Date()
+        }
+      });
+      return NextResponse.json({ success: true, message: 'Saved to database', attempt: record });
+    }
+
+    // Guest users or fallback: just acknowledge — data persists in localStorage client-side
+    return NextResponse.json({ success: true, message: 'Saved to client storage' });
+  } catch (error: any) {
+    console.error('handleSavePracticeAttempt error:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+async function handleGetPracticeAttempts(data: any) {
+  try {
+    const userId = data?.userId;
+    if (!userId || userId === 'guest' || !(prisma as any).practiceSession) {
+      return NextResponse.json({ success: true, attempts: [] });
+    }
+
+    const records = await (prisma as any).practiceSession.findMany({
+      where: { userId },
+      orderBy: { completedAt: 'desc' }
+    });
+
+    return NextResponse.json({ success: true, attempts: records });
+  } catch (error: any) {
+    console.error('handleGetPracticeAttempts error:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
@@ -1670,14 +1748,17 @@ async function handleReorderMockTests(data: any) {
   return NextResponse.json({ success: true });
 }
 
-async function handleSaveCustomQuestions(data: any) {
-  const { testId, questions } = data;
+async function handleSaveCustomQuestions(rawPayload: any) {
+  const payload = rawPayload || {};
+  const { testId, categoryId, questions } = payload;
+  const targetId = testId || (categoryId ? `${categoryId}_default` : 'practice_series_default');
 
   const bucketName = process.env.TIGRIS_BUCKET_NAME;
+  let s3Url: string | null = null;
 
   if (bucketName && questions && Array.isArray(questions)) {
     try {
-      const fileName = `questions_${testId}.json`;
+      const fileName = `questions_${targetId}.json`;
       const fileBuffer = Buffer.from(JSON.stringify(questions));
 
       await s3Client.send(
@@ -1689,35 +1770,69 @@ async function handleSaveCustomQuestions(data: any) {
         })
       );
 
-      const s3Url = `${process.env.TIGRIS_ENDPOINT || "https://fly.storage.tigris.dev"}/${bucketName}/${fileName}`;
-
-      await prisma.mockTest.update({
-        where: { id: testId },
-        data: {
-          customQuestions: { url: s3Url },
-          questionsCount: questions.length,
-        },
-      });
-
-      return NextResponse.json({ success: true });
+      s3Url = `${process.env.TIGRIS_ENDPOINT || "https://fly.storage.tigris.dev"}/${bucketName}/${fileName}`;
     } catch (err: any) {
       console.error("Failed to upload custom questions to Tigris:", err);
     }
   }
 
-  await prisma.mockTest.update({
-    where: { id: testId },
-    data: {
-      customQuestions: questions,
-      questionsCount: Array.isArray(questions) ? questions.length : 100,
-    },
-  });
+  // Ensure mockTest record exists in database
+  try {
+    const existingTest = await prisma.mockTest.findUnique({
+      where: { id: targetId },
+    });
 
-  return NextResponse.json({ success: true });
+    if (!existingTest) {
+      let defaultSeries = await prisma.testSeries.findFirst();
+      if (!defaultSeries) {
+        const defaultCategory = await prisma.category.create({
+          data: { id: categoryId || 'practice_series_default', name: 'Practice Series' }
+        });
+        const defaultExam = await prisma.exam.create({
+          data: { id: 'practice_exam_default', categoryId: defaultCategory.id, name: 'Practice Exam' }
+        });
+        defaultSeries = await prisma.testSeries.create({
+          data: { id: 'practice_series_default', examId: defaultExam.id, title: 'Practice Series' }
+        });
+      }
+
+      await prisma.mockTest.create({
+        data: {
+          id: targetId,
+          testSeriesId: defaultSeries.id,
+          title: `Practice Questions Set (${targetId})`,
+          durationMinutes: 20,
+          questionsCount: Array.isArray(questions) ? questions.length : 25,
+          maxMarks: 50,
+          requiredTierName: 'None',
+          customQuestions: s3Url ? { url: s3Url } : questions,
+        }
+      });
+    } else {
+      await prisma.mockTest.update({
+        where: { id: targetId },
+        data: {
+          customQuestions: s3Url ? { url: s3Url } : questions,
+          questionsCount: Array.isArray(questions) ? questions.length : existingTest.questionsCount,
+        },
+      });
+    }
+  } catch (err: any) {
+    console.error("Prisma mockTest update error:", err);
+  }
+
+  return NextResponse.json({
+    success: true,
+    url: s3Url,
+    questionsCount: Array.isArray(questions) ? questions.length : 0
+  });
 }
 
 async function handleGetCustomQuestions(data: any) {
-  const { testId } = data;
+  const { testId } = data || {};
+  if (!testId) {
+    return NextResponse.json({ success: true, customQuestions: null });
+  }
 
   const mockTest = await prisma.mockTest.findUnique({
     where: { id: testId },

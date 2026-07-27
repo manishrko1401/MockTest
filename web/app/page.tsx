@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
 import { useIsMobile } from './useIsMobile';
+import VocabSection from './components/VocabSection';
 
 const EXAMS_BY_CATEGORY: Record<string, { id: string; name: string }[]> = {
   ssc: [
@@ -467,6 +468,7 @@ const formatSubCategoryName = (name: string) => {
           <div className="fixed inset-x-0 top-14 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-205 dark:border-slate-900 z-30 shadow-lg p-6 flex flex-col gap-6 animate-in slide-in-from-top-4 duration-200">
             <nav className="flex flex-col gap-4 text-sm font-bold text-slate-655 dark:text-slate-300">
               <Link href="/mock-tests" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navTestSeries}</Link>
+              <Link href="/practice-series" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navPracticeSeries}</Link>
               <Link href="/updates" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navUpdates}</Link>
               <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navProfile}</Link>
               {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
@@ -728,6 +730,9 @@ const formatSubCategoryName = (name: string) => {
               })}
             </div>
           </section>
+
+          {/* MOBILE VOCABULARY BOOSTER SECTION */}
+          <VocabSection language={language} />
 
           {/* MOBILE TABS UPDATES SECTION */}
           <section className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-900">
@@ -1110,6 +1115,7 @@ const formatSubCategoryName = (name: string) => {
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-505 dark:text-slate-400">
             <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
+            <Link href="/practice-series" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navPracticeSeries}</Link>
             <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navUpdates}</Link>
             <Link href="/profile" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navProfile}</Link>
             {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
@@ -1409,6 +1415,11 @@ const formatSubCategoryName = (name: string) => {
                 );
               })}
         </div>
+      </section>
+
+      {/* DESKTOP VOCABULARY BOOSTER SECTION */}
+      <section className="py-12 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900">
+        <VocabSection language={language} />
       </section>
 
       {/* PORTAL UPDATES BOARD */}

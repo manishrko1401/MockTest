@@ -1,0 +1,3377 @@
+[
+  {
+    "id": 1,
+    "word": "SCEPTICAL",
+    "pos": "(adj)",
+    "hindiMeaning": "संदेहवादी / शक्की",
+    "meaning": "not easily convinced; having doubts or reservations.",
+    "synonyms": [
+      "dubious",
+      "doubtful",
+      "cynical",
+      "distrustful"
+    ],
+    "antonyms": [
+      "believer"
+    ],
+    "usage": "The skeptical woman wanted to get a psychic reading even though she didn’t believe that people could see the future."
+  },
+  {
+    "id": 2,
+    "word": "EKE",
+    "pos": "(verb)",
+    "hindiMeaning": "बनाए रखना / बचा कर खर्च करना",
+    "meaning": "make an amount or supply of something last longer by using or consuming it frugally.",
+    "synonyms": [
+      "save",
+      "augment"
+    ],
+    "antonyms": [
+      "squander"
+    ],
+    "usage": "She managed to eke out her student loan till the end of the year."
+  },
+  {
+    "id": 3,
+    "word": "CURATE",
+    "pos": "(verb)",
+    "hindiMeaning": "संग्रहित व व्यवस्थित करना",
+    "meaning": "select, organize, and look after the items in (a collection or exhibition).",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": "Both exhibitions are curated by the Centre's director."
+  },
+  {
+    "id": 4,
+    "word": "GOSPEL",
+    "pos": "(noun)",
+    "hindiMeaning": "अकाट्य सत्य / परम सिद्धांत",
+    "meaning": "a thing that is absolutely true.",
+    "synonyms": [
+      "fact",
+      "doctrine",
+      "truth",
+      "authority"
+    ],
+    "antonyms": [
+      "doubt",
+      "unbelief"
+    ],
+    "usage": "Missionaries were sent to preach the Gospel."
+  },
+  {
+    "id": 5,
+    "word": "CYNICISM",
+    "pos": "(noun)",
+    "hindiMeaning": "कुटिलता / निराशावाद",
+    "meaning": "an inclination to believe that people are motivated purely by self- interest; scepticism.",
+    "synonyms": [
+      "scepticism",
+      "doubt",
+      "distrust",
+      "mistrust"
+    ],
+    "antonyms": [
+      "optimism"
+    ],
+    "usage": "He's often been accused of cynicism in his attitude towards politics."
+  },
+  {
+    "id": 6,
+    "word": "CORROBORATION",
+    "pos": "(noun)",
+    "hindiMeaning": "पुष्टि / समर्थन",
+    "meaning": "evidence which confirms or supports a statement, theory, or finding; confirmation.",
+    "synonyms": [
+      "verification",
+      "attestation",
+      "affirmation",
+      "ratification"
+    ],
+    "antonyms": [],
+    "usage": "The prosecution provided corroboration for her allegation."
+  },
+  {
+    "id": 7,
+    "word": "RENUNCIATION",
+    "pos": "(noun)",
+    "hindiMeaning": "अस्वीकार / त्याग",
+    "meaning": "the formal rejection of something, typically a belief, claim, or course of action.",
+    "synonyms": [
+      "repudiation",
+      "rejection",
+      "abandonment"
+    ],
+    "antonyms": [
+      "agreement",
+      "approval",
+      "claim",
+      "sanction"
+    ],
+    "usage": "He made a renunciation of his chairmanship."
+  },
+  {
+    "id": 8,
+    "word": "SCAB",
+    "pos": "(noun)",
+    "hindiMeaning": "घाव की पपड़ी",
+    "meaning": "a dry, rough protective crust that forms over a cut or wound during healing.",
+    "synonyms": [
+      "blister",
+      "crater",
+      "defect",
+      "wound"
+    ],
+    "antonyms": [
+      "perfection"
+    ],
+    "usage": "A scab formed on his leg."
+  },
+  {
+    "id": 9,
+    "word": "UNABATED",
+    "pos": "(adj)",
+    "hindiMeaning": "अक्षीण / निरंतर",
+    "meaning": "without any reduction in intensity or strength.",
+    "synonyms": [
+      "incessant",
+      "persistent"
+    ],
+    "antonyms": [
+      "intermittent",
+      "relenting"
+    ],
+    "usage": "They danced all night with unabated energy."
+  },
+  {
+    "id": 10,
+    "word": "GRAPEVINE",
+    "pos": "(noun)",
+    "hindiMeaning": "अफवाह / गपशप",
+    "meaning": "used to refer to the circulation of rumours and unofficial information.",
+    "synonyms": [
+      "gossip",
+      "hearsay",
+      "rumor"
+    ],
+    "antonyms": [
+      "truth"
+    ],
+    "usage": "I heard on the grapevine that he was leaving - is it true?"
+  },
+  {
+    "id": 11,
+    "word": "ADVOCATE",
+    "pos": "(verb)",
+    "hindiMeaning": "समर्थन करना / वकील",
+    "meaning": "to defend or promote something",
+    "synonyms": [
+      "backer",
+      "defender"
+    ],
+    "antonyms": [
+      "opponent",
+      "protester"
+    ],
+    "usage": "Environmental protesters often advocate for cleaner energy practices."
+  },
+  {
+    "id": 12,
+    "word": "AGITATE",
+    "pos": "(verb)",
+    "hindiMeaning": "उत्तेजित करना / आंदोलन करना",
+    "meaning": "to promote something",
+    "synonyms": [
+      "disturb",
+      "beat"
+    ],
+    "antonyms": [
+      "calm",
+      "soothe"
+    ],
+    "usage": "They’re agitating for better health care."
+  },
+  {
+    "id": 13,
+    "word": "ANALOGOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "अनुरूप / समान",
+    "meaning": "similar but not identical",
+    "synonyms": [
+      "akin",
+      "alike"
+    ],
+    "antonyms": [
+      "unlike",
+      "alien"
+    ],
+    "usage": "Green onions are considered analogous to spring onions."
+  },
+  {
+    "id": 14,
+    "word": "BITTERSWEET",
+    "pos": "(adj)",
+    "hindiMeaning": "खट्टा-मीठा / सुख-दुख का मिश्रण",
+    "meaning": "tinged with a feeling of sadness",
+    "synonyms": [
+      "tangerine"
+    ],
+    "antonyms": [
+      "happiness"
+    ],
+    "usage": "The ending of the romance movie was bittersweet."
+  },
+  {
+    "id": 15,
+    "word": "BRAWL",
+    "pos": "(noun)",
+    "hindiMeaning": "हाथापाई / विवाद / दंगा",
+    "meaning": "an intense, loud fight",
+    "synonyms": [
+      "uproar",
+      "clash"
+    ],
+    "antonyms": [
+      "calm",
+      "peace"
+    ],
+    "usage": "A brawl broke out at school today after one student accused another of cheating."
+  },
+  {
+    "id": 16,
+    "word": "CIVIC",
+    "pos": "(adj)",
+    "hindiMeaning": "नागरिक / नगर का",
+    "meaning": "relating to the city or citizens",
+    "synonyms": [
+      "local",
+      "public"
+    ],
+    "antonyms": [
+      "tribal"
+    ],
+    "usage": "Voting is a civic duty."
+  },
+  {
+    "id": 17,
+    "word": "CIVILITY",
+    "pos": "(noun)",
+    "hindiMeaning": "शिष्टाचार / सभ्यता",
+    "meaning": "to declare formally and with authority",
+    "synonyms": [
+      "directive",
+      "edict"
+    ],
+    "antonyms": [
+      "lawlessness"
+    ],
+    "usage": "The president decreed that Halloween would henceforth be a national holiday."
+  },
+  {
+    "id": 18,
+    "word": "DUBIOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "संदिग्ध / शक्की",
+    "meaning": "doubtful, questionable",
+    "synonyms": [
+      "arguable",
+      "hesitant"
+    ],
+    "antonyms": [
+      "honest",
+      "certain"
+    ],
+    "usage": "The man’s claims to the throne were dubious since nobody k new where he’d come from."
+  },
+  {
+    "id": 19,
+    "word": "CLOUT",
+    "pos": "(noun)",
+    "hindiMeaning": "प्रभाव / ताकत",
+    "meaning": "to transmit, bestow, or disclose",
+    "synonyms": [
+      "impose",
+      "bestow"
+    ],
+    "antonyms": [
+      "keep",
+      "withhold"
+    ],
+    "usage": "Parents must impart common sense to their children."
+  },
+  {
+    "id": 20,
+    "word": "INFER",
+    "pos": "(verb)",
+    "hindiMeaning": "निष्कर्ष निकालना",
+    "meaning": "to guess, conclude, or derive by reasoning",
+    "synonyms": [
+      "assume",
+      "consider"
+    ],
+    "antonyms": [
+      "neglect"
+    ],
+    "usage": "You can infer from this quotation that the writer didn’t care for “pretty” language."
+  },
+  {
+    "id": 21,
+    "word": "SKULK",
+    "pos": "(verb)",
+    "hindiMeaning": "छिपकर रहना / घात लगाकर बैठना",
+    "meaning": "to move about in a sly or secret manner.",
+    "synonyms": [
+      "lurk",
+      "shirk",
+      "slide",
+      "sneak."
+    ],
+    "antonyms": [
+      "hustle",
+      "hurry",
+      "quest",
+      "run."
+    ],
+    "usage": "When the criminal surveyed the jewelry store, he tried to skulk around the neighborhood without being noticed."
+  },
+  {
+    "id": 22,
+    "word": "DEFERENCE",
+    "pos": "(noun)",
+    "hindiMeaning": "आदर / सम्मान",
+    "meaning": "reigning; ruling.",
+    "synonyms": [
+      "dominant",
+      "governing",
+      "rampant",
+      "influential."
+    ],
+    "antonyms": [
+      "powerless",
+      "ineffectual",
+      "inadequate",
+      "ineffective."
+    ],
+    "usage": "After all, a queen regnant sits on the throne and the monarchy must be feeling pressure from its seemingly more progressive neighbors."
+  },
+  {
+    "id": 23,
+    "word": "DEGRADE",
+    "pos": "(verb)",
+    "hindiMeaning": "अपमानित करना / नीचा दिखाना",
+    "meaning": "distracted or absent-minded.",
+    "synonyms": [
+      "preoccupied",
+      "engrossed",
+      "forgetful",
+      "inattentive."
+    ],
+    "antonyms": [
+      "concentrating",
+      "attentive",
+      "focused",
+      "unperturbed."
+    ],
+    "usage": "He grew more and more distrait as hours passed without confirmation that there were survivors of the plane crash."
+  },
+  {
+    "id": 24,
+    "word": "DEMUR",
+    "pos": "(verb)",
+    "hindiMeaning": "आपत्ति करना / हिचकिचाना",
+    "meaning": "a quick, clever reply to an insult or criticism.",
+    "synonyms": [
+      "retaliation",
+      "repartee",
+      "squelch",
+      "quip."
+    ],
+    "antonyms": [
+      "request",
+      "query",
+      "bidding",
+      "catechize."
+    ],
+    "usage": "A riposte to that argument was provided by Sea Containers, the shipping group headed by James Sherwood."
+  },
+  {
+    "id": 25,
+    "word": "CLIMAX",
+    "pos": "(noun)",
+    "hindiMeaning": "चरम सीमा / पराकाष्ठा",
+    "meaning": "having or marked by sympathy and consideration for others.",
+    "synonyms": [
+      "benevolent",
+      "compassionate",
+      "humane",
+      "kindhearted."
+    ],
+    "antonyms": [
+      "atrocious",
+      "brutal",
+      "callous",
+      "fiendish."
+    ],
+    "usage": "The queen had a benignant reputation and was loved for her caring treatment of others."
+  },
+  {
+    "id": 26,
+    "word": "COARSE",
+    "pos": "(adj)",
+    "hindiMeaning": "खुरदुरा / अशिष्ट",
+    "meaning": "conceal or disguise one's true feelings or beliefs.",
+    "synonyms": [
+      "dissimulate",
+      "feign",
+      "masquerade",
+      "counterfeit."
+    ],
+    "antonyms": [
+      "expose",
+      "unveil",
+      "reveal",
+      "exhibit."
+    ],
+    "usage": "The con man did his best to dissemble his real motives from the wealthy widow."
+  },
+  {
+    "id": 27,
+    "word": "NONPAREIL",
+    "pos": "(adj)",
+    "hindiMeaning": "अद्वितीय / बेमिसाल / अनुपम",
+    "meaning": "having no match or equal; unrivalled.",
+    "synonyms": [
+      "incomparable",
+      "unrivalled",
+      "unparalleled",
+      "unsurpassable."
+    ],
+    "antonyms": [
+      "common",
+      "normal",
+      "ordinary",
+      "inferior."
+    ],
+    "usage": "The champions deserved the title because they were nonpareil all season and won every game."
+  },
+  {
+    "id": 28,
+    "word": "STENTORIAN",
+    "pos": "(adj)",
+    "hindiMeaning": "बुलंद / गर्जनपूर्ण (आवाज)",
+    "meaning": "(of a person's voice) loud and powerful.",
+    "synonyms": [
+      "booming",
+      "clangorous",
+      "piercing",
+      "roaring."
+    ],
+    "antonyms": [
+      "soothing",
+      "muffled",
+      "muted",
+      "softened."
+    ],
+    "usage": "When my father speaks in a stentorian voice, I know I’m in trouble."
+  },
+  {
+    "id": 29,
+    "word": "PREPOSTEROUS",
+    "pos": "(adj)",
+    "hindiMeaning": "निरर्थक / बेतुका / हास्यास्पद",
+    "meaning": "a confused mixture.",
+    "synonyms": [
+      "mishmash",
+      "jumble",
+      "hodgepodge",
+      "turmoil."
+    ],
+    "antonyms": [
+      "constituent",
+      "ravel",
+      "sequence",
+      "categorization."
+    ],
+    "usage": "The present gun law is a farrago of nonsense as most of it is unenforceable."
+  },
+  {
+    "id": 30,
+    "word": "EXHAUSTIVE",
+    "pos": "(adj)",
+    "hindiMeaning": "संपूर्ण / विस्तृत",
+    "meaning": "kind or compassionate treatment especially towards someone who is undeserving of it.",
+    "synonyms": [
+      "clemency",
+      "forbearance",
+      "philanthropy",
+      "empathy."
+    ],
+    "antonyms": [
+      "requital",
+      "vindictiveness",
+      "virulence",
+      "vitriol."
+    ],
+    "usage": "This savage punishment was approved by the higher officers of the navy, who showed great lenity to men of their own rank."
+  },
+  {
+    "id": 31,
+    "word": "FUNGIBLE",
+    "pos": "(adj)",
+    "hindiMeaning": "विनिमेय / परिवर्तनीय",
+    "meaning": "(of goods contracted for without an individual specimen being specified) replaceable by another identical item; mutually interchangeable.",
+    "synonyms": [
+      "compatible",
+      "synonymous"
+    ],
+    "antonyms": [
+      "different",
+      "dissimilar"
+    ],
+    "usage": "The two automobiles are not fungible because one vehicle is worth more than the other vehicle."
+  },
+  {
+    "id": 32,
+    "word": "ODIOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "घिनौना / अप्रिय",
+    "meaning": "extremely unpleasant; repulsive.",
+    "synonyms": [
+      "revolting",
+      "repulsive",
+      "repellent",
+      "repugnant"
+    ],
+    "antonyms": [
+      "delightful",
+      "pleasant",
+      "agreeable",
+      "charming"
+    ],
+    "usage": "The athlete got arrested for participating in the odious sport of dog fighting."
+  },
+  {
+    "id": 33,
+    "word": "CYNICAL",
+    "pos": "(adj)",
+    "hindiMeaning": "कुटिल / निंदक",
+    "meaning": "doubtful as to whether something will happen or whether it is worthwhile.",
+    "synonyms": [
+      "sceptical",
+      "doubtful",
+      "distrustful",
+      "suspicious"
+    ],
+    "antonyms": [
+      "optimistic",
+      "credulous"
+    ],
+    "usage": "She may be cynical about the film industry, but ultimately she has no intention of biting the hand that feeds her."
+  },
+  {
+    "id": 34,
+    "word": "COMPLIANT",
+    "pos": "(adj)",
+    "hindiMeaning": "आज्ञाकारी / अनुपालन करने वाला",
+    "meaning": "not openly acknowledged or displayed.",
+    "synonyms": [
+      "secret",
+      "furtive",
+      "clandestine",
+      "surreptitious"
+    ],
+    "antonyms": [
+      "overt",
+      "above board"
+    ],
+    "usage": "Every measure, both overt and covert, is being taken against terrorists."
+  },
+  {
+    "id": 35,
+    "word": "ASTUTE",
+    "pos": "(adj)",
+    "hindiMeaning": "चतुर / चालाक",
+    "meaning": "having or showing an ability to accurately assess situations or people and turn this to one's advantage.",
+    "synonyms": [
+      "shrewd",
+      "sharp",
+      "sharp-witted",
+      "razor-sharp",
+      "acute"
+    ],
+    "antonyms": [],
+    "usage": "A good leader must be an astute judge of ability."
+  },
+  {
+    "id": 36,
+    "word": "CONCEDE",
+    "pos": "(verb)",
+    "hindiMeaning": "स्वीकार करना / मान लेना",
+    "meaning": "not having any serious purpose or value.",
+    "synonyms": [
+      "flippant",
+      "glib",
+      "waggish"
+    ],
+    "antonyms": [
+      "serious",
+      "practical",
+      "important"
+    ],
+    "usage": "Isabelle was a frivolous little fool, vain and flighty."
+  },
+  {
+    "id": 37,
+    "word": "IRASCIBLE",
+    "pos": "(adj)",
+    "hindiMeaning": "चिड़चिड़ा / क्रोधी",
+    "meaning": "having or showing a tendency to be easily angered.",
+    "synonyms": [
+      "irritable",
+      "quick-tempered",
+      "short-tempered",
+      "bad-tempered",
+      "ill- tempered"
+    ],
+    "antonyms": [
+      "cool",
+      "cheerful"
+    ],
+    "usage": "He was recognised to be highly jealous and irascible."
+  },
+  {
+    "id": 38,
+    "word": "CONVICTION",
+    "pos": "(noun)",
+    "hindiMeaning": "दोषसिद्धि / दृढ़ विश्वास",
+    "meaning": "public shame or disgrace.",
+    "synonyms": [
+      "shame",
+      "humiliation",
+      "embarrassment",
+      "mortification"
+    ],
+    "antonyms": [
+      "honour"
+    ],
+    "usage": "He feared the ignominy of being exposed as a spy."
+  },
+  {
+    "id": 39,
+    "word": "TIZZY",
+    "pos": "(noun)",
+    "hindiMeaning": "घबराहट / अति-उत्तेजना / व्याकुलता",
+    "meaning": "a state of nervous excitement or agitation.",
+    "synonyms": [
+      "acrimony",
+      "animosity",
+      "annoyance",
+      "chargin"
+    ],
+    "antonyms": [
+      "calm",
+      "calmness",
+      "delight",
+      "ease"
+    ],
+    "usage": "Her mother was in a tizzy over Liz's divorce."
+  },
+  {
+    "id": 40,
+    "word": "DEARTH",
+    "pos": "(noun)",
+    "hindiMeaning": "अकाल / कमी",
+    "meaning": "unfriendly; hostile.",
+    "synonyms": [
+      "hostile",
+      "unfriendly",
+      "antagonistic",
+      "ill-disposed",
+      "unkind"
+    ],
+    "antonyms": [
+      "friendly",
+      "warm"
+    ],
+    "usage": "It may have become inimical to our happiness."
+  },
+  {
+    "id": 41,
+    "word": "FORBID",
+    "pos": "(verb)",
+    "hindiMeaning": "निषेध करना / मना करना",
+    "meaning": "to refuse to allow something",
+    "synonyms": [
+      "ban",
+      "block"
+    ],
+    "antonyms": [
+      "add",
+      "admit"
+    ],
+    "usage": "City Ordinance 126 forbids car parking in this area of New York."
+  },
+  {
+    "id": 42,
+    "word": "EXACERBATE",
+    "pos": "(verb)",
+    "hindiMeaning": "बिगाड़ना / बदतर बनाना",
+    "meaning": "feeling happy and also slightly sad when you think about things that happened in the past",
+    "synonyms": [
+      "regretful",
+      "sentimental"
+    ],
+    "antonyms": [
+      "happy"
+    ],
+    "usage": "Talking about our old family holidays has made me feel all nostalgic."
+  },
+  {
+    "id": 43,
+    "word": "EMANCIPATE",
+    "pos": "(verb)",
+    "hindiMeaning": "स्वतंत्र करना / मुक्त करना",
+    "meaning": "to give people social or political freedom and rights",
+    "synonyms": [
+      "liberate",
+      "loosen"
+    ],
+    "antonyms": [
+      "detain",
+      "hold"
+    ],
+    "usage": "It neither made him to be human to his slaves, nor to emancipate them."
+  },
+  {
+    "id": 44,
+    "word": "EXEMPLARY",
+    "pos": "(adj)",
+    "hindiMeaning": "अनुकरणीय / आदर्श",
+    "meaning": "not able to be changed or persuaded",
+    "synonyms": [
+      "stern",
+      "unchanged"
+    ],
+    "antonyms": [
+      "flexible"
+    ],
+    "usage": "We were disappointed that they insisted on such a rigid interpretation of the rules. Buy RRB ALP Stage II Physics & Maths Test Series"
+  },
+  {
+    "id": 45,
+    "word": "EXONERATE",
+    "pos": "(verb)",
+    "hindiMeaning": "दोषमुक्त करना / बरी करना",
+    "meaning": "deep love, devotion, and respect",
+    "synonyms": [
+      "love",
+      "affection"
+    ],
+    "antonyms": [
+      "hatred",
+      "dislike"
+    ],
+    "usage": "She smiled in adoration of the picture her daughter drew for her."
+  },
+  {
+    "id": 46,
+    "word": "EXTRANEOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "अनावश्यक / बाहरी",
+    "meaning": "the act of obeying rules",
+    "synonyms": [
+      "conforment",
+      "consent"
+    ],
+    "antonyms": [
+      "difference",
+      "refusal"
+    ],
+    "usage": "In the army, there are harsh consequences for soldiers who are not in compliance with military laws."
+  },
+  {
+    "id": 47,
+    "word": "IDOLIZE",
+    "pos": "(verb)",
+    "hindiMeaning": "अत्यधिक पूजना / आदर्श मानना",
+    "meaning": "to adore, admire, or love greatly",
+    "synonyms": [
+      "admire",
+      "acknowledge"
+    ],
+    "antonyms": [
+      "dislike",
+      "disrespect"
+    ],
+    "usage": "She wanted someone to idolize her for her strong work ethic."
+  },
+  {
+    "id": 48,
+    "word": "FACILITATE",
+    "pos": "(verb)",
+    "hindiMeaning": "सुगम बनाना / सहायता करना",
+    "meaning": "politeness",
+    "synonyms": [
+      "comity",
+      "decorum"
+    ],
+    "antonyms": [
+      "rudeness"
+    ],
+    "usage": "Men were considered gentlemen by their behavior, but now the civility has worn off."
+  },
+  {
+    "id": 49,
+    "word": "FASTIDIOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "तुनकमिज़ाज / हठी",
+    "meaning": "to glorify or place above others",
+    "synonyms": [
+      "dignify",
+      "glorify"
+    ],
+    "antonyms": [
+      "blame",
+      "condemn"
+    ],
+    "usage": "For a fee, most celebrities will exalt a product by pretending to like it."
+  },
+  {
+    "id": 50,
+    "word": "FEASIBLE",
+    "pos": "(adj)",
+    "hindiMeaning": "व्यावहारिक / संभव",
+    "meaning": "to regard someone or something with great respect or devotion",
+    "synonyms": [
+      "admire",
+      "adore"
+    ],
+    "antonyms": [
+      "criticize"
+    ],
+    "usage": "It’s a sad truth that many Americans revere movie stars and sports figures as demi-gods."
+  },
+  {
+    "id": 51,
+    "word": "FERVENT",
+    "pos": "(adj)",
+    "hindiMeaning": "उत्कट / जोशिला",
+    "meaning": "conspicuously inscribe or display a design on.",
+    "synonyms": [
+      "decorate",
+      "embellish"
+    ],
+    "antonyms": [],
+    "usage": "My crafty sister-in-law was able to emblazon my t-shirt with a glittery monogram."
+  },
+  {
+    "id": 52,
+    "word": "FLAMBOYANT",
+    "pos": "(adj)",
+    "hindiMeaning": "भड़कीला / आकर्षक",
+    "meaning": "envelop completely and hide from view.",
+    "synonyms": [
+      "conceal",
+      "pall"
+    ],
+    "antonyms": [
+      "disclose",
+      "divulge"
+    ],
+    "usage": "The boy is trying to enshroud himself by placing a hoodie over his head."
+  },
+  {
+    "id": 53,
+    "word": "FORTUITOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "आकस्मिक / भाग्यशाली",
+    "meaning": "to irritate; annoy",
+    "synonyms": [
+      "afflict",
+      "agitate",
+      "annoy",
+      "exasperate"
+    ],
+    "antonyms": [
+      "aid",
+      "appease",
+      "soothe"
+    ],
+    "usage": "I get irritated when people go out of their way to vex me with their small problems."
+  },
+  {
+    "id": 54,
+    "word": "ESOTERIC",
+    "pos": "(adj)",
+    "hindiMeaning": "गूढ़ / गोपनीय",
+    "meaning": "mysterious, obscure",
+    "synonyms": [
+      "abstruse",
+      "mystical"
+    ],
+    "antonyms": [
+      "common",
+      "familiar"
+    ],
+    "usage": "The medical research was so esoteric that only a few physicians could actually understand the results."
+  },
+  {
+    "id": 55,
+    "word": "FOSTER",
+    "pos": "(verb)",
+    "hindiMeaning": "बढ़ावा देना / पोषण करना",
+    "meaning": "a grip around the neck of another person that can kill by asphyxiation if held for long enough.",
+    "synonyms": [
+      "grip",
+      "monopoly"
+    ],
+    "antonyms": [],
+    "usage": "These companies are determined to keep a stranglehold on the banana industry."
+  },
+  {
+    "id": 56,
+    "word": "CONJOIN",
+    "pos": "(verb)",
+    "hindiMeaning": "एकत्रित होना / जोड़ना",
+    "meaning": "join; combine.",
+    "synonyms": [
+      "adjin",
+      "affix",
+      "associate",
+      "bind"
+    ],
+    "antonyms": [
+      "detach",
+      "disconnect",
+      "disjoin"
+    ],
+    "usage": "America's rise in rates was conjoined with higher rates elsewhere."
+  },
+  {
+    "id": 57,
+    "word": "STASH",
+    "pos": "(verb)",
+    "hindiMeaning": "छिपाने की जगह / गुप्त धन",
+    "meaning": "store (something) safely in a hidden or secret place.",
+    "synonyms": [
+      "bury",
+      "conceal",
+      "disguise",
+      "smuggle"
+    ],
+    "antonyms": [
+      "expose",
+      "reveal"
+    ],
+    "usage": "Stash old plastic or paper shopping bags near the rubbish or garbage bin and then you can re-cycle them as bin liners."
+  },
+  {
+    "id": 58,
+    "word": "FRUGAL",
+    "pos": "(adj)",
+    "hindiMeaning": "मितव्ययी / किफायती",
+    "meaning": "massage or squeeze with the hands.",
+    "synonyms": [
+      "massage",
+      "rub"
+    ],
+    "antonyms": [],
+    "usage": "Knead the dough lightly, then shape it into a round loaf."
+  },
+  {
+    "id": 59,
+    "word": "FUTILE",
+    "pos": "(adj)",
+    "hindiMeaning": "व्यर्थ / निरर्थक",
+    "meaning": "wrap (someone, especially a baby) in garments or cloth.",
+    "synonyms": [
+      "clothe",
+      "sheathe",
+      "enwrap"
+    ],
+    "antonyms": [
+      "uncover",
+      "unwrap"
+    ],
+    "usage": "I simply swaddle my quart jar in several kitchen towels."
+  },
+  {
+    "id": 60,
+    "word": "GARRULOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "बातूनी / वाचाल",
+    "meaning": "walk with short quick steps in an affectedly dainty manner.",
+    "synonyms": [
+      "crumble",
+      "waddle"
+    ],
+    "antonyms": [],
+    "usage": "He had a strange, mincing walk. 1.SEDATE: (adjective) ़ं त Meaning: avoiding excitement or great activity and usually calm and relaxed. Synonyms: calm, composed, recollected, tranquil. Antonyms: agitated, discomposed, flustered, perturbed. Usage: Dean stepped back further, the smile fading from his face as the two men drove away at a very sedate pace."
+  },
+  {
+    "id": 61,
+    "word": "BEDECK",
+    "pos": "(verb)",
+    "hindiMeaning": "सजाना / संवारना",
+    "meaning": "to decorate or cover.",
+    "synonyms": [
+      "adorn",
+      "bedizen",
+      "embellish",
+      "emblaze."
+    ],
+    "antonyms": [
+      "denude",
+      "blemish",
+      "deface",
+      "disfigure."
+    ],
+    "usage": "The cars were all bedecked with flowers for the wedding ceremony."
+  },
+  {
+    "id": 62,
+    "word": "GREGARIOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "झुंड में रहने वाला / मिलनसार",
+    "meaning": "a tiny piece of a substance; a speck.",
+    "synonyms": [
+      "bit",
+      "dribble",
+      "fleck",
+      "nugget."
+    ],
+    "antonyms": [
+      "lump",
+      "abundance",
+      "bushel",
+      "heaps."
+    ],
+    "usage": "Feeling anxious about the state of her home, the obsessive housewife scrubbed away every tiny mote of dust."
+  },
+  {
+    "id": 63,
+    "word": "GULLIBLE",
+    "pos": "(adj)",
+    "hindiMeaning": "सीधा-साधा / आसानी से धोखा खाने वाला",
+    "meaning": "surround; enclose.",
+    "synonyms": [
+      "encircle",
+      "envelop",
+      "cloak",
+      "swathe."
+    ],
+    "antonyms": [
+      "unbridle",
+      "free",
+      "open",
+      "release."
+    ],
+    "usage": "The stone circle was environed by an expanse of peat soil."
+  },
+  {
+    "id": 64,
+    "word": "HACKNEYED",
+    "pos": "(adj)",
+    "hindiMeaning": "घिसा-पिटा / साधारण",
+    "meaning": "show or guide (someone) somewhere.",
+    "synonyms": [
+      "lead",
+      "accompany",
+      "conduct",
+      "assist."
+    ],
+    "antonyms": [
+      "retract",
+      "conclude",
+      "cease",
+      "stop."
+    ],
+    "usage": "A nurse ushered us into the hospital room."
+  },
+  {
+    "id": 65,
+    "word": "VERNACULAR",
+    "pos": "(noun)",
+    "hindiMeaning": "स्थानीय भाषा / मातृभाषा",
+    "meaning": "used in or suitable for speech and not formal writing.",
+    "synonyms": [
+      "colloquial",
+      "jargon",
+      "argot",
+      "patois."
+    ],
+    "antonyms": [
+      "standard",
+      "undialectical",
+      "genteel",
+      "formal."
+    ],
+    "usage": "While the author never stated the novel's setting, the vernacular of the characters identified the location as somewhere in Asia."
+  },
+  {
+    "id": 66,
+    "word": "SACK",
+    "pos": "(verb)",
+    "hindiMeaning": "निकाल देना / बर्खास्त करना",
+    "meaning": "dismiss from employment.",
+    "synonyms": [
+      "bounce",
+      "discharge",
+      "dismiss",
+      "terminate"
+    ],
+    "antonyms": [
+      "recruit",
+      "employ",
+      "engage",
+      "hire."
+    ],
+    "usage": "Any official found to be involved would be sacked on the spot."
+  },
+  {
+    "id": 67,
+    "word": "HAPHAZARD",
+    "pos": "(adj)",
+    "hindiMeaning": "अव्यवस्थित / बेतरतीब",
+    "meaning": "secret; concealed.",
+    "synonyms": [
+      "covert",
+      "subversive",
+      "sunken",
+      "private."
+    ],
+    "antonyms": [
+      "aboveground",
+      "surface",
+      "open",
+      "palpable."
+    ],
+    "usage": "The robbers are digging a subterranean path that will allow them to enter the bank from underneath the vault’s floor."
+  },
+  {
+    "id": 68,
+    "word": "SUBVERT",
+    "pos": "(verb)",
+    "hindiMeaning": "व्यवस्था भंग करना / तख्तापलट करना",
+    "meaning": "undermine the power and authority of (an established system or institution).",
+    "synonyms": [
+      "destabilize",
+      "unsettle",
+      "overthrow",
+      "depose."
+    ],
+    "antonyms": [
+      "dignify",
+      "exalt",
+      "honor",
+      "ameliorate."
+    ],
+    "usage": "She subverted my noble desire to do a good deed without reward."
+  },
+  {
+    "id": 69,
+    "word": "HARBINGER",
+    "pos": "(noun)",
+    "hindiMeaning": "अग्रदूत / संदेशवाहक",
+    "meaning": "to make final, definite, or beyond dispute.",
+    "synonyms": [
+      "settle",
+      "conclude",
+      "finalize",
+      "wrap up."
+    ],
+    "antonyms": [
+      "confuse",
+      "unsettle",
+      "release",
+      "unfasten."
+    ],
+    "usage": "Her work on the project should clinch her a promotion."
+  },
+  {
+    "id": 70,
+    "word": "AGILE",
+    "pos": "(adj)",
+    "hindiMeaning": "चुस्त / फूर्तीला",
+    "meaning": "able to move quickly and easily. Synonym: acrobatic, dexterous, deft, Antonym: clumsy, stiff, slow, dull Sentence: At 20 years old he was not as agile as he is now.",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": ""
+  },
+  {
+    "id": 71,
+    "word": "HEGEMONY",
+    "pos": "(noun)",
+    "hindiMeaning": "प्रभुत्व / आधिपत्य",
+    "meaning": "ostentatiously costly and luxurious. Synonym: luxurious, sumptuous, palatial Antonym: penniless, poor, impoverished, penurious Sentence: Most of the cash went on supporting his opulent lifestyle.",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": ""
+  },
+  {
+    "id": 72,
+    "word": "IMPLICIT",
+    "pos": "(adj)",
+    "hindiMeaning": "अंतर्निहित / अप्रत्यक्ष",
+    "meaning": "showing a casual lack of concern Synonym: nonchalant, untroubled, unworried, Antonym: anxious, concerned Sentence: His insouciant handling of the oil spill in the Gulf is under fire from all sides.",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": ""
+  },
+  {
+    "id": 73,
+    "word": "LACKADAISICAL",
+    "pos": "(adj)",
+    "hindiMeaning": "अलसाया / सुस्त / भावुक",
+    "meaning": "lacking enthusiasm and determination; carelessly lazy. Synonym: lax, unenthusiastic, half-hearted, uninterested, lukewarm, indifferent, Antonym: enthusiastic, excited Sentence: The food was nice enough but the service was rather lackadaisical.",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": ""
+  },
+  {
+    "id": 74,
+    "word": "INADVERTENT",
+    "pos": "(adj)",
+    "hindiMeaning": "अनजाने में हुआ / असावधान",
+    "meaning": "expressing contempt or disapproval. Synonym: disparaging, derogatory, deprecatory, Antonym: complimentary, Sentence: Make sure students realise that 'fat' is an unflattering or pejorative word.",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": ""
+  },
+  {
+    "id": 75,
+    "word": "REPERTOIRE",
+    "pos": "(noun)",
+    "hindiMeaning": "प्रदर्शन सूची / संग्रह",
+    "meaning": "a stock of plays, dances, or items that a company or a performer knows or is prepared to perform. Synonym: collection, stock, range, repertory Sentence: His repertoire includes a large number of Scottish folk songs.",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": ""
+  },
+  {
+    "id": 76,
+    "word": "INCISIVE",
+    "pos": "(adj)",
+    "hindiMeaning": "तीक्ष्ण / प्रभावशाली",
+    "meaning": "a temporary stay., stay somewhere temporarily. Synonym: stay, visit, stop, stopover, residence; Sentence: The film is about only a very brief sojourn in Gauguin's otherwise racy biography.",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": ""
+  },
+  {
+    "id": 77,
+    "word": "VANQUISH",
+    "pos": "(verb)",
+    "hindiMeaning": "पराजित करना / जीतना",
+    "meaning": "defeat thoroughly. Synonym: conquer, defeat Antonym: surrender Sentence: She wouldn't be as easy to vanquish as she had been outside the Feelgood Saloo",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": ""
+  },
+  {
+    "id": 78,
+    "word": "INDIGENOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "स्वदेशी / मूल निवासी",
+    "meaning": "Friendly Synonym: Cordial, Harmonious Antonym: impolite, uncivil Sentence: The two parties have reached an amicable settlement.",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": ""
+  },
+  {
+    "id": 79,
+    "word": "INDOLENT",
+    "pos": "(adj)",
+    "hindiMeaning": "आलसी / कामचोर",
+    "meaning": "absorb or assimilate (ideas or knowledge). Synonym: assimilate, absorb, soak up, take in, digest Antonym: abstain, fast Sentence: It was advantageous to animals digest and imbibe soybean's nutrition composition.",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": ""
+  },
+  {
+    "id": 80,
+    "word": "INNATE",
+    "pos": "(adj)",
+    "hindiMeaning": "जन्मजात / स्वाभाविक",
+    "meaning": "An inborn or natural quality",
+    "synonyms": [
+      "natural",
+      "real"
+    ],
+    "antonyms": [
+      "unnatural",
+      "artificial"
+    ],
+    "usage": "The formal models that are consistent with a critical period rely on innate representations of abstract structure."
+  },
+  {
+    "id": 81,
+    "word": "INEVITABLE",
+    "pos": "(adj)",
+    "hindiMeaning": "अपरिहार्य / अवश्यंभावी",
+    "meaning": "easily deceived or tricked",
+    "synonyms": [
+      "stupid",
+      "foolish"
+    ],
+    "antonyms": [
+      "clever",
+      "wise"
+    ],
+    "usage": "There will be no academic studies, no eulogies from gullible literary editors."
+  },
+  {
+    "id": 82,
+    "word": "ECCENTRIC",
+    "pos": "(adj)",
+    "hindiMeaning": "सनकी / विलक्षण",
+    "meaning": "(of a person or their behaviour) unconventional and slightly strange.",
+    "synonyms": [
+      "strange",
+      "unusual"
+    ],
+    "antonyms": [
+      "usual",
+      "same"
+    ],
+    "usage": "She was an elderly eccentric woman who lived with 25 cats."
+  },
+  {
+    "id": 83,
+    "word": "INHABITANT",
+    "pos": "(noun)",
+    "hindiMeaning": "निवासी / बाशिंदा",
+    "meaning": "a person or animal that lives in a particular place",
+    "synonyms": [
+      "residents",
+      "occupants"
+    ],
+    "antonyms": [
+      "refugees",
+      "migrants"
+    ],
+    "usage": "The Aborigines are the native inhabitants of Australia."
+  },
+  {
+    "id": 84,
+    "word": "INTRINSIC",
+    "pos": "(adj)",
+    "hindiMeaning": "आंतरिक / वास्तविक",
+    "meaning": "to move into or through something",
+    "synonyms": [
+      "drill",
+      "access"
+    ],
+    "antonyms": [
+      "retreat",
+      "yield"
+    ],
+    "usage": "The drill isn’t sharp enough to penetrate into the rock"
+  },
+  {
+    "id": 85,
+    "word": "LACONIC",
+    "pos": "(adj)",
+    "hindiMeaning": "संक्षिप्त / कम बोलने वाला",
+    "meaning": "To go away from a place or person in order to escape.",
+    "synonyms": [
+      "yield",
+      "surrender"
+    ],
+    "antonyms": [
+      "invade",
+      "access"
+    ],
+    "usage": "Fire fighters had to retreat from the fierce heat."
+  },
+  {
+    "id": 86,
+    "word": "MOCK",
+    "pos": "(verb)",
+    "hindiMeaning": "हँसी उड़ाना / उपहास करना",
+    "meaning": "to laugh at someone, often by copying them in a funny but unkind way",
+    "synonyms": [
+      "insult",
+      "scorn"
+    ],
+    "antonyms": [
+      "compliment",
+      "praise"
+    ],
+    "usage": "The wind mocked their attempts to reach the shore by pushing the boat further and further out to the sea."
+  },
+  {
+    "id": 87,
+    "word": "LUCID",
+    "pos": "(adj)",
+    "hindiMeaning": "सुस्पष्ट / साफ़",
+    "meaning": "to look at something or someone for a long time, especially in surprise or admiration or thinking about something for long.",
+    "synonyms": [
+      "admire",
+      "observe"
+    ],
+    "antonyms": [
+      "dislike",
+      "miss"
+    ],
+    "usage": "She was gazing out the window, rocking rhythmically to and fro."
+  },
+  {
+    "id": 88,
+    "word": "METICULOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "अति सावधान / बारीक",
+    "meaning": "pleasant and friendly",
+    "synonyms": [
+      "amicable",
+      "cheerful"
+    ],
+    "antonyms": [
+      "aloof",
+      "bad"
+    ],
+    "usage": "He seemed an amiable young man."
+  },
+  {
+    "id": 89,
+    "word": "MITIGATE",
+    "pos": "(verb)",
+    "hindiMeaning": "कम करना / शांत करना",
+    "meaning": "showing honesty",
+    "synonyms": [
+      "honest",
+      "rightness"
+    ],
+    "antonyms": [
+      "dishonest",
+      "evil"
+    ],
+    "usage": "Her probity and integrity are beyond question."
+  },
+  {
+    "id": 90,
+    "word": "OUTRAGE",
+    "pos": "(verb)",
+    "hindiMeaning": "आक्रोशित करना / अपमान करना",
+    "meaning": "an extremely strong reaction of anger, shock, or indignation.",
+    "synonyms": [
+      "indignation",
+      "fury",
+      "anger",
+      "rage"
+    ],
+    "antonyms": [
+      "kindness",
+      "honor",
+      "praise",
+      "respect"
+    ],
+    "usage": "They were horrified by the outrage before their eyes."
+  },
+  {
+    "id": 91,
+    "word": "ONUS",
+    "pos": "(noun)",
+    "hindiMeaning": "दायित्व / जिम्मेदारी",
+    "meaning": "something that is one's duty or responsibility.",
+    "synonyms": [
+      "burden",
+      "responsibility",
+      "liability",
+      "obligation"
+    ],
+    "antonyms": [
+      "advantage",
+      "benefit",
+      "blessing"
+    ],
+    "usage": "The onus of proof lies with the prosecution."
+  },
+  {
+    "id": 92,
+    "word": "NEFARIOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "कुख्यात / कुटिल",
+    "meaning": "a thing that discourages or is intended to discourage someone from doing something.",
+    "synonyms": [
+      "disincentive",
+      "discouragement"
+    ],
+    "antonyms": [
+      "incentive",
+      "encouragement"
+    ],
+    "usage": "The nuclear deterrent has maintained an uneasy peace."
+  },
+  {
+    "id": 93,
+    "word": "DELIBERATE",
+    "pos": "(adj)",
+    "hindiMeaning": "जानबूझकर / विचारपूर्वक",
+    "meaning": "done consciously and intentionally.",
+    "synonyms": [
+      "intentional",
+      "calculated",
+      "conscious"
+    ],
+    "antonyms": [
+      "accidental",
+      "unintentional"
+    ],
+    "usage": "Can you pick out the three deliberate mistakes in this paragraph?"
+  },
+  {
+    "id": 94,
+    "word": "OBSCENE",
+    "pos": "(adj)",
+    "hindiMeaning": "अश्लील / भद्दा",
+    "meaning": "offending against moral principles; repugnant.",
+    "synonyms": [
+      "shocking",
+      "scandalous",
+      "vile",
+      "foul",
+      "atrocious",
+      "outrageous"
+    ],
+    "antonyms": [
+      "clean",
+      "decent",
+      "gentle",
+      "magnificent"
+    ],
+    "usage": "The salaries some company directors earn are obscene."
+  },
+  {
+    "id": 95,
+    "word": "OBSTINATE",
+    "pos": "(adj)",
+    "hindiMeaning": "जिद्दी / अडिग",
+    "meaning": "serving as a symbol of a particular quality or concept; symbolic.",
+    "synonyms": [
+      "symbolic",
+      "representative",
+      "demonstrative",
+      "suggestive"
+    ],
+    "antonyms": [
+      "representational",
+      "realistic"
+    ],
+    "usage": "Over time, his story became emblematic of the spirit of the modern age."
+  },
+  {
+    "id": 96,
+    "word": "TWEAK",
+    "pos": "(verb)",
+    "hindiMeaning": "सूक्ष्म बदलाव करना / समायोजन करना",
+    "meaning": "a fine adjustment to a mechanism or system.",
+    "synonyms": [
+      "adjustment",
+      "modification",
+      "alteration",
+      "change"
+    ],
+    "antonyms": [],
+    "usage": "I think you'll have to tweak these figures a little before you show them to the boss."
+  },
+  {
+    "id": 97,
+    "word": "COUP",
+    "pos": "(noun)",
+    "hindiMeaning": "तख्तापलट / अचानक सफलता",
+    "meaning": "an instance of successfully achieving something difficult.",
+    "synonyms": [
+      "success",
+      "triumph",
+      "feat"
+    ],
+    "antonyms": [
+      "failure"
+    ],
+    "usage": "There have been seven coup attempts against the beleaguered government."
+  },
+  {
+    "id": 98,
+    "word": "INEFFABLE",
+    "pos": "(adj)",
+    "hindiMeaning": "अकथनीय / वर्णनातीत",
+    "meaning": "too great or extreme to be expressed or described in words.",
+    "synonyms": [
+      "inexpressible",
+      "indescribable",
+      "marvellous",
+      "wonderful"
+    ],
+    "antonyms": [
+      "definable",
+      "describable",
+      "utterable"
+    ],
+    "usage": "There was a spring in his step, and ineffable calmness dressing his sun-brown face. 10. ADDLE : ( कोई ) पट प से सोचने म असमश ; मत Meaning: make (someone) unable to think clearly; confuse. Synonyms: muddled, confused, fuddled Antonyms: clarify, enlighten, explain Example: The object is to addle and not to elucidate."
+  },
+  {
+    "id": 99,
+    "word": "REVIVAL",
+    "pos": "(noun)",
+    "hindiMeaning": "पुनरुद्धार / पुनर्जीवन",
+    "meaning": "an instance of something becoming popular or important again after a long time",
+    "synonyms": [
+      "recovery",
+      "renewal"
+    ],
+    "antonyms": [
+      "destruction",
+      "killing"
+    ],
+    "usage": "A revival of the classic musical, Godspell, was playing at a theater downtown."
+  },
+  {
+    "id": 100,
+    "word": "PRAGMATIC",
+    "pos": "(adj)",
+    "hindiMeaning": "व्यावहारिक / यथार्थवादी",
+    "meaning": "a rounded bump or swelling that juts outward on a surface",
+    "synonyms": [
+      "lump",
+      "bump"
+    ],
+    "antonyms": [
+      "ingrowth"
+    ],
+    "usage": "The bag was so full that a bulge from the oranges could be seen through the packaging."
+  },
+  {
+    "id": 101,
+    "word": "RESCIND",
+    "pos": "(verb)",
+    "hindiMeaning": "रद्द करना / वापस लेना",
+    "meaning": "plentiful in detail or growth",
+    "synonyms": [
+      "dense",
+      "lush"
+    ],
+    "antonyms": [
+      "poor",
+      "plain"
+    ],
+    "usage": "In the spring months, thousands of tourists visit the luxuriant gardens near the art museum"
+  },
+  {
+    "id": 102,
+    "word": "SERENDIPITY",
+    "pos": "(noun)",
+    "hindiMeaning": "आकस्मिक लाभ / सौभाग्य",
+    "meaning": "to stockpile or store things excessively",
+    "synonyms": [
+      "accumulation",
+      "heap"
+    ],
+    "antonyms": [
+      "debt",
+      "need"
+    ],
+    "usage": "The shopaholic likes to hoard clothing and has filled three closets with dresses and shoes that she doesn’t need."
+  },
+  {
+    "id": 103,
+    "word": "SUPERFLUOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "अनावश्यक / अत्यधिक",
+    "meaning": "swelling or an increase in the rushing of waves or water",
+    "synonyms": [
+      "flood",
+      "flow"
+    ],
+    "antonyms": [
+      "decrease",
+      "decline"
+    ],
+    "usage": "Surging waves crashed onto the shores causing fear of flooding among the local citizens."
+  },
+  {
+    "id": 104,
+    "word": "TACITURN",
+    "pos": "(adj)",
+    "hindiMeaning": "अल्पभाषी / मौन रहने वाला",
+    "meaning": "to make something sound or look better or more acceptable than it is in reality",
+    "synonyms": [
+      "adorn",
+      "deck"
+    ],
+    "antonyms": [
+      "lessen",
+      "reduce"
+    ],
+    "usage": "Grandma likes to embellish her knitting by hiding secret messages in the pattern."
+  },
+  {
+    "id": 105,
+    "word": "TREPIDATION",
+    "pos": "(noun)",
+    "hindiMeaning": "घबराहट / भय",
+    "meaning": "rapid increase in the number or amount of something",
+    "synonyms": [
+      "generation",
+      "propagation"
+    ],
+    "antonyms": [
+      "reduction"
+    ],
+    "usage": "The proliferation of technology over the last 100 years has happened so quickly and caused many societal changes."
+  },
+  {
+    "id": 106,
+    "word": "INCLUSION",
+    "pos": "(noun)",
+    "hindiMeaning": "समावेश / समावेशन",
+    "meaning": "the act of adding a person or thing to a situation or agreement",
+    "synonyms": [
+      "addition",
+      "incorporation"
+    ],
+    "antonyms": [
+      "exclusion",
+      "subtraction"
+    ],
+    "usage": "Since the group offers guaranteed inclusion, it'll refund the fee if my website doesn’t appear in search results."
+  },
+  {
+    "id": 107,
+    "word": "UBIQUITOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "सर्वव्यापी / हर जगह मौजूद",
+    "meaning": "a formal pardon or reprieve given to one who has committed a criminal or political offense",
+    "synonyms": [
+      "forgiveness",
+      "immunity"
+    ],
+    "antonyms": [
+      "vulnerability"
+    ],
+    "usage": "Although the governor claimed to be an honest man of the people, he did not hesitate to give his wealthy friend amnesty for a tax related crime."
+  },
+  {
+    "id": 108,
+    "word": "INFRINGE",
+    "pos": "(verb)",
+    "hindiMeaning": "उल्लंघन करना / अतिक्रमण करना",
+    "meaning": "to trespass upon something",
+    "synonyms": [
+      "breach",
+      "disobey"
+    ],
+    "antonyms": [
+      "obey",
+      "give"
+    ],
+    "usage": "Having that much work to do at home will only infringe upon my time with my family."
+  },
+  {
+    "id": 109,
+    "word": "TENACIOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "दृढ़ / अडिग",
+    "meaning": "to involve in conflict or difficulties",
+    "synonyms": [
+      "enmesh",
+      "ensnare",
+      "ensnarl",
+      "entangle."
+    ],
+    "antonyms": [
+      "emancipate",
+      "liberate",
+      "acclimate",
+      "relieve."
+    ],
+    "usage": "The politician’s racist comments embroiled him in a great deal of controversy."
+  },
+  {
+    "id": 110,
+    "word": "SPLURGE",
+    "pos": "(verb)",
+    "hindiMeaning": "फिजूलखर्च करना / पैसे उड़ाना",
+    "meaning": "to spend extravagantly or ostentatiously.",
+    "synonyms": [
+      "squander",
+      "fling",
+      "dissipate",
+      "disburse."
+    ],
+    "antonyms": [
+      "accumulate",
+      "hoard",
+      "conserve",
+      "preserve."
+    ],
+    "usage": "I feel like splurging on a new dress."
+  },
+  {
+    "id": 111,
+    "word": "VENERABLE",
+    "pos": "(adj)",
+    "hindiMeaning": "आदरणीय / पूज्य",
+    "meaning": "to use (someone or something) as the model for one's speech, mannerisms, or behavior.",
+    "synonyms": [
+      "imitate",
+      "reecho",
+      "repeat",
+      "follow."
+    ],
+    "antonyms": [
+      "neglect",
+      "reprove",
+      "proscribe",
+      "affront."
+    ],
+    "usage": "Josh is trying to emulate the success of his well-accomplished mother."
+  },
+  {
+    "id": 112,
+    "word": "PETULANT",
+    "pos": "(adj)",
+    "hindiMeaning": "चिड़चिड़ा / तुनकमिज़ाज",
+    "meaning": "easily irritated or annoyed.",
+    "synonyms": [
+      "choleric",
+      "grouchy",
+      "grumpy",
+      "peevish."
+    ],
+    "antonyms": [
+      "affable",
+      "cordial",
+      "genial",
+      "gregarious."
+    ],
+    "usage": "Because she whined about everything on the movie set, the studio head described the actress as petulant."
+  },
+  {
+    "id": 113,
+    "word": "VINDICATE",
+    "pos": "(verb)",
+    "hindiMeaning": "दोषमुक्त सिद्ध करना",
+    "meaning": "having or showing determined courage in the face of difficulties.",
+    "synonyms": [
+      "courageous",
+      "intrepid",
+      "valiant",
+      "valorous."
+    ],
+    "antonyms": [
+      "timid",
+      "timorous",
+      "gutless",
+      "frightful."
+    ],
+    "usage": "His plucky attitude made him a great candidate for police officer training academy."
+  },
+  {
+    "id": 114,
+    "word": "ZEALOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "उत्साही / कट्टर",
+    "meaning": "to cease resistance (as to another's arguments, demands, or control).",
+    "synonyms": [
+      "concede",
+      "give in",
+      "submit",
+      "succumb."
+    ],
+    "antonyms": [
+      "combat",
+      "confront",
+      "counter",
+      "defy."
+    ],
+    "usage": "Because my father is very angry, he won’t relent on my harsh punishment."
+  },
+  {
+    "id": 115,
+    "word": "ABSURD",
+    "pos": "(adj)",
+    "hindiMeaning": "निरर्थक / बेतुका",
+    "meaning": "not in harmony or keeping with the surroundings or other aspects of something.",
+    "synonyms": [
+      "discordant",
+      "conflicting",
+      "clashing",
+      "inconsistent."
+    ],
+    "antonyms": [
+      "accordant",
+      "compatible",
+      "concordant",
+      "conformable."
+    ],
+    "usage": "Wearing a rain jacket in sunny weather is quite incongruous."
+  },
+  {
+    "id": 116,
+    "word": "ACCORD",
+    "pos": "(noun)",
+    "hindiMeaning": "सहमति / समझौता",
+    "meaning": "the state of being confined as a prisoner, especially for political or military reasons.",
+    "synonyms": [
+      "restraint",
+      "restriction",
+      "entrapment",
+      "detention."
+    ],
+    "antonyms": [
+      "emancipation",
+      "liberation",
+      "redemption",
+      "release."
+    ],
+    "usage": "Everyone had to produce an identity card, including those actually in the internment camps."
+  },
+  {
+    "id": 117,
+    "word": "FORESEEABLE",
+    "pos": "(adj)",
+    "hindiMeaning": "पूर्वानुमेय / प्रत्याशित",
+    "meaning": "able to be foreseen or predicted.",
+    "synonyms": [
+      "predictable",
+      "anticipated",
+      "foreseen",
+      "presumable."
+    ],
+    "antonyms": [
+      "unpredictable",
+      "atypical",
+      "irresolute",
+      "indeterminate."
+    ],
+    "usage": "It is foreseeable that we will get married but I’m not sure how soon."
+  },
+  {
+    "id": 118,
+    "word": "ACQUIESCE",
+    "pos": "(verb)",
+    "hindiMeaning": "सहमति देना / स्वीकार करना",
+    "meaning": "influence or power, especially in politics or business.",
+    "synonyms": [
+      "influence",
+      "dominion",
+      "predominance",
+      "supremacy."
+    ],
+    "antonyms": [
+      "helplessness",
+      "powerlessness",
+      "impuissance",
+      "frailty."
+    ],
+    "usage": "Looking to build a business, the entrepreneur was looking to establish clout in the community."
+  },
+  {
+    "id": 119,
+    "word": "BETRAYAL",
+    "pos": "(noun)",
+    "hindiMeaning": "विश्वासघात / धोखेबाज़ी",
+    "meaning": "the action of betraying one's country, a group, or a person.",
+    "synonyms": [
+      "treachery",
+      "cheat"
+    ],
+    "antonyms": [
+      "faithfulness",
+      "loyalty"
+    ],
+    "usage": "The betrayals are harder to get over than any physical injury."
+  },
+  {
+    "id": 120,
+    "word": "MANIFESTATION",
+    "pos": "(noun)",
+    "hindiMeaning": "अभिव्यक्ति / प्रकटीकरण",
+    "meaning": "the action or fact of showing something",
+    "synonyms": [
+      "demonstration",
+      "reveal"
+    ],
+    "antonyms": [
+      "hide",
+      "conceal"
+    ],
+    "usage": "To colonists, idiocy was a pitiable and vulnerable condition, one more manifestation of God's diverse creations."
+  },
+  {
+    "id": 121,
+    "word": "ACUTE",
+    "pos": "(adj)",
+    "hindiMeaning": "तीव्र / गंभीर",
+    "meaning": "expected or expecting to be the specified thing in the future",
+    "synonyms": [
+      "potential",
+      "possible"
+    ],
+    "antonyms": [
+      "impossible"
+    ],
+    "usage": "Prospective measures must be taken to make sure that future investments do not fail like the current ones."
+  },
+  {
+    "id": 122,
+    "word": "ADAMANT",
+    "pos": "(adj)",
+    "hindiMeaning": "अडिग / हठी",
+    "meaning": "a person's inherent qualities of mind and character.",
+    "synonyms": [
+      "nature",
+      "temperament"
+    ],
+    "antonyms": [
+      "disinclination"
+    ],
+    "usage": "With her inquisitive disposition, Sarah is an ideal candidate for the detective’s position."
+  },
+  {
+    "id": 123,
+    "word": "INCESSANTLY",
+    "pos": "(adv)",
+    "hindiMeaning": "निरंतर / लगातार",
+    "meaning": "without interruption",
+    "synonyms": [
+      "constantly",
+      "continually"
+    ],
+    "antonyms": [
+      "stoppage",
+      "cease"
+    ],
+    "usage": "Reena talked about Romil incessantly."
+  },
+  {
+    "id": 124,
+    "word": "ABORIGINAL",
+    "pos": "(noun)",
+    "hindiMeaning": "मूल निवासी",
+    "meaning": "inhabiting or existing in a land from the earliest times or from before the arrival of colonists.",
+    "synonyms": [
+      "indigenous",
+      "naive"
+    ],
+    "antonyms": [
+      "modern",
+      "new"
+    ],
+    "usage": "The archaeologist found several aboriginal artifacts at the dig site of the ancient city."
+  },
+  {
+    "id": 125,
+    "word": "AFFABLE",
+    "pos": "(adj)",
+    "hindiMeaning": "मिलनसार / सौम्य",
+    "meaning": "exist in large numbers or amounts.",
+    "synonyms": [
+      "flourish",
+      "abundant"
+    ],
+    "antonyms": [
+      "less",
+      "small"
+    ],
+    "usage": "Local beers abound in the neighborhood pub that is rumored to have some of the best beverages in the world."
+  },
+  {
+    "id": 126,
+    "word": "AFFLUENT",
+    "pos": "(adj)",
+    "hindiMeaning": "धनी / समृद्ध",
+    "meaning": "disinterested and selfless concern for the well-being of others.",
+    "synonyms": [
+      "selfless",
+      "self-denial"
+    ],
+    "antonyms": [
+      "selfish",
+      "mean"
+    ],
+    "usage": "Some may choose to work with vulnerable elderly people out of altruism."
+  },
+  {
+    "id": 127,
+    "word": "AGGRAVATE",
+    "pos": "(verb)",
+    "hindiMeaning": "गंभीर बनाना / भड़काना",
+    "meaning": "extremely sarcastic or critical.",
+    "synonyms": [
+      "mordant",
+      "destructive"
+    ],
+    "antonyms": [
+      "safe"
+    ],
+    "usage": "Because my uncle was a mean man, he took pleasure in making caustic statements to people."
+  },
+  {
+    "id": 128,
+    "word": "ALACRITY",
+    "pos": "(noun)",
+    "hindiMeaning": "तत्परता / उत्सुकता",
+    "meaning": "disgust or sicken (someone) with an excess of sweetness, richness, or sentiment.",
+    "synonyms": [
+      "over the top",
+      "honeying"
+    ],
+    "antonyms": [
+      "mild",
+      "good"
+    ],
+    "usage": "Jill is no longer impressed by cloying lines of devotion after having her heart broken countless times."
+  },
+  {
+    "id": 129,
+    "word": "ALLEVIATE",
+    "pos": "(verb)",
+    "hindiMeaning": "कम करना / राहत देना",
+    "meaning": "criticize severely.",
+    "synonyms": [
+      "attack",
+      "pillory",
+      "lambaste",
+      "revile."
+    ],
+    "antonyms": [
+      "applaud",
+      "acclaim",
+      "compliment",
+      "admiration."
+    ],
+    "usage": "The play was slated by the critics."
+  },
+  {
+    "id": 130,
+    "word": "AMBIGUOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "अस्पष्ट / द्विअर्थी",
+    "meaning": "impose an unwelcome or unnecessary person or thing on.",
+    "synonyms": [
+      "impose",
+      "force",
+      "thrust",
+      "inflict."
+    ],
+    "antonyms": [
+      "aid",
+      "help",
+      "overlook",
+      "prevent."
+    ],
+    "usage": "The government has decided to foist yet another tax increase on the public."
+  },
+  {
+    "id": 131,
+    "word": "PROCURE",
+    "pos": "(verb)",
+    "hindiMeaning": "प्राप्त करना / हासिल करना",
+    "meaning": "obtain (something), especially with care or effort.",
+    "synonyms": [
+      "acquire",
+      "attain",
+      "earn",
+      "reap."
+    ],
+    "antonyms": [
+      "relinquish",
+      "surrender",
+      "yield",
+      "forfeit."
+    ],
+    "usage": "You may have to barter with Jim to procure the essential supplies you need."
+  },
+  {
+    "id": 132,
+    "word": "DAMNING",
+    "pos": "(adj)",
+    "hindiMeaning": "घातक / दोषसिद्ध करने वाला",
+    "meaning": "(of a circumstance or piece of evidence) strongly suggesting guilt or error.",
+    "synonyms": [
+      "incriminating",
+      "derogatory",
+      "catastrophic",
+      "destructive."
+    ],
+    "antonyms": [
+      "auspicious",
+      "encouraging",
+      "optimistic",
+      "propitious."
+    ],
+    "usage": "She waved back, wondering how the most damning of them all was also the only who seemed anywhere able to feel sympathy."
+  },
+  {
+    "id": 133,
+    "word": "AMELIORATE",
+    "pos": "(verb)",
+    "hindiMeaning": "सुधारना / बेहतर बनाना",
+    "meaning": "a phenomenon that naturally accompanies or follows something.",
+    "synonyms": [
+      "accompaniment",
+      "attendant",
+      "corollary",
+      "adjunct."
+    ],
+    "antonyms": [
+      "irrelevant",
+      "unaided",
+      "unattached",
+      "unrelated."
+    ],
+    "usage": "Puberty is the stage of life where adolescents begin to experience concomitant changes in their bodies, their emotions, and their view of their parents."
+  },
+  {
+    "id": 134,
+    "word": "AMICABLE",
+    "pos": "(adj)",
+    "hindiMeaning": "मैत्रीपूर्ण / शांतिपूर्ण",
+    "meaning": "melodramatic behavior designed to attract attention.",
+    "synonyms": [
+      "drama",
+      "affectation",
+      "exaggerated",
+      "farcical."
+    ],
+    "antonyms": [
+      "restrained",
+      "subdued",
+      "phlegmatic",
+      "stolid."
+    ],
+    "usage": "Whenever the spoiled toddler does not get her way, she begins to yell in a histrionic manner."
+  },
+  {
+    "id": 135,
+    "word": "ANOMALY",
+    "pos": "(noun)",
+    "hindiMeaning": "अनियमितता / अपवाद",
+    "meaning": "relating to or concerned with complete systems rather than with individual parts.",
+    "synonyms": [
+      "comprehensive",
+      "entire",
+      "integrated",
+      "complete."
+    ],
+    "antonyms": [
+      "deficient",
+      "fragmental",
+      "divided",
+      "reduced."
+    ],
+    "usage": "Under the project guidelines, the student educators must create a holistic lesson that makes use of all five senses."
+  },
+  {
+    "id": 136,
+    "word": "APATHY",
+    "pos": "(noun)",
+    "hindiMeaning": "उदासीनता / अनिच्छा",
+    "meaning": "unwilling or refusing to change one's views or to agree about something.",
+    "synonyms": [
+      "resolute",
+      "inexorable",
+      "inveterate",
+      "tenacious."
+    ],
+    "antonyms": [
+      "tractable",
+      "acquiescent",
+      "subservient",
+      "obsequious."
+    ],
+    "usage": "When it came to their willingness to extend my curfew, my parents were intransigent and would not budge."
+  },
+  {
+    "id": 137,
+    "word": "ARDUOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "कठिन / श्रमसाध्य",
+    "meaning": "encourage or assist (someone) to do something wrong.",
+    "synonyms": [
+      "foment",
+      "incite",
+      "instigate",
+      "provoke."
+    ],
+    "antonyms": [
+      "constrain",
+      "restrain",
+      "allay",
+      "soothe."
+    ],
+    "usage": "If you abet violence in your home, you should not be surprised if your children grow up to be abusers."
+  },
+  {
+    "id": 138,
+    "word": "FITFUL",
+    "pos": "(adj)",
+    "hindiMeaning": "अस्थिर / अनियमित",
+    "meaning": "active or occurring spasmodically or intermittently; not regular or steady.",
+    "synonyms": [
+      "intermittent",
+      "sporadic",
+      "spasmodic",
+      "unsteady."
+    ],
+    "antonyms": [
+      "constant",
+      "continuous",
+      "steady",
+      "unwavering."
+    ],
+    "usage": "Because the weather has been fitful lately, we are not sure if our outdoor wedding is going to take place."
+  },
+  {
+    "id": 139,
+    "word": "ARTICULATE",
+    "pos": "(verb)",
+    "hindiMeaning": "सुस्पष्ट व्यक्त करना",
+    "meaning": "not able to be forgotten.",
+    "synonyms": [
+      "ineradicable",
+      "enduring",
+      "stubborn",
+      "permanent"
+    ],
+    "antonyms": [
+      "delible",
+      "destructible",
+      "erasable",
+      "impermanent"
+    ],
+    "usage": "The blood had left an indelible mark on her shirt."
+  },
+  {
+    "id": 140,
+    "word": "ASCERTAIN",
+    "pos": "(verb)",
+    "hindiMeaning": "पता लगाना / सुनिश्चित करना",
+    "meaning": "too long, slow, or dull; tiresome or monotonous.",
+    "synonyms": [
+      "dull",
+      "unexciting",
+      "unvaried",
+      "mundane"
+    ],
+    "antonyms": [
+      "exciting",
+      "interesting"
+    ],
+    "usage": "The meeting was so long and tedious, he was ready to climb the wall."
+  },
+  {
+    "id": 141,
+    "word": "ASSIDUOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "परिश्रमी / मेहनती",
+    "meaning": "skill or expertise in a particular activity or field.",
+    "synonyms": [
+      "skill",
+      "expertise",
+      "ability",
+      "ability"
+    ],
+    "antonyms": [
+      "inability",
+      "ineptitude"
+    ],
+    "usage": "He was famous for his prowess as an athlete."
+  },
+  {
+    "id": 142,
+    "word": "AUDACIOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "साहसी / दुस्साहसी",
+    "meaning": "(of a person or their manner) childishly sulky or bad-tempered.",
+    "synonyms": [
+      "cranky",
+      "fractious",
+      "irritable",
+      "perverse"
+    ],
+    "antonyms": [
+      "agreeable",
+      "cheerful",
+      "patient",
+      "willing"
+    ],
+    "usage": "I was made to feel like a petulant child who has flown into a temper because his favorite toy was removed."
+  },
+  {
+    "id": 143,
+    "word": "ABOUND",
+    "pos": "(verb)",
+    "hindiMeaning": "प्रचुर मात्रा में होना / प्रचुरता",
+    "meaning": "(of a system or situation) excessively complicated, and typically involving a great deal of administrative detail",
+    "synonyms": [
+      "daedal",
+      "complicated",
+      "convoluted",
+      "devious"
+    ],
+    "antonyms": [],
+    "usage": "They are built on the Byzantine pattern, in small scale, and have painted fresco decoration."
+  },
+  {
+    "id": 144,
+    "word": "BUCOLIC",
+    "pos": "(adj)",
+    "hindiMeaning": "ग्राम्य / देहाती",
+    "meaning": "relating to the pleasant aspects of the countryside and country life.",
+    "synonyms": [
+      "rustic",
+      "rural",
+      "pastoral",
+      "country"
+    ],
+    "antonyms": [
+      "urban"
+    ],
+    "usage": "There was a certain bucolic look to the faces of the cart drivers."
+  },
+  {
+    "id": 145,
+    "word": "AUGMENT",
+    "pos": "(verb)",
+    "hindiMeaning": "वृद्धि करना / बढ़ाना",
+    "meaning": "(of an action, idea, or aim) deserving praise and commendation.",
+    "synonyms": [
+      "praiseworthy",
+      "commendable",
+      "admirable",
+      "meritorious"
+    ],
+    "antonyms": [],
+    "usage": "Faith ceases to be laudable when it is blind faith."
+  },
+  {
+    "id": 146,
+    "word": "AUSTERE",
+    "pos": "(adj)",
+    "hindiMeaning": "कठोर / सादा",
+    "meaning": "aggressively greedy or grasping.",
+    "synonyms": [
+      "grasping",
+      "greedy",
+      "avaricious",
+      "acquisitive"
+    ],
+    "antonyms": [
+      "generous"
+    ],
+    "usage": "It was a horrendous, rapacious strategy that they had used to gain control of their own home system."
+  },
+  {
+    "id": 147,
+    "word": "CLOYING",
+    "pos": "(adj)",
+    "hindiMeaning": "अति-मधुर / चापलूसी भरा",
+    "meaning": "support or strengthen.",
+    "synonyms": [
+      "strengthen",
+      "support",
+      "reinforce",
+      "boost"
+    ],
+    "antonyms": [
+      "undermine"
+    ],
+    "usage": "He is making a bold attempt to bolster the territory's confidence."
+  },
+  {
+    "id": 148,
+    "word": "GERMANE",
+    "pos": "(adj)",
+    "hindiMeaning": "सार्थक / प्रासंगिक",
+    "meaning": "relevant to a subject under consideration.",
+    "synonyms": [
+      "relevant",
+      "pertinent",
+      "applicable",
+      "apposite"
+    ],
+    "antonyms": [
+      "irrelevant"
+    ],
+    "usage": "He asks questions that are germane and central to the issue"
+  },
+  {
+    "id": 149,
+    "word": "AUTONOMOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "स्वायत्त / स्वतंत्र",
+    "meaning": "A long step or stage in making progress.",
+    "synonyms": [
+      "clump",
+      "tramp",
+      "stomp",
+      "stalk."
+    ],
+    "antonyms": [
+      "amble",
+      "meander",
+      "ramble",
+      "wander."
+    ],
+    "usage": "In two bounding strides the woman was in the street, kneeling over her friend."
+  },
+  {
+    "id": 150,
+    "word": "AVERSION",
+    "pos": "(noun)",
+    "hindiMeaning": "घृणा / नापसंदगी",
+    "meaning": "Causing or tending to cause annoyance, frustration, or worry.",
+    "synonyms": [
+      "annoying",
+      "irksome",
+      "infuriating",
+      "exasperating."
+    ],
+    "antonyms": [
+      "pleasing",
+      "soothing",
+      "aiding",
+      "assisting."
+    ],
+    "usage": "This vexatious problem was resolved, incompletely, by civil war and secession."
+  },
+  {
+    "id": 151,
+    "word": "BENEVOLENT",
+    "pos": "(adj)",
+    "hindiMeaning": "परोपकारी / दयालु",
+    "meaning": "Dull and uninspired; lacking originality or excitement.",
+    "synonyms": [
+      "uninteresting",
+      "uninspired",
+      "monotonous",
+      "humdrum."
+    ],
+    "antonyms": [
+      "exciting",
+      "entertaining",
+      "breathtaking",
+      "enthralling."
+    ],
+    "usage": "Most of my students used informal, asymmetrical balance, as formal balance can seem stodgy and dull."
+  },
+  {
+    "id": 152,
+    "word": "BENIGN",
+    "pos": "(adj)",
+    "hindiMeaning": "सौम्य / अनुकूल",
+    "meaning": "tremble or totter, typically because of old age.",
+    "synonyms": [
+      "stumble",
+      "stagger",
+      "sway",
+      "lurch."
+    ],
+    "antonyms": [
+      "steady",
+      "fix",
+      "stay",
+      "still",
+      "remain."
+    ],
+    "usage": "The old woman doddered from the bed to the table."
+  },
+  {
+    "id": 153,
+    "word": "BOLSTER",
+    "pos": "(verb)",
+    "hindiMeaning": "सहारा देना / मजबूत करना",
+    "meaning": "(of a person’s mouth) wide open in surprise or wonder.",
+    "synonyms": [
+      "agog",
+      "breathless",
+      "enthusiastic",
+      "raring."
+    ],
+    "antonyms": [
+      "apathetic",
+      "indifferent",
+      "unimpressed",
+      "uninterested."
+    ],
+    "usage": "When I first saw the sunset in the Grand Canyon, I could only stand staring with my mouth agape."
+  },
+  {
+    "id": 154,
+    "word": "CASTIGATE",
+    "pos": "(verb)",
+    "hindiMeaning": "कड़ी आलोचना करना",
+    "meaning": "a state of physical or mental inactivity; lethargy.",
+    "synonyms": [
+      "listlessness",
+      "languor",
+      "stagnation",
+      "idleness."
+    ],
+    "antonyms": [
+      "eagerness",
+      "keenness",
+      "spiritedness",
+      "vigor."
+    ],
+    "usage": "During the winter, the bears fall into an intense torpor."
+  },
+  {
+    "id": 155,
+    "word": "PRECARIOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "अनिश्चित / खतरनाक / असुरक्षित",
+    "meaning": "dependent on chance; uncertain.",
+    "synonyms": [
+      "unsure",
+      "unpredictable",
+      "doubtful",
+      "dubious."
+    ],
+    "antonyms": [
+      "certain",
+      "stable",
+      "confirmed",
+      "definite."
+    ],
+    "usage": "As Finance Secretary I found that the finances of the state were in a precarious condition."
+  },
+  {
+    "id": 156,
+    "word": "CATALYST",
+    "pos": "(noun)",
+    "hindiMeaning": "उत्प्रेरक / प्रेरणा",
+    "meaning": "to talk informally.",
+    "synonyms": [
+      "chitchat",
+      "gossip",
+      "patter",
+      "schmooze."
+    ],
+    "antonyms": [
+      "be silent",
+      "be quiet",
+      "listen."
+    ],
+    "usage": "Guests gathered in the hallway to confabulate about the weather and make small talk."
+  },
+  {
+    "id": 157,
+    "word": "EERIE",
+    "pos": "(adj)",
+    "hindiMeaning": "भयावह / अजीब / डरावना",
+    "meaning": "strange and frightening.",
+    "synonyms": [
+      "sinister",
+      "ghostly",
+      "creepy",
+      "haunting."
+    ],
+    "antonyms": [
+      "normal",
+      "ordinary",
+      "prosaic",
+      "routine."
+    ],
+    "usage": "An eerie feeling came over us as we watched the scary movie."
+  },
+  {
+    "id": 158,
+    "word": "COERCE",
+    "pos": "(verb)",
+    "hindiMeaning": "मजबूर करना / दबाव डालना",
+    "meaning": "in a way that expresses what needs to be said clearly and without unnecessary words.",
+    "synonyms": [
+      "brief",
+      "compendious",
+      "concise",
+      "terse."
+    ],
+    "antonyms": [
+      "circumlocutory",
+      "diffuse",
+      "long-winded",
+      "prolix."
+    ],
+    "usage": "The reviewer’s remarks were succinct and to the point."
+  },
+  {
+    "id": 159,
+    "word": "COGNIZANT",
+    "pos": "(adj)",
+    "hindiMeaning": "अवगत / जानकार",
+    "meaning": "full of or showing high-spirited merriment",
+    "synonyms": [
+      "happy",
+      "cheerful"
+    ],
+    "antonyms": [
+      "sad",
+      "depressed"
+    ],
+    "usage": "She was in a jovial mood"
+  },
+  {
+    "id": 160,
+    "word": "CONCILIATORY",
+    "pos": "(adj)",
+    "hindiMeaning": "मिलाप करने वाला / शांतिदायक",
+    "meaning": "a trite or obvious remark",
+    "synonyms": [
+      "trite",
+      "platitude"
+    ],
+    "antonyms": [
+      "animating"
+    ],
+    "usage": "My wedding day - and I know it's a cliche - was just the happiest day of my life."
+  },
+  {
+    "id": 161,
+    "word": "CONDONE",
+    "pos": "(verb)",
+    "hindiMeaning": "माफ करना / ध्यान न देना",
+    "meaning": "the union of diverse things into one body or form or group",
+    "synonyms": [
+      "alliance",
+      "union"
+    ],
+    "antonyms": [
+      "discord",
+      "rift"
+    ],
+    "usage": "A coalition between Liberals and Conservatives"
+  },
+  {
+    "id": 162,
+    "word": "UNDERLYING",
+    "pos": "(adj)",
+    "hindiMeaning": "बुनियादी / अंतर्निहित",
+    "meaning": "in the nature of something though not readily apparent",
+    "synonyms": [
+      "latent",
+      "repressed"
+    ],
+    "antonyms": [
+      "primary"
+    ],
+    "usage": "The underlying message of the film is that love transcends everything else."
+  },
+  {
+    "id": 163,
+    "word": "CONSPICUOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "प्रत्यक्ष / सुस्पष्ट",
+    "meaning": "the quality of being doable",
+    "synonyms": [
+      "usability",
+      "facility"
+    ],
+    "antonyms": [
+      "useless"
+    ],
+    "usage": "We're looking at the feasibility of building a shopping center there."
+  },
+  {
+    "id": 164,
+    "word": "CENSURE",
+    "pos": "(verb)",
+    "hindiMeaning": "निंदा करना / भर्त्सना करना",
+    "meaning": "harsh crticism or disaproval",
+    "synonyms": [
+      "reprimand",
+      "rebuke"
+    ],
+    "antonyms": [
+      "praise",
+      "acceptance"
+    ],
+    "usage": "His dishonest behaviour came under severe censure."
+  },
+  {
+    "id": 165,
+    "word": "LETHARGY",
+    "pos": "(noun)",
+    "hindiMeaning": "सुस्ती / आलस्य",
+    "meaning": "showing an unusual lack of energy",
+    "synonyms": [
+      "inactive",
+      "weak"
+    ],
+    "antonyms": [
+      "active",
+      "energetic"
+    ],
+    "usage": "Symptoms of the disease include loss of appetite, lethargy, and vomiting."
+  },
+  {
+    "id": 166,
+    "word": "LAUDABLE",
+    "pos": "(adj)",
+    "hindiMeaning": "प्रशंसनीय / सराहनीय",
+    "meaning": "something that is a counterfeit",
+    "synonyms": [
+      "fake",
+      "dummy"
+    ],
+    "antonyms": [
+      "real"
+    ],
+    "usage": "They claimed that the election had been fair, but really it was a sham."
+  },
+  {
+    "id": 167,
+    "word": "RAPACIOUS",
+    "pos": "(adj)",
+    "hindiMeaning": "अति-लोलुप / अत्यंत लालची",
+    "meaning": "functioning in a supporting capacity",
+    "synonyms": [
+      "supporting",
+      "additive"
+    ],
+    "antonyms": [
+      "base",
+      "core"
+    ],
+    "usage": "The doctor said she should be taking vitamin supplements."
+  },
+  {
+    "id": 168,
+    "word": "UNFETTERED",
+    "pos": "(adj)",
+    "hindiMeaning": "निरंकुश / स्वतंत्र / बेरोक-टोक",
+    "meaning": "not bound by shackles and chains",
+    "synonyms": [
+      "unbounded",
+      "free"
+    ],
+    "antonyms": [
+      "chained",
+      "bounded"
+    ],
+    "usage": "Poets are unfettered by the normal rules of sentence structure."
+  },
+  {
+    "id": 169,
+    "word": "DEPLETE",
+    "pos": "(verb)",
+    "hindiMeaning": "कम करना / समाप्त करना",
+    "meaning": "a loud, unpleasant, and prolonged noise.",
+    "synonyms": [
+      "babel",
+      "bedlam",
+      "clash",
+      "clatter"
+    ],
+    "antonyms": [
+      "calm",
+      "order",
+      "peace",
+      "quiet"
+    ],
+    "usage": "The din from my neighbor’s party will probably keep me up all night."
+  },
+  {
+    "id": 170,
+    "word": "STRIDE",
+    "pos": "(noun)",
+    "hindiMeaning": "छलांग / डग / लंबी चाल",
+    "meaning": "support of a cause",
+    "synonyms": [
+      "aegis",
+      "auspices",
+      "backing",
+      "subsidy"
+    ],
+    "antonyms": [
+      "attack",
+      "blockage",
+      "obstruction",
+      "opposition"
+    ],
+    "usage": "Your patronage of the arts program will allow our students to put on four plays this year."
+  },
+  {
+    "id": 171,
+    "word": "DESOLATE",
+    "pos": "(adj)",
+    "hindiMeaning": "उजाड़ / निर्जन",
+    "meaning": "make (someone) feel annoyed, frustrated, or worried, especially with trivial matters.",
+    "synonyms": [
+      "afflict",
+      "agitate",
+      "annoy",
+      "exasperate"
+    ],
+    "antonyms": [
+      "aid",
+      "appeade",
+      "calm",
+      "comfort"
+    ],
+    "usage": "Because you are having a bad day, do not assume the entire world is out to vex you."
+  },
+  {
+    "id": 172,
+    "word": "DEVIATE",
+    "pos": "(verb)",
+    "hindiMeaning": "भटकना / विचलित होना",
+    "meaning": "very serious or gloomy.",
+    "synonyms": [
+      "stern",
+      "forbidding",
+      "uninviting",
+      "unapproachable"
+    ],
+    "antonyms": [
+      "amiable",
+      "pleasant"
+    ],
+    "usage": "His expression was grim when he told them they had lost their jobs."
+  },
+  {
+    "id": 173,
+    "word": "DILIGENT",
+    "pos": "(adj)",
+    "hindiMeaning": "मेहनती / लगनशील",
+    "meaning": "not deprived of freedom of action or expression; not restricted or hampered.",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": "He was not free to give her the untrammelled life that she deserved."
+  },
+  {
+    "id": 174,
+    "word": "DISPARATE",
+    "pos": "(adj)",
+    "hindiMeaning": "भिन्न / असमान",
+    "meaning": "a particular position or place where something occurs or is situated",
+    "synonyms": [
+      "arrangement",
+      "location",
+      "condition",
+      "circumstances"
+    ],
+    "antonyms": [
+      "boon",
+      "disarrangement"
+    ],
+    "usage": "The locus of these intersections is the quadratrix."
+  },
+  {
+    "id": 175,
+    "word": "DISPARAGE",
+    "pos": "(verb)",
+    "hindiMeaning": "उपेक्षा करना / नीचा दिखाना",
+    "meaning": "disagreement between people.",
+    "synonyms": [
+      "strife",
+      "conflict",
+      "friction",
+      "hostility"
+    ],
+    "antonyms": [
+      "agreement",
+      "accord",
+      "harmony"
+    ],
+    "usage": "A note of discord has crept into relations between the two countries."
+  },
+  {
+    "id": 176,
+    "word": "DISPATCH",
+    "pos": "(verb)",
+    "hindiMeaning": "भेजना / रवाना करना",
+    "meaning": "tending to spread very quickly and undesirably or harmfully.",
+    "synonyms": [
+      "nosy",
+      "interfering"
+    ],
+    "antonyms": [],
+    "usage": "The samples tested in this series may not include a high proportion of health care staff involved in invasive procedures."
+  },
+  {
+    "id": 177,
+    "word": "DISSEMINATE",
+    "pos": "(verb)",
+    "hindiMeaning": "प्रचारित करना / फैलाना",
+    "meaning": "giving the worrying impression that something bad is going to happen; threateningly inauspicious.",
+    "synonyms": [
+      "threatening",
+      "menacing",
+      "baleful",
+      "forbidding"
+    ],
+    "antonyms": [
+      "promising",
+      "auspicious",
+      "propitious"
+    ],
+    "usage": "There were ominous dark clouds gathering overhead."
+  },
+  {
+    "id": 178,
+    "word": "DIVERSIFY",
+    "pos": "(verb)",
+    "hindiMeaning": "विविधता लाना",
+    "meaning": "spoil or impair the quality or efficiency of.",
+    "synonyms": [
+      "annihilate",
+      "negate",
+      "quash",
+      "abate"
+    ],
+    "antonyms": [
+      "allow",
+      "help",
+      "permit",
+      "affirm"
+    ],
+    "usage": "Changes at this point may actually vitiate the entire system."
+  },
+  {
+    "id": 179,
+    "word": "SUCCINCTLY",
+    "pos": "(adv)",
+    "hindiMeaning": "संक्षेप में",
+    "meaning": "profoundly wise.",
+    "synonyms": [
+      "sagacious",
+      "erudite",
+      "discerning",
+      "judicious."
+    ],
+    "antonyms": [
+      "dumb",
+      "imbecile",
+      "moronic",
+      "slow-witted."
+    ],
+    "usage": "A sage suggestion that they think long and hard before deciding to marry at such a young age."
+  },
+  {
+    "id": 180,
+    "word": "JOVIAL",
+    "pos": "(adj)",
+    "hindiMeaning": "हंसमुख / उल्लासपूर्ण",
+    "meaning": "talk at length in a foolish or inconsequential way.",
+    "synonyms": [
+      "chatter",
+      "babble",
+      "prate",
+      "ramble."
+    ],
+    "antonyms": [
+      "quiet",
+      "silence",
+      "enunciate",
+      "articulate."
+    ],
+    "usage": "To make others envious, Reena likes to prattle on about her great job."
+  },
+  {
+    "id": 181,
+    "word": "DOCTRINE",
+    "pos": "(noun)",
+    "hindiMeaning": "सिद्धांत / मत",
+    "meaning": "difficult, undesirable, or unpleasant.",
+    "synonyms": [
+      "disagreeable",
+      "odious",
+      "inapt",
+      "unwanted."
+    ],
+    "antonyms": [
+      "desirable",
+      "enviable",
+      "alluring",
+      "apposite."
+    ],
+    "usage": "They already have the unenviable task of supervising some of the most dangerous prisoners in the country."
+  },
+  {
+    "id": 182,
+    "word": "DOGMATIC",
+    "pos": "(adj)",
+    "hindiMeaning": "कट्टर / हठधर्मी",
+    "meaning": "prevent from working or succeeding; thwart.",
+    "synonyms": [
+      "ruin",
+      "wreck",
+      "destroy",
+      "devastate."
+    ],
+    "antonyms": [
+      "guard",
+      "shelter",
+      "shield",
+      "swathe."
+    ],
+    "usage": "The latest information could scupper the peace talks."
+  },
+  {
+    "id": 183,
+    "word": "DOMINANT",
+    "pos": "(adj)",
+    "hindiMeaning": "प्रमुख / प्रभावशाली",
+    "meaning": "a store of valuable or delightful things.",
+    "synonyms": [
+      "accumulation",
+      "agglomeration",
+      "backlog",
+      "conglomeration."
+    ],
+    "antonyms": [
+      "junk",
+      "dispersion",
+      "reduction",
+      "shrinkage."
+    ],
+    "usage": "I discovered a trove of candy bars and pop tarts in my teen son's pillow case."
+  },
+  {
+    "id": 184,
+    "word": "DREAD",
+    "pos": "(noun)",
+    "hindiMeaning": "डर / भय",
+    "meaning": "sad or miserable in appearance.",
+    "synonyms": [
+      "dejected",
+      "forlorn",
+      "crestfallen",
+      "abject."
+    ],
+    "antonyms": [
+      "blissful",
+      "buoyant",
+      "cheerful",
+      "delighted."
+    ],
+    "usage": "The mother could tell that her son was woebegone when she told him that he was grounded."
+  },
+  {
+    "id": 185,
+    "word": "MYSTIQUE",
+    "pos": "(noun)",
+    "hindiMeaning": "रहस्यमय आकर्षण / आभा",
+    "meaning": "a quality of mystery, glamour, or power associated with someone or something.",
+    "synonyms": [
+      "charisma",
+      "mystery",
+      "fascination",
+      "aura."
+    ],
+    "antonyms": [
+      "plainness",
+      "limpidity",
+      "perspicuity",
+      "lucidity."
+    ],
+    "usage": "The detective was captivated by the suspect’s mystique."
+  },
+  {
+    "id": 186,
+    "word": "ELAPSE",
+    "pos": "(verb)",
+    "hindiMeaning": "बीतना / गुज़रना",
+    "meaning": "make (a disease or its symptoms) less severe without removing the cause.",
+    "synonyms": [
+      "alleviate",
+      "relieve",
+      "soothe",
+      "assuage."
+    ],
+    "antonyms": [
+      "heighten",
+      "intensify",
+      "aggravate",
+      "exacerbate."
+    ],
+    "usage": "This medicine should palliate your cough at least a little."
+  },
+  {
+    "id": 187,
+    "word": "ELUCIDATE",
+    "pos": "(verb)",
+    "hindiMeaning": "स्पष्ट करना / व्याख्या करना",
+    "meaning": "unqualified; absolute.",
+    "synonyms": [
+      "unconditional",
+      "unlimited",
+      "unrestricted",
+      "comprehensive."
+    ],
+    "antonyms": [
+      "abbreviated",
+      "abridged",
+      "diminished",
+      "reduced."
+    ],
+    "usage": "The delegation to the international convention was given plenary authority to negotiate a treaty in the nation's best interest."
+  },
+  {
+    "id": 188,
+    "word": "PATRONAGE",
+    "pos": "(noun)",
+    "hindiMeaning": "संरक्षण देना / आश्रय",
+    "meaning": "feel or express discontent; fret.",
+    "synonyms": [
+      "mope",
+      "languish",
+      "despondent",
+      "lament."
+    ],
+    "antonyms": [
+      "complacent",
+      "fulfilled",
+      "rejoice",
+      "contented."
+    ],
+    "usage": "The soldiers repine for their families when they are stationed overseas. 1.ABSTRACT= भ़व़मक Meaning:existing purely in mind Synonyms: complex, unreal Antonyms: real, simple Example:Julie had trouble understanding the appeal of the abstract painting. 2.ABYSMAL= बे हद खऱब Meaning:extremely bad Synonyms: bad, awful Antonyms: good Example:I got an abysmal grade on my research paper! 3.BREVITY= सं तत़ Meaning:the quality of being breif or terse Synonyms: short, breif Antonyms: large, long Example:The brevity of their time together made it all the more romantic. 4.CONCEIVE= वच़र करऩ Meaning:to come up with Synonyms: accept, assume Antonyms: neglect, avoid Example:The plan to build the city was originally conceived in the early 1900s. 5.CULMINATION= पऱक़टठ़ Meaning:the final act Synonyms: climax, end Antonyms: start Example:The culmination of the performance was unforgettable. 6. DILEMMA= सं क क त Meaning: a problem or doubt Synonyms: doubt, unsure Antonyms: sure, definite Example:The main dilemma is whether to pay for a commercial or not. 7. DILIGENCE= परम Meaning:the quality of being commited to a task Synonyms: dedicated, commited Antonyms: inactivity, lethargy Example:Diligence and confidence will get you far in life. 8. ECCENTRIC= उके Meaning:deviating from the norm Synonyms: bizarre, curious Antonyms: common, familiar Example:She’s a little eccentric but still fun to be ar ound. 9. EMPHATIC= भ़वी Meaning:very expressive Synonyms: active, explicit Antonyms: inactive, implicit Example:Her emphatic smile told me she was excited to ride the roller coaster. 10. HOSTILE=  ु त़प ू णश Meaning: harmful or dangerous Synonyms: dangerous, violent Antonyms: safe, friendly Example:The voices around the corner sounded angry, hostile even. 1. Quagmire: (noun) ऩज ु क ह़लत Meaning: a difficult, puzzling, or embarrassing situation from which there is no easy escape Synonyms: bind,corner, dilemma, fix, hole, impasse, jam, mire, pickle, predicament, spot Antonyms: advantage, solution, agreement, contentment Usage: He's caught in a quagmire of debt. 2. Subtler: (adjective) ल Meaning: clever at attaining one's ends by indirect and often deceptive means Synonyms: artful, beguiling, cagey, crafty, cunning, cute, designing, devious, foxy, guileful, scheming, shrewd, slick, sly, tricky, wily Antonyms: artless, guileless, ingenuous, innocent Usage: There have been many subtler, more original and more systematic thinkers about the conditions of the social union. 3. Proffer: (verb) नवे दन करऩ Meaning: to put before another for acceptance or consideration Synonyms: extend, offer, tender, propose, give in, submit. Antonyms: decline, deny, disallow, disapprove, negative, reject. Usage: It is the ultimate manifestation of the marketplace of ideas; the more people who proffer their ideas to the world, the better the outcome will be for us all. 4. Hoary: (adjective) वयोव ृ ध Meaning: dating or surviving from the distant past Synonyms: age-old, aged, ancient, antediluvian, antique, dateless, hoar, immemorial, old, venerable Antonyms: modern, new, recent Usage: From one point of view they shadow out the great epic of the destinies of the human race; again, the universal solar myth claims a share in them; hoary traditions were brought into ex post facto connexion with them; or they served to commemorate simple meteorological and astronomical facts."
+  },
+  {
+    "id": 189,
+    "word": "ELUSIVE",
+    "pos": "(adj)",
+    "hindiMeaning": "पकड़ में न आने वाला / कठिन",
+    "meaning": "naturally accompanying or associated.",
+    "synonyms": [
+      "attendant",
+      "collateral",
+      "linked",
+      "accessory",
+      "auxiliary."
+    ],
+    "antonyms": [
+      "unassociated",
+      "unconnected",
+      "unrelated",
+      "indifferent",
+      "unbound."
+    ],
+    "usage": "That it is apparently devoid of psychical concomitant need not imply that the impressions concerned in it are crude and inelaborate."
+  },
+  {
+    "id": 190,
+    "word": "STULTIFY",
+    "pos": "(verb)",
+    "hindiMeaning": "व्यर्थ करना / सुस्त करना",
+    "meaning": "cause to lose enthusiasm and initiative, especially as a result of a tedious or restrictive routine.",
+    "synonyms": [
+      "hamper",
+      "impede",
+      "obstruct",
+      "thwart",
+      "suppress",
+      "smother",
+      "repress",
+      "counteract",
+      "trammel",
+      "restrain."
+    ],
+    "antonyms": [
+      "consolidate",
+      "augment",
+      "glorify",
+      "exacerbate",
+      "exalt",
+      "stir",
+      "elevate",
+      "accentuate",
+      "strengthen."
+    ],
+    "usage": "By referencing actual statistics, he was able to stultify his opponent’s argument."
+  },
+  {
+    "id": 191,
+    "word": "NIHILISM",
+    "pos": "(noun)",
+    "hindiMeaning": "शून्यवाद",
+    "meaning": "the rejection of all religious and moral principles, in the belief that life is meaningless.",
+    "synonyms": [
+      "cynicism",
+      "rejection",
+      "repudiation",
+      "abnegation",
+      "disbelief",
+      "skepticism."
+    ],
+    "antonyms": [
+      "belief",
+      "faith",
+      "approval",
+      "discipline",
+      "ratification."
+    ],
+    "usage": "The rebels urged the people to grab hold of nihilism and remove all government officials from office."
+  },
+  {
+    "id": 192,
+    "word": "EXHILARATING",
+    "pos": "(adj)",
+    "hindiMeaning": "रोमांचक / आनंददायक",
+    "meaning": "humorous or witty conversation.",
+    "synonyms": [
+      "banter",
+      "chaff",
+      "jesting",
+      "repartee",
+      "barb",
+      "gambit."
+    ],
+    "antonyms": [
+      "bullying",
+      "criticism",
+      "argument",
+      "fight."
+    ],
+    "usage": "The president was in a good mood as he walked through the crowd and made several voters laugh with his witty badinage."
+  },
+  {
+    "id": 193,
+    "word": "MELLOW",
+    "pos": "(adj)",
+    "hindiMeaning": "मधुर / कोमल",
+    "meaning": "(especially of a sound, flavour, or color) pleasantly smooth or soft; free from harshness.",
+    "synonyms": [
+      "dulcet",
+      "euphonious",
+      "melodious",
+      "mellifluous",
+      "mellifluent."
+    ],
+    "antonyms": [
+      "rugged",
+      "abrading",
+      "gruff",
+      "abrasive",
+      "harsh."
+    ],
+    "usage": "His mellow voice and his qualitative speech made everyone applaud him."
+  },
+  {
+    "id": 194,
+    "word": "EXCORIATE",
+    "pos": "(verb)",
+    "hindiMeaning": "आलोचना करना / कड़ी निंदा करना",
+    "meaning": "to criticize harshly and usually publicly.",
+    "synonyms": [
+      "assail",
+      "castigate",
+      "lambaste",
+      "vituperate",
+      "imprecate."
+    ],
+    "antonyms": [
+      "acclaim",
+      "laud",
+      "praise",
+      "glorify",
+      "admire",
+      "exalt."
+    ],
+    "usage": "The stern judge will excoriate the behavior of the repeat offender by sentencing him to thirty years in prison."
+  }
+]

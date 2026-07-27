@@ -281,3 +281,22 @@ model SupportMessage {
   @@map("support_messages")
 }
 
+// 15. Practice Series Section Attempts
+model PracticeSession {
+  id            String   @id @default(uuid())
+  userId        String
+  categoryId    String
+  sectionIndex  Int
+  correct       Int      @default(0)
+  wrong         Int      @default(0)
+  unattempted   Int      @default(0)
+  attempted     Int      @default(0)
+  total         Int      @default(25)
+  accuracy      Float    @default(0)
+  responses     Json?    // { globalQuestionIndex: selectedOptionIndex }
+  completedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, categoryId, sectionIndex])
+  @@map("practice_sessions")
+}
