@@ -1528,43 +1528,6 @@ async function handleAddCategory(rawPayload: any) {
     },
   });
 
-  // Ensure default Exam, TestSeries, and MockTest exist for this category so getCompiledExamCatalog compiles it properly for all users
-  try {
-    const examId = `${id}_exam`;
-    let exam = await prisma.exam.findUnique({ where: { id: examId } });
-    if (!exam) {
-      exam = await prisma.exam.create({
-        data: { id: examId, categoryId: id, name: `${name} Exam` }
-      });
-    }
-
-    const seriesId = `${id}_series`;
-    let series = await prisma.testSeries.findUnique({ where: { id: seriesId } });
-    if (!series) {
-      series = await prisma.testSeries.create({
-        data: { id: seriesId, examId: exam.id, title: `${name} Series` }
-      });
-    }
-
-    const testId = `${id}_default`;
-    let test = await prisma.mockTest.findUnique({ where: { id: testId } });
-    if (!test) {
-      await prisma.mockTest.create({
-        data: {
-          id: testId,
-          testSeriesId: series.id,
-          title: `Practice Questions Set (${name})`,
-          durationMinutes: 20,
-          questionsCount: 25,
-          maxMarks: 50,
-          requiredTierName: 'None',
-        }
-      });
-    }
-  } catch (err: any) {
-    console.error("Error creating child records for category:", err);
-  }
-
   // Clear in-memory catalog cache so all live users receive fresh data
   catalogCache.examCatalog = null;
   catalogCache.noticesList = null;
@@ -1619,15 +1582,6 @@ async function handleAddSubCategory(data: any) {
       id,
       categoryId,
       name,
-    },
-  });
-
-  // Automatically create a default test series (sub-subcategory) for this subcategory
-  await prisma.testSeries.create({
-    data: {
-      id: id + '_series',
-      examId: id,
-      title: name + ' Series',
     },
   });
 
@@ -1864,12 +1818,15 @@ async function handleSaveCustomQuestions(rawPayload: any) {
   const categoryId = payload.categoryId || rawPayload?.categoryId;
   const questions = payload.questions || rawPayload?.questions;
 
-  const targetCatId = categoryId || (testId ? testId.replace(/_default|_practice_default|_practice_practice_default/g, '') : 'practice_series_default');
-  const targetId = testId || `${targetCatId}_default`;
+  if (!testId) {
+    return NextResponse.json({ success: false, error: 'Target mock test ID is required' }, { status: 400 });
+  }
 
   if (!questions || !Array.isArray(questions)) {
     return NextResponse.json({ success: false, error: 'Questions array is required' }, { status: 400 });
   }
+
+  const targetId = String(testId).trim();
 
   const bucketName = process.env.TIGRIS_BUCKET_NAME;
   let s3Url: string | null = null;
@@ -1894,100 +1851,86 @@ async function handleSaveCustomQuestions(rawPayload: any) {
     }
   }
 
-  // Option 2: Store ONLY the Tigris S3 file link URL in Supabase (fallback to JSON array only if S3 upload failed)
+  const questionsDataToStore = s3Url ? { url: s3Url } : questions;
+
   try {
-    // 1. Ensure target Category exists
-    let targetCategory = await prisma.category.findUnique({
-      where: { id: targetCatId }
+    // 1. Check if the target mock test already exists in the database
+    let existingMockTest = await prisma.mockTest.findUnique({
+      where: { id: targetId }
     });
 
-    if (!targetCategory) {
-      const formattedName = targetCatId
-        .replace(/_/g, ' ')
-        .replace(/practice/gi, 'Practice Series')
-        .replace(/\b\w/g, (l: string) => l.toUpperCase());
-      
-      targetCategory = await prisma.category.create({
+    if (existingMockTest) {
+      // Update existing mock test questions without creating any new categories
+      await prisma.mockTest.update({
+        where: { id: targetId },
         data: {
-          id: targetCatId,
-          name: formattedName,
-          isPracticeSeries: true,
-          description: 'Practice Series Domain Category'
-        }
-      });
-    }
-
-    // 2. Ensure target Exam exists
-    let targetExam = await prisma.exam.findFirst({
-      where: { categoryId: targetCategory.id }
-    });
-
-    if (!targetExam) {
-      targetExam = await prisma.exam.create({
-        data: {
-          id: `${targetCategory.id}_exam`,
-          categoryId: targetCategory.id,
-          name: `${targetCategory.name} Exam`
-        }
-      });
-    }
-
-    // 3. Ensure target TestSeries exists
-    let targetSeries = await prisma.testSeries.findFirst({
-      where: { examId: targetExam.id }
-    });
-
-    if (!targetSeries) {
-      targetSeries = await prisma.testSeries.create({
-        data: {
-          id: `${targetCategory.id}_series`,
-          examId: targetExam.id,
-          title: `${targetCategory.name} Series`
-        }
-      });
-    }
-
-    // Store ONLY { url: s3Url } link in Supabase DB if uploaded to S3
-    const questionsDataToStore = s3Url ? { url: s3Url } : questions;
-
-    await prisma.mockTest.upsert({
-      where: { id: targetId },
-      update: {
-        customQuestions: questionsDataToStore,
-        questionsCount: questions.length,
-      },
-      create: {
-        id: targetId,
-        testSeriesId: targetSeries.id,
-        title: `Practice Questions Set (${targetCategory.name})`,
-        durationMinutes: 20,
-        questionsCount: questions.length,
-        maxMarks: questions.length * 2,
-        requiredTierName: 'None',
-        customQuestions: questionsDataToStore,
-      }
-    });
-
-    // Also update candidate fallback test IDs
-    const altTargetId = `${targetCatId}_practice_default`;
-    if (altTargetId !== targetId) {
-      await prisma.mockTest.upsert({
-        where: { id: altTargetId },
-        update: {
           customQuestions: questionsDataToStore,
           questionsCount: questions.length,
-        },
-        create: {
-          id: altTargetId,
+          maxMarks: questions.length * 2,
+        }
+      });
+    } else {
+      // 2. If test does not exist, find an existing TestSeries to attach to
+      let targetSeries = null;
+
+      if (payload.testSeriesId) {
+        targetSeries = await prisma.testSeries.findUnique({
+          where: { id: payload.testSeriesId }
+        });
+      }
+
+      if (!targetSeries) {
+        targetSeries = await prisma.testSeries.findFirst();
+      }
+
+      // If no TestSeries exists at all, find or fallback to first Category
+      if (!targetSeries) {
+        let defaultCategory = await prisma.category.findFirst();
+        if (!defaultCategory) {
+          defaultCategory = await prisma.category.create({
+            data: {
+              id: 'general_test_series',
+              name: 'General Test Series',
+              isPracticeSeries: false,
+              description: 'Default Test Series Category'
+            }
+          });
+        }
+
+        let defaultExam = await prisma.exam.findFirst({
+          where: { categoryId: defaultCategory.id }
+        });
+        if (!defaultExam) {
+          defaultExam = await prisma.exam.create({
+            data: {
+              id: `${defaultCategory.id}_exam`,
+              categoryId: defaultCategory.id,
+              name: `${defaultCategory.name} Exam`
+            }
+          });
+        }
+
+        targetSeries = await prisma.testSeries.create({
+          data: {
+            id: `${defaultCategory.id}_series`,
+            examId: defaultExam.id,
+            title: `${defaultCategory.name} Test Series`
+          }
+        });
+      }
+
+      await prisma.mockTest.create({
+        data: {
+          id: targetId,
           testSeriesId: targetSeries.id,
-          title: `Practice Questions Set (${targetCategory.name})`,
-          durationMinutes: 20,
+          title: payload.title || `Test Paper (${targetId})`,
+          durationMinutes: payload.durationMinutes || 60,
           questionsCount: questions.length,
           maxMarks: questions.length * 2,
           requiredTierName: 'None',
           customQuestions: questionsDataToStore,
         }
-      }).catch(() => {});
+      });
     }
 
     // Clear in-memory catalog cache so all live users receive fresh data
