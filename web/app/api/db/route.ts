@@ -2020,12 +2020,19 @@ async function getCompiledExamCatalog() {
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "description" text DEFAULT \'\';');
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "countText" text DEFAULT \'\';');
     await prisma.$executeRawUnsafe('ALTER TABLE IF EXISTS public.vocabs ENABLE ROW LEVEL SECURITY;');
+    await prisma.$executeRawUnsafe('ALTER TABLE IF EXISTS public.practice_sessions ENABLE ROW LEVEL SECURITY;');
     await prisma.$executeRawUnsafe(`
       DO $$
       BEGIN
           IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'vocabs') THEN
               IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'vocabs' AND policyname = 'Enable read access for all users') THEN
                   CREATE POLICY "Enable read access for all users" ON public.vocabs FOR SELECT USING (true);
+              END IF;
+          END IF;
+          IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'practice_sessions') THEN
+              EXECUTE 'DROP POLICY IF EXISTS "Enable all access for practice_sessions" ON public.practice_sessions;';
+              IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'practice_sessions' AND policyname = 'Allow_Public_Read_practice_sessions') THEN
+                  CREATE POLICY "Allow_Public_Read_practice_sessions" ON public.practice_sessions FOR SELECT USING (true);
               END IF;
           END IF;
       END $$;
