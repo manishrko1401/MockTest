@@ -20,7 +20,8 @@ import {
   Clock,
   Eye,
   PlusCircle,
-  MinusCircle
+  MinusCircle,
+  Target
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
@@ -188,7 +189,15 @@ export default function TestSeriesDetailScreen({
           }}>
             <Image source={{ uri: series.logoUrl }} style={{ width: 32, height: 32, borderRadius: 16, resizeMode: 'cover' }} />
           </View>
-        ) : null}
+        ) : (
+          <View style={{
+            width: 32, height: 32, borderRadius: 16,
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            marginRight: 10, justifyContent: 'center', alignItems: 'center',
+          }}>
+            <Target size={18} color="#FFFFFF" />
+          </View>
+        )}
         <View style={styles.headerInfo}>
           <Text style={styles.headerCategory}>{series.categoryName}</Text>
           <Text style={styles.headerTitle} numberOfLines={1}>{series.name} {language === 'en' ? 'Series' : 'सीरीज'}</Text>

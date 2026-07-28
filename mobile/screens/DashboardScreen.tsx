@@ -1103,7 +1103,7 @@ export default function DashboardScreen({
               justifyContent: 'center',
               alignItems: 'center',
             }}>
-              <BookOpen color="#FFFFFF" size={22} />
+              <Target color="#FFFFFF" size={22} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{
@@ -1337,7 +1337,13 @@ export default function DashboardScreen({
                         ]}>
                           <CategoryLogoImage
                             logoUrl={category.logoUrl || ''}
-                            fallbackIcon={<CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={24} />}
+                            fallbackIcon={
+                              (category.isPracticeSeries || category.id?.includes('practice') || category.name?.toLowerCase().includes('practice')) ? (
+                                <Target color={catStyle.iconColor || '#3B82F6'} size={24} />
+                              ) : (
+                                <CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={24} />
+                              )
+                            }
                           />
                         </View>
 
@@ -1430,6 +1436,8 @@ export default function DashboardScreen({
                         source={{ uri: logoUri }}
                         style={{ width: 44, height: 44, borderRadius: 22, resizeMode: 'cover' }}
                       />
+                    ) : (selectedCategory.isPracticeSeries || selectedCategory.id?.includes('practice') || selectedCategory.name?.toLowerCase().includes('practice')) ? (
+                      <Target color={catStyle.iconColor || '#3B82F6'} size={22} />
                     ) : (
                       <BookOpen color={catStyle.iconColor} size={20} />
                     )}
