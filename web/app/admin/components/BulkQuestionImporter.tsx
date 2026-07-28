@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, Edit, FileText, CheckCircle2, AlertCircle, PlusCircle, X, Globe } from 'lucide-react';
+import { Database, Edit, FileText, CheckCircle2, AlertCircle, PlusCircle, X, Globe, Upload, FolderOpen } from 'lucide-react';
 
 function decodeHtml(text: string): string {
   if (!text) return "";
@@ -144,6 +144,34 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   const [selCatId, setSelCatId] = React.useState<string>('');
   const [selSubId, setSelSubId] = React.useState<string>('');
   const [selSubSubId, setSelSubSubId] = React.useState<string>('');
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.json') && file.type !== 'application/json') {
+      showToast('Please select a valid .json file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        if (text) {
+          setJsonInput(text);
+          setImporterMode('json');
+          showToast(`Loaded "${file.name}" (${(file.size / 1024).toFixed(1)} KB) into importer!`);
+        }
+      } catch (err: any) {
+        showToast(`Failed to read file: ${err.message || 'Unknown error'}`);
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+    e.target.value = '';
+  };
 
   const testSeriesCatalog = React.useMemo(() => {
     return examCatalog || [];
@@ -360,6 +388,21 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
             <Edit className="h-4 w-4" />
             Form Builder
           </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-bold cursor-pointer border-2 border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+          >
+            <Upload className="h-4 w-4" />
+            Pick JSON File from Computer
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".json,application/json"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
           {importerMode === 'json' && (
             <button
               type="button"
@@ -378,7 +421,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
         <div className="flex items-center gap-3 p-6 border-b border-slate-100 dark:border-slate-800">
           <div className="h-7 w-7 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center shrink-0">3</div>
           <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wide">
-            {importerMode === 'json' ? 'Paste JSON Questions Array' : `${editingQuestionIndex !== null ? `Editing Question #${editingQuestionIndex + 1}` : 'Add a New Question'}`}
+            {importerMode === 'json' ? 'Paste or Upload JSON Questions Array' : `${editingQuestionIndex !== null ? `Editing Question #${editingQuestionIndex + 1}` : 'Add a New Question'}`}
           </h3>
           {importerMode === 'form' && formQuestionsList.length > 0 && (
             <button
@@ -394,6 +437,18 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
         <div className="p-6">
           {importerMode === 'json' ? (
             <form onSubmit={handleBulkUploadSubmit} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  JSON Code / Questions Array
+                </label>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-600 hover:text-white font-bold flex items-center gap-1.5 cursor-pointer px-3.5 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-800 transition-all shadow-sm"
+                >
+                  <FolderOpen className="h-3.5 w-3.5" /> Pick JSON File from Computer
+                </button>
+              </div>
               <textarea
                 rows={14}
                 value={jsonInput}
