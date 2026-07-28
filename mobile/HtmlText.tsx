@@ -257,6 +257,7 @@ interface HtmlImageProps {
   height?: number;
 }
 const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark, width: propWidth, height: propHeight }) => {
+  if (!src || !src.trim()) return null;
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
   const [loading, setLoading] = useState(true);

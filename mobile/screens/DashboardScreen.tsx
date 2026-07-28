@@ -873,11 +873,11 @@ export default function DashboardScreen({
                       style={[
                         styles.carouselSlide, 
                         { width: Dimensions.get('window').width - 32 },
-                        ann.imageUrl ? { height: 180, minHeight: 180, padding: 0, overflow: 'hidden' } : {},
+                        ann.imageUrl && ann.imageUrl.trim() ? { height: 180, minHeight: 180, padding: 0, overflow: 'hidden' } : {},
                         isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }
                       ]}
                     >
-                      {ann.imageUrl ? (
+                      {ann.imageUrl && ann.imageUrl.trim() ? (
                         <TouchableOpacity
                           activeOpacity={ann.url ? 0.9 : 1}
                           onPress={() => ann.url && Linking.openURL(ann.url)}
@@ -1406,7 +1406,8 @@ export default function DashboardScreen({
           windowSize={5}
           renderItem={({ item: sub }) => {
             const catStyle = getCategoryStyle(selectedCategory.name, isDark);
-            const logoUri = sub.logoUrl || selectedCategory.logoUrl || null;
+            const rawLogo = (sub.logoUrl && sub.logoUrl.trim()) || (selectedCategory.logoUrl && selectedCategory.logoUrl.trim()) || null;
+            const logoUri = rawLogo && rawLogo.trim() ? rawLogo.trim() : null;
             return (
               <TouchableOpacity
                 style={[
