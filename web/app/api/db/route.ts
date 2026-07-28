@@ -1817,7 +1817,7 @@ async function handleSaveCustomQuestions(rawPayload: any) {
       const formattedName = targetCatId
         .replace(/_/g, ' ')
         .replace(/practice/gi, 'Practice Series')
-        .replace(/\b\w/g, l => l.toUpperCase());
+        .replace(/\b\w/g, (l: string) => l.toUpperCase());
       
       targetCategory = await prisma.category.create({
         data: {
