@@ -412,6 +412,7 @@ export default function DashboardScreen({
   const [refreshing, setRefreshing] = useState(false);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  const [testCatalogMode, setTestCatalogMode] = useState<'mock_tests' | 'practice_series'>('mock_tests');
 
   const [suggestionModalOpen, setSuggestionModalOpen] = useState(false);
   const [suggCategory, setSuggCategory] = useState('General');
@@ -1073,55 +1074,81 @@ export default function DashboardScreen({
           </ScrollView>
         </View>
 
-        {/* Explore Test Series */}
-        <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>Popular Test Series</Text>
-        {featuredExams.map((exam) => {
-          const catStyle = getCategoryStyle(exam.categoryName || '', isDark);
-          return (
-            <TouchableOpacity
-              key={exam.id}
-              style={[
-                styles.seriesCard,
-                {
-                  backgroundColor: catStyle.colors[0],
-                  borderColor: catStyle.borderColor,
-                  borderLeftWidth: 4,
-                  borderLeftColor: catStyle.iconColor,
-                  position: 'relative',
-                  overflow: 'hidden',
-                },
-              ]}
-              onPress={() => onSelectTestSeries(exam)}
-            >
-              {/* Decorative background circles */}
-              <View style={{ position: 'absolute', top: -25, right: -25, width: 70, height: 70, borderRadius: 35, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.12 : 0.05 }} />
-              <View style={{ position: 'absolute', bottom: -15, left: 40, width: 45, height: 45, borderRadius: 22.5, backgroundColor: catStyle.iconColor, opacity: isDark ? 0.08 : 0.03 }} />
+        {/* Practice Series Button (Just below Explore Categories) */}
+        <TouchableOpacity
+          style={{
+            backgroundColor: isDark ? '#1E293B' : '#EFF6FF',
+            borderColor: isDark ? '#334155' : '#BFDBFE',
+            borderWidth: 1.5,
+            borderRadius: 16,
+            padding: 14,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 16,
+          }}
+          onPress={() => {
+            setExamSearchQuery('');
+            setSelectedCategoryId(null);
+            setTestCatalogMode('practice_series');
+            setActiveTab('tests');
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
+            <View style={{
+              width: 42,
+              height: 42,
+              borderRadius: 12,
+              backgroundColor: '#2563EB',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <BookOpen color="#FFFFFF" size={22} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: 15,
+                fontWeight: '900',
+                color: isDark ? '#FFFFFF' : '#1E293B',
+              }}>
+                {language === 'hi' ? 'अभ्यास श्रृंखला (Practice Series)' : 'Practice Series'}
+              </Text>
+              <Text style={{
+                fontSize: 11.5,
+                fontWeight: '600',
+                color: isDark ? '#94A3B8' : '#64748B',
+                marginTop: 2,
+              }}>
+                {language === 'hi' ? 'सभी श्रेणियां और टेस्ट सीरीज देखें' : 'View all categories & test series'}
+              </Text>
+            </View>
+          </View>
 
-              <View style={styles.seriesCardLeft}>
-                <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: catStyle.borderColor, borderWidth: 1, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                  <BookOpen color={catStyle.iconColor} size={18} />
-                </View>
-                <View style={styles.seriesDetails}>
-                  <Text style={[styles.seriesTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B' }]}>{exam.name} Series</Text>
-                  <Text style={[styles.seriesMeta, isDark ? { color: '#94A3B8' } : { color: '#64748B' }]}>
-                    {exam.categoryName} • {exam.tests?.length || 0} practice papers
-                  </Text>
-                </View>
-              </View>
-              <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', justifyContent: 'center', alignItems: 'center' }}>
-                <ChevronRight color={catStyle.iconColor} size={14} />
-              </View>
-            </TouchableOpacity>
-          );
-        })}
+          <View style={{
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: isDark ? '#334155' : '#DBEAFE',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginLeft: 8,
+          }}>
+            <ChevronRight color="#2563EB" size={18} />
+          </View>
+        </TouchableOpacity>
       </ScrollView>
     );
   };
 
   const renderTestsTab = () => {
     if (selectedCategoryId === null) {
-      // Filter exam categories by search query
-      const sortedCatalog = [...examCatalog].sort((a, b) => {
+      // Filter exam categories by mode (Mock Tests vs Practice Series) and search query
+      const baseCatalog = examCatalog.filter(cat => {
+        const isPractice = !!(cat.isPracticeSeries || cat.id?.includes('practice') || cat.name?.toLowerCase().includes('practice'));
+        return testCatalogMode === 'practice_series' ? isPractice : !isPractice;
+      });
+
+      const sortedCatalog = [...baseCatalog].sort((a, b) => {
         const aPinned = pinnedCategoryIds.includes(a.id);
         const bPinned = pinnedCategoryIds.includes(b.id);
         if (aPinned && !bPinned) return -1;
@@ -1136,12 +1163,73 @@ export default function DashboardScreen({
 
       return (
         <View style={{ flex: 1 }}>
+          {/* Segmented Control Toggle: Mock Tests vs Practice Series */}
+          <View style={{
+            flexDirection: 'row',
+            backgroundColor: isDark ? '#1E293B' : '#E2E8F0',
+            padding: 3,
+            borderRadius: 14,
+            marginBottom: 10,
+          }}>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 8,
+                borderRadius: 11,
+                alignItems: 'center',
+                backgroundColor: testCatalogMode === 'mock_tests' ? (isDark ? '#2563EB' : '#FFFFFF') : 'transparent',
+                shadowColor: '#000',
+                shadowOpacity: testCatalogMode === 'mock_tests' ? 0.08 : 0,
+                shadowRadius: 2,
+                elevation: testCatalogMode === 'mock_tests' ? 1 : 0,
+              }}
+              onPress={() => {
+                setExamSearchQuery('');
+                setTestCatalogMode('mock_tests');
+              }}
+            >
+              <Text style={{
+                fontSize: 12.5,
+                fontWeight: '800',
+                color: testCatalogMode === 'mock_tests' ? (isDark ? '#FFFFFF' : '#1E293B') : (isDark ? '#94A3B8' : '#64748B'),
+              }}>
+                {language === 'hi' ? 'मॉक टेस्ट श्रेणी' : 'Mock Test Series'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 8,
+                borderRadius: 11,
+                alignItems: 'center',
+                backgroundColor: testCatalogMode === 'practice_series' ? (isDark ? '#2563EB' : '#FFFFFF') : 'transparent',
+                shadowColor: '#000',
+                shadowOpacity: testCatalogMode === 'practice_series' ? 0.08 : 0,
+                shadowRadius: 2,
+                elevation: testCatalogMode === 'practice_series' ? 1 : 0,
+              }}
+              onPress={() => {
+                setExamSearchQuery('');
+                setTestCatalogMode('practice_series');
+              }}
+            >
+              <Text style={{
+                fontSize: 12.5,
+                fontWeight: '800',
+                color: testCatalogMode === 'practice_series' ? (isDark ? '#FFFFFF' : '#1E293B') : (isDark ? '#94A3B8' : '#64748B'),
+              }}>
+                {language === 'hi' ? 'अभ्यास श्रृंखला' : 'Practice Series'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Search Bar */}
           <View style={[styles.examSearchContainer, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
             <Search size={16} color={isDark ? '#60A5FA' : '#6B7280'} style={{ marginRight: 8 }} />
             <TextInput
               style={[styles.examSearchInput, isDark && { color: ThemeColors.dark.text }]}
-              placeholder={LOCALIZATION[language].searchExams}
+              placeholder={testCatalogMode === 'practice_series' ? (language === 'hi' ? 'अभ्यास श्रेणी खोजें...' : 'Search practice series...') : LOCALIZATION[language].searchExams}
               placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
               value={examSearchQuery}
               onChangeText={setExamSearchQuery}
@@ -1211,7 +1299,13 @@ export default function DashboardScreen({
                       activeOpacity={0.82}
                       onPress={() => {
                         setExamSearchQuery('');
-                        setSelectedCategoryId(category.id);
+                        const isPracticeCat = !!(category.isPracticeSeries || category.id?.includes('practice') || category.name?.toLowerCase().includes('practice'));
+                        if (isPracticeCat && category.subCategories && category.subCategories.length === 1) {
+                          const sub = category.subCategories[0];
+                          onSelectTestSeries({ ...sub, categoryName: category.name, logoUrl: sub.logoUrl || category.logoUrl });
+                        } else {
+                          setSelectedCategoryId(category.id);
+                        }
                       }}
                     >
                       {/* Top-Right Pin Badge */}

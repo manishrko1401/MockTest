@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 import Link from 'next/link';
 import HomeSupportWidget from './components/HomeSupportWidget';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb } from 'lucide-react';
+import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
 import { useIsMobile } from './useIsMobile';
 import VocabSection from './components/VocabSection';
@@ -612,14 +612,21 @@ const formatSubCategoryName = (name: string) => {
               </Link>
             </div>
 
-            {/* Test Series Button (Mobile Only) */}
-            <div className="flex justify-center pt-2">
+            {/* Test Series & Practice Series Buttons (Mobile Only) */}
+            <div className="flex items-center justify-center gap-2.5 pt-2">
               <Link
                 href="/mock-tests"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 px-6 rounded-xl text-xs transition active:scale-95 shadow-md flex items-center gap-2"
+                className="flex-1 max-w-[160px] bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
               >
                 <BookOpen className="h-4 w-4" />
                 {language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series'}
+              </Link>
+              <Link
+                href="/practice-series"
+                className="flex-1 max-w-[160px] bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
+              >
+                <Target className="h-4 w-4" />
+                {language === 'hi' ? 'प्रैक्टिस सीरीज' : 'Practice Series'}
               </Link>
             </div>
 
@@ -739,8 +746,7 @@ const formatSubCategoryName = (name: string) => {
             </div>
           </section>
 
-          {/* MOBILE VOCABULARY BOOSTER SECTION */}
-          <VocabSection language={language} />
+          {/* MOBILE VOCABULARY BOOSTER SECTION REMOVED FOR MOBILE VIEW AS REQUESTED */}
 
           {/* MOBILE TABS UPDATES SECTION */}
           <section className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-900">

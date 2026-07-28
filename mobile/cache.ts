@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ── Cache version prefix (bump this string if question data shape changes) ─
 const Q_KEY_PREFIX = 'qs_v2_';   // "v2" auto-busts any old v1 cache
-const CAT_KEY      = 'catalog_v3';
+const CAT_KEY      = 'catalog_v4'; // v4: force full-sync to include practice series isPracticeSeries + sections
 const USER_KEY     = 'user_profile_cache';
 const SYNC_TS_KEY  = 'catalog_last_synced_at';
 
@@ -315,10 +315,15 @@ export function mergeCatalogDelta(
   for (const newCat of delta.newCategories) {
     const existing = catalog.find((c: any) => c.id === newCat.id);
     if (existing) {
-      // Update mutable fields on existing category (e.g. logoUrl changed in admin)
+      // Update all mutable fields on existing category
       existing.logoUrl = newCat.logoUrl ?? existing.logoUrl;
       existing.name = newCat.name ?? existing.name;
       existing.orderIndex = newCat.orderIndex ?? existing.orderIndex;
+      // Preserve isPracticeSeries and other catalog flags if present in delta
+      if (newCat.isPracticeSeries !== undefined) existing.isPracticeSeries = newCat.isPracticeSeries;
+      if (newCat.isPopular !== undefined) existing.isPopular = newCat.isPopular;
+      if (newCat.description !== undefined) existing.description = newCat.description;
+      if (newCat.countText !== undefined) existing.countText = newCat.countText;
     } else {
       catalog.push({ ...newCat, subCategories: [] });
     }

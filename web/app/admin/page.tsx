@@ -18,13 +18,14 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
 import { DatabaseMonitor } from './components/DatabaseMonitor';
 import { VocabManager } from './components/VocabManager';
 import { PracticeSeriesManager } from './components/PracticeSeriesManager';
+import { AppPracticeSeriesManager } from './components/AppPracticeSeriesManager';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -111,9 +112,9 @@ const formatTimeAgo = (dateStr?: string | null): string => {
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -1396,6 +1397,17 @@ export default function AdminAnalytics() {
               <Zap className="h-4 w-4 text-amber-400 fill-amber-400" />
               Practice Series Manager
             </button>
+            <button
+              onClick={() => selectTab('app_practice_series')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                activeTab === 'app_practice_series'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Sparkles className="h-4 w-4 text-indigo-400" />
+              App Practice Series
+            </button>
             {hasTabAccess('users') && (
               <button
                 onClick={() => selectTab('users')}
@@ -1901,9 +1913,18 @@ export default function AdminAnalytics() {
             <VocabManager />
           )}
 
-          {/* TAB: PRACTICE SERIES MANAGER PORTAL */}
+          {/* TAB: PRACTICE SERIES MANAGER PORTAL (WEBSITE) */}
           {activeTab === 'practice_series' && (
             <PracticeSeriesManager
+              examCatalog={examCatalog}
+              showToast={showToast}
+              onRefreshCatalog={refreshCatalog}
+            />
+          )}
+
+          {/* TAB: DEDICATED APP PRACTICE SERIES MANAGER PORTAL (MOBILE APP) */}
+          {activeTab === 'app_practice_series' && (
+            <AppPracticeSeriesManager
               examCatalog={examCatalog}
               showToast={showToast}
               onRefreshCatalog={refreshCatalog}

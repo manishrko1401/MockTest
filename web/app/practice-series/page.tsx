@@ -35,7 +35,8 @@ import {
   XCircle,
   RotateCcw,
   Star,
-  Flag
+  Flag,
+  LayoutDashboard
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { EXPLANATIONS } from '../lib/examUtils';
@@ -415,7 +416,8 @@ export default function PracticeSeriesPage() {
   const [expandedBookmarks, setExpandedBookmarks] = useState<Record<string, boolean>>({});
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Question Viewer & Sectioning State (10 Questions per Section)
+  // In-memory questions cache for instant 0ms category rendering
+  const questionsMemoryCache = React.useRef<Record<string, any[]>>({});
   const [domainQuestions, setDomainQuestions] = useState<any[]>([]);
   const [selectedSectionIndex, setSelectedSectionIndex] = useState<number | null>(null);
   const [sectionSearchQuery, setSectionSearchQuery] = useState<string>('');
@@ -429,6 +431,7 @@ export default function PracticeSeriesPage() {
   const [reportReason, setReportReason] = useState<string>('incorrect_answer');
   const [reportDetails, setReportDetails] = useState<string>('');
   const [reportSuccessToast, setReportSuccessToast] = useState<boolean>(false);
+  const [showMobilePaletteModal, setShowMobilePaletteModal] = useState<boolean>(false);
   const [sectionResultsMap, setSectionResultsMap] = useState<Record<string, any>>({});
 
   const loadSectionResults = async () => {
@@ -702,19 +705,89 @@ export default function PracticeSeriesPage() {
 
   const practiceCatalog = Array.from(combinedCategoriesMap.values());
 
-  // Function to load uploaded questions for selected domain.
-  // Questions are fetched from DB/S3 first (same as test series), exactly like
-  // handleGetCustomQuestions on the server resolves questions for mock tests.
-  // localStorage is used only as a write-through cache AFTER a fresh DB fetch;
-  // it is never used to skip the DB call so all users always get the latest data.
+  // Background prefetcher: preloads all practice category questions into memory cache
+  // as soon as practiceCatalog is available, ensuring 0ms opening speed when clicking cards.
+  useEffect(() => {
+    if (practiceCatalog.length === 0) return;
+    practiceCatalog.forEach((cat) => {
+      const catId = cat.id;
+      if (!questionsMemoryCache.current[catId]) {
+        try {
+          const saved = localStorage.getItem(`mth_practice_questions_${catId}`);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              questionsMemoryCache.current[catId] = parsed;
+              return;
+            }
+          }
+        } catch (e) {}
+
+        // Non-blocking silent background prefetch
+        fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get-custom-questions',
+            testId: `${catId}_default`,
+            categoryId: catId
+          })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              if (data.url) {
+                fetch(data.url)
+                  .then(r => r.ok ? r.json() : null)
+                  .then(parsed => {
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                      questionsMemoryCache.current[catId] = parsed;
+                      try { localStorage.setItem(`mth_practice_questions_${catId}`, JSON.stringify(parsed)); } catch (e) {}
+                    }
+                  }).catch(() => {});
+              } else if (data.customQuestions || data.questions) {
+                let questionsArray = data.customQuestions || data.questions;
+                if (Array.isArray(questionsArray) && questionsArray.length > 0) {
+                  questionsMemoryCache.current[catId] = questionsArray;
+                  try { localStorage.setItem(`mth_practice_questions_${catId}`, JSON.stringify(questionsArray)); } catch (e) {}
+                }
+              }
+            }
+          })
+          .catch(() => {});
+      }
+    });
+  }, [practiceCatalog]);
+
+  // Ultra-Fast Stale-While-Revalidate Question Loader
+  // Renders instantly (0ms) from Memory / LocalStorage while revalidating from DB in background
   const loadDomainQuestions = async (catId: string) => {
-    setLoadingQuestions(true);
     setCurrentQIndex(0);
     setSelectedOptionMap({});
 
-    let loadedQuestions: any[] = [];
+    // 1. Instant load from Memory Cache or LocalStorage (0ms lag!)
+    let loadedQuestions: any[] = questionsMemoryCache.current[catId] || [];
+    if (loadedQuestions.length === 0) {
+      try {
+        const savedQs = localStorage.getItem(`mth_practice_questions_${catId}`);
+        if (savedQs) {
+          const parsed = JSON.parse(savedQs);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            loadedQuestions = parsed;
+            questionsMemoryCache.current[catId] = parsed;
+          }
+        }
+      } catch (e) {}
+    }
 
-    // 1. Always fetch from DB/S3 first (source of truth — same as test series)
+    if (loadedQuestions.length > 0) {
+      setDomainQuestions(loadedQuestions);
+      setLoadingQuestions(false);
+    } else {
+      setLoadingQuestions(true);
+    }
+
+    // 2. Fetch fresh questions from DB/S3 API in background
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
@@ -727,20 +800,20 @@ export default function PracticeSeriesPage() {
       });
       const data = await res.json();
       if (data.success) {
-        // Direct download from Tigris S3 URL to bypass Supabase egress completely
+        let freshQuestions: any[] = [];
         if (data.url) {
           try {
             const fetchS3 = await fetch(data.url);
             if (fetchS3.ok) {
               const parsedS3 = await fetchS3.json();
               if (Array.isArray(parsedS3) && parsedS3.length > 0) {
-                loadedQuestions = parsedS3;
+                freshQuestions = parsedS3;
               }
             }
           } catch (s3Err) {}
         }
 
-        if (loadedQuestions.length === 0 && (data.customQuestions || data.questions)) {
+        if (freshQuestions.length === 0 && (data.customQuestions || data.questions)) {
           let questionsArray = data.customQuestions || data.questions;
           if (typeof questionsArray === 'string') {
             const fetchRes = await fetch(questionsArray);
@@ -753,30 +826,21 @@ export default function PracticeSeriesPage() {
             }
           }
           if (Array.isArray(questionsArray) && questionsArray.length > 0) {
-            loadedQuestions = questionsArray;
+            freshQuestions = questionsArray;
           }
         }
 
-        // Write-through cache: store in localStorage for instant re-renders in this session
-        if (loadedQuestions.length > 0) {
+        if (freshQuestions.length > 0) {
+          questionsMemoryCache.current[catId] = freshQuestions;
+          setDomainQuestions(freshQuestions);
           try {
-            localStorage.setItem(`mth_practice_questions_${catId}`, JSON.stringify(loadedQuestions));
+            localStorage.setItem(`mth_practice_questions_${catId}`, JSON.stringify(freshQuestions));
           } catch (storageErr) {}
         }
       }
-    } catch (e) {}
-
-    // 2. DB fetch failed or offline: fall back to localStorage cache
-    if (loadedQuestions.length === 0) {
-      try {
-        const savedQs = localStorage.getItem(`mth_practice_questions_${catId}`);
-        if (savedQs) {
-          const parsed = JSON.parse(savedQs);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            loadedQuestions = parsed;
-          }
-        }
-      } catch (e) {}
+    } catch (e) {
+    } finally {
+      setLoadingQuestions(false);
     }
 
     // 3. Fallback to default questions if none uploaded yet
@@ -1015,8 +1079,9 @@ export default function PracticeSeriesPage() {
       
       {/* HEADER NAVBAR */}
       <header className="h-16 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 md:px-12 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-3">
+        <div className="flex items-center gap-8 min-w-0">
+          {/* Desktop Logo */}
+          <Link href="/" className="hidden md:flex items-center gap-3">
             <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
               <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
             </div>
@@ -1025,6 +1090,30 @@ export default function PracticeSeriesPage() {
               <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
             </div>
           </Link>
+
+          {/* Mobile Left Header Content: Show Category Name when taking Section Test, else Back to Home */}
+          {selectedSectionIndex !== null ? (
+            <div className="md:hidden flex items-center gap-2 min-w-0">
+              <button
+                onClick={() => {
+                  setSelectedSectionIndex(null);
+                  setIsReviewMode(false);
+                }}
+                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 shrink-0"
+                title="Back to Sections"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <span className="font-black text-xs text-slate-900 dark:text-white truncate max-w-[170px]">
+                {activeCategoryObj?.name}
+              </span>
+            </div>
+          ) : (
+            <Link href="/" className="md:hidden flex items-center gap-1.5 text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-extrabold text-xs tracking-wide transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              <span>{language === 'hi' ? 'मुख्य पृष्ठ पर वापस जाएं' : 'Back to Home'}</span>
+            </Link>
+          )}
 
           <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600 dark:text-slate-400">
             <Link href="/" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navHome}</Link>
@@ -1035,41 +1124,50 @@ export default function PracticeSeriesPage() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
-          >
-            <option value="en">English</option>
-            <option value="hi">हिन्दी</option>
-          </select>
-
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 active:scale-95 transition cursor-pointer"
-            title={theme === 'light' ? t.themeDark : t.themeLight}
-          >
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </button>
-
-          {currentUser ? (
-            <Link href="/profile" className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-extrabold flex items-center gap-1.5">
-              <UserCheck className="h-4 w-4" />
-              <span className="hidden sm:inline">{currentUser.name.split(' ')[0]}</span>
-            </Link>
-          ) : (
-            <Link href="/auth" className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs active:scale-95 transition">
-              {t.logIn}
-            </Link>
+        <div className="flex items-center gap-2">
+          {/* Question Palette Button on Mobile View (Extreme Right of top-most header during section tests) */}
+          {selectedSectionIndex !== null && (
+            <button
+              onClick={() => setShowMobilePaletteModal(true)}
+              className="md:hidden px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5 shrink-0"
+              title="Question Palette"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              <span>Palette</span>
+            </button>
           )}
 
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800"
-          >
-            {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
-          </button>
+          <div className="hidden sm:flex items-center gap-2">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+            >
+              <option value="en">English</option>
+              <option value="hi">हिन्दी</option>
+            </select>
+
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 active:scale-95 transition cursor-pointer"
+              title={theme === 'light' ? t.themeDark : t.themeLight}
+            >
+              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </button>
+          </div>
+
+          <div className={selectedSectionIndex !== null ? 'hidden sm:block' : 'block'}>
+            {currentUser ? (
+              <Link href="/profile" className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-extrabold flex items-center gap-1.5">
+                <UserCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">{currentUser.name.split(' ')[0]}</span>
+              </Link>
+            ) : (
+              <Link href="/auth" className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs active:scale-95 transition">
+                {t.logIn}
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 
@@ -1080,48 +1178,56 @@ export default function PracticeSeriesPage() {
           /* STARRED QUESTIONS VIEW (GROUPED DOMAIN CATEGORY WISE) */
           <div className="space-y-6 animate-fade-in">
             {/* Navigation Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowStarredView(false)}
-                  className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 cursor-pointer transition"
-                  title="Back to Practice Domains"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <div>
-                  <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                    <Star className="h-5 w-5 fill-amber-400 text-amber-500" />
-                    <span>{language === 'hi' ? 'स्टार किए गए प्रश्न' : 'Starred Questions'}</span>
-                  </h2>
-                  <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">
-                    {language === 'hi' ? 'डोमेन श्रेणी के अनुसार स्टार प्रश्न' : 'Grouped Domain Category-Wise'}
-                  </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowStarredView(false)}
+                    className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 cursor-pointer transition shrink-0"
+                    title="Back to Practice Domains"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </button>
+                  <div>
+                    <h2 className="text-xs sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5 whitespace-nowrap">
+                      <Star className="h-4 w-4 sm:h-5 sm:w-5 fill-amber-400 text-amber-500 shrink-0" />
+                      <span>{language === 'hi' ? 'स्टार प्रश्न' : 'Starred Questions'}</span>
+                    </h2>
+                    {/* Hide Grouped Domain Category Subtitle on Mobile View */}
+                    <p className="hidden sm:block text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">
+                      {language === 'hi' ? 'डोमेन श्रेणी के अनुसार स्टार प्रश्न' : 'Grouped Domain Category-Wise'}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-3">
-                {/* Language Switcher */}
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
+                {/* English / Hindi Toggle Button in Center of Top Horizontal Line on Mobile */}
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg shrink-0">
                   <button
                     onClick={() => setViewerLang('en')}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-black transition ${
+                    className={`px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-[11px] font-black transition ${
                       viewerLang === 'en' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    English
+                    EN
                   </button>
                   <button
                     onClick={() => setViewerLang('hi')}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-black transition ${
+                    className={`px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-[11px] font-black transition ${
                       viewerLang === 'hi' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    हिन्दी
+                    HI
                   </button>
                 </div>
 
-                {/* Expand / Collapse All Toggle */}
+                {/* Mobile Question Badge */}
+                <span className="sm:hidden text-[10px] font-extrabold bg-amber-50 text-amber-600 dark:bg-amber-955/40 dark:text-amber-400 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/40 shrink-0">
+                  {Object.keys(starredQuestionsMap).length} Qs
+                </span>
+              </div>
+
+              <div className="hidden sm:flex items-center gap-2 justify-end w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
+                {/* Expand / Collapse All Toggle (Hidden on mobile view as requested) */}
                 {Object.keys(starredQuestionsMap).length > 0 && (
                   <button
                     onClick={() => {
@@ -1135,9 +1241,9 @@ export default function PracticeSeriesPage() {
                         setExpandedStarredMap(map);
                       }
                     }}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-extrabold transition flex items-center gap-1 cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-[11px] font-extrabold transition flex items-center gap-1 cursor-pointer shrink-0"
                   >
-                    <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${Object.keys(starredQuestionsMap).length > 0 && Object.keys(starredQuestionsMap).every(k => expandedStarredMap[k]) ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform duration-200 ${Object.keys(starredQuestionsMap).length > 0 && Object.keys(starredQuestionsMap).every(k => expandedStarredMap[k]) ? 'rotate-180' : ''}`} />
                     <span>
                       {Object.keys(starredQuestionsMap).length > 0 && Object.keys(starredQuestionsMap).every(k => expandedStarredMap[k])
                         ? (viewerLang === 'hi' ? 'सब छिपाएं' : 'Collapse All')
@@ -1146,6 +1252,7 @@ export default function PracticeSeriesPage() {
                   </button>
                 )}
 
+                {/* Desktop Question Badge */}
                 <span className="text-xs font-extrabold bg-amber-50 text-amber-600 dark:bg-amber-955/40 dark:text-amber-400 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-900/40">
                   {Object.keys(starredQuestionsMap).length} Starred Questions
                 </span>
@@ -1324,47 +1431,50 @@ export default function PracticeSeriesPage() {
           /* ALL PRACTICE DOMAINS GRID (FULL WIDTH) */
           <div className="space-y-6">
             {/* Sub Header (Matched to Test Series Page) */}
-            <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
-              <div className="animate-in fade-in slide-in-from-top-4 duration-350">
-                <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Target className="h-5 w-5 text-blue-500" />
-                  {language === 'hi' ? 'अभ्यास सीरीज़ डोमेन' : 'Practice Series Domains'}
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-6">
+              <div className="animate-in fade-in slide-in-from-top-4 duration-350 w-full">
+                <div className="flex items-center justify-between w-full gap-2">
+                  <h2 className="text-sm sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 shrink">
+                    <Target className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 shrink-0" />
+                    <span className="truncate">{language === 'hi' ? 'अभ्यास सीरीज़ डोमेन' : 'Practice Series Domains'}</span>
+                  </h2>
+
+                  {/* Small Starred Questions Button shifted to the EXTREME RIGHT SIDE */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(null);
+                      setShowStarredView(true);
+                    }}
+                    className="inline-flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-[9.5px] sm:text-xs shadow-xs transition cursor-pointer hover:scale-105 active:scale-95 shrink-0 ml-auto"
+                    title="View Starred Questions"
+                  >
+                    <Star className="h-3 w-3 fill-amber-100 text-amber-100" />
+                    <span>{language === 'hi' ? 'स्टार प्रश्न' : 'Starred'} ({Object.keys(starredQuestionsMap).length})</span>
+                  </button>
+                </div>
+
+                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {language === 'hi' ? 'एडमिन द्वारा अपलोड किए गए प्रश्नों को सीधे वन-बाय-वन हल करने के लिए डोमेन चुनें' : 'Select a category to explore practice series'}
                 </p>
               </div>
 
-              {/* Starred Questions & Categories Search Bar */}
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                <button
-                  onClick={() => {
-                    setSelectedCategory(null);
-                    setShowStarredView(true);
-                  }}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs shadow-sm transition cursor-pointer hover:scale-105 active:scale-95 shrink-0"
-                >
-                  <Star className="h-4 w-4 fill-amber-100 text-amber-100" />
-                  <span>{language === 'hi' ? 'स्टार किए गए प्रश्न' : 'Starred Questions'} ({Object.keys(starredQuestionsMap).length})</span>
-                </button>
-
-                <div className="relative max-w-sm w-full">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
-                    <Search className="h-4 w-4" />
-                  </div>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={language === 'hi' ? 'अभ्यास डोमेन खोजें...' : 'Search practice domain...'}
-                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-sm font-medium"
-                  />
+              {/* Full Width Search Bar */}
+              <div className="relative w-full max-w-full sm:max-w-sm">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                  <Search className="h-4 w-4" />
                 </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={language === 'hi' ? 'अभ्यास डोमेन खोजें...' : 'Search practice domain...'}
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-sm font-medium"
+                />
               </div>
             </div>
 
-            {/* Category Cards Grid — Matched 1-to-1 with Test Series Category Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 animate-in fade-in duration-300">
+            {/* Category Cards Grid — 2 Tiles per Row on Mobile View */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 animate-in fade-in duration-300">
               {filteredCatalog.map((cat) => {
                 const isSsc = cat.id.includes('ssc');
                 const isRailways = cat.id.includes('railway');
@@ -1372,49 +1482,55 @@ export default function PracticeSeriesPage() {
                 const isTeaching = cat.id.includes('teach');
                 const isUgcNet = cat.id.includes('ugc') || cat.id.includes('state');
 
-                const topBorderColor = 
-                  isSsc ? 'border-t-orange-500 hover:border-orange-500/50' :
-                  isRailways ? 'border-t-indigo-500 hover:border-indigo-500/50' :
-                  isBanking ? 'border-t-emerald-500 hover:border-emerald-500/50' :
-                  isTeaching ? 'border-t-amber-500 hover:border-amber-500/50' :
-                  isUgcNet ? 'border-t-sky-500 hover:border-sky-500/50' :
-                  'border-t-pink-500 hover:border-pink-500/50';
+                const accentColor = 
+                  isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
+                  isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
+                  isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
+                  isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
+                  isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
+                  'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
 
                 return (
                   <button
                     key={cat.id}
                     onClick={() => handleCategorySelect(cat.id)}
-                    className={`relative overflow-hidden bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl flex flex-col items-center text-center transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer hover:scale-[1.03] active:scale-[0.98] group border-t-4 ${topBorderColor}`}
+                    className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 p-2.5 sm:p-3.5 rounded-xl flex flex-col sm:flex-row justify-between gap-2 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
                   >
-                    {/* Logo/Icon Container */}
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-3 bg-slate-50 dark:bg-slate-900 group-hover:scale-110 transition duration-300">
-                      {(cat as any).logoUrl ? (
-                        <img
-                          src={(cat as any).logoUrl}
-                          alt={`${cat.name} logo`}
-                          className="w-full h-full object-contain p-1"
-                        />
-                      ) : (
-                        <div className="text-blue-500">
-                          {isSsc && <Award className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />}
-                          {isRailways && <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />}
-                          {isBanking && <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />}
-                          {isTeaching && <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />}
-                          {isUgcNet && <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-sky-500" />}
-                          {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-pink-500" />}
+                    {/* Left details */}
+                    <div className="flex-1 flex flex-col justify-between min-w-0">
+                      <div>
+                        {/* Target Logo/Icon Container */}
+                        <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center border border-blue-100 dark:border-blue-900/40 shadow-sm overflow-hidden mb-2 bg-blue-50/60 dark:bg-blue-955/30 transition duration-300">
+                          {(cat as any).logoUrl ? (
+                            <img
+                              src={(cat as any).logoUrl}
+                              alt={`${cat.name} logo`}
+                              className="w-full h-full object-contain p-1"
+                            />
+                          ) : (
+                            <Target className="h-5 w-5 sm:h-6.5 sm:w-6.5 text-blue-600 dark:text-blue-400" />
+                          )}
                         </div>
-                      )}
+
+                        <h4 className="font-extrabold text-[10px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
+                          {cat.name}
+                        </h4>
+
+                        {cat.description && (
+                          <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1.5 line-clamp-2 leading-tight">
+                            {cat.description}
+                          </p>
+                        )}
+
+                        <span className="text-[7.5px] sm:text-[9px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
+                          {cat.countText || 'Practice Series'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[8px] sm:text-[8.5px] uppercase tracking-wider mt-2 sm:mt-3 pt-1 sm:pt-1.5 border-t border-slate-100 dark:border-slate-800/60 w-full">
+                        {viewerLang === 'hi' ? "अभ्यास शुरू करें" : "Start Practice"} <ChevronRight className="h-2.5 w-2.5 transition group-hover:translate-x-0.5" />
+                      </div>
                     </div>
-
-                    {/* Category Title */}
-                    <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-855 dark:text-slate-100 mb-2 leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      {cat.name}
-                    </h4>
-
-                    {/* Test Count / Questions Badge */}
-                    <span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border border-slate-100 dark:border-slate-800">
-                      {cat.countText || 'Practice Series'}
-                    </span>
                   </button>
                 );
               })}
@@ -1424,26 +1540,27 @@ export default function PracticeSeriesPage() {
             /* SECTION SELECTION GRID VIEW FOR THE SELECTED CATEGORY */
             <div className="space-y-6 animate-fade-in">
               {/* Navigation Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="flex flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleBackToCategories}
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 cursor-pointer transition"
+                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 cursor-pointer transition shrink-0"
                     title="Back to Practice Domains"
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </button>
                   <div>
-                    <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <h2 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                       <span>{activeCategoryObj?.name}</span>
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400 font-medium">
                       {activeCategoryObj?.description ? `${activeCategoryObj.description} • ` : ''}{domainQuestions.length} Questions Total • Divided into {totalSections} Sections ({QUESTIONS_PER_SECTION} Questions / Section)
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5">
+                {/* Hide Search Bar on Mobile View */}
+                <div className="hidden sm:flex items-center gap-2.5">
                   <div className="relative">
                     <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
@@ -1600,75 +1717,77 @@ export default function PracticeSeriesPage() {
                 return (
                   <div className="space-y-4">
                     {/* Section Navigation Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-                      <div className="flex items-center gap-2.5">
+                    <div className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-2.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs w-full">
+                      {/* Left: Back Button, Category Name & Section Dropdown */}
+                      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
                         <button
                           onClick={() => {
                             setSelectedSectionIndex(null);
                             setIsReviewMode(false);
                           }}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 cursor-pointer transition flex items-center gap-1 text-xs font-bold"
+                          className="hidden sm:flex p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 cursor-pointer transition items-center gap-1 text-xs font-bold shrink-0"
                           title="Back to All Sections"
                         >
                           <ArrowLeft className="h-4 w-4" />
                           <span className="hidden sm:inline">Sections</span>
                         </button>
 
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                              {activeCategoryObj?.name}
-                            </h2>
-                            {/* Section Dropdown */}
-                            <select
-                              value={selectedSectionIndex}
-                              onChange={(e) => {
-                                setSelectedSectionIndex(Number(e.target.value));
-                                setIsReviewMode(false);
-                                setCurrentQIndex(0);
-                              }}
-                              className="bg-blue-50 dark:bg-blue-955/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-black text-xs px-2.5 py-1 rounded-lg focus:outline-none cursor-pointer"
-                            >
-                              {Array.from({ length: totalSections }).map((_, idx) => {
-                                const startQ = idx * QUESTIONS_PER_SECTION + 1;
-                                const endQ = Math.min((idx + 1) * QUESTIONS_PER_SECTION, domainQuestions.length);
-                                return (
-                                  <option key={idx} value={idx}>
-                                    Section {idx + 1} (Q{startQ} - Q{endQ})
-                                  </option>
-                                );
-                              })}
-                            </select>
-                          </div>
+                        <span className="hidden sm:inline text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate max-w-[180px]">
+                          {activeCategoryObj?.name}
+                        </span>
 
-                          {isReviewMode ? (
-                            <span className="inline-block mt-1 text-[10px] font-black bg-amber-500 text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
-                              {viewerLang === 'hi' ? 'समीक्षा मोड (उत्तर एवं व्याख्या अनलॉक)' : 'Review Mode (Solutions Unlocked)'}
-                            </span>
-                          ) : (
-                            <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                              Section {selectedSectionIndex + 1} of {totalSections} • {QUESTIONS_PER_SECTION} Questions / Section
-                            </p>
-                          )}
-                        </div>
+                        {/* Section Dropdown */}
+                        <select
+                          value={selectedSectionIndex}
+                          onChange={(e) => {
+                            setSelectedSectionIndex(Number(e.target.value));
+                            setIsReviewMode(false);
+                            setCurrentQIndex(0);
+                          }}
+                          className="bg-blue-50 dark:bg-blue-955/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-black text-[10.5px] sm:text-xs px-1.5 sm:px-2 py-1 rounded-lg focus:outline-none cursor-pointer shrink-0"
+                        >
+                          {Array.from({ length: totalSections }).map((_, idx) => {
+                            const startQ = idx * QUESTIONS_PER_SECTION + 1;
+                            const endQ = Math.min((idx + 1) * QUESTIONS_PER_SECTION, domainQuestions.length);
+                            return (
+                              <option key={idx} value={idx}>
+                                Sec {idx + 1} (Q{startQ}-Q{endQ})
+                              </option>
+                            );
+                          })}
+                        </select>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        {/* Prev / Next Section Buttons */}
-                        <button
-                          onClick={() => {
-                            if (selectedSectionIndex > 0) {
-                              setSelectedSectionIndex(selectedSectionIndex - 1);
-                              setIsReviewMode(false);
-                              setCurrentQIndex(0);
-                            }
-                          }}
-                          disabled={selectedSectionIndex === 0}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold transition disabled:opacity-40 cursor-pointer flex items-center gap-1"
-                        >
-                          <ChevronLeft className="h-3.5 w-3.5" /> Prev Sec
-                        </button>
+                      {/* Center: Language Switcher & Question Number Badge */}
+                      <div className="flex items-center gap-1.5 justify-center flex-1">
+                        {/* Language Switcher */}
+                        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg shrink-0">
+                          <button
+                            onClick={() => setViewerLang('en')}
+                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] font-black transition ${
+                              viewerLang === 'en' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                            }`}
+                          >
+                            EN
+                          </button>
+                          <button
+                            onClick={() => setViewerLang('hi')}
+                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] font-black transition ${
+                              viewerLang === 'hi' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                            }`}
+                          >
+                            HI
+                          </button>
+                        </div>
 
+                        {/* Q Number Badge in Center */}
+                        <span className="text-[10px] sm:text-[11px] font-extrabold bg-blue-50 text-blue-600 dark:bg-blue-955 dark:text-blue-400 px-2 py-0.5 sm:py-1 rounded-lg border border-blue-200 dark:border-blue-900/40 shrink-0 whitespace-nowrap">
+                          Q {currentQIndex + 1}/{currentSectionQuestions.length}
+                        </span>
+                      </div>
+
+                      {/* Right: Next Sec Button */}
+                      <div className="flex items-center gap-1.5 ml-auto shrink-0">
                         <button
                           onClick={() => {
                             if (selectedSectionIndex < totalSections - 1) {
@@ -1678,34 +1797,11 @@ export default function PracticeSeriesPage() {
                             }
                           }}
                           disabled={selectedSectionIndex >= totalSections - 1}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold transition disabled:opacity-40 cursor-pointer flex items-center gap-1"
+                          className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] sm:text-xs font-extrabold transition disabled:opacity-40 cursor-pointer flex items-center gap-1 shadow-xs shrink-0"
                         >
-                          Next Sec <ChevronRight className="h-3.5 w-3.5" />
+                          <span>Next Sec</span>
+                          <ChevronRight className="h-3.5 w-3.5" />
                         </button>
-
-                        {/* Language Switcher */}
-                        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
-                          <button
-                            onClick={() => setViewerLang('en')}
-                            className={`px-2 py-1 rounded-md text-[10px] font-black transition ${
-                              viewerLang === 'en' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
-                            }`}
-                          >
-                            EN
-                          </button>
-                          <button
-                            onClick={() => setViewerLang('hi')}
-                            className={`px-2 py-1 rounded-md text-[10px] font-black transition ${
-                              viewerLang === 'hi' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
-                            }`}
-                          >
-                            HI
-                          </button>
-                        </div>
-
-                        <span className="text-[11px] font-extrabold bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900/40">
-                          Q {currentQIndex + 1} / {currentSectionQuestions.length}
-                        </span>
                       </div>
                     </div>
 
@@ -1890,8 +1986,8 @@ export default function PracticeSeriesPage() {
                         </div>
                       </div>
 
-                      {/* RIGHT COLUMN: COMPACT CBT QUESTION PALETTE */}
-                      <div className="w-full lg:w-72 shrink-0 space-y-4">
+                      {/* RIGHT COLUMN: COMPACT CBT QUESTION PALETTE (Hidden on mobile view as requested) */}
+                      <div className="hidden lg:block w-72 shrink-0 space-y-4">
                         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs space-y-3.5 sticky top-20">
                           {/* Candidate Avatar & Status */}
                           <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -1980,25 +2076,139 @@ export default function PracticeSeriesPage() {
                             </div>
                           </div>
 
-                          {/* Finish Section Button */}
-                          <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                          {/* Finish Section Button (Hidden in solution/review mode) */}
+                          {!isReviewMode && (
+                            <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                              <button
+                                onClick={() => {
+                                  if (selectedCategory && selectedSectionIndex !== null) {
+                                    const stats = getSectionStats(selectedSectionIndex);
+                                    saveSectionResult(selectedCategory, selectedSectionIndex, stats);
+                                  }
+                                  setShowFinishSummaryModal(true);
+                                }}
+                                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>{viewerLang === 'hi' ? 'सेक्शन पूरा करें (परिणाम)' : 'Finish Section'}</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* MOBILE QUESTION PALETTE MODAL (Opened by Palette Button on Header) */}
+                    {showMobilePaletteModal && (
+                      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200">
+                        <div className="bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-4 animate-in slide-in-from-bottom duration-200">
+                          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                            <div className="flex items-center gap-2">
+                              <LayoutDashboard className="h-4 w-4 text-amber-500" />
+                              <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">
+                                {activeCategoryObj?.name} — Section {selectedSectionIndex + 1}
+                              </h3>
+                            </div>
                             <button
-                              onClick={() => {
-                                if (selectedCategory && selectedSectionIndex !== null) {
-                                  const stats = getSectionStats(selectedSectionIndex);
-                                  saveSectionResult(selectedCategory, selectedSectionIndex, stats);
-                                }
-                                setShowFinishSummaryModal(true);
-                              }}
-                              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                              onClick={() => setShowMobilePaletteModal(false)}
+                              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                             >
-                              <CheckCircle2 className="h-4 w-4" />
-                              <span>{viewerLang === 'hi' ? 'सेक्शन पूरा करें (परिणाम)' : 'Finish Section'}</span>
+                              <X className="h-5 w-5" />
+                            </button>
+                          </div>
+
+                          {/* Legend Status */}
+                          {(() => {
+                            let secAttempted = 0;
+                            currentSectionQuestions.forEach((_, relIdx) => {
+                              const gIdx = (selectedSectionIndex * QUESTIONS_PER_SECTION) + relIdx;
+                              if (selectedOptionMap[gIdx] !== undefined) secAttempted++;
+                            });
+                            const secNotVisited = currentSectionQuestions.length - secAttempted;
+
+                            return (
+                              <div className="grid grid-cols-2 gap-2 text-[10px] font-extrabold">
+                                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-emerald-50 dark:bg-emerald-955/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40">
+                                  <span className="w-4.5 h-4.5 rounded-md bg-emerald-600 text-white flex items-center justify-center text-[9px]">{secAttempted}</span>
+                                  <span>Attempted</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                  <span className="w-4.5 h-4.5 rounded-md bg-slate-400 dark:bg-slate-700 text-white flex items-center justify-center text-[9px]">{secNotVisited}</span>
+                                  <span>Not Visited</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
+
+                          {/* Palette Grid */}
+                          <div className="grid grid-cols-5 gap-2 max-h-60 overflow-y-auto p-1">
+                            {currentSectionQuestions.map((q, relIdx) => {
+                              const isCurrent = relIdx === currentQIndex;
+                              const gIdx = (selectedSectionIndex * QUESTIONS_PER_SECTION) + relIdx;
+                              const selectedOpt = selectedOptionMap[gIdx];
+                              const hasAttempted = selectedOpt !== undefined;
+                              const isCorrect = hasAttempted && selectedOpt === (q.correctOption ?? 0);
+
+                              let btnBg = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+
+                              if (isReviewMode) {
+                                if (hasAttempted) {
+                                  btnBg = isCorrect ? "bg-emerald-600 text-white border-emerald-700" : "bg-rose-600 text-white border-rose-700";
+                                } else {
+                                  btnBg = "bg-slate-200 dark:bg-slate-700 text-slate-500 border-slate-300 dark:border-slate-600";
+                                }
+                              } else {
+                                if (hasAttempted) {
+                                  btnBg = "bg-blue-600 text-white border-blue-700 font-bold";
+                                }
+                              }
+
+                              if (isCurrent) {
+                                btnBg += " ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 font-black scale-105";
+                              }
+
+                              return (
+                                <button
+                                  key={relIdx}
+                                  onClick={() => {
+                                    setCurrentQIndex(relIdx);
+                                    setShowMobilePaletteModal(false);
+                                  }}
+                                  className={`h-10 rounded-xl text-xs font-bold transition flex items-center justify-center border cursor-pointer ${btnBg}`}
+                                >
+                                  {relIdx + 1}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                            {!isReviewMode && (
+                              <button
+                                onClick={() => {
+                                  if (selectedCategory && selectedSectionIndex !== null) {
+                                    const stats = getSectionStats(selectedSectionIndex);
+                                    saveSectionResult(selectedCategory, selectedSectionIndex, stats);
+                                  }
+                                  setShowMobilePaletteModal(false);
+                                  setShowFinishSummaryModal(true);
+                                }}
+                                className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>{viewerLang === 'hi' ? 'सेक्शन पूरा करें' : 'Finish Section'}</span>
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setShowMobilePaletteModal(false)}
+                              className={`${isReviewMode ? 'w-full' : 'px-4'} py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs cursor-pointer`}
+                            >
+                              Close
                             </button>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 );
               })()}
@@ -2010,74 +2220,74 @@ export default function PracticeSeriesPage() {
       {showFinishSummaryModal && (() => {
         const stats = getPracticeStats();
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 animate-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-6 animate-in fade-in duration-200 overflow-y-auto">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-md w-full shadow-2xl space-y-3.5 sm:space-y-5 max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200">
               
               {/* Header Icon & Title */}
-              <div className="text-center space-y-2">
-                <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-955/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400 shadow-xs">
-                  <Trophy className="h-8 w-8 text-amber-500 animate-bounce" />
+              <div className="text-center space-y-1 sm:space-y-1.5">
+                <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-blue-50 dark:bg-blue-955/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400 shadow-xs">
+                  <Trophy className="h-5 w-5 sm:h-7 sm:w-7 text-amber-500 animate-bounce" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                <h3 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white">
                   {viewerLang === 'hi' ? 'अभ्यास परिणाम सारांश' : 'Practice Completed!'}
                 </h3>
-                <p className="text-xs font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                <p className="text-[10px] sm:text-xs font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
                   {activeCategoryObj?.name || 'Practice Series Domain'}
                 </p>
               </div>
 
               {/* Stats Grid: Correct & Wrong Answers */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {/* Correct Answers */}
-                <div className="bg-emerald-50/80 dark:bg-emerald-955/40 border border-emerald-200 dark:border-emerald-900/60 p-4 rounded-2xl space-y-1 text-center shadow-xs">
-                  <div className="flex items-center justify-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-extrabold text-xs uppercase tracking-wider">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>{viewerLang === 'hi' ? 'सही उत्तर' : 'Correct Answers'}</span>
+                <div className="bg-emerald-50/80 dark:bg-emerald-955/40 border border-emerald-200 dark:border-emerald-900/60 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl space-y-0.5 text-center shadow-xs">
+                  <div className="flex items-center justify-center gap-1 text-emerald-700 dark:text-emerald-400 font-extrabold text-[10px] sm:text-xs uppercase tracking-wider">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>{viewerLang === 'hi' ? 'सही उत्तर' : 'Correct'}</span>
                   </div>
-                  <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">
-                    {stats.correct} <span className="text-xs font-bold text-emerald-700/70">/ {stats.total}</span>
+                  <p className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                    {stats.correct} <span className="text-[10px] sm:text-xs font-bold text-emerald-700/70">/ {stats.total}</span>
                   </p>
                 </div>
 
                 {/* Wrong Answers */}
-                <div className="bg-rose-50/80 dark:bg-rose-955/40 border border-rose-200 dark:border-rose-900/60 p-4 rounded-2xl space-y-1 text-center shadow-xs">
-                  <div className="flex items-center justify-center gap-1.5 text-rose-700 dark:text-rose-400 font-extrabold text-xs uppercase tracking-wider">
-                    <XCircle className="h-4 w-4" />
-                    <span>{viewerLang === 'hi' ? 'गलत उत्तर' : 'Wrong Answers'}</span>
+                <div className="bg-rose-50/80 dark:bg-rose-955/40 border border-rose-200 dark:border-rose-900/60 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl space-y-0.5 text-center shadow-xs">
+                  <div className="flex items-center justify-center gap-1 text-rose-700 dark:text-rose-400 font-extrabold text-[10px] sm:text-xs uppercase tracking-wider">
+                    <XCircle className="h-3.5 w-3.5" />
+                    <span>{viewerLang === 'hi' ? 'गलत उत्तर' : 'Wrong'}</span>
                   </div>
-                  <p className="text-2xl sm:text-3xl font-black text-rose-600 dark:text-rose-400">
-                    {stats.wrong} <span className="text-xs font-bold text-rose-700/70">/ {stats.total}</span>
+                  <p className="text-lg sm:text-2xl font-black text-rose-600 dark:text-rose-400">
+                    {stats.wrong} <span className="text-[10px] sm:text-xs font-bold text-rose-700/70">/ {stats.total}</span>
                   </p>
                 </div>
 
                 {/* Unattempted */}
-                <div className="bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-3.5 rounded-2xl space-y-1 text-center">
-                  <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                <div className="bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-2 sm:p-3 rounded-xl sm:rounded-2xl space-y-0.5 text-center">
+                  <span className="text-[9px] sm:text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                     {viewerLang === 'hi' ? 'प्रयास नहीं किया' : 'Unattempted'}
                   </span>
-                  <p className="text-lg font-black text-slate-700 dark:text-slate-200">
+                  <p className="text-sm sm:text-base font-black text-slate-700 dark:text-slate-200">
                     {stats.unattempted}
                   </p>
                 </div>
 
                 {/* Accuracy */}
-                <div className="bg-blue-50/80 dark:bg-blue-955/40 border border-blue-200 dark:border-blue-900/60 p-3.5 rounded-2xl space-y-1 text-center">
-                  <span className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">
+                <div className="bg-blue-50/80 dark:bg-blue-955/40 border border-blue-200 dark:border-blue-900/60 p-2 sm:p-3 rounded-xl sm:rounded-2xl space-y-0.5 text-center">
+                  <span className="text-[9px] sm:text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">
                     {viewerLang === 'hi' ? 'सटीकता' : 'Accuracy'}
                   </span>
-                  <p className="text-lg font-black text-blue-600 dark:text-blue-400">
+                  <p className="text-sm sm:text-base font-black text-blue-600 dark:text-blue-400">
                     {stats.accuracy}%
                   </p>
                 </div>
               </div>
 
               {/* Visual Performance Bar */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[10px] font-extrabold text-slate-500 dark:text-slate-400">
-                  <span>Performance Breakdown</span>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-extrabold text-slate-500 dark:text-slate-400">
+                  <span>Performance</span>
                   <span>{stats.attempted} / {stats.total} Attempted</span>
                 </div>
-                <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex shadow-inner">
+                <div className="h-2 sm:h-2.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex shadow-inner">
                   <div
                     style={{ width: `${stats.total > 0 ? (stats.correct / stats.total) * 100 : 0}%` }}
                     className="bg-emerald-500 h-full transition-all duration-500"
@@ -2097,14 +2307,14 @@ export default function PracticeSeriesPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 pt-1">
                 <button
                   onClick={() => {
                     setIsReviewMode(true);
                     setShowFinishSummaryModal(false);
                     setCurrentQIndex(0);
                   }}
-                  className="py-2.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-extrabold text-xs transition cursor-pointer border border-slate-200 dark:border-slate-700 text-center"
+                  className="py-2 sm:py-2.5 px-1.5 sm:px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-extrabold text-[10.5px] sm:text-xs transition cursor-pointer border border-slate-200 dark:border-slate-700 text-center"
                 >
                   {viewerLang === 'hi' ? 'व्याख्या' : 'Explanation'}
                 </button>
@@ -2115,9 +2325,9 @@ export default function PracticeSeriesPage() {
                       handleReattemptSection(selectedSectionIndex);
                     }
                   }}
-                  className="py-2.5 px-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1"
+                  className="py-2 sm:py-2.5 px-1.5 sm:px-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10.5px] sm:text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" />
+                  <RotateCcw className="h-3 w-3" />
                   <span>{viewerLang === 'hi' ? 'पुनः प्रयास' : 'Reattempt'}</span>
                 </button>
 
@@ -2128,10 +2338,10 @@ export default function PracticeSeriesPage() {
                       setSelectedSectionIndex(selectedSectionIndex + 1);
                       setCurrentQIndex(0);
                     }}
-                    className="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1"
+                    className="py-2 sm:py-2.5 px-1.5 sm:px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10.5px] sm:text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1"
                   >
                     <span>{viewerLang === 'hi' ? `अगला (${selectedSectionIndex + 2})` : `Next (${selectedSectionIndex + 2})`}</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
+                    <ChevronRight className="h-3 w-3" />
                   </button>
                 )}
 
@@ -2140,9 +2350,9 @@ export default function PracticeSeriesPage() {
                     setShowFinishSummaryModal(false);
                     setSelectedSectionIndex(null);
                   }}
-                  className="py-2.5 px-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition cursor-pointer text-center"
+                  className="py-2 sm:py-2.5 px-1.5 sm:px-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10.5px] sm:text-xs shadow-md transition cursor-pointer text-center"
                 >
-                  {viewerLang === 'hi' ? 'सभी सेक्शन' : 'All Sections'}
+                  {viewerLang === 'hi' ? 'सेक्शन पर वापस जाएं' : 'Back to Sections'}
                 </button>
               </div>
 
@@ -2243,8 +2453,10 @@ export default function PracticeSeriesPage() {
         <p className="font-bold">© 2026 Mock Test CBT Portal. All rights reserved.</p>
       </footer>
 
-      {/* Floating Support & Suggestion Widgets */}
-      <HomeSupportWidget variant="expandable" />
+      {/* Floating Support & Suggestion Widgets (Hidden on mobile view as requested) */}
+      <div className="hidden sm:block">
+        <HomeSupportWidget variant="expandable" />
+      </div>
     </div>
   );
 }

@@ -292,17 +292,23 @@ export default function MobileTestScreen({
       setLoading(true);
       setLoadingText('Loading test...');
 
-      // Find catalog test immediately to get title
-      let initialCatalogTest: any = null;
-      if (examCatalog && examCatalog.length > 0) {
+      // Find catalog test immediately to get title, duration, marks & config
+      const findTestInCatalog = (tId: string) => {
+        if (!examCatalog || examCatalog.length === 0) return null;
         for (const cat of examCatalog) {
           for (const sub of cat.subCategories || []) {
-            const found = (sub.tests || []).find((t: any) => t.id === testId);
-            if (found) { initialCatalogTest = found; break; }
+            for (const ss of sub.subSubCategories || []) {
+              const found = (ss.tests || []).find((t: any) => t.id === tId);
+              if (found) return found;
+            }
+            const found = (sub.tests || []).find((t: any) => t.id === tId);
+            if (found) return found;
           }
-          if (initialCatalogTest) break;
         }
-      }
+        return null;
+      };
+
+      const initialCatalogTest = findTestInCatalog(testId);
       let resolvedTitle = initialCatalogTest?.title;
       if (!resolvedTitle) {
         if (testId.includes('ssc')) {
@@ -329,16 +335,7 @@ export default function MobileTestScreen({
         }
 
         // Find test details in catalog to get correct duration & timing config
-        let catalogTest: any = null;
-        if (examCatalog && examCatalog.length > 0) {
-          for (const cat of examCatalog) {
-            for (const sub of cat.subCategories || []) {
-              const found = (sub.tests || []).find((t: any) => t.id === testId);
-              if (found) { catalogTest = found; break; }
-            }
-            if (catalogTest) break;
-          }
-        }
+        const catalogTest = findTestInCatalog(testId);
 
         let durationSeconds = 3600;
         if (catalogTest?.durationMinutes) {
