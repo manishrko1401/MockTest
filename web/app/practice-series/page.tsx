@@ -760,6 +760,9 @@ export default function PracticeSeriesPage() {
           }
           if (Array.isArray(questionsArray) && questionsArray.length > 0) {
             loadedQuestions = questionsArray;
+            try {
+              localStorage.setItem(`mth_practice_questions_${catId}`, JSON.stringify(questionsArray));
+            } catch (storageErr) {}
           }
         }
       } catch (e) {}
