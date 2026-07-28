@@ -395,10 +395,16 @@ const DEFAULT_PRACTICE_CATALOG: TestCategory[] = [
 ];
 
 export default function PracticeSeriesPage() {
-  const { currentUser, examCatalog, theme, toggleTheme, language, setLanguage, logout, toggleBookmark } = useAuth();
+  const { currentUser, examCatalog, theme, toggleTheme, language, setLanguage, logout, toggleBookmark, refreshCatalog } = useAuth();
   const router = useRouter();
   const t = TRANSLATIONS[language];
   const { isMobile, isMounted } = useIsMobile();
+
+  useEffect(() => {
+    if (refreshCatalog) {
+      refreshCatalog();
+    }
+  }, []);
 
   const [customPracticeCategories, setCustomPracticeCategories] = useState<TestCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -747,21 +753,45 @@ export default function PracticeSeriesPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'get-custom-questions',
-            testId: `${catId}_default`
+            testId: `${catId}_default`,
+            categoryId: catId
           })
         });
         const data = await res.json();
-        const questionsArrayRaw = data.customQuestions || data.questions;
-        if (data.success && questionsArrayRaw) {
-          let questionsArray = questionsArrayRaw;
-          if (typeof questionsArray === 'string') {
-            const fetchRes = await fetch(questionsArray);
-            questionsArray = await fetchRes.json();
-          }
-          if (Array.isArray(questionsArray) && questionsArray.length > 0) {
-            loadedQuestions = questionsArray;
+        if (data.success) {
+          // Direct download from Tigris S3 URL to bypass Supabase egress completely
+          if (data.url) {
             try {
-              localStorage.setItem(`mth_practice_questions_${catId}`, JSON.stringify(questionsArray));
+              const fetchS3 = await fetch(data.url);
+              if (fetchS3.ok) {
+                const parsedS3 = await fetchS3.json();
+                if (Array.isArray(parsedS3) && parsedS3.length > 0) {
+                  loadedQuestions = parsedS3;
+                }
+              }
+            } catch (s3Err) {}
+          }
+
+          if (loadedQuestions.length === 0 && (data.customQuestions || data.questions)) {
+            let questionsArray = data.customQuestions || data.questions;
+            if (typeof questionsArray === 'string') {
+              const fetchRes = await fetch(questionsArray);
+              questionsArray = await fetchRes.json();
+            } else if (questionsArray && typeof questionsArray === 'object' && !Array.isArray(questionsArray)) {
+              if (Array.isArray((questionsArray as any).data)) {
+                questionsArray = (questionsArray as any).data;
+              } else if (Array.isArray((questionsArray as any).questions)) {
+                questionsArray = (questionsArray as any).questions;
+              }
+            }
+            if (Array.isArray(questionsArray) && questionsArray.length > 0) {
+              loadedQuestions = questionsArray;
+            }
+          }
+
+          if (loadedQuestions.length > 0) {
+            try {
+              localStorage.setItem(`mth_practice_questions_${catId}`, JSON.stringify(loadedQuestions));
             } catch (storageErr) {}
           }
         }

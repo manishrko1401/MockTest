@@ -1496,13 +1496,15 @@ async function handleAddCategory(rawPayload: any) {
     return NextResponse.json({ success: false, error: 'Category ID and Name are required' }, { status: 400 });
   }
 
+  const isPractice = isPracticeSeries ?? (id.includes('practice') || name.toLowerCase().includes('practice'));
+
   await prisma.category.upsert({
     where: { id },
     update: {
       name,
       logoUrl: logoUrl || null,
       isPopular: isPopular ?? false,
-      isPracticeSeries: isPracticeSeries ?? true,
+      isPracticeSeries: isPractice,
       description: description ?? '',
       countText: countText ?? '',
     },
@@ -1511,11 +1513,52 @@ async function handleAddCategory(rawPayload: any) {
       name,
       logoUrl: logoUrl || null,
       isPopular: isPopular ?? false,
-      isPracticeSeries: isPracticeSeries ?? true,
+      isPracticeSeries: isPractice,
       description: description ?? '',
       countText: countText ?? '',
     },
   });
+
+  // Ensure default Exam, TestSeries, and MockTest exist for this category so getCompiledExamCatalog compiles it properly for all users
+  try {
+    const examId = `${id}_exam`;
+    let exam = await prisma.exam.findUnique({ where: { id: examId } });
+    if (!exam) {
+      exam = await prisma.exam.create({
+        data: { id: examId, categoryId: id, name: `${name} Exam` }
+      });
+    }
+
+    const seriesId = `${id}_series`;
+    let series = await prisma.testSeries.findUnique({ where: { id: seriesId } });
+    if (!series) {
+      series = await prisma.testSeries.create({
+        data: { id: seriesId, examId: exam.id, title: `${name} Series` }
+      });
+    }
+
+    const testId = `${id}_default`;
+    let test = await prisma.mockTest.findUnique({ where: { id: testId } });
+    if (!test) {
+      await prisma.mockTest.create({
+        data: {
+          id: testId,
+          testSeriesId: series.id,
+          title: `Practice Questions Set (${name})`,
+          durationMinutes: 20,
+          questionsCount: 25,
+          maxMarks: 50,
+          requiredTierName: 'None',
+        }
+      });
+    }
+  } catch (err: any) {
+    console.error("Error creating child records for category:", err);
+  }
+
+  // Clear in-memory catalog cache so all live users receive fresh data
+  catalogCache.examCatalog = null;
+  catalogCache.noticesList = null;
 
   return NextResponse.json({ success: true });
 }
@@ -1778,15 +1821,22 @@ async function handleReorderMockTests(data: any) {
 }
 
 async function handleSaveCustomQuestions(rawPayload: any) {
-  const payload = rawPayload || {};
-  const { testId, categoryId, questions } = payload;
-  const targetId = testId || (categoryId ? `${categoryId}_default` : 'practice_series_default');
-  const targetCatId = categoryId || (targetId.endsWith('_default') ? targetId.replace('_default', '') : 'practice_series_default');
+  const payload = rawPayload?.data || rawPayload || {};
+  const testId = payload.testId || rawPayload?.testId;
+  const categoryId = payload.categoryId || rawPayload?.categoryId;
+  const questions = payload.questions || rawPayload?.questions;
+
+  const targetCatId = categoryId || (testId ? testId.replace(/_default|_practice_default|_practice_practice_default/g, '') : 'practice_series_default');
+  const targetId = testId || `${targetCatId}_default`;
+
+  if (!questions || !Array.isArray(questions)) {
+    return NextResponse.json({ success: false, error: 'Questions array is required' }, { status: 400 });
+  }
 
   const bucketName = process.env.TIGRIS_BUCKET_NAME;
   let s3Url: string | null = null;
 
-  if (bucketName && questions && Array.isArray(questions)) {
+  if (bucketName) {
     try {
       const fileName = `questions_${targetId}.json`;
       const fileBuffer = Buffer.from(JSON.stringify(questions));
@@ -1802,11 +1852,11 @@ async function handleSaveCustomQuestions(rawPayload: any) {
 
       s3Url = `${process.env.TIGRIS_ENDPOINT || "https://fly.storage.tigris.dev"}/${bucketName}/${fileName}`;
     } catch (err: any) {
-      console.error("Failed to upload custom questions to Tigris:", err);
+      console.error("Failed to upload custom questions to Tigris S3:", err);
     }
   }
 
-  // Ensure Category, Exam, TestSeries and mockTest records exist in database
+  // Option 2: Store ONLY the Tigris S3 file link URL in Supabase (fallback to JSON array only if S3 upload failed)
   try {
     // 1. Ensure target Category exists
     let targetCategory = await prisma.category.findUnique({
@@ -1859,64 +1909,100 @@ async function handleSaveCustomQuestions(rawPayload: any) {
       });
     }
 
-    const existingTest = await prisma.mockTest.findUnique({
+    // Store ONLY { url: s3Url } link in Supabase DB if uploaded to S3
+    const questionsDataToStore = s3Url ? { url: s3Url } : questions;
+
+    await prisma.mockTest.upsert({
       where: { id: targetId },
+      update: {
+        customQuestions: questionsDataToStore,
+        questionsCount: questions.length,
+      },
+      create: {
+        id: targetId,
+        testSeriesId: targetSeries.id,
+        title: `Practice Questions Set (${targetCategory.name})`,
+        durationMinutes: 20,
+        questionsCount: questions.length,
+        maxMarks: questions.length * 2,
+        requiredTierName: 'None',
+        customQuestions: questionsDataToStore,
+      }
     });
 
-    if (!existingTest) {
-      await prisma.mockTest.create({
-        data: {
-          id: targetId,
+    // Also update candidate fallback test IDs
+    const altTargetId = `${targetCatId}_practice_default`;
+    if (altTargetId !== targetId) {
+      await prisma.mockTest.upsert({
+        where: { id: altTargetId },
+        update: {
+          customQuestions: questionsDataToStore,
+          questionsCount: questions.length,
+        },
+        create: {
+          id: altTargetId,
           testSeriesId: targetSeries.id,
           title: `Practice Questions Set (${targetCategory.name})`,
           durationMinutes: 20,
-          questionsCount: Array.isArray(questions) ? questions.length : 25,
-          maxMarks: 50,
+          questionsCount: questions.length,
+          maxMarks: questions.length * 2,
           requiredTierName: 'None',
-          customQuestions: s3Url ? { url: s3Url } : questions,
+          customQuestions: questionsDataToStore,
         }
-      });
-    } else {
-      await prisma.mockTest.update({
-        where: { id: targetId },
-        data: {
-          customQuestions: s3Url ? { url: s3Url } : questions,
-          questionsCount: Array.isArray(questions) ? questions.length : existingTest.questionsCount,
-        },
-      });
+      }).catch(() => {});
     }
+
+    // Clear in-memory catalog cache so all live users receive fresh data
+    catalogCache.examCatalog = null;
+    catalogCache.noticesList = null;
+
   } catch (err: any) {
     console.error("Prisma mockTest update error:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 
   return NextResponse.json({
     success: true,
     url: s3Url,
-    questionsCount: Array.isArray(questions) ? questions.length : 0
+    questionsCount: questions.length
   });
 }
 
-async function handleGetCustomQuestions(data: any) {
-  const { testId } = data || {};
-  if (!testId) {
+async function handleGetCustomQuestions(rawPayload: any) {
+  const payload = rawPayload?.data || rawPayload || {};
+  const testId = payload.testId || rawPayload?.testId;
+  const categoryId = payload.categoryId || rawPayload?.categoryId;
+
+  if (!testId && !categoryId) {
     return NextResponse.json({ success: true, customQuestions: null, questions: null });
   }
 
-  // Candidate IDs to check in fallback order to handle _practice or _practice_practice suffix variations
-  const candidateIds = [testId];
-  if (testId.endsWith('_practice_default')) {
-    candidateIds.push(testId.replace('_practice_default', '_practice_practice_default'));
-    candidateIds.push(testId.replace('_practice_default', '_default'));
-  } else if (testId.endsWith('_practice_practice_default')) {
-    candidateIds.push(testId.replace('_practice_practice_default', '_practice_default'));
-    candidateIds.push(testId.replace('_practice_practice_default', '_default'));
-  } else if (testId.endsWith('_default')) {
-    candidateIds.push(testId.replace('_default', '_practice_default'));
-    candidateIds.push(testId.replace('_default', '_practice_practice_default'));
+  const candidateIds: string[] = [];
+  if (testId) candidateIds.push(testId);
+  if (categoryId) {
+    candidateIds.push(`${categoryId}_default`);
+    candidateIds.push(`${categoryId}_practice_default`);
+    candidateIds.push(`${categoryId}_practice_practice_default`);
+    if (!categoryId.endsWith('_practice')) {
+      candidateIds.push(`${categoryId}_practice_default`);
+    }
+  }
+  if (testId) {
+    if (testId.endsWith('_practice_default')) {
+      candidateIds.push(testId.replace('_practice_default', '_practice_practice_default'));
+      candidateIds.push(testId.replace('_practice_default', '_default'));
+    } else if (testId.endsWith('_practice_practice_default')) {
+      candidateIds.push(testId.replace('_practice_practice_default', '_practice_default'));
+      candidateIds.push(testId.replace('_practice_practice_default', '_default'));
+    } else if (testId.endsWith('_default')) {
+      candidateIds.push(testId.replace('_default', '_practice_default'));
+      candidateIds.push(testId.replace('_default', '_practice_practice_default'));
+    }
   }
 
   let mockTest: any = null;
   for (const cid of candidateIds) {
+    if (!cid) continue;
     mockTest = await prisma.mockTest.findUnique({
       where: { id: cid },
       select: {
@@ -1932,40 +2018,54 @@ async function handleGetCustomQuestions(data: any) {
 
   let questions = mockTest?.customQuestions || null;
 
-  if (
-    questions &&
-    typeof questions === 'object' &&
-    !Array.isArray(questions) &&
-    'url' in (questions as any)
-  ) {
-    const url = (questions as any).url;
-    try {
-      const bucketName = process.env.TIGRIS_BUCKET_NAME || "mocktest-assets";
-      const urlObj = new URL(url);
-      const pathname = decodeURIComponent(urlObj.pathname);
-      const key = pathname.startsWith(`/${bucketName}/`)
-        ? pathname.substring(bucketName.length + 2)
-        : pathname.startsWith('/') ? pathname.substring(1) : pathname;
+  // Retrieve JSON content from Tigris S3 if stored as URL link
+  if (questions && typeof questions === 'object' && !Array.isArray(questions)) {
+    if (Array.isArray((questions as any).data)) {
+      questions = (questions as any).data;
+    } else if (Array.isArray((questions as any).questions)) {
+      questions = (questions as any).questions;
+    } else if ('url' in (questions as any)) {
+      const url = (questions as any).url;
+      try {
+        const bucketName = process.env.TIGRIS_BUCKET_NAME || "mocktest-assets";
+        const urlObj = new URL(url);
+        const pathname = decodeURIComponent(urlObj.pathname);
+        const key = pathname.startsWith(`/${bucketName}/`)
+          ? pathname.substring(bucketName.length + 2)
+          : pathname.startsWith('/') ? pathname.substring(1) : pathname;
 
-      const response = await s3Client.send(
-        new GetObjectCommand({
-          Bucket: bucketName,
-          Key: key,
-        })
-      );
-      if (!response.Body) {
-        throw new Error("S3 GetObject response body is undefined");
+        const response = await s3Client.send(
+          new GetObjectCommand({
+            Bucket: bucketName,
+            Key: key,
+          })
+        );
+        if (response.Body) {
+          const bodyContents = await response.Body.transformToString();
+          questions = JSON.parse(bodyContents);
+        }
+      } catch (err) {
+        console.error("Failed to fetch questions from Tigris S3 via SDK, trying HTTP fetch:", err);
+        try {
+          const fetchRes = await fetch(url);
+          if (fetchRes.ok) {
+            questions = await fetchRes.json();
+          }
+        } catch (fetchErr) {
+          console.error("Failed to fetch questions from URL:", fetchErr);
+        }
       }
-      const bodyContents = await response.Body.transformToString();
-      questions = JSON.parse(bodyContents);
-    } catch (err) {
-      console.error("Failed to fetch questions from Tigris S3:", err);
-      questions = null;
     }
+  }
+
+  let s3Url: string | null = null;
+  if (mockTest?.customQuestions && typeof mockTest.customQuestions === 'object' && 'url' in (mockTest.customQuestions as any)) {
+    s3Url = (mockTest.customQuestions as any).url;
   }
 
   return NextResponse.json({
     success: true,
+    url: s3Url,
     questions,
     customQuestions: questions,
     positiveMarks: mockTest?.positiveMarks ?? null,
