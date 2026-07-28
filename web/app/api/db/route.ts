@@ -285,7 +285,7 @@ export async function POST(request: Request) {
       case 'bulk-import-questions':
         return await handleSaveCustomQuestions(data || body);
       case 'get-custom-questions':
-        return await handleGetCustomQuestions(data);
+        return await handleGetCustomQuestions(data || body);
       case 'reorder-categories':
         return await handleReorderCategories(data);
       case 'reorder-subcategories':
