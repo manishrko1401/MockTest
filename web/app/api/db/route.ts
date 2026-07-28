@@ -2019,6 +2019,17 @@ async function getCompiledExamCatalog() {
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "isPracticeSeries" boolean DEFAULT false;');
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "description" text DEFAULT \'\';');
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "countText" text DEFAULT \'\';');
+    await prisma.$executeRawUnsafe('ALTER TABLE IF EXISTS public.vocabs ENABLE ROW LEVEL SECURITY;');
+    await prisma.$executeRawUnsafe(`
+      DO $$
+      BEGIN
+          IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'vocabs') THEN
+              IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'vocabs' AND policyname = 'Enable read access for all users') THEN
+                  CREATE POLICY "Enable read access for all users" ON public.vocabs FOR SELECT USING (true);
+              END IF;
+          END IF;
+      END $$;
+    `);
   } catch (err: any) {
     console.error("Runtime database patch failed:", err);
     // Don't throw — allow the query to proceed and fail naturally if column truly missing
