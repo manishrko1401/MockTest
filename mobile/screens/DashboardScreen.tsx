@@ -270,15 +270,16 @@ const CategoryIcon = ({ name, color, size }: { name: string; color: string; size
 
 const CategoryLogoImage = ({ logoUrl, fallbackIcon }: { logoUrl: string; fallbackIcon: React.ReactNode }) => {
   const [hasError, setHasError] = useState(false);
-  const isSvg = logoUrl.toLowerCase().split('?')[0].endsWith('.svg');
+  const cleanUrl = logoUrl ? logoUrl.trim() : '';
+  const isSvg = cleanUrl ? cleanUrl.toLowerCase().split('?')[0].endsWith('.svg') : false;
 
-  if (hasError || isSvg) {
+  if (!cleanUrl || hasError || isSvg) {
     return <>{fallbackIcon}</>;
   }
 
   return (
     <Image
-      source={{ uri: logoUrl }}
+      source={{ uri: cleanUrl }}
       style={{ width: '100%', height: '100%', borderRadius: 27 }}
       resizeMode="cover"
       onError={() => setHasError(true)}
@@ -1339,7 +1340,7 @@ export default function DashboardScreen({
                             logoUrl={category.logoUrl || ''}
                             fallbackIcon={
                               (category.isPracticeSeries || category.id?.includes('practice') || category.name?.toLowerCase().includes('practice')) ? (
-                                <Target color={catStyle.iconColor || '#3B82F6'} size={24} />
+                                <Trophy color="#F59E0B" size={24} />
                               ) : (
                                 <CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={24} />
                               )
@@ -1437,7 +1438,7 @@ export default function DashboardScreen({
                         style={{ width: 44, height: 44, borderRadius: 22, resizeMode: 'cover' }}
                       />
                     ) : (selectedCategory.isPracticeSeries || selectedCategory.id?.includes('practice') || selectedCategory.name?.toLowerCase().includes('practice')) ? (
-                      <Target color={catStyle.iconColor || '#3B82F6'} size={22} />
+                      <Trophy color="#F59E0B" size={22} />
                     ) : (
                       <BookOpen color={catStyle.iconColor} size={20} />
                     )}

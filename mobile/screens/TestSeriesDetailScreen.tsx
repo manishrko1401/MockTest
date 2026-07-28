@@ -21,7 +21,7 @@ import {
   Eye,
   PlusCircle,
   MinusCircle,
-  Target
+  Trophy
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
@@ -180,14 +180,14 @@ export default function TestSeriesDetailScreen({
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
           <ArrowLeft color="#FFF" size={20} />
         </TouchableOpacity>
-        {series.logoUrl ? (
+        {series.logoUrl && series.logoUrl.trim() ? (
           <View style={{
             width: 32, height: 32, borderRadius: 16,
             backgroundColor: '#FFFFFF',
             marginRight: 10, justifyContent: 'center', alignItems: 'center',
             overflow: 'hidden'
           }}>
-            <Image source={{ uri: series.logoUrl }} style={{ width: 32, height: 32, borderRadius: 16, resizeMode: 'cover' }} />
+            <Image source={{ uri: series.logoUrl.trim() }} style={{ width: 32, height: 32, borderRadius: 16, resizeMode: 'cover' }} />
           </View>
         ) : (
           <View style={{
@@ -195,7 +195,7 @@ export default function TestSeriesDetailScreen({
             backgroundColor: 'rgba(255,255,255,0.2)',
             marginRight: 10, justifyContent: 'center', alignItems: 'center',
           }}>
-            <Target size={18} color="#FFFFFF" />
+            <Trophy size={18} color="#F59E0B" />
           </View>
         )}
         <View style={styles.headerInfo}>
