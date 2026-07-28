@@ -1564,13 +1564,42 @@ async function handleAddCategory(rawPayload: any) {
 }
 
 async function handleDeleteCategory(data: any) {
-  const { categoryId } = data;
+  const categoryId = data?.categoryId || data?.id || (typeof data === 'string' ? data : null);
 
-  await prisma.category.delete({
-    where: { id: categoryId },
-  });
+  if (!categoryId) {
+    return NextResponse.json({ success: false, error: 'Category ID is required' }, { status: 400 });
+  }
 
-  return NextResponse.json({ success: true });
+  try {
+    // Delete associated exams, testSeries, and mockTests if any to avoid foreign key issues
+    const exams = await prisma.exam.findMany({ where: { categoryId } });
+    const examIds = exams.map(e => e.id);
+
+    if (examIds.length > 0) {
+      const series = await prisma.testSeries.findMany({ where: { examId: { in: examIds } } });
+      const seriesIds = series.map(s => s.id);
+
+      if (seriesIds.length > 0) {
+        await prisma.mockTest.deleteMany({ where: { testSeriesId: { in: seriesIds } } });
+        await prisma.testSeries.deleteMany({ where: { id: { in: seriesIds } } });
+      }
+      await prisma.exam.deleteMany({ where: { id: { in: examIds } } });
+    }
+
+    // Use deleteMany so it won't throw if record does not exist in DB (e.g. static/fallback category)
+    await prisma.category.deleteMany({
+      where: { id: categoryId },
+    });
+
+    // Clear in-memory catalog cache so all live users receive fresh data
+    catalogCache.examCatalog = null;
+    catalogCache.noticesList = null;
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("handleDeleteCategory error:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
 }
 
 async function handleAddSubCategory(data: any) {

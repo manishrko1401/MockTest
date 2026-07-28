@@ -284,6 +284,13 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
 
     if (selectedCatId === catId) setSelectedCatId('');
 
+    // Save to deleted list locally so default fallbacks don't reappear
+    const deletedIds = getDeletedCategoryIds();
+    if (!deletedIds.includes(catId)) {
+      deletedIds.push(catId);
+      saveDeletedCategoryIds(deletedIds);
+    }
+
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
