@@ -141,20 +141,33 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
 
   useEffect(() => {
     const deletedIds = getDeletedCategoryIds();
+    let localCategories: any[] = [];
     try {
       const saved = localStorage.getItem('mth_practice_categories');
       if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          const filtered = parsed.filter((c: any) => !deletedIds.includes(c.id));
-          setPracticeCatalog(filtered);
-          return;
+          localCategories = parsed;
         }
       }
     } catch (e) {}
 
-    const filteredDefaults = defaultCatalog.filter(c => !deletedIds.includes(c.id));
-    setPracticeCatalog(filteredDefaults);
+    const combinedMap = new Map<string, any>();
+    const seenNames = new Set<string>();
+
+    const addCat = (c: any) => {
+      if (!c || deletedIds.includes(c.id)) return;
+      const key = (c.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (seenNames.has(key)) return;
+      seenNames.add(key);
+      combinedMap.set(c.id, c);
+    };
+
+    localCategories.forEach(addCat);
+    initialPracticeCategories.forEach(addCat);
+    fallbackDefaults.forEach(addCat);
+
+    setPracticeCatalog(Array.from(combinedMap.values()));
   }, [examCatalog]);
 
   const saveAndBroadcastCategories = (updatedCatalog: any[]) => {
@@ -202,9 +215,17 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'create-category',
-          category: newCategory
+          category: newCategory,
+          data: newCategory
         })
-      }).catch(() => {});
+      })
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && onRefreshCatalog) {
+          onRefreshCatalog();
+        }
+      })
+      .catch(() => {});
 
       if (onRefreshCatalog) onRefreshCatalog();
     } catch (err: any) {

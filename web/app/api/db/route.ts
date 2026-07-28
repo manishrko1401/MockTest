@@ -132,7 +132,7 @@ export async function POST(request: Request) {
       'delete-reported-question', 'get-support-users', 
       'delete-support-conversation', 'edit-support-message',
       'add-notice', 'delete-notice', 
-      'add-category', 'edit-category', 'delete-category',
+      'add-category', 'create-category', 'edit-category', 'delete-category',
       'add-subcategory', 'edit-subcategory', 'delete-subcategory',
       'add-subsubcategory', 'edit-subsubcategory', 'delete-subsubcategory',
       'add-mocktest', 'edit-mocktest-title', 'delete-mocktest',
@@ -207,11 +207,11 @@ export async function POST(request: Request) {
     if (action) {
       const writeActions = [
         'add-notice', 'delete-notice',
-        'add-category', 'edit-category', 'delete-category',
+        'add-category', 'create-category', 'edit-category', 'delete-category',
         'add-subcategory', 'edit-subcategory', 'delete-subcategory',
         'add-subsubcategory', 'edit-subsubcategory', 'delete-subsubcategory',
         'add-mocktest', 'edit-mocktest-title', 'delete-mocktest',
-        'save-custom-questions',
+        'save-custom-questions', 'bulk-import-questions',
         'reorder-categories', 'reorder-subcategories', 'reorder-subsubcategories', 'reorder-mocktests',
         'refresh-catalog'
       ];
@@ -257,11 +257,12 @@ export async function POST(request: Request) {
       case 'delete-notice':
         return await handleDeleteNotice(data);
       case 'add-category':
-        return await handleAddCategory(data);
+      case 'create-category':
+        return await handleAddCategory(data || body?.category || body);
       case 'edit-category':
-        return await handleEditCategory(data);
+        return await handleEditCategory(data || body?.category || body);
       case 'delete-category':
-        return await handleDeleteCategory(data);
+        return await handleDeleteCategory(data || body);
       case 'add-subcategory':
         return await handleAddSubCategory(data);
       case 'edit-subcategory':
@@ -1487,15 +1488,30 @@ async function handleDeleteNotice(data: any) {
   return NextResponse.json({ success: true });
 }
 
-async function handleAddCategory(data: any) {
-  const { id, name, logoUrl, isPopular, description, countText } = data;
+async function handleAddCategory(rawPayload: any) {
+  const data = rawPayload?.category || rawPayload?.data || rawPayload || {};
+  const { id, name, logoUrl, isPopular, isPracticeSeries, description, countText } = data;
 
-  await prisma.category.create({
-    data: {
+  if (!id || !name) {
+    return NextResponse.json({ success: false, error: 'Category ID and Name are required' }, { status: 400 });
+  }
+
+  await prisma.category.upsert({
+    where: { id },
+    update: {
+      name,
+      logoUrl: logoUrl || null,
+      isPopular: isPopular ?? false,
+      isPracticeSeries: isPracticeSeries ?? true,
+      description: description ?? '',
+      countText: countText ?? '',
+    },
+    create: {
       id,
       name,
       logoUrl: logoUrl || null,
       isPopular: isPopular ?? false,
+      isPracticeSeries: isPracticeSeries ?? true,
       description: description ?? '',
       countText: countText ?? '',
     },
@@ -1646,15 +1662,28 @@ async function handleDeleteMockTest(data: any) {
   return NextResponse.json({ success: true });
 }
 
-async function handleEditCategory(data: any) {
-  const { categoryId, name, logoUrl, isPopular, description, countText } = data;
+async function handleEditCategory(rawPayload: any) {
+  const data = rawPayload?.category || rawPayload?.data || rawPayload || {};
+  const updates = rawPayload?.updates || {};
+  const targetId = data.categoryId || data.id || rawPayload?.categoryId;
+  const name = updates.name !== undefined ? updates.name : data.name;
+  const description = updates.description !== undefined ? updates.description : data.description;
+  const logoUrl = data.logoUrl;
+  const isPopular = data.isPopular;
+  const isPracticeSeries = data.isPracticeSeries;
+  const countText = data.countText;
+
+  if (!targetId) {
+    return NextResponse.json({ success: false, error: 'Category ID is required for edit' }, { status: 400 });
+  }
 
   await prisma.category.update({
-    where: { id: categoryId },
+    where: { id: targetId },
     data: { 
-      name,
+      name: name !== undefined ? name : undefined,
       logoUrl: logoUrl !== undefined ? logoUrl : undefined,
       isPopular: isPopular !== undefined ? isPopular : undefined,
+      isPracticeSeries: isPracticeSeries !== undefined ? isPracticeSeries : undefined,
       description: description !== undefined ? description : undefined,
       countText: countText !== undefined ? countText : undefined,
     },
@@ -1752,6 +1781,7 @@ async function handleSaveCustomQuestions(rawPayload: any) {
   const payload = rawPayload || {};
   const { testId, categoryId, questions } = payload;
   const targetId = testId || (categoryId ? `${categoryId}_default` : 'practice_series_default');
+  const targetCatId = categoryId || (targetId.endsWith('_default') ? targetId.replace('_default', '') : 'practice_series_default');
 
   const bucketName = process.env.TIGRIS_BUCKET_NAME;
   let s3Url: string | null = null;
@@ -1776,31 +1806,69 @@ async function handleSaveCustomQuestions(rawPayload: any) {
     }
   }
 
-  // Ensure mockTest record exists in database
+  // Ensure Category, Exam, TestSeries and mockTest records exist in database
   try {
+    // 1. Ensure target Category exists
+    let targetCategory = await prisma.category.findUnique({
+      where: { id: targetCatId }
+    });
+
+    if (!targetCategory) {
+      const formattedName = targetCatId
+        .replace(/_/g, ' ')
+        .replace(/practice/gi, 'Practice Series')
+        .replace(/\b\w/g, l => l.toUpperCase());
+      
+      targetCategory = await prisma.category.create({
+        data: {
+          id: targetCatId,
+          name: formattedName,
+          isPracticeSeries: true,
+          description: 'Practice Series Domain Category'
+        }
+      });
+    }
+
+    // 2. Ensure target Exam exists
+    let targetExam = await prisma.exam.findFirst({
+      where: { categoryId: targetCategory.id }
+    });
+
+    if (!targetExam) {
+      targetExam = await prisma.exam.create({
+        data: {
+          id: `${targetCategory.id}_exam`,
+          categoryId: targetCategory.id,
+          name: `${targetCategory.name} Exam`
+        }
+      });
+    }
+
+    // 3. Ensure target TestSeries exists
+    let targetSeries = await prisma.testSeries.findFirst({
+      where: { examId: targetExam.id }
+    });
+
+    if (!targetSeries) {
+      targetSeries = await prisma.testSeries.create({
+        data: {
+          id: `${targetCategory.id}_series`,
+          examId: targetExam.id,
+          title: `${targetCategory.name} Series`
+        }
+      });
+    }
+
     const existingTest = await prisma.mockTest.findUnique({
       where: { id: targetId },
     });
 
     if (!existingTest) {
-      let defaultSeries = await prisma.testSeries.findFirst();
-      if (!defaultSeries) {
-        const defaultCategory = await prisma.category.create({
-          data: { id: categoryId || 'practice_series_default', name: 'Practice Series' }
-        });
-        const defaultExam = await prisma.exam.create({
-          data: { id: 'practice_exam_default', categoryId: defaultCategory.id, name: 'Practice Exam' }
-        });
-        defaultSeries = await prisma.testSeries.create({
-          data: { id: 'practice_series_default', examId: defaultExam.id, title: 'Practice Series' }
-        });
-      }
-
       await prisma.mockTest.create({
         data: {
           id: targetId,
-          testSeriesId: defaultSeries.id,
-          title: `Practice Questions Set (${targetId})`,
+          testSeriesId: targetSeries.id,
+          title: `Practice Questions Set (${targetCategory.name})`,
           durationMinutes: 20,
           questionsCount: Array.isArray(questions) ? questions.length : 25,
           maxMarks: 50,
@@ -1831,17 +1899,36 @@ async function handleSaveCustomQuestions(rawPayload: any) {
 async function handleGetCustomQuestions(data: any) {
   const { testId } = data || {};
   if (!testId) {
-    return NextResponse.json({ success: true, customQuestions: null });
+    return NextResponse.json({ success: true, customQuestions: null, questions: null });
   }
 
-  const mockTest = await prisma.mockTest.findUnique({
-    where: { id: testId },
-    select: {
-      customQuestions: true,
-      positiveMarks: true,
-      negativeMarks: true,
-    },
-  });
+  // Candidate IDs to check in fallback order to handle _practice or _practice_practice suffix variations
+  const candidateIds = [testId];
+  if (testId.endsWith('_practice_default')) {
+    candidateIds.push(testId.replace('_practice_default', '_practice_practice_default'));
+    candidateIds.push(testId.replace('_practice_default', '_default'));
+  } else if (testId.endsWith('_practice_practice_default')) {
+    candidateIds.push(testId.replace('_practice_practice_default', '_practice_default'));
+    candidateIds.push(testId.replace('_practice_practice_default', '_default'));
+  } else if (testId.endsWith('_default')) {
+    candidateIds.push(testId.replace('_default', '_practice_default'));
+    candidateIds.push(testId.replace('_default', '_practice_practice_default'));
+  }
+
+  let mockTest: any = null;
+  for (const cid of candidateIds) {
+    mockTest = await prisma.mockTest.findUnique({
+      where: { id: cid },
+      select: {
+        customQuestions: true,
+        positiveMarks: true,
+        negativeMarks: true,
+      },
+    });
+    if (mockTest && mockTest.customQuestions) {
+      break;
+    }
+  }
 
   let questions = mockTest?.customQuestions || null;
 
@@ -1880,6 +1967,7 @@ async function handleGetCustomQuestions(data: any) {
   return NextResponse.json({
     success: true,
     questions,
+    customQuestions: questions,
     positiveMarks: mockTest?.positiveMarks ?? null,
     negativeMarks: mockTest?.negativeMarks ?? null,
   });
@@ -1924,10 +2012,11 @@ async function handleReportQuestion(data: any) {
 // Optimized Memory Assembly Compiler for Exam Catalog
 // ---------------------------------------------------------------------------
 async function getCompiledExamCatalog() {
-  // Safe runtime schema patch: ensure logoUrl, isPopular, description, countText columns exist in categories table
+  // Safe runtime schema patch: ensure logoUrl, isPopular, isPracticeSeries, description, countText columns exist in categories table
   try {
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "logoUrl" text;');
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "isPopular" boolean DEFAULT false;');
+    await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "isPracticeSeries" boolean DEFAULT false;');
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "description" text DEFAULT \'\';');
     await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "countText" text DEFAULT \'\';');
   } catch (err: any) {
@@ -2046,6 +2135,7 @@ async function getCompiledExamCatalog() {
     logoUrl: cat.logoUrl || null,
     orderIndex: cat.orderIndex ?? 0,
     isPopular: cat.isPopular ?? false,
+    isPracticeSeries: cat.isPracticeSeries ?? false,
     description: cat.description ?? '',
     countText: cat.countText ?? '',
     subCategories: examsByCat[cat.id] || [],

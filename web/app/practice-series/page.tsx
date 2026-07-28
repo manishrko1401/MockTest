@@ -695,8 +695,10 @@ export default function PracticeSeriesPage() {
   const catalogPracticeCategories = examCatalog.filter(c =>
     ((c as any).isPracticeSeries ||
     c.id.includes('practice') ||
+    c.id.includes('series') ||
     c.name.toLowerCase().includes('practice') ||
-    c.name.toLowerCase().includes('sectional')) &&
+    c.name.toLowerCase().includes('sectional') ||
+    c.name.toLowerCase().includes('series')) &&
     !deletedCategoryIds.includes(c.id)
   );
 
@@ -749,8 +751,9 @@ export default function PracticeSeriesPage() {
           })
         });
         const data = await res.json();
-        if (data.success && data.customQuestions) {
-          let questionsArray = data.customQuestions;
+        const questionsArrayRaw = data.customQuestions || data.questions;
+        if (data.success && questionsArrayRaw) {
+          let questionsArray = questionsArrayRaw;
           if (typeof questionsArray === 'string') {
             const fetchRes = await fetch(questionsArray);
             questionsArray = await fetchRes.json();

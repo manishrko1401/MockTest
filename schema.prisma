@@ -99,6 +99,7 @@ model Category {
   createdAt         DateTime           @default(now())
   orderIndex        Int                @default(0)
   isPopular         Boolean            @default(false)
+  isPracticeSeries  Boolean            @default(false)
   description       String             @default("")
   countText         String             @default("")
 
