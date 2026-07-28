@@ -402,6 +402,10 @@ export default function PracticeSeriesPage() {
   const { isMobile, isMounted } = useIsMobile();
 
   useEffect(() => {
+    router.replace('/mock-tests');
+  }, [router]);
+
+  useEffect(() => {
     if (refreshCatalog) {
       refreshCatalog();
     }

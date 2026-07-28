@@ -121,11 +121,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
   const [filterSubSubCategory, setFilterSubSubCategory] = useState('');
 
   const testSeriesCatalog = React.useMemo(() => {
-    return (examCatalog || []).filter((cat: any) =>
-      !cat.isPracticeSeries &&
-      !cat.id.includes('_practice') &&
-      !cat.name.toLowerCase().includes('practice series')
-    );
+    return examCatalog || [];
   }, [examCatalog]);
 
   const filteredMocks: { cat: any; sub: any; subsub: any; test: any; }[] = [];

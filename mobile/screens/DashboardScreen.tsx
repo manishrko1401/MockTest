@@ -53,7 +53,8 @@ import {
   Shield,
   Target,
   Pin,
-  LogIn
+  LogIn,
+  Star
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
@@ -1039,115 +1040,168 @@ export default function DashboardScreen({
           );
         })()}
 
-        {/* Section 3: Explore Categories */}
-        <View style={{ marginBottom: 12 }}>
-          <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>{LOCALIZATION[language].exploreCategories}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesRow}>
-            {[...examCatalog].sort((a, b) => {
-              const aPinned = pinnedCategoryIds.includes(a.id);
-              const bPinned = pinnedCategoryIds.includes(b.id);
-              if (aPinned && !bPinned) return -1;
-              if (!aPinned && bPinned) return 1;
-              return (a.orderIndex ?? 0) - (b.orderIndex ?? 0);
-            }).map((cat) => {
-              const catStyle = getCategoryStyle(cat.name, isDark);
-              return (
+        {/* Section 3: Popular Exam Categories */}
+        {(() => {
+          const nonPracticeCats = (examCatalog || []).filter((c: any) =>
+            !c.isPracticeSeries &&
+            !c.id?.includes('_practice') &&
+            !c.name?.toLowerCase().includes('practice')
+          );
+          const popularList = nonPracticeCats.filter((c: any) => c.isPopular === true);
+          const displayPopular = popularList.length > 0 ? popularList : nonPracticeCats.slice(0, 6);
+
+          if (displayPopular.length === 0) return null;
+
+          return (
+            <View style={{ marginBottom: 18 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingRight: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Star size={16} color="#F59E0B" fill="#F59E0B" />
+                  <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }, { marginBottom: 0 }]}>
+                    {language === 'hi' ? 'लोकप्रिय परीक्षा श्रेणियां' : 'Popular Exam Categories'}
+                  </Text>
+                </View>
                 <TouchableOpacity
-                  key={cat.id}
-                  style={[
-                    styles.categoryBadge,
-                    {
-                      backgroundColor: catStyle.colors[0],
-                      borderColor: catStyle.borderColor,
-                      borderWidth: 1.5,
-                    },
-                  ]}
                   onPress={() => {
                     setExamSearchQuery('');
-                    setSelectedCategoryId(cat.id);
+                    setSelectedCategoryId(null);
                     setActiveTab('tests');
                   }}
                 >
-                  <Text style={[styles.categoryBadgeText, { color: catStyle.iconColor, fontWeight: 'bold' }]}>{cat.name}</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#2563EB' }}>
+                    {language === 'hi' ? 'सभी देखें →' : 'View All →'}
+                  </Text>
                 </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+              </View>
 
-        {/* Practice Series Button (Just below Explore Categories) */}
-        <TouchableOpacity
-          style={{
-            backgroundColor: isDark ? '#1E293B' : '#EFF6FF',
-            borderColor: isDark ? '#334155' : '#BFDBFE',
-            borderWidth: 1.5,
-            borderRadius: 16,
-            padding: 14,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 16,
-          }}
-          onPress={() => {
-            setExamSearchQuery('');
-            setSelectedCategoryId(null);
-            setTestCatalogMode('practice_series');
-            setActiveTab('tests');
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
-            <View style={{
-              width: 42,
-              height: 42,
-              borderRadius: 12,
-              backgroundColor: '#2563EB',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-              <Target color="#FFFFFF" size={22} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{
-                fontSize: 15,
-                fontWeight: '900',
-                color: isDark ? '#FFFFFF' : '#1E293B',
-              }}>
-                {language === 'hi' ? 'अभ्यास श्रृंखला (Practice Series)' : 'Practice Series'}
-              </Text>
-              <Text style={{
-                fontSize: 11.5,
-                fontWeight: '600',
-                color: isDark ? '#94A3B8' : '#64748B',
-                marginTop: 2,
-              }}>
-                {language === 'hi' ? 'सभी श्रेणियां और टेस्ट सीरीज देखें' : 'View all categories & test series'}
-              </Text>
-            </View>
-          </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 12 }}>
+                {displayPopular.map((cat) => {
+                  const catStyle = getCategoryStyle(cat.name, isDark);
+                  const subPreview = (cat.subCategories || [])
+                    .slice(0, 3)
+                    .map((s: any) => s.title || s.name)
+                    .join(' • ');
 
-          <View style={{
-            width: 28,
-            height: 28,
-            borderRadius: 14,
-            backgroundColor: isDark ? '#334155' : '#DBEAFE',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginLeft: 8,
-          }}>
-            <ChevronRight color="#2563EB" size={18} />
-          </View>
-        </TouchableOpacity>
+                  return (
+                    <TouchableOpacity
+                      key={`popular-card-${cat.id}`}
+                      activeOpacity={0.85}
+                      style={{
+                        width: 210,
+                        backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                        borderRadius: 18,
+                        padding: 14,
+                        marginRight: 12,
+                        borderColor: isDark ? '#334155' : '#E2E8F0',
+                        borderWidth: 1.5,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 3 },
+                        shadowOpacity: isDark ? 0.3 : 0.06,
+                        shadowRadius: 6,
+                        elevation: 3,
+                      }}
+                      onPress={() => {
+                        setExamSearchQuery('');
+                        setSelectedCategoryId(cat.id);
+                        setActiveTab('tests');
+                      }}
+                    >
+                      {/* Top Row: Icon + Popular Badge */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                        <View style={{
+                          width: 42,
+                          height: 42,
+                          borderRadius: 13,
+                          backgroundColor: isDark ? '#111D38' : catStyle.colors[0],
+                          borderColor: catStyle.borderColor,
+                          borderWidth: 1.5,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          overflow: 'hidden',
+                        }}>
+                          <CategoryLogoImage
+                            logoUrl={cat.logoUrl || ''}
+                            fallbackIcon={<CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={22} />}
+                          />
+                        </View>
+
+                        <View style={{
+                          backgroundColor: isDark ? 'rgba(245, 158, 11, 0.18)' : '#FEF3C7',
+                          borderColor: isDark ? '#78350F' : '#FDE68A',
+                          borderWidth: 1,
+                          paddingHorizontal: 7,
+                          paddingVertical: 2.5,
+                          borderRadius: 9,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 3,
+                        }}>
+                          <Star size={9} color="#D97706" fill="#D97706" />
+                          <Text style={{ fontSize: 9, fontWeight: '900', color: '#D97706', letterSpacing: 0.3 }}>
+                            POPULAR
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Category Name */}
+                      <Text style={{
+                        fontSize: 14.5,
+                        fontWeight: '900',
+                        color: isDark ? '#FFFFFF' : '#0F172A',
+                        marginBottom: 4,
+                      }} numberOfLines={1}>
+                        {cat.name}
+                      </Text>
+
+                      {/* Description / Subcategories preview */}
+                      <Text style={{
+                        fontSize: 11,
+                        fontWeight: '600',
+                        color: isDark ? '#94A3B8' : '#64748B',
+                        marginBottom: 10,
+                        minHeight: 26,
+                      }} numberOfLines={2}>
+                        {cat.countText ? `${cat.countText} • ` : ''}{subPreview || (language === 'hi' ? 'सभी मॉक टेस्ट उपलब्ध' : 'All Mock Tests Available')}
+                      </Text>
+
+                      {/* Bottom action button */}
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingTop: 8,
+                        borderTopWidth: 1,
+                        borderTopColor: isDark ? '#334155' : '#F1F5F9',
+                      }}>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#2563EB' }}>
+                          {language === 'hi' ? 'टेस्ट देखें' : 'Explore Tests'}
+                        </Text>
+                        <View style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: 10,
+                          backgroundColor: isDark ? '#1E3A8A' : '#EFF6FF',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}>
+                          <ChevronRight size={13} color="#2563EB" />
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          );
+        })()}
+
       </ScrollView>
     );
   };
 
   const renderTestsTab = () => {
     if (selectedCategoryId === null) {
-      // Filter exam categories by mode (Mock Tests vs Practice Series) and search query
-      const baseCatalog = examCatalog.filter(cat => {
-        const isPractice = !!(cat.isPracticeSeries || cat.id?.includes('practice') || cat.name?.toLowerCase().includes('practice'));
-        return testCatalogMode === 'practice_series' ? isPractice : !isPractice;
-      });
+      const baseCatalog = examCatalog || [];
 
       const sortedCatalog = [...baseCatalog].sort((a, b) => {
         const aPinned = pinnedCategoryIds.includes(a.id);
@@ -1164,66 +1218,6 @@ export default function DashboardScreen({
 
       return (
         <View style={{ flex: 1 }}>
-          {/* Segmented Control Toggle: Mock Tests vs Practice Series */}
-          <View style={{
-            flexDirection: 'row',
-            backgroundColor: isDark ? '#1E293B' : '#E2E8F0',
-            padding: 3,
-            borderRadius: 14,
-            marginBottom: 10,
-          }}>
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                paddingVertical: 8,
-                borderRadius: 11,
-                alignItems: 'center',
-                backgroundColor: testCatalogMode === 'mock_tests' ? (isDark ? '#2563EB' : '#FFFFFF') : 'transparent',
-                shadowColor: '#000',
-                shadowOpacity: testCatalogMode === 'mock_tests' ? 0.08 : 0,
-                shadowRadius: 2,
-                elevation: testCatalogMode === 'mock_tests' ? 1 : 0,
-              }}
-              onPress={() => {
-                setExamSearchQuery('');
-                setTestCatalogMode('mock_tests');
-              }}
-            >
-              <Text style={{
-                fontSize: 12.5,
-                fontWeight: '800',
-                color: testCatalogMode === 'mock_tests' ? (isDark ? '#FFFFFF' : '#1E293B') : (isDark ? '#94A3B8' : '#64748B'),
-              }}>
-                {language === 'hi' ? 'मॉक टेस्ट श्रेणी' : 'Mock Test Series'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                paddingVertical: 8,
-                borderRadius: 11,
-                alignItems: 'center',
-                backgroundColor: testCatalogMode === 'practice_series' ? (isDark ? '#2563EB' : '#FFFFFF') : 'transparent',
-                shadowColor: '#000',
-                shadowOpacity: testCatalogMode === 'practice_series' ? 0.08 : 0,
-                shadowRadius: 2,
-                elevation: testCatalogMode === 'practice_series' ? 1 : 0,
-              }}
-              onPress={() => {
-                setExamSearchQuery('');
-                setTestCatalogMode('practice_series');
-              }}
-            >
-              <Text style={{
-                fontSize: 12.5,
-                fontWeight: '800',
-                color: testCatalogMode === 'practice_series' ? (isDark ? '#FFFFFF' : '#1E293B') : (isDark ? '#94A3B8' : '#64748B'),
-              }}>
-                {language === 'hi' ? 'अभ्यास श्रृंखला' : 'Practice Series'}
-              </Text>
-            </TouchableOpacity>
-          </View>
 
           {/* Search Bar */}
           <View style={[styles.examSearchContainer, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>

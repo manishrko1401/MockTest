@@ -27,6 +27,10 @@ export interface Question {
   };
   correctOptionIndex: number; // Used for evaluation
   orderIndex: number;
+  explanation?: {
+    en: string;
+    hi: string;
+  };
 }
 
 export interface Section {
@@ -35,7 +39,7 @@ export interface Section {
   orderIndex: number;
   positiveMark: number;
   negativeMark: number;
-  durationSeconds?: number;
+  durationSeconds?: number; // Set when sectional timing is enabled
 }
 
 export interface ActiveSession {
@@ -45,7 +49,7 @@ export interface ActiveSession {
   totalDurationSeconds: number;
   sections: Section[];
   questions: Question[];
-  hasSectionalTiming?: boolean;
+  hasSectionalTiming?: boolean; // When true, lock users per section with per-section countdown
 }
 
 /**
@@ -89,7 +93,7 @@ export interface EngineState {
 }
 
 type EngineAction =
-  | { type: 'INIT_SESSION'; payload: { session: ActiveSession; maxViolations?: number; resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number } } }
+  | { type: 'INIT_SESSION'; payload: { session: ActiveSession; maxViolations?: number; defaultLanguage?: 'en' | 'hi'; resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number } } }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'hi' }
   | { type: 'TICK_TIMER' }
   | { type: 'SELECT_OPTION'; payload: { optionIndex: number | null } }
@@ -98,6 +102,7 @@ type EngineAction =
   | { type: 'MARK_FOR_REVIEW_AND_NEXT' }
   | { type: 'JUMP_TO_QUESTION'; payload: { sectionIndex: number; questionIndex: number } }
   | { type: 'SWITCH_SECTION'; payload: { sectionIndex: number } }
+  | { type: 'SUBMIT_SECTION' }
   | { type: 'ADD_VIOLATION' }
   | { type: 'SUBMIT_EXAM' }
   | { type: 'SET_SYNCING'; payload: boolean }
@@ -132,15 +137,18 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
   switch (action.type) {
     case 'INIT_SESSION': {
-      const { session, maxViolations = 3, resumeData } = action.payload;
+      const { session, maxViolations = 3, defaultLanguage = 'en', resumeData } = action.payload;
       let initialResponses: Record<string, QuestionResponse> = {};
-      let initialTimeRemaining = session.totalDurationSeconds;
+      // For sectional timing: start with Section 0's duration; otherwise full test duration
+      let initialTimeRemaining = session.hasSectionalTiming && session.sections[0]?.durationSeconds
+        ? session.sections[0].durationSeconds
+        : session.totalDurationSeconds;
       let initialViolationsCount = 0;
       let initialSectionIndex = 0;
       let initialQuestionIndex = 0;
 
       if (resumeData) {
-        initialResponses = resumeData.responses;
+        initialResponses = { ...resumeData.responses };
         initialTimeRemaining = resumeData.timeRemaining;
         initialViolationsCount = resumeData.violationsCount;
         if (resumeData.currentSectionIndex !== undefined) {
@@ -149,18 +157,21 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         if (resumeData.currentQuestionIndex !== undefined) {
           initialQuestionIndex = resumeData.currentQuestionIndex;
         }
-      } else {
-        // Initialize all questions to state 1 (NOT_VISITED)
-        session.questions.forEach((q) => {
-          initialResponses[q.id] = {
-            questionId: q.id,
-            selectedOptionIndex: null,
-            tempOptionIndex: null,
-            state: 1, // NOT_VISITED
-            elapsedSeconds: 0,
-          };
-        });
+      }
 
+      // Ensure every question has a valid response object with tempOptionIndex defined
+      session.questions.forEach((q) => {
+        const existing = initialResponses[q.id];
+        initialResponses[q.id] = {
+          questionId: q.id,
+          selectedOptionIndex: existing?.selectedOptionIndex ?? null,
+          tempOptionIndex: existing?.tempOptionIndex ?? existing?.selectedOptionIndex ?? null,
+          state: existing?.state ?? 1, // NOT_VISITED
+          elapsedSeconds: existing?.elapsedSeconds ?? 0,
+        };
+      });
+
+      if (!resumeData) {
         // Mark the very first question of the first section as state 2 (NOT_ANSWERED)
         const firstSectionQuestions = getSectionQuestions(session, 0);
         if (firstSectionQuestions.length > 0) {
@@ -169,11 +180,6 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
             ...initialResponses[firstQuestionId],
             state: 2, // NOT_ANSWERED
           };
-        }
-
-        // If sectional timing, initialize timeRemaining to first section's duration
-        if (session.hasSectionalTiming && session.sections.length > 0) {
-          initialTimeRemaining = session.sections[0].durationSeconds || session.totalDurationSeconds;
         }
       }
 
@@ -184,7 +190,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         responses: initialResponses,
         timeRemaining: initialTimeRemaining,
         isTimerRunning: true,
-        language: 'en',
+        language: defaultLanguage,
         violationsCount: initialViolationsCount,
         maxViolationsAllowed: maxViolations,
         isExamSubmitted: false,
@@ -216,45 +222,41 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         };
       }
 
-      // Automatically submit or transition when timer hits zero
+      // When timer hits zero:
       if (nextTimeRemaining === 0) {
+        // Sectional timing: auto-advance to next section or submit if last
         if (session.hasSectionalTiming) {
           const nextSectionIndex = state.currentSectionIndex + 1;
           if (nextSectionIndex < session.sections.length) {
-            // Revert temporary changes to saved value for current question (if any)
-            if (activeQuestion) {
-              updatedResponses[activeQuestion.id].tempOptionIndex = updatedResponses[activeQuestion.id].selectedOptionIndex;
-            }
-
-            // Transition to the next section
+            // Advance to next section, reset timer to next section's duration
             const nextSection = session.sections[nextSectionIndex];
+            const nextSectionDuration = nextSection.durationSeconds ?? session.totalDurationSeconds;
             const nextSectionQuestions = getSectionQuestions(session, nextSectionIndex);
-            
-            // Mark the first question of the next section as NOT_ANSWERED (2) if it was NOT_VISITED (1)
+            // Mark first question of next section as visited
             if (nextSectionQuestions.length > 0) {
               const firstQ = nextSectionQuestions[0];
-              if (updatedResponses[firstQ.id].state === 1) {
-                updatedResponses[firstQ.id].state = 2;
+              if (updatedResponses[firstQ.id]?.state === 1) {
+                updatedResponses[firstQ.id] = { ...updatedResponses[firstQ.id], state: 2 };
               }
-              updatedResponses[firstQ.id].tempOptionIndex = updatedResponses[firstQ.id].selectedOptionIndex;
             }
-
             return {
               ...state,
               currentSectionIndex: nextSectionIndex,
               currentQuestionIndex: 0,
-              timeRemaining: nextSection.durationSeconds || 0,
+              timeRemaining: nextSectionDuration,
               responses: updatedResponses,
             };
+          } else {
+            // Last section done, submit
+            return engineReducer(
+              { ...state, timeRemaining: 0, responses: updatedResponses },
+              { type: 'SUBMIT_EXAM' }
+            );
           }
         }
-
+        // Non-sectional: submit on global timer expiry
         return engineReducer(
-          {
-            ...state,
-            timeRemaining: 0,
-            responses: updatedResponses,
-          },
+          { ...state, timeRemaining: 0, responses: updatedResponses },
           { type: 'SUBMIT_EXAM' }
         );
       }
@@ -272,8 +274,16 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       if (!activeQuestion) return state;
 
       const updatedResponses = { ...state.responses };
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+
       updatedResponses[activeQuestion.id] = {
-        ...updatedResponses[activeQuestion.id],
+        ...currentResp,
         tempOptionIndex: action.payload.optionIndex,
       };
 
@@ -289,13 +299,19 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       if (!activeQuestion) return state;
 
       const updatedResponses = { ...state.responses };
-      const currentResp = updatedResponses[activeQuestion.id];
-      const hasSelection = currentResp.tempOptionIndex !== null;
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+      const hasSelection = currentResp?.tempOptionIndex !== undefined && currentResp?.tempOptionIndex !== null;
 
       // Update state: ANSWERED (3) if selected, else NOT_ANSWERED (2)
       updatedResponses[activeQuestion.id] = {
         ...currentResp,
-        selectedOptionIndex: currentResp.tempOptionIndex,
+        selectedOptionIndex: currentResp.tempOptionIndex ?? null,
         state: hasSelection ? 3 : 2,
       };
 
@@ -318,16 +334,19 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       const nextQuestion = nextSectionQuestions[nextQuestionIndex];
 
       if (nextQuestion) {
-        const nextResp = updatedResponses[nextQuestion.id];
+        const nextResp = updatedResponses[nextQuestion.id] || {
+          questionId: nextQuestion.id,
+          selectedOptionIndex: null,
+          tempOptionIndex: null,
+          state: 1,
+          elapsedSeconds: 0,
+        };
         // If next question was NOT_VISITED (1), set to NOT_ANSWERED (2)
-        if (nextResp.state === 1) {
-          updatedResponses[nextQuestion.id] = {
-            ...nextResp,
-            state: 2,
-          };
-        }
-        // Initialize temp option from saved option
-        updatedResponses[nextQuestion.id].tempOptionIndex = updatedResponses[nextQuestion.id].selectedOptionIndex;
+        updatedResponses[nextQuestion.id] = {
+          ...nextResp,
+          state: nextResp.state === 1 ? 2 : nextResp.state,
+          tempOptionIndex: nextResp.selectedOptionIndex,
+        };
       }
 
       return {
@@ -344,9 +363,17 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       if (!activeQuestion) return state;
 
       const updatedResponses = { ...state.responses };
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+
       // Flush selections and set state to NOT_ANSWERED (2)
       updatedResponses[activeQuestion.id] = {
-        ...updatedResponses[activeQuestion.id],
+        ...currentResp,
         selectedOptionIndex: null,
         tempOptionIndex: null,
         state: 2,
@@ -364,15 +391,21 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       if (!activeQuestion) return state;
 
       const updatedResponses = { ...state.responses };
-      const currentResp = updatedResponses[activeQuestion.id];
-      const hasSelection = currentResp.tempOptionIndex !== null;
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+      const hasSelection = currentResp?.tempOptionIndex !== undefined && currentResp?.tempOptionIndex !== null;
 
       // 5-State Rule:
       // Option chosen: ANSWERED_AND_MARKED_FOR_REVIEW (5)
       // No option chosen: MARKED_FOR_REVIEW (4)
       updatedResponses[activeQuestion.id] = {
         ...currentResp,
-        selectedOptionIndex: currentResp.tempOptionIndex,
+        selectedOptionIndex: currentResp.tempOptionIndex ?? null,
         state: hasSelection ? 5 : 4,
       };
 
@@ -393,14 +426,18 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       const nextQuestion = nextSectionQuestions[nextQuestionIndex];
 
       if (nextQuestion) {
-        const nextResp = updatedResponses[nextQuestion.id];
-        if (nextResp.state === 1) {
-          updatedResponses[nextQuestion.id] = {
-            ...nextResp,
-            state: 2,
-          };
-        }
-        updatedResponses[nextQuestion.id].tempOptionIndex = updatedResponses[nextQuestion.id].selectedOptionIndex;
+        const nextResp = updatedResponses[nextQuestion.id] || {
+          questionId: nextQuestion.id,
+          selectedOptionIndex: null,
+          tempOptionIndex: null,
+          state: 1,
+          elapsedSeconds: 0,
+        };
+        updatedResponses[nextQuestion.id] = {
+          ...nextResp,
+          state: nextResp.state === 1 ? 2 : nextResp.state,
+          tempOptionIndex: nextResp.selectedOptionIndex,
+        };
       }
 
       return {
@@ -413,6 +450,12 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
     case 'JUMP_TO_QUESTION': {
       const { sectionIndex, questionIndex } = action.payload;
+
+      // Block cross-section navigation if sectional timing is active
+      if (session.hasSectionalTiming && sectionIndex !== state.currentSectionIndex) {
+        return state;
+      }
+
       const targetQuestions = getSectionQuestions(session, sectionIndex);
       const targetQuestion = targetQuestions[questionIndex];
       if (!targetQuestion) return state;
@@ -423,23 +466,35 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       const currentQuestions = getSectionQuestions(session, state.currentSectionIndex);
       const currentActiveQuestion = currentQuestions[state.currentQuestionIndex];
       if (currentActiveQuestion) {
-        const activeResp = updatedResponses[currentActiveQuestion.id];
+        const activeResp = updatedResponses[currentActiveQuestion.id] || {
+          questionId: currentActiveQuestion.id,
+          selectedOptionIndex: null,
+          tempOptionIndex: null,
+          state: 1,
+          elapsedSeconds: 0,
+        };
         // Revert temporary changes to saved value
-        activeResp.tempOptionIndex = activeResp.selectedOptionIndex;
-
-        // If the question was left active without selection/saving, it becomes NOT_ANSWERED (2)
-        if (activeResp.state === 1) {
-          activeResp.state = 2;
-        }
+        updatedResponses[currentActiveQuestion.id] = {
+          ...activeResp,
+          tempOptionIndex: activeResp.selectedOptionIndex,
+          state: activeResp.state === 1 ? 2 : activeResp.state,
+        };
       }
 
       // Prepare target question
-      const targetResp = updatedResponses[targetQuestion.id];
-      if (targetResp.state === 1) {
-        targetResp.state = 2; // Transition target question from NOT_VISITED to NOT_ANSWERED
-      }
-      // Populate tempOptionIndex with saved selection
-      targetResp.tempOptionIndex = targetResp.selectedOptionIndex;
+      const targetResp = updatedResponses[targetQuestion.id] || {
+        questionId: targetQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+      
+      updatedResponses[targetQuestion.id] = {
+        ...targetResp,
+        state: targetResp.state === 1 ? 2 : targetResp.state,
+        tempOptionIndex: targetResp.selectedOptionIndex,
+      };
 
       return {
         ...state,
@@ -451,10 +506,41 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
     case 'SWITCH_SECTION': {
       const { sectionIndex } = action.payload;
+      // Block section switching if sectional timing is active
+      if (session.hasSectionalTiming) return state;
       return engineReducer(state, {
         type: 'JUMP_TO_QUESTION',
         payload: { sectionIndex, questionIndex: 0 },
       });
+    }
+
+    case 'SUBMIT_SECTION': {
+      if (state.isExamSubmitted) return state;
+      const nextSectionIndex = state.currentSectionIndex + 1;
+      if (session && nextSectionIndex < session.sections.length) {
+        const nextSection = session.sections[nextSectionIndex];
+        const nextSectionDuration = session.hasSectionalTiming && nextSection.durationSeconds
+          ? nextSection.durationSeconds
+          : state.timeRemaining;
+        const nextSectionQuestions = getSectionQuestions(session, nextSectionIndex);
+        const updatedResponses = { ...state.responses };
+        if (nextSectionQuestions.length > 0) {
+          const firstQ = nextSectionQuestions[0];
+          if (updatedResponses[firstQ.id]?.state === 1) {
+            updatedResponses[firstQ.id] = { ...updatedResponses[firstQ.id], state: 2 };
+          }
+        }
+        return {
+          ...state,
+          currentSectionIndex: nextSectionIndex,
+          currentQuestionIndex: 0,
+          timeRemaining: nextSectionDuration,
+          responses: updatedResponses,
+          isTimerRunning: true,
+        };
+      } else {
+        return engineReducer(state, { type: 'SUBMIT_EXAM' });
+      }
     }
 
     case 'ADD_VIOLATION': {
@@ -563,13 +649,14 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
 interface TestEngineContextType {
   state: EngineState;
-  initSession: (session: ActiveSession, maxViolations?: number, resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number }) => void;
+  initSession: (session: ActiveSession, maxViolations?: number, resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number }, defaultLanguage?: 'en' | 'hi') => void;
   selectOption: (optionIndex: number | null) => void;
   saveAndNext: () => void;
   clearResponse: () => void;
   markForReviewAndNext: () => void;
   jumpToQuestion: (sectionIndex: number, questionIndex: number) => void;
   switchSection: (sectionIndex: number) => void;
+  submitSection: () => void;
   setLanguage: (lang: 'en' | 'hi') => void;
   addViolation: () => void;
   submitExam: () => void;
@@ -617,9 +704,10 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
   const initSession = useCallback((
     session: ActiveSession,
     maxViolations?: number,
-    resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number }
+    resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number },
+    defaultLanguage?: 'en' | 'hi'
   ) => {
-    dispatch({ type: 'INIT_SESSION', payload: { session, maxViolations, resumeData } });
+    dispatch({ type: 'INIT_SESSION', payload: { session, maxViolations, resumeData, defaultLanguage } });
   }, []);
 
   const selectOption = useCallback((optionIndex: number | null) => {
@@ -644,6 +732,10 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
 
   const switchSection = useCallback((sectionIndex: number) => {
     dispatch({ type: 'SWITCH_SECTION', payload: { sectionIndex } });
+  }, []);
+
+  const submitSection = useCallback(() => {
+    dispatch({ type: 'SUBMIT_SECTION' });
   }, []);
 
   const setLanguage = useCallback((lang: 'en' | 'hi') => {
@@ -683,14 +775,14 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
 
     const handleBlur = () => {
       // Triggered when focus transitions off browser tab/window
-      addViolation();
+      pauseExam();
     };
 
     window.addEventListener('blur', handleBlur);
     return () => {
       window.removeEventListener('blur', handleBlur);
     };
-  }, [state.isTimerRunning, state.isExamSubmitted, addViolation]);
+  }, [state.isTimerRunning, state.isExamSubmitted, pauseExam]);
 
   // 3. Anti-Cheat: Disables right click context menu & blocks text selection / copy / cut / paste
   useEffect(() => {
@@ -776,6 +868,7 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
         markForReviewAndNext,
         jumpToQuestion,
         switchSection,
+        submitSection,
         setLanguage,
         addViolation,
         submitExam,

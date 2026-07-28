@@ -157,11 +157,7 @@ export default function MockTestsCatalog() {
 
   // Filter out Practice Series categories so they ONLY appear on the Practice Series page
   const testSeriesCatalog = React.useMemo(() => {
-    return (examCatalog || []).filter(c =>
-      !(c as any).isPracticeSeries &&
-      !c.id.includes('_practice') &&
-      !c.name.toLowerCase().includes('practice series')
-    );
+    return examCatalog || [];
   }, [examCatalog]);
 
   // Filter exam catalog by search query (checks category name or subcategory exam name)

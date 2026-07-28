@@ -55,7 +55,12 @@ model User {
   bookmarkedQuestions     Json?
   coins                   Int                @default(0)
   referralCoinsCredited   Boolean            @default(false)
+  currentSessionId        String?
+  otpCode                 String?
+  otpExpiresAt            DateTime?
   supportMessages         SupportMessage[]
+  lastSeen                DateTime?
+  lastPlatform            String?            @default("web")
 
   @@map("users")
 }
@@ -158,6 +163,10 @@ model MockTest {
   orderIndex          Int                @default(0)
   positiveMarks       Float              @default(2.0)
   negativeMarks       Float              @default(0.5)
+  testbookTotalUsers   Int                @default(0)
+  testbookTopperScore  Float              @default(0.0)
+  testbookAverageScore Float              @default(0.0)
+  testbookCutoffScore  Float              @default(0.0)
 
   @@map("mock_tests")
 }
@@ -218,6 +227,8 @@ model UserTestSession {
   createdAt                  DateTime                @default(now())
   currentSectionIndex        Int                     @default(0)
   currentQuestionIndex       Int                     @default(0)
+  testbookRank               Int?
+  testbookPercentile         Float?
   source                     String                  @default("web")
 
   @@map("user_test_sessions")
@@ -282,7 +293,56 @@ model SupportMessage {
   @@map("support_messages")
 }
 
-// 15. Practice Series Section Attempts
+// 15. User Feedback & Ratings
+model Feedback {
+  id             String   @id @default(uuid())
+  userId         String
+  userEmail      String   @default("")
+  userFullName   String   @default("")
+  testId         String
+  testTitle      String   @default("")
+  platformRating Int      // 1-5 rating for web/app
+  examRating     Int      // 1-5 rating for exam
+  feedbackText   String?
+  source         String   @default("web") // "web" or "app"
+  createdAt      DateTime @default(now())
+
+  @@map("feedbacks")
+}
+
+// 16. User Suggestions for MockTest Hub Team
+model Suggestion {
+  id           String   @id @default(uuid())
+  userId       String?
+  name         String   @default("")
+  email        String   @default("")
+  category     String   @default("General") // "General", "New Exam Request", "Feature Request", "UI/UX Improvement", "Bug Report"
+  message      String
+  status       String   @default("PENDING") // "PENDING", "REVIEWED", "RESOLVED"
+  adminReply   String?
+  source       String   @default("web") // "web", "mobile_web", "app"
+  createdAt    DateTime @default(now())
+
+  @@map("suggestions")
+}
+
+// 17. Vocabulary Items
+model Vocab {
+  id           Int      @id @default(autoincrement())
+  word         String
+  pos          String   @default("(verb)")
+  hindiMeaning String
+  meaning      String
+  synonyms     String[]
+  antonyms     String[]
+  usage        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("vocabs")
+}
+
+// 18. Practice Series Section Attempts
 model PracticeSession {
   id            String   @id @default(uuid())
   userId        String
@@ -294,7 +354,7 @@ model PracticeSession {
   attempted     Int      @default(0)
   total         Int      @default(25)
   accuracy      Float    @default(0)
-  responses     Json?    // { globalQuestionIndex: selectedOptionIndex }
+  responses     Json?
   completedAt   DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

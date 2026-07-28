@@ -211,11 +211,7 @@ const formatSubCategoryName = (name: string) => {
 };
 
   const testSeriesCatalog = React.useMemo(() => {
-    return (examCatalog || []).filter(c =>
-      !(c as any).isPracticeSeries &&
-      !c.id.includes('_practice') &&
-      !c.name.toLowerCase().includes('practice series')
-    );
+    return examCatalog || [];
   }, [examCatalog]);
 
   const popularCategories = testSeriesCatalog.filter(c => c.isPopular);
@@ -476,7 +472,6 @@ const formatSubCategoryName = (name: string) => {
           <div className="fixed inset-x-0 top-14 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-205 dark:border-slate-900 z-30 shadow-lg p-6 flex flex-col gap-6 animate-in slide-in-from-top-4 duration-200">
             <nav className="flex flex-col gap-4 text-sm font-bold text-slate-655 dark:text-slate-300">
               <Link href="/mock-tests" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navTestSeries}</Link>
-              <Link href="/practice-series" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navPracticeSeries}</Link>
               <Link href="/updates" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navUpdates}</Link>
               <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navProfile}</Link>
               {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
@@ -612,21 +607,14 @@ const formatSubCategoryName = (name: string) => {
               </Link>
             </div>
 
-            {/* Test Series & Practice Series Buttons (Mobile Only) */}
+            {/* Test Series Button (Mobile Only) */}
             <div className="flex items-center justify-center gap-2.5 pt-2">
               <Link
                 href="/mock-tests"
-                className="flex-1 max-w-[160px] bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
+                className="w-full max-w-[220px] bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
               >
                 <BookOpen className="h-4 w-4" />
                 {language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series'}
-              </Link>
-              <Link
-                href="/practice-series"
-                className="flex-1 max-w-[160px] bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
-              >
-                <Target className="h-4 w-4" />
-                {language === 'hi' ? 'प्रैक्टिस सीरीज' : 'Practice Series'}
               </Link>
             </div>
 
@@ -1129,7 +1117,6 @@ const formatSubCategoryName = (name: string) => {
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-505 dark:text-slate-400">
             <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
-            <Link href="/practice-series" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navPracticeSeries}</Link>
             <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navUpdates}</Link>
             <Link href="/profile" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navProfile}</Link>
             {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (

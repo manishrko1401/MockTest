@@ -24,8 +24,6 @@ import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
 import { DatabaseMonitor } from './components/DatabaseMonitor';
 import { VocabManager } from './components/VocabManager';
-import { PracticeSeriesManager } from './components/PracticeSeriesManager';
-import { AppPracticeSeriesManager } from './components/AppPracticeSeriesManager';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -1386,28 +1384,6 @@ export default function AdminAnalytics() {
               <BookOpen className="h-4 w-4" />
               Vocab Upload & Manager
             </button>
-            <button
-              onClick={() => selectTab('practice_series')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'practice_series'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Zap className="h-4 w-4 text-amber-400 fill-amber-400" />
-              Practice Series Manager
-            </button>
-            <button
-              onClick={() => selectTab('app_practice_series')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'app_practice_series'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Sparkles className="h-4 w-4 text-indigo-400" />
-              App Practice Series
-            </button>
             {hasTabAccess('users') && (
               <button
                 onClick={() => selectTab('users')}
@@ -1911,24 +1887,6 @@ export default function AdminAnalytics() {
           {/* TAB: VOCABULARY MANAGEMENT PORTAL */}
           {activeTab === 'vocab' && (
             <VocabManager />
-          )}
-
-          {/* TAB: PRACTICE SERIES MANAGER PORTAL (WEBSITE) */}
-          {activeTab === 'practice_series' && (
-            <PracticeSeriesManager
-              examCatalog={examCatalog}
-              showToast={showToast}
-              onRefreshCatalog={refreshCatalog}
-            />
-          )}
-
-          {/* TAB: DEDICATED APP PRACTICE SERIES MANAGER PORTAL (MOBILE APP) */}
-          {activeTab === 'app_practice_series' && (
-            <AppPracticeSeriesManager
-              examCatalog={examCatalog}
-              showToast={showToast}
-              onRefreshCatalog={refreshCatalog}
-            />
           )}
 
           {/* TAB 3: USER MANAGEMENT PORTAL */}

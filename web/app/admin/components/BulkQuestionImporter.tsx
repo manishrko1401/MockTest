@@ -146,11 +146,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   const [selSubSubId, setSelSubSubId] = React.useState<string>('');
 
   const testSeriesCatalog = React.useMemo(() => {
-    return (examCatalog || []).filter((cat: any) =>
-      !cat.isPracticeSeries &&
-      !cat.id.includes('_practice') &&
-      !cat.name.toLowerCase().includes('practice series')
-    );
+    return examCatalog || [];
   }, [examCatalog]);
 
   React.useEffect(() => {
