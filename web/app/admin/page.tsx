@@ -910,32 +910,52 @@ export default function AdminAnalytics() {
 
     try {
       const parsedData = JSON.parse(jsonInput);
-      const questionsArray = (Array.isArray(parsedData) ? parsedData : [parsedData]).map((q: any) => {
-        const textEn = (q.textEn || q.questionText || q.question || q.text || q.question_text || q.textHi || "").toString().trim();
-        const textHi = (q.textHi || q.questionText || q.question || q.text || q.question_text || textEn).toString().trim();
-        
-        let rawOpts = q.optionsEn || q.options || q.optionsHi;
-        if (!Array.isArray(rawOpts) || rawOpts.length < 2) {
-          if (q.option1 || q.opt1) {
-            rawOpts = [q.option1 || q.opt1, q.option2 || q.opt2, q.option3 || q.opt3, q.option4 || q.opt4, q.option5].filter(Boolean);
-          }
+
+      const getLangText = (val: any, lang: 'en' | 'hi'): string => {
+        if (!val) return "";
+        if (typeof val === 'string' || typeof val === 'number') return String(val).trim();
+        if (typeof val === 'object') {
+          if (lang === 'en') return (val.en || val.hi || val.textEn || val.text || "").toString().trim();
+          if (lang === 'hi') return (val.hi || val.en || val.textHi || val.text || "").toString().trim();
         }
-        const optionsEn = Array.isArray(rawOpts) && rawOpts.length >= 2 ? rawOpts.map((o: any) => String(o).trim()) : ["Option A", "Option B", "Option C", "Option D"];
-        const optionsHi = Array.isArray(q.optionsHi) && q.optionsHi.length >= 2 ? q.optionsHi.map((o: any) => String(o).trim()) : optionsEn;
-        
+        return "";
+      };
+
+      const getOptionsArray = (q: any, lang: 'en' | 'hi'): string[] => {
+        const rawList = (lang === 'en' ? (q.optionsEn || q.options || q.optionsHi) : (q.optionsHi || q.options || q.optionsEn));
+        if (Array.isArray(rawList) && rawList.length >= 2) {
+          return rawList.map((o: any) => getLangText(o, lang)).filter(Boolean);
+        }
+        if (q.option1 || q.opt1) {
+          const list = [q.option1 || q.opt1, q.option2 || q.opt2, q.option3 || q.opt3, q.option4 || q.opt4, q.option5].filter(Boolean);
+          return list.map((o: any) => getLangText(o, lang)).filter(Boolean);
+        }
+        return [];
+      };
+
+      const questionsArray = (Array.isArray(parsedData) ? parsedData : [parsedData]).map((q: any, idx: number) => {
+        const textEn = getLangText(q.textEn || q.questionText || q.question || q.text || q.question_text, 'en') || `Question #${idx + 1}`;
+        const textHi = getLangText(q.textHi || q.questionText || q.question || q.text || q.question_text, 'hi') || textEn;
+
+        let optionsEn = getOptionsArray(q, 'en');
+        if (optionsEn.length < 2) optionsEn = ["Option A", "Option B", "Option C", "Option D"];
+
+        let optionsHi = getOptionsArray(q, 'hi');
+        if (optionsHi.length < 2) optionsHi = optionsEn;
+
         let correctIndex = 0;
-        if (typeof q.correctIndex === 'number') {
-          correctIndex = q.correctIndex;
-        } else if (typeof q.correctAnswer === 'number') {
-          correctIndex = q.correctAnswer;
-        } else if (typeof q.answer === 'number') {
-          correctIndex = q.answer;
-        } else if (typeof q.correct_option === 'number') {
-          correctIndex = Math.max(0, q.correct_option - 1);
-        } else if (typeof q.correct_answer === 'number') {
-          correctIndex = Math.max(0, q.correct_answer - 1);
-        } else if (q.correctAnswer || q.answer || q.correct_option || q.correct_answer) {
-          const str = (q.correctAnswer || q.answer || q.correct_option || q.correct_answer).toString().trim().toUpperCase();
+        const rawCorrect = q.correctIndex ?? q.correctOption ?? q.correctAnswer ?? q.answer ?? q.correct_option ?? q.correct_answer;
+
+        if (typeof rawCorrect === 'number') {
+          if (rawCorrect >= optionsEn.length) {
+            correctIndex = Math.max(0, rawCorrect - 1);
+          } else if (rawCorrect < 0) {
+            correctIndex = 0;
+          } else {
+            correctIndex = rawCorrect;
+          }
+        } else if (rawCorrect !== undefined && rawCorrect !== null) {
+          const str = String(rawCorrect).trim().toUpperCase();
           if (str === 'A' || str === '1' || str === 'OPT1' || str === 'OPTION 1' || str === 'OPTION A') correctIndex = 0;
           else if (str === 'B' || str === '2' || str === 'OPT2' || str === 'OPTION 2' || str === 'OPTION B') correctIndex = 1;
           else if (str === 'C' || str === '3' || str === 'OPT3' || str === 'OPTION 3' || str === 'OPTION C') correctIndex = 2;
@@ -947,11 +967,13 @@ export default function AdminAnalytics() {
         }
         if (correctIndex < 0 || correctIndex >= optionsEn.length) correctIndex = 0;
 
-        const explanationEn = (q.explanationEn || q.explanation || q.solution || q.answer_explanation || q.sol || "").toString().trim();
-        const explanationHi = (q.explanationHi || q.explanation || q.solution || q.answer_explanation || q.sol || explanationEn).toString().trim();
+        const explanationEn = getLangText(q.explanationEn || q.explanation || q.solution || q.answer_explanation || q.sol, 'en');
+        const explanationHi = getLangText(q.explanationHi || q.explanation || q.solution || q.answer_explanation || q.sol, 'hi') || explanationEn;
+
+        const sectionName = getLangText(q.section || q.sectionName || q.subject, 'en') || 'General Studies';
 
         return {
-          id: q.id || 'q_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 6),
+          id: String(q.id || 'q_' + Math.random().toString(36).substring(2, 11)),
           textEn,
           textHi,
           optionsEn,
@@ -959,7 +981,7 @@ export default function AdminAnalytics() {
           correctIndex,
           explanationEn,
           explanationHi,
-          section: q.section || 'General Studies'
+          section: sectionName
         };
       });
 
