@@ -80,50 +80,13 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
   // Ingestion status
   const [ingesting, setIngesting] = useState<boolean>(false);
 
-  // Initial practice series catalog
+  // Filter ONLY Practice Series Categories created in DB (with isPracticeSeries === true)
   const initialPracticeCategories = examCatalog.filter(c =>
     (c as any).isPracticeSeries ||
-    c.id.includes('practice') ||
-    c.name.toLowerCase().includes('practice') ||
-    c.name.toLowerCase().includes('sectional')
+    c.id.includes('_practice') ||
+    c.name.toLowerCase().includes('practice')
   );
 
-  const fallbackDefaults = [
-    {
-      id: 'railways_practice_domain',
-      name: 'Railways Practice Series',
-      isPracticeSeries: true,
-      description: 'RRB NTPC, Group D General Science & Math Practice',
-      subCategories: []
-    },
-    {
-      id: 'banking_practice_domain',
-      name: 'Banking Practice Series',
-      isPracticeSeries: true,
-      description: 'SBI PO, Clerk Puzzles & DI Practice Sets',
-      subCategories: []
-    },
-    {
-      id: 'state_practice_domain',
-      name: 'State Exams Practice Series',
-      isPracticeSeries: true,
-      description: 'BSSC, UPPSC State Special GK & Aptitude Practice',
-      subCategories: []
-    },
-    {
-      id: 'teaching_practice_domain',
-      name: 'Teaching Practice Series',
-      isPracticeSeries: true,
-      description: 'CTET, State TET Child Development & Pedagogy Practice',
-      subCategories: []
-    }
-  ];
-
-  // -------------------------------------------------------------------------
-  // Derive practice catalog from DB-backed examCatalog (same as test series).
-  // This means the catalog is always the same for ALL users on ALL devices.
-  // localStorage is no longer the source of truth for categories.
-  // -------------------------------------------------------------------------
   const getDeletedCategoryIds = (): string[] => {
     try {
       const saved = localStorage.getItem('mth_deleted_practice_categories');
@@ -139,7 +102,7 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
     } catch (e) {}
   };
 
-  // Build catalog from examCatalog (DB), exactly like the test series page does.
+  // Build catalog from examCatalog (DB created by admin)
   const deletedIds = getDeletedCategoryIds();
   const derivedCatalog = (() => {
     const map = new Map<string, any>();
@@ -151,16 +114,13 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
       seenNames.add(key);
       map.set(c.id, c);
     };
-    // DB categories first (visible to ALL users)
     initialPracticeCategories.forEach(addCat);
-    // Built-in defaults as fallback
-    fallbackDefaults.forEach(addCat);
     return Array.from(map.values());
   })();
 
   const [practiceCatalog, setPracticeCatalog] = useState<any[]>(derivedCatalog);
 
-  // Re-sync whenever examCatalog updates (e.g. after refreshCatalog() returns)
+  // Re-sync whenever examCatalog updates
   useEffect(() => {
     const ids = getDeletedCategoryIds();
     const map = new Map<string, any>();
@@ -173,7 +133,6 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
       map.set(c.id, c);
     };
     initialPracticeCategories.forEach(addCat);
-    fallbackDefaults.forEach(addCat);
     setPracticeCatalog(Array.from(map.values()));
   }, [examCatalog]);
 

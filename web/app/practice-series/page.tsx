@@ -678,15 +678,11 @@ export default function PracticeSeriesPage() {
 
   const deletedCategoryIds = getDeletedCategoryIds();
 
-  // Filter ONLY Practice Series Categories from DB-backed examCatalog.
-  // These are the canonical source of truth — visible to ALL users on ALL devices.
+  // Filter ONLY admin-created Practice Series Categories from DB-backed examCatalog.
   const catalogPracticeCategories = examCatalog.filter(c =>
     ((c as any).isPracticeSeries ||
-    c.id.includes('practice') ||
-    c.id.includes('series') ||
-    c.name.toLowerCase().includes('practice') ||
-    c.name.toLowerCase().includes('sectional') ||
-    c.name.toLowerCase().includes('series')) &&
+    c.id.includes('_practice') ||
+    c.name.toLowerCase().includes('practice')) &&
     !deletedCategoryIds.includes(c.id)
   );
 
@@ -701,14 +697,8 @@ export default function PracticeSeriesPage() {
     combinedCategoriesMap.set(c.id, c);
   };
 
-  // Priority order:
-  // 1. DB-backed catalog categories (from examCatalog — visible to ALL users)
-  // 2. Local session additions (from localStorage — admin's device only, for in-session UX)
-  // 3. Built-in defaults as final fallback
-  // DB categories go first so they are never silently blocked by stale localStorage data.
+  // Show ONLY admin-created categories from DB (examCatalog).
   catalogPracticeCategories.forEach(addCategoryIfUnique);
-  customPracticeCategories.forEach(addCategoryIfUnique);
-  DEFAULT_PRACTICE_CATALOG.forEach(addCategoryIfUnique);
 
   const practiceCatalog = Array.from(combinedCategoriesMap.values());
 
