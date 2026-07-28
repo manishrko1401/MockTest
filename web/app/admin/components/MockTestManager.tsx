@@ -120,8 +120,16 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
   const [filterSubCategory, setFilterSubCategory] = useState('');
   const [filterSubSubCategory, setFilterSubSubCategory] = useState('');
 
+  const testSeriesCatalog = React.useMemo(() => {
+    return (examCatalog || []).filter((cat: any) =>
+      !cat.isPracticeSeries &&
+      !cat.id.includes('_practice') &&
+      !cat.name.toLowerCase().includes('practice series')
+    );
+  }, [examCatalog]);
+
   const filteredMocks: { cat: any; sub: any; subsub: any; test: any; }[] = [];
-  examCatalog
+  testSeriesCatalog
     .filter((cat: any) => !filterCategory || cat.id === filterCategory)
     .forEach((cat: any) => {
       cat.subCategories
@@ -226,7 +234,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
                   >
                     <option value="">-- Select --</option>
-                    {examCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                    {testSeriesCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -239,7 +247,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-50"
                   >
                     <option value="">-- Select --</option>
-                    {examCatalog.find((c: any) => c.id === newMockCategoryParent)?.subCategories.map((sub: any) => <option key={sub.id} value={sub.id}>{sub.name}</option>) || null}
+                    {testSeriesCatalog.find((c: any) => c.id === newMockCategoryParent)?.subCategories.map((sub: any) => <option key={sub.id} value={sub.id}>{sub.name}</option>) || null}
                   </select>
                 </div>
                 <div>

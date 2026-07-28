@@ -210,7 +210,15 @@ const formatSubCategoryName = (name: string) => {
   return cleanName || name;
 };
 
-  const popularCategories = examCatalog?.filter(c => c.isPopular) || [];
+  const testSeriesCatalog = React.useMemo(() => {
+    return (examCatalog || []).filter(c =>
+      !(c as any).isPracticeSeries &&
+      !c.id.includes('_practice') &&
+      !c.name.toLowerCase().includes('practice series')
+    );
+  }, [examCatalog]);
+
+  const popularCategories = testSeriesCatalog.filter(c => c.isPopular);
   const displayCategories = popularCategories.length > 0
     ? popularCategories.map(c => ({
         id: c.id,

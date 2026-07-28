@@ -145,9 +145,17 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   const [selSubId, setSelSubId] = React.useState<string>('');
   const [selSubSubId, setSelSubSubId] = React.useState<string>('');
 
+  const testSeriesCatalog = React.useMemo(() => {
+    return (examCatalog || []).filter((cat: any) =>
+      !cat.isPracticeSeries &&
+      !cat.id.includes('_practice') &&
+      !cat.name.toLowerCase().includes('practice series')
+    );
+  }, [examCatalog]);
+
   React.useEffect(() => {
     if (selectedUploadTestId) {
-      for (const cat of examCatalog) {
+      for (const cat of testSeriesCatalog) {
         for (const sub of cat.subCategories || []) {
           for (const subsub of sub.subSubCategories || []) {
             if ((subsub.tests || []).some((t: any) => t.id === selectedUploadTestId)) {
@@ -160,9 +168,9 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
         }
       }
     }
-  }, [selectedUploadTestId, examCatalog]);
+  }, [selectedUploadTestId, testSeriesCatalog]);
 
-  const currentCategory = examCatalog.find(c => c.id === selCatId);
+  const currentCategory = testSeriesCatalog.find(c => c.id === selCatId);
   const availableSubCategories = currentCategory ? currentCategory.subCategories || [] : [];
   
   const currentSubCategory = availableSubCategories.find((s: any) => s.id === selSubId);
@@ -172,7 +180,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   const availableTests = currentSubSubCategory ? currentSubSubCategory.tests || [] : [];
 
   const allTests: { id: string; title: string; categoryName: string; subCategoryName: string }[] = [];
-  examCatalog.forEach(cat => {
+  testSeriesCatalog.forEach(cat => {
     (cat.subCategories || []).forEach((sub: any) => {
       (sub.subSubCategories || []).forEach((subsub: any) => {
         (subsub.tests || []).forEach((t: any) => {
@@ -244,7 +252,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
               className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
             >
               <option value="">— Select Category —</option>
-              {examCatalog.map(cat => (
+              {testSeriesCatalog.map(cat => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>

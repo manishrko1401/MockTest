@@ -155,12 +155,21 @@ export default function MockTestsCatalog() {
     setMounted(true);
   }, []);
 
+  // Filter out Practice Series categories so they ONLY appear on the Practice Series page
+  const testSeriesCatalog = React.useMemo(() => {
+    return (examCatalog || []).filter(c =>
+      !(c as any).isPracticeSeries &&
+      !c.id.includes('_practice') &&
+      !c.name.toLowerCase().includes('practice series')
+    );
+  }, [examCatalog]);
+
   // Filter exam catalog by search query (checks category name or subcategory exam name)
   const getFilteredCatalogForSearch = React.useMemo(() => {
     const query = examSearchQuery.toLowerCase().trim();
-    if (!query) return examCatalog;
+    if (!query) return testSeriesCatalog;
     
-    return examCatalog.map(cat => {
+    return testSeriesCatalog.map(cat => {
       // If the category name matches, keep all its subcategories
       if (cat.name.toLowerCase().includes(query)) {
         return cat;
@@ -177,11 +186,11 @@ export default function MockTestsCatalog() {
       }
       return null;
     }).filter(Boolean) as TestCategory[];
-  }, [examCatalog, examSearchQuery]);
+  }, [testSeriesCatalog, examSearchQuery]);
 
   const currentCategoryObj = React.useMemo(() => {
-    return examCatalog.find(c => c.id === selectedCategory);
-  }, [examCatalog, selectedCategory]);
+    return testSeriesCatalog.find(c => c.id === selectedCategory);
+  }, [testSeriesCatalog, selectedCategory]);
 
   const getFilteredSubCategories = React.useMemo(() => {
     if (!currentCategoryObj) return [];
@@ -216,7 +225,7 @@ export default function MockTestsCatalog() {
       } else if (hash.startsWith('#exam-')) {
         const examId = hash.replace('#exam-', '');
         let foundCatId = null;
-        for (const cat of examCatalog) {
+        for (const cat of testSeriesCatalog) {
           if (cat.subCategories.some(sub => sub.id === examId)) {
             foundCatId = cat.id;
             break;
@@ -264,7 +273,7 @@ export default function MockTestsCatalog() {
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
-  }, [examCatalog]);
+  }, [testSeriesCatalog]);
 
   const handleCategorySelect = (catId: string) => {
     setSelectedCategory(catId);
@@ -495,8 +504,8 @@ export default function MockTestsCatalog() {
   if (isMounted && isMobile) {
     // Filter tests by search query
     const getMobileFilteredCatalog = () => {
-      if (!searchQuery) return examCatalog;
-      return examCatalog.map(cat => ({
+      if (!searchQuery) return testSeriesCatalog;
+      return testSeriesCatalog.map(cat => ({
         ...cat,
         subCategories: cat.subCategories.map(sub => ({
           ...sub,
