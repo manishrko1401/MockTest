@@ -1363,74 +1363,63 @@ export default function PracticeSeriesPage() {
               </div>
             </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 animate-in fade-in duration-300">
-                {filteredCatalog.map((cat) => {
-                  const isSsc = cat.id.includes('ssc');
-                  const isRailways = cat.id.includes('railway');
-                  const isBanking = cat.id.includes('bank');
-                  const isTeaching = cat.id.includes('teach');
-                  const isUgcNet = cat.id.includes('ugc') || cat.id.includes('state');
+            {/* Category Cards Grid — Matched 1-to-1 with Test Series Category Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 animate-in fade-in duration-300">
+              {filteredCatalog.map((cat) => {
+                const isSsc = cat.id.includes('ssc');
+                const isRailways = cat.id.includes('railway');
+                const isBanking = cat.id.includes('bank');
+                const isTeaching = cat.id.includes('teach');
+                const isUgcNet = cat.id.includes('ugc') || cat.id.includes('state');
 
-                  const accentColor = 
-                    isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
-                    isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
-                    isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
-                    isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
-                    isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
-                    'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
+                const topBorderColor = 
+                  isSsc ? 'border-t-orange-500 hover:border-orange-500/50' :
+                  isRailways ? 'border-t-indigo-500 hover:border-indigo-500/50' :
+                  isBanking ? 'border-t-emerald-500 hover:border-emerald-500/50' :
+                  isTeaching ? 'border-t-amber-500 hover:border-amber-500/50' :
+                  isUgcNet ? 'border-t-sky-500 hover:border-sky-500/50' :
+                  'border-t-pink-500 hover:border-pink-500/50';
 
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => handleCategorySelect(cat.id)}
-                      className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 p-3 sm:p-3.5 rounded-xl flex flex-col justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
-                    >
-                      <div className="flex-1 flex flex-col justify-between min-w-0 w-full">
-                        <div>
-                          {/* Logo/Icon Container */}
-                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-2 bg-slate-50 dark:bg-slate-900 transition duration-300">
-                            {(cat as any).logoUrl ? (
-                              <img
-                                src={(cat as any).logoUrl}
-                                alt={`${cat.name} logo`}
-                                className="w-full h-full object-contain p-1"
-                              />
-                            ) : (
-                              <div className="text-blue-500">
-                                {isSsc && <Award className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-orange-500" />}
-                                {isRailways && <TrendingUp className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-indigo-500" />}
-                                {isBanking && <Coins className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-emerald-500" />}
-                                {isTeaching && <BookOpen className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-amber-500" />}
-                                {isUgcNet && <GraduationCap className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-sky-500" />}
-                                {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-pink-500" />}
-                              </div>
-                            )}
-                          </div>
-
-                          <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
-                            {cat.name}
-                          </h4>
-
-                          {cat.description && (
-                            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mb-2 line-clamp-2 leading-relaxed">
-                              {cat.description}
-                            </p>
-                          )}
-
-                          <span className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
-                            {cat.countText || 'Practice Series'}
-                          </span>
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleCategorySelect(cat.id)}
+                    className={`relative overflow-hidden bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl flex flex-col items-center text-center transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer hover:scale-[1.03] active:scale-[0.98] group border-t-4 ${topBorderColor}`}
+                  >
+                    {/* Logo/Icon Container */}
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-3 bg-slate-50 dark:bg-slate-900 group-hover:scale-110 transition duration-300">
+                      {(cat as any).logoUrl ? (
+                        <img
+                          src={(cat as any).logoUrl}
+                          alt={`${cat.name} logo`}
+                          className="w-full h-full object-contain p-1"
+                        />
+                      ) : (
+                        <div className="text-blue-500">
+                          {isSsc && <Award className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />}
+                          {isRailways && <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />}
+                          {isBanking && <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />}
+                          {isTeaching && <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />}
+                          {isUgcNet && <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-sky-500" />}
+                          {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-pink-500" />}
                         </div>
+                      )}
+                    </div>
 
-                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[8.5px] uppercase tracking-wider mt-3 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 w-full">
-                          {viewerLang === 'hi' ? "अभ्यास शुरू करें" : "Start Practice"} <ChevronRight className="h-2.5 w-2.5 transition group-hover:translate-x-0.5" />
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+                    {/* Category Title */}
+                    <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-855 dark:text-slate-100 mb-2 leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {cat.name}
+                    </h4>
+
+                    {/* Test Count / Questions Badge */}
+                    <span className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border border-slate-100 dark:border-slate-800">
+                      {cat.countText || 'Practice Series'}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
+          </div>
           ) : selectedSectionIndex === null ? (
             /* SECTION SELECTION GRID VIEW FOR THE SELECTED CATEGORY */
             <div className="space-y-6 animate-fade-in">
