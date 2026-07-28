@@ -406,7 +406,9 @@ export default function PracticeSeriesPage() {
     }
   }, []);
 
-  const [customPracticeCategories, setCustomPracticeCategories] = useState<TestCategory[]>([]);
+  // customPracticeCategories is no longer needed — categories come from examCatalog (DB)
+  // just like the test series page. Keeping state as empty to avoid breaking any lingering references.
+  const [customPracticeCategories] = useState<TestCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'tests' | 'bookmarks'>('tests');
@@ -670,34 +672,14 @@ export default function PracticeSeriesPage() {
     }
   };
 
-  const loadCustomCategories = () => {
-    try {
-      const deletedIds = getDeletedCategoryIds();
-      const saved = localStorage.getItem('mth_practice_categories');
-      if (saved !== null) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setCustomPracticeCategories(parsed.filter((c: any) => !deletedIds.includes(c.id)));
-          return;
-        }
-      }
-      setCustomPracticeCategories([]);
-    } catch (e) {
-      setCustomPracticeCategories([]);
-    }
-  };
-
-  useEffect(() => {
-    loadCustomCategories();
-    window.addEventListener('practice_categories_updated', loadCustomCategories);
-    return () => {
-      window.removeEventListener('practice_categories_updated', loadCustomCategories);
-    };
-  }, []);
+  // Categories are sourced entirely from examCatalog (DB-backed), same as test series.
+  // No localStorage needed — examCatalog is populated from the DB on every page load
+  // via refreshCatalog() (called at component mount above).
 
   const deletedCategoryIds = getDeletedCategoryIds();
 
-  // Filter ONLY Practice Series Categories
+  // Filter ONLY Practice Series Categories from DB-backed examCatalog.
+  // These are the canonical source of truth — visible to ALL users on ALL devices.
   const catalogPracticeCategories = examCatalog.filter(c =>
     ((c as any).isPracticeSeries ||
     c.id.includes('practice') ||
@@ -719,14 +701,22 @@ export default function PracticeSeriesPage() {
     combinedCategoriesMap.set(c.id, c);
   };
 
-  // User created / catalog categories take priority
-  customPracticeCategories.forEach(addCategoryIfUnique);
+  // Priority order:
+  // 1. DB-backed catalog categories (from examCatalog — visible to ALL users)
+  // 2. Local session additions (from localStorage — admin's device only, for in-session UX)
+  // 3. Built-in defaults as final fallback
+  // DB categories go first so they are never silently blocked by stale localStorage data.
   catalogPracticeCategories.forEach(addCategoryIfUnique);
+  customPracticeCategories.forEach(addCategoryIfUnique);
   DEFAULT_PRACTICE_CATALOG.forEach(addCategoryIfUnique);
 
   const practiceCatalog = Array.from(combinedCategoriesMap.values());
 
-  // Function to load uploaded questions for selected domain
+  // Function to load uploaded questions for selected domain.
+  // Questions are fetched from DB/S3 first (same as test series), exactly like
+  // handleGetCustomQuestions on the server resolves questions for mock tests.
+  // localStorage is used only as a write-through cache AFTER a fresh DB fetch;
+  // it is never used to skip the DB call so all users always get the latest data.
   const loadDomainQuestions = async (catId: string) => {
     setLoadingQuestions(true);
     setCurrentQIndex(0);
@@ -734,65 +724,66 @@ export default function PracticeSeriesPage() {
 
     let loadedQuestions: any[] = [];
 
-    // 1. Check localStorage first
+    // 1. Always fetch from DB/S3 first (source of truth — same as test series)
     try {
-      const savedQs = localStorage.getItem(`mth_practice_questions_${catId}`);
-      if (savedQs) {
-        const parsed = JSON.parse(savedQs);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          loadedQuestions = parsed;
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'get-custom-questions',
+          testId: `${catId}_default`,
+          categoryId: catId
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Direct download from Tigris S3 URL to bypass Supabase egress completely
+        if (data.url) {
+          try {
+            const fetchS3 = await fetch(data.url);
+            if (fetchS3.ok) {
+              const parsedS3 = await fetchS3.json();
+              if (Array.isArray(parsedS3) && parsedS3.length > 0) {
+                loadedQuestions = parsedS3;
+              }
+            }
+          } catch (s3Err) {}
+        }
+
+        if (loadedQuestions.length === 0 && (data.customQuestions || data.questions)) {
+          let questionsArray = data.customQuestions || data.questions;
+          if (typeof questionsArray === 'string') {
+            const fetchRes = await fetch(questionsArray);
+            questionsArray = await fetchRes.json();
+          } else if (questionsArray && typeof questionsArray === 'object' && !Array.isArray(questionsArray)) {
+            if (Array.isArray((questionsArray as any).data)) {
+              questionsArray = (questionsArray as any).data;
+            } else if (Array.isArray((questionsArray as any).questions)) {
+              questionsArray = (questionsArray as any).questions;
+            }
+          }
+          if (Array.isArray(questionsArray) && questionsArray.length > 0) {
+            loadedQuestions = questionsArray;
+          }
+        }
+
+        // Write-through cache: store in localStorage for instant re-renders in this session
+        if (loadedQuestions.length > 0) {
+          try {
+            localStorage.setItem(`mth_practice_questions_${catId}`, JSON.stringify(loadedQuestions));
+          } catch (storageErr) {}
         }
       }
     } catch (e) {}
 
-    // 2. Fetch from backend API
+    // 2. DB fetch failed or offline: fall back to localStorage cache
     if (loadedQuestions.length === 0) {
       try {
-        const res = await fetch('/api/db', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'get-custom-questions',
-            testId: `${catId}_default`,
-            categoryId: catId
-          })
-        });
-        const data = await res.json();
-        if (data.success) {
-          // Direct download from Tigris S3 URL to bypass Supabase egress completely
-          if (data.url) {
-            try {
-              const fetchS3 = await fetch(data.url);
-              if (fetchS3.ok) {
-                const parsedS3 = await fetchS3.json();
-                if (Array.isArray(parsedS3) && parsedS3.length > 0) {
-                  loadedQuestions = parsedS3;
-                }
-              }
-            } catch (s3Err) {}
-          }
-
-          if (loadedQuestions.length === 0 && (data.customQuestions || data.questions)) {
-            let questionsArray = data.customQuestions || data.questions;
-            if (typeof questionsArray === 'string') {
-              const fetchRes = await fetch(questionsArray);
-              questionsArray = await fetchRes.json();
-            } else if (questionsArray && typeof questionsArray === 'object' && !Array.isArray(questionsArray)) {
-              if (Array.isArray((questionsArray as any).data)) {
-                questionsArray = (questionsArray as any).data;
-              } else if (Array.isArray((questionsArray as any).questions)) {
-                questionsArray = (questionsArray as any).questions;
-              }
-            }
-            if (Array.isArray(questionsArray) && questionsArray.length > 0) {
-              loadedQuestions = questionsArray;
-            }
-          }
-
-          if (loadedQuestions.length > 0) {
-            try {
-              localStorage.setItem(`mth_practice_questions_${catId}`, JSON.stringify(loadedQuestions));
-            } catch (storageErr) {}
+        const savedQs = localStorage.getItem(`mth_practice_questions_${catId}`);
+        if (savedQs) {
+          const parsed = JSON.parse(savedQs);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            loadedQuestions = parsed;
           }
         }
       } catch (e) {}

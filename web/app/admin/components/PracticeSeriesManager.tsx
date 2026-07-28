@@ -119,10 +119,11 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
     }
   ];
 
-  const defaultCatalog = initialPracticeCategories.length > 0 ? initialPracticeCategories : fallbackDefaults;
-
-  const [practiceCatalog, setPracticeCatalog] = useState<any[]>(defaultCatalog);
-
+  // -------------------------------------------------------------------------
+  // Derive practice catalog from DB-backed examCatalog (same as test series).
+  // This means the catalog is always the same for ALL users on ALL devices.
+  // localStorage is no longer the source of truth for categories.
+  // -------------------------------------------------------------------------
   const getDeletedCategoryIds = (): string[] => {
     try {
       const saved = localStorage.getItem('mth_deleted_practice_categories');
@@ -135,53 +136,51 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
   const saveDeletedCategoryIds = (ids: string[]) => {
     try {
       localStorage.setItem('mth_deleted_practice_categories', JSON.stringify(ids));
-      window.dispatchEvent(new Event('practice_categories_updated'));
     } catch (e) {}
   };
 
-  useEffect(() => {
-    const deletedIds = getDeletedCategoryIds();
-    let localCategories: any[] = [];
-    try {
-      const saved = localStorage.getItem('mth_practice_categories');
-      if (saved !== null) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          localCategories = parsed;
-        }
-      }
-    } catch (e) {}
-
-    const combinedMap = new Map<string, any>();
+  // Build catalog from examCatalog (DB), exactly like the test series page does.
+  const deletedIds = getDeletedCategoryIds();
+  const derivedCatalog = (() => {
+    const map = new Map<string, any>();
     const seenNames = new Set<string>();
-
     const addCat = (c: any) => {
       if (!c || deletedIds.includes(c.id)) return;
       const key = (c.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
       if (seenNames.has(key)) return;
       seenNames.add(key);
-      combinedMap.set(c.id, c);
+      map.set(c.id, c);
     };
+    // DB categories first (visible to ALL users)
+    initialPracticeCategories.forEach(addCat);
+    // Built-in defaults as fallback
+    fallbackDefaults.forEach(addCat);
+    return Array.from(map.values());
+  })();
 
-    localCategories.forEach(addCat);
+  const [practiceCatalog, setPracticeCatalog] = useState<any[]>(derivedCatalog);
+
+  // Re-sync whenever examCatalog updates (e.g. after refreshCatalog() returns)
+  useEffect(() => {
+    const ids = getDeletedCategoryIds();
+    const map = new Map<string, any>();
+    const seenNames = new Set<string>();
+    const addCat = (c: any) => {
+      if (!c || ids.includes(c.id)) return;
+      const key = (c.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (seenNames.has(key)) return;
+      seenNames.add(key);
+      map.set(c.id, c);
+    };
     initialPracticeCategories.forEach(addCat);
     fallbackDefaults.forEach(addCat);
-
-    setPracticeCatalog(Array.from(combinedMap.values()));
+    setPracticeCatalog(Array.from(map.values()));
   }, [examCatalog]);
-
-  const saveAndBroadcastCategories = (updatedCatalog: any[]) => {
-    setPracticeCatalog(updatedCatalog);
-    try {
-      localStorage.setItem('mth_practice_categories', JSON.stringify(updatedCatalog));
-      window.dispatchEvent(new Event('practice_categories_updated'));
-    } catch (e) {}
-  };
 
   // Active Category Object
   const activeCategoryObj = practiceCatalog.find(c => c.id === selectedCatId);
 
-  // Handle Creating New Practice Domain Category
+  // Handle Creating New Practice Domain Category — save to DB first (like test series)
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCatName.trim()) {
@@ -192,9 +191,6 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
     setCreatingCat(true);
     try {
       const generatedId = newCatName.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '_practice';
-      
-      const deletedIds = getDeletedCategoryIds().filter(id => id !== generatedId);
-      saveDeletedCategoryIds(deletedIds);
 
       const newCategory = {
         id: generatedId,
@@ -204,13 +200,8 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
         subCategories: []
       };
 
-      const updated = [...practiceCatalog.filter(c => c.id !== generatedId), newCategory];
-      saveAndBroadcastCategories(updated);
-      showToast(`Practice Category "${newCatName}" created successfully!`);
-      setNewCatName('');
-      setNewCatDesc('');
-
-      fetch('/api/db', {
+      // Save to DB first — this is the single source of truth (same as test series)
+      const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -218,15 +209,18 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
           category: newCategory,
           data: newCategory
         })
-      })
-      .then(res => res.json())
-      .then(resData => {
-        if (resData.success && onRefreshCatalog) {
-          onRefreshCatalog();
-        }
-      })
-      .catch(() => {});
+      });
+      const resData = await res.json();
+      if (!resData.success) {
+        showToast(`Failed to create category: ${resData.error || 'Unknown error'}`);
+        return;
+      }
 
+      showToast(`Practice Category "${newCatName}" created successfully!`);
+      setNewCatName('');
+      setNewCatDesc('');
+
+      // Refresh catalog from DB so the new category appears for ALL users
       if (onRefreshCatalog) onRefreshCatalog();
     } catch (err: any) {
       showToast(`Error creating practice category: ${err.message}`);
@@ -249,79 +243,75 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
     setEditCatDesc('');
   };
 
-  // Save Category Edits
+  // Save Category Edits — DB first (like test series)
   const handleSaveEditCategory = async (catId: string) => {
     if (!editCatName.trim()) {
       showToast("Practice Category Name cannot be empty!");
       return;
     }
 
-    const updated = practiceCatalog.map(cat => {
-      if (cat.id === catId) {
-        return {
-          ...cat,
-          name: editCatName,
-          description: editCatDesc
-        };
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'edit-category',
+          categoryId: catId,
+          updates: { name: editCatName, description: editCatDesc }
+        })
+      });
+      const resData = await res.json();
+      if (!resData.success) {
+        showToast(`Failed to update category: ${resData.error || 'Unknown error'}`);
+        return;
       }
-      return cat;
-    });
+    } catch (err: any) {
+      showToast(`Error updating category: ${err.message}`);
+      return;
+    }
 
-    saveAndBroadcastCategories(updated);
     showToast(`Practice Category updated successfully!`);
     setEditingCatId(null);
-
-    fetch('/api/db', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'edit-category',
-        categoryId: catId,
-        updates: {
-          name: editCatName,
-          description: editCatDesc
-        }
-      })
-    }).catch(() => {});
-
+    // Refresh catalog from DB so updated name is visible to ALL users
     if (onRefreshCatalog) onRefreshCatalog();
   };
 
-  // Delete Category
+  // Delete Category — DB first (like test series)
   const handleDeleteCategory = async (catId: string, catName: string) => {
     if (!window.confirm(`Are you sure you want to delete the category "${catName}"? This action cannot be undone.`)) {
       return;
     }
 
-    const deletedIds = getDeletedCategoryIds();
-    if (!deletedIds.includes(catId)) {
-      deletedIds.push(catId);
-      saveDeletedCategoryIds(deletedIds);
-    }
-
-    const updated = practiceCatalog.filter(cat => cat.id !== catId);
-    if (selectedCatId === catId) {
-      setSelectedCatId('');
-    }
-
-    saveAndBroadcastCategories(updated);
+    if (selectedCatId === catId) setSelectedCatId('');
 
     try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete-category',
+          categoryId: catId,
+          data: { categoryId: catId }
+        })
+      });
+      const resData = await res.json();
+      if (!resData.success) {
+        showToast(`Failed to delete category: ${resData.error || 'Unknown error'}`);
+        return;
+      }
+    } catch (err: any) {
+      showToast(`Error deleting category: ${err.message}`);
+      return;
+    }
+
+    // Clear local caches for this category
+    try {
       localStorage.removeItem(`mth_practice_questions_${catId}`);
+      localStorage.removeItem(`mth_practice_options_${catId}`);
     } catch (e) {}
 
     showToast(`Practice Category "${catName}" deleted successfully!`);
-
-    fetch('/api/db', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'delete-category',
-        categoryId: catId,
-        data: { categoryId: catId }
-      })
-    }).catch(() => {});
-
+    // Refresh catalog from DB so deletion is visible to ALL users
     if (onRefreshCatalog) onRefreshCatalog();
   };
 
@@ -441,7 +431,7 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
     setFormExplanationHi('');
   };
 
-  // Ingest & Save Parsed Questions to Target Practice Category
+  // Ingest & Save Parsed Questions — saves to DB/S3 (same as test series bulk importer)
   const handleIngestQuestions = async () => {
     if (!selectedCatId) {
       showToast("Please select a target Practice Domain Category first!");
@@ -473,12 +463,14 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
 
       const data = await res.json();
       if (data.success) {
+        // Invalidate the local question cache so the practice page always
+        // re-fetches fresh questions from DB/S3 on the next category select.
         try {
-          localStorage.setItem(`mth_practice_questions_${selectedCatId}`, JSON.stringify(parsedQuestions));
+          localStorage.removeItem(`mth_practice_questions_${selectedCatId}`);
           window.dispatchEvent(new Event('practice_questions_updated'));
         } catch (e) {}
 
-        showToast(`Successfully ingested ${parsedQuestions.length} practice questions into "${activeCategoryObj?.name || selectedCatId}"!`);
+        showToast(`Successfully uploaded ${parsedQuestions.length} questions to database for "${activeCategoryObj?.name || selectedCatId}" — visible to ALL users now!`);
         setParsedQuestions([]);
         setJsonInput('');
         if (onRefreshCatalog) onRefreshCatalog();
