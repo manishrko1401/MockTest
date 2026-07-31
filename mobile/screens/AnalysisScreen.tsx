@@ -828,12 +828,14 @@ export default function AnalysisScreen({
                          </View>
                        </View>
 
-                       {/* Question Title */}
-                       <HtmlText
-                         style={styles.questionText}
-                         isDark={isDark}
-                         html={lang === 'en' ? question.textEn || question.content?.en?.questionText : question.textHi || question.content?.hi?.questionText}
-                       />
+                       {/* Website-identical Question Text Box */}
+                       <View style={[styles.questionCardBox, isDark && styles.questionCardBoxDark]}>
+                         <HtmlText
+                           style={styles.questionText}
+                           isDark={isDark}
+                           html={lang === 'en' ? question.textEn || question.content?.en?.questionText : question.textHi || question.content?.hi?.questionText}
+                         />
+                       </View>
 
                        {/* Options List */}
                        <View style={styles.optionsContainer}>
@@ -1875,12 +1877,25 @@ const styles = StyleSheet.create({
   iconBtn: {
     padding: 2
   },
+  questionCardBox: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
+    width: '100%',
+  },
+  questionCardBoxDark: {
+    backgroundColor: '#1E293B',
+    borderColor: '#334155',
+  },
   questionText: {
     fontSize: 14,
     fontWeight: '700',
     color: '#1E293B',
     lineHeight: 20,
-    marginBottom: 16
+    marginBottom: 0,
   },
   optionsContainer: {
     gap: 8,
@@ -1892,13 +1907,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'flex-start'
   },
   optionIndexLabel: {
     fontSize: 13,
     fontWeight: '800',
     fontStyle: 'italic',
-    marginRight: 8
+    marginRight: 8,
+    marginTop: 1
   },
   optionText: {
     fontSize: 13,

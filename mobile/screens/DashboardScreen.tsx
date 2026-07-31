@@ -18,7 +18,9 @@ import {
   ActivityIndicator,
   PanResponder
 } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SpinningDotsLoader } from '../SpinningDotsLoader';
 import {
   Trophy,
   BookOpen,
@@ -54,7 +56,8 @@ import {
   Target,
   Pin,
   LogIn,
-  Star
+  Star,
+  Clock
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
@@ -62,6 +65,7 @@ import { ApiClient } from '../api';
 import { getCachedQuestions, saveQuestionsToCache } from '../cache';
 import { ThemeColors } from '../theme';
 import { HtmlText } from '../HtmlText';
+import { getLocalizedName } from '../utils/localization';
 
 interface DashboardScreenProps {
   currentUser: any;
@@ -80,6 +84,8 @@ interface DashboardScreenProps {
   setActiveTab: (tab: 'home' | 'tests' | 'notices' | 'bookmarks' | 'profile') => void;
   selectedCategoryId: string | null;
   setSelectedCategoryId: (id: string | null) => void;
+  selectedSubCategoryId?: string | null;
+  setSelectedSubCategoryId?: (id: string | null) => void;
   onToggleBookmark?: (testId: string, questionId: string) => void;
   language: 'en' | 'hi';
   onChangeLanguage: (lang: 'en' | 'hi') => void;
@@ -269,7 +275,7 @@ const CategoryIcon = ({ name, color, size }: { name: string; color: string; size
   }
 };
 
-const CategoryLogoImage = ({ logoUrl, fallbackIcon }: { logoUrl: string; fallbackIcon: React.ReactNode }) => {
+const CategoryLogoImage = React.memo(({ logoUrl, fallbackIcon }: { logoUrl: string; fallbackIcon: React.ReactNode }) => {
   const [hasError, setHasError] = useState(false);
   const cleanUrl = logoUrl ? logoUrl.trim() : '';
   const isSvg = cleanUrl ? cleanUrl.toLowerCase().split('?')[0].endsWith('.svg') : false;
@@ -279,14 +285,16 @@ const CategoryLogoImage = ({ logoUrl, fallbackIcon }: { logoUrl: string; fallbac
   }
 
   return (
-    <Image
+    <ExpoImage
       source={{ uri: cleanUrl }}
       style={{ width: '100%', height: '100%', borderRadius: 27 }}
-      resizeMode="cover"
+      contentFit="cover"
+      transition={100}
+      cachePolicy="memory-disk"
       onError={() => setHasError(true)}
     />
   );
-};
+});
 
 const SwipeableCategoryCard = ({
   children,
@@ -404,6 +412,8 @@ export default function DashboardScreen({
   setActiveTab,
   selectedCategoryId,
   setSelectedCategoryId,
+  selectedSubCategoryId = null,
+  setSelectedSubCategoryId = () => {},
   onToggleBookmark,
   language,
   onChangeLanguage,
@@ -685,7 +695,7 @@ export default function DashboardScreen({
   }, [activeTab, currentUser?.bookmarkedQuestions]);
 
   useEffect(() => {
-    if (showReferredFriends && currentUser?.referralCode) {
+    if ((showReferredFriends || activeTab === 'profile') && currentUser?.referralCode) {
       setLoadingReferred(true);
       ApiClient.getReferredFriends(currentUser.referralCode)
         .then((res: any) => {
@@ -700,7 +710,7 @@ export default function DashboardScreen({
           setLoadingReferred(false);
         });
     }
-  }, [showReferredFriends, currentUser?.referralCode]);
+  }, [showReferredFriends, activeTab, currentUser?.referralCode]);
 
   // Form and tab states
   const [activeNoticeTab, setActiveNoticeTab] = useState<'notice' | 'result' | 'admit_card' | 'answer_key'>('notice');
@@ -896,7 +906,7 @@ export default function DashboardScreen({
                             <Text style={[styles.announcementTypeBadge, isDark && { backgroundColor: ThemeColors.dark.bg, color: '#60A5FA', borderColor: '#334155' }]}>{ann.type || 'NEWS'}</Text>
                             <Text style={styles.announcementDateText}>{ann.date}</Text>
                           </View>
-                          <Text style={[styles.announcementTitleText, isDark && { color: ThemeColors.dark.text }]}>{ann.title}</Text>
+                          <Text style={[styles.announcementTitleText, isDark && { color: ThemeColors.dark.text }]}>{language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}</Text>
                           {ann.lastDate && (
                             <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#EF4444', marginTop: 4, marginBottom: 4 }}>
                               {language === 'en' ? 'Last Date: ' : 'अंतिम तिथि: '}{ann.lastDate}
@@ -1008,7 +1018,7 @@ export default function DashboardScreen({
                 </View>
                 
                 <Text style={[styles.liveUpdatesTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B', fontWeight: '900' }]} numberOfLines={2}>
-                  {activeNotice.title}
+                  {language === 'hi' && activeNotice.titleHi ? activeNotice.titleHi : activeNotice.title}
                 </Text>
                 {activeNotice.lastDate && (
                   <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#EF4444', marginTop: 4, marginBottom: 4 }}>
@@ -1346,7 +1356,7 @@ export default function DashboardScreen({
                         <View style={styles.categoryDetails}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                             <Text style={[styles.categoryTitle, { color: isDark ? '#F1F5F9' : '#1E293B' }]}>
-                              {category.name}
+                              {getLocalizedName(category, language)}
                             </Text>
                           </View>
                           <Text style={[styles.categoryMeta, { color: isDark ? '#64748B' : '#6B7280' }]}>
@@ -1379,6 +1389,151 @@ export default function DashboardScreen({
       return null;
     }
 
+    if (selectedSubCategoryId) {
+      const selectedSubCategory = (selectedCategory.subCategories || []).find((s: any) => s.id === selectedSubCategoryId);
+      if (!selectedSubCategory) {
+        setSelectedSubCategoryId(null);
+        return null;
+      }
+
+      const sortedSubSubList = [...(selectedSubCategory.subSubCategories || [])].sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+
+      return (
+        <View style={{ flex: 1 }}>
+          <TouchableOpacity
+            style={[styles.backToCatBtn, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border, borderBottomColor: ThemeColors.dark.border }]}
+            onPress={() => setSelectedSubCategoryId(null)}
+          >
+            <ChevronLeft color={isDark ? '#60A5FA' : '#2563EB'} size={16} />
+            <Text style={[styles.backToCatText, isDark && { color: '#60A5FA' }]}>
+              {language === 'hi' ? `${getLocalizedName(selectedCategory, language)} पर वापस जाएं` : `Back to ${getLocalizedName(selectedCategory, language)}`}
+            </Text>
+          </TouchableOpacity>
+
+          <FlatList
+            data={sortedSubSubList}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+            removeClippedSubviews={true}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={7}
+            getItemLayout={(data, index) => ({ length: 78, offset: 78 * index, index })}
+            renderItem={({ item: subSub }) => {
+              const catStyle = getCategoryStyle(selectedCategory.name, isDark);
+              const rawLogo = (subSub.logoUrl && subSub.logoUrl.trim()) || (selectedSubCategory.logoUrl && selectedSubCategory.logoUrl.trim()) || (selectedCategory.logoUrl && selectedCategory.logoUrl.trim()) || null;
+              const logoUri = rawLogo && rawLogo.trim() ? rawLogo.trim() : null;
+              return (
+                <TouchableOpacity
+                  style={[
+                    styles.seriesCard,
+                    {
+                      backgroundColor: catStyle.colors[0],
+                      borderColor: catStyle.borderColor,
+                      borderLeftWidth: 4,
+                      borderLeftColor: catStyle.iconColor,
+                    },
+                  ]}
+                  activeOpacity={0.82}
+                  onPress={() => onSelectTestSeries({
+                    ...subSub,
+                    categoryName: selectedCategory.name,
+                    subCategoryName: selectedSubCategory.name,
+                    logoUrl: logoUri,
+                  })}
+                >
+                  <View style={styles.seriesCardLeft}>
+                    {/* Icon / Logo circle */}
+                    <View style={{
+                      width: 44, height: 44, borderRadius: 22,
+                      backgroundColor: isDark ? '#111D38' : '#FFFFFF',
+                      borderColor: catStyle.borderColor, borderWidth: 1.5,
+                      justifyContent: 'center', alignItems: 'center', marginRight: 12,
+                      overflow: 'hidden',
+                      shadowColor: '#4F6EF7', shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.1, shadowRadius: 3, elevation: 1,
+                    }}>
+                      <CategoryLogoImage
+                        logoUrl={logoUri || ''}
+                        fallbackIcon={
+                          (selectedCategory.isPracticeSeries || selectedCategory.id?.includes('practice') || selectedCategory.name?.toLowerCase().includes('practice')) ? (
+                            <Trophy color="#F59E0B" size={22} />
+                          ) : (
+                            <BookOpen color={catStyle.iconColor} size={20} />
+                          )
+                        }
+                      />
+                    </View>
+                    <View style={styles.seriesDetails}>
+                      <Text style={[styles.seriesTitle, { color: isDark ? '#F1F5F9' : '#1E293B' }]}>
+                        {getLocalizedName(subSub, language)}
+                      </Text>
+                      <Text style={[styles.seriesMeta, { color: isDark ? '#64748B' : '#6B7280' }]}>
+                        {subSub.tests?.length || 0} Mock Tests
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={{
+                    width: 32, height: 32, borderRadius: 16,
+                    backgroundColor: isDark ? 'rgba(79,110,247,0.15)' : 'rgba(79,110,247,0.1)',
+                    justifyContent: 'center', alignItems: 'center',
+                  }}>
+                    <ChevronRight color={catStyle.iconColor} size={16} />
+                  </View>
+                </TouchableOpacity>
+              );
+            }}
+            ListEmptyComponent={
+              <View style={{
+                padding: 24,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: 20,
+                backgroundColor: isDark ? 'rgba(15,23,42,0.6)' : '#FFFFFF',
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: isDark ? '#1E293B' : '#E2E8F0',
+              }}>
+                <View style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 26,
+                  backgroundColor: isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 10,
+                }}>
+                  <Clock size={26} color="#3B82F6" />
+                </View>
+                <Text style={{
+                  fontSize: 14,
+                  fontWeight: '800',
+                  color: isDark ? '#F8FAFC' : '#0F172A',
+                  textAlign: 'center',
+                  marginBottom: 4,
+                }}>
+                  {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                </Text>
+                <Text style={{
+                  fontSize: 11,
+                  fontWeight: '500',
+                  color: isDark ? '#94A3B8' : '#64748B',
+                  textAlign: 'center',
+                  lineHeight: 16,
+                  maxWidth: 270,
+                }}>
+                  {language === 'hi'
+                    ? 'हमारी विशेषज्ञ टीम इस श्रेणी के लिए उच्च-गुणवत्ता वाले मॉक टेस्ट, अभ्यास सेट और विस्तृत समाधान तैयार कर रही है। जल्द ही नए टेस्ट उपलब्ध होंगे!'
+                    : 'Our expert team is actively creating high-quality mock tests, practice sets, and detailed solutions for this category. Stay tuned — new tests are uploaded regularly!'}
+                </Text>
+              </View>
+            }
+          />
+        </View>
+      );
+    }
+
     return (
       <View style={{ flex: 1 }}>
         <TouchableOpacity
@@ -1386,7 +1541,9 @@ export default function DashboardScreen({
           onPress={() => setSelectedCategoryId(null)}
         >
           <ChevronLeft color={isDark ? '#60A5FA' : '#2563EB'} size={16} />
-          <Text style={[styles.backToCatText, isDark && { color: '#60A5FA' }]}>Back to Exam Categories</Text>
+          <Text style={[styles.backToCatText, isDark && { color: '#60A5FA' }]}>
+            {language === 'hi' ? 'परीक्षा श्रेणियों पर वापस जाएं' : 'Back to Exam Categories'}
+          </Text>
         </TouchableOpacity>
 
         <FlatList
@@ -1395,13 +1552,21 @@ export default function DashboardScreen({
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           removeClippedSubviews={true}
-          initialNumToRender={8}
+          initialNumToRender={10}
           maxToRenderPerBatch={10}
-          windowSize={5}
+          windowSize={7}
+          getItemLayout={(data, index) => ({ length: 78, offset: 78 * index, index })}
           renderItem={({ item: sub }) => {
             const catStyle = getCategoryStyle(selectedCategory.name, isDark);
             const rawLogo = (sub.logoUrl && sub.logoUrl.trim()) || (selectedCategory.logoUrl && selectedCategory.logoUrl.trim()) || null;
             const logoUri = rawLogo && rawLogo.trim() ? rawLogo.trim() : null;
+
+            const subSubCount = sub.subSubCategories?.length || 0;
+            const directTestsCount = sub.tests?.length || 0;
+            const totalTestsCount = subSubCount > 0
+              ? (sub.subSubCategories || []).reduce((acc: number, ss: any) => acc + (ss.tests?.length || 0), 0)
+              : directTestsCount;
+
             return (
               <TouchableOpacity
                 style={[
@@ -1414,7 +1579,13 @@ export default function DashboardScreen({
                   },
                 ]}
                 activeOpacity={0.82}
-                onPress={() => onSelectTestSeries({ ...sub, categoryName: selectedCategory.name, logoUrl: logoUri })}
+                onPress={() => {
+                  if (sub.subSubCategories && sub.subSubCategories.length > 0) {
+                    setSelectedSubCategoryId(sub.id);
+                  } else {
+                    onSelectTestSeries({ ...sub, categoryName: selectedCategory.name, logoUrl: logoUri });
+                  }
+                }}
               >
                 <View style={styles.seriesCardLeft}>
                   {/* Icon / Logo circle */}
@@ -1427,23 +1598,25 @@ export default function DashboardScreen({
                     shadowColor: '#4F6EF7', shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: 0.1, shadowRadius: 3, elevation: 1,
                   }}>
-                    {logoUri ? (
-                      <Image
-                        source={{ uri: logoUri }}
-                        style={{ width: 44, height: 44, borderRadius: 22, resizeMode: 'cover' }}
-                      />
-                    ) : (selectedCategory.isPracticeSeries || selectedCategory.id?.includes('practice') || selectedCategory.name?.toLowerCase().includes('practice')) ? (
-                      <Trophy color="#F59E0B" size={22} />
-                    ) : (
-                      <BookOpen color={catStyle.iconColor} size={20} />
-                    )}
+                    <CategoryLogoImage
+                      logoUrl={logoUri || ''}
+                      fallbackIcon={
+                        (selectedCategory.isPracticeSeries || selectedCategory.id?.includes('practice') || selectedCategory.name?.toLowerCase().includes('practice')) ? (
+                          <Trophy color="#F59E0B" size={22} />
+                        ) : (
+                          <BookOpen color={catStyle.iconColor} size={20} />
+                        )
+                      }
+                    />
                   </View>
                   <View style={styles.seriesDetails}>
                     <Text style={[styles.seriesTitle, { color: isDark ? '#F1F5F9' : '#1E293B' }]}>
-                      {sub.name}
+                      {getLocalizedName(sub, language)}
                     </Text>
                     <Text style={[styles.seriesMeta, { color: isDark ? '#64748B' : '#6B7280' }]}>
-                      {sub.tests?.length || 0} Mock Tests
+                      {subSubCount > 0
+                        ? (language === 'hi' ? `${subSubCount} उप-श्रेणियां (${totalTestsCount} टेस्ट)` : `${subSubCount} Sub-categories (${totalTestsCount} Tests)`)
+                        : `${directTestsCount} Mock Tests`}
                     </Text>
                   </View>
                 </View>
@@ -1457,6 +1630,51 @@ export default function DashboardScreen({
               </TouchableOpacity>
             );
           }}
+          ListEmptyComponent={
+            <View style={{
+              padding: 24,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginTop: 20,
+              backgroundColor: isDark ? 'rgba(15,23,42,0.6)' : '#FFFFFF',
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: isDark ? '#1E293B' : '#E2E8F0',
+            }}>
+              <View style={{
+                width: 52,
+                height: 52,
+                borderRadius: 26,
+                backgroundColor: isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 10,
+              }}>
+                <Clock size={26} color="#3B82F6" />
+              </View>
+              <Text style={{
+                fontSize: 14,
+                fontWeight: '800',
+                color: isDark ? '#F8FAFC' : '#0F172A',
+                textAlign: 'center',
+                marginBottom: 4,
+              }}>
+                {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+              </Text>
+              <Text style={{
+                fontSize: 11,
+                fontWeight: '500',
+                color: isDark ? '#94A3B8' : '#64748B',
+                textAlign: 'center',
+                lineHeight: 16,
+                maxWidth: 270,
+              }}>
+                {language === 'hi'
+                  ? 'हमारी विशेषज्ञ टीम इस श्रेणी के लिए उच्च-गुणवत्ता वाले मॉक टेस्ट, अभ्यास सेट और विस्तृत समाधान तैयार कर रही है। जल्द ही नए टेस्ट उपलब्ध होंगे!'
+                  : 'Our expert team is actively creating high-quality mock tests, practice sets, and detailed solutions for this category. Stay tuned — new tests are uploaded regularly!'}
+              </Text>
+            </View>
+          }
         />
       </View>
     );
@@ -1527,7 +1745,7 @@ export default function DashboardScreen({
           </View>
           <Text style={[styles.noticeDate, { color: isDark ? '#94A3B8' : '#64748B' }]}>{notice.date}</Text>
         </View>
-        <Text style={[styles.noticeTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B' }]}>{notice.title}</Text>
+        <Text style={[styles.noticeTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B' }]}>{language === 'hi' && notice.titleHi ? notice.titleHi : notice.title}</Text>
         {notice.lastDate && (
           <Text style={[styles.noticeSubText, { color: '#EF4444', fontWeight: 'bold' }]}>Last Date: {notice.lastDate}</Text>
         )}
@@ -1721,10 +1939,7 @@ export default function DashboardScreen({
             borderRadius: 16, borderWidth: 1,
             borderColor: isDark ? '#334155' : '#E2E8F0'
           }}>
-            <ActivityIndicator size="large" color="#3B82F6" />
-            <Text style={{ marginTop: 12, fontSize: 12, fontWeight: '600', color: isDark ? '#64748B' : '#94A3B8' }}>
-              Loading bookmarked questions...
-            </Text>
+            <SpinningDotsLoader size={48} isDark={isDark} message="Loading bookmarked questions..." />
           </View>
         ) : (
           <View style={{ gap: 12 }}>
@@ -2294,14 +2509,14 @@ export default function DashboardScreen({
               </Text>
               <View style={styles.referredCountBadge}>
                 <Text style={styles.referredCountBadgeText}>
-                  {currentUser.referralsCount}
+                  {referredFriends.length || currentUser.referralsCount || 0}
                 </Text>
               </View>
             </View>
             <Text style={[styles.expandToggleText, isDark && { color: '#60A5FA' }]}>
               {showReferredFriends 
                 ? (language === 'en' ? '▲ Hide' : '▲ छिपाएं') 
-                : (language === 'en' ? '▼ Track' : '▼ ट्रैक करें')}
+                : (language === 'en' ? '▼ Track Progress' : '▼ प्रगति देखें')}
             </Text>
           </TouchableOpacity>
 
@@ -2316,44 +2531,159 @@ export default function DashboardScreen({
 
             if (referredFriends.length === 0) {
               return (
-                <View style={{ marginTop: 10, padding: 16, alignItems: 'center', backgroundColor: isDark ? '#0B1329' : '#F9FAFB', borderRadius: 8 }}>
-                  <Text style={{ fontSize: 11, color: isDark ? '#94A3B8' : '#6B7280', fontStyle: 'italic' }}>
-                    {language === 'en' ? "You haven't referred any candidates yet." : 'आपने अभी तक किसी भी उम्मीदवार को आमंत्रित नहीं किया है।'}
+                <View style={{ marginTop: 10, padding: 16, alignItems: 'center', backgroundColor: isDark ? '#0B1329' : '#F9FAFB', borderRadius: 8, borderWidth: 1, borderColor: isDark ? '#1E293B' : '#E5E7EB' }}>
+                  <Text style={{ fontSize: 11, color: isDark ? '#94A3B8' : '#6B7280', fontStyle: 'italic', textAlign: 'center' }}>
+                    {language === 'en' 
+                      ? "You haven't referred any candidates yet. Share your code to start earning coins!" 
+                      : 'आपने अभी तक किसी उम्मीदवार को आमंत्रित नहीं किया है। सिक्के अर्जित करना शुरू करने के लिए अपना कोड साझा करें!'}
                   </Text>
                 </View>
               );
             }
 
+            const totalInvited = referredFriends.length;
+            const completedCount = referredFriends.filter((f: any) => f.hasCompletedTest).length;
+            const pendingCount = Math.max(0, totalInvited - completedCount);
+            const totalCoinsEarned = completedCount * 20;
+            const overallPercent = totalInvited > 0 ? Math.round((completedCount / totalInvited) * 100) : 0;
+
             return (
-              <View style={{ marginTop: 10, gap: 10 }}>
+              <View style={{ marginTop: 10, gap: 12 }}>
+                {/* Summary Progress Box */}
+                <View style={{
+                  padding: 12,
+                  borderRadius: 10,
+                  backgroundColor: isDark ? '#0F172A' : '#FEF3C7',
+                  borderWidth: 1,
+                  borderColor: isDark ? '#334155' : '#FDE68A',
+                }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <Text style={{ fontSize: 11, fontWeight: 'bold', color: isDark ? '#F59E0B' : '#B45309' }}>
+                      {language === 'en' ? '📊 Overall Referral Progress' : '📊 समग्र रेफरल प्रगति'}
+                    </Text>
+                    <Text style={{ fontSize: 11, fontWeight: 'bold', color: isDark ? '#10B981' : '#047857' }}>
+                      +{totalCoinsEarned} {language === 'en' ? 'Coins Earned' : 'सिक्के अर्जित'}
+                    </Text>
+                  </View>
+
+                  {/* Summary Bar */}
+                  <View style={{ height: 8, backgroundColor: isDark ? '#1E293B' : '#FDE68A', borderRadius: 4, overflow: 'hidden', marginBottom: 8 }}>
+                    <View style={{ height: '100%', width: `${overallPercent}%`, backgroundColor: '#10B981', borderRadius: 4 }} />
+                  </View>
+
+                  {/* Summary Metrics Row */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', gap: 12 }}>
+                      <Text style={{ fontSize: 10, color: isDark ? '#94A3B8' : '#78350F' }}>
+                        {language === 'en' ? `Invited: ${totalInvited}` : `आमंत्रित: ${totalInvited}`}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: '#10B981', fontWeight: 'bold' }}>
+                        {language === 'en' ? `Completed: ${completedCount}` : `पूर्ण: ${completedCount}`}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: '#F59E0B', fontWeight: 'bold' }}>
+                        {language === 'en' ? `Pending: ${pendingCount}` : `लंबित: ${pendingCount}`}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 10, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#78350F' }}>
+                      {overallPercent}%
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Individual Friend Cards */}
                 {referredFriends.map((friend: any) => {
                   const hasCompletedTest = friend.hasCompletedTest;
-                  
+                  const friendInitials = (friend.name || 'C').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+                  const maskedEmail = friend.email ? friend.email.replace(/(.{2})(.*)(@.*)/, "$1***$3") : '';
+
                   return (
-                    <View key={friend.id} style={[styles.friendTrackerCard, isDark && { backgroundColor: '#0B1329', borderColor: ThemeColors.dark.border }]}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={[styles.friendNameText, isDark && { color: ThemeColors.dark.text }]}>{friend.name || 'Candidate'}</Text>
-                        <Text style={[styles.friendProgressText, { color: hasCompletedTest ? '#10B981' : '#F59E0B' }]}>
-                          {hasCompletedTest 
-                            ? (language === 'en' ? 'Completed! 20 Coins' : 'पूरा हुआ! 20 सिक्के') 
-                            : (language === 'en' ? 'Pending Test Attempt' : 'टेस्ट का प्रयास लंबित')}
-                        </Text>
-                      </View>
-                      
-                      {/* Progress Bar */}
-                      <View style={styles.friendProgressBarBg}>
-                        <View style={[styles.friendProgressBarFill, { width: hasCompletedTest ? '100%' : '50%', backgroundColor: hasCompletedTest ? '#10B981' : '#FBBF24' }]} />
+                    <View 
+                      key={friend.id} 
+                      style={[
+                        styles.friendTrackerCard, 
+                        isDark 
+                          ? { backgroundColor: '#0B1329', borderColor: hasCompletedTest ? '#059669' : ThemeColors.dark.border } 
+                          : { backgroundColor: '#F9FAFB', borderColor: hasCompletedTest ? '#A7F3D0' : '#E5E7EB' }
+                      ]}
+                    >
+                      {/* Top Row: User Avatar & Name & Status */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                          <View style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 14,
+                            backgroundColor: hasCompletedTest ? '#10B981' : '#3B82F6',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                          }}>
+                            <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 'bold' }}>{friendInitials}</Text>
+                          </View>
+
+                          <View style={{ flex: 1 }}>
+                            <Text style={[styles.friendNameText, isDark && { color: ThemeColors.dark.text }]} numberOfLines={1}>
+                              {friend.name || 'Candidate'}
+                            </Text>
+                            {maskedEmail ? (
+                              <Text style={{ fontSize: 9, color: isDark ? '#94A3B8' : '#6B7280' }}>
+                                {maskedEmail} {friend.candidateCode ? `• ${friend.candidateCode}` : ''}
+                              </Text>
+                            ) : null}
+                          </View>
+                        </View>
+
+                        {/* Status Badge */}
+                        <View style={{
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                          borderRadius: 12,
+                          backgroundColor: hasCompletedTest ? (isDark ? '#064E3B' : '#D1FAE5') : (isDark ? '#451A03' : '#FEF3C7'),
+                          borderWidth: 1,
+                          borderColor: hasCompletedTest ? '#10B981' : '#F59E0B',
+                        }}>
+                          <Text style={{
+                            fontSize: 9,
+                            fontWeight: 'bold',
+                            color: hasCompletedTest ? (isDark ? '#6EE7B7' : '#065F46') : (isDark ? '#FDE68A' : '#92400E'),
+                          }}>
+                            {hasCompletedTest 
+                              ? (language === 'en' ? '✓ 100% Completed (+20 Coins)' : '✓ 100% पूरा हुआ (+20 सिक्के)') 
+                              : (language === 'en' ? '⌛ 50% Registered (Pending Test)' : '⌛ 50% पंजीकृत (टेस्ट लंबित)')}
+                          </Text>
+                        </View>
                       </View>
 
-                      {/* Steps detail */}
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-                        <Text style={styles.stepDetailLabel}>{language === 'en' ? '✓ Registered' : '✓ पंजीकृत'}</Text>
-                        <Text style={[styles.stepDetailLabel, { color: hasCompletedTest ? '#10B981' : '#6B7280' }]}>
+                      {/* Progress Bar */}
+                      <View style={styles.friendProgressBarBg}>
+                        <View 
+                          style={[
+                            styles.friendProgressBarFill, 
+                            { 
+                              width: hasCompletedTest ? '100%' : '50%', 
+                              backgroundColor: hasCompletedTest ? '#10B981' : '#F59E0B' 
+                            }
+                          ]} 
+                        />
+                      </View>
+
+                      {/* Milestone Step Details */}
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+                        <Text style={[styles.stepDetailLabel, { color: '#10B981' }]}>
+                          {language === 'en' ? '✓ Step 1: Registered (50%)' : '✓ चरण 1: पंजीकृत (50%)'}
+                        </Text>
+                        <Text style={[styles.stepDetailLabel, { color: hasCompletedTest ? '#10B981' : (isDark ? '#94A3B8' : '#6B7280') }]}>
                           {hasCompletedTest 
-                            ? (language === 'en' ? '✓ Test Completed' : '✓ टेस्ट पूरा हुआ') 
-                            : (language === 'en' ? '⌛ Attempting test...' : '⌛ टेस्ट का प्रयास कर रहे हैं...')}
+                            ? (language === 'en' ? '✓ Step 2: Test Done (+20 Coins)' : '✓ चरण 2: टेस्ट पूरा (+20 सिक्के)') 
+                            : (language === 'en' ? '⌛ Step 2: Awaiting CBT Test' : '⌛ चरण 2: टेस्ट का प्रयास लंबित')}
                         </Text>
                       </View>
+
+                      {/* Registration Date Footer */}
+                      {friend.registeredDate ? (
+                        <Text style={{ fontSize: 8, color: isDark ? '#64748B' : '#9CA3AF', marginTop: 4, fontStyle: 'italic' }}>
+                          {language === 'en' ? `Joined: ${friend.registeredDate}` : `शामिल हुए: ${friend.registeredDate}`}
+                        </Text>
+                      ) : null}
                     </View>
                   );
                 })}

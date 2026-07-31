@@ -13,6 +13,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Updates from 'expo-updates';
 import { ApiClient, onSessionInvalidated } from './api';
+import { SpinningDotsLoader } from './SpinningDotsLoader';
 import NetInfo from '@react-native-community/netinfo';
 import { getCachedCatalog, saveCatalogToCache, clearAllCache, getLastSyncTimestamp, setLastSyncTimestamp, mergeCatalogDelta, invalidateQuestionsCache, getCachedUser, saveUserToCache, getCachedQuestions, saveQuestionsToCache } from './cache';
 import AuthScreen from './screens/AuthScreen';
@@ -49,7 +50,13 @@ export default function App() {
   const [activeTestId, setActiveTestId] = useState<string>('');
   const [dashboardTab, setDashboardTab] = useState<'home' | 'tests' | 'notices' | 'bookmarks' | 'profile'>('home');
   const [dashboardCategoryId, setDashboardCategoryId] = useState<string | null>(null);
+  const [dashboardSubCategoryId, setDashboardSubCategoryId] = useState<string | null>(null);
   const [unreadSupportCount, setUnreadSupportCount] = useState<number>(0);
+
+  const handleSetDashboardCategoryId = (id: string | null) => {
+    setDashboardCategoryId(id);
+    setDashboardSubCategoryId(null);
+  };
 
   // Helper to prefetch questions for completed/ongoing test sessions so they load instantly offline
   const prefetchCompletedTests = async (user: any) => {
@@ -350,12 +357,21 @@ export default function App() {
         return true;
       }
 
+      if (viewMode === 'analysis') {
+        setViewMode(previousViewMode || 'dashboard');
+        return true;
+      }
+
       if (viewMode === 'support_chat') {
         setViewMode('dashboard');
         return true;
       }
 
       if (viewMode === 'dashboard') {
+        if (dashboardSubCategoryId !== null) {
+          setDashboardSubCategoryId(null);
+          return true;
+        }
         if (dashboardCategoryId !== null) {
           setDashboardCategoryId(null);
           return true;
@@ -376,7 +392,7 @@ export default function App() {
     );
 
     return () => backHandler.remove();
-  }, [viewMode, previousViewMode, dashboardCategoryId, dashboardTab, currentUser]);
+  }, [viewMode, previousViewMode, dashboardCategoryId, dashboardSubCategoryId, dashboardTab, currentUser]);
 
   // 1b. Listen to notification taps/clicks to route the user
   useEffect(() => {
@@ -642,6 +658,9 @@ export default function App() {
     await clearAllCache();
     ApiClient.setApiSession(null, null);
     setCurrentUser(null);
+    setDashboardCategoryId(null);
+    setDashboardSubCategoryId(null);
+    setDashboardTab('home');
     setViewMode('auth');
     setLoading(false);
   };
@@ -702,7 +721,7 @@ export default function App() {
 
           {/* Premium custom loading animation indicator */}
           <View style={styles.spinnerContainer}>
-            <ActivityIndicator size="large" color="#2563EB" />
+            <SpinningDotsLoader size={54} isDark={isDark} />
           </View>
 
           <Text style={[styles.loadingStatusText, isDark ? { color: '#64748B' } : { color: '#9CA3AF' }]}>
@@ -750,7 +769,9 @@ export default function App() {
             activeTab={dashboardTab}
             setActiveTab={setDashboardTab}
             selectedCategoryId={dashboardCategoryId}
-            setSelectedCategoryId={setDashboardCategoryId}
+            setSelectedCategoryId={handleSetDashboardCategoryId}
+            selectedSubCategoryId={dashboardSubCategoryId}
+            setSelectedSubCategoryId={setDashboardSubCategoryId}
             onToggleBookmark={handleToggleBookmark}
             language={language}
             onChangeLanguage={async (lang) => {

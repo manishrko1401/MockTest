@@ -411,6 +411,7 @@ export default function AdminAnalytics() {
 
   // Notices states
   const [noticeTitle, setNoticeTitle] = useState('');
+  const [noticeTitleHi, setNoticeTitleHi] = useState('');
   const [noticeType, setNoticeType] = useState('EXAM DATE');
   const [noticeCategory, setNoticeCategory] = useState<'notice' | 'result' | 'admit_card'>('notice');
   const [noticeDate, setNoticeDate] = useState(new Date().toISOString().split('T')[0]);
@@ -420,6 +421,7 @@ export default function AdminAnalytics() {
 
   // Announcements states
   const [announcementTitle, setAnnouncementTitle] = useState('');
+  const [announcementTitleHi, setAnnouncementTitleHi] = useState('');
   const [announcementType, setAnnouncementType] = useState('NEWS');
   const [announcementDate, setAnnouncementDate] = useState(new Date().toISOString().split('T')[0]);
   const [announcementUrl, setAnnouncementUrl] = useState('');
@@ -430,6 +432,7 @@ export default function AdminAnalytics() {
   const [testiName, setTestiName] = useState('');
   const [testiExam, setTestiExam] = useState('');
   const [testiQuote, setTestiQuote] = useState('');
+  const [testiQuoteHi, setTestiQuoteHi] = useState('');
   const [testiInitials, setTestiInitials] = useState('');
   const [testiGradient, setTestiGradient] = useState('from-blue-600 to-cyan-500');
   const [testiPhotoUrl, setTestiPhotoUrl] = useState('');
@@ -532,15 +535,18 @@ export default function AdminAnalytics() {
 
   // Category management form states
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryNameHi, setNewCategoryNameHi] = useState('');
   const [newCategoryLogoUrl, setNewCategoryLogoUrl] = useState('');
   const [newCategoryIsPopular, setNewCategoryIsPopular] = useState(false);
   const [newCategoryDescription, setNewCategoryDescription] = useState('');
   const [newCategoryCountText, setNewCategoryCountText] = useState('');
   const [newSubCategoryParent, setNewSubCategoryParent] = useState('');
   const [newSubCategoryName, setNewSubCategoryName] = useState('');
+  const [newSubCategoryNameHi, setNewSubCategoryNameHi] = useState('');
   const [newSubSubCategoryParentCategory, setNewSubSubCategoryParentCategory] = useState('');
   const [newSubSubCategoryParentSubCategory, setNewSubSubCategoryParentSubCategory] = useState('');
   const [newSubSubCategoryName, setNewSubSubCategoryName] = useState('');
+  const [newSubSubCategoryNameHi, setNewSubSubCategoryNameHi] = useState('');
 
   // Category/subcategory/mock edit states
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
@@ -1230,12 +1236,14 @@ export default function AdminAnalytics() {
       testiExam.trim(),
       testiGradient,
       initialsVal,
-      testiPhotoUrl || undefined
+      testiPhotoUrl || undefined,
+      testiQuoteHi.trim() || undefined
     );
 
     setTestiName('');
     setTestiExam('');
     setTestiQuote('');
+    setTestiQuoteHi('');
     setTestiInitials('');
     setTestiGradient('from-blue-600 to-cyan-500');
     setTestiPhotoUrl('');
@@ -2905,8 +2913,9 @@ export default function AdminAnalytics() {
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (!noticeTitle.trim()) return;
-                      addNotice(noticeTitle, noticeType, noticeCategory, noticeDate, noticeUrl, noticeLastDate);
+                      addNotice(noticeTitle, noticeType, noticeCategory, noticeDate, noticeUrl, noticeLastDate, undefined, noticeTitleHi.trim() || undefined);
                       setNoticeTitle('');
+                      setNoticeTitleHi('');
                       setNoticeUrl('');
                       setNoticeLastDate('');
                       setIsCreateNoticeOpen(false);
@@ -3004,16 +3013,28 @@ export default function AdminAnalytics() {
                         </div>
                       </div>
 
-                      <div>
-                        <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Update Heading Title</label>
-                        <textarea
-                          required
-                          value={noticeTitle}
-                          onChange={(e) => setNoticeTitle(e.target.value)}
-                          placeholder="Type notice title description..."
-                          rows={3}
-                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Update Heading Title (English)</label>
+                          <textarea
+                            required
+                            value={noticeTitle}
+                            onChange={(e) => setNoticeTitle(e.target.value)}
+                            placeholder="Type notice title description in English..."
+                            rows={3}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Update Heading Title (Hindi)</label>
+                          <textarea
+                            value={noticeTitleHi}
+                            onChange={(e) => setNoticeTitleHi(e.target.value)}
+                            placeholder="टाइटल हिन्दी में दर्ज करें (वैकल्पिक)..."
+                            rows={3}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
+                          />
+                        </div>
                       </div>
 
                       <div className="flex justify-end pt-3">
@@ -3175,9 +3196,11 @@ export default function AdminAnalytics() {
                           newCategoryLogoUrl.trim() || undefined,
                           newCategoryIsPopular,
                           newCategoryDescription.trim(),
-                          newCategoryCountText.trim()
+                          newCategoryCountText.trim(),
+                          newCategoryNameHi.trim() || undefined
                         );
                         setNewCategoryName('');
+                        setNewCategoryNameHi('');
                         setNewCategoryLogoUrl('');
                         setNewCategoryIsPopular(false);
                         setNewCategoryDescription('');
@@ -3187,18 +3210,32 @@ export default function AdminAnalytics() {
                       }}
                       className="space-y-4"
                     >
-                      <div>
-                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
-                          Category Name
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={newCategoryName}
-                          onChange={(e) => setNewCategoryName(e.target.value)}
-                          placeholder="e.g. UPSC Exams, SSC Exams"
-                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            Category Name (English)
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            placeholder="e.g. UPSC Exams, SSC Exams"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            Category Name (Hindi)
+                          </label>
+                          <input
+                            type="text"
+                            value={newCategoryNameHi}
+                            onChange={(e) => setNewCategoryNameHi(e.target.value)}
+                            placeholder="e.g. यूपीएससी परीक्षा, एसएससी परीक्षा"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
                       </div>
                       <div>
                         <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
@@ -3565,14 +3602,15 @@ export default function AdminAnalytics() {
                           alert('Please select a parent category and enter a name.');
                           return;
                         }
-                        addSubCategory(newSubCategoryParent, newSubCategoryName.trim());
+                        addSubCategory(newSubCategoryParent, newSubCategoryName.trim(), newSubCategoryNameHi.trim() || undefined);
                         setNewSubCategoryName('');
+                        setNewSubCategoryNameHi('');
                         setIsCreateSubCategoryOpen(false);
                         showToast('Subcategory created successfully!');
                       }}
                       className="space-y-4"
                     >
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                             Parent Category
@@ -3592,7 +3630,7 @@ export default function AdminAnalytics() {
                         
                         <div>
                           <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-                            Sub Category Name
+                            Sub Category Name (English)
                           </label>
                           <input
                             type="text"
@@ -3600,6 +3638,19 @@ export default function AdminAnalytics() {
                             value={newSubCategoryName}
                             onChange={(e) => setNewSubCategoryName(e.target.value)}
                             placeholder="e.g. SSC CGL, IBPS RRB PO"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            Sub Category Name (Hindi)
+                          </label>
+                          <input
+                            type="text"
+                            value={newSubCategoryNameHi}
+                            onChange={(e) => setNewSubCategoryNameHi(e.target.value)}
+                            placeholder="e.g. एसएससी सीजीएल, आईबीपीएस आरआरबी पीओ"
                             className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                           />
                         </div>
@@ -3783,14 +3834,15 @@ export default function AdminAnalytics() {
                           alert('Please select parent category, subcategory and enter a name.');
                           return;
                         }
-                        addSubSubCategory(newSubSubCategoryParentCategory, newSubSubCategoryParentSubCategory, newSubSubCategoryName.trim());
+                        addSubSubCategory(newSubSubCategoryParentCategory, newSubSubCategoryParentSubCategory, newSubSubCategoryName.trim(), newSubSubCategoryNameHi.trim() || undefined);
                         setNewSubSubCategoryName('');
+                        setNewSubSubCategoryNameHi('');
                         setIsCreateSubSubCategoryOpen(false);
                         showToast('Sub-subcategory created successfully!');
                       }}
                       className="space-y-4"
                     >
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                           <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
                             Parent Category
@@ -3831,14 +3883,27 @@ export default function AdminAnalytics() {
 
                         <div>
                           <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
-                            Sub-Sub Category Name
+                            Sub-Sub Category Name (English)
                           </label>
                           <input
                             type="text"
                             required
                             value={newSubSubCategoryName}
                             onChange={(e) => setNewSubSubCategoryName(e.target.value)}
-                            placeholder="e.g. Quantitative Aptitude, Reasoning"
+                            placeholder="e.g. Full Test, PYP"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            Sub-Sub Category Name (Hindi)
+                          </label>
+                          <input
+                            type="text"
+                            value={newSubSubCategoryNameHi}
+                            onChange={(e) => setNewSubSubCategoryNameHi(e.target.value)}
+                            placeholder="e.g. फुल मॉक टेस्ट, अध्याय-वार टेस्ट"
                             className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                           />
                         </div>
@@ -4483,8 +4548,9 @@ export default function AdminAnalytics() {
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (!announcementTitle.trim()) return;
-                      addNotice(announcementTitle, announcementType, 'announcement', announcementDate, announcementUrl, undefined, announcementImageUrl);
+                      addNotice(announcementTitle, announcementType, 'announcement', announcementDate, announcementUrl, undefined, announcementImageUrl, announcementTitleHi.trim() || undefined);
                       setAnnouncementTitle('');
+                      setAnnouncementTitleHi('');
                       setAnnouncementUrl('');
                       setAnnouncementImageUrl('');
                       setIsCreateAnnouncementOpen(false);
@@ -4569,16 +4635,28 @@ export default function AdminAnalytics() {
                         </p>
                       </div>
 
-                      <div>
-                        <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Content</label>
-                        <textarea
-                          required
-                          value={announcementTitle}
-                          onChange={(e) => setAnnouncementTitle(e.target.value)}
-                          placeholder="Type announcement description content..."
-                          rows={4}
-                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Content (English)</label>
+                          <textarea
+                            required
+                            value={announcementTitle}
+                            onChange={(e) => setAnnouncementTitle(e.target.value)}
+                            placeholder="Type announcement description content in English..."
+                            rows={4}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Content (Hindi)</label>
+                          <textarea
+                            value={announcementTitleHi}
+                            onChange={(e) => setAnnouncementTitleHi(e.target.value)}
+                            placeholder="घोषणा हिन्दी में दर्ज करें (वैकल्पिक)..."
+                            rows={4}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
+                          />
+                        </div>
                       </div>
 
                       <div className="flex justify-end pt-3">
@@ -4782,16 +4860,28 @@ export default function AdminAnalytics() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Topper Quote / Message Text</label>
-                    <textarea
-                      required
-                      value={testiQuote}
-                      onChange={(e) => setTestiQuote(e.target.value)}
-                      placeholder="e.g. Testbook Pass Pro mock sittings exactly models the live CBT screen. It was key to my success!"
-                      rows={3}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Topper Quote / Message Text (English)</label>
+                      <textarea
+                        required
+                        value={testiQuote}
+                        onChange={(e) => setTestiQuote(e.target.value)}
+                        placeholder="e.g. Testbook Pass Pro mock sittings exactly models the live CBT screen. It was key to my success!"
+                        rows={3}
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Topper Quote / Message Text (Hindi)</label>
+                      <textarea
+                        value={testiQuoteHi}
+                        onChange={(e) => setTestiQuoteHi(e.target.value)}
+                        placeholder="संदेश हिन्दी में दर्ज करें (वैकल्पिक)..."
+                        rows={3}
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
                   </div>
 
                   <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">

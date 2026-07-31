@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, Edit, FileText, CheckCircle2, AlertCircle, PlusCircle, X, Globe, Upload, FolderOpen } from 'lucide-react';
+import { Database, Edit, FileText, CheckCircle2, AlertCircle, PlusCircle, X, Globe, Upload, FolderOpen, Monitor, Smartphone, LayoutGrid, Wifi, Battery, ArrowLeft, Check, Sparkles, BookOpen } from 'lucide-react';
 
 function decodeHtml(text: string): string {
   if (!text) return "";
@@ -16,6 +16,32 @@ function decodeHtml(text: string): string {
     decoded = temp;
   }
   return decoded;
+}
+
+function stripHtmlToPlainText(html: string): string {
+  if (!html) return "";
+  let text = String(html);
+  for (let i = 0; i < 3; i++) {
+    const temp = text
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ');
+    if (temp === text) break;
+    text = temp;
+  }
+  text = text
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<\/tr>/gi, '\n')
+    .replace(/<\/h[1-6]>/gi, '\n\n');
+  text = text.replace(/<[^>]*>/g, '');
+  text = text.replace(/\n{3,}/g, '\n\n');
+  return text.trim();
 }
 
 interface BulkQuestionImporterProps {
@@ -39,6 +65,10 @@ interface BulkQuestionImporterProps {
   setCustomSectionName: (val: string) => void;
   selectedSection: string;
   setSelectedSection: (val: string) => void;
+  formPassageEn?: string;
+  setFormPassageEn?: (val: string) => void;
+  formPassageHi?: string;
+  setFormPassageHi?: (val: string) => void;
   formTextEn: string;
   setFormTextEn: (val: string) => void;
   formTextHi: string;
@@ -101,6 +131,10 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   setCustomSectionName,
   selectedSection,
   setSelectedSection,
+  formPassageEn = '',
+  setFormPassageEn = () => {},
+  formPassageHi = '',
+  setFormPassageHi = () => {},
   formTextEn,
   setFormTextEn,
   formTextHi,
@@ -144,6 +178,45 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   const [selCatId, setSelCatId] = React.useState<string>('');
   const [selSubId, setSelSubId] = React.useState<string>('');
   const [selSubSubId, setSelSubSubId] = React.useState<string>('');
+  const [previewLayoutMode, setPreviewLayoutMode] = React.useState<'both' | 'web' | 'mobile'>('both');
+
+  const loadQuestionIntoForm = (index: number) => {
+    const q = parsedQuestions[index] || formQuestionsList[index];
+    if (!q) return;
+    setEditingQuestionIndex(index);
+    setFormPassageEn(stripHtmlToPlainText(q.passageEn || q.passage?.en || ''));
+    setFormPassageHi(stripHtmlToPlainText(q.passageHi || q.passage?.hi || ''));
+    setFormTextEn(stripHtmlToPlainText(q.textEn || q.questionText?.en || ''));
+    setFormTextHi(stripHtmlToPlainText(q.textHi || q.questionText?.hi || ''));
+    setOpt1En(stripHtmlToPlainText(q.optionsEn?.[0] || q.options?.[0]?.en || q.options?.[0] || ''));
+    setOpt1Hi(stripHtmlToPlainText(q.optionsHi?.[0] || q.options?.[0]?.hi || q.options?.[0] || ''));
+    setOpt2En(stripHtmlToPlainText(q.optionsEn?.[1] || q.options?.[1]?.en || q.options?.[1] || ''));
+    setOpt2Hi(stripHtmlToPlainText(q.optionsHi?.[1] || q.options?.[1]?.hi || q.options?.[1] || ''));
+    setOpt3En(stripHtmlToPlainText(q.optionsEn?.[2] || q.options?.[2]?.en || q.options?.[2] || ''));
+    setOpt3Hi(stripHtmlToPlainText(q.optionsHi?.[2] || q.options?.[2]?.hi || q.options?.[2] || ''));
+    setOpt4En(stripHtmlToPlainText(q.optionsEn?.[3] || q.options?.[3]?.en || q.options?.[3] || ''));
+    setOpt4Hi(stripHtmlToPlainText(q.optionsHi?.[3] || q.options?.[3]?.hi || q.options?.[3] || ''));
+    setOpt5En(stripHtmlToPlainText(q.optionsEn?.[4] || q.options?.[4]?.en || q.options?.[4] || ''));
+    setOpt5Hi(stripHtmlToPlainText(q.optionsHi?.[4] || q.options?.[4]?.hi || q.options?.[4] || ''));
+    setFormCorrectIndex(q.correctIndex ?? q.correctOption ?? 0);
+    setFormExplanationEn(stripHtmlToPlainText(q.explanationEn || q.explanation?.en || ''));
+    setFormExplanationHi(stripHtmlToPlainText(q.explanationHi || q.explanation?.hi || ''));
+    setSelectedSection(q.section || 'General Studies');
+    setImporterMode('form');
+    showToast(`Loaded Question #${index + 1} into Form Builder!`);
+  };
+
+  const resetFormForNewQuestion = () => {
+    setEditingQuestionIndex(null);
+    setFormPassageEn(''); setFormPassageHi('');
+    setFormTextEn(''); setFormTextHi('');
+    setOpt1En(''); setOpt1Hi(''); setOpt2En(''); setOpt2Hi('');
+    setOpt3En(''); setOpt3Hi(''); setOpt4En(''); setOpt4Hi('');
+    setOpt5En(''); setOpt5Hi('');
+    setFormCorrectIndex(0); setFormExplanationEn(''); setFormExplanationHi('');
+    setSelectedSection('General Studies'); setCustomSectionName('');
+    showToast("Form cleared for new question.");
+  };
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -475,186 +548,382 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
               </button>
             </form>
           ) : (
-            <form onSubmit={handleAddFormQuestion} className="space-y-5 text-xs">
-              {/* Section + Bilingual Question */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[10px] font-extrabold text-slate-550 dark:text-slate-400 uppercase tracking-wider mb-2">Section</label>
-                    <div className="flex gap-2">
-                      <select
-                        value={selectedSection}
-                        onChange={(e) => {
-                          setSelectedSection(e.target.value);
-                          if (e.target.value !== 'create_new') setCustomSectionName('');
-                        }}
-                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
+            <div className="space-y-6">
+              {/* Question Selection Bar inside Form Builder */}
+              <div className="bg-slate-100 dark:bg-slate-900/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Edit className="h-4 w-4 text-blue-500" />
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                      {editingQuestionIndex !== null ? `Editing Question #${editingQuestionIndex + 1}` : 'Form Builder — Add / Edit Question'}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    {parsedQuestions.length > 0 && (
+                      <div className="flex items-center gap-2 flex-1 sm:flex-none">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline">Select Question:</span>
+                        <select
+                          value={editingQuestionIndex !== null ? editingQuestionIndex : ''}
+                          onChange={(e) => {
+                            if (e.target.value === '') {
+                              resetFormForNewQuestion();
+                            } else {
+                              loadQuestionIntoForm(Number(e.target.value));
+                            }
+                          }}
+                          className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer flex-1 sm:flex-none max-w-xs"
+                        >
+                          <option value="">+ Add New Blank Question</option>
+                          {parsedQuestions.map((q: any, idx: number) => (
+                            <option key={idx} value={idx}>
+                              Q{idx + 1}: {q.section ? `[${q.section}] ` : ''}{(q.textEn || q.textHi || 'Question').substring(0, 40)}...
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {editingQuestionIndex !== null && (
+                      <button
+                        type="button"
+                        onClick={resetFormForNewQuestion}
+                        className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-xs font-bold hover:bg-blue-100 transition cursor-pointer"
                       >
-                        {getAvailableSections().map((sec) => (
-                          <option key={sec} value={sec}>{sec}</option>
-                        ))}
-                        <option value="create_new">+ New Section...</option>
-                      </select>
-                      {selectedSection === 'create_new' && (
-                        <input
-                          type="text"
-                          required
-                          value={customSectionName}
-                          onChange={(e) => setCustomSectionName(e.target.value)}
-                          placeholder="Section name..."
-                          className="flex-1 bg-slate-50 dark:bg-slate-900 border border-blue-450 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
-                        />
-                      )}
+                        + New Question
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Interactive Form */}
+              <form onSubmit={handleAddFormQuestion} className="space-y-5 text-xs">
+                {/* Section Selector */}
+                <div>
+                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Section Category</label>
+                  <div className="flex gap-2 max-w-md">
+                    <select
+                      value={selectedSection}
+                      onChange={(e) => {
+                        setSelectedSection(e.target.value);
+                        if (e.target.value !== 'create_new') setCustomSectionName('');
+                      }}
+                      className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
+                    >
+                      {getAvailableSections().map((sec) => (
+                        <option key={sec} value={sec}>{sec}</option>
+                      ))}
+                      <option value="create_new">+ New Section...</option>
+                    </select>
+                    {selectedSection === 'create_new' && (
+                      <input
+                        type="text"
+                        required
+                        value={customSectionName}
+                        onChange={(e) => setCustomSectionName(e.target.value)}
+                        placeholder="Section name..."
+                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-blue-500 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none font-bold"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Passage / Reading Comprehension Text (Bilingual) */}
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-extrabold text-[11px] uppercase tracking-wider">
+                    <BookOpen className="h-4 w-4" />
+                    <span>Passage / Comprehension Text (Optional for Reading Questions)</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Passage Text (English)</label>
+                      <textarea
+                        value={formPassageEn}
+                        onChange={(e) => setFormPassageEn(e.target.value)}
+                        placeholder="Enter reading passage in English (if applicable)..."
+                        rows={3}
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">गद्यांश / निर्देश पाठ (Hindi)</label>
+                      <textarea
+                        value={formPassageHi}
+                        onChange={(e) => setFormPassageHi(e.target.value)}
+                        placeholder="हिंदी में गद्यांश टाइप करें (यदि लागू हो)..."
+                        rows={3}
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none font-medium"
+                      />
                     </div>
                   </div>
+                </div>
+
+                {/* Bilingual Question Text */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-550 dark:text-slate-400 uppercase tracking-wider mb-2">Question Text (English)</label>
+                    <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Question Text (English) *</label>
                     <textarea
                       value={formTextEn}
                       onChange={(e) => setFormTextEn(e.target.value)}
                       placeholder="Type the question in English..."
                       rows={4}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-855 dark:text-slate-205 focus:outline-none focus:border-blue-500 resize-none font-medium"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none font-medium"
                     />
                   </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="h-[34px]" />
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-555 dark:text-slate-400 uppercase tracking-wider mb-2">प्रश्न पाठ (Hindi)</label>
+                    <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">प्रश्न पाठ (Hindi) *</label>
                     <textarea
                       value={formTextHi}
                       onChange={(e) => setFormTextHi(e.target.value)}
                       placeholder="हिंदी में प्रश्न टाइप करें..."
                       rows={4}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-855 dark:text-slate-205 focus:outline-none focus:border-blue-500 resize-none font-medium"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none font-medium"
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Options Grid */}
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Answer Options</h4>
-                  <span className="text-[9px] text-slate-450">(Options A-B required · Options C-E optional)</span>
+                {/* Options Grid */}
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Answer Options & Correct Key</h4>
+                    <span className="text-[9px] text-slate-400">(Click option letter A–E to set as Correct Answer)</span>
+                  </div>
+                  {[
+                    { en: opt1En, setEn: setOpt1En, hi: opt1Hi, setHi: setOpt1Hi, idx: 0, label: 'A', req: true },
+                    { en: opt2En, setEn: setOpt2En, hi: opt2Hi, setHi: setOpt2Hi, idx: 1, label: 'B', req: true },
+                    { en: opt3En, setEn: setOpt3En, hi: opt3Hi, setHi: setOpt3Hi, idx: 2, label: 'C', req: false },
+                    { en: opt4En, setEn: setOpt4En, hi: opt4Hi, setHi: setOpt4Hi, idx: 3, label: 'D', req: false },
+                    { en: opt5En, setEn: setOpt5En, hi: opt5Hi, setHi: setOpt5Hi, idx: 4, label: 'E', req: false },
+                  ].map(({ en, setEn, hi, setHi, idx, label, req }) => (
+                    <div key={label} className={`flex items-center gap-3 ${!req ? 'mt-1 pt-1' : ''}`}>
+                      <button
+                        type="button"
+                        onClick={() => setFormCorrectIndex(idx)}
+                        title={`Mark Option ${label} as correct answer`}
+                        className={`h-7 w-7 rounded-full border-2 flex items-center justify-center text-xs font-black shrink-0 cursor-pointer transition-all ${
+                          formCorrectIndex === idx
+                            ? 'bg-green-500 border-green-500 text-white shadow-md'
+                            : 'border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:border-green-400'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                      <input
+                        type="text"
+                        value={en}
+                        onChange={(e) => setEn(e.target.value)}
+                        placeholder={`Option ${label} (English)${!req ? ' — optional' : ''}`}
+                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+                      />
+                      <input
+                        type="text"
+                        value={hi}
+                        onChange={(e) => setHi(e.target.value)}
+                        placeholder={`विकल्प ${label} (Hindi)${!req ? ' — वैकल्पिक' : ''}`}
+                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+                      />
+                    </div>
+                  ))}
                 </div>
-                {[
-                  { en: opt1En, setEn: setOpt1En, hi: opt1Hi, setHi: setOpt1Hi, idx: 0, label: 'A', req: true },
-                  { en: opt2En, setEn: setOpt2En, hi: opt2Hi, setHi: setOpt2Hi, idx: 1, label: 'B', req: true },
-                  { en: opt3En, setEn: setOpt3En, hi: opt3Hi, setHi: setOpt3Hi, idx: 2, label: 'C', req: false },
-                  { en: opt4En, setEn: setOpt4En, hi: opt4Hi, setHi: setOpt4Hi, idx: 3, label: 'D', req: false },
-                  { en: opt5En, setEn: setOpt5En, hi: opt5Hi, setHi: setOpt5Hi, idx: 4, label: 'E', req: false },
-                ].map(({ en, setEn, hi, setHi, idx, label, req }) => (
-                  <div key={label} className={`flex items-center gap-3 ${!req ? 'mt-1 pt-1' : ''}`}>
+
+                {/* Detailed Solution & Explanation Section */}
+                <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-955/20 border border-amber-200/80 dark:border-amber-900/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-extrabold text-xs uppercase tracking-wider">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      <span>Detailed Solution & Explanation (Full View)</span>
+                    </div>
+                    <span className="text-[10px] text-amber-600/90 dark:text-amber-400/80 font-medium">Supports multiple paragraphs, step-by-step formulas & clean line breaks</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[10px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                          Explanation / Solution (English) <span className="text-slate-400 font-normal normal-case">— optional</span>
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-mono">({formExplanationEn.length} chars)</span>
+                      </div>
+                      <textarea
+                        value={formExplanationEn}
+                        onChange={(e) => setFormExplanationEn(e.target.value)}
+                        placeholder="Type detailed solution in English...\n\nExample:\nStep 1: Calculate total resistance R = R1 + R2 = 10 + 20 = 30 ohms.\nStep 2: Use Ohm's Law V = I * R => I = 120 / 30 = 4 Amperes."
+                        rows={8}
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-3.5 text-xs text-slate-850 dark:text-slate-150 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 resize-y leading-relaxed font-medium min-h-[160px]"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[10px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                          व्याख्या / पूरा हल (Hindi) <span className="text-slate-400 font-normal normal-case">— वैकल्पिक</span>
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-mono">({formExplanationHi.length} अक्षरों)</span>
+                      </div>
+                      <textarea
+                        value={formExplanationHi}
+                        onChange={(e) => setFormExplanationHi(e.target.value)}
+                        placeholder="हिंदी में विस्तृत व्याख्या और हल टाइप करें...\n\nउदाहरण:\nचरण 1: कुल प्रतिरोध R = 10 + 20 = 30 ओम।\nचरण 2: ओम का नियम V = I * R => I = 120 / 30 = 4 एम्पीयर।"
+                        rows={8}
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-3.5 text-xs text-slate-850 dark:text-slate-150 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 resize-y leading-relaxed font-medium min-h-[160px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3 items-center pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl text-xs active:scale-95 transition-all cursor-pointer shadow-md shadow-blue-500/20"
+                  >
+                    {editingQuestionIndex !== null ? (
+                      <><Edit className="h-4 w-4" /> Update Question #{editingQuestionIndex + 1}</>
+                    ) : (
+                      <><PlusCircle className="h-4 w-4" /> Add Question to List</>
+                    )}
+                  </button>
+                  {editingQuestionIndex !== null && (
                     <button
                       type="button"
-                      onClick={() => setFormCorrectIndex(idx)}
-                      title={`Mark Option ${label} as correct`}
-                      className={`h-7 w-7 rounded-full border-2 flex items-center justify-center text-xs font-black shrink-0 cursor-pointer transition-all ${
-                        formCorrectIndex === idx
-                          ? 'bg-green-500 border-green-500 text-white shadow-md'
-                          : 'border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:border-green-400'
-                      }`}
+                      onClick={resetFormForNewQuestion}
+                      className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 font-bold py-2.5 px-5 rounded-xl text-xs active:scale-95 transition-all cursor-pointer animate-fadeIn"
                     >
-                      {label}
+                      <X className="h-4 w-4" /> Cancel Edit
                     </button>
-                    <input
-                      type="text"
-                      value={en}
-                      onChange={(e) => setEn(e.target.value)}
-                      placeholder={`Option ${label} (English)${!req ? ' — optional' : ''}`}
-                      className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-855 dark:text-slate-205 focus:outline-none focus:border-blue-500 font-medium"
-                    />
-                    <input
-                      type="text"
-                      value={hi}
-                      onChange={(e) => setHi(e.target.value)}
-                      placeholder={`विकल्प ${label} (Hindi)${!req ? ' — वैकल्पिक' : ''}`}
-                      className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-855 dark:text-slate-205 focus:outline-none focus:border-blue-500 font-medium"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {/* Explanation */}
-              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <div>
-                  <label className="block text-[10px] font-extrabold text-slate-450 uppercase tracking-wider mb-2">Explanation (English) <span className="text-slate-450 font-normal normal-case">— optional</span></label>
-                  <textarea
-                    value={formExplanationEn}
-                    onChange={(e) => setFormExplanationEn(e.target.value)}
-                    placeholder="Add explanation in English..."
-                    rows={2}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-855 dark:text-slate-205 focus:outline-none focus:border-blue-500 resize-none font-medium"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-extrabold text-slate-450 uppercase tracking-wider mb-2">व्याख्या (Hindi) <span className="text-slate-450 font-normal normal-case">— वैकल्पिक</span></label>
-                  <textarea
-                    value={formExplanationHi}
-                    onChange={(e) => setFormExplanationHi(e.target.value)}
-                    placeholder="हिंदी में व्याख्या जोड़ें..."
-                    rows={2}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-855 dark:text-slate-205 focus:outline-none focus:border-blue-500 resize-none font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-3 items-center pt-3 border-t border-slate-100 dark:border-slate-800">
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl text-xs active:scale-95 transition-all cursor-pointer shadow-md shadow-blue-500/20"
-                >
-                  {editingQuestionIndex !== null ? (
-                    <><Edit className="h-4 w-4" /> Update Question #{editingQuestionIndex + 1}</>
-                  ) : (
-                    <><PlusCircle className="h-4 w-4" /> Add to List</>
                   )}
-                </button>
-                {editingQuestionIndex !== null && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingQuestionIndex(null);
-                      setFormTextEn(''); setFormTextHi('');
-                      setOpt1En(''); setOpt1Hi(''); setOpt2En(''); setOpt2Hi('');
-                      setOpt3En(''); setOpt3Hi(''); setOpt4En(''); setOpt4Hi('');
-                      setOpt5En(''); setOpt5Hi('');
-                      setFormCorrectIndex(0); setFormExplanationEn(''); setFormExplanationHi('');
-                      setSelectedSection('General Studies'); setCustomSectionName('');
-                      showToast("Edit cancelled.");
-                    }}
-                    className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 font-bold py-2.5 px-5 rounded-xl text-xs active:scale-95 transition-all cursor-pointer animate-fadeIn"
-                  >
-                    <X className="h-4 w-4" /> Cancel Edit
-                  </button>
-                )}
-              </div>
-            </form>
+                </div>
+              </form>
+
+              {/* Uploaded Questions List Drawer inside Form Builder */}
+              {parsedQuestions.length > 0 && (
+                <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Loaded Questions List ({parsedQuestions.length} Questions)
+                    </h4>
+                    <span className="text-[10px] text-slate-400 font-medium">Click "Edit in Form" to load any question into Form Builder</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-72 overflow-y-auto p-1">
+                    {parsedQuestions.map((q: any, idx: number) => {
+                      const isSelected = editingQuestionIndex === idx;
+                      return (
+                        <div
+                          key={idx}
+                          className={`p-3.5 rounded-xl border text-xs space-y-2 transition-all ${
+                            isSelected
+                              ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-400 dark:border-blue-700 ring-2 ring-blue-500/30'
+                              : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-extrabold text-[11px] text-blue-600 dark:text-blue-400">
+                              Q{idx + 1}. <span className="text-slate-500 dark:text-slate-400 font-bold">[{q.section || 'General'}]</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => loadQuestionIntoForm(idx)}
+                              className="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-[10px] hover:bg-blue-700 transition cursor-pointer flex items-center gap-1"
+                            >
+                              <Edit className="h-3 w-3" />
+                              <span>Edit in Form</span>
+                            </button>
+                          </div>
+                          {(q.passageEn || q.passageHi || q.passage?.en || q.passage?.hi) && (
+                            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 p-2 rounded-lg text-[10px] text-amber-800 dark:text-amber-300 font-medium line-clamp-2">
+                              📖 <strong>Passage:</strong> {q.passageEn || q.passageHi || q.passage?.en || q.passage?.hi}
+                            </div>
+                          )}
+                          <p className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-2 leading-relaxed">
+                            {q.textEn || q.textHi || q.questionText?.en || q.questionText?.hi || 'Question'}
+                          </p>
+                          <div className="flex flex-wrap gap-1 pt-1 text-[10px] text-slate-500">
+                            <span>{q.optionsEn?.length || q.options?.length || 4} Options</span>
+                            <span>•</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">Correct: Option {String.fromCharCode(65 + (q.correctIndex ?? q.correctOption ?? 0))}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
 
-      {/* STEP 4 — Review Questions */}
+      {/* STEP 4 — Review Questions (Website & Mobile App Previews) */}
       {parsedQuestions.length > 0 && (
-        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between gap-3 p-6 border-b border-slate-100 dark:border-slate-800">
+        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden font-sans">
+          {/* Header & Controls */}
+          <div className="flex flex-wrap items-center justify-between gap-4 p-6 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-3">
               <div className="h-7 w-7 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center shrink-0">4</div>
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wide">Review Questions ({parsedQuestions.length})</h3>
+              <div>
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wide">Review Questions ({parsedQuestions.length})</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">Inspect layout & solutions for both Website Desktop view and Mobile App screen</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Globe className="h-3.5 w-3.5 text-slate-400" />
-              <select
-                value={previewLanguage}
-                onChange={(e) => setPreviewLanguage(e.target.value as 'en' | 'hi')}
-                className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-350 focus:outline-none cursor-pointer"
-              >
-                <option value="en">English</option>
-                <option value="hi">हिंदी</option>
-              </select>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Preview Layout Mode Switcher */}
+              <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setPreviewLayoutMode('both')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    previewLayoutMode === 'both'
+                      ? 'bg-blue-600 text-white shadow-sm font-extrabold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                  title="Show both Website and Mobile App preview side-by-side"
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                  <span>Both Views</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewLayoutMode('web')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    previewLayoutMode === 'web'
+                      ? 'bg-blue-600 text-white shadow-sm font-extrabold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                  title="Show Website Desktop Preview only"
+                >
+                  <Monitor className="h-3.5 w-3.5" />
+                  <span>Website</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewLayoutMode('mobile')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    previewLayoutMode === 'mobile'
+                      ? 'bg-blue-600 text-white shadow-sm font-extrabold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                  title="Show Mobile App Frame Preview only"
+                >
+                  <Smartphone className="h-3.5 w-3.5" />
+                  <span>Mobile App</span>
+                </button>
+              </div>
+
+              {/* Language Switcher */}
+              <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                <Globe className="h-3.5 w-3.5 text-slate-400" />
+                <select
+                  value={previewLanguage}
+                  onChange={(e) => setPreviewLanguage(e.target.value as 'en' | 'hi')}
+                  className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+                >
+                  <option value="en">English</option>
+                  <option value="hi">हिंदी</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -662,7 +931,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
           {Object.keys(sectionColors).length > 0 && (
             <div className="px-6 pt-4 flex flex-wrap gap-2">
               {Object.entries(sectionColors).map(([sec, color]) => (
-                <span key={sec} className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-455">
+                <span key={sec} className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-400">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
                   {sec}
                 </span>
@@ -671,7 +940,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
           )}
 
           {/* Question Navigator Pills */}
-          <div className="px-6 py-4 flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+          <div className="px-6 py-4 flex flex-wrap gap-1.5 max-h-28 overflow-y-auto border-b border-slate-100 dark:border-slate-800">
             {parsedQuestions.map((q: any, idx: number) => {
               const sec = q.section || 'General';
               const color = sectionColors[sec] || '#6B7280';
@@ -682,7 +951,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                   type="button"
                   onClick={() => setPreviewQuestionIndex(idx)}
                   className={`h-7 w-7 text-[10px] font-black rounded-lg transition-all cursor-pointer ${
-                    isActive ? 'text-white scale-110 shadow-md' : 'text-white opacity-60 hover:opacity-90'
+                    isActive ? 'text-white scale-110 shadow-md ring-2 ring-blue-500' : 'text-white opacity-60 hover:opacity-90'
                   }`}
                   style={{ backgroundColor: color }}
                   title={`Q${idx + 1}: ${sec}`}
@@ -693,45 +962,38 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
             })}
           </div>
 
-          {/* Active Question Preview */}
+          {/* Active Question Preview Content */}
           {(() => {
             const activeQ = parsedQuestions[previewQuestionIndex];
             if (!activeQ) return null;
+            const qPassage = previewLanguage === 'en' 
+              ? (activeQ.passageEn || activeQ.passage?.en)
+              : (activeQ.passageHi || activeQ.passage?.hi || activeQ.passageEn || activeQ.passage?.en);
             const qText = previewLanguage === 'en' ? activeQ.textEn : activeQ.textHi;
             const qOptions = previewLanguage === 'en' ? activeQ.optionsEn : activeQ.optionsHi;
             const qExp = previewLanguage === 'en' ? activeQ.explanationEn : activeQ.explanationHi;
             const sec = activeQ.section || 'General Studies';
-            const secColor = sectionColors[sec] || '#6B7280';
+            const secColor = sectionColors[sec] || '#3B82F6';
 
-            return (
-              <div className="mx-6 mb-6 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-slate-800" style={{ backgroundColor: `${secColor}18` }}>
+            // Render Website Preview Component
+            const renderWebsitePreview = () => (
+              <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm flex-1">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-950/80">
                   <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: secColor }} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: secColor }}>{sec}</span>
+                    <Monitor className="h-4 w-4 text-blue-500" />
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">Website Desktop Preview</span>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${secColor}20`, color: secColor }}>
+                      {sec}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-slate-550 font-semibold">Q{previewQuestionIndex + 1} of {parsedQuestions.length}</span>
+                    <span className="text-[10px] text-slate-500 font-bold">Q{previewQuestionIndex + 1} of {parsedQuestions.length}</span>
                     <button
                       type="button"
-                      onClick={() => {
-                        const q = formQuestionsList[previewQuestionIndex];
-                        if (!q) return;
-                        setEditingQuestionIndex(previewQuestionIndex);
-                        setFormTextEn(q.textEn || ''); setFormTextHi(q.textHi || '');
-                        setOpt1En(q.optionsEn?.[0] || ''); setOpt1Hi(q.optionsHi?.[0] || '');
-                        setOpt2En(q.optionsEn?.[1] || ''); setOpt2Hi(q.optionsHi?.[1] || '');
-                        setOpt3En(q.optionsEn?.[2] || ''); setOpt3Hi(q.optionsHi?.[2] || '');
-                        setOpt4En(q.optionsEn?.[3] || ''); setOpt4Hi(q.optionsHi?.[3] || '');
-                        setOpt5En(q.optionsEn?.[4] || ''); setOpt5Hi(q.optionsHi?.[4] || '');
-                        setFormCorrectIndex(q.correctIndex ?? 0);
-                        setFormExplanationEn(q.explanationEn || ''); setFormExplanationHi(q.explanationHi || '');
-                        setSelectedSection(q.section || 'General Studies');
-                        setImporterMode('form');
-                      }}
-                      className="text-[10px] font-bold text-blue-600 dark:text-blue-450 hover:underline cursor-pointer"
+                      onClick={() => loadQuestionIntoForm(previewQuestionIndex)}
+                      className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800"
                     >
-                      Edit
+                      Edit in Form
                     </button>
                     <button
                       type="button"
@@ -751,33 +1013,180 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                     </button>
                   </div>
                 </div>
-                <div className="p-4 space-y-3">
-                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-205 leading-relaxed markup-content font-sans animate-fadeIn" dangerouslySetInnerHTML={{ __html: decodeHtml(qText) }} />
-                  <div className="space-y-1.5">
+
+                <div className="p-5 space-y-4">
+                  {/* Passage Text if present */}
+                  {qPassage && (
+                    <div className="bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 rounded-xl p-4 space-y-1">
+                      <div className="flex items-center gap-1.5 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                        <BookOpen className="h-3.5 w-3.5" />
+                        <span>Passage / Comprehension Text</span>
+                      </div>
+                      <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed markup-content font-medium" dangerouslySetInnerHTML={{ __html: decodeHtml(qPassage) }} />
+                    </div>
+                  )}
+
+                  {/* Question Text */}
+                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-relaxed markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(qText) }} />
+
+                  {/* Options */}
+                  <div className="space-y-2">
                     {(qOptions || []).map((opt: string, i: number) => (
                       <div
                         key={i}
-                        className={`flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium border ${
+                        className={`flex items-start gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium border transition-all ${
                           i === activeQ.correctIndex
-                            ? 'bg-green-50 dark:bg-green-955/30 border-green-200 dark:border-green-800 text-green-705 dark:text-green-405'
-                            : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400'
+                            ? 'bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-800 text-green-800 dark:text-green-300 font-bold shadow-sm'
+                            : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
                         }`}
                       >
-                        <span className={`font-black text-[10px] w-4 shrink-0 ${i === activeQ.correctIndex ? 'text-green-600 dark:text-green-400' : 'text-slate-450'}`}>
+                        <span className={`font-black text-[11px] w-5 shrink-0 ${i === activeQ.correctIndex ? 'text-green-600 dark:text-green-400' : 'text-slate-400'}`}>
                           {String.fromCharCode(65 + i)}
                         </span>
                         <div className="flex-1 markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(opt) }} />
-                        {i === activeQ.correctIndex && <CheckCircle2 className="h-3.5 w-3.5 text-green-500 ml-auto shrink-0" />}
+                        {i === activeQ.correctIndex && <CheckCircle2 className="h-4 w-4 text-green-500 ml-auto shrink-0" />}
                       </div>
                     ))}
                   </div>
+
+                  {/* Solution / Explanation */}
                   {qExp && (
-                    <div className="bg-amber-50 dark:bg-amber-955/20 border border-amber-200 dark:border-amber-900/50 rounded-lg p-3.5">
-                      <p className="text-[10px] font-extrabold text-amber-600 dark:text-amber-505 uppercase tracking-wider mb-1.5">Explanation</p>
-                      <div className="text-xs text-amber-705 dark:text-amber-305 leading-relaxed markup-content font-semibold" dangerouslySetInnerHTML={{ __html: decodeHtml(qExp) }} />
+                    <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl p-4 space-y-1.5">
+                      <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                        <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                        <span>Website Solution & Explanation</span>
+                      </div>
+                      <div className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed markup-content font-semibold" dangerouslySetInnerHTML={{ __html: decodeHtml(qExp) }} />
                     </div>
                   )}
                 </div>
+              </div>
+            );
+
+            // Render Mobile App Size Frame Preview Component
+            const renderMobileAppPreview = () => (
+              <div className="flex flex-col items-center justify-start">
+                {/* Mobile Smartphone Frame Container */}
+                <div className="w-full max-w-[360px] bg-slate-950 rounded-[40px] p-3 shadow-2xl border-[6px] border-slate-800/90 font-sans">
+                  <div className="bg-slate-900 rounded-[30px] overflow-hidden border border-slate-800 text-slate-100 flex flex-col min-h-[560px] shadow-inner">
+                    
+                    {/* Mobile Device Status Bar */}
+                    <div className="bg-slate-950 px-4 py-2 flex items-center justify-between text-[10px] text-slate-400 font-bold border-b border-slate-800/60">
+                      <span>09:41</span>
+                      {/* Notch */}
+                      <div className="w-16 h-3 bg-slate-900 rounded-full flex items-center justify-center">
+                        <div className="w-4 h-1 bg-slate-800 rounded-full" />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Wifi className="h-3 w-3 text-slate-400" />
+                        <Battery className="h-3.5 w-3.5 text-slate-400" />
+                      </div>
+                    </div>
+
+                    {/* Mobile App Header Bar */}
+                    <div className="bg-blue-600 dark:bg-blue-700 text-white px-3.5 py-2.5 flex items-center justify-between shadow-md">
+                      <div className="flex items-center gap-2">
+                        <ArrowLeft className="h-4 w-4" />
+                        <div>
+                          <p className="text-xs font-black leading-tight tracking-tight">Mock Test App</p>
+                          <p className="text-[9px] text-blue-200 font-semibold">{sec}</p>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-black bg-blue-800/90 px-2 py-0.5 rounded-full text-blue-100 border border-blue-400/30">
+                        {previewLanguage.toUpperCase()}
+                      </span>
+                    </div>
+
+                    {/* Mobile Screen Body Viewport */}
+                    <div className="p-3.5 flex-1 flex flex-col justify-between space-y-3 bg-slate-950 overflow-y-auto">
+                      <div className="space-y-3">
+                        
+                        {/* Question Meta Header */}
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-800/80 text-[10px] font-extrabold tracking-wider">
+                          <span className="text-blue-400 bg-blue-950/80 px-2 py-0.5 rounded border border-blue-800/50">
+                            Q.{previewQuestionIndex + 1} / {parsedQuestions.length}
+                          </span>
+                          <span className="text-emerald-400 font-black bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/50">
+                            +2.0  -0.5
+                          </span>
+                        </div>
+
+                        {/* Passage text if present */}
+                        {qPassage && (
+                          <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 space-y-1">
+                            <span className="text-[9px] font-black text-amber-400 uppercase tracking-wider block">📖 Passage Text:</span>
+                            <div className="text-[11px] text-slate-300 leading-relaxed markup-content line-clamp-4" dangerouslySetInnerHTML={{ __html: decodeHtml(qPassage) }} />
+                          </div>
+                        )}
+
+                        {/* Mobile Question Text */}
+                        <div 
+                          className="text-xs font-semibold text-slate-100 leading-relaxed markup-content"
+                          dangerouslySetInnerHTML={{ __html: decodeHtml(qText) }} 
+                        />
+
+                        {/* Mobile Touchable Option Cards */}
+                        <div className="space-y-2 pt-1">
+                          {(qOptions || []).map((opt: string, i: number) => {
+                            const isCorrect = i === activeQ.correctIndex;
+                            return (
+                              <div
+                                key={i}
+                                className={`flex items-start gap-2.5 p-2.5 rounded-xl text-xs font-medium transition-all border ${
+                                  isCorrect
+                                    ? 'bg-emerald-950/80 border-emerald-500 text-emerald-200 font-bold shadow-md shadow-emerald-950/40'
+                                    : 'bg-slate-900/90 border-slate-800/90 text-slate-300'
+                                }`}
+                              >
+                                <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
+                                  isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400'
+                                }`}>
+                                  {String.fromCharCode(65 + i)}
+                                </div>
+                                <div className="flex-1 text-[11px] leading-snug markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(opt) }} />
+                                {isCorrect && <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0 ml-auto" />}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Mobile App Solution / Explanation Box */}
+                        {qExp && (
+                          <div className="bg-amber-950/50 border border-amber-800/60 rounded-xl p-3 mt-3 space-y-1">
+                            <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-400 uppercase tracking-wider">
+                              <Sparkles className="h-3 w-3 text-amber-400" />
+                              <span>Mobile Solution Card</span>
+                            </div>
+                            <div 
+                              className="text-[11px] text-amber-200/95 leading-relaxed markup-content font-medium" 
+                              dangerouslySetInnerHTML={{ __html: decodeHtml(qExp) }} 
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Mobile Navigation Simulation */}
+                      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-extrabold text-slate-400">
+                        <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">‹ Prev</span>
+                        <span className="text-emerald-400 bg-emerald-950/90 border border-emerald-800/60 px-2 py-0.5 rounded">Solution Mode</span>
+                        <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Next ›</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+
+            return (
+              <div className="p-6">
+                {previewLayoutMode === 'both' && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    {renderWebsitePreview()}
+                    {renderMobileAppPreview()}
+                  </div>
+                )}
+                {previewLayoutMode === 'web' && renderWebsitePreview()}
+                {previewLayoutMode === 'mobile' && renderMobileAppPreview()}
               </div>
             );
           })()}

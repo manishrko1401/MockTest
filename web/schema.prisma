@@ -99,6 +99,7 @@ model UserSubscription {
 model Category {
   id                String             @id @default(uuid())
   name              String             @unique
+  nameHi            String?            @default("")
   logoUrl           String?
   exams             Exam[]
   createdAt         DateTime           @default(now())
@@ -117,6 +118,7 @@ model Exam {
   categoryId        String
   category          Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   name              String
+  nameHi            String?            @default("")
   testSeries        TestSeries[]
   createdAt         DateTime           @default(now())
   orderIndex        Int                @default(0)
@@ -130,6 +132,7 @@ model TestSeries {
   examId            String
   exam              Exam               @relation(fields: [examId], references: [id], onDelete: Cascade)
   title             String
+  titleHi           String?            @default("")
   description       String?
   mockTests         MockTest[]
   createdAt         DateTime           @default(now())
@@ -145,6 +148,7 @@ model MockTest {
   testSeriesId        String
   testSeries          TestSeries         @relation(fields: [testSeriesId], references: [id], onDelete: Cascade)
   title               String
+  titleHi             String?            @default("")
   description         String?
   durationMinutes     Int
   passingCutoff       Float              @default(0.0)
@@ -253,6 +257,7 @@ model QuestionResponseState {
 model Notice {
   id          String   @id @default(uuid())
   title       String
+  titleHi     String?  @default("")
   date        String
   publishDate String
   type        String

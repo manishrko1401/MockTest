@@ -7,6 +7,7 @@ import HomeSupportWidget from './components/HomeSupportWidget';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
+import { getLocalizedName } from './lib/examUtils';
 import { useIsMobile } from './useIsMobile';
 import VocabSection from './components/VocabSection';
 
@@ -211,27 +212,27 @@ const formatSubCategoryName = (name: string) => {
 };
 
   const testSeriesCatalog = React.useMemo(() => {
-    return examCatalog || [];
+    return [...(examCatalog || [])].sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   }, [examCatalog]);
 
-  const popularCategories = testSeriesCatalog.filter(c => c.isPopular);
-  const displayCategories = popularCategories.length > 0
-    ? popularCategories.map(c => ({
+  const displayCategories = React.useMemo(() => {
+    const adminCatalog = examCatalog || [];
+    // Show popular categories added by admin (isPopular === true)
+    const popularOnly = adminCatalog.filter((c: any) => c.isPopular === true);
+    const targetCatalog = popularOnly.length > 0 ? popularOnly : adminCatalog;
+
+    return [...targetCatalog]
+      .sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+      .map(c => ({
         id: c.id,
         name: c.name,
+        nameHi: c.nameHi,
         desc: c.description || '',
-        count: c.countText || '',
+        count: c.countText || (c.subCategories?.length ? `${c.subCategories.length} Exams` : '0 Exams'),
         logoUrl: c.logoUrl || null,
-        subCategories: c.subCategories || []
-      }))
-    : CATEGORIES.map(c => ({
-        id: c.id,
-        name: c.name,
-        desc: c.desc,
-        count: c.count,
-        logoUrl: null,
-        subCategories: EXAMS_BY_CATEGORY[c.id] || []
+        subCategories: [...(c.subCategories || [])].sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
       }));
+  }, [examCatalog]);
 
   const handleClaimPassPro = async () => {
     if (!currentUser) return;
@@ -268,6 +269,7 @@ const formatSubCategoryName = (name: string) => {
       exam: n.date,
       initials: n.lastDate || n.title.slice(0, 2).toUpperCase(),
       quote: n.type,
+      quoteHi: n.titleHi,
       gradient: n.url || 'from-blue-600 to-cyan-500',
       photoUrl: n.imageUrl
     }));
@@ -428,7 +430,7 @@ const formatSubCategoryName = (name: string) => {
               noticesList.map((notice) => (
                 <span key={notice.id} className="mx-4 hover:underline">
                   <Link href="/updates">
-                    {notice.title} ({notice.date})
+                    {(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title} ({notice.date})
                   </Link>
                   <span className="ml-4 text-blue-300">|</span>
                 </span>
@@ -572,7 +574,7 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           <section className="text-center pt-8 pb-1 space-y-4 relative z-10">
-            <span className="inline-flex items-center gap-1 bg-blue-105 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-black px-3 py-1 rounded-full text-[9px] uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1.5 bg-blue-105 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-black px-4 py-1.5 rounded-full text-xs sm:text-sm uppercase tracking-wider shadow-sm">
               {t.heroBadge}
             </span>
 
@@ -586,26 +588,6 @@ const formatSubCategoryName = (name: string) => {
             <p className="text-slate-655 dark:text-slate-400 text-xs leading-relaxed max-w-sm mx-auto font-semibold">
               {t.heroDesc}
             </p>
-
-            {/* Quick search exam */}
-            <div className="relative max-w-md w-full mx-auto pt-2">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                <Search className="h-4 w-4" />
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t.searchPlaceholder}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-24 py-3 text-[11px] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 shadow-sm"
-              />
-              <Link
-                href={`/mock-tests?q=${searchQuery}`}
-                className="absolute right-1.5 top-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-xl text-[9px] transition active:scale-95 shadow"
-              >
-                {t.searchBtn.split(' ')[0]}
-              </Link>
-            </div>
 
             {/* Test Series Button (Mobile Only) */}
             <div className="flex items-center justify-center gap-2.5 pt-2">
@@ -647,7 +629,7 @@ const formatSubCategoryName = (name: string) => {
 
             <div className="flex-1 flex flex-col justify-center min-h-[100px] z-10 text-left">
               <p className="text-slate-755 dark:text-slate-300 italic text-[11px] leading-relaxed mb-4 font-semibold">
-                "{activeTopper.quote}"
+                "{language === 'hi' && activeTopper.quoteHi ? activeTopper.quoteHi : activeTopper.quote}"
               </p>
               
               <div className="flex items-center gap-3">
@@ -720,7 +702,7 @@ const formatSubCategoryName = (name: string) => {
                           {cat.count}
                         </span>
                       </div>
-                      <h4 className="font-extrabold text-xs text-slate-900 dark:text-white mb-1 line-clamp-1">{cat.name}</h4>
+                      <h4 className="font-extrabold text-xs text-slate-900 dark:text-white mb-1 line-clamp-1">{getLocalizedName(cat, language)}</h4>
                       <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-tight font-semibold line-clamp-2">{cat.desc}</p>
                     </div>
 
@@ -824,11 +806,11 @@ const formatSubCategoryName = (name: string) => {
                           <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-normal">
                             {notice.url ? (
                               <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-0.5">
-                                {notice.title}
+                                {(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title}
                                 <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
                               </a>
                             ) : (
-                              notice.title
+                              (language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title
                             )}
                           </h5>
                           <p className="text-[8px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
@@ -1193,7 +1175,7 @@ const formatSubCategoryName = (name: string) => {
             noticesList.map((notice) => (
               <span key={notice.id} className="mx-6 hover:underline">
                 <Link href="/updates">
-                  {notice.title} ({notice.date})
+                  {(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title} ({notice.date})
                 </Link>
                 <span className="ml-6 text-blue-300">|</span>
               </span>
@@ -1261,7 +1243,7 @@ const formatSubCategoryName = (name: string) => {
 
         {/* Left Side: Pitch Title */}
         <div className="space-y-6">
-          <span className="inline-flex items-center gap-1.5 text-[10px] bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+          <span className="inline-flex items-center gap-2 text-xs md:text-sm lg:text-base bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-black px-4.5 py-2 rounded-full uppercase tracking-wider shadow-sm">
             {t.heroBadge}
           </span>
           
@@ -1273,25 +1255,7 @@ const formatSubCategoryName = (name: string) => {
             {t.heroDesc}
           </p>
 
-          {/* Quick search exam */}
-          <div className="relative max-w-md w-full pt-2">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-505">
-              <Search className="h-4 w-4" />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t.searchPlaceholder}
-              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl pl-11 pr-32 py-3 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 shadow-sm"
-            />
-            <Link
-              href={`/mock-tests?q=${searchQuery}`}
-              className="absolute right-2 top-4 bg-blue-600 hover:bg-blue-750 text-white font-bold py-1.5 px-4 rounded-xl text-[10px] transition active:scale-95 shadow-md cursor-pointer"
-            >
-              {t.searchBtn}
-            </Link>
-          </div>
+
 
         </div>
 
@@ -1331,7 +1295,7 @@ const formatSubCategoryName = (name: string) => {
             </div>
 
             <p className="text-slate-700 dark:text-slate-300 italic text-xs md:text-sm leading-relaxed mb-6 font-semibold">
-              "{activeTopper.quote}"
+              "{language === 'hi' && activeTopper.quoteHi ? activeTopper.quoteHi : activeTopper.quote}"
             </p>
             
             <div className="flex items-center gap-3">
@@ -1405,7 +1369,7 @@ const formatSubCategoryName = (name: string) => {
                           {cat.count}
                         </span>
                       </div>
-                      <h4 className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white mb-1.5">{cat.name}</h4>
+                      <h4 className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white mb-1.5">{getLocalizedName(cat, language)}</h4>
                       <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
                     </div>
 

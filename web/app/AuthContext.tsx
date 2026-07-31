@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 export interface MockTestItem {
   id: string;
   title: string;
+  titleHi?: string;
   questionsCount: number;
   durationMinutes: number;
   maxMarks: number;
@@ -23,12 +24,15 @@ export interface MockTestItem {
 export interface TestSubSubCategory {
   id: string;
   name: string;
+  nameHi?: string;
+  titleHi?: string;
   tests: MockTestItem[];
 }
 
 export interface TestSubCategory {
   id: string;
   name: string;
+  nameHi?: string;
   logoUrl?: string;
   subSubCategories: TestSubSubCategory[];
   tests: MockTestItem[];
@@ -37,6 +41,7 @@ export interface TestSubCategory {
 export interface TestCategory {
   id: string;
   name: string;
+  nameHi?: string;
   logoUrl?: string;
   isPopular?: boolean;
   isPracticeSeries?: boolean;
@@ -68,6 +73,7 @@ export interface MockTestRecord {
 export interface Notice {
   id: string;
   title: string;
+  titleHi?: string;
   date: string;
   publishDate: string; // YYYY-MM-DD
   type: string;
@@ -176,19 +182,19 @@ interface AuthContextType {
   ) => void;
   clearOngoingSession: (testId: string) => void;
   noticesList: Notice[];
-  addNotice: (title: string, type: string, category: 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial', date?: string, url?: string, lastDateInput?: string, imageUrl?: string) => void;
+  addNotice: (title: string, type: string, category: 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial', date?: string, url?: string, lastDateInput?: string, imageUrl?: string, titleHi?: string) => void;
   deleteNotice: (id: string) => void;
   language: 'en' | 'hi';
   setLanguage: (lang: 'en' | 'hi') => void;
   examCatalog: TestCategory[];
-  addCategory: (name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string) => void;
-  editCategory: (categoryId: string, name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string) => void;
+  addCategory: (name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string, nameHi?: string) => void;
+  editCategory: (categoryId: string, name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string, nameHi?: string) => void;
   deleteCategory: (categoryId: string) => void;
-  addSubCategory: (categoryId: string, name: string) => void;
-  editSubCategory: (categoryId: string, subCategoryId: string, name: string) => void;
+  addSubCategory: (categoryId: string, name: string, nameHi?: string) => void;
+  editSubCategory: (categoryId: string, subCategoryId: string, name: string, nameHi?: string) => void;
   deleteSubCategory: (categoryId: string, subCategoryId: string) => void;
-  addSubSubCategory: (categoryId: string, subCategoryId: string, name: string) => void;
-  editSubSubCategory: (categoryId: string, subCategoryId: string, subSubCategoryId: string, name: string) => void;
+  addSubSubCategory: (categoryId: string, subCategoryId: string, name: string, nameHi?: string) => void;
+  editSubSubCategory: (categoryId: string, subCategoryId: string, subSubCategoryId: string, name: string, nameHi?: string) => void;
   deleteSubSubCategory: (categoryId: string, subCategoryId: string, subSubCategoryId: string) => void;
   addMockTest: (categoryId: string, subCategoryId: string, subSubCategoryId: string, test: Omit<MockTestItem, 'id'>) => void;
   editMockTestTitle: (
@@ -985,7 +991,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     document.cookie = "tb_theme=" + nextTheme + ";path=/;max-age=31536000";
   };
 
-  const addNotice = (title: string, type: string, category: 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial', dateInput?: string, url?: string, lastDateInput?: string, imageUrl?: string) => {
+  const addNotice = (title: string, type: string, category: 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial', dateInput?: string, url?: string, lastDateInput?: string, imageUrl?: string, titleHi?: string) => {
     let dateStr = '';
     const publishDateRaw = dateInput || new Date().toISOString().split('T')[0];
 
@@ -1024,6 +1030,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     const newNotice: Notice = {
       id: newId,
       title,
+      titleHi: titleHi?.trim() || undefined,
       type: category === 'testimonial' ? type : type.toUpperCase(),
       category,
       date: dateStr,
@@ -1062,11 +1069,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }).catch(err => console.error("Delete notice error:", err));
   };
 
-  const addCategory = (name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string) => {
+  const addCategory = (name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string, nameHi?: string) => {
     const newId = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).substring(2, 6);
     const newCategory: TestCategory = {
       id: newId,
       name,
+      nameHi: nameHi ?? '',
       logoUrl,
       isPopular: isPopular ?? false,
       description: description ?? '',
@@ -1082,7 +1090,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'add-category',
-        data: { id: newId, name, logoUrl, isPopular, description, countText }
+        data: { id: newId, name, nameHi: nameHi ?? '', logoUrl, isPopular, description, countText }
       })
     }).catch(err => console.error("Add category error:", err));
   };
@@ -1102,8 +1110,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }).catch(err => console.error("Delete category error:", err));
   };
 
-  const editCategory = (categoryId: string, name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string) => {
-    const updated = examCatalog.map(c => c.id === categoryId ? { ...c, name, logoUrl, isPopular, description, countText } : c);
+  const editCategory = (categoryId: string, name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string, nameHi?: string) => {
+    const updated = examCatalog.map(c => c.id === categoryId ? { ...c, name, nameHi: nameHi !== undefined ? nameHi : c.nameHi, logoUrl, isPopular, description, countText } : c);
     setExamCatalog(updated);
 
     fetch('/api/db', {
@@ -1111,22 +1119,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'edit-category',
-        data: { categoryId, name, logoUrl, isPopular, description, countText }
+        data: { categoryId, name, nameHi, logoUrl, isPopular, description, countText }
       })
     }).catch(err => console.error("Edit category error:", err));
   };
 
-  const addSubCategory = (categoryId: string, name: string) => {
+  const addSubCategory = (categoryId: string, name: string, nameHi?: string) => {
     const newId = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).substring(2, 6);
     const defaultSubSubId = newId + '_series';
     const newSubSub: TestSubSubCategory = {
       id: defaultSubSubId,
       name: name + ' Series',
+      nameHi: (nameHi ? nameHi + ' सीरीज' : ''),
       tests: []
     };
     const newSub: TestSubCategory = {
       id: newId,
       name,
+      nameHi: nameHi ?? '',
       subSubCategories: [newSubSub],
       tests: []
     };
@@ -1146,7 +1156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'add-subcategory',
-        data: { id: newId, categoryId, name }
+        data: { id: newId, categoryId, name, nameHi: nameHi ?? '' }
       })
     }).catch(err => console.error("Add subcategory error:", err));
   };
@@ -1173,12 +1183,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }).catch(err => console.error("Delete subcategory error:", err));
   };
 
-  const editSubCategory = (categoryId: string, subCategoryId: string, name: string) => {
+  const editSubCategory = (categoryId: string, subCategoryId: string, name: string, nameHi?: string) => {
     const updated = examCatalog.map(c => {
       if (c.id === categoryId) {
         return {
           ...c,
-          subCategories: c.subCategories.map(s => s.id === subCategoryId ? { ...s, name } : s)
+          subCategories: c.subCategories.map(s => s.id === subCategoryId ? { ...s, name, nameHi: nameHi !== undefined ? nameHi : s.nameHi } : s)
         };
       }
       return c;
@@ -1190,16 +1200,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'edit-subcategory',
-        data: { subCategoryId, name }
+        data: { subCategoryId, name, nameHi }
       })
     }).catch(err => console.error("Edit subcategory error:", err));
   };
 
-  const addSubSubCategory = (categoryId: string, subCategoryId: string, name: string) => {
+  const addSubSubCategory = (categoryId: string, subCategoryId: string, name: string, nameHi?: string) => {
     const newId = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).substring(2, 6);
     const newSubSub: TestSubSubCategory = {
       id: newId,
       name,
+      nameHi: nameHi ?? '',
+      titleHi: nameHi ?? '',
       tests: []
     };
     const updated = examCatalog.map(c => {
@@ -1226,7 +1238,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'add-subsubcategory',
-        data: { id: newId, subCategoryId, name }
+        data: { id: newId, subCategoryId, name, nameHi: nameHi ?? '' }
       })
     }).catch(err => console.error("Add sub-subcategory error:", err));
   };
@@ -1261,7 +1273,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }).catch(err => console.error("Delete sub-subcategory error:", err));
   };
 
-  const editSubSubCategory = (categoryId: string, subCategoryId: string, subSubCategoryId: string, name: string) => {
+  const editSubSubCategory = (categoryId: string, subCategoryId: string, subSubCategoryId: string, name: string, nameHi?: string) => {
     const updated = examCatalog.map(c => {
       if (c.id === categoryId) {
         return {
@@ -1270,7 +1282,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
             if (s.id === subCategoryId) {
               return {
                 ...s,
-                subSubCategories: (s.subSubCategories || []).map(ss => ss.id === subSubCategoryId ? { ...ss, name } : ss)
+                subSubCategories: (s.subSubCategories || []).map(ss => ss.id === subSubCategoryId ? { ...ss, name, nameHi: nameHi !== undefined ? nameHi : ss.nameHi, titleHi: nameHi !== undefined ? nameHi : ss.titleHi } : ss)
               };
             }
             return s;
@@ -1286,7 +1298,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'edit-subsubcategory',
-        data: { subSubCategoryId, name }
+        data: { subSubCategoryId, name, nameHi }
       })
     }).catch(err => console.error("Edit sub-subcategory error:", err));
   };
@@ -1297,7 +1309,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       ...test,
       id: newId
     };
-    const updated = examCatalog.map(c => {
+    setExamCatalog(prevCatalog => prevCatalog.map(c => {
       if (c.id === categoryId) {
         return {
           ...c,
@@ -1322,8 +1334,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         };
       }
       return c;
-    });
-    setExamCatalog(updated);
+    }));
 
     fetch('/api/db', {
       method: 'POST',

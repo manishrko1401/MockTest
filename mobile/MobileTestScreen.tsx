@@ -22,6 +22,7 @@ import { Globe, AlignJustify } from 'lucide-react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { ApiClient, BASE_URL } from './api';
 import { getCachedQuestions, saveQuestionsToCache } from './cache';
+import { SpinningDotsLoader } from './SpinningDotsLoader';
 import { ThemeColors } from './theme';
 import { HtmlText, preloadImages } from './HtmlText';
 
@@ -201,23 +202,9 @@ export default function MobileTestScreen({
   const handleExamSubmitRef = useRef<(forced?: boolean) => void>(() => {});
   const questionsPagerRef = useRef<ScrollView>(null);
   const lastSectionIdxRef = useRef<number>(0);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        // Capture swipe gestures only when horizontal displacement exceeds 35 and vertical is minimal
-        return Math.abs(gestureState.dx) > 35 && Math.abs(gestureState.dy) < 15;
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        if (gestureState.dx < -55) {
-          handleSaveAndNextRef.current?.();
-        } else if (gestureState.dx > 55) {
-          handlePreviousQuestionRef.current?.();
-        }
-      },
-    })
-  ).current;
+  // Flag: true when the next scroll event was triggered by a button press (not user swipe).
+  // Prevents the useEffect scrollTo from firing for user-initiated swipes (avoids double-navigation).
+  const isProgrammaticScrollRef = useRef<boolean>(false);
 
   // Network connectivity tracking
   const isOnlineRef = useRef<boolean>(true);
@@ -606,11 +593,16 @@ export default function MobileTestScreen({
     const sectionChanged = lastSectionIdxRef.current !== currentSectionIdx;
     lastSectionIdxRef.current = currentSectionIdx;
 
-    // Use animated transition only when navigating questions within the same section
-    questionsPagerRef.current?.scrollTo({
-      x: currentQuestionIdx * SCREEN_WIDTH,
-      animated: !sectionChanged
-    });
+    if (isProgrammaticScrollRef.current || sectionChanged) {
+      // Only call scrollTo when triggered by a button press or section change.
+      // For user swipes, the pager has already moved — calling scrollTo again causes
+      // a double-snap / auto-swipe misbehavior.
+      isProgrammaticScrollRef.current = false;
+      questionsPagerRef.current?.scrollTo({
+        x: currentQuestionIdx * SCREEN_WIDTH,
+        animated: !sectionChanged,
+      });
+    }
   }, [currentQuestionIdx, currentSectionIdx]);
 
   // Timer Tick hook — uses refs to avoid stale closure bugs with sectional timing
@@ -645,6 +637,7 @@ export default function MobileTestScreen({
             const nextSecIdx = currentSecIdx + 1;
             if (nextSecIdx < allSections.length) {
               // Advance to next section: update section index, reset question, restart timer
+              isProgrammaticScrollRef.current = true;
               setCurrentSectionIdx(nextSecIdx);
               setCurrentQuestionIdx(0);
               const nextSec = allSections[nextSecIdx];
@@ -791,6 +784,7 @@ export default function MobileTestScreen({
         updatedResponses[nextQ.id].state = 2; // mark visited
       }
       nextQIdx = currentQuestionIdx + 1;
+      isProgrammaticScrollRef.current = true;
       setCurrentQuestionIdx(nextQIdx);
     } else {
       // End of section
@@ -803,6 +797,7 @@ export default function MobileTestScreen({
         }
         nextSecIdx = currentSectionIdx + 1;
         nextQIdx = 0;
+        isProgrammaticScrollRef.current = true;
         setCurrentSectionIdx(nextSecIdx);
         setCurrentQuestionIdx(nextQIdx);
       } else {
@@ -827,11 +822,13 @@ export default function MobileTestScreen({
 
   const handlePreviousQuestion = () => {
     if (currentQuestionIdx > 0) {
+      isProgrammaticScrollRef.current = true;
       setCurrentQuestionIdx(prev => prev - 1);
     } else if (!hasSectionalTiming && currentSectionIdx > 0) {
       // Only allow going back to previous section when sectional timing is NOT active
       const prevSecIdx = currentSectionIdx - 1;
       const prevSecQs = questions.filter(q => q.sectionId === sections[prevSecIdx].id);
+      isProgrammaticScrollRef.current = true;
       setCurrentSectionIdx(prevSecIdx);
       setCurrentQuestionIdx(prevSecQs.length - 1);
     }
@@ -853,6 +850,7 @@ export default function MobileTestScreen({
         return updated;
       });
 
+      isProgrammaticScrollRef.current = true;
       setCurrentSectionIdx(nextSecIdx);
       setCurrentQuestionIdx(0);
 
@@ -959,10 +957,12 @@ export default function MobileTestScreen({
         updatedResponses[nextQ.id].state = 2;
       }
       nextQIdx = currentQuestionIdx + 1;
+      isProgrammaticScrollRef.current = true;
       setCurrentQuestionIdx(nextQIdx);
     } else if (!hasSectionalTiming && currentSectionIdx < sections.length - 1) {
       nextSecIdx = currentSectionIdx + 1;
       nextQIdx = 0;
+      isProgrammaticScrollRef.current = true;
       setCurrentSectionIdx(nextSecIdx);
       setCurrentQuestionIdx(nextQIdx);
     }
@@ -986,6 +986,7 @@ export default function MobileTestScreen({
       return copy;
     });
 
+    isProgrammaticScrollRef.current = true;
     setCurrentSectionIdx(secIdx);
     setCurrentQuestionIdx(qIdx);
     setDrawerMounted(false);
@@ -1311,8 +1312,7 @@ export default function MobileTestScreen({
   if (loading) {
     return (
       <View style={[styles.loadingContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
-        <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={[styles.loadingText, isDark && { color: ThemeColors.dark.text }]}>{loadingText}</Text>
+        <SpinningDotsLoader size={56} isDark={isDark} message={loadingText} />
       </View>
     );
   }
@@ -1521,14 +1521,11 @@ export default function MobileTestScreen({
             {examName}
           </Text>
         </View>
-        {/* Right: hamburger to open palette */}
         <TouchableOpacity style={styles.hamburgerBtn} onPress={openDrawer}>
           <AlignJustify size={rs(22)} color="#FFF" />
         </TouchableOpacity>
       </View>
 
-
-      {/* Offline indicator banner */}
       {!isOnline && (
         <View style={styles.offlineBanner}>
           <Text style={styles.offlineBannerText}>
@@ -1537,7 +1534,6 @@ export default function MobileTestScreen({
         </View>
       )}
 
-      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Section Tabs ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -1557,6 +1553,7 @@ export default function MobileTestScreen({
               ]}
               onPress={() => {
                 if (isLocked) return;
+                isProgrammaticScrollRef.current = true;
                 setCurrentSectionIdx(idx);
                 setCurrentQuestionIdx(0);
               }}
@@ -1574,7 +1571,6 @@ export default function MobileTestScreen({
         })}
       </ScrollView>
 
-      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Stats Bar ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
       <View style={[styles.statsBar, isDark && { backgroundColor: isDark ? '#0F1729' : '#F9FAFB', borderBottomColor: ThemeColors.dark.border }]}>
         <Text style={[styles.statsText, isDark && { color: ThemeColors.dark.textMuted }]}>
           Answered: <Text style={styles.statsHighlight}>{answeredCount}</Text>
@@ -1585,7 +1581,6 @@ export default function MobileTestScreen({
               Last {minutesLeft} Mins{hasSectionalTiming ? ' (Section)' : ''}
             </Text>
           )}
-          {/* Language switcher */}
           <View style={[styles.langToggleRow, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
             <TouchableOpacity
               style={[styles.langToggleBtn, lang === 'en' && styles.langToggleBtnActive]}
@@ -1603,18 +1598,20 @@ export default function MobileTestScreen({
         </View>
       </View>
 
-      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Question ScrollView ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
       <ScrollView
         ref={questionsPagerRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        scrollEventThrottle={16}
-        decelerationRate="fast"
+        decelerationRate="normal"
+        disableIntervalMomentum
         bounces={false}
         keyboardShouldPersistTaps="handled"
+        scrollsToTop={false}
         onMomentumScrollEnd={(e) => {
           const pageIndex = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+          // Only update state if the page actually changed.
+          // isProgrammaticScrollRef stays false here so the useEffect skips the redundant scrollTo.
           if (pageIndex !== currentQuestionIdxLiveRef.current) {
             setCurrentQuestionIdx(pageIndex);
           }
@@ -1638,6 +1635,19 @@ export default function MobileTestScreen({
                 contentContainerStyle={styles.questionContentContainer}
                 showsVerticalScrollIndicator={false}
               >
+                {/* Question sub-header bar (website style) */}
+                <View style={[styles.qSubHeaderBar, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+                  <Text style={[styles.qTypeText, isDark && { color: '#60A5FA' }]}>Question Type: MCQ</Text>
+                  <View style={styles.qMarksRow}>
+                    <View style={styles.posMarkBadge}>
+                      <Text style={styles.posMarkText}>+2.0</Text>
+                    </View>
+                    <View style={styles.negMarkBadge}>
+                      <Text style={styles.negMarkText}>-0.5</Text>
+                    </View>
+                  </View>
+                </View>
+
                 {/* Question number header row */}
                 <View style={styles.questionHeaderRow}>
                   {/* Blue number badge */}
@@ -1653,12 +1663,14 @@ export default function MobileTestScreen({
                   </View>
                 </View>
 
-                {/* Question text */}
-                <HtmlText
-                  style={[styles.questionBody, isDark && { color: ThemeColors.dark.text }]}
-                  isDark={isDark}
-                  html={qText}
-                />
+                {/* Website-identical Question Text Box */}
+                <View style={[styles.questionCardBox, isDark && styles.questionCardBoxDark]}>
+                  <HtmlText
+                    style={[styles.questionBody, isDark && { color: ThemeColors.dark.text }]}
+                    isDark={isDark}
+                    html={qText}
+                  />
+                </View>
 
                 {/* Options as numbered cards */}
                 <View style={styles.optionsBlock}>
@@ -2349,12 +2361,73 @@ const styles = StyleSheet.create({
   actionIcon: {
     padding: rs(4),
   },
+  qSubHeaderBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
+    borderWidth: 1,
+    borderRadius: rs(8),
+    paddingHorizontal: rs(10),
+    paddingVertical: vs(6),
+    marginBottom: vs(12),
+  },
+  qTypeText: {
+    fontSize: rs(11),
+    fontWeight: 'bold',
+    color: '#0747A6',
+  },
+  qMarksRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(6),
+  },
+  posMarkBadge: {
+    backgroundColor: '#DCFCE7',
+    borderColor: '#86EFAC',
+    borderWidth: 1,
+    paddingHorizontal: rs(6),
+    paddingVertical: vs(2),
+    borderRadius: rs(4),
+  },
+  posMarkText: {
+    color: '#15803D',
+    fontSize: rs(10),
+    fontWeight: 'bold',
+  },
+  negMarkBadge: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FCA5A5',
+    borderWidth: 1,
+    paddingHorizontal: rs(6),
+    paddingVertical: vs(2),
+    borderRadius: rs(4),
+  },
+  negMarkText: {
+    color: '#B91C1C',
+    fontSize: rs(10),
+    fontWeight: 'bold',
+  },
+  questionCardBox: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+    borderWidth: 1,
+    borderRadius: rs(10),
+    padding: rs(14),
+    marginBottom: vs(16),
+    width: '100%',
+  },
+  questionCardBoxDark: {
+    backgroundColor: '#1E293B',
+    borderColor: '#334155',
+  },
   questionBody: {
     fontSize: rs(15),
     color: '#111827',
     lineHeight: rs(22),
     fontWeight: '500',
-    marginBottom: vs(18),
+    marginBottom: vs(4),
   },
   violationWarningRow: {
     flexDirection: 'row',
@@ -2385,7 +2458,7 @@ const styles = StyleSheet.create({
   },
   optionCard: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     borderWidth: 1,
     borderColor: '#E5E7EB',
     borderRadius: rs(10),
@@ -2406,6 +2479,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexShrink: 0,
+    marginTop: vs(1),
   },
   optionNumCircleSelected: {
     borderColor: '#2563EB',
@@ -2423,6 +2497,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: rs(13),
     color: '#374151',
+    textAlign: 'left',
   },
   optionTextSelected: {
     color: '#1E40AF',

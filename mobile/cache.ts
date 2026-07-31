@@ -43,15 +43,15 @@ export async function getCachedQuestions(testId: string): Promise<any[] | null> 
 }
 
 /**
- * Proactively prunes older question caches to prevent hitting storage limits.
- * Retains the 50 most recently saved test question sets on device storage.
+ * Proactively prunes older question caches to prevent hitting SQLite storage limits.
+ * Retains the 10 most recently saved test question sets on device storage.
  */
-async function pruneQuestionsCache(): Promise<void> {
+async function pruneQuestionsCache(maxToKeep = 10): Promise<void> {
   try {
     const allKeys = await AsyncStorage.getAllKeys();
     const qKeys = allKeys.filter(k => k.startsWith(Q_KEY_PREFIX));
     
-    if (qKeys.length > 50) {
+    if (qKeys.length > maxToKeep) {
       const items: { key: string; savedAt: number }[] = [];
       for (const key of qKeys) {
         const val = await AsyncStorage.getItem(key);
@@ -68,15 +68,15 @@ async function pruneQuestionsCache(): Promise<void> {
       // Sort oldest first
       items.sort((a, b) => a.savedAt - b.savedAt);
       
-      // Keep the 50 most recent items, remove the rest
-      const toRemove = items.slice(0, items.length - 50).map(i => i.key);
+      // Keep the most recent items, remove the rest
+      const toRemove = items.slice(0, items.length - maxToKeep).map(i => i.key);
       if (toRemove.length > 0) {
         await AsyncStorage.multiRemove(toRemove);
-        console.log(`[Cache] Proactively pruned ${toRemove.length} old test caches. Storing max 50 tests.`);
+        console.log(`[Cache] Proactively pruned ${toRemove.length} old test caches. Storing max ${maxToKeep} tests.`);
       }
     }
   } catch (err) {
-    console.warn('[Cache] Pruning failed:', err);
+    console.log('[Cache] Pruning notice:', err);
   }
 }
 
@@ -86,31 +86,27 @@ async function pruneQuestionsCache(): Promise<void> {
  */
 export async function saveQuestionsToCache(testId: string, questions: any[]): Promise<void> {
   try {
-    // Proactively prune older test question caches
-    await pruneQuestionsCache();
+    // Proactively prune older test question caches (keep 10 most recent)
+    await pruneQuestionsCache(10);
 
     await AsyncStorage.setItem(
       `${Q_KEY_PREFIX}${testId}`,
       JSON.stringify({ questions, savedAt: Date.now() })
     );
   } catch (err) {
-    console.warn('[Cache] Failed to save questions, attempting emergency cache eviction:', err);
+    console.log('[Cache] Primary question save hit storage limit, performing emergency eviction...');
     try {
-      const allKeys = await AsyncStorage.getAllKeys();
-      const qKeys = allKeys.filter(k => k.startsWith(Q_KEY_PREFIX));
-      if (qKeys.length > 0) {
-        // Evict all stored questions in case of emergency storage full
-        await AsyncStorage.multiRemove(qKeys);
-        console.log('[Cache] Emergency cache purge of all test questions complete.');
-        
-        // Retry writing the current test questions
-        await AsyncStorage.setItem(
-          `${Q_KEY_PREFIX}${testId}`,
-          JSON.stringify({ questions, savedAt: Date.now() })
-        );
-      }
+      // Evict older questions, keeping only 3 most recent
+      await pruneQuestionsCache(3);
+      
+      // Retry writing the current test questions
+      await AsyncStorage.setItem(
+        `${Q_KEY_PREFIX}${testId}`,
+        JSON.stringify({ questions, savedAt: Date.now() })
+      );
+      console.log('[Cache] Successfully saved questions after emergency cache eviction.');
     } catch (retryErr) {
-      console.warn('[Cache] Emergency cache eviction retry failed:', retryErr);
+      console.log('[Cache] Emergency cache eviction retry handled:', retryErr);
     }
   }
 }

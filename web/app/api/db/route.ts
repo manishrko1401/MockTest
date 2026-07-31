@@ -312,6 +312,8 @@ export async function POST(request: Request) {
         return await handleCatalogSync(data);
       case 'get-referred-friends':
         return await handleGetReferredFriends(data);
+      case 'reset-referrals':
+        return await handleResetReferrals();
       case 'get-user-details':
         return await handleGetUserDetails(data);
       case 'admin-data':
@@ -552,6 +554,7 @@ async function handleBootstrap() {
   const noticesList = notices.map((n: any) => ({
     id: n.id,
     title: n.title,
+    titleHi: n.titleHi || undefined,
     date: n.date,
     publishDate: n.publishDate,
     type: n.type,
@@ -594,6 +597,7 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
     const noticesList = notices.map((n: any) => ({
       id: n.id,
       title: n.title,
+      titleHi: n.titleHi || undefined,
       date: n.date,
       publishDate: n.publishDate,
       type: n.type,
@@ -690,6 +694,7 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
   const mappedNewNotices = newNotices.map((n: any) => ({
     id: n.id,
     title: n.title,
+    titleHi: n.titleHi || undefined,
     date: n.date,
     publishDate: n.publishDate,
     type: n.type,
@@ -988,28 +993,41 @@ async function handleGetReferredFriends(data: any) {
   });
 
   const formattedFriends = friends.map((f: any) => {
-    const hasCompletedTest = f.testSessions.some((s: any) => {
-      if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') {
-        return false;
-      }
-      const durationMinutes = s.mockTest?.durationMinutes || 60;
-      const totalSec = durationMinutes * 60;
-      return s.timeSpentSeconds >= totalSec * 0.75;
+    const hasCompletedTest = Boolean(f.referralCoinsCredited) || f.testSessions.some((s: any) => {
+      return s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED';
     });
 
     return {
       id: f.id,
-      name: f.fullName,
+      name: f.fullName || 'Candidate',
       email: f.email,
+      mobile: f.mobile,
       candidateCode: f.candidateCode,
       registeredDate: formatDateTime(f.createdAt),
-      hasCompletedTest
+      hasCompletedTest,
+      coinsEarned: hasCompletedTest ? 20 : 0
     };
   });
 
   return NextResponse.json({
     success: true,
     referredFriends: formattedFriends
+  });
+}
+
+async function handleResetReferrals() {
+  const result = await prisma.user.updateMany({
+    data: {
+      referredBy: null,
+      referralsCount: 0,
+      referralCoinsCredited: false,
+      coins: 0
+    }
+  });
+
+  return NextResponse.json({
+    success: true,
+    message: `All referral data has been reset successfully. Updated ${result.count} users.`
   });
 }
 
@@ -1468,12 +1486,13 @@ async function handleResetAttempt(data: any) {
 }
 
 async function handleAddNotice(data: any) {
-  const { id, title, type, category, date, publishDate, url, lastDate, imageUrl } = data;
+  const { id, title, titleHi, type, category, date, publishDate, url, lastDate, imageUrl } = data;
 
   await prisma.notice.create({
     data: {
       id,
       title,
+      titleHi: titleHi || null,
       type,
       category,
       date,
@@ -1499,7 +1518,7 @@ async function handleDeleteNotice(data: any) {
 
 async function handleAddCategory(rawPayload: any) {
   const data = rawPayload?.category || rawPayload?.data || rawPayload || {};
-  const { id, name, logoUrl, isPopular, isPracticeSeries, description, countText } = data;
+  const { id, name, nameHi, logoUrl, isPopular, isPracticeSeries, description, countText } = data;
 
   if (!id || !name) {
     return NextResponse.json({ success: false, error: 'Category ID and Name are required' }, { status: 400 });
@@ -1511,6 +1530,7 @@ async function handleAddCategory(rawPayload: any) {
     where: { id },
     update: {
       name,
+      nameHi: nameHi !== undefined ? nameHi : undefined,
       logoUrl: logoUrl || null,
       isPopular: isPopular ?? false,
       isPracticeSeries: isPractice,
@@ -1520,6 +1540,7 @@ async function handleAddCategory(rawPayload: any) {
     create: {
       id,
       name,
+      nameHi: nameHi || '',
       logoUrl: logoUrl || null,
       isPopular: isPopular ?? false,
       isPracticeSeries: isPractice,
@@ -1575,13 +1596,14 @@ async function handleDeleteCategory(data: any) {
 }
 
 async function handleAddSubCategory(data: any) {
-  const { id, categoryId, name } = data;
+  const { id, categoryId, name, nameHi } = data;
 
   await prisma.exam.create({
     data: {
       id,
       categoryId,
       name,
+      nameHi: nameHi || '',
     },
   });
 
@@ -1599,13 +1621,14 @@ async function handleDeleteSubCategory(data: any) {
 }
 
 async function handleAddSubSubCategory(data: any) {
-  const { id, subCategoryId, name } = data;
+  const { id, subCategoryId, name, nameHi, titleHi } = data;
 
   await prisma.testSeries.create({
     data: {
       id,
       examId: subCategoryId,
       title: name,
+      titleHi: nameHi || titleHi || '',
     },
   });
 
@@ -1629,6 +1652,7 @@ async function handleAddMockTest(data: any) {
     subSubCategoryId,
     id,
     title,
+    titleHi,
     questionsCount,
     durationMinutes,
     maxMarks,
@@ -1668,6 +1692,7 @@ async function handleAddMockTest(data: any) {
       id,
       testSeriesId: finalTestSeriesId,
       title,
+      titleHi: titleHi || '',
       durationMinutes,
       questionsCount,
       maxMarks,
@@ -1702,6 +1727,7 @@ async function handleEditCategory(rawPayload: any) {
   const updates = rawPayload?.updates || {};
   const targetId = data.categoryId || data.id || rawPayload?.categoryId;
   const name = updates.name !== undefined ? updates.name : data.name;
+  const nameHi = updates.nameHi !== undefined ? updates.nameHi : data.nameHi;
   const description = updates.description !== undefined ? updates.description : data.description;
   const logoUrl = data.logoUrl;
   const isPopular = data.isPopular;
@@ -1716,6 +1742,7 @@ async function handleEditCategory(rawPayload: any) {
     where: { id: targetId },
     data: { 
       name: name !== undefined ? name : undefined,
+      nameHi: nameHi !== undefined ? nameHi : undefined,
       logoUrl: logoUrl !== undefined ? logoUrl : undefined,
       isPopular: isPopular !== undefined ? isPopular : undefined,
       isPracticeSeries: isPracticeSeries !== undefined ? isPracticeSeries : undefined,
@@ -1728,34 +1755,41 @@ async function handleEditCategory(rawPayload: any) {
 }
 
 async function handleEditSubCategory(data: any) {
-  const { subCategoryId, name } = data;
+  const { subCategoryId, name, nameHi } = data;
 
   await prisma.exam.update({
     where: { id: subCategoryId },
-    data: { name },
+    data: { 
+      name,
+      nameHi: nameHi !== undefined ? nameHi : undefined,
+    },
   });
 
   return NextResponse.json({ success: true });
 }
 
 async function handleEditSubSubCategory(data: any) {
-  const { subSubCategoryId, name } = data;
+  const { subSubCategoryId, name, nameHi, titleHi } = data;
 
   await prisma.testSeries.update({
     where: { id: subSubCategoryId },
-    data: { title: name },
+    data: { 
+      title: name,
+      titleHi: nameHi !== undefined ? nameHi : (titleHi !== undefined ? titleHi : undefined),
+    },
   });
 
   return NextResponse.json({ success: true });
 }
 
 async function handleEditMockTestTitle(data: any) {
-  const { testId, title, testbookTotalUsers, testbookTopperScore, testbookAverageScore, testbookCutoffScore, positiveMarks, negativeMarks } = data;
+  const { testId, title, titleHi, testbookTotalUsers, testbookTopperScore, testbookAverageScore, testbookCutoffScore, positiveMarks, negativeMarks } = data;
 
   await prisma.mockTest.update({
     where: { id: testId },
     data: {
       title,
+      titleHi: titleHi !== undefined ? titleHi : undefined,
       testbookTotalUsers: testbookTotalUsers !== undefined ? Number(testbookTotalUsers) : undefined,
       testbookTopperScore: testbookTopperScore !== undefined ? Number(testbookTopperScore) : undefined,
       testbookAverageScore: testbookAverageScore !== undefined ? Number(testbookAverageScore) : undefined,
@@ -2117,6 +2151,12 @@ async function getCompiledExamCatalog() {
               END IF;
           END IF;
       END $$;
+
+      ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "nameHi" TEXT DEFAULT '';
+      ALTER TABLE "exams" ADD COLUMN IF NOT EXISTS "nameHi" TEXT DEFAULT '';
+      ALTER TABLE "test_series" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
+      ALTER TABLE "mock_tests" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
+      ALTER TABLE "notices" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
     `);
   } catch (err: any) {
     console.error("Runtime database patch failed:", err);
@@ -2130,7 +2170,8 @@ async function getCompiledExamCatalog() {
     SELECT 
       "id", 
       "testSeriesId", 
-      "title", 
+      "title",
+      COALESCE("titleHi", '') as "titleHi", 
       "durationMinutes", 
       "passingCutoff", 
       "questionsCount", 
@@ -2169,6 +2210,7 @@ async function getCompiledExamCatalog() {
     testsBySeries[t.testSeriesId].push({
       id: t.id,
       title: t.title,
+      titleHi: t.titleHi || '',
       questionsCount: t.questionsCount,
       durationMinutes: t.durationMinutes,
       maxMarks: t.maxMarks,
@@ -2204,6 +2246,8 @@ async function getCompiledExamCatalog() {
     seriesByExam[ts.examId].push({
       id: ts.id,
       name: ts.title,
+      nameHi: ts.titleHi || '',
+      titleHi: ts.titleHi || '',
       orderIndex: ts.orderIndex ?? 0,
       tests,
     });
@@ -2221,6 +2265,7 @@ async function getCompiledExamCatalog() {
     examsByCat[exam.categoryId].push({
       id: exam.id,
       name: exam.name,
+      nameHi: exam.nameHi || '',
       orderIndex: exam.orderIndex ?? 0,
       subSubCategories,
       tests,
@@ -2231,6 +2276,7 @@ async function getCompiledExamCatalog() {
   return categories.map((cat: any) => ({
     id: cat.id,
     name: cat.name,
+    nameHi: cat.nameHi || '',
     logoUrl: cat.logoUrl || null,
     orderIndex: cat.orderIndex ?? 0,
     isPopular: cat.isPopular ?? false,

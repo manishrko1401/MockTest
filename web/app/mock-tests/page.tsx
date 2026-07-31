@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth, TestCategory, TestSubCategory, MockTestItem } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu, TrendingUp, Coins, MapPin, Sparkles, Trophy, Star } from 'lucide-react';
-import { generateExamSession, EXPLANATIONS } from '../lib/examUtils';
+import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu, TrendingUp, Coins, MapPin, Sparkles, Trophy, Star, Clock, UploadCloud, FolderOpen } from 'lucide-react';
+import { generateExamSession, EXPLANATIONS, getLocalizedName } from '../lib/examUtils';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 import HomeSupportWidget from '../components/HomeSupportWidget';
@@ -157,7 +157,7 @@ export default function MockTestsCatalog() {
 
   // Filter out Practice Series categories so they ONLY appear on the Practice Series page
   const testSeriesCatalog = React.useMemo(() => {
-    return examCatalog || [];
+    return [...(examCatalog || [])].sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   }, [examCatalog]);
 
   // Filter exam catalog by search query (checks category name or subcategory exam name)
@@ -190,9 +190,10 @@ export default function MockTestsCatalog() {
 
   const getFilteredSubCategories = React.useMemo(() => {
     if (!currentCategoryObj) return [];
+    const sortedSubs = [...(currentCategoryObj.subCategories || [])].sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
     const query = examSearchQuery.toLowerCase().trim();
-    if (!query) return currentCategoryObj.subCategories || [];
-    return (currentCategoryObj.subCategories || []).filter(sub => 
+    if (!query) return sortedSubs;
+    return sortedSubs.filter(sub => 
       sub.name.toLowerCase().includes(query)
     );
   }, [currentCategoryObj, examSearchQuery]);
@@ -761,7 +762,7 @@ export default function MockTestsCatalog() {
                             )}
                           </div>
                           <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-850 dark:text-slate-100 mb-2 leading-snug line-clamp-2">
-                            {cat.name}
+                            {getLocalizedName(cat, language)}
                           </h4>
                           <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border border-slate-100 dark:border-slate-800">
                             {cat.subCategories?.length || 0} Exams
@@ -783,61 +784,83 @@ export default function MockTestsCatalog() {
                   
                   <div>
                     <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                      {activeCategoryObj?.name}
+                      {getLocalizedName(activeCategoryObj, language)}
                     </h2>
                     <p className="text-[10px] text-slate-500 dark:text-slate-400">
                       Select an exam to view available tests
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {activeCategoryObj?.subCategories.map(subCat => {
-                      const count = subCat.tests.length;
-                      const countStr = count === 1 
-                        ? (language === 'hi' ? `1 ${t.mocksCount}` : `1 Mock Test`)
-                        : (language === 'hi' ? `${count} ${t.mocksCount}` : `${count} Mock Tests`);
-                      
-                      const themeInfo = getCategoryTheme(selectedCategory);
+                  {!activeCategoryObj?.subCategories || activeCategoryObj.subCategories.length === 0 ? (
+                    <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-slate-950 dark:via-slate-900/40 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
+                      <div className="relative inline-flex items-center justify-center">
+                        <div className="absolute inset-0 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-xl animate-pulse" />
+                        <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
+                          <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8 animate-bounce" />
+                        </div>
+                      </div>
 
-                      return (
-                        <button
-                          key={subCat.id}
-                          onClick={() => handleSubCategorySelect(subCat.id)}
-                          className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
-                        >
-                          {/* Accent Gradient Border at top */}
-                          <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${themeInfo.gradient}`} />
-                          
-                          {/* Radial Glow on Hover */}
-                          <div 
-                            className="absolute -right-16 -top-16 w-32 h-32 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                            style={{ backgroundColor: themeInfo.accentGlow }}
-                          />
+                      <div className="space-y-2">
+                        <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                          {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
+                          {language === 'hi'
+                            ? 'हमारी विशेषज्ञ टीम इस श्रेणी के लिए उच्च-गुणवत्ता वाले मॉक टेस्ट, अभ्यास सेट और विस्तृत समाधान तैयार कर रही है। जल्द ही नए टेस्ट उपलब्ध होंगे!'
+                            : 'Our expert team is actively creating high-quality mock tests, practice sets, and detailed solutions for this category. Stay tuned — new tests are uploaded regularly!'}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {activeCategoryObj.subCategories.map(subCat => {
+                        const count = subCat.tests.length;
+                        const countStr = count === 1 
+                          ? (language === 'hi' ? `1 ${t.mocksCount}` : `1 Mock Test`)
+                          : (language === 'hi' ? `${count} ${t.mocksCount}` : `${count} Mock Tests`);
+                        
+                        const themeInfo = getCategoryTheme(selectedCategory);
 
-                          {/* Icon Container */}
-                          <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md overflow-hidden ${themeInfo.iconBg}`}>
-                            {getSubCatIcon(subCat.name, subCat.logoUrl || activeCategoryObj?.logoUrl)}
-                          </div>
+                        return (
+                          <button
+                            key={subCat.id}
+                            onClick={() => handleSubCategorySelect(subCat.id)}
+                            className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
+                          >
+                            {/* Accent Gradient Border at top */}
+                            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${themeInfo.gradient}`} />
+                            
+                            {/* Radial Glow on Hover */}
+                            <div 
+                              className="absolute -right-16 -top-16 w-32 h-32 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                              style={{ backgroundColor: themeInfo.accentGlow }}
+                            />
 
-                          {/* Exam Title */}
-                          <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-855 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2.5 leading-snug line-clamp-2">
-                            {subCat.name}
-                          </h4>
+                            {/* Icon Container */}
+                            <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md overflow-hidden ${themeInfo.iconBg}`}>
+                              {getSubCatIcon(subCat.name, subCat.logoUrl || activeCategoryObj?.logoUrl)}
+                            </div>
 
-                          {/* Test Count Badge */}
-                          <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 sm:px-3.5 sm:py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg} group-hover:scale-105`}>
-                            {countStr}
-                          </span>
+                            {/* Exam Title */}
+                            <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-855 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2.5 leading-snug line-clamp-2">
+                              {getLocalizedName(subCat, language)}
+                            </h4>
 
-                          {/* Practice CTA Prompt */}
-                          <div className="flex items-center gap-1 text-[9px] uppercase font-black text-blue-600 dark:text-blue-400 tracking-wider mt-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                            {language === 'hi' ? "तैयारी शुरू करें" : "Start Practice"}
-                            <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 duration-200" />
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                            {/* Test Count Badge */}
+                            <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 sm:px-3.5 sm:py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg} group-hover:scale-105`}>
+                              {countStr}
+                            </span>
+
+                            {/* Practice CTA Prompt */}
+                            <div className="flex items-center gap-1 text-[9px] uppercase font-black text-blue-600 dark:text-blue-400 tracking-wider mt-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                              {language === 'hi' ? "तैयारी शुरू करें" : "Start Practice"}
+                              <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 duration-200" />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               ) : (
                 /* Case 3: Subcategory (Exam) is selected - Render Tests List under it */
@@ -853,15 +876,18 @@ export default function MockTestsCatalog() {
                     const activeSubCat = activeCategoryObj?.subCategories.find(s => s.id === selectedSubCategory);
                     
                     // Let's group tests by their sub-subcategory
-                    const groups = (activeSubCat?.subSubCategories || []).map(subSub => {
-                      const filtered = subSub.tests.filter(t => 
-                        t.title.toLowerCase().includes(searchQuery.toLowerCase())
-                      );
-                      return {
-                        ...subSub,
-                        tests: filtered
-                      };
-                    }).filter(g => g.tests.length > 0);
+                    const groups = [...(activeSubCat?.subSubCategories || [])]
+                      .sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+                      .map(subSub => {
+                        const sortedTests = [...(subSub.tests || [])].sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+                        const filtered = sortedTests.filter(t => 
+                          t.title.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                        return {
+                          ...subSub,
+                          tests: filtered
+                        };
+                      });
 
                     const fallbackTests = (activeSubCat?.tests || []).filter(t => 
                       t.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -871,7 +897,7 @@ export default function MockTestsCatalog() {
                       <div className="space-y-4">
                         <div>
                           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                            {activeSubCat?.name}
+                            {getLocalizedName(activeSubCat, language)}
                           </h2>
                           <p className="text-[10px] text-slate-500 dark:text-slate-400">
                             Practice with full length test papers
@@ -879,8 +905,24 @@ export default function MockTestsCatalog() {
                         </div>
 
                         {groups.length === 0 && fallbackTests.length === 0 ? (
-                          <div className="text-center py-12 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-500 text-xs">
-                            No tests available for this exam.
+                          <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-slate-950 dark:via-slate-900/40 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
+                            <div className="relative inline-flex items-center justify-center">
+                              <div className="absolute inset-0 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-xl animate-pulse" />
+                              <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
+                                <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8 animate-bounce" />
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                                {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                              </h3>
+                              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
+                                {language === 'hi'
+                                  ? 'हमारी विशेषज्ञ टीम इस श्रेणी के लिए उच्च-गुणवत्ता वाले मॉक टेस्ट, अभ्यास सेट और विस्तृत समाधान तैयार कर रही है। जल्द ही नए टेस्ट उपलब्ध होंगे!'
+                                  : 'Our expert team is actively creating high-quality mock tests, practice sets, and detailed solutions for this category. Stay tuned — new tests are uploaded regularly!'}
+                              </p>
+                            </div>
                           </div>
                         ) : groups.length > 0 ? (
                           <div className="space-y-4">
@@ -898,7 +940,7 @@ export default function MockTestsCatalog() {
                                         : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
                                     }`}
                                   >
-                                    {group.name} ({group.tests.length})
+                                    {getLocalizedName(group.name, language)} ({group.tests.length})
                                   </button>
                                 );
                               })}
@@ -972,7 +1014,7 @@ export default function MockTestsCatalog() {
                                           </div>
 
                                           <h4 className="font-extrabold text-xs text-slate-850 dark:text-white leading-snug">
-                                            {test.title}
+                                            {getLocalizedName(test, language)}
                                           </h4>
 
                                           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[8px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
@@ -1542,7 +1584,7 @@ export default function MockTestsCatalog() {
                             )}
                           </div>
                           <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-                            {cat.name}
+                            {getLocalizedName(cat, language)}
                           </h4>
                           <span className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
                             {cat.subCategories?.length || 0} Exams
@@ -1562,8 +1604,8 @@ export default function MockTestsCatalog() {
                             {cat.subCategories.slice(0, 5).map((sub: any) => (
                               <div key={sub.id} className="flex items-center gap-1">
                                 <div className="h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-450 shrink-0"></div>
-                                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={sub.name}>
-                                  {formatSubCategoryName(sub.name)}
+                                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={getLocalizedName(sub, language)}>
+                                  {getLocalizedName(formatSubCategoryName(sub.name), language)}
                                 </span>
                               </div>
                             ))}
@@ -1610,7 +1652,7 @@ export default function MockTestsCatalog() {
 
                   <div className="text-right animate-in fade-in slide-in-from-top-4 duration-350">
                     <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2 justify-end">
-                      {currentCategoryObj?.name}
+                      {getLocalizedName(currentCategoryObj, language)}
                       <BookOpen className="h-5 w-5 text-blue-500" />
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -1620,8 +1662,29 @@ export default function MockTestsCatalog() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 animate-in fade-in duration-300">
-                {getFilteredSubCategories.map(subCat => {
+              {getFilteredSubCategories.length === 0 ? (
+                <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-slate-950 dark:via-slate-900/40 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
+                  <div className="relative inline-flex items-center justify-center">
+                    <div className="absolute inset-0 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-xl animate-pulse" />
+                    <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
+                      <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8 animate-bounce" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                      {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
+                      {language === 'hi'
+                        ? 'हमारी विशेषज्ञ टीम इस श्रेणी के लिए उच्च-गुणवत्ता वाले मॉक टेस्ट, अभ्यास सेट और विस्तृत समाधान तैयार कर रही है। जल्द ही नए टेस्ट उपलब्ध होंगे!'
+                        : 'Our expert team is actively creating high-quality mock tests, practice sets, and detailed solutions for this category. Stay tuned — new tests are uploaded regularly!'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 animate-in fade-in duration-300">
+                  {getFilteredSubCategories.map(subCat => {
                   const count = subCat.tests.length;
                   const countStr = count === 1 
                     ? (language === 'hi' ? `1 ${t.mocksCount}` : `1 Mock Test`)
@@ -1661,7 +1724,7 @@ export default function MockTestsCatalog() {
 
                           {/* Exam Title */}
                           <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
-                            {subCat.name}
+                            {getLocalizedName(subCat, language)}
                           </h4>
 
                           {/* Test Count Badge */}
@@ -1684,8 +1747,8 @@ export default function MockTestsCatalog() {
                             {subSubList.slice(0, 5).map((itemTitle: string, idx: number) => (
                               <div key={idx} className="flex items-center gap-1">
                                 <div className="h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-450 shrink-0"></div>
-                                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={itemTitle}>
-                                  {formatSubCategoryName(itemTitle)}
+                                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={getLocalizedName(itemTitle, language)}>
+                                  {getLocalizedName(formatSubCategoryName(itemTitle), language)}
                                 </span>
                               </div>
                             ))}
@@ -1696,21 +1759,25 @@ export default function MockTestsCatalog() {
                   );
                 })}
               </div>
+              )}
             </>
           ) : (
             <>
               {(() => {
                 const activeSubCat = currentCategoryObj?.subCategories.find(s => s.id === selectedSubCategory);
                 // Let's group tests by their sub-subcategory
-                const groups = (activeSubCat?.subSubCategories || []).map(subSub => {
-                  const filtered = subSub.tests.filter(t => 
-                    t.title.toLowerCase().includes(searchQuery.toLowerCase())
-                  );
-                  return {
-                    ...subSub,
-                    tests: filtered
-                  };
-                }).filter(g => g.tests.length > 0);
+                const groups = [...(activeSubCat?.subSubCategories || [])]
+                  .sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+                  .map(subSub => {
+                    const sortedTests = [...(subSub.tests || [])].sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+                    const filtered = sortedTests.filter(t => 
+                      t.title.toLowerCase().includes(searchQuery.toLowerCase())
+                    );
+                    return {
+                      ...subSub,
+                      tests: filtered
+                    };
+                  });
 
                 const fallbackTests = (activeSubCat?.tests || []).filter(t => 
                   t.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -1738,7 +1805,7 @@ export default function MockTestsCatalog() {
 
                       <div className="text-right">
                         <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2 justify-end">
-                          {activeSubCat?.name}
+                          {getLocalizedName(activeSubCat, language)}
                           <BookOpen className="h-5 w-5 text-blue-500" />
                         </h2>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -1748,10 +1815,24 @@ export default function MockTestsCatalog() {
                     </div>
 
                     {groups.length === 0 && fallbackTests.length === 0 ? (
-                      <div className="text-center py-16 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl">
-                        <p className="text-slate-500 dark:text-slate-400 text-sm font-bold">
-                          {language === 'hi' ? 'कोई मॉक टेस्ट नहीं मिला।' : 'No mock tests found.'}
-                        </p>
+                      <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-slate-950 dark:via-slate-900/40 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
+                        <div className="relative inline-flex items-center justify-center">
+                          <div className="absolute inset-0 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-xl animate-pulse" />
+                          <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
+                            <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8 animate-bounce" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                            {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
+                            {language === 'hi'
+                              ? 'हमारी विशेषज्ञ टीम इस श्रेणी के लिए उच्च-गुणवत्ता वाले मॉक टेस्ट, अभ्यास सेट और विस्तृत समाधान तैयार कर रही है। जल्द ही नए टेस्ट उपलब्ध होंगे!'
+                              : 'Our expert team is actively creating high-quality mock tests, practice sets, and detailed solutions for this category. Stay tuned — new tests are uploaded regularly!'}
+                          </p>
+                        </div>
                       </div>
                     ) : groups.length > 0 ? (
                       <div className="space-y-6">
@@ -1769,7 +1850,7 @@ export default function MockTestsCatalog() {
                                     : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
                                 }`}
                               >
-                                {group.name} ({group.tests.length})
+                                {getLocalizedName(group.name, language)} ({group.tests.length})
                               </button>
                             );
                           })}
@@ -1778,7 +1859,24 @@ export default function MockTestsCatalog() {
                         {/* Selected Group's Tests */}
                         {(() => {
                           const activeGroup = groups.find(g => g.id === (activeSubSubId || groups[0]?.id));
-if (!activeGroup) return null;
+                          if (!activeGroup) return null;
+                          if (activeGroup.tests.length === 0) {
+                            return (
+                              <div className="text-center py-10 sm:py-12 px-4 sm:px-6 bg-gradient-to-b from-slate-50/80 to-white dark:from-slate-950 dark:to-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3 max-w-xl mx-auto my-2">
+                                <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-sm">
+                                  <Clock className="h-6 w-6 animate-pulse" />
+                                </div>
+                                <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                                  {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                                </h4>
+                                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto font-medium leading-relaxed">
+                                  {language === 'hi'
+                                    ? 'हमारी विशेषज्ञ टीम इस श्रेणी के लिए उच्च-गुणवत्ता वाले मॉक टेस्ट, अभ्यास सेट और विस्तृत समाधान तैयार कर रही है। जल्द ही नए टेस्ट उपलब्ध होंगे!'
+                                    : 'Our expert team is actively creating high-quality mock tests, practice sets, and detailed solutions for this category. Stay tuned — new tests are uploaded regularly!'}
+                                </p>
+                              </div>
+                            );
+                          }
                           return (
                             <div className="space-y-3 animate-in fade-in duration-300">
                               {activeGroup.tests.map(test => {

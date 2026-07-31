@@ -21,6 +21,19 @@ export function onSessionInvalidated(callback: () => void) {
   sessionInvalidatedCallback = callback;
 }
 
+async function fetchWithTimeout(url: string, options: any = {}, timeoutMs = 3500) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
+  }
+}
+
 async function postRequest(action: string, data: any = {}) {
   const endpoints = [LOCAL_API_URL, PROD_API_URL].filter((v, i, a) => a.indexOf(v) === i);
 
@@ -36,13 +49,18 @@ async function postRequest(action: string, data: any = {}) {
 
   for (const endpoint of endpoints) {
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const isLocal = endpoint === LOCAL_API_URL;
+      const response = await fetchWithTimeout(
+        endpoint,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action, data }),
         },
-        body: JSON.stringify({ action, data }),
-      });
+        isLocal ? 3000 : 15000
+      );
 
       const result = await response.json();
 
@@ -54,7 +72,8 @@ async function postRequest(action: string, data: any = {}) {
       }
       lastErrorResult = result;
     } catch (err) {
-      console.warn(`Attempt failed on ${endpoint}:`, err);
+      // Use silent logging so Expo Go YellowBox warning popups are avoided during endpoint fallback
+      console.log(`[API] Endpoint attempt failed on ${endpoint}, falling back to next endpoint...`);
     }
   }
 
@@ -199,6 +218,12 @@ export const ApiClient = {
     postRequest('get-referred-friends', { referralCode }),
 
   /**
+   * Resets all referral data across users
+   */
+  resetReferrals: () =>
+    postRequest('reset-referrals'),
+
+  /**
    * Request password reset OTP via email
    */
   requestPasswordReset: (email: string) =>
@@ -239,13 +264,14 @@ export const ApiClient = {
 
     for (const endpoint of endpoints) {
       try {
+        const isLocal = endpoint === LOCAL_API_URL;
         const syncUrl = endpoint.replace('/api/db', '/api/cron/sync');
-        const response = await fetch(syncUrl, {
+        const response = await fetchWithTimeout(syncUrl, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
           }
-        });
+        }, isLocal ? 3000 : 15000);
         const result = await response.json();
         if (result && result.success) {
           success = true;
@@ -278,13 +304,14 @@ export const ApiClient = {
     let errorMsg = '';
     for (const endpoint of endpoints) {
       try {
+        const isLocal = endpoint === LOCAL_API_URL;
         const feedbackUrl = endpoint.replace('/api/db', '/api/feedback');
-        const response = await fetch(feedbackUrl, {
+        const response = await fetchWithTimeout(feedbackUrl, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
           }
-        });
+        }, isLocal ? 3000 : 15000);
         const result = await response.json();
         if (result && result.success) {
           return result;
@@ -305,13 +332,14 @@ export const ApiClient = {
     let errorMsg = '';
     for (const endpoint of endpoints) {
       try {
+        const isLocal = endpoint === LOCAL_API_URL;
         const feedbackUrl = endpoint.replace('/api/db', `/api/feedback?id=${id}`);
-        const response = await fetch(feedbackUrl, {
+        const response = await fetchWithTimeout(feedbackUrl, {
           method: 'DELETE',
           headers: {
             'Accept': 'application/json',
           }
-        });
+        }, isLocal ? 3000 : 15000);
         const result = await response.json();
         if (result && result.success) {
           return result;

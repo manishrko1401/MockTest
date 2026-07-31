@@ -57,6 +57,8 @@ interface MockTestManagerProps {
   editingMockTestbookCutoffScore: number;
   setEditingMockTestbookCutoffScore: (val: number) => void;
   editMockTestTitle: (catId: string, subId: string, subsubId: string, testId: string, title: string, stats?: any) => void;
+  newMockCount?: number;
+  setNewMockCount?: (val: number) => void;
 }
 
 export const MockTestManager: React.FC<MockTestManagerProps> = ({
@@ -71,6 +73,8 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
   setEditingMockTestId,
   newMockTitle,
   setNewMockTitle,
+  newMockCount: propNewMockCount,
+  setNewMockCount: propSetNewMockCount,
   newMockDuration,
   setNewMockDuration,
   newMockQsCount,
@@ -119,6 +123,11 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
   const [filterCategory, setFilterCategory] = useState('');
   const [filterSubCategory, setFilterSubCategory] = useState('');
   const [filterSubSubCategory, setFilterSubSubCategory] = useState('');
+  const [filterSearch, setFilterSearch] = useState('');
+
+  const [internalMockCount, setInternalMockCount] = useState(1);
+  const countValue = propNewMockCount !== undefined ? propNewMockCount : internalMockCount;
+  const updateCount = propSetNewMockCount || setInternalMockCount;
 
   const testSeriesCatalog = React.useMemo(() => {
     return examCatalog || [];
@@ -134,9 +143,11 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
           (sub.subSubCategories || [])
             .filter((subsub: any) => !filterSubSubCategory || subsub.id === filterSubSubCategory)
             .forEach((subsub: any) => {
-              subsub.tests.forEach((test: any) => {
-                filteredMocks.push({ cat, sub, subsub, test });
-              });
+              subsub.tests
+                .filter((test: any) => !filterSearch.trim() || test.title.toLowerCase().includes(filterSearch.toLowerCase()))
+                .forEach((test: any) => {
+                  filteredMocks.push({ cat, sub, subsub, test });
+                });
             });
         });
     });
@@ -188,23 +199,30 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                   sectionalTimings = newMockSectionalTimingsStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
                   finalDuration = sectionalTimings.reduce((a, b) => a + b, 0);
                 }
-                addMockTest(newMockCategoryParent, newMockSubCategoryParent, newMockSubSubCategoryParent, {
-                  title: newMockTitle.trim(),
-                  questionsCount: Number(newMockQsCount),
-                  durationMinutes: finalDuration,
-                  maxMarks: Number(newMockMaxMarks),
-                  isPremium: newMockRequiredTier !== 'None',
-                  requiredTier: newMockRequiredTier,
-                  hasSectionalTiming: newMockHasSectionalTiming,
-                  sectionalTimings: newMockHasSectionalTiming ? sectionalTimings : undefined,
-                  testbookTotalUsers: Number(newMockTestbookTotalUsers),
-                  testbookTopperScore: Number(newMockTestbookTopperScore),
-                  testbookAverageScore: Number(newMockTestbookAverageScore),
-                  testbookCutoffScore: Number(newMockTestbookCutoffScore),
-                  positiveMarks: Number(newMockPositiveMarks),
-                  negativeMarks: Number(newMockNegativeMarks),
-                } as any);
+
+                const count = Math.max(1, Number(countValue) || 1);
+                for (let i = 1; i <= count; i++) {
+                  const titleToUse = count === 1 ? newMockTitle.trim() : `${newMockTitle.trim()} ${i}`;
+                  addMockTest(newMockCategoryParent, newMockSubCategoryParent, newMockSubSubCategoryParent, {
+                    title: titleToUse,
+                    questionsCount: Number(newMockQsCount),
+                    durationMinutes: finalDuration,
+                    maxMarks: Number(newMockMaxMarks),
+                    isPremium: newMockRequiredTier !== 'None',
+                    requiredTier: newMockRequiredTier,
+                    hasSectionalTiming: newMockHasSectionalTiming,
+                    sectionalTimings: newMockHasSectionalTiming ? sectionalTimings : undefined,
+                    testbookTotalUsers: Number(newMockTestbookTotalUsers),
+                    testbookTopperScore: Number(newMockTestbookTopperScore),
+                    testbookAverageScore: Number(newMockTestbookAverageScore),
+                    testbookCutoffScore: Number(newMockTestbookCutoffScore),
+                    positiveMarks: Number(newMockPositiveMarks),
+                    negativeMarks: Number(newMockNegativeMarks),
+                  } as any);
+                }
+
                 setNewMockTitle('');
+                updateCount(1);
                 setNewMockSubSubCategoryParent('');
                 setNewMockHasSectionalTiming(false);
                 setNewMockSectionalTimingsStr('');
@@ -215,7 +233,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                 setNewMockTestbookAverageScore(0.0);
                 setNewMockTestbookCutoffScore(0.0);
                 setEditingMockTestId(null);
-                showToast('Mock test created successfully!');
+                showToast(count === 1 ? 'Mock test created successfully!' : `Successfully created ${count} mock tests!`);
               }}
               className="space-y-5"
             >
@@ -261,11 +279,60 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                 </div>
               </div>
 
-              {/* Test Title */}
-              <div>
-                <label className="block text-[10px] font-extrabold text-slate-555 dark:text-slate-400 uppercase tracking-wider mb-2">Test Title</label>
-                <input type="text" required value={newMockTitle} onChange={(e) => setNewMockTitle(e.target.value)} placeholder="e.g. SSC CGL 2026 - Mock Test 1" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold font-sans" />
+              {/* Test Title & Quantity */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="sm:col-span-3">
+                  <label className="block text-[10px] font-extrabold text-slate-555 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Test Title {countValue > 1 && <span className="text-blue-600 dark:text-blue-400 font-normal lowercase">(base title for batch)</span>}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newMockTitle}
+                    onChange={(e) => setNewMockTitle(e.target.value)}
+                    placeholder="e.g. SSC CGL Full Test"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold font-sans"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-extrabold text-slate-555 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    No. of Tests to Create
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    max={50}
+                    value={countValue}
+                    onChange={(e) => updateCount(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold font-sans"
+                  />
+                </div>
               </div>
+
+              {/* Live Bulk Title Preview Badge */}
+              {countValue > 1 && newMockTitle.trim() && (
+                <div className="p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl text-xs text-blue-900 dark:text-blue-200 space-y-1">
+                  <div className="font-extrabold flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
+                    <span>⚡ Bulk Creation Preview ({countValue} Mock Tests):</span>
+                  </div>
+                  <p className="text-[11px] text-blue-800 dark:text-blue-300 font-medium">
+                    Will create tests with titles suffixing 1 to {countValue}:
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {Array.from({ length: Math.min(countValue, 5) }).map((_, idx) => (
+                      <span key={idx} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-[10px] font-mono font-semibold rounded-md border border-blue-200 dark:border-blue-700">
+                        {newMockTitle.trim()} {idx + 1}
+                      </span>
+                    ))}
+                    {countValue > 5 && (
+                      <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-[10px] font-mono font-semibold rounded-md border border-blue-200 dark:border-blue-800">
+                        ... up to "{newMockTitle.trim()} {countValue}"
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Settings */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -363,13 +430,23 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
       {/* Filter Bar */}
       <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm font-sans">
         <div className="flex flex-wrap gap-3 items-center">
-          <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-505 uppercase tracking-wider">
-            <Search className="h-3.5 w-3.5" /> Filter
+          <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+            <Search className="h-3.5 w-3.5 text-slate-400" /> Filter
+          </div>
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={filterSearch}
+              onChange={(e) => setFilterSearch(e.target.value)}
+              placeholder="Search mock test title..."
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+            />
           </div>
           <select
             value={filterCategory}
             onChange={(e) => { setFilterCategory(e.target.value); setFilterSubCategory(''); setFilterSubSubCategory(''); }}
-            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
           >
             <option value="">All Exam Categories</option>
             {examCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
@@ -378,7 +455,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
             value={filterSubCategory}
             onChange={(e) => { setFilterSubCategory(e.target.value); setFilterSubSubCategory(''); }}
             disabled={!filterCategory}
-            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
+            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
           >
             <option value="">All Sub Categories</option>
             {examCatalog.find((c: any) => c.id === filterCategory)?.subCategories.map((sub: any) => <option key={sub.id} value={sub.id}>{sub.name}</option>) || null}
@@ -387,13 +464,13 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
             value={filterSubSubCategory}
             onChange={(e) => setFilterSubSubCategory(e.target.value)}
             disabled={!filterSubCategory}
-            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
+            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
           >
             <option value="">All Sub-Sub Categories</option>
             {examCatalog.find((c: any) => c.id === filterCategory)?.subCategories.find((s: any) => s.id === filterSubCategory)?.subSubCategories?.map((subsub: any) => <option key={subsub.id} value={subsub.id}>{subsub.name}</option>) || null}
           </select>
-          {(filterCategory || filterSubCategory || filterSubSubCategory) && (
-            <button type="button" onClick={() => { setFilterCategory(''); setFilterSubCategory(''); setFilterSubSubCategory(''); }} className="text-[11px] text-slate-555 hover:text-red-500 font-bold cursor-pointer flex items-center gap-1 transition-colors">
+          {(filterSearch || filterCategory || filterSubCategory || filterSubSubCategory) && (
+            <button type="button" onClick={() => { setFilterSearch(''); setFilterCategory(''); setFilterSubCategory(''); setFilterSubSubCategory(''); }} className="text-[11px] text-slate-500 hover:text-red-500 font-bold cursor-pointer flex items-center gap-1 transition-colors">
               <X className="h-3.5 w-3.5" /> Clear
             </button>
           )}

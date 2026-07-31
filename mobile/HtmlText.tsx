@@ -1,601 +1,388 @@
+/**
+ * HtmlText.tsx — Professional HTML renderer for React Native
+ *
+ * Architecture: Two-phase block/inline rendering
+ *  Phase 1: HTML → Array<Block>  (htmlToBlocks)
+ *  Phase 2: Array<Block> → React nodes  (renderBlocks)
+ *
+ * A Block maps to a View row; Inlines flow inside Text within that View.
+ * This eliminates all "ghost" blank lines from CMS-generated HTML.
+ */
 import React, { useState } from 'react';
 import { Text, View, StyleSheet, Image as RNImage } from 'react-native';
 import { Image } from 'expo-image';
 
-interface HtmlTextProps {
+export interface HtmlTextProps {
   html: string;
   style?: any;
   isDark?: boolean;
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Brace-aware group extractor
-// Returns the content between matching { } starting at str[start], and the
-// index of the character AFTER the closing }.
-// ──────────────────────────────────────────────────────────────────────────────
-function extractBraceGroup(
-  str: string,
-  start: number
-): { content: string; end: number } | null {
-  if (start >= str.length || str[start] !== '{') return null;
-  let depth = 1;
-  let i = start + 1;
-  while (i < str.length && depth > 0) {
-    if (str[i] === '{') depth++;
-    else if (str[i] === '}') depth--;
-    i++;
-  }
-  return depth === 0 ? { content: str.slice(start + 1, i - 1), end: i } : null;
+// ─────────────────────────────────────────────────────────────────────────────
+// HTML Entity Map (comprehensive: math, Greek, currencies, symbols, arrows)
+// ─────────────────────────────────────────────────────────────────────────────
+const ENTITIES: Record<string, string> = {
+  // Basics
+  amp:'&', lt:'<', gt:'>', quot:'"', apos:"'", nbsp:'\u00A0',
+  // Punctuation
+  iexcl:'¡',cent:'¢',pound:'£',curren:'¤',yen:'¥',brvbar:'¦',sect:'§',
+  uml:'¨',copy:'©',ordf:'ª',laquo:'«',not:'¬',shy:'\u00AD',reg:'®',
+  macr:'¯',deg:'°',plusmn:'±',sup2:'²',sup3:'³',acute:'´',micro:'µ',
+  para:'¶',middot:'·',cedil:'¸',sup1:'¹',ordm:'º',raquo:'»',
+  frac14:'¼',frac12:'½',frac34:'¾',iquest:'¿',
+  // Dashes & spaces
+  ndash:'–',mdash:'—',thinsp:'\u2009',ensp:'\u2002',emsp:'\u2003',
+  zwj:'\u200D',zwnj:'\u200C',lrm:'\u200E',rlm:'\u200F',
+  // Quotes
+  sbquo:'‚',bdquo:'„',hellip:'…',dagger:'†',Dagger:'‡',permil:'‰',
+  lsaquo:'‹',rsaquo:'›',ldquo:'\u201C',rdquo:'\u201D',
+  lsquo:'\u2018',rsquo:'\u2019',bull:'•',prime:'′',Prime:'″',
+  frasl:'⁄',trade:'™',euro:'€',
+  // ── MATH OPERATORS ──────────────────────────────────────────────────────────
+  minus:'−',times:'×',divide:'÷',radic:'√',infin:'∞',
+  sum:'∑',prod:'∏',int:'∫',part:'∂',nabla:'∇',
+  ne:'≠',le:'≤',ge:'≥',equiv:'≡',asymp:'≈',cong:'≅',
+  sim:'∼',prop:'∝',ang:'∠',perp:'⊥',there4:'∴',because:'∵',
+  approx:'≈',sdot:'⋅',lowast:'∗',
+  // ── FRACTIONS ────────────────────────────────────────────────────────────────
+  frac13:'⅓',frac23:'⅔',frac15:'⅕',frac25:'⅖',frac35:'⅗',
+  frac45:'⅘',frac16:'⅙',frac56:'⅚',frac18:'⅛',frac38:'⅜',
+  frac58:'⅝',frac78:'⅞',
+  // ── POWERS / SUB / SUP ───────────────────────────────────────────────────────
+  sup0:'⁰',sup4:'⁴',sup5:'⁵',sup6:'⁶',sup7:'⁷',sup8:'⁸',sup9:'⁹',
+  sub0:'₀',sub1:'₁',sub2:'₂',sub3:'₃',sub4:'₄',
+  sub5:'₅',sub6:'₆',sub7:'₇',sub8:'₈',sub9:'₉',
+  // ── LOGIC & SETS ─────────────────────────────────────────────────────────────
+  forall:'∀',exist:'∃',empty:'∅',isin:'∈',notin:'∉',
+  sub:'⊂',sup:'⊃',nsub:'⊄',sube:'⊆',supe:'⊇',
+  and:'∧',or:'∨',cap:'∩',cup:'∪',oplus:'⊕',otimes:'⊗',
+  // ── ARROWS ───────────────────────────────────────────────────────────────────
+  larr:'←',uarr:'↑',rarr:'→',darr:'↓',harr:'↔',crarr:'↵',
+  lArr:'⇐',uArr:'⇑',rArr:'⇒',dArr:'⇓',hArr:'⇔',
+  nearr:'↗',searr:'↘',swarr:'↙',nwarr:'↖',
+  xlarr:'⟵',xrarr:'⟶',xharr:'⟷',xlArr:'⟸',xrArr:'⟹',xhArr:'⟺',
+  // ── GEOMETRY & MISC ──────────────────────────────────────────────────────────
+  loz:'◊',spades:'♠',clubs:'♣',hearts:'♥',diams:'♦',
+  ldots:'…',cdots:'⋯',vdots:'⋮',ddots:'⋱',
+  lceil:'⌈',rceil:'⌉',lfloor:'⌊',rfloor:'⌋',lang:'⟨',rang:'⟩',
+  // ── CURRENCIES ───────────────────────────────────────────────────────────────
+  inr:'₹',rupee:'₹',won:'₩',peso:'₱',bitcoin:'₿',ruble:'₽',
+  // ── GREEK LOWERCASE ──────────────────────────────────────────────────────────
+  alpha:'α',beta:'β',gamma:'γ',delta:'δ',epsilon:'ε',zeta:'ζ',
+  eta:'η',theta:'θ',iota:'ι',kappa:'κ',lambda:'λ',mu:'μ',
+  nu:'ν',xi:'ξ',omicron:'ο',pi:'π',rho:'ρ',sigma:'σ',
+  tau:'τ',upsilon:'υ',phi:'φ',chi:'χ',psi:'ψ',omega:'ω',
+  sigmaf:'ς',thetasym:'ϑ',upsih:'ϒ',piv:'ϖ',
+  // ── GREEK UPPERCASE ──────────────────────────────────────────────────────────
+  Alpha:'Α',Beta:'Β',Gamma:'Γ',Delta:'Δ',Epsilon:'Ε',Zeta:'Ζ',
+  Eta:'Η',Theta:'Θ',Iota:'Ι',Kappa:'Κ',Lambda:'Λ',Mu:'Μ',
+  Nu:'Ν',Xi:'Ξ',Omicron:'Ο',Pi:'Π',Rho:'Ρ',Sigma:'Σ',
+  Tau:'Τ',Upsilon:'Υ',Phi:'Φ',Chi:'Χ',Psi:'Ψ',Omega:'Ω',
+  // ── LATIN EXTENDED ───────────────────────────────────────────────────────────
+  Aacute:'Á',aacute:'á',Agrave:'À',agrave:'à',Acirc:'Â',acirc:'â',
+  Atilde:'Ã',atilde:'ã',Auml:'Ä',auml:'ä',Aring:'Å',aring:'å',
+  AElig:'Æ',aelig:'æ',Ccedil:'Ç',ccedil:'ç',Eacute:'É',eacute:'é',
+  Egrave:'È',egrave:'è',Ecirc:'Ê',ecirc:'ê',Euml:'Ë',euml:'ë',
+  Iacute:'Í',iacute:'í',Igrave:'Ì',igrave:'ì',Icirc:'Î',icirc:'î',
+  Iuml:'Ï',iuml:'ï',ETH:'Ð',eth:'ð',Ntilde:'Ñ',ntilde:'ñ',
+  Oacute:'Ó',oacute:'ó',Ograve:'Ò',ograve:'ò',Ocirc:'Ô',ocirc:'ô',
+  Otilde:'Õ',otilde:'õ',Ouml:'Ö',ouml:'ö',Oslash:'Ø',oslash:'ø',
+  Uacute:'Ú',uacute:'ú',Ugrave:'Ù',ugrave:'ù',Ucirc:'Û',ucirc:'û',
+  Uuml:'Ü',uuml:'ü',Yacute:'Ý',yacute:'ý',THORN:'Þ',thorn:'þ',
+  szlig:'ß',yuml:'ÿ',OElig:'Œ',oelig:'œ',Scaron:'Š',scaron:'š',Yuml:'Ÿ',
+  // ── MATH LETTERS ─────────────────────────────────────────────────────────────
+  fnof:'ƒ',weierp:'℘',image:'ℑ',real:'ℜ',alefsym:'ℵ',
+};
+
+function decodeEntities(s: string): string {
+  if (!s.includes('&')) return s;
+  return s
+    .replace(/&#([0-9]+);/g, (_,d)=>String.fromCodePoint(parseInt(d,10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_,h)=>String.fromCodePoint(parseInt(h,16)))
+    .replace(/&([a-zA-Z][a-zA-Z0-9]*);/g, (_,n)=>ENTITIES[n]??_);
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// LaTeX → plain Unicode for non-fraction content
-// (fracs are extracted separately before this is called)
-// ──────────────────────────────────────────────────────────────────────────────
-function translateLatexToUnicode(latex: string): string {
-  if (!latex) return '';
-  let c = latex;
+// ─────────────────────────────────────────────────────────────────────────────
+// LaTeX → Unicode (comprehensive)
+// ─────────────────────────────────────────────────────────────────────────────
+const SUP: Record<string,string> = {
+  '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹',
+  '+':'⁺','-':'⁻','=':'⁼','(':'⁽',')':'⁾','n':'ⁿ','x':'ˣ','a':'ᵃ','b':'ᵇ',
+  'c':'ᶜ','d':'ᵈ','e':'ᵉ','f':'ᶠ','g':'ᵍ','h':'ʰ','i':'ⁱ','j':'ʲ','k':'ᵏ',
+  'l':'ˡ','m':'ᵐ','o':'ᵒ','p':'ᵖ','r':'ʳ','s':'ˢ','t':'ᵗ','u':'ᵘ','v':'ᵛ',
+  'w':'ʷ','y':'ʸ','z':'ᶻ',
+};
+const SUB: Record<string,string> = {
+  '0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉',
+  '+':'₊','-':'₋','=':'₌','(':'₍',')':'₎',
+  'a':'ₐ','e':'ₑ','o':'ₒ','x':'ₓ','n':'ₙ','i':'ᵢ','r':'ᵣ','u':'ᵤ','v':'ᵥ',
+};
+
+function latexToUnicode(s: string): string {
+  if (!s) return '';
+  let c = s;
 
   // Strip math delimiters
-  c = c.replace(/\\+\(|\\+\)|\\+\[|\\+\]|\$\$?/g, '');
+  c = c.replace(/\\\(|\\\)|\\\[|\\\]|\$\$/g,'');
+  c = c.replace(/(?<![a-zA-Z])\$(?!\$)/g,'');
 
-  // ── Commands with {content} (must run before generic brace-strip) ──────────
+  // Text-mode commands: \text{…} \mathrm{…} etc.
+  c = c.replace(/\\(?:text|rm|mathrm|mathbf|textbf|textrm|mathit|mathbb|mathcal|mbox|hbox)\s*\{([^{}]*)\}/g,'$1');
 
-  // Text mode: \text{Simplify:} → Simplify:
-  c = c.replace(/\\+(?:text|rm|mathrm|mathbf|textbf|mbox)\s*\{([^{}]*)\}/g, '$1');
-
-  // Fractions that appear inside num/den of a visual fraction (render inline)
-  for (let i = 0; i < 3; i++) {
-    c = c.replace(/\\+frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)');
+  // ── Fractions (nested up to 4 passes) ─────────────────────────────────────
+  for (let i=0;i<4;i++) {
+    c = c.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,'($1)/($2)');
+    c = c.replace(/\\dfrac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,'($1)/($2)');
+    c = c.replace(/\\tfrac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,'($1)/($2)');
+    c = c.replace(/\\cfrac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,'($1)/($2)');
   }
 
-  // sqrt
-  c = c.replace(/\\+sqrt\s*\{([^{}]*)\}/g, '√($1)');
-  c = c.replace(/\\+sqrt/g, '√');
+  // ── Roots ─────────────────────────────────────────────────────────────────
+  c = c.replace(/\\sqrt\s*\[2\]\s*\{([^{}]*)\}/g,'√($1)');
+  c = c.replace(/\\sqrt\s*\[3\]\s*\{([^{}]*)\}/g,'∛($1)');
+  c = c.replace(/\\sqrt\s*\[4\]\s*\{([^{}]*)\}/g,'∜($1)');
+  c = c.replace(/\\sqrt\s*\{([^{}]*)\}/g,'√($1)');
+  c = c.replace(/\\sqrt\b/g,'√');
 
-  // overline / bar
-  c = c.replace(/\\+overline\s*\{([^{}]*)\}/g, '$1̄');
-  c = c.replace(/\\+bar\s*\{([^{}]*)\}/g, '$1̄');
+  // ── Overline / bar / hat / vec ─────────────────────────────────────────────
+  c = c.replace(/\\overline\s*\{([^{}]*)\}/g,'$1̄');
+  c = c.replace(/\\bar\s*\{([^{}]*)\}/g,'$1̄');
+  c = c.replace(/\\hat\s*\{([^{}]*)\}/g,'$1̂');
+  c = c.replace(/\\vec\s*\{([^{}]*)\}/g,'$1⃗');
+  c = c.replace(/\\tilde\s*\{([^{}]*)\}/g,'$1̃');
+  c = c.replace(/\\dot\s*\{([^{}]*)\}/g,'$1̇');
+  c = c.replace(/\\ddot\s*\{([^{}]*)\}/g,'$1̈');
 
-  // Exponents with braces: x^{10} → x¹⁰
-  const supMap: Record<string, string> = {
-    '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
-    '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
-    '+': '⁺', '-': '⁻', 'n': 'ⁿ', 'x': 'ˣ', 'a': 'ᵃ', 'b': 'ᵇ',
-  };
-  c = c.replace(/\^\{([^{}]+)\}/g, (_, exp) =>
-    exp.split('').map((ch: string) => supMap[ch] ?? ch).join('')
-  );
+  // ── Superscripts: ^{…} and ^x ─────────────────────────────────────────────
+  c = c.replace(/\^\{([^{}]+)\}/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
+  c = c.replace(/\^([0-9a-zA-Z+\-])/g, (_,ch)=>SUP[ch]??`^${ch}`);
 
-  // Subscripts with braces: x_{10} → x₁₀
-  const subMap: Record<string, string> = {
-    '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
-    '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
-    'n': 'ₙ', 'a': 'ₐ', 'e': 'ₑ', 'o': 'ₒ', 'x': 'ₓ',
-  };
-  c = c.replace(/_\{([^{}]+)\}/g, (_, sub) =>
-    sub.split('').map((ch: string) => subMap[ch] ?? ch).join('')
-  );
+  // ── Subscripts: _{…} and _x ───────────────────────────────────────────────
+  c = c.replace(/_\{([^{}]+)\}/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
+  c = c.replace(/_([0-9a-zA-Z+\-])/g, (_,ch)=>SUB[ch]??`_${ch}`);
 
-  // Left/Right delimiters
-  c = c.replace(/\\+left\s*/g, '');
-  c = c.replace(/\\+right\s*/g, '');
+  // ── Delimiters ────────────────────────────────────────────────────────────
+  c = c.replace(/\\left\s*([\(\[\{|\\])/g,'$1');
+  c = c.replace(/\\right\s*([\)\]\}|\\])/g,'$1');
+  c = c.replace(/\\left\./g,'');
+  c = c.replace(/\\right\./g,'');
 
-  // ── Strip remaining bare {…} braces (run 3× for nested groups) ────────────
-  for (let i = 0; i < 3; i++) c = c.replace(/\{([^{}]*)\}/g, '$1');
+  // ── Strip remaining braces ────────────────────────────────────────────────
+  for (let i=0;i<4;i++) c = c.replace(/\{([^{}]*)\}/g,'$1');
 
-  // ── Named commands (no braces) ─────────────────────────────────────────────
+  // ── Trig & log ────────────────────────────────────────────────────────────
+  c = c.replace(/\\arctan\b/g,'arctan');
+  c = c.replace(/\\arcsin\b/g,'arcsin');
+  c = c.replace(/\\arccos\b/g,'arccos');
+  c = c.replace(/\\tan\b/g,'tan');
+  c = c.replace(/\\sin\b/g,'sin');
+  c = c.replace(/\\cos\b/g,'cos');
+  c = c.replace(/\\cot\b/g,'cot');
+  c = c.replace(/\\sec\b/g,'sec');
+  c = c.replace(/\\cosec\b/g,'cosec');
+  c = c.replace(/\\csc\b/g,'csc');
+  c = c.replace(/\\log\b/g,'log');
+  c = c.replace(/\\ln\b/g,'ln');
+  c = c.replace(/\\lim\b/g,'lim');
+  c = c.replace(/\\exp\b/g,'exp');
+  c = c.replace(/\\max\b/g,'max');
+  c = c.replace(/\\min\b/g,'min');
+  c = c.replace(/\\sup\b/g,'sup');
+  c = c.replace(/\\inf\b/g,'inf');
+  c = c.replace(/\\gcd\b/g,'gcd');
+  c = c.replace(/\\lcm\b/g,'lcm');
+  c = c.replace(/\\det\b/g,'det');
+  c = c.replace(/\\dim\b/g,'dim');
+  c = c.replace(/\\deg\b/g,'deg');
+  c = c.replace(/\\mod\b/g,'mod');
 
-  // Trig / log
-  c = c.replace(/\\+tan(?![a-z])/g, 'tan');
-  c = c.replace(/\\+sin(?![a-z])/g, 'sin');
-  c = c.replace(/\\+cos(?![a-z])/g, 'cos');
-  c = c.replace(/\\+cot(?![a-z])/g, 'cot');
-  c = c.replace(/\\+sec(?![a-z])/g, 'sec');
-  c = c.replace(/\\+cosec/g, 'cosec');
-  c = c.replace(/\\+log(?![a-z])/g, 'log');
-  c = c.replace(/\\+lim(?![a-z])/g, 'lim');
-  c = c.replace(/\\+exp(?![a-z])/g, 'exp');
+  // ── Greek letters ─────────────────────────────────────────────────────────
+  c = c.replace(/\\alpha\b/gi,'α');  c = c.replace(/\\beta\b/gi,'β');
+  c = c.replace(/\\gamma\b/g,'γ');   c = c.replace(/\\Gamma\b/g,'Γ');
+  c = c.replace(/\\delta\b/g,'δ');   c = c.replace(/\\Delta\b/g,'Δ');
+  c = c.replace(/\\epsilon\b/gi,'ε'); c = c.replace(/\\varepsilon\b/g,'ε');
+  c = c.replace(/\\zeta\b/gi,'ζ');   c = c.replace(/\\eta\b/gi,'η');
+  c = c.replace(/\\theta\b/g,'θ');   c = c.replace(/\\Theta\b/g,'Θ');
+  c = c.replace(/\\vartheta\b/g,'ϑ');
+  c = c.replace(/\\iota\b/gi,'ι');   c = c.replace(/\\kappa\b/gi,'κ');
+  c = c.replace(/\\lambda\b/g,'λ');  c = c.replace(/\\Lambda\b/g,'Λ');
+  c = c.replace(/\\mu\b/gi,'μ');     c = c.replace(/\\nu\b/gi,'ν');
+  c = c.replace(/\\xi\b/g,'ξ');      c = c.replace(/\\Xi\b/g,'Ξ');
+  c = c.replace(/\\pi\b/g,'π');      c = c.replace(/\\Pi\b/g,'Π');
+  c = c.replace(/\\varpi\b/g,'ϖ');
+  c = c.replace(/\\rho\b/gi,'ρ');    c = c.replace(/\\varrho\b/g,'ϱ');
+  c = c.replace(/\\sigma\b/g,'σ');   c = c.replace(/\\Sigma\b/g,'Σ');
+  c = c.replace(/\\varsigma\b/g,'ς');
+  c = c.replace(/\\tau\b/gi,'τ');
+  c = c.replace(/\\upsilon\b/g,'υ'); c = c.replace(/\\Upsilon\b/g,'Υ');
+  c = c.replace(/\\phi\b/g,'φ');     c = c.replace(/\\Phi\b/g,'Φ');
+  c = c.replace(/\\varphi\b/g,'φ');
+  c = c.replace(/\\chi\b/gi,'χ');
+  c = c.replace(/\\psi\b/g,'ψ');     c = c.replace(/\\Psi\b/g,'Ψ');
+  c = c.replace(/\\omega\b/g,'ω');   c = c.replace(/\\Omega\b/g,'Ω');
 
-  // Greek
-  c = c.replace(/\\+theta/gi, 'θ');
-  c = c.replace(/\\+alpha/gi, 'α');
-  c = c.replace(/\\+beta/gi, 'β');
-  c = c.replace(/\\+gamma/gi, 'γ');
-  c = c.replace(/\\+lambda/gi, 'λ');
-  c = c.replace(/\\+mu/gi, 'μ');
-  c = c.replace(/\\+pi/gi, 'π');
-  c = c.replace(/\\+phi/gi, 'φ');
-  c = c.replace(/\\+sigma/gi, 'σ');
-  c = c.replace(/\\+omega/gi, 'ω');
-  c = c.replace(/\\+delta/gi, 'δ');
-  c = c.replace(/\\+Delta/g, 'Δ');
-  c = c.replace(/\\+epsilon/gi, 'ε');
-  c = c.replace(/\\+eta/gi, 'η');
-  c = c.replace(/\\+rho/gi, 'ρ');
-  c = c.replace(/\\+tau/gi, 'τ');
-  c = c.replace(/\\+xi/gi, 'ξ');
+  // ── Operators & symbols ───────────────────────────────────────────────────
+  c = c.replace(/\\times\b/g,'×');   c = c.replace(/\\div\b/g,'÷');
+  c = c.replace(/\\pm\b/g,'±');      c = c.replace(/\\mp\b/g,'∓');
+  c = c.replace(/\\cdot\b/g,'·');    c = c.replace(/\\cdots\b/g,'⋯');
+  c = c.replace(/\\ldots\b/g,'…');   c = c.replace(/\\vdots\b/g,'⋮');
+  c = c.replace(/\\ddots\b/g,'⋱');   c = c.replace(/\\dots\b/g,'…');
+  c = c.replace(/\\infty\b/g,'∞');
+  c = c.replace(/\\approx\b/g,'≈');  c = c.replace(/\\simeq\b/g,'≃');
+  c = c.replace(/\\sim\b/g,'∼');
+  c = c.replace(/\\neq\b/g,'≠');     c = c.replace(/\\ne\b/g,'≠');
+  c = c.replace(/\\leq\b/g,'≤');     c = c.replace(/\\le\b/g,'≤');
+  c = c.replace(/\\geq\b/g,'≥');     c = c.replace(/\\ge\b/g,'≥');
+  c = c.replace(/\\ll\b/g,'≪');      c = c.replace(/\\gg\b/g,'≫');
+  c = c.replace(/\\equiv\b/g,'≡');   c = c.replace(/\\cong\b/g,'≅');
+  c = c.replace(/\\propto\b/g,'∝');
+  c = c.replace(/\\therefore\b/g,'∴'); c = c.replace(/\\because\b/g,'∵');
+  c = c.replace(/\\implies\b/g,'⇒');
+  c = c.replace(/\\impliedby\b/g,'⇐');
+  c = c.replace(/\\iff\b/g,'⇔');
+  c = c.replace(/\\Rightarrow\b/g,'⇒'); c = c.replace(/\\Leftarrow\b/g,'⇐');
+  c = c.replace(/\\Leftrightarrow\b/g,'⇔');
+  c = c.replace(/\\rightarrow\b/g,'→'); c = c.replace(/\\leftarrow\b/g,'←');
+  c = c.replace(/\\leftrightarrow\b/g,'↔');
+  c = c.replace(/\\to\b/g,'→');      c = c.replace(/\\gets\b/g,'←');
+  c = c.replace(/\\uparrow\b/g,'↑'); c = c.replace(/\\downarrow\b/g,'↓');
+  c = c.replace(/\\updownarrow\b/g,'↕');
+  c = c.replace(/\\subset\b/g,'⊂');  c = c.replace(/\\supset\b/g,'⊃');
+  c = c.replace(/\\subseteq\b/g,'⊆'); c = c.replace(/\\supseteq\b/g,'⊇');
+  c = c.replace(/\\in\b/g,'∈');      c = c.replace(/\\notin\b/g,'∉');
+  c = c.replace(/\\cap\b/g,'∩');     c = c.replace(/\\cup\b/g,'∪');
+  c = c.replace(/\\emptyset\b/g,'∅'); c = c.replace(/\\varnothing\b/g,'∅');
+  c = c.replace(/\\forall\b/g,'∀');  c = c.replace(/\\exists\b/g,'∃');
+  c = c.replace(/\\neg\b/g,'¬');     c = c.replace(/\\lnot\b/g,'¬');
+  c = c.replace(/\\land\b/g,'∧');    c = c.replace(/\\lor\b/g,'∨');
+  c = c.replace(/\\sum\b/g,'∑');     c = c.replace(/\\prod\b/g,'∏');
+  c = c.replace(/\\int\b/g,'∫');     c = c.replace(/\\oint\b/g,'∮');
+  c = c.replace(/\\partial\b/g,'∂'); c = c.replace(/\\nabla\b/g,'∇');
+  c = c.replace(/\\triangle\b/g,'△'); c = c.replace(/\\angle\b/g,'∠');
+  c = c.replace(/\\perp\b/g,'⊥');    c = c.replace(/\\parallel\b/g,'∥');
+  c = c.replace(/\\circ\b/g,'∘');
+  c = c.replace(/\\\^\\circ/g,'°');  c = c.replace(/\\\^o\b/g,'°');
+  c = c.replace(/\\degree\b/g,'°');
+  c = c.replace(/\\bullet\b/g,'•');  c = c.replace(/\\star\b/g,'⋆');
+  c = c.replace(/\\oplus\b/g,'⊕');   c = c.replace(/\\otimes\b/g,'⊗');
+  c = c.replace(/\\odot\b/g,'⊙');
+  c = c.replace(/\\prime\b/g,'′');   c = c.replace(/\\backslash\b/g,'\\');
 
-  // Operators
-  c = c.replace(/\\+times/g, '×');
-  c = c.replace(/\\+div/g, '÷');
-  c = c.replace(/\\+pm/g, '±');
-  c = c.replace(/\\+mp/g, '∓');
-  c = c.replace(/\\+triangle/g, '△');
-  c = c.replace(/\\+angle/g, '∠');
-  c = c.replace(/\\+infty/g, '∞');
-  c = c.replace(/\\+approx/g, '≈');
-  c = c.replace(/\\+neq/g, '≠');
-  c = c.replace(/\\+leq/g, '≤');
-  c = c.replace(/\\+geq/g, '≥');
-  c = c.replace(/\\+implies/g, '⇒');
-  c = c.replace(/\\+impliedby/g, '⇐');
-  c = c.replace(/\\+iff/g, '⇔');
-  c = c.replace(/\\+leftrightarrow/g, '↔');
-  c = c.replace(/\\+rightarrow/g, '→');
-  c = c.replace(/\\+leftarrow/g, '←');
-  c = c.replace(/\\+to(?![a-z])/g, '→');
-  c = c.replace(/\\+cdot/g, '·');
-  c = c.replace(/\\+ldots|\\+dots/g, '…');
-  c = c.replace(/\\+sum/g, '∑');
-  c = c.replace(/\\+prod/g, '∏');
-  c = c.replace(/\\+int/g, '∫');
-  c = c.replace(/\\+circ/g, '°');
+  // ── Currencies ────────────────────────────────────────────────────────────
+  c = c.replace(/\\rupee\b/g,'₹');
+  c = c.replace(/\\euro\b/g,'€');
+  c = c.replace(/\\pounds\b/g,'£');
+  c = c.replace(/\\yen\b/g,'¥');
+  c = c.replace(/\\dollar\b/g,'$');
+  c = c.replace(/\\cent\b/g,'¢');
 
-  // Single-char exponents
-  c = c.replace(/\^\^?\\+circ|\\^circ/g, '°');
-  c = c.replace(/\^0/g, '⁰'); c = c.replace(/\^1/g, '¹'); c = c.replace(/\^2/g, '²');
-  c = c.replace(/\^3/g, '³'); c = c.replace(/\^4/g, '⁴'); c = c.replace(/\^5/g, '⁵');
-  c = c.replace(/\^6/g, '⁶'); c = c.replace(/\^7/g, '⁷'); c = c.replace(/\^8/g, '⁸');
-  c = c.replace(/\^9/g, '⁹'); c = c.replace(/\^x/g, 'ˣ'); c = c.replace(/\^n/g, 'ⁿ');
+  // ── Spacing commands ──────────────────────────────────────────────────────
+  c = c.replace(/\\[,;:!]\s*/g,' ');
+  c = c.replace(/\\quad\b/g,' ');
+  c = c.replace(/\\qquad\b/g,'  ');
+  c = c.replace(/\\hspace\s*\{[^{}]*\}/g,' ');
+  c = c.replace(/\\vspace\s*\{[^{}]*\}/g,'');
+  c = c.replace(/\\\s/g,' ');
 
-  // Single-char subscripts
-  c = c.replace(/_0/g, '₀'); c = c.replace(/_1/g, '₁'); c = c.replace(/_2/g, '₂');
-  c = c.replace(/_3/g, '₃'); c = c.replace(/_n/g, 'ₙ');
+  // ── Remove remaining LaTeX commands ───────────────────────────────────────
+  c = c.replace(/\\[a-zA-Z]+\b\*?/g,'');
 
-  // Currency
-  c = c.replace(/\\+rupee/g, '₹');
+  // ── Clean up remaining backslashes and extra spaces ───────────────────────
+  c = c.replace(/\\/g,'');
+  c = c.replace(/[ \t]{2,}/g,' ').trim();
 
-  // Remove remaining backslashes
-  c = c.replace(/\\/g, '');
-
-  // Collapse extra whitespace
-  c = c.replace(/\s{2,}/g, ' ').trim();
   return c;
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Parsed segment types
-// ──────────────────────────────────────────────────────────────────────────────
-type Segment =
-  | { type: 'text'; value: string }
-  | { type: 'frac'; num: string; den: string };
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Split a text string into plain-text and fraction segments.
-// Fracs are found with a brace-aware parser so nested {} work correctly.
-// ──────────────────────────────────────────────────────────────────────────────
-function splitIntoSegments(raw: string): Segment[] {
-  const segments: Segment[] = [];
-  let i = 0;
-  let buf = '';
-
-  while (i < raw.length) {
-    // Count leading backslashes
-    if (raw[i] === '\\') {
-      let bs = 0;
-      while (i + bs < raw.length && raw[i + bs] === '\\') bs++;
-      const after = raw.slice(i + bs);
-
-      if (after.startsWith('frac')) {
-        // Flush buffer
-        if (buf) { segments.push({ type: 'text', value: buf }); buf = ''; }
-        i += bs + 4; // skip \frac
-
-        // Skip whitespace between \frac and {
-        while (i < raw.length && raw[i] === ' ') i++;
-
-        const numRes = extractBraceGroup(raw, i);
-        if (!numRes) { buf += '\\frac'; continue; }
-        i = numRes.end;
-
-        // Skip whitespace between {} {}
-        while (i < raw.length && raw[i] === ' ') i++;
-
-        const denRes = extractBraceGroup(raw, i);
-        if (!denRes) { buf += `(${numRes.content})`; continue; }
-        i = denRes.end;
-
-        // Translate num/den content (fracs inside render as inline text)
-        segments.push({
-          type: 'frac',
-          num: translateLatexToUnicode(numRes.content),
-          den: translateLatexToUnicode(denRes.content),
-        });
-        continue;
-      } else {
-        buf += raw[i];
-        i++;
-      }
-    } else {
-      buf += raw[i];
-      i++;
-    }
-  }
-
-  if (buf) segments.push({ type: 'text', value: buf });
-  return segments;
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Visual fraction component
-// ──────────────────────────────────────────────────────────────────────────────
-interface FracProps {
-  num: string;
-  den: string;
-  fontSize: number;
-  color: string;
-}
-const FractionView: React.FC<FracProps> = ({ num, den, fontSize, color }) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// Fraction renderer (visual numerator/denominator stack)
+// ─────────────────────────────────────────────────────────────────────────────
+interface FracProps { num:string; den:string; fontSize:number; color:string }
+const FracView: React.FC<FracProps> = ({ num, den, fontSize, color }) => {
   const fs = Math.round(fontSize * 0.82);
   return (
     <View style={styles.fracWrap}>
-      <Text style={[styles.fracPart, { fontSize: fs, color }]}>{num}</Text>
-      <View style={[styles.fracLine, { backgroundColor: color }]} />
-      <Text style={[styles.fracPart, { fontSize: fs, color }]}>{den}</Text>
+      <Text style={{ fontSize:fs, color, textAlign:'center', minWidth:16 }}>{num}</Text>
+      <View style={{ height:1.5, backgroundColor:color, alignSelf:'stretch', minWidth:20, marginVertical:2 }} />
+      <Text style={{ fontSize:fs, color, textAlign:'center', minWidth:16 }}>{den}</Text>
     </View>
   );
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Remote image helper component with auto-height sizing
-// ──────────────────────────────────────────────────────────────────────────────
-interface HtmlImageProps {
-  src: string;
-  isDark?: boolean;
-  width?: number;
-  height?: number;
-}
-const HtmlImage: React.FC<HtmlImageProps> = ({ src, isDark, width: propWidth, height: propHeight }) => {
-  if (!src || !src.trim()) return null;
-  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+// ─────────────────────────────────────────────────────────────────────────────
+// Image component with auto-sizing
+// ─────────────────────────────────────────────────────────────────────────────
+interface ImgProps { src:string; isDark?:boolean; w?:number; h?:number }
+const HtmlImg: React.FC<ImgProps> = ({ src, isDark, w, h }) => {
+  const [ar, setAr] = useState<number|null>(null);
+  const [size, setSize] = useState<{w:number;h:number}|null>(null);
   const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
-    if (propWidth && propHeight) {
-      setDimensions({ width: propWidth, height: propHeight });
-      setAspectRatio(propWidth / propHeight);
-      setLoading(false);
-    } else {
-      RNImage.getSize(
-        src,
-        (width, height) => {
-          if (width && height) {
-            setDimensions({ width, height });
-            setAspectRatio(width / height);
-          }
-          setLoading(false);
-        },
-        (error) => {
-          console.warn('Failed to get image size for:', src, error);
-          setLoading(false);
-        }
-      );
-    }
-  }, [src, propWidth, propHeight]);
+    if (w && h) { setSize({w,h}); setAr(w/h); setLoading(false); return; }
+    RNImage.getSize(src,
+      (iw,ih)=>{ if(iw&&ih){setSize({w:iw,h:ih});setAr(iw/ih);} setLoading(false); },
+      ()=>setLoading(false)
+    );
+  }, [src,w,h]);
 
-  const isIcon =
-    (propWidth && propWidth < 100) ||
-    (dimensions && dimensions.width < 100 && dimensions.height < 100) ||
-    src.toLowerCase().includes('shortcut-trick') ||
-    src.toLowerCase().includes('alternate-methord') ||
-    src.toLowerCase().includes('alternate-method') ||
-    src.toLowerCase().includes('additional-information');
+  const isIcon = (w&&w<100)||(size&&size.w<100)||
+    /shortcut-trick|alternate-meth|additional-info|icon|bullet/i.test(src);
 
   if (loading) {
-    const isUrlLikelyIcon =
-      (propWidth && propWidth < 100) ||
-      src.toLowerCase().includes('icon') ||
-      src.toLowerCase().includes('bullet') ||
-      src.toLowerCase().includes('key') ||
-      src.toLowerCase().includes('info') ||
-      src.toLowerCase().includes('shortcut-trick') ||
-      src.toLowerCase().includes('alternate-methord') ||
-      src.toLowerCase().includes('alternate-method') ||
-      src.toLowerCase().includes('additional-information');
-
-    if (isUrlLikelyIcon) {
-      return (
-        <View
-          style={{
-            width: propWidth ?? 26,
-            height: propHeight ?? 26,
-            backgroundColor: isDark ? '#1E293B' : '#E2E8F0',
-            borderRadius: 4,
-            marginHorizontal: 4,
-            alignSelf: 'center',
-          }}
-        />
-      );
-    }
-    return (
-      <View
-        style={{
-          width: 120,
-          height: 40,
-          backgroundColor: isDark ? '#1E293B' : '#E2E8F0',
-          borderRadius: 4,
-          marginVertical: 6,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Text style={{ fontSize: 9, color: isDark ? '#94A3B8' : '#64748B' }}>Loading image...</Text>
-      </View>
-    );
+    if ((w&&w<100)||/icon|bullet/i.test(src))
+      return <View style={{width:w??26,height:h??26,backgroundColor:isDark?'#1E293B':'#E2E8F0',borderRadius:4,marginHorizontal:4}} />;
+    return <View style={{width:120,height:40,backgroundColor:isDark?'#1E293B':'#E2E8F0',borderRadius:4,marginVertical:4,justifyContent:'center',alignItems:'center'}}><Text style={{fontSize:9,color:'#94A3B8'}}>…</Text></View>;
   }
 
-  if (isIcon && aspectRatio) {
-    const targetHeight = propHeight ?? (dimensions ? Math.min(dimensions.height, 26) : 26);
-    const targetWidth = targetHeight * aspectRatio;
-    return (
-      <Image
-        source={{ uri: src }}
-        style={{
-          width: targetWidth,
-          height: targetHeight,
-          marginHorizontal: 4,
-          alignSelf: 'center',
-        }}
-        contentFit="contain"
-        cachePolicy="memory-disk"
-        transition={150}
-        recyclingKey={src}
-      />
-    );
+  if (isIcon && ar) {
+    const th = h??(size?Math.min(size.h,26):26);
+    return <Image source={{uri:src}} style={{width:th*ar,height:th,marginHorizontal:4,alignSelf:'center'}} contentFit="contain" cachePolicy="memory-disk" recyclingKey={src} />;
   }
 
-  const containerStyle: any = {
-    marginVertical: 8,
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: 320,
-    backgroundColor: '#FFFFFF',
-    padding: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: isDark ? '#334155' : '#E2E8F0',
-  };
-
-  if (aspectRatio) {
-    return (
-      <View style={containerStyle}>
-        <Image
-          source={{ uri: src }}
-          style={{
-            width: '100%',
-            aspectRatio: aspectRatio,
-          }}
-          contentFit="contain"
-          cachePolicy="memory-disk"
-          transition={150}
-          recyclingKey={src}
-        />
-      </View>
-    );
-  }
-
-  // Fallback if size detection fails
+  const boxStyle:any={marginVertical:6,alignSelf:'stretch',backgroundColor:'#fff',padding:6,borderRadius:8,borderWidth:1,borderColor:isDark?'#334155':'#E2E8F0'};
   return (
-    <View style={containerStyle}>
-      <Image
-        source={{ uri: src }}
-        style={{
-          width: '100%',
-          height: 150,
-        }}
-        contentFit="contain"
-        cachePolicy="memory-disk"
-        transition={150}
-        recyclingKey={src}
-      />
+    <View style={boxStyle}>
+      <Image source={{uri:src}} style={{width:'100%',aspectRatio:ar??1.5}} contentFit="contain" cachePolicy="memory-disk" recyclingKey={src} />
     </View>
   );
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
-// HTML entity decoder (run recursively up to 3 passes for double-encoded text)
-// ──────────────────────────────────────────────────────────────────────────────
-// ── Comprehensive HTML named-entity lookup table ──────────────────────────────
-// Maps every standard HTML4/HTML5 named entity to its Unicode character.
-// Single source of truth — no individual regex chains needed.
 // ─────────────────────────────────────────────────────────────────────────────
-const HTML_ENTITIES: Record<string, string> = {
-  // Basics
-  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0',
-  // Punctuation & typography
-  iexcl: '¡', cent: '¢', pound: '£', curren: '¤', yen: '¥', brvbar: '¦',
-  sect: '§', uml: '¨', copy: '©', ordf: 'ª', laquo: '«', not: '¬',
-  shy: '\u00ad', reg: '®', macr: '¯', deg: '°', plusmn: '±', sup2: '²',
-  sup3: '³', acute: '´', micro: 'µ', para: '¶', middot: '·', cedil: '¸',
-  sup1: '¹', ordm: 'º', raquo: '»', frac14: '¼', frac12: '½', frac34: '¾',
-  iquest: '¿',
-  // Dashes & spaces
-  ndash: '–', mdash: '—', thinsp: '\u2009', ensp: '\u2002', emsp: '\u2003',
-  zwj: '\u200d', zwnj: '\u200c', lrm: '\u200e', rlm: '\u200f',
-  // Quotes & typographic marks
-  sbquo: '‚', bdquo: '„', hellip: '…', dagger: '†', Dagger: '‡',
-  permil: '‰', lsaquo: '‹', rsaquo: '›', ldquo: '\u201c', rdquo: '\u201d',
-  lsquo: '\u2018', rsquo: '\u2019', bull: '•', prime: '′', Prime: '″',
-  frasl: '⁄', trade: '™', euro: '€',
-  // Math operators
-  minus: '−', times: '×', divide: '÷', radic: '√', infin: '∞',
-  sum: '∑', prod: '∏', int: '∫', part: '∂', nabla: '∇',
-  ne: '≠', le: '≤', ge: '≥', equiv: '≡', asymp: '≈', cong: '≅',
-  sim: '∼', prop: '∝', ang: '∠', perp: '⊥', there4: '∴', because: '∵',
-  approx: '≈',
-  // Logic & set theory
-  forall: '∀', exist: '∃', empty: '∅', isin: '∈', notin: '∉',
-  sub: '⊂', sup: '⊃', nsub: '⊄', sube: '⊆', supe: '⊇',
-  and: '∧', or: '∨', cap: '∩', cup: '∪', oplus: '⊕', otimes: '⊗',
-  // Arrows (simple)
-  larr: '←', uarr: '↑', rarr: '→', darr: '↓', harr: '↔',
-  crarr: '↵', uarrl: '↿', darrl: '⇂',
-  // Double arrows
-  lArr: '⇐', uArr: '⇑', rArr: '⇒', dArr: '⇓', hArr: '⇔',
-  // Diagonal arrows
-  nearr: '↗', searr: '↘', swarr: '↙', nwarr: '↖',
-  // Long arrows
-  xlarr: '⟵', xrarr: '⟶', xharr: '⟷', xlArr: '⟸', xrArr: '⟹', xhArr: '⟺',
-  // Greek lowercase
-  alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', zeta: 'ζ',
-  eta: 'η', theta: 'θ', iota: 'ι', kappa: 'κ', lambda: 'λ', mu: 'μ',
-  nu: 'ν', xi: 'ξ', omicron: 'ο', pi: 'π', rho: 'ρ', sigma: 'σ',
-  tau: 'τ', upsilon: 'υ', phi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω',
-  sigmaf: 'ς', thetasym: 'ϑ', upsih: 'ϒ', piv: 'ϖ',
-  // Greek uppercase
-  Alpha: 'Α', Beta: 'Β', Gamma: 'Γ', Delta: 'Δ', Epsilon: 'Ε', Zeta: 'Ζ',
-  Eta: 'Η', Theta: 'Θ', Iota: 'Ι', Kappa: 'Κ', Lambda: 'Λ', Mu: 'Μ',
-  Nu: 'Ν', Xi: 'Ξ', Omicron: 'Ο', Pi: 'Π', Rho: 'Ρ', Sigma: 'Σ',
-  Tau: 'Τ', Upsilon: 'Υ', Phi: 'Φ', Chi: 'Χ', Psi: 'Ψ', Omega: 'Ω',
-  // Dots & ellipsis
-  ldots: '…', cdots: '⋯', vdots: '⋮', ddots: '⋱', sdot: '⋅', lowast: '∗',
-  // Geometry & misc math
-  loz: '◊', spades: '♠', clubs: '♣', hearts: '♥', diams: '♦',
-  circ: 'ˆ', tilde: '˜',
-  // Subscripts / superscripts
-  fnof: 'ƒ', weierp: '℘', image: 'ℑ', real: 'ℜ', alefsym: 'ℵ',
-  // Fractions
-  frac13: '⅓', frac23: '⅔', frac15: '⅕', frac25: '⅖', frac35: '⅗',
-  frac45: '⅘', frac16: '⅙', frac56: '⅚', frac18: '⅛', frac38: '⅜',
-  frac58: '⅝', frac78: '⅞',
-  // Currencies
-  inr: '₹', rupee: '₹', won: '₩', peso: '₱', bitcoin: '₿', ruble: '₽',
-  // Brackets / delimiters
-  lang: '⟨', rang: '⟩', lceil: '⌈', rceil: '⌉', lfloor: '⌊', rfloor: '⌋',
-  // Latin extended (common)
-  Aacute: 'Á', aacute: 'á', Agrave: 'À', agrave: 'à', Acirc: 'Â',
-  acirc: 'â', Atilde: 'Ã', atilde: 'ã', Auml: 'Ä', auml: 'ä',
-  Aring: 'Å', aring: 'å', AElig: 'Æ', aelig: 'æ', Ccedil: 'Ç',
-  ccedil: 'ç', Eacute: 'É', eacute: 'é', Egrave: 'È', egrave: 'è',
-  Ecirc: 'Ê', ecirc: 'ê', Euml: 'Ë', euml: 'ë', Iacute: 'Í',
-  iacute: 'í', Igrave: 'Ì', igrave: 'ì', Icirc: 'Î', icirc: 'î',
-  Iuml: 'Ï', iuml: 'ï', ETH: 'Ð', eth: 'ð', Ntilde: 'Ñ', ntilde: 'ñ',
-  Oacute: 'Ó', oacute: 'ó', Ograve: 'Ò', ograve: 'ò', Ocirc: 'Ô',
-  ocirc: 'ô', Otilde: 'Õ', otilde: 'õ', Ouml: 'Ö', ouml: 'ö',
-  Oslash: 'Ø', oslash: 'ø', Uacute: 'Ú', uacute: 'ú', Ugrave: 'Ù',
-  ugrave: 'ù', Ucirc: 'Û', ucirc: 'û', Uuml: 'Ü', uuml: 'ü',
-  Yacute: 'Ý', yacute: 'ý', THORN: 'Þ', thorn: 'þ', szlig: 'ß',
-  yuml: 'ÿ', OElig: 'Œ', oelig: 'œ', Scaron: 'Š', scaron: 'š',
-  Yuml: 'Ÿ',
-};
-
-function decodeEntities(text: string): string {
-  // Numeric decimal entities: &#8377; → ₹
-  let out = text.replace(/&#([0-9]+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)));
-  // Numeric hex entities: &#x20B9; → ₹
-  out = out.replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)));
-  // Named entities via lookup table — handles all standard entities
-  out = out.replace(/&([a-zA-Z][a-zA-Z0-9]*);/g, (match, name) => {
-    return HTML_ENTITIES[name] ?? match; // leave unknown entities as-is
-  });
-  return out;
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
 // HTML Table renderer
-// Parses <table><tr><td>/<th> structure and renders as a bordered View grid
-// ──────────────────────────────────────────────────────────────────────────────
-function renderTableHtml(
-  tableHtml: string,
-  textStyle: any,
-  isDark: boolean | undefined,
-  keyPrefix: string
-): React.ReactNode {
-  const borderColor = isDark ? '#4B5563' : '#D1D5DB';
-  const headerBg   = isDark ? '#1F2937' : '#E5E7EB';
-  const evenBg     = isDark ? '#111827' : '#F9FAFB';
-  const textColor  = isDark ? '#E5E7EB' : '#1F2937';
-  const fontSize   = (textStyle?.fontSize ?? 13) * 0.88;
+// ─────────────────────────────────────────────────────────────────────────────
+function renderTable(html:string, textStyle:any, isDark:boolean|undefined, key:string): React.ReactNode {
+  const bc = isDark?'#4B5563':'#D1D5DB';
+  const hBg = isDark?'#1F2937':'#E5E7EB';
+  const eBg = isDark?'#111827':'#F9FAFB';
+  const tc  = isDark?'#E5E7EB':'#1F2937';
+  const fs  = (textStyle?.fontSize??13)*0.88;
 
-  // Extract rows
-  const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-  const rows: Array<Array<{ text: string; isHeader: boolean }>> = [];
-  let rowMatch: RegExpExecArray | null;
-
-  while ((rowMatch = rowRegex.exec(tableHtml)) !== null) {
-    const rowHtml = rowMatch[1];
-    const cells: Array<{ text: string; isHeader: boolean }> = [];
-    const cellRegex = /<(td|th)[^>]*>([\s\S]*?)<\/(td|th)>/gi;
-    let cellMatch: RegExpExecArray | null;
-
-    while ((cellMatch = cellRegex.exec(rowHtml)) !== null) {
-      const isHeader = cellMatch[1].toLowerCase() === 'th';
-      // Strip inner tags, decode entities
-      let cellText = cellMatch[2]
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      // Decode HTML entities
-      cellText = decodeEntities(cellText);
-      // Apply LaTeX translation
-      cellText = translateLatexToUnicode(cellText);
-      cells.push({ text: cellText, isHeader });
+  const rows: Array<Array<{text:string;header:boolean}>> = [];
+  const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let rm:RegExpExecArray|null;
+  while((rm=rowRe.exec(html))!==null){
+    const cells:Array<{text:string;header:boolean}>=[];
+    const cellRe=/<(td|th)[^>]*>([\s\S]*?)<\/\1>/gi;
+    let cm:RegExpExecArray|null;
+    while((cm=cellRe.exec(rm[1]))!==null){
+      let t=cm[2].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      t=decodeEntities(t); t=latexToUnicode(t);
+      cells.push({text:t,header:cm[1].toLowerCase()==='th'});
     }
-
-    if (cells.length > 0) rows.push(cells);
+    if(cells.length) rows.push(cells);
   }
-
-  if (rows.length === 0) return null;
-
-  // Find max columns across all rows for flex calculation
-  const maxCols = Math.max(...rows.map(r => r.length));
-
+  if(!rows.length) return null;
+  const mc=Math.max(...rows.map(r=>r.length));
   return (
-    <View
-      key={keyPrefix}
-      style={{
-        width: '100%',
-        borderWidth: 1,
-        borderColor,
-        borderRadius: 4,
-        overflow: 'hidden',
-        marginVertical: 8,
-      }}
-    >
-      {rows.map((row, rIdx) => {
-        const isHeaderRow = rIdx === 0 || row.some(c => c.isHeader);
+    <View key={key} style={{width:'100%',borderWidth:1,borderColor:bc,borderRadius:4,overflow:'hidden',marginVertical:6}}>
+      {rows.map((row,ri)=>{
+        const isH=ri===0||row.some(c=>c.header);
         return (
-          <View
-            key={rIdx}
-            style={{
-              flexDirection: 'row',
-              backgroundColor: isHeaderRow ? headerBg : (rIdx % 2 === 0 ? evenBg : 'transparent'),
-            }}
-          >
-            {row.map((cell, cIdx) => (
-              <View
-                key={cIdx}
-                style={{
-                  flex: 1,
-                  borderRightWidth: cIdx < maxCols - 1 ? 1 : 0,
-                  borderBottomWidth: rIdx < rows.length - 1 ? 1 : 0,
-                  borderColor,
-                  padding: 6,
-                  minWidth: 0,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize,
-                    color: textColor,
-                    fontWeight: isHeaderRow || cell.isHeader ? 'bold' : 'normal',
-                    textAlign: 'center',
-                  }}
-                >
-                  {cell.text}
-                </Text>
+          <View key={ri} style={{flexDirection:'row',backgroundColor:isH?hBg:ri%2===0?eBg:'transparent'}}>
+            {row.map((cell,ci)=>(
+              <View key={ci} style={{flex:1,borderRightWidth:ci<mc-1?1:0,borderBottomWidth:ri<rows.length-1?1:0,borderColor:bc,padding:6,minWidth:0}}>
+                <Text style={{fontSize:fs,color:tc,fontWeight:isH||cell.header?'bold':'normal',textAlign:'center'}}>{cell.text}</Text>
               </View>
             ))}
           </View>
@@ -605,378 +392,398 @@ function renderTableHtml(
   );
 }
 
-// Split HTML into table and non-table chunks
-function splitByTables(
-  html: string
-): Array<{ type: 'table' | 'text'; content: string }> {
-  const parts: Array<{ type: 'table' | 'text'; content: string }> = [];
-  let remaining = html;
-  while (remaining.length > 0) {
-    const tblStart = remaining.toLowerCase().indexOf('<table');
-    if (tblStart === -1) { parts.push({ type: 'text', content: remaining }); break; }
-    if (tblStart > 0) parts.push({ type: 'text', content: remaining.slice(0, tblStart) });
-    const tblEnd = remaining.toLowerCase().indexOf('</table>', tblStart);
-    if (tblEnd === -1) { parts.push({ type: 'text', content: remaining.slice(tblStart) }); break; }
-    const endIdx = tblEnd + 8;
-    parts.push({ type: 'table', content: remaining.slice(tblStart, endIdx) });
-    remaining = remaining.slice(endIdx);
+// ─────────────────────────────────────────────────────────────────────────────
+// Block / Inline node types
+// ─────────────────────────────────────────────────────────────────────────────
+type InlineNode =
+  | { k:'text';  v:string; bold?:boolean; italic?:boolean; under?:boolean; sup?:boolean; sub?:boolean; hLevel?:number }
+  | { k:'frac';  num:string; den:string }
+  | { k:'img';   src:string; w?:number; h?:number };
+
+type Block =
+  | { k:'para';  nodes: InlineNode[] }
+  | { k:'head';  level:number; nodes: InlineNode[] }
+  | { k:'li';    bullet:string; nodes: InlineNode[] }
+  | { k:'hr' }
+  | { k:'table'; html:string }
+  | { k:'img';   src:string; w?:number; h?:number };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HTML pre-processing: strip junk that creates blank lines
+// ─────────────────────────────────────────────────────────────────────────────
+function cleanHtml(raw: string): string {
+  let s = raw;
+
+  // 1. Decode entities (3 passes for double-encoded)
+  for(let i=0;i<3;i++){ const n=decodeEntities(s); if(n===s)break; s=n; }
+
+  // 2. Strip HTML comments
+  s = s.replace(/<!--[\s\S]*?-->/g, '');
+
+  // 3. Normalize line endings
+  s = s.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+
+  // 4. Remove style/script blocks entirely
+  s = s.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+  s = s.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+  // 5. Remove ALL empty/whitespace-only block tags (the root cause of blank lines)
+  //    Repeat until stable (handles nested empty tags)
+  let prev = '';
+  while (prev !== s) {
+    prev = s;
+    s = s
+      .replace(/<p[^>]*>\s*(<br\s*\/?>\s*)*\s*<\/p>/gi, '')
+      .replace(/<div[^>]*>\s*(<br\s*\/?>\s*)*\s*<\/div>/gi, '')
+      .replace(/<p[^>]*>(?:&nbsp;|\u00A0|\s)*<\/p>/gi, '')
+      .replace(/<div[^>]*>(?:&nbsp;|\u00A0|\s)*<\/div>/gi, '')
+      .replace(/<span[^>]*>(?:&nbsp;|\u00A0|\s)*<\/span>/gi, '');
   }
-  return parts;
+
+  // 6. Collapse 3+ consecutive <br> into at most 2
+  s = s.replace(/(<br\s*\/?>\s*){3,}/gi, '<br/><br/>');
+
+  // 7. Remove invisible &nbsp; standalone runs (3+ in a row → nothing)
+  s = s.replace(/(&nbsp;\s*){3,}/gi, '');
+
+  // 8. Remove data-* attributes, style="" attributes (reduce noise)
+  s = s.replace(/\s+data-[a-z][a-z0-9-]*="[^"]*"/gi, '');
+  s = s.replace(/\s+style="[^"]*"/gi, '');
+
+  return s.trim();
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Extract just the tag name (lowercased) from a full tag token.
-// e.g. '<p class="foo">' → 'p', '</strong>' → 'strong', '<br/>' → 'br'
-// ──────────────────────────────────────────────────────────────────────────────
-function getTagName(token: string): string {
+function getTag(token: string): string {
   const m = token.match(/^<\/?([a-zA-Z][a-zA-Z0-9]*)/);
   return m ? m[1].toLowerCase() : '';
 }
 
-function renderContent(
-  html: string,
-  textStyle: any,
-  isDark: boolean | undefined,
-  keyPrefix: string = 'h'
-): React.ReactNode[] {
-  // Recursive entity decoding
-  let clean = html;
-  for (let pass = 0; pass < 3; pass++) {
-    const next = decodeEntities(clean);
-    if (next === clean) break;
-    clean = next;
+function splitTables(html: string): Array<{type:'table'|'text';content:string}> {
+  const parts: Array<{type:'table'|'text';content:string}> = [];
+  let rest = html;
+  while(rest.length) {
+    const si = rest.toLowerCase().indexOf('<table');
+    if(si===-1){ parts.push({type:'text',content:rest}); break; }
+    if(si>0) parts.push({type:'text',content:rest.slice(0,si)});
+    const ei = rest.toLowerCase().indexOf('</table>',si);
+    if(ei===-1){ parts.push({type:'text',content:rest.slice(si)}); break; }
+    parts.push({type:'table',content:rest.slice(si,ei+8)});
+    rest = rest.slice(ei+8);
   }
-
-  // Strip HTML comments
-  clean = clean.replace(/<!--[\s\S]*?-->/g, '');
-
-  // ── Pre-pass: extract <table> blocks and render them separately ─────────────
-  const chunks = splitByTables(clean);
-  if (chunks.some(c => c.type === 'table')) {
-    // Has at least one table – process chunk by chunk
-    const allNodes: React.ReactNode[] = [];
-    let chunkCount = 0;
-    for (const chunk of chunks) {
-      if (chunk.type === 'table') {
-        const tblNode = renderTableHtml(chunk.content, textStyle, isDark, `${keyPrefix}-tbl-${chunkCount++}`);
-        if (tblNode) allNodes.push(tblNode);
-      } else if (chunk.content.trim()) {
-        // Recurse for non-table text (strips tables from input so no infinite loop)
-        allNodes.push(...renderContent(chunk.content, textStyle, isDark, `${keyPrefix}-chk-${chunkCount++}`));
-      }
-    }
-    return allNodes;
-  }
-
-  // ── No table: proceed with normal token-based rendering ─────────────────────
-
-  // Tokenize: split by HTML tags vs text
-  const tokenRegex = /(<[^>]+>)/g;
-  const tokens = clean.split(tokenRegex);
-
-  // Formatting state
-  let isBold = false;
-  let isItalic = false;
-  let isUnderline = false;
-  let isSup = false;
-  let isSub = false;
-
-  let isOl = false;
-  let listCounter = 0;
-  let currentHeadingLevel = 0; // 0 = not a heading
-
-  const nodes: React.ReactNode[] = [];
-  let keyIdx = 0;
-  const getKey = () => `${keyPrefix}-${keyIdx++}`;
-
-  const color: string = isDark ? '#E5E7EB' : '#1F2937';
-  const fontSize: number = textStyle?.fontSize ?? 14;
-
-  // ── Dedup guard: don't push two consecutive newlines ──────────────────────
-  const pushNewline = () => {
-    const last = nodes[nodes.length - 1];
-    const lastIsNewline =
-      last != null &&
-      React.isValidElement(last) &&
-      (last as React.ReactElement<any>).props?.children === '\n';
-    if (!lastIsNewline) {
-      nodes.push(<Text key={getKey()} style={textStyle}>{'\n'}</Text>);
-    }
-  };
-
-  const pushText = (value: string) => {
-    if (!value) return;
-    // Heading font sizes: h1=1.6x, h2=1.45x, h3=1.3x, h4=1.15x, h5=1.05x, h6=1.0x
-    const headingScale = [1.6, 1.45, 1.3, 1.15, 1.05, 1.0];
-    const headingFontSize = currentHeadingLevel > 0
-      ? Math.round(fontSize * (headingScale[currentHeadingLevel - 1] ?? 1.0))
-      : fontSize;
-    // Sub/sup use a smaller font
-    const effectiveFontSize = (isSup || isSub)
-      ? Math.round(headingFontSize * 0.72)
-      : headingFontSize;
-
-    const s: any[] = [
-      textStyle,
-      { color, fontSize: effectiveFontSize },
-      (isBold || currentHeadingLevel > 0) && { fontWeight: 'bold' as const },
-      isItalic && { fontStyle: 'italic' as const },
-      isUnderline && { textDecorationLine: 'underline' as const },
-    ].filter(Boolean);
-
-    nodes.push(<Text key={getKey()} style={s}>{value}</Text>);
-  };
-
-  const pushTextWithFracs = (rawText: string) => {
-    // Strip math delimiters so \frac is accessible at top level
-    const stripped = rawText.replace(/\\+\(|\\+\)|\\+\[|\\+\]|\$\$?/g, '');
-    const segments = splitIntoSegments(stripped);
-
-    for (const seg of segments) {
-      if (seg.type === 'frac') {
-        nodes.push(
-          <FractionView
-            key={getKey()}
-            num={seg.num}
-            den={seg.den}
-            fontSize={fontSize}
-            color={color}
-          />
-        );
-      } else {
-        // Translate remaining LaTeX in the plain-text part
-        const translated = translateLatexToUnicode(seg.value);
-        pushText(translated);
-      }
-    }
-  };
-
-  for (const token of tokens) {
-    if (!token) continue;
-
-    if (token.startsWith('<')) {
-      const tagName = getTagName(token);
-      const isClosing = token.startsWith('</');
-
-      // ── Inline formatting ────────────────────────────────────────────────
-      if (tagName === 'strong' || tagName === 'b') {
-        isBold = !isClosing;
-      } else if (tagName === 'em' || tagName === 'i') {
-        isItalic = !isClosing;
-      } else if (tagName === 'u') {
-        isUnderline = !isClosing;
-      } else if (tagName === 'mark') {
-        // highlight — treat as bold for emphasis
-        isBold = !isClosing;
-
-      // ── Sub / Sup (HTML tags) ─────────────────────────────────────────────
-      } else if (tagName === 'sup') {
-        isSup = !isClosing;
-      } else if (tagName === 'sub') {
-        isSub = !isClosing;
-
-      // ── Line breaks ───────────────────────────────────────────────────────
-      } else if (tagName === 'br') {
-        nodes.push(<Text key={getKey()} style={textStyle}>{'\n'}</Text>);
-
-      // ── Block elements ────────────────────────────────────────────────────
-      } else if (
-        tagName === 'p' || tagName === 'div' ||
-        tagName === 'section' || tagName === 'article' ||
-        tagName === 'blockquote' || tagName === 'pre'
-      ) {
-        if (!isClosing) {
-          if (nodes.length > 0) pushNewline();
-        } else {
-          pushNewline();
-        }
-
-      // ── Headings h1–h6 ────────────────────────────────────────────────────
-      } else if (/^h[1-6]$/.test(tagName)) {
-        const level = parseInt(tagName[1], 10);
-        if (!isClosing) {
-          if (nodes.length > 0) pushNewline();
-          currentHeadingLevel = level;
-        } else {
-          currentHeadingLevel = 0;
-          pushNewline();
-        }
-
-      // ── Lists ─────────────────────────────────────────────────────────────
-      } else if (tagName === 'ul') {
-        isOl = false;
-        listCounter = 0;
-        if (!isClosing) {
-          if (nodes.length > 0) pushNewline();
-        } else {
-          pushNewline();
-        }
-      } else if (tagName === 'ol') {
-        if (!isClosing) {
-          isOl = true;
-          listCounter = 0;
-          if (nodes.length > 0) pushNewline();
-        } else {
-          isOl = false;
-          pushNewline();
-        }
-      } else if (tagName === 'li') {
-        if (!isClosing) {
-          if (isOl) {
-            listCounter++;
-            pushText(`${listCounter}. `);
-          } else {
-            pushText('• ');
-          }
-        } else {
-          pushNewline();
-        }
-
-      // ── Images ────────────────────────────────────────────────────────────
-      } else if (tagName === 'img' && !isClosing) {
-        const srcMatch = token.match(/src=["']([^"']+)["']/i);
-        if (srcMatch) {
-          let src = srcMatch[1];
-          if (src.startsWith('//')) src = 'https:' + src;
-
-          // Parse width/height attributes (e.g. width="26px", height="26px" or width="26")
-          const widthMatch = token.match(/width=["']([^"']+)["']/i);
-          const heightMatch = token.match(/height=["']([^"']+)["']/i);
-          const attrWidth = widthMatch ? parseInt(widthMatch[1], 10) : undefined;
-          const attrHeight = heightMatch ? parseInt(heightMatch[1], 10) : undefined;
-
-          // Parse style attributes (e.g. style="width: 164px; height: 122px;")
-          const styleMatch = token.match(/style=["']([^"']+)["']/i);
-          let styleWidth: number | undefined;
-          let styleHeight: number | undefined;
-          if (styleMatch) {
-            const styleStr = styleMatch[1];
-            const wMatch = styleStr.match(/width:\s*(\d+)px/i);
-            const hMatch = styleStr.match(/height:\s*(\d+)px/i);
-            if (wMatch) styleWidth = parseInt(wMatch[1], 10);
-            if (hMatch) styleHeight = parseInt(hMatch[1], 10);
-          }
-
-          const width = styleWidth ?? attrWidth;
-          const height = styleHeight ?? attrHeight;
-
-          nodes.push(
-            <HtmlImage
-              key={getKey()}
-              src={src}
-              isDark={isDark}
-              width={width}
-              height={height}
-            />
-          );
-        }
-
-      // ── Horizontal rule ───────────────────────────────────────────────────
-      } else if (tagName === 'hr') {
-        nodes.push(
-          <View
-            key={getKey()}
-            style={{
-              width: '100%',
-              height: 1,
-              backgroundColor: isDark ? '#334155' : '#E2E8F0',
-              marginVertical: 6,
-            }}
-          />
-        );
-
-      // ── Span / anchor / abbr / code / kbd etc. — content flows through ────
-      // (tag is silently ignored; text content renders normally)
-      }
-    } else {
-      // Plain text token – render with fraction and LaTeX support
-      if (token) pushTextWithFracs(token);
-    }
-  }
-
-  return nodes;
+  return parts;
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Custom memo comparator: skip re-render when only the style identity changed
-// (e.g. selection highlight in exam) – only re-render on content or theme change
-// ──────────────────────────────────────────────────────────────────────────────
-function arePropsEqual(prev: HtmlTextProps, next: HtmlTextProps): boolean {
-  return prev.html === next.html && prev.isDark === next.isDark;
+// ─────────────────────────────────────────────────────────────────────────────
+// Parse \frac inside inline text segments
+// ─────────────────────────────────────────────────────────────────────────────
+function parseFrac(raw: string): Array<{type:'text'|'frac';v?:string;num?:string;den?:string}> {
+  const out: Array<{type:'text'|'frac';v?:string;num?:string;den?:string}> = [];
+  // Look for \frac{}{} patterns
+  const re = /\\(?:d|t|c)?frac\s*\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}\s*\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g;
+  let last = 0, m: RegExpExecArray|null;
+  while((m=re.exec(raw))!==null){
+    if(m.index>last) out.push({type:'text',v:raw.slice(last,m.index)});
+    out.push({type:'frac',num:latexToUnicode(m[1]),den:latexToUnicode(m[2])});
+    last=m.index+m[0].length;
+  }
+  if(last<raw.length) out.push({type:'text',v:raw.slice(last)});
+  return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main parser: HTML → Block[]
+// ─────────────────────────────────────────────────────────────────────────────
+function htmlToBlocks(rawHtml: string): Block[] {
+  const html = cleanHtml(rawHtml);
+
+  // Handle tables separately
+  const chunks = splitTables(html);
+  if(chunks.some(c=>c.type==='table')){
+    const all: Block[] = [];
+    for(const ch of chunks){
+      if(ch.type==='table') all.push({k:'table',html:ch.content});
+      else if(ch.content.trim()) all.push(...htmlToBlocks(ch.content));
+    }
+    return all;
+  }
+
+  const blocks: Block[] = [];
+
+  // Formatting state
+  let bold=false, italic=false, under=false, sup=false, sub=false;
+  let hLevel=0;
+  let isOl=false, liCount=0;
+  let inLi=false;
+
+  // Current accumulator
+  let curK: 'para'|'head'|'li' = 'para';
+  let curBullet = '';
+  let curNodes: InlineNode[] = [];
+
+  const flush = () => {
+    // Trim leading/trailing pure-whitespace text nodes
+    while(curNodes.length && curNodes[0].k==='text' && !(curNodes[0] as any).v?.trim()) curNodes.shift();
+    while(curNodes.length && curNodes[curNodes.length-1].k==='text' && !(curNodes[curNodes.length-1] as any).v?.trim()) curNodes.pop();
+    if(!curNodes.length) { curNodes=[]; return; }
+    if(curK==='para') blocks.push({k:'para',nodes:curNodes});
+    else if(curK==='head') blocks.push({k:'head',level:hLevel,nodes:curNodes});
+    else if(curK==='li') blocks.push({k:'li',bullet:curBullet,nodes:curNodes});
+    curNodes=[];
+  };
+
+  const addText = (raw: string) => {
+    if(!raw) return;
+    // Collapse whitespace but preserve single spaces between words
+    const v = raw.replace(/[ \t\r\n]+/g,' ');
+    if(!v.trim() && v===' '){
+      // Single space — only add if we have content
+      if(curNodes.length) curNodes.push({k:'text',v:' '});
+      return;
+    }
+    if(!v.trim()) return;
+
+    // Check for \frac patterns
+    const parts = parseFrac(v);
+    for(const p of parts){
+      if(p.type==='frac'){
+        curNodes.push({k:'frac',num:p.num!,den:p.den!});
+      } else if(p.v){
+        // Apply full LaTeX translation then entity decode
+        let t = latexToUnicode(p.v);
+        // Final cleanup
+        t = t.replace(/[ \t]{2,}/g,' ');
+        if(t) curNodes.push({k:'text',v:t,bold:bold||hLevel>0,italic,under,sup,sub,hLevel});
+      }
+    }
+  };
+
+  const tokens = html.split(/(<[^>]+>)/g);
+
+  for(const token of tokens){
+    if(!token) continue;
+
+    if(!token.startsWith('<')){
+      addText(token);
+      continue;
+    }
+
+    const tag = getTag(token);
+    const closing = token.startsWith('</');
+    const self = token.endsWith('/>') || ['br','hr','img','input','meta','link'].includes(tag);
+
+    // ── Inline formatting ────────────────────────────────────────────────────
+    if(['strong','b'].includes(tag)){           bold=!closing; continue; }
+    if(['em','i'].includes(tag)){               italic=!closing; continue; }
+    if(tag==='u'){                              under=!closing; continue; }
+    if(tag==='mark'){                           bold=!closing; continue; }
+    if(tag==='sup'){                            sup=!closing; continue; }
+    if(tag==='sub'){                            sub=!closing; continue; }
+
+    // ── BR: newline only if block has content already ───────────────────────
+    if(tag==='br'){
+      if(curNodes.length) {
+        // Check the last node isn't already a newline
+        const last = curNodes[curNodes.length-1];
+        if(!(last.k==='text' && (last as any).v==='\n')){
+          curNodes.push({k:'text',v:'\n'});
+        }
+      }
+      continue;
+    }
+
+    // ── HR ───────────────────────────────────────────────────────────────────
+    if(tag==='hr'){ flush(); blocks.push({k:'hr'}); continue; }
+
+    // ── Headings ─────────────────────────────────────────────────────────────
+    if(/^h[1-6]$/.test(tag)){
+      if(!closing){ flush(); curK='head'; hLevel=parseInt(tag[1],10); }
+      else { flush(); curK='para'; hLevel=0; }
+      continue;
+    }
+
+    // ── Block elements: p, div, section, article, blockquote, pre ───────────
+    if(['p','div','section','article','blockquote','pre'].includes(tag)){
+      flush(); curK='para'; continue;
+    }
+
+    // ── Lists ────────────────────────────────────────────────────────────────
+    if(tag==='ul'){ if(!closing){ flush();isOl=false;liCount=0; } else { flush(); } continue; }
+    if(tag==='ol'){ if(!closing){ flush();isOl=true;liCount=0; } else { flush();isOl=false; } continue; }
+    if(tag==='li'){
+      if(!closing){
+        flush();
+        curK='li';
+        if(isOl){ liCount++; curBullet=`${liCount}. `; }
+        else curBullet='• ';
+        inLi=true;
+      } else { flush(); curK='para'; inLi=false; }
+      continue;
+    }
+
+    // ── Images ───────────────────────────────────────────────────────────────
+    if(tag==='img' && !closing){
+      const sm=token.match(/src=["']([^"']+)["']/i);
+      if(sm){
+        let src=sm[1];
+        if(src.startsWith('//')) src='https:'+src;
+
+        const wm=token.match(/width=["'](\d+)/i);
+        const hm=token.match(/height=["'](\d+)/i);
+        const sm2=token.match(/style=["'][^"']*width:\s*(\d+)px/i);
+        const sm3=token.match(/style=["'][^"']*height:\s*(\d+)px/i);
+        const iw=sm2?parseInt(sm2[1]):wm?parseInt(wm[1]):undefined;
+        const ih=sm3?parseInt(sm3[1]):hm?parseInt(hm[1]):undefined;
+        const isSmall=iw&&iw<100;
+
+        if(isSmall){
+          curNodes.push({k:'img',src,w:iw,h:ih});
+        } else {
+          flush();
+          blocks.push({k:'img',src,w:iw,h:ih});
+        }
+      }
+      continue;
+    }
+
+    // ── Ignored tags: span, a, abbr, code, kbd, font, td, tr, etc. ──────────
+    // Their text content flows through naturally — we just skip the tag itself
+  }
+
+  flush();
+  return blocks;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render blocks to React Native nodes
+// ─────────────────────────────────────────────────────────────────────────────
+let _keyId = 0;
+const K = () => `ht_${_keyId++}`;
+
+function renderInlines(nodes: InlineNode[], baseFontSize:number, baseColor:string, textStyle:any, isDark?:boolean): React.ReactNode[] {
+  const headingScale=[1.6,1.45,1.3,1.15,1.05,1.0];
+  return nodes.map(node=>{
+    if(node.k==='frac'){
+      return <FracView key={K()} num={node.num} den={node.den} fontSize={baseFontSize} color={baseColor}/>;
+    }
+    if(node.k==='img'){
+      return <HtmlImg key={K()} src={node.src} isDark={isDark} w={node.w} h={node.h}/>;
+    }
+    // text node
+    const n = node as Extract<InlineNode,{k:'text'}>;
+    const hFs = n.hLevel ? Math.round(baseFontSize*(headingScale[(n.hLevel??1)-1]??1)) : baseFontSize;
+    const fs = (n.sup||n.sub) ? Math.round(hFs*0.72) : hFs;
+    const style:any[] = [
+      textStyle,
+      { color:baseColor, fontSize:fs, textAlign:'left' as const, lineHeight:fs*1.55 },
+      n.bold  && { fontWeight:'bold' as const },
+      n.italic && { fontStyle:'italic' as const },
+      n.under && { textDecorationLine:'underline' as const },
+    ].filter(Boolean);
+    return <Text key={K()} style={style}>{n.v}</Text>;
+  });
+}
+
+function renderBlocks(blocks: Block[], textStyle:any, isDark?:boolean): React.ReactNode[] {
+  const baseFs: number = textStyle?.fontSize ?? 14;
+  const baseColor: string = isDark ? '#E5E7EB' : '#1F2937';
+  const out: React.ReactNode[] = [];
+
+  for(const b of blocks){
+    if(b.k==='hr'){
+      out.push(<View key={K()} style={{width:'100%',height:1,backgroundColor:isDark?'#334155':'#E2E8F0',marginVertical:4}}/>);
+      continue;
+    }
+    if(b.k==='table'){
+      const n=renderTable(b.html,textStyle,isDark,K());
+      if(n) out.push(n);
+      continue;
+    }
+    if(b.k==='img'){
+      out.push(<HtmlImg key={K()} src={b.src} isDark={isDark} w={b.w} h={b.h}/>);
+      continue;
+    }
+    // para / head / li
+    const nodes = b.nodes;
+    if(!nodes.length) continue;
+
+    const inlines = renderInlines(nodes, baseFs, baseColor, textStyle, isDark);
+
+    if(b.k==='li'){
+      out.push(
+        <View key={K()} style={{flexDirection:'row',alignItems:'flex-start',marginBottom:2,width:'100%'}}>
+          <Text style={[textStyle,{color:baseColor,fontSize:baseFs,lineHeight:baseFs*1.55,fontWeight:'bold',flexShrink:0,minWidth:22}]}>{b.bullet}</Text>
+          <View style={{flex:1,flexDirection:'row',flexWrap:'wrap',alignItems:'flex-start'}}>{inlines}</View>
+        </View>
+      );
+    } else {
+      out.push(
+        <View key={K()} style={{flexDirection:'row',flexWrap:'wrap',alignItems:'flex-start',width:'100%'}}>
+          {inlines}
+        </View>
+      );
+    }
+  }
+  return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Exported component
+// ─────────────────────────────────────────────────────────────────────────────
+function areEqual(prev:HtmlTextProps, next:HtmlTextProps): boolean {
+  return prev.html===next.html && prev.isDark===next.isDark;
 }
 
 const HtmlTextInner: React.FC<HtmlTextProps> = ({ html, style, isDark }) => {
-  if (!html) return null;
+  if(!html) return null;
 
-  const nodes = renderContent(html, style, isDark);
+  const blocks  = htmlToBlocks(html);
+  const rendered = renderBlocks(blocks, style, isDark);
 
-  // Extract layout props (margin, padding) from style to apply to outer View
-  // Text-only props (color, fontSize, fontWeight, lineHeight, etc.) stay in
-  // the individual Text/FractionView children.
-  const flatStyle = StyleSheet.flatten(style) ?? {};
+  // Pull layout-only props (margin/padding/width) to the outer View
+  const flat = StyleSheet.flatten(style) ?? {};
   const layoutProps: any = {};
-  const layoutKeys = [
-    'margin', 'marginTop', 'marginBottom', 'marginLeft', 'marginRight',
-    'marginHorizontal', 'marginVertical',
-    'padding', 'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight',
-    'paddingHorizontal', 'paddingVertical',
-    'width', 'height', 'flex', 'alignSelf',
-  ];
-  for (const key of layoutKeys) {
-    if (flatStyle[key] !== undefined) layoutProps[key] = flatStyle[key];
+  for(const k of ['margin','marginTop','marginBottom','marginLeft','marginRight','marginHorizontal','marginVertical',
+                   'padding','paddingTop','paddingBottom','paddingLeft','paddingRight','paddingHorizontal','paddingVertical',
+                   'width','height','flex','alignSelf']){
+    if(flat[k]!==undefined) layoutProps[k]=flat[k];
   }
 
   return (
     <View style={[styles.wrap, layoutProps]}>
-      {nodes}
+      {rendered}
     </View>
   );
 };
 
-export const HtmlText = React.memo(HtmlTextInner, arePropsEqual);
+export const HtmlText = React.memo(HtmlTextInner, areEqual);
 
-// ──────────────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   wrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    width: '100%',
   },
   fracWrap: {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 4,
-    // Vertically center with surrounding text
-  },
-  fracPart: {
-    textAlign: 'center',
-    minWidth: 16,
-  },
-  fracLine: {
-    height: 1.5,
-    alignSelf: 'stretch',
-    minWidth: 20,
-    marginVertical: 2,
+    marginHorizontal: 3,
   },
 });
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Image pre-fetcher — call this when question data loads to warm the cache
-// so images appear instantly when users reach each question.
-// ──────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Image pre-fetcher — call when questions load to warm disk cache
+// ─────────────────────────────────────────────────────────────────────────────
 export function preloadImages(htmlStrings: string[]): void {
-  const IMG_REGEX = /src=["']([^"']+)["']/gi;
+  const re = /src=["']([^"']+)["']/gi;
   const urls = new Set<string>();
-  for (const html of htmlStrings) {
-    if (!html) continue;
-    let m: RegExpExecArray | null;
-    const re = new RegExp(IMG_REGEX.source, 'gi');
-    while ((m = re.exec(html)) !== null) {
-      if (m[1]?.startsWith('http')) urls.add(m[1]);
+  for(const s of htmlStrings){
+    if(!s) continue;
+    let m: RegExpExecArray|null;
+    const r=new RegExp(re.source,'gi');
+    while((m=r.exec(s))!==null){
+      if(m[1]?.startsWith('http')) urls.add(m[1]);
     }
   }
-  if (urls.size === 0) return;
-  // expo-image prefetch — downloads to disk cache silently in background
-  Image.prefetch([...urls]);
+  if(urls.size) Image.prefetch([...urls]);
 }

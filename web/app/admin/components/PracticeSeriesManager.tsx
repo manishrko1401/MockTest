@@ -20,7 +20,13 @@ import {
   Sparkles,
   Database,
   Save,
-  X
+  X,
+  Monitor,
+  Smartphone,
+  LayoutGrid,
+  Wifi,
+  Battery,
+  ArrowLeft
 } from 'lucide-react';
 
 interface PracticeSeriesManagerProps {
@@ -61,6 +67,7 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
   // Previewer state
   const [previewIndex, setPreviewIndex] = useState<number>(0);
   const [previewLanguage, setPreviewLanguage] = useState<'en' | 'hi'>('en');
+  const [previewLayoutMode, setPreviewLayoutMode] = useState<'both' | 'web' | 'mobile'>('both');
 
   // Interactive Form Question state
   const [formTextEn, setFormTextEn] = useState<string>('');
@@ -815,7 +822,7 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
 
           {/* STEP 3: LIVE VERIFIED QUESTION PREVIEWER & INGESTION */}
           {parsedQuestions.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5 animate-fade-in">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5 animate-fade-in font-sans">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div className="flex items-center gap-2">
                   <span className="h-6 w-6 rounded-full bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center">3</span>
@@ -824,98 +831,245 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
                       Verified Questions Preview ({parsedQuestions.length} Questions Ready)
                     </h3>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                      Inspect question rendering and option answers before saving into database
+                      Inspect rendering for Website view and Mobile App size screen before saving
                     </p>
                   </div>
                 </div>
 
-                {/* Language Switcher for Preview */}
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-slate-400" />
-                  <select
-                    value={previewLanguage}
-                    onChange={(e) => setPreviewLanguage(e.target.value as 'en' | 'hi')}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
-                  >
-                    <option value="en">English Preview</option>
-                    <option value="hi">हिंदी Preview</option>
-                  </select>
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* View Mode Controls */}
+                  <div className="flex items-center bg-slate-100 dark:bg-slate-955 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewLayoutMode('both')}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        previewLayoutMode === 'both'
+                          ? 'bg-blue-600 text-white shadow-sm font-extrabold'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                      <span>Both Views</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewLayoutMode('web')}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        previewLayoutMode === 'web'
+                          ? 'bg-blue-600 text-white shadow-sm font-extrabold'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <Monitor className="h-3.5 w-3.5" />
+                      <span>Website</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewLayoutMode('mobile')}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        previewLayoutMode === 'mobile'
+                          ? 'bg-blue-600 text-white shadow-sm font-extrabold'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <Smartphone className="h-3.5 w-3.5" />
+                      <span>Mobile App</span>
+                    </button>
+                  </div>
+
+                  {/* Language Switcher for Preview */}
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-slate-400" />
+                    <select
+                      value={previewLanguage}
+                      onChange={(e) => setPreviewLanguage(e.target.value as 'en' | 'hi')}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+                    >
+                      <option value="en">English Preview</option>
+                      <option value="hi">हिंदी Preview</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              {/* PREVIEW CARD */}
-              {activePreviewQuestion && (
-                <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-5 space-y-4">
-                  {/* Card Header & Pagination */}
-                  <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-3">
-                    <span className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                      Question {previewIndex + 1} of {parsedQuestions.length}
-                    </span>
+              {/* PREVIEW CARDS */}
+              {activePreviewQuestion && (() => {
+                const qText = previewLanguage === 'hi' ? activePreviewQuestion.questionText.hi : activePreviewQuestion.questionText.en;
+                const qExp = previewLanguage === 'hi' ? activePreviewQuestion.explanation.hi : activePreviewQuestion.explanation.en;
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setPreviewIndex((prev) => Math.max(0, prev - 1))}
-                        disabled={previewIndex === 0}
-                        className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </button>
+                const renderWebCard = () => (
+                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-5 space-y-4 flex-1">
+                    <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-3">
+                      <div className="flex items-center gap-2">
+                        <Monitor className="h-4 w-4 text-blue-500" />
+                        <span className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                          Website Desktop Preview — Q{previewIndex + 1} of {parsedQuestions.length}
+                        </span>
+                      </div>
 
-                      <button
-                        onClick={() => setPreviewIndex((prev) => Math.min(parsedQuestions.length - 1, prev + 1))}
-                        disabled={previewIndex === parsedQuestions.length - 1}
-                        className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Question Text */}
-                  <div>
-                    <h4 className="text-sm font-extrabold text-slate-900 dark:text-white leading-relaxed">
-                      {previewIndex + 1}. {previewLanguage === 'hi' ? activePreviewQuestion.questionText.hi : activePreviewQuestion.questionText.en}
-                    </h4>
-                  </div>
-
-                  {/* Options Matrix */}
-                  <div className="space-y-2">
-                    {activePreviewQuestion.options.map((opt: any, oIdx: number) => {
-                      const isCorrect = oIdx === activePreviewQuestion.correctOption;
-                      const optText = previewLanguage === 'hi' ? opt.hi : opt.en;
-                      return (
-                        <div
-                          key={oIdx}
-                          className={`p-3 rounded-xl text-xs font-extrabold flex items-center justify-between border ${
-                            isCorrect
-                              ? 'bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300'
-                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
-                          }`}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setPreviewIndex((prev) => Math.max(0, prev - 1))}
+                          disabled={previewIndex === 0}
+                          className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
                         >
-                          <span>({oIdx + 1}) {optText}</span>
-                          {isCorrect && (
-                            <span className="flex items-center gap-1 text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full uppercase">
-                              <Check className="h-3 w-3" /> Correct Answer
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Solution Explanation */}
-                  {(activePreviewQuestion.explanation.en || activePreviewQuestion.explanation.hi) && (
-                    <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 p-3.5 rounded-xl text-xs space-y-1">
-                      <span className="font-black text-amber-800 dark:text-amber-400 uppercase tracking-wider text-[10px] block">
-                        Detailed Solution & Explanation:
-                      </span>
-                      <p className="text-slate-700 dark:text-slate-300 font-medium leading-relaxed whitespace-pre-line">
-                        {previewLanguage === 'hi' ? activePreviewQuestion.explanation.hi : activePreviewQuestion.explanation.en}
-                      </p>
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setPreviewIndex((prev) => Math.min(parsedQuestions.length - 1, prev + 1))}
+                          disabled={previewIndex === parsedQuestions.length - 1}
+                          className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 cursor-pointer"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              )}
+
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white leading-relaxed">
+                        {previewIndex + 1}. {qText}
+                      </h4>
+                    </div>
+
+                    <div className="space-y-2">
+                      {activePreviewQuestion.options.map((opt: any, oIdx: number) => {
+                        const isCorrect = oIdx === activePreviewQuestion.correctOption;
+                        const optText = previewLanguage === 'hi' ? opt.hi : opt.en;
+                        return (
+                          <div
+                            key={oIdx}
+                            className={`p-3 rounded-xl text-xs font-extrabold flex items-center justify-between border ${
+                              isCorrect
+                                ? 'bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            <span>({oIdx + 1}) {optText}</span>
+                            {isCorrect && (
+                              <span className="flex items-center gap-1 text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full uppercase">
+                                <Check className="h-3 w-3" /> Correct Answer
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {qExp && (
+                      <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 p-3.5 rounded-xl text-xs space-y-1">
+                        <span className="font-black text-amber-800 dark:text-amber-400 uppercase tracking-wider text-[10px] block">
+                          Detailed Solution & Explanation:
+                        </span>
+                        <p className="text-slate-700 dark:text-slate-300 font-medium leading-relaxed whitespace-pre-line">
+                          {qExp}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+
+                const renderMobileCard = () => (
+                  <div className="flex flex-col items-center">
+                    <div className="w-full max-w-[360px] bg-slate-950 rounded-[40px] p-3 shadow-2xl border-[6px] border-slate-800/90 font-sans">
+                      <div className="bg-slate-900 rounded-[30px] overflow-hidden border border-slate-800 text-slate-100 flex flex-col min-h-[540px] shadow-inner">
+                        {/* Mobile Device Status Bar */}
+                        <div className="bg-slate-950 px-4 py-2 flex items-center justify-between text-[10px] text-slate-400 font-bold border-b border-slate-800/60">
+                          <span>09:41</span>
+                          <div className="w-16 h-3 bg-slate-900 rounded-full flex items-center justify-center">
+                            <div className="w-4 h-1 bg-slate-800 rounded-full" />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Wifi className="h-3 w-3 text-slate-400" />
+                            <Battery className="h-3.5 w-3.5 text-slate-400" />
+                          </div>
+                        </div>
+
+                        {/* Mobile App Header Bar */}
+                        <div className="bg-blue-600 dark:bg-blue-700 text-white px-3.5 py-2.5 flex items-center justify-between shadow-md">
+                          <div className="flex items-center gap-2">
+                            <ArrowLeft className="h-4 w-4" />
+                            <div>
+                              <p className="text-xs font-black leading-tight tracking-tight">Practice Series App</p>
+                              <p className="text-[9px] text-blue-200 font-semibold">{activeCategoryObj?.name || 'Practice'}</p>
+                            </div>
+                          </div>
+                          <span className="text-[9px] font-black bg-blue-800/90 px-2 py-0.5 rounded-full text-blue-100 border border-blue-400/30">
+                            {previewLanguage.toUpperCase()}
+                          </span>
+                        </div>
+
+                        {/* Mobile Viewport Body */}
+                        <div className="p-3.5 flex-1 flex flex-col justify-between space-y-3 bg-slate-950 overflow-y-auto">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between pb-2 border-b border-slate-800/80 text-[10px] font-extrabold tracking-wider">
+                              <span className="text-blue-400 bg-blue-950/80 px-2 py-0.5 rounded border border-blue-800/50">
+                                Q.{previewIndex + 1} / {parsedQuestions.length}
+                              </span>
+                              <span className="text-emerald-400 font-black bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/50">
+                                Practice Mode
+                              </span>
+                            </div>
+
+                            <div className="text-xs font-semibold text-slate-100 leading-relaxed">
+                              {qText}
+                            </div>
+
+                            <div className="space-y-2 pt-1">
+                              {activePreviewQuestion.options.map((opt: any, oIdx: number) => {
+                                const isCorrect = oIdx === activePreviewQuestion.correctOption;
+                                const optText = previewLanguage === 'hi' ? opt.hi : opt.en;
+                                return (
+                                  <div
+                                    key={oIdx}
+                                    className={`flex items-start gap-2.5 p-2.5 rounded-xl text-xs font-medium transition-all border ${
+                                      isCorrect
+                                        ? 'bg-emerald-950/80 border-emerald-500 text-emerald-200 font-bold shadow-md shadow-emerald-950/40'
+                                        : 'bg-slate-900/90 border-slate-800/90 text-slate-300'
+                                    }`}
+                                  >
+                                    <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
+                                      isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400'
+                                    }`}>
+                                      {oIdx + 1}
+                                    </div>
+                                    <div className="flex-1 text-[11px] leading-snug">{optText}</div>
+                                    {isCorrect && <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0 ml-auto" />}
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {qExp && (
+                              <div className="bg-amber-950/50 border border-amber-800/60 rounded-xl p-3 mt-3 space-y-1">
+                                <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-400 uppercase tracking-wider">
+                                  <Sparkles className="h-3 w-3 text-amber-400" />
+                                  <span>Mobile Solution Card</span>
+                                </div>
+                                <p className="text-[11px] text-amber-200/95 leading-relaxed font-medium whitespace-pre-line">
+                                  {qExp}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+
+                return (
+                  <div>
+                    {previewLayoutMode === 'both' && (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                        {renderWebCard()}
+                        {renderMobileCard()}
+                      </div>
+                    )}
+                    {previewLayoutMode === 'web' && renderWebCard()}
+                    {previewLayoutMode === 'mobile' && renderMobileCard()}
+                  </div>
+                );
+              })()}
 
               {/* Ingest & Upload Action Bar */}
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">

@@ -15,6 +15,7 @@ import { ArrowLeft, Send } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
+import { SpinningDotsLoader } from '../SpinningDotsLoader';
 
 interface SupportChatScreenProps {
   currentUser: any;
@@ -163,7 +164,7 @@ export default function SupportChatScreen({
       >
         {loading ? (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color="#2563EB" />
+            <SpinningDotsLoader size={48} isDark={isDark} message="Loading support chat..." />
           </View>
         ) : (
           <FlatList

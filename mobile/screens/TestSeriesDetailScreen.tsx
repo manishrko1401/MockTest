@@ -25,7 +25,9 @@ import {
 } from 'lucide-react-native';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
+import { SpinningDotsLoader } from '../SpinningDotsLoader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getLocalizedName } from '../utils/localization';
 
 interface TestSeriesDetailScreenProps {
   currentUser: any;
@@ -75,6 +77,15 @@ export default function TestSeriesDetailScreen({
   const { width: SCREEN_WIDTH } = Dimensions.get('window');
   const horizontalScrollRef = useRef<ScrollView>(null);
   const [activeSubSubId, setActiveSubSubId] = useState<string | null>(null);
+  const [screenLoading, setScreenLoading] = useState(true);
+
+  useEffect(() => {
+    setScreenLoading(true);
+    const timer = setTimeout(() => {
+      setScreenLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [series?.id]);
 
   const sortedSubSubCategories = React.useMemo(() => {
     if (!series.subSubCategories) return [];
@@ -107,6 +118,36 @@ export default function TestSeriesDetailScreen({
     };
     loadLocalOngoing();
   }, []);
+
+  // Fast O(1) map for latest completed attempt per testId
+  const completedAttemptMap = React.useMemo(() => {
+    const map = new Map<string, any>();
+    if (!currentUser?.testSessions) return map;
+    for (const s of currentUser.testSessions) {
+      if (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED') {
+        const existing = map.get(s.testId);
+        const sTime = s.startedAt ? new Date(s.startedAt).getTime() : 0;
+        const eTime = existing?.startedAt ? new Date(existing.startedAt).getTime() : 0;
+        if (!existing || sTime > eTime) {
+          map.set(s.testId, s);
+        }
+      }
+    }
+    return map;
+  }, [currentUser?.testSessions]);
+
+  // Fast O(1) set for paused/ongoing testIds
+  const pausedTestIdsSet = React.useMemo(() => {
+    const set = new Set<string>(localOngoingIds);
+    if (currentUser?.testSessions) {
+      for (const s of currentUser.testSessions) {
+        if (s.status === 'ONGOING') {
+          set.add(s.testId);
+        }
+      }
+    }
+    return set;
+  }, [currentUser?.testSessions, localOngoingIds]);
 
   // Helper to check if a user has access to a mock test based on their subscription tier
   const hasAccess = (requiredTier: string) => {
@@ -165,6 +206,34 @@ export default function TestSeriesDetailScreen({
     );
   };
 
+  if (screenLoading) {
+    return (
+      <View style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }, { justifyContent: 'center', alignItems: 'center' }]}>
+        <View style={[
+          styles.header, 
+          isDark && { backgroundColor: ThemeColors.dark.headerBg },
+          { paddingTop: insets.top + 10, paddingBottom: 12, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }
+        ]}>
+          <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+            <ArrowLeft color="#FFF" size={20} />
+          </TouchableOpacity>
+          <View style={styles.headerInfo}>
+            <Text style={styles.headerCategory}>
+              {series.subCategoryName ? `${series.categoryName} • ${series.subCategoryName}` : series.categoryName}
+            </Text>
+            <Text style={styles.headerTitle} numberOfLines={1}>{series.name} {language === 'en' ? 'Series' : 'सीरीज'}</Text>
+          </View>
+        </View>
+
+        <SpinningDotsLoader
+          size={56}
+          isDark={isDark}
+          message={language === 'hi' ? 'टेस्ट सूची लोड हो रही है...' : 'Loading test list...'}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
       {/* Decorative Blur Orbs */}
@@ -199,8 +268,10 @@ export default function TestSeriesDetailScreen({
           </View>
         )}
         <View style={styles.headerInfo}>
-          <Text style={styles.headerCategory}>{series.categoryName}</Text>
-          <Text style={styles.headerTitle} numberOfLines={1}>{series.name} {language === 'en' ? 'Series' : 'सीरीज'}</Text>
+          <Text style={styles.headerCategory}>
+            {series.subCategoryName ? `${getLocalizedName(series.categoryName, language)} • ${getLocalizedName(series.subCategoryName, language)}` : getLocalizedName(series.categoryName, language)}
+          </Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>{getLocalizedName(series.name, language)} {language === 'en' ? 'Series' : 'सीरीज'}</Text>
         </View>
       </View>
 
@@ -236,7 +307,7 @@ export default function TestSeriesDetailScreen({
                       isDark && !isSelected && { color: '#94A3B8' }
                     ]}
                   >
-                    {subSub.name} ({subSub.tests?.length || 0})
+                    {getLocalizedName(subSub, language)} ({subSub.tests?.length || 0})
                   </Text>
                 </TouchableOpacity>
               );
@@ -284,18 +355,9 @@ export default function TestSeriesDetailScreen({
                         })
                         .map((test: any) => {
                         const allowed = hasAccess(test.requiredTier);
-                        const completedAttempts = (currentUser.testSessions || [])
-                          .filter((s: any) => s.testId === test.id && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'))
-                          .sort((a: any, b: any) => {
-                            const timeA = a.startedAt ? new Date(a.startedAt).getTime() : 0;
-                            const timeB = b.startedAt ? new Date(b.startedAt).getTime() : 0;
-                            return timeB - timeA;
-                          });
-                        const attempt = completedAttempts[0];
-                        const isCompleted = completedAttempts.length > 0;
-                        const isPaused = localOngoingIds.has(test.id) || (currentUser.testSessions || []).some(
-                          (s: any) => s.testId === test.id && s.status === 'ONGOING'
-                        );
+                        const attempt = completedAttemptMap.get(test.id);
+                        const isCompleted = !!attempt;
+                        const isPaused = pausedTestIdsSet.has(test.id);
 
                         let cardBg = isDark ? ThemeColors.dark.card : '#FFFFFF';
                         let cardBorderColor = isDark ? ThemeColors.dark.border : '#E2E8F0';
@@ -337,7 +399,7 @@ export default function TestSeriesDetailScreen({
                             ]}
                           >
                             <View style={styles.testCardHeader}>
-                              <Text style={[styles.testTitle, isDark && { color: ThemeColors.dark.text }]}>{test.title}</Text>
+                              <Text style={[styles.testTitle, isDark && { color: ThemeColors.dark.text }]}>{getLocalizedName(test, language)}</Text>
                               {test.requiredTier !== 'None' ? (
                                 <Text style={[styles.badge, styles.proBadge]}>PRO</Text>
                               ) : (
@@ -448,7 +510,49 @@ export default function TestSeriesDetailScreen({
                         );
                       })
                     ) : (
-                      <Text style={styles.noTestsText}>No tests available in this series yet.</Text>
+                      <View style={{
+                        padding: 24,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginVertical: 20,
+                        backgroundColor: isDark ? 'rgba(15,23,42,0.6)' : '#FFFFFF',
+                        borderRadius: 20,
+                        borderWidth: 1,
+                        borderColor: isDark ? '#1E293B' : '#E2E8F0',
+                      }}>
+                        <View style={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: 28,
+                          backgroundColor: isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginBottom: 12,
+                        }}>
+                          <Clock size={28} color="#3B82F6" />
+                        </View>
+                        <Text style={{
+                          fontSize: 15,
+                          fontWeight: '800',
+                          color: isDark ? '#F8FAFC' : '#0F172A',
+                          textAlign: 'center',
+                          marginBottom: 6,
+                        }}>
+                          {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                        </Text>
+                        <Text style={{
+                          fontSize: 12,
+                          fontWeight: '500',
+                          color: isDark ? '#94A3B8' : '#64748B',
+                          textAlign: 'center',
+                          lineHeight: 18,
+                          maxWidth: 290,
+                        }}>
+                          {language === 'hi'
+                            ? 'हमारी विशेषज्ञ टीम इस श्रेणी के लिए उच्च-गुणवत्ता वाले मॉक टेस्ट, अभ्यास सेट और विस्तृत समाधान तैयार कर रही है। जल्द ही नए टेस्ट उपलब्ध होंगे!'
+                            : 'Our expert team is actively creating high-quality mock tests, practice sets, and detailed solutions for this category. Stay tuned — new tests are uploaded regularly!'}
+                        </Text>
+                      </View>
                     )}
                   </View>
                 </ScrollView>
@@ -463,18 +567,9 @@ export default function TestSeriesDetailScreen({
           {series.tests && series.tests.length > 0 ? (
             series.tests.map((test: any) => {
               const allowed = hasAccess(test.requiredTier);
-              const completedAttempts = (currentUser.testSessions || [])
-                .filter((s: any) => s.testId === test.id && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED'))
-                .sort((a: any, b: any) => {
-                  const timeA = a.startedAt ? new Date(a.startedAt).getTime() : 0;
-                  const timeB = b.startedAt ? new Date(b.startedAt).getTime() : 0;
-                  return timeB - timeA;
-                });
-              const attempt = completedAttempts[0];
-              const isCompleted = completedAttempts.length > 0;
-              const isPaused = localOngoingIds.has(test.id) || (currentUser.testSessions || []).some(
-                (s: any) => s.testId === test.id && s.status === 'ONGOING'
-              );
+              const attempt = completedAttemptMap.get(test.id);
+              const isCompleted = !!attempt;
+              const isPaused = pausedTestIdsSet.has(test.id);
 
               let cardBg = isDark ? ThemeColors.dark.card : '#FFFFFF';
               let cardBorderColor = isDark ? ThemeColors.dark.border : '#E2E8F0';
@@ -516,7 +611,7 @@ export default function TestSeriesDetailScreen({
                   ]}
                 >
                   <View style={styles.testCardHeader}>
-                    <Text style={[styles.testTitle, isDark && { color: ThemeColors.dark.text }]}>{test.title}</Text>
+                    <Text style={[styles.testTitle, isDark && { color: ThemeColors.dark.text }]}>{getLocalizedName(test, language)}</Text>
                     {test.requiredTier !== 'None' ? (
                       <Text style={[styles.badge, styles.proBadge]}>PRO</Text>
                     ) : (
@@ -627,7 +722,49 @@ export default function TestSeriesDetailScreen({
               );
             })
           ) : (
-            <Text style={styles.noTestsText}>No tests available in this series yet.</Text>
+            <View style={{
+              padding: 24,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginVertical: 24,
+              backgroundColor: isDark ? 'rgba(15,23,42,0.6)' : '#FFFFFF',
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: isDark ? '#1E293B' : '#E2E8F0',
+            }}>
+              <View style={{
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                backgroundColor: isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 12,
+              }}>
+                <Clock size={28} color="#3B82F6" />
+              </View>
+              <Text style={{
+                fontSize: 15,
+                fontWeight: '800',
+                color: isDark ? '#F8FAFC' : '#0F172A',
+                textAlign: 'center',
+                marginBottom: 6,
+              }}>
+                {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+              </Text>
+              <Text style={{
+                fontSize: 12,
+                fontWeight: '500',
+                color: isDark ? '#94A3B8' : '#64748B',
+                textAlign: 'center',
+                lineHeight: 18,
+                maxWidth: 290,
+              }}>
+                {language === 'hi'
+                  ? 'हमारी विशेषज्ञ टीम इस श्रेणी के लिए उच्च-गुणवत्ता वाले मॉक टेस्ट, अभ्यास सेट और विस्तृत समाधान तैयार कर रही है। जल्द ही नए टेस्ट उपलब्ध होंगे!'
+                  : 'Our expert team is actively creating high-quality mock tests, practice sets, and detailed solutions for this category. Stay tuned — new tests are uploaded regularly!'}
+              </Text>
+            </View>
           )}
         </ScrollView>
       )}

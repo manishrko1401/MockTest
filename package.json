@@ -13,6 +13,7 @@
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.17",
     "prisma": "^7.9.1",
+    "puppeteer": "^25.4.0",
     "typescript": "^7.0.2"
   },
   "scripts": {

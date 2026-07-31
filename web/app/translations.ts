@@ -19,9 +19,10 @@ export const TRANSLATIONS = {
     langSelect: "Language",
 
     // Home Page
-    heroBadge: "🏆 India's Exam Prep Portal",
+    heroBadge: "🎓 For the students, by the students",
     heroTitlePrefix: "Unlock Success In Your ",
     heroTitleSuffix: "Exams",
+    heroMotto: "For the students, by the students",
     heroDesc: "Get comprehensive CBT mock sittings, instant accuracy graphs, tab-blur security alerts, and full access passes mapped to SSC, Banking, Railways, and State Exams.",
     searchPlaceholder: "Search exam (e.g. SSC CGL, RRB NTPC, SBI PO)...",
     searchBtn: "Search Mock Test",
@@ -237,9 +238,10 @@ export const TRANSLATIONS = {
     langSelect: "भाषा",
 
     // Home Page
-    heroBadge: "🏆 भारत का एग्जाम प्रेप पोर्टल",
+    heroBadge: "🎓 छात्रों के लिए, छात्रों द्वारा",
     heroTitlePrefix: "अपनी परीक्षाओं में ",
     heroTitleSuffix: "सफलता अनलॉक करें",
+    heroMotto: "छात्रों के लिए, छात्रों द्वारा",
     heroDesc: "व्यापक सीबीटी मॉक सेटिंग्स, त्वरित सटीकता ग्राफ, टैब-ब्लर सुरक्षा अलर्ट और एसएससी, बैंकिंग, रेलवे और राज्य परीक्षाओं के लिए पूर्ण पास प्राप्त करें।",
     searchPlaceholder: "परीक्षा खोजें (जैसे: SSC CGL, RRB NTPC, SBI PO)...",
     searchBtn: "मॉक टेस्ट खोजें",
