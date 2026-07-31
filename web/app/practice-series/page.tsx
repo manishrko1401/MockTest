@@ -1436,7 +1436,7 @@ export default function PracticeSeriesPage() {
           <div className="space-y-6">
             {/* Sub Header (Matched to Test Series Page) */}
             <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-6">
-              <div className="animate-in fade-in slide-in-from-top-4 duration-350 w-full">
+              <div className="w-full">
                 <div className="flex items-center justify-between w-full gap-2">
                   <h2 className="text-sm sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 shrink">
                     <Target className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 shrink-0" />
@@ -1478,7 +1478,7 @@ export default function PracticeSeriesPage() {
             </div>
 
             {/* Category Cards Grid — 2 Tiles per Row on Mobile View */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 animate-in fade-in duration-300">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
               {filteredCatalog.map((cat) => {
                 const isSsc = cat.id.includes('ssc');
                 const isRailways = cat.id.includes('railway');
@@ -1498,7 +1498,7 @@ export default function PracticeSeriesPage() {
                   <button
                     key={cat.id}
                     onClick={() => handleCategorySelect(cat.id)}
-                    className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 p-2.5 sm:p-3.5 rounded-xl flex flex-col sm:flex-row justify-between gap-2 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
+                    className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 sm:p-3.5 rounded-xl flex flex-col sm:flex-row justify-between gap-2 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer border-t-4 ${accentColor}`}
                   >
                     {/* Left details */}
                     <div className="flex-1 flex flex-col justify-between min-w-0">

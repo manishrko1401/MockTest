@@ -740,7 +740,7 @@ export default function MockTestsCatalog() {
                         <button
                           key={cat.id}
                           onClick={() => handleCategorySelect(cat.id)}
-                          className={`w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/85 rounded-2xl transition-all duration-350 shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-[0.99] border-t-4 border-l-0 border-r-0 border-b-0 cursor-pointer ${accentColor}`}
+                          className={`w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer border-t-4 ${accentColor}`}
                         >
                           {/* Logo/Icon Container */}
                           <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-3 bg-slate-50 dark:bg-slate-900 transition duration-300">
@@ -825,7 +825,7 @@ export default function MockTestsCatalog() {
                           <button
                             key={subCat.id}
                             onClick={() => handleSubCategorySelect(subCat.id)}
-                            className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-lg hover:scale-[1.03] active:scale-[0.99] cursor-pointer group hover:border-blue-500/20"
+                            className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer group hover:border-blue-500/30"
                           >
                             {/* Accent Gradient Border at top */}
                             <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${themeInfo.gradient}`} />
@@ -837,7 +837,7 @@ export default function MockTestsCatalog() {
                             />
 
                             {/* Icon Container */}
-                            <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 shadow-sm group-hover:shadow-md overflow-hidden ${themeInfo.iconBg}`}>
+                            <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-105 shadow-sm overflow-hidden ${themeInfo.iconBg}`}>
                               {getSubCatIcon(subCat.name, subCat.logoUrl || activeCategoryObj?.logoUrl)}
                             </div>
 
@@ -847,14 +847,14 @@ export default function MockTestsCatalog() {
                             </h4>
 
                             {/* Test Count Badge */}
-                            <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 sm:px-3.5 sm:py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg} group-hover:scale-105`}>
+                            <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 sm:px-3.5 sm:py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg}`}>
                               {countStr}
                             </span>
 
                             {/* Practice CTA Prompt */}
-                            <div className="flex items-center gap-1 text-[9px] uppercase font-black text-blue-600 dark:text-blue-400 tracking-wider mt-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                            <div className="flex items-center gap-1 text-[9px] uppercase font-black text-blue-600 dark:text-blue-400 tracking-wider mt-4 opacity-90 group-hover:opacity-100 transition-opacity duration-200">
                               {language === 'hi' ? "तैयारी शुरू करें" : "Start Practice"}
-                              <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 duration-200" />
+                              <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 duration-200" />
                             </div>
                           </button>
                         );
@@ -927,7 +927,7 @@ export default function MockTestsCatalog() {
                         ) : groups.length > 0 ? (
                           <div className="space-y-4">
                             {/* Horizontal Tab Navigator for Sub-subcategories */}
-                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200 dark:border-slate-800 animate-in fade-in duration-200">
+                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200 dark:border-slate-800">
                               {groups.map(group => {
                                 const isSelected = (activeSubSubId || groups[0]?.id) === group.id;
                                 return (
@@ -951,7 +951,7 @@ export default function MockTestsCatalog() {
                               const activeGroup = groups.find(g => g.id === (activeSubSubId || groups[0]?.id));
                               if (!activeGroup) return null;
                               return (
-                                <div className="space-y-3 animate-in fade-in duration-300">
+                                <div className="space-y-3">
                                   {activeGroup.tests.map((test) => {
                                     const attempts = getTestAttempts(test.id);
                                     const attemptsCount = attempts.length;
@@ -1503,7 +1503,7 @@ export default function MockTestsCatalog() {
           ) : selectedCategory === null ? (
             <>
               <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
-                <div className="animate-in fade-in slide-in-from-top-4 duration-350">
+                <div>
                   <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-blue-500" />
                     {language === 'hi' ? 'परीक्षा श्रेणियाँ' : 'Exam Categories'}
@@ -1536,7 +1536,7 @@ export default function MockTestsCatalog() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 animate-in fade-in duration-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {getFilteredCatalogForSearch.map(cat => {
                   const isSsc = cat.id === 'ssc';
                   const isRailways = cat.id === 'railways';
@@ -1559,7 +1559,7 @@ export default function MockTestsCatalog() {
                         setSelectedCategory(cat.id);
                         setSelectedSubCategory(null);
                       }}
-                      className={`bg-white dark:bg-slate-950 border border-slate-205 dark:border-slate-800 hover:border-blue-550 dark:hover:border-blue-500 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
+                      className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer border-t-4 ${accentColor}`}
                     >
                       {/* Left details */}
                       <div className="flex-1 flex flex-col justify-between min-w-0">
@@ -1650,7 +1650,7 @@ export default function MockTestsCatalog() {
                     )}
                   </div>
 
-                  <div className="text-right animate-in fade-in slide-in-from-top-4 duration-350">
+                  <div className="text-right">
                     <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2 justify-end">
                       {getLocalizedName(currentCategoryObj, language)}
                       <BookOpen className="h-5 w-5 text-blue-500" />
@@ -1683,7 +1683,7 @@ export default function MockTestsCatalog() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 animate-in fade-in duration-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {getFilteredSubCategories.map(subCat => {
                   const count = subCat.tests.length;
                   const countStr = count === 1 
@@ -1712,7 +1712,7 @@ export default function MockTestsCatalog() {
                     <button
                       key={subCat.id}
                       onClick={() => setSelectedSubCategory(subCat.id)}
-                      className={`bg-white dark:bg-slate-950 border border-slate-205 dark:border-slate-800 hover:border-blue-550 dark:hover:border-blue-500 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer hover:scale-[1.02] duration-200 border-t-4 border-l-0 border-r-0 border-b-0 ${accentColor}`}
+                      className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer border-t-4 ${accentColor}`}
                     >
                       {/* Left details */}
                       <div className="flex-1 flex flex-col justify-between min-w-0">
@@ -1784,7 +1784,7 @@ export default function MockTestsCatalog() {
                 );
 
                 return (
-                  <div className="space-y-6 animate-in fade-in duration-300">
+                  <div className="space-y-6">
                     <div className="mb-6 flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
                       <button
                         onClick={() => setSelectedSubCategory(null)}
@@ -1878,7 +1878,7 @@ export default function MockTestsCatalog() {
                             );
                           }
                           return (
-                            <div className="space-y-3 animate-in fade-in duration-300">
+                            <div className="space-y-3">
                               {activeGroup.tests.map(test => {
                                 const hasPass = currentUser && (
                                   (test.requiredTier === 'None') ||
