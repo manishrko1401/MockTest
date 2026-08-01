@@ -569,17 +569,17 @@ const formatSubCategoryName = (name: string) => {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="w-full border border-blue-200/80 dark:border-blue-900/50 rounded-2xl flex flex-col justify-between bg-slate-950 text-white shadow-md relative overflow-hidden transition-all duration-300 touch-pan-y"
+            className="w-full border border-blue-200/80 dark:border-blue-900/50 rounded-2xl flex flex-col justify-between bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-md relative overflow-hidden transition-all duration-300 touch-pan-y"
           >
             {activeAnnouncements.length > 1 && (
               <>
-                <div className="absolute top-2.5 right-2.5 z-30 flex gap-1 items-center bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 shadow-sm">
+                <div className="absolute top-2.5 right-2.5 z-30 flex gap-1 items-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
                   {activeAnnouncements.map((_, idx) => (
                     <button
                       key={idx}
                       onClick={() => setAnnouncementIndex(idx)}
                       className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                        announcementIndex === idx ? 'bg-blue-400 w-4' : 'bg-white/40 w-1.5'
+                        announcementIndex === idx ? 'bg-blue-600 dark:bg-blue-400 w-4' : 'bg-slate-300 dark:bg-white/40 w-1.5'
                       }`}
                     />
                   ))}
@@ -588,14 +588,14 @@ const formatSubCategoryName = (name: string) => {
                 {/* Left & Right Tap Buttons for Mobile Swipe Navigation */}
                 <button
                   onClick={() => setAnnouncementIndex((prev) => (prev - 1 + activeAnnouncements.length) % activeAnnouncements.length)}
-                  className="absolute left-1.5 top-1/2 -translate-y-1/2 z-30 p-1 bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-full text-white/80 hover:text-white border border-white/10 transition active:scale-90 shadow-md"
+                  className="absolute left-1.5 top-1/2 -translate-y-1/2 z-30 p-1 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full text-slate-700 hover:text-slate-900 dark:text-white/80 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition active:scale-90 shadow-md"
                   aria-label="Previous Banner"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </button>
                 <button
                   onClick={() => setAnnouncementIndex((prev) => (prev + 1) % activeAnnouncements.length)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 z-30 p-1 bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-full text-white/80 hover:text-white border border-white/10 transition active:scale-90 shadow-md"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 z-30 p-1 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full text-slate-700 hover:text-slate-900 dark:text-white/80 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition active:scale-90 shadow-md"
                   aria-label="Next Banner"
                 >
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -604,8 +604,8 @@ const formatSubCategoryName = (name: string) => {
             )}
 
             {activeAnnouncements.length === 0 ? (
-              <div className="w-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-slate-400">
-                <Bell className="h-6 w-6 text-slate-500 mb-1" />
+              <div className="w-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-slate-500 dark:text-slate-400">
+                <Bell className="h-6 w-6 text-slate-400 dark:text-slate-500 mb-1" />
                 <p className="text-[11px] font-semibold">
                   {language === 'hi' ? 'वर्तमान में कोई सक्रिय घोषणाएं नहीं हैं।' : 'No active announcements at the moment.'}
                 </p>
@@ -614,9 +614,9 @@ const formatSubCategoryName = (name: string) => {
               (() => {
                 const ann = activeAnnouncements[announcementIndex] || activeAnnouncements[0];
                 return (
-                  <div className="w-full flex flex-col justify-between animate-in fade-in duration-200 bg-slate-950">
+                  <div className="w-full flex flex-col justify-between animate-in fade-in duration-200 bg-white dark:bg-slate-900">
                     {/* Banner Image Container - Fits 100% Perfectly Without Cropping Any Part */}
-                    <div className="w-full relative flex items-center justify-center bg-slate-950 p-1 overflow-hidden min-h-[140px]">
+                    <div className="w-full relative flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-1 overflow-hidden min-h-[140px]">
                       {ann.imageUrl && ann.imageUrl.trim() ? (
                         <img
                           src={ann.imageUrl.trim().replace(/^http:\/\//i, 'https://')}
@@ -624,32 +624,32 @@ const formatSubCategoryName = (name: string) => {
                           className="w-full h-auto max-h-[260px] object-contain rounded-xl block mx-auto"
                         />
                       ) : (
-                        <div className="w-full h-36 rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 flex flex-col items-center justify-center p-4 text-center space-y-1">
-                          <Bell className="h-7 w-7 text-blue-400 animate-bounce" />
-                          <h3 className="font-extrabold text-xs text-white line-clamp-2">{ann.title}</h3>
+                        <div className="w-full h-36 rounded-xl bg-gradient-to-br from-blue-50 via-indigo-50/50 to-slate-100 dark:from-blue-950/60 dark:via-indigo-950/60 dark:to-slate-900 flex flex-col items-center justify-center p-4 text-center space-y-1">
+                          <Bell className="h-7 w-7 text-blue-600 dark:text-blue-400 animate-bounce" />
+                          <h3 className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-2">{ann.title}</h3>
                         </div>
                       )}
                     </div>
 
                     {/* Small Announcement Info Footer at Bottom (Does NOT Block Banner) */}
-                    <div className="shrink-0 w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-2 px-3 flex items-center justify-between gap-2 z-20">
+                    <div className="shrink-0 w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-2 px-3 flex items-center justify-between gap-2 z-20">
                       <div className="flex-1 min-w-0 space-y-0.5 text-left">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="bg-blue-600/90 text-white font-black text-[8px] px-1.5 py-0.5 rounded border border-blue-400/30 uppercase tracking-wider">
+                          <span className="bg-blue-600 text-white font-black text-[8px] px-1.5 py-0.5 rounded border border-blue-400/30 uppercase tracking-wider">
                             {ann.type || 'ANNOUNCEMENT'}
                           </span>
-                          <span className="text-[8.5px] text-slate-400 font-bold flex items-center gap-0.5">
-                            <Calendar className="h-2.5 w-2.5 text-blue-400" /> {ann.date}
+                          <span className="text-[8.5px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-0.5">
+                            <Calendar className="h-2.5 w-2.5 text-blue-600 dark:text-blue-400" /> {ann.date}
                           </span>
                           {ann.lastDate && (
-                            <span className="text-[8px] font-black text-red-400 flex items-center gap-0.5 bg-red-950/70 border border-red-800/40 px-1.5 py-0.5 rounded">
+                            <span className="text-[8px] font-black text-red-600 dark:text-red-400 flex items-center gap-0.5 bg-red-50 dark:bg-red-950/70 border border-red-200 dark:border-red-800/40 px-1.5 py-0.5 rounded">
                               <span className="h-1 w-1 rounded-full bg-red-500 animate-ping inline-block" />
                               {language === 'hi' ? 'अंतिम: ' : 'Last: '}{ann.lastDate}
                             </span>
                           )}
                         </div>
 
-                        <h4 className="font-extrabold text-[9.5px] text-white leading-tight line-clamp-1">
+                        <h4 className="font-extrabold text-[9.5px] text-slate-900 dark:text-white leading-tight line-clamp-1">
                           {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
                         </h4>
                       </div>
@@ -803,8 +803,8 @@ const formatSubCategoryName = (name: string) => {
           {/* MOBILE TABS UPDATES SECTION */}
           <section className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-900">
             <div className="text-center max-w-sm mx-auto">
-              <h2 className="text-lg font-black tracking-tight text-slate-905 dark:text-white uppercase">{t.liveUpdatesTitle}</h2>
-              <p className="text-[10px] text-slate-505 dark:text-slate-400 mt-1 font-semibold">{t.liveUpdatesDesc}</p>
+              <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.liveUpdatesTitle}</h2>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">{t.liveUpdatesDesc}</p>
             </div>
 
             {/* TAB SELECTION BAR */}
@@ -833,8 +833,8 @@ const formatSubCategoryName = (name: string) => {
                 onClick={() => setMobileUpdateTab('admit_card')}
                 className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
                   mobileUpdateTab === 'admit_card' 
-                    ? 'bg-white dark:bg-slate-805 text-green-600 dark:text-white shadow-sm'
-                    : 'text-slate-505 hover:text-slate-700'
+                    ? 'bg-white dark:bg-slate-800 text-green-600 dark:text-white shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 Admit Cards
@@ -842,7 +842,7 @@ const formatSubCategoryName = (name: string) => {
             </div>
 
             {/* RENDER ACTIVE TAB */}
-            <div className="bg-white dark:bg-slate-905 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm min-h-[300px] flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm min-h-[300px] flex flex-col justify-between">
               <div>
                 <h3 className="font-extrabold text-[10px] text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-1.5">
                   {mobileUpdateTab === 'notice' && <><Bell className="h-4 w-4 text-blue-600 animate-bounce" /> {t.liveNotices}</>}
@@ -1345,16 +1345,16 @@ const formatSubCategoryName = (name: string) => {
         </div>
 
         {/* Right Side: Wider Full-Height Banner Announcement Panel */}
-        <div className="lg:col-span-8 border border-blue-200/80 dark:border-blue-900/50 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[420px] md:min-h-[460px] bg-slate-950 text-white shadow-xl hover:shadow-2xl transition-all duration-300 group">
+        <div className="lg:col-span-8 border border-blue-200/80 dark:border-blue-900/50 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[420px] md:min-h-[460px] bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xl hover:shadow-2xl transition-all duration-300 group">
           {activeAnnouncements.length > 1 && (
             <>
-              <div className="absolute top-3.5 right-3.5 z-30 flex gap-1.5 items-center bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-md">
+              <div className="absolute top-3.5 right-3.5 z-30 flex gap-1.5 items-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-md">
                 {activeAnnouncements.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setAnnouncementIndex(idx)}
                     className={`h-2 rounded-full transition-all cursor-pointer ${
-                      announcementIndex === idx ? 'bg-blue-400 w-5' : 'bg-white/40 hover:bg-white/70 w-2'
+                      announcementIndex === idx ? 'bg-blue-600 dark:bg-blue-400 w-5' : 'bg-slate-300 dark:bg-white/40 hover:bg-slate-400 dark:hover:bg-white/70 w-2'
                     }`}
                   />
                 ))}
@@ -1363,15 +1363,14 @@ const formatSubCategoryName = (name: string) => {
               {/* Small Left & Right Navigation Arrows */}
               <button
                 onClick={() => setAnnouncementIndex((prev) => (prev - 1 + activeAnnouncements.length) % activeAnnouncements.length)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-30 p-2 bg-black/50 hover:bg-black/80 backdrop-blur-md rounded-full text-white/80 hover:text-white border border-white/10 transition active:scale-95 shadow-lg group-hover:opacity-100 opacity-80 cursor-pointer"
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-30 p-2 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full text-slate-700 hover:text-slate-900 dark:text-white/80 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition active:scale-95 shadow-lg group-hover:opacity-100 opacity-80 cursor-pointer"
                 aria-label="Previous Announcement"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setAnnouncementIndex((prev) => (prev + 1) % activeAnnouncements.length)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-30 p-2 bg-black/50 hover:bg-black/80 backdrop-blur-md rounded-full text-white/80 hover:text-white border border-white/10 transition active:scale-95 shadow-lg group-hover:opacity-100 opacity-80 cursor-pointer"
-                aria-label="Next Announcement"
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-30 p-2 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full text-slate-700 hover:text-slate-900 dark:text-white/80 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition active:scale-95 shadow-lg group-hover:opacity-100 opacity-80 cursor-pointer"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -1379,8 +1378,8 @@ const formatSubCategoryName = (name: string) => {
           )}
 
           {activeAnnouncements.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400 space-y-2">
-              <Bell className="h-10 w-10 text-slate-600" />
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-500 dark:text-slate-400 space-y-2">
+              <Bell className="h-10 w-10 text-slate-400 dark:text-slate-600" />
               <p className="text-sm font-semibold">
                 {language === 'hi' ? 'वर्तमान में कोई सक्रिय घोषणाएं नहीं हैं।' : 'No active announcements at the moment.'}
               </p>
@@ -1389,9 +1388,9 @@ const formatSubCategoryName = (name: string) => {
             (() => {
               const ann = activeAnnouncements[announcementIndex] || activeAnnouncements[0];
               return (
-                <div className="flex-1 flex flex-col justify-between h-full w-full animate-in fade-in duration-300 bg-slate-950">
+                <div className="flex-1 flex flex-col justify-between h-full w-full animate-in fade-in duration-300 bg-white dark:bg-slate-900">
                   {/* Top Banner Image Container - Fits Entire Image Completely Without Cropping */}
-                  <div className="flex-1 w-full relative min-h-[300px] md:min-h-[340px] flex items-center justify-center bg-slate-950 overflow-hidden p-2">
+                  <div className="flex-1 w-full relative min-h-[300px] md:min-h-[340px] flex items-center justify-center bg-slate-50 dark:bg-slate-900 overflow-hidden p-2">
                     {ann.imageUrl && ann.imageUrl.trim() ? (
                       <img
                         src={ann.imageUrl.trim().replace(/^http:\/\//i, 'https://')}
@@ -1399,32 +1398,32 @@ const formatSubCategoryName = (name: string) => {
                         className="w-full h-full object-contain max-h-[340px] md:max-h-[380px] rounded-xl group-hover:scale-[1.01] transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full min-h-[280px] rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-2">
-                        <Bell className="h-12 w-12 text-blue-400 animate-bounce" />
-                        <h3 className="font-black text-lg md:text-xl text-white max-w-md">{ann.title}</h3>
+                      <div className="w-full h-full min-h-[280px] rounded-xl bg-gradient-to-br from-blue-50 via-indigo-50/50 to-slate-100 dark:from-blue-950/60 dark:via-indigo-950/60 dark:to-slate-900 flex flex-col items-center justify-center p-6 text-center space-y-2">
+                        <Bell className="h-12 w-12 text-blue-600 dark:text-blue-400 animate-bounce" />
+                        <h3 className="font-black text-lg md:text-xl text-slate-900 dark:text-white max-w-md">{ann.title}</h3>
                       </div>
                     )}
                   </div>
 
                   {/* Bottom Compact Announcement Info Footer (Does NOT block the banner) */}
-                  <div className="shrink-0 w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-2 px-3.5 md:px-5 flex items-center justify-between gap-2.5 z-20">
+                  <div className="shrink-0 w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-2 px-3.5 md:px-5 flex items-center justify-between gap-2.5 z-20">
                     <div className="flex-1 min-w-0 space-y-0.5 text-left">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="bg-blue-600/90 text-white font-black text-[8px] md:text-[9px] px-2 py-0.5 rounded border border-blue-400/30 uppercase tracking-wider">
+                        <span className="bg-blue-600 text-white font-black text-[8px] md:text-[9px] px-2 py-0.5 rounded border border-blue-400/30 uppercase tracking-wider">
                           {ann.type || 'ANNOUNCEMENT'}
                         </span>
-                        <span className="text-[9px] md:text-[10.5px] text-slate-400 font-bold flex items-center gap-1">
-                          <Calendar className="h-3 w-3 text-blue-400" /> {ann.date}
+                        <span className="text-[9px] md:text-[10.5px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-blue-600 dark:text-blue-400" /> {ann.date}
                         </span>
                         {ann.lastDate && (
-                          <span className="text-[8.5px] md:text-[10px] font-black text-red-400 flex items-center gap-1 bg-red-950/70 border border-red-800/40 px-1.5 py-0.5 rounded">
+                          <span className="text-[8.5px] md:text-[10px] font-black text-red-600 dark:text-red-400 flex items-center gap-1 bg-red-50 dark:bg-red-950/70 border border-red-200 dark:border-red-800/40 px-1.5 py-0.5 rounded">
                             <span className="h-1 w-1 rounded-full bg-red-500 animate-ping inline-block" />
                             {language === 'hi' ? 'अंतिम तिथि: ' : 'Last Date: '}{ann.lastDate}
                           </span>
                         )}
                       </div>
 
-                      <h4 className="font-extrabold text-[11px] md:text-xs text-white leading-tight line-clamp-1">
+                      <h4 className="font-extrabold text-[11px] md:text-xs text-slate-900 dark:text-white leading-tight line-clamp-1">
                         {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
                       </h4>
                     </div>
