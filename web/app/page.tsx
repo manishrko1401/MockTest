@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 import Link from 'next/link';
 import HomeSupportWidget from './components/HomeSupportWidget';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, GraduationCap, ChevronRight, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target } from 'lucide-react';
+import { ShieldCheck, GraduationCap, ChevronRight, ChevronLeft, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
 import { getLocalizedName } from './lib/examUtils';
 import { useIsMobile } from './useIsMobile';
@@ -279,11 +279,36 @@ const formatSubCategoryName = (name: string) => {
   const [announcementIndex, setAnnouncementIndex] = useState(0);
   const activeAnnouncements = (noticesList || []).filter(n => n.category === 'announcement');
 
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchEndX.current = null;
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > 30;
+    const isRightSwipe = distance < -30;
+
+    if (isLeftSwipe && activeAnnouncements.length > 1) {
+      setAnnouncementIndex((prev) => (prev + 1) % activeAnnouncements.length);
+    } else if (isRightSwipe && activeAnnouncements.length > 1) {
+      setAnnouncementIndex((prev) => (prev - 1 + activeAnnouncements.length) % activeAnnouncements.length);
+    }
+  };
+
   React.useEffect(() => {
     if (activeAnnouncements.length <= 1) return;
     const timer = setInterval(() => {
       setAnnouncementIndex((prev) => (prev + 1) % activeAnnouncements.length);
-    }, 8000);
+    }, 5000);
     return () => clearInterval(timer);
   }, [activeAnnouncements.length]);
 
@@ -539,24 +564,47 @@ const formatSubCategoryName = (name: string) => {
             </svg>
           </div>
 
-          {/* 1. ANNOUNCEMENT BANNER PANEL (Fits Banner Completely, Details at Bottom) */}
-          <section className="border border-blue-200/80 dark:border-blue-900/50 rounded-2xl flex flex-col justify-between min-h-[240px] bg-slate-950 text-white shadow-md relative overflow-hidden transition-all duration-300">
+          {/* 1. ANNOUNCEMENT BANNER PANEL (Fits Banner 100% Perfectly, Touch Swipeable & Auto Rotating) */}
+          <section
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            className="w-full border border-blue-200/80 dark:border-blue-900/50 rounded-2xl flex flex-col justify-between bg-slate-950 text-white shadow-md relative overflow-hidden transition-all duration-300 touch-pan-y"
+          >
             {activeAnnouncements.length > 1 && (
-              <div className="absolute top-2.5 right-2.5 z-30 flex gap-1 items-center bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 shadow-sm">
-                {activeAnnouncements.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setAnnouncementIndex(idx)}
-                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                      announcementIndex === idx ? 'bg-blue-400 w-4' : 'bg-white/40 w-1.5'
-                    }`}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="absolute top-2.5 right-2.5 z-30 flex gap-1 items-center bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 shadow-sm">
+                  {activeAnnouncements.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setAnnouncementIndex(idx)}
+                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                        announcementIndex === idx ? 'bg-blue-400 w-4' : 'bg-white/40 w-1.5'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                {/* Left & Right Tap Buttons for Mobile Swipe Navigation */}
+                <button
+                  onClick={() => setAnnouncementIndex((prev) => (prev - 1 + activeAnnouncements.length) % activeAnnouncements.length)}
+                  className="absolute left-1.5 top-1/2 -translate-y-1/2 z-30 p-1 bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-full text-white/80 hover:text-white border border-white/10 transition active:scale-90 shadow-md"
+                  aria-label="Previous Banner"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => setAnnouncementIndex((prev) => (prev + 1) % activeAnnouncements.length)}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 z-30 p-1 bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-full text-white/80 hover:text-white border border-white/10 transition active:scale-90 shadow-md"
+                  aria-label="Next Banner"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </>
             )}
 
             {activeAnnouncements.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-4 text-slate-400">
+              <div className="w-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-slate-400">
                 <Bell className="h-6 w-6 text-slate-500 mb-1" />
                 <p className="text-[11px] font-semibold">
                   {language === 'hi' ? 'वर्तमान में कोई सक्रिय घोषणाएं नहीं हैं।' : 'No active announcements at the moment.'}
@@ -566,42 +614,42 @@ const formatSubCategoryName = (name: string) => {
               (() => {
                 const ann = activeAnnouncements[announcementIndex] || activeAnnouncements[0];
                 return (
-                  <div className="flex-1 flex flex-col justify-between h-full w-full animate-in fade-in duration-200 bg-slate-950">
-                    {/* Banner Image Container - Fits 100% of Image Without Cropping */}
-                    <div className="flex-1 w-full relative min-h-[170px] max-h-[220px] flex items-center justify-center bg-slate-950 p-1.5 overflow-hidden">
+                  <div className="w-full flex flex-col justify-between animate-in fade-in duration-200 bg-slate-950">
+                    {/* Banner Image Container - Fits 100% Perfectly Without Cropping Any Part */}
+                    <div className="w-full relative flex items-center justify-center bg-slate-950 p-1 overflow-hidden min-h-[140px]">
                       {ann.imageUrl && ann.imageUrl.trim() ? (
                         <img
                           src={ann.imageUrl.trim().replace(/^http:\/\//i, 'https://')}
                           alt={ann.title}
-                          className="w-full h-full object-contain max-h-[210px] rounded-lg"
+                          className="w-full h-auto max-h-[260px] object-contain rounded-xl block mx-auto"
                         />
                       ) : (
-                        <div className="w-full h-full min-h-[160px] rounded-lg bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 flex flex-col items-center justify-center p-4 text-center space-y-1">
-                          <Bell className="h-8 w-8 text-blue-400 animate-bounce" />
+                        <div className="w-full h-36 rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 flex flex-col items-center justify-center p-4 text-center space-y-1">
+                          <Bell className="h-7 w-7 text-blue-400 animate-bounce" />
                           <h3 className="font-extrabold text-xs text-white line-clamp-2">{ann.title}</h3>
                         </div>
                       )}
                     </div>
 
                     {/* Small Announcement Info Footer at Bottom (Does NOT Block Banner) */}
-                    <div className="shrink-0 w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-2.5 px-3 flex items-center justify-between gap-2 z-20">
+                    <div className="shrink-0 w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-2 px-3 flex items-center justify-between gap-2 z-20">
                       <div className="flex-1 min-w-0 space-y-0.5 text-left">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="bg-blue-600/90 text-white font-black text-[8px] px-2 py-0.5 rounded border border-blue-400/30 uppercase tracking-wider">
+                          <span className="bg-blue-600/90 text-white font-black text-[8px] px-1.5 py-0.5 rounded border border-blue-400/30 uppercase tracking-wider">
                             {ann.type || 'ANNOUNCEMENT'}
                           </span>
-                          <span className="text-[9px] text-slate-400 font-bold flex items-center gap-0.5">
+                          <span className="text-[8.5px] text-slate-400 font-bold flex items-center gap-0.5">
                             <Calendar className="h-2.5 w-2.5 text-blue-400" /> {ann.date}
                           </span>
                           {ann.lastDate && (
-                            <span className="text-[8.5px] font-black text-red-400 flex items-center gap-1 bg-red-950/70 border border-red-800/40 px-1.5 py-0.5 rounded">
+                            <span className="text-[8px] font-black text-red-400 flex items-center gap-0.5 bg-red-950/70 border border-red-800/40 px-1.5 py-0.5 rounded">
                               <span className="h-1 w-1 rounded-full bg-red-500 animate-ping inline-block" />
-                              {language === 'hi' ? 'अंतिम तिथि: ' : 'Last: '}{ann.lastDate}
+                              {language === 'hi' ? 'अंतिम: ' : 'Last: '}{ann.lastDate}
                             </span>
                           )}
                         </div>
 
-                        <h4 className="font-extrabold text-[10px] text-white leading-tight line-clamp-1">
+                        <h4 className="font-extrabold text-[9.5px] text-white leading-tight line-clamp-1">
                           {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
                         </h4>
                       </div>
@@ -611,10 +659,10 @@ const formatSubCategoryName = (name: string) => {
                           href={ann.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[9px] px-2.5 py-1.5 rounded-lg transition active:scale-95 shrink-0 cursor-pointer"
+                          className="inline-flex items-center gap-0.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[8.5px] px-2.5 py-1 rounded-md transition active:scale-95 shrink-0 cursor-pointer shadow-sm"
                         >
                           <span>{language === 'hi' ? 'विवरण' : 'Details'}</span>
-                          <ChevronRight className="h-3 w-3" />
+                          <ChevronRight className="h-2.5 w-2.5" />
                         </a>
                       ) : null}
                     </div>
@@ -1341,24 +1389,24 @@ const formatSubCategoryName = (name: string) => {
                   </div>
 
                   {/* Bottom Compact Announcement Info Footer (Does NOT block the banner) */}
-                  <div className="shrink-0 w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-3 px-4 md:px-6 flex items-center justify-between gap-3 z-20">
-                    <div className="flex-1 min-w-0 space-y-1 text-left">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="bg-blue-600/90 text-white font-black text-[9px] md:text-[10px] px-2.5 py-0.5 rounded-md border border-blue-400/30 uppercase tracking-wider">
+                  <div className="shrink-0 w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-2 px-3.5 md:px-5 flex items-center justify-between gap-2.5 z-20">
+                    <div className="flex-1 min-w-0 space-y-0.5 text-left">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="bg-blue-600/90 text-white font-black text-[8px] md:text-[9px] px-2 py-0.5 rounded border border-blue-400/30 uppercase tracking-wider">
                           {ann.type || 'ANNOUNCEMENT'}
                         </span>
-                        <span className="text-[10px] md:text-xs text-slate-400 font-bold flex items-center gap-1">
+                        <span className="text-[9px] md:text-[10.5px] text-slate-400 font-bold flex items-center gap-1">
                           <Calendar className="h-3 w-3 text-blue-400" /> {ann.date}
                         </span>
                         {ann.lastDate && (
-                          <span className="text-[10px] md:text-xs font-black text-red-400 flex items-center gap-1 bg-red-950/70 border border-red-800/40 px-2 py-0.5 rounded-md">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping inline-block" />
+                          <span className="text-[8.5px] md:text-[10px] font-black text-red-400 flex items-center gap-1 bg-red-950/70 border border-red-800/40 px-1.5 py-0.5 rounded">
+                            <span className="h-1 w-1 rounded-full bg-red-500 animate-ping inline-block" />
                             {language === 'hi' ? 'अंतिम तिथि: ' : 'Last Date: '}{ann.lastDate}
                           </span>
                         )}
                       </div>
 
-                      <h4 className="font-extrabold text-xs md:text-sm text-white leading-snug line-clamp-1">
+                      <h4 className="font-extrabold text-[11px] md:text-xs text-white leading-tight line-clamp-1">
                         {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
                       </h4>
                     </div>
@@ -1368,10 +1416,10 @@ const formatSubCategoryName = (name: string) => {
                         href={ann.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[11px] md:text-xs px-3.5 py-2 rounded-xl transition shadow-md hover:shadow-blue-500/25 active:scale-95 shrink-0 cursor-pointer"
+                        className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[10px] md:text-[11px] px-3 py-1.5 rounded-lg transition shadow-md hover:shadow-blue-500/25 active:scale-95 shrink-0 cursor-pointer"
                       >
                         <span>{language === 'hi' ? 'विवरण देखें' : 'View Details'}</span>
-                        <ChevronRight className="h-3.5 w-3.5" />
+                        <ChevronRight className="h-3 w-3" />
                       </a>
                     ) : null}
                   </div>
@@ -1844,8 +1892,8 @@ const formatSubCategoryName = (name: string) => {
         </div>
       )}
 
-      {/* Floating Support Team Overlay Widget on Home Screen */}
-      <HomeSupportWidget />
+      {/* Floating Support Team Overlay Widget on Home Screen (Same small circle expandable variant as Test Series page) */}
+      <HomeSupportWidget variant="expandable" />
     </div>
   );
 }
