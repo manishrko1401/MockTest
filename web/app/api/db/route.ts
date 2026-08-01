@@ -1811,7 +1811,26 @@ async function handleEditSubSubCategory(data: any) {
 }
 
 async function handleEditMockTestTitle(data: any) {
-  const { testId, title, titleHi, testbookTotalUsers, testbookTopperScore, testbookAverageScore, testbookCutoffScore, positiveMarks, negativeMarks } = data;
+  const {
+    testId,
+    title,
+    titleHi,
+    testbookTotalUsers,
+    testbookTopperScore,
+    testbookAverageScore,
+    testbookCutoffScore,
+    positiveMarks,
+    negativeMarks,
+    durationMinutes,
+    questionsCount,
+    maxMarks,
+    requiredTier,
+    requiredTierName,
+    hasSectionalTiming,
+    sectionalTimings,
+  } = data;
+
+  const tierToUse = requiredTierName !== undefined ? requiredTierName : requiredTier;
 
   await prisma.mockTest.update({
     where: { id: testId },
@@ -1824,6 +1843,12 @@ async function handleEditMockTestTitle(data: any) {
       testbookCutoffScore: testbookCutoffScore !== undefined ? Number(testbookCutoffScore) : undefined,
       positiveMarks: positiveMarks !== undefined ? Number(positiveMarks) : undefined,
       negativeMarks: negativeMarks !== undefined ? Number(negativeMarks) : undefined,
+      durationMinutes: durationMinutes !== undefined ? Number(durationMinutes) : undefined,
+      questionsCount: questionsCount !== undefined ? Number(questionsCount) : undefined,
+      maxMarks: maxMarks !== undefined ? Number(maxMarks) : undefined,
+      requiredTierName: tierToUse !== undefined ? tierToUse : undefined,
+      hasSectionalTiming: hasSectionalTiming !== undefined ? Boolean(hasSectionalTiming) : undefined,
+      sectionalTimings: sectionalTimings !== undefined ? sectionalTimings : undefined,
     },
   });
 

@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { PlusCircle, ArrowDown, ArrowUp, Edit, Trash2, X, Search, FileText } from 'lucide-react';
+import { PlusCircle, ArrowDown, ArrowUp, Edit, Trash2, X, Search, FileText, Clock, Plus, RotateCcw, Zap } from 'lucide-react';
+
+const DEFAULT_SECTIONAL_TIMING_PRESETS = [
+  '15, 15, 15, 15',
+  '20, 20, 20',
+  '20, 20, 20, 20',
+  '15, 15, 15',
+  '25, 25, 25, 25',
+  '16, 16, 16, 16',
+  '60, 60',
+];
 
 interface MockTestManagerProps {
   examCatalog: any[];
@@ -124,6 +134,89 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
   const [filterSubCategory, setFilterSubCategory] = useState('');
   const [filterSubSubCategory, setFilterSubSubCategory] = useState('');
   const [filterSearch, setFilterSearch] = useState('');
+
+  // Quick Sectional Timing Presets State
+  const [quickTimingPresets, setQuickTimingPresets] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('admin_quick_sectional_timings');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load quick sectional timing presets:', e);
+      }
+    }
+    return DEFAULT_SECTIONAL_TIMING_PRESETS;
+  });
+
+  const [newPresetInput, setNewPresetInput] = useState('');
+  const [showAddPresetForm, setShowAddPresetForm] = useState(false);
+
+  // Additional state for editing mock tests
+  const [editingMockDuration, setEditingMockDuration] = useState<number>(60);
+  const [editingMockQsCount, setEditingMockQsCount] = useState<number>(100);
+  const [editingMockMaxMarks, setEditingMockMaxMarks] = useState<number>(200);
+  const [editingMockRequiredTier, setEditingMockRequiredTier] = useState<'None' | 'Testbook Pass' | 'Testbook Pass Pro'>('None');
+  const [editingMockHasSectionalTiming, setEditingMockHasSectionalTiming] = useState<boolean>(false);
+  const [editingMockSectionalTimingsStr, setEditingMockSectionalTimingsStr] = useState<string>('');
+
+  const handleAddCustomPreset = (valStr?: string) => {
+    const targetStr = (valStr || newPresetInput).trim();
+    if (!targetStr) return;
+
+    const parts = targetStr.split(',').map(s => s.trim()).filter(Boolean);
+    const nums = parts.map(Number);
+    if (parts.length === 0 || nums.some(n => isNaN(n) || n <= 0)) {
+      alert('Please enter valid comma-separated section durations in minutes (e.g. 15, 15, 15, 15)');
+      return;
+    }
+
+    const formattedPreset = nums.join(', ');
+    const totalMin = nums.reduce((a, b) => a + b, 0);
+
+    let updated = quickTimingPresets;
+    if (!quickTimingPresets.includes(formattedPreset)) {
+      updated = [...quickTimingPresets, formattedPreset];
+      setQuickTimingPresets(updated);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('admin_quick_sectional_timings', JSON.stringify(updated));
+      }
+    }
+
+    setNewMockHasSectionalTiming(true);
+    setNewMockSectionalTimingsStr(formattedPreset);
+    if (totalMin > 0) {
+      setNewMockDuration(totalMin);
+    }
+
+    setNewPresetInput('');
+    setShowAddPresetForm(false);
+    showToast('Quick timing preset saved and applied!');
+  };
+
+  const handleDeletePreset = (presetToDelete: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = quickTimingPresets.filter(p => p !== presetToDelete);
+    setQuickTimingPresets(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_quick_sectional_timings', JSON.stringify(updated));
+    }
+    showToast('Preset removed.');
+  };
+
+  const handleResetPresets = () => {
+    if (window.confirm('Reset quick sectional timing presets to default?')) {
+      setQuickTimingPresets(DEFAULT_SECTIONAL_TIMING_PRESETS);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('admin_quick_sectional_timings', JSON.stringify(DEFAULT_SECTIONAL_TIMING_PRESETS));
+      }
+      showToast('Presets reset to default.');
+    }
+  };
 
   const [internalMockCount, setInternalMockCount] = useState(1);
   const countValue = propNewMockCount !== undefined ? propNewMockCount : internalMockCount;
@@ -359,20 +452,192 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
               </div>
 
               {/* Sectional Timing */}
-              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
-                <label className="flex items-center gap-2.5 cursor-pointer">
-                  <input type="checkbox" checked={newMockHasSectionalTiming} onChange={(e) => { setNewMockHasSectionalTiming(e.target.checked); if (!e.target.checked) setNewMockSectionalTimingsStr(''); }} className="w-4 h-4 accent-blue-600 cursor-pointer rounded" />
-                  <span className="text-xs font-bold text-slate-705 dark:text-slate-200">Enable Sectional Timing</span>
-                  <span className="text-[10px] text-slate-400">(lock users per section)</span>
-                </label>
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-4 font-sans">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newMockHasSectionalTiming}
+                      onChange={(e) => {
+                        setNewMockHasSectionalTiming(e.target.checked);
+                        if (!e.target.checked) setNewMockSectionalTimingsStr('');
+                      }}
+                      className="w-4 h-4 accent-blue-600 cursor-pointer rounded"
+                    />
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      Enable Sectional Timing
+                    </span>
+                    <span className="text-[10px] text-slate-400">(lock users per section)</span>
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddPresetForm(!showAddPresetForm)}
+                      className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer bg-blue-50 dark:bg-blue-955/40 border border-blue-200 dark:border-blue-800 px-2.5 py-1 rounded-lg transition"
+                    >
+                      <Plus className="w-3 h-3" />
+                      + Add Quick Timing
+                    </button>
+                    {quickTimingPresets.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleResetPresets}
+                        title="Reset to default presets"
+                        className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1 cursor-pointer"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Timing Presets Selector Chips */}
+                <div className="space-y-2 pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                      <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+                      Quick Sectional Timing Presets (1-Click Apply)
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {quickTimingPresets.map((preset) => {
+                      const timings = preset.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
+                      const totalMin = timings.reduce((a, b) => a + b, 0);
+
+                      const normalizedCurrent = newMockSectionalTimingsStr.split(',').map(s => s.trim()).filter(Boolean).join(', ');
+                      const normalizedPreset = timings.join(', ');
+                      const isActive = newMockHasSectionalTiming && normalizedCurrent === normalizedPreset;
+
+                      return (
+                        <div
+                          key={preset}
+                          onClick={() => {
+                            setNewMockHasSectionalTiming(true);
+                            setNewMockSectionalTimingsStr(normalizedPreset);
+                            if (totalMin > 0) {
+                              setNewMockDuration(totalMin);
+                            }
+                          }}
+                          className={`group relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all border ${
+                            isActive
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/30 ring-2 ring-blue-400 dark:ring-blue-500'
+                              : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-xs'
+                          }`}
+                        >
+                          <span>{normalizedPreset}</span>
+                          <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${
+                            isActive 
+                              ? 'bg-blue-700 text-blue-100' 
+                              : 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-955'
+                          }`}>
+                            {totalMin}m
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeletePreset(preset, e)}
+                            className={`opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity p-0.5 rounded-full ${
+                              isActive ? 'text-blue-200 hover:text-white' : 'text-slate-400'
+                            }`}
+                            title="Remove this preset"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Form to Add Custom Preset */}
+                {showAddPresetForm && (
+                  <div className="p-3 bg-white dark:bg-slate-950 border border-blue-200 dark:border-blue-900/60 rounded-xl space-y-2">
+                    <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                      Create New Quick Timing Preset
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newPresetInput}
+                        onChange={(e) => setNewPresetInput(e.target.value)}
+                        placeholder="e.g. 15, 15, 15, 15 or 20, 20, 20"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddCustomPreset();
+                          }
+                        }}
+                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-mono font-semibold"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleAddCustomPreset()}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer shrink-0"
+                      >
+                        Save & Apply
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddPresetForm(false)}
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-2 py-1 text-xs cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-slate-400">
+                      Enter section durations in minutes separated by commas. Saved presets will be available for 1-click test creation.
+                    </p>
+                  </div>
+                )}
+
+                {/* Manual Text Input Field */}
                 {newMockHasSectionalTiming && (
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Section Durations (minutes, comma-separated)</label>
-                    <input type="text" value={newMockSectionalTimingsStr} onChange={(e) => setNewMockSectionalTimingsStr(e.target.value)} placeholder="e.g. 20, 20, 20" className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                  <div className="pt-2">
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">
+                      Selected Section Durations (minutes, comma-separated)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newMockSectionalTimingsStr}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNewMockSectionalTimingsStr(val);
+                          const timings = val.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
+                          const total = timings.reduce((a, b) => a + b, 0);
+                          if (total > 0) {
+                            setNewMockDuration(total);
+                          }
+                        }}
+                        placeholder="e.g. 15, 15, 15, 15 or 20, 20, 20"
+                        className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-mono font-semibold"
+                      />
+                      {newMockSectionalTimingsStr.trim() && !quickTimingPresets.includes(newMockSectionalTimingsStr.split(',').map(s => s.trim()).filter(Boolean).join(', ')) && (
+                        <button
+                          type="button"
+                          onClick={() => handleAddCustomPreset(newMockSectionalTimingsStr)}
+                          title="Save current custom timing as a quick preset"
+                          className="px-2.5 py-2 bg-slate-100 hover:bg-blue-50 dark:bg-slate-900 dark:hover:bg-blue-955 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-800 rounded-lg text-[10px] font-bold shrink-0 transition flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" /> Save as Preset
+                        </button>
+                      )}
+                    </div>
                     {newMockSectionalTimingsStr.trim() && (() => {
                       const timings = newMockSectionalTimingsStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
                       const total = timings.reduce((a, b) => a + b, 0);
-                      return total > 0 ? <p className="text-[10px] text-blue-550 mt-1">{timings.length} section(s) · Total: <strong>{total} min</strong> (overrides Duration)</p> : null;
+                      return total > 0 ? (
+                        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
+                          <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-955/60 border border-blue-200 dark:border-blue-800 rounded-md">
+                            {timings.length} section{timings.length !== 1 ? 's' : ''} ({timings.join(' min, ')} min)
+                          </span>
+                          <span>·</span>
+                          <span>Total Duration: <strong>{total} minutes</strong> (automatically applied)</span>
+                        </div>
+                      ) : null;
                     })()}
                   </div>
                 )}
@@ -504,14 +769,40 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     <p className="font-black text-sm text-slate-900 dark:text-white leading-snug truncate">{test.title}</p>
 
                     {/* Settings strip */}
-                    <div className="flex flex-wrap gap-2 mt-2 text-[11px] font-bold text-slate-505 dark:text-slate-400">
-                      <span className="flex items-center gap-1">📋 {test.questionsCount} Qs</span>
-                      <span>·</span>
-                      <span>⏱ {test.durationMinutes} min</span>
-                      <span>·</span>
-                      <span>🏆 {test.maxMarks} marks</span>
-                      {test.hasSectionalTiming && (
-                        <span className="px-1.5 py-0.5 bg-purple-50 dark:bg-purple-955/30 text-purple-650 dark:text-purple-400 border border-purple-200 dark:border-purple-900/50 rounded-md text-[9px] font-extrabold uppercase tracking-wider">Sectional</span>
+                    <div className="flex flex-wrap gap-2 mt-2 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                      <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-md">
+                        📋 {test.questionsCount} Qs
+                      </span>
+                      <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-md">
+                        🏆 {test.maxMarks} Marks
+                      </span>
+                      <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-md text-emerald-600 dark:text-emerald-400">
+                        🎯 +{test.positiveMarks ?? 2.0} / -{test.negativeMarks ?? 0.5}
+                      </span>
+                    </div>
+
+                    {/* Sectional Timing & Duration Display */}
+                    <div className="mt-2 flex flex-wrap gap-2 items-center">
+                      {test.hasSectionalTiming ? (() => {
+                        let timingsArr: number[] = [];
+                        if (Array.isArray(test.sectionalTimings)) {
+                          timingsArr = (test.sectionalTimings as any[]).map((n: any) => Number(n)).filter((n: number) => !isNaN(n));
+                        } else if (typeof test.sectionalTimings === 'string' && (test.sectionalTimings as string).trim()) {
+                          timingsArr = (test.sectionalTimings as string).split(',').map((s: string) => Number(s.trim())).filter((n: number) => !isNaN(n));
+                        }
+                        const sumTotal = timingsArr.reduce((a: number, b: number) => a + b, 0);
+
+                        return (
+                          <span className="px-2.5 py-1 bg-purple-50 dark:bg-purple-955/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-lg text-[11px] font-extrabold flex items-center gap-1.5 shadow-xs">
+                            <Zap className="w-3 h-3 text-purple-600 dark:text-purple-400 fill-purple-500" />
+                            Sectional: {timingsArr.length > 0 ? `${timingsArr.join('m, ')}m` : 'Enabled'} 
+                            <span className="text-[10px] text-purple-500 font-semibold">({sumTotal > 0 ? sumTotal : test.durationMinutes} min total)</span>
+                          </span>
+                        );
+                      })() : (
+                        <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-500" /> Overall Duration: {test.durationMinutes} min
+                        </span>
                       )}
                     </div>
 
@@ -540,7 +831,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                         : tierColor === 'blue' ? 'bg-blue-50 dark:bg-blue-955/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50'
                         : 'bg-amber-50 dark:bg-amber-955/30 text-amber-705 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50'
                       }`}>
-                        {test.requiredTier === 'None' ? 'Free' : test.requiredTier.replace('Testbook', 'Mock')}
+                        {test.requiredTier === 'None' || test.requiredTierName === 'None' ? 'Free' : (test.requiredTierName || test.requiredTier || '').replace('Testbook', 'Mock')}
                       </span>
                       {hasCustomQs ? (
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-green-955/30 text-green-455 border border-green-800">
@@ -602,6 +893,20 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                           setEditingMockTestbookTopperScore(test.testbookTopperScore ?? 0);
                           setEditingMockTestbookAverageScore(test.testbookAverageScore ?? 0);
                           setEditingMockTestbookCutoffScore(test.testbookCutoffScore ?? 0);
+
+                          setEditingMockDuration(test.durationMinutes ?? 60);
+                          setEditingMockQsCount(test.questionsCount ?? 100);
+                          setEditingMockMaxMarks(test.maxMarks ?? 200);
+                          setEditingMockRequiredTier((test.requiredTierName || test.requiredTier || 'None') as any);
+                          setEditingMockHasSectionalTiming(!!test.hasSectionalTiming);
+
+                          let initialTimingsStr = '';
+                          if (Array.isArray(test.sectionalTimings)) {
+                            initialTimingsStr = test.sectionalTimings.join(', ');
+                          } else if (typeof test.sectionalTimings === 'string') {
+                            initialTimingsStr = test.sectionalTimings;
+                          }
+                          setEditingMockSectionalTimingsStr(initialTimingsStr);
                         }
                       }}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition ${
@@ -628,50 +933,179 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
 
                 {/* Inline Edit Panel */}
                 {isEditing && (
-                  <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-5 space-y-4">
-                    <p className="text-[10px] font-extrabold text-blue-600 dark:text-blue-450 uppercase tracking-wider flex items-center gap-1.5">
-                      <Edit className="h-3 w-3" /> Editing: {test.title}
+                  <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-5 space-y-4 font-sans">
+                    <p className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Edit className="h-3 w-3" /> Editing Mock Test: {test.title}
                     </p>
+
+                    {/* Title */}
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-550 uppercase tracking-wider mb-2">Title</label>
-                      <input type="text" value={editingMockTestTitle} onChange={(e) => setEditingMockTestTitle(e.target.value)} className="w-full bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-855 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold" />
+                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Title</label>
+                      <input type="text" value={editingMockTestTitle} onChange={(e) => setEditingMockTestTitle(e.target.value)} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold" />
                     </div>
+
+                    {/* Main Config: Duration, Questions, Max Marks, Access Tier */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Duration (min)</label>
+                        <input type="number" min={1} value={editingMockDuration} onChange={(e) => setEditingMockDuration(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold" />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Questions Count</label>
+                        <input type="number" min={1} value={editingMockQsCount} onChange={(e) => setEditingMockQsCount(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold" />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Max Marks</label>
+                        <input type="number" min={1} value={editingMockMaxMarks} onChange={(e) => setEditingMockMaxMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold" />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Access Tier</label>
+                        <select value={editingMockRequiredTier} onChange={(e) => setEditingMockRequiredTier(e.target.value as any)} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold">
+                          <option value="None">Free</option>
+                          <option value="Testbook Pass">Pass</option>
+                          <option value="Testbook Pass Pro">Pass Pro</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Sectional Timing in Edit Panel */}
+                    <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
+                      <label className="flex items-center gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editingMockHasSectionalTiming}
+                          onChange={(e) => {
+                            setEditingMockHasSectionalTiming(e.target.checked);
+                            if (!e.target.checked) setEditingMockSectionalTimingsStr('');
+                          }}
+                          className="w-4 h-4 accent-blue-600 cursor-pointer rounded"
+                        />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                          Enable Sectional Timing
+                        </span>
+                        <span className="text-[10px] text-slate-400">(lock users per section)</span>
+                      </label>
+
+                      {/* Quick Timing Presets for Edit Form */}
+                      <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-900">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                          <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+                          Quick Presets (1-Click Apply)
+                        </span>
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                          {quickTimingPresets.map((preset) => {
+                            const timings = preset.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
+                            const totalMin = timings.reduce((a, b) => a + b, 0);
+
+                            const normalizedCurrent = editingMockSectionalTimingsStr.split(',').map(s => s.trim()).filter(Boolean).join(', ');
+                            const normalizedPreset = timings.join(', ');
+                            const isActive = editingMockHasSectionalTiming && normalizedCurrent === normalizedPreset;
+
+                            return (
+                              <button
+                                key={`edit-${preset}`}
+                                type="button"
+                                onClick={() => {
+                                  setEditingMockHasSectionalTiming(true);
+                                  setEditingMockSectionalTimingsStr(normalizedPreset);
+                                  if (totalMin > 0) {
+                                    setEditingMockDuration(totalMin);
+                                  }
+                                }}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                                  isActive
+                                    ? 'bg-purple-600 text-white border-purple-600 ring-2 ring-purple-400'
+                                    : 'bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-purple-400'
+                                }`}
+                              >
+                                {normalizedPreset} <span className="text-[9px] opacity-80">({totalMin}m)</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {editingMockHasSectionalTiming && (
+                        <div className="pt-1">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Section Durations (minutes, comma-separated)</label>
+                          <input
+                            type="text"
+                            value={editingMockSectionalTimingsStr}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingMockSectionalTimingsStr(val);
+                              const timings = val.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
+                              const total = timings.reduce((a, b) => a + b, 0);
+                              if (total > 0) {
+                                setEditingMockDuration(total);
+                              }
+                            }}
+                            placeholder="e.g. 15, 15, 15, 15"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-purple-500 font-mono font-semibold"
+                          />
+                          {editingMockSectionalTimingsStr.trim() && (() => {
+                            const timings = editingMockSectionalTimingsStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
+                            const total = timings.reduce((a, b) => a + b, 0);
+                            return total > 0 ? (
+                              <p className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold mt-1">
+                                {timings.length} section(s) · Total: <strong>{total} min</strong> (overrides Duration)
+                              </p>
+                            ) : null;
+                          })()}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Marking Scheme */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Positive Marks (+ve)</label>
-                        <input type="number" step="0.01" min={0} value={editingMockPositiveMarks} onChange={(e) => setEditingMockPositiveMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-202 focus:outline-none focus:border-blue-500" />
+                        <input type="number" step="0.01" min={0} value={editingMockPositiveMarks} onChange={(e) => setEditingMockPositiveMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
                       </div>
                       <div>
                         <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Negative Marks (-ve)</label>
-                        <input type="number" step="0.01" min={0} value={editingMockNegativeMarks} onChange={(e) => setEditingMockNegativeMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-202 focus:outline-none focus:border-blue-500" />
+                        <input type="number" step="0.01" min={0} value={editingMockNegativeMarks} onChange={(e) => setEditingMockNegativeMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
                       </div>
                     </div>
+
+                    {/* Benchmark Stats */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
                         <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Total Pool</label>
-                        <input type="number" value={editingMockTestbookTotalUsers} onChange={(e) => setEditingMockTestbookTotalUsers(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-202 focus:outline-none focus:border-blue-500" />
+                        <input type="number" value={editingMockTestbookTotalUsers} onChange={(e) => setEditingMockTestbookTotalUsers(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
                       </div>
                       <div>
                         <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Topper Score</label>
-                        <input type="number" step="0.1" value={editingMockTestbookTopperScore} onChange={(e) => setEditingMockTestbookTopperScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-855 dark:text-slate-202 focus:outline-none focus:border-blue-500" />
+                        <input type="number" step="0.1" value={editingMockTestbookTopperScore} onChange={(e) => setEditingMockTestbookTopperScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
                       </div>
                       <div>
                         <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Average Score</label>
-                        <input type="number" step="0.1" value={editingMockTestbookAverageScore} onChange={(e) => setEditingMockTestbookAverageScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-855 dark:text-slate-202 focus:outline-none focus:border-blue-500" />
+                        <input type="number" step="0.1" value={editingMockTestbookAverageScore} onChange={(e) => setEditingMockTestbookAverageScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
                       </div>
                       <div>
                         <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Cutoff Score</label>
-                        <input type="number" step="0.1" value={editingMockTestbookCutoffScore} onChange={(e) => setEditingMockTestbookCutoffScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-855 dark:text-slate-202 focus:outline-none focus:border-blue-500" />
+                        <input type="number" step="0.1" value={editingMockTestbookCutoffScore} onChange={(e) => setEditingMockTestbookCutoffScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
                       </div>
                     </div>
+
                     <div className="flex gap-3 justify-end pt-2 border-t border-slate-200 dark:border-slate-800">
-                      <button type="button" onClick={() => setEditingMockTestId(null)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-505 dark:text-slate-400 bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer transition">
+                      <button type="button" onClick={() => setEditingMockTestId(null)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer transition">
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={() => {
                           if (editingMockTestTitle.trim()) {
+                            let sectionalTimings: number[] | undefined = undefined;
+                            let finalDuration = Number(editingMockDuration);
+                            if (editingMockHasSectionalTiming && editingMockSectionalTimingsStr.trim()) {
+                              sectionalTimings = editingMockSectionalTimingsStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
+                              if (sectionalTimings.length > 0) {
+                                finalDuration = sectionalTimings.reduce((a, b) => a + b, 0);
+                              }
+                            }
+
                             editMockTestTitle(cat.id, sub.id, subsub.id, test.id, editingMockTestTitle.trim(), {
                               testbookTotalUsers: Number(editingMockTestbookTotalUsers),
                               testbookTopperScore: Number(editingMockTestbookTopperScore),
@@ -679,9 +1113,17 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                               testbookCutoffScore: Number(editingMockTestbookCutoffScore),
                               positiveMarks: Number(editingMockPositiveMarks),
                               negativeMarks: Number(editingMockNegativeMarks),
+                              durationMinutes: finalDuration,
+                              questionsCount: Number(editingMockQsCount),
+                              maxMarks: Number(editingMockMaxMarks),
+                              requiredTier: editingMockRequiredTier,
+                              requiredTierName: editingMockRequiredTier,
+                              isPremium: editingMockRequiredTier !== 'None',
+                              hasSectionalTiming: editingMockHasSectionalTiming,
+                              sectionalTimings: editingMockHasSectionalTiming ? sectionalTimings : undefined,
                             });
                             setEditingMockTestId(null);
-                            showToast('Mock test updated successfully.');
+                            showToast('Mock test updated successfully!');
                           }
                         }}
                         className="px-6 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition active:scale-95 shadow-md shadow-blue-500/20"
