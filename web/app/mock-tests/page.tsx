@@ -10,22 +10,7 @@ import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 import HomeSupportWidget from '../components/HomeSupportWidget';
 
-function decodeHtml(text: string): string {
-  if (!text) return "";
-  let decoded = text;
-  for (let i = 0; i < 3; i++) {
-    const temp = decoded
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ');
-    if (temp === decoded) break;
-    decoded = temp;
-  }
-  return decoded;
-}
+import { processQuestionHtml, decodeHtml } from '../lib/mathUtils';
 
 const formatSubCategoryName = (name: string) => {
   let cleanName = name
@@ -748,7 +733,7 @@ export default function MockTestsCatalog() {
                                 </p>
                                 <div 
                                   className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed mt-1 font-medium markup-content"
-                                  dangerouslySetInnerHTML={{ __html: decodeHtml(questionExplanation) }}
+                                  dangerouslySetInnerHTML={{ __html: processQuestionHtml(questionExplanation) }}
                                 />
                               </div>
                             )}
@@ -1447,7 +1432,7 @@ export default function MockTestsCatalog() {
                                 Q #{index + 1}
                               </span>
                             </div>
-                            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" dangerouslySetInnerHTML={{ __html: decodeHtml(questionTextEn) }} />
+                            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" dangerouslySetInnerHTML={{ __html: processQuestionHtml(questionTextEn) }} />
                           </div>
                           
                           <div className="flex items-center gap-3">
@@ -1470,10 +1455,10 @@ export default function MockTestsCatalog() {
                             {/* Question Text */}
                             <div className="bg-slate-50 dark:bg-slate-900/60 p-4 border border-slate-200 dark:border-slate-800 rounded text-xs leading-relaxed text-slate-800 dark:text-slate-200">
                               <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">Question (English):</p>
-                              <div className="font-normal mb-3 markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(questionTextEn) }} />
+                              <div className="font-normal mb-3 markup-content" dangerouslySetInnerHTML={{ __html: processQuestionHtml(questionTextEn) }} />
                               {questionTextHi && questionTextHi !== questionTextEn && (<>
                                 <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">प्रश्न (Hindi):</p>
-                                <div className="font-normal markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(questionTextHi) }} />
+                                <div className="font-normal markup-content" dangerouslySetInnerHTML={{ __html: processQuestionHtml(questionTextHi) }} />
                               </>)}
                             </div>
 
@@ -1498,10 +1483,10 @@ export default function MockTestsCatalog() {
                                         }`}
                                       >
                                         <div className="flex items-center justify-between">
-                                          <span className="flex items-center gap-1">Option {oIdx + 1}: <span dangerouslySetInnerHTML={{ __html: decodeHtml(textEn) }} /></span>
+                                          <span className="flex items-center gap-1">Option {oIdx + 1}: <span dangerouslySetInnerHTML={{ __html: processQuestionHtml(textEn) }} /></span>
                                           {isCorrect && <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />}
                                         </div>
-                                        {textHi !== textEn && <span className="text-[10px] opacity-80 mt-0.5 flex items-center gap-1">हिंदी: <span dangerouslySetInnerHTML={{ __html: decodeHtml(textHi) }} /></span>}
+                                        {textHi !== textEn && <span className="text-[10px] opacity-80 mt-0.5 flex items-center gap-1">हिंदी: <span dangerouslySetInnerHTML={{ __html: processQuestionHtml(textHi) }} /></span>}
                                       </div>
                                     );
                                   })}
@@ -1516,11 +1501,11 @@ export default function MockTestsCatalog() {
                                 <div className="space-y-4 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
                                   {explanationEn && <div>
                                     <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.englishExplanation}</p>
-                                    <div className="markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(explanationEn) }} />
+                                    <div className="markup-content" dangerouslySetInnerHTML={{ __html: processQuestionHtml(explanationEn) }} />
                                   </div>}
                                   {explanationHi && <div className="pt-3 border-t border-blue-100/50 dark:border-blue-950/20">
                                     <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.hindiExplanation}</p>
-                                    <div className="markup-content" dangerouslySetInnerHTML={{ __html: decodeHtml(explanationHi) }} />
+                                    <div className="markup-content" dangerouslySetInnerHTML={{ __html: processQuestionHtml(explanationHi) }} />
                                   </div>}
                                 </div>
                               </div>

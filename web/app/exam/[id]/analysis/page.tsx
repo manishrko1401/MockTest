@@ -29,22 +29,7 @@ import {
 } from 'lucide-react';
 import { TRANSLATIONS } from '../../../translations';
 
-function decodeHtml(text: string): string {
-  if (!text) return "";
-  let decoded = text;
-  for (let i = 0; i < 3; i++) {
-    const temp = decoded
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ');
-    if (temp === decoded) break;
-    decoded = temp;
-  }
-  return decoded;
-}
+import { processQuestionHtml, decodeHtml } from '../../../lib/mathUtils';
 
 
 // Targeted, memoized component for MathJax rendering to prevent React re-render clashing
@@ -1209,7 +1194,7 @@ export default function ExamSolutionAnalysisPage() {
                 <MathJaxText
                   component="div"
                   className="font-semibold text-slate-900 dark:text-white leading-relaxed markup-content"
-                  content={decodeHtml(activeQuestion.content[lang]?.questionText || activeQuestion.content['en']?.questionText || "")}
+                  content={processQuestionHtml(activeQuestion.content[lang]?.questionText || activeQuestion.content['en']?.questionText || "")}
                 />
 
                 {activeQuestion.content[lang]?.mathLatex && (
@@ -1260,7 +1245,7 @@ export default function ExamSolutionAnalysisPage() {
                       }`}>
                         {String.fromCharCode(65 + optIdx)}
                       </span>
-                      <MathJaxText content={decodeHtml(optLabel)} />
+                      <MathJaxText content={processQuestionHtml(optLabel)} />
                     </span>
 
                     <div className="flex items-center gap-2">
@@ -1289,7 +1274,7 @@ export default function ExamSolutionAnalysisPage() {
               <MathJaxText
                 component="div"
                 className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold markup-content"
-                content={decodeHtml(activeExplanation[lang] || activeExplanation['en'] || "")}
+                content={processQuestionHtml(activeExplanation[lang] || activeExplanation['en'] || "")}
               />
             </div>
             </div>

@@ -14,22 +14,7 @@ import Link from 'next/link';
 import { Check, CheckCircle2, ShieldAlert, ShieldCheck, Globe, User, BookOpen, AlertCircle, ArrowLeft, Sun, Moon, Clock, Pause, Play, Menu, X, Trophy, Star } from 'lucide-react';
 import { useIsMobile } from '../../useIsMobile';
 
-function decodeHtml(text: string): string {
-  if (!text) return "";
-  let decoded = text;
-  for (let i = 0; i < 3; i++) {
-    const temp = decoded
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ');
-    if (temp === decoded) break;
-    decoded = temp;
-  }
-  return decoded;
-}
+import { processQuestionHtml, decodeHtml } from '../../lib/mathUtils';
 
 
 // Targeted, memoized component for MathJax rendering to prevent React re-render clashing
@@ -851,7 +836,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                       <MathJaxText
                         component="div"
                         className="markup-content font-sans"
-                        content={decodeHtml(questionLang === 'en'
+                        content={processQuestionHtml(questionLang === 'en'
                           ? currentQuestion.content.en.questionText
                           : currentQuestion.content.hi.questionText)}
                       />
@@ -903,7 +888,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                             />
                             <MathJaxText
                               className="flex-1 font-sans"
-                              content={decodeHtml(optLabel)}
+                              content={processQuestionHtml(optLabel)}
                             />
                           </label>
                         );
@@ -1319,7 +1304,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                         <MathJaxText
                           component="div"
                           className="markup-content font-sans"
-                          content={decodeHtml(questionLang === 'en'
+                          content={processQuestionHtml(questionLang === 'en'
                             ? currentQuestion.content.en.questionText
                             : currentQuestion.content.hi.questionText)}
                         />
@@ -1371,7 +1356,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
                               />
                               <MathJaxText
                                 className="text-slate-800 text-xs flex-1 font-sans"
-                                content={decodeHtml(optLabel)}
+                              content={processQuestionHtml(optLabel)}
                               />
                             </label>
                           );

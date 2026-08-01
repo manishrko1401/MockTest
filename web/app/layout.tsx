@@ -42,14 +42,14 @@ export default async function RootLayout({
           {children}
         </AuthProvider>
 
-        {/* MathJax — lazy loaded, only needed on exam pages */}
+        {/* MathJax — loaded after page interactive for fast math rendering */}
         <Script
           src="/mathjax-config.js"
-          strategy="lazyOnload"
+          strategy="afterInteractive"
         />
         <Script
           src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
-          strategy="lazyOnload"
+          strategy="afterInteractive"
         />
       </body>
     </html>

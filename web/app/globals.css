@@ -104,6 +104,31 @@ body {
   margin: 0.75rem auto;
   max-width: 100%;
 }
+.markup-content sup {
+  font-size: 0.75em;
+  vertical-align: super;
+  line-height: 0;
+}
+.markup-content sub {
+  font-size: 0.75em;
+  vertical-align: sub;
+  line-height: 0;
+}
+/* MathJax overflow handling */
+.markup-content .MathJax {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+mjx-container {
+  overflow-x: auto;
+  max-width: 100%;
+}
+/* Ensure fractions and other tall math expressions don't get clipped */
+mjx-container[jax="CHTML"] {
+  line-height: 1.8 !important;
+}
+
 
 /* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {

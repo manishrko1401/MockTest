@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth, TestCategory } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -44,22 +44,35 @@ import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 import HomeSupportWidget from '../components/HomeSupportWidget';
 
-function decodeHtml(text: string): string {
-  if (!text) return "";
-  let decoded = text;
-  for (let i = 0; i < 3; i++) {
-    const temp = decoded
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ');
-    if (temp === decoded) break;
-    decoded = temp;
-  }
-  return decoded;
-}
+import { processQuestionHtml, decodeHtml } from '../lib/mathUtils';
+
+
+// MathJax-enabled text component for practice-series
+const MathJaxText = React.memo(({ content, className, component: Component = 'span' }: { content: string, className?: string, component?: 'span' | 'div' | 'p' | 'h3' }) => {
+  const containerRef = useRef<HTMLElement>(null);
+  React.useEffect(() => {
+    let active = true;
+    let timeoutId: any = null;
+    const triggerTypeset = () => {
+      if (!containerRef.current || !active) return;
+      const MathJax = (window as any).MathJax;
+      if (MathJax?.typesetPromise) {
+        try {
+          MathJax.typesetClear([containerRef.current]);
+          MathJax.typesetPromise([containerRef.current]).catch((err: any) => console.warn('MathJax error:', err));
+        } catch (e) {
+          MathJax.typesetPromise([containerRef.current]).catch((err: any) => console.warn('MathJax error:', err));
+        }
+      } else {
+        timeoutId = setTimeout(triggerTypeset, 100);
+      }
+    };
+    triggerTypeset();
+    return () => { active = false; if (timeoutId) clearTimeout(timeoutId); };
+  }, [content]);
+  return <Component ref={containerRef as any} className={className} dangerouslySetInnerHTML={{ __html: content }} />;
+});
+MathJaxText.displayName = 'MathJaxText';
 
 function renderFormattedExplanation(rawExp: any, lang: 'en' | 'hi', qId?: string, asPoints: boolean = false) {
   let expText = "";
@@ -80,14 +93,15 @@ function renderFormattedExplanation(rawExp: any, lang: 'en' | 'hi', qId?: string
       : 'Detailed explanation and concept breakdown will be updated shortly.';
   }
 
-  const decoded = decodeHtml(expText).trim();
+  const decoded = processQuestionHtml(expText).trim();
   const hasHtml = /<[a-z][\s\S]*>/i.test(decoded);
 
   if (hasHtml) {
     return (
-      <div 
+      <MathJaxText
+        component="div"
         className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-medium leading-relaxed markup-content space-y-2 pt-1"
-        dangerouslySetInnerHTML={{ __html: decoded }}
+        content={decoded}
       />
     );
   }
@@ -1341,9 +1355,10 @@ export default function PracticeSeriesPage() {
                                       Q #{qIdx + 1}
                                     </span>
                                   </div>
-                                  <p 
-                                    className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" 
-                                    dangerouslySetInnerHTML={{ __html: viewerLang === 'hi' ? questionTextHi : questionTextEn }} 
+                                  <MathJaxText
+                                    component="div"
+                                    className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate markup-content"
+                                    content={processQuestionHtml(viewerLang === 'hi' ? questionTextHi : questionTextEn)}
                                   />
                                 </div>
                                 
@@ -1368,11 +1383,11 @@ export default function PracticeSeriesPage() {
                                   {/* Question Text Box */}
                                   <div className="bg-slate-50 dark:bg-slate-900/60 p-4 border border-slate-200 dark:border-slate-800 rounded-xl text-xs leading-relaxed text-slate-800 dark:text-slate-200">
                                     <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">Question (English):</p>
-                                    <div className="font-normal mb-3 markup-content" dangerouslySetInnerHTML={{ __html: questionTextEn }} />
+                                    <MathJaxText component="div" className="font-normal mb-3 markup-content" content={processQuestionHtml(questionTextEn)} />
                                     {questionTextHi && questionTextHi !== questionTextEn && (
                                       <>
                                         <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">प्रश्न (Hindi):</p>
-                                        <div className="font-normal markup-content" dangerouslySetInnerHTML={{ __html: questionTextHi }} />
+                                        <MathJaxText component="div" className="font-normal markup-content" content={processQuestionHtml(questionTextHi)} />
                                       </>
                                     )}
                                   </div>
@@ -1397,10 +1412,10 @@ export default function PracticeSeriesPage() {
                                               }`}
                                             >
                                               <div className="flex items-center justify-between">
-                                                <span className="flex items-center gap-1 font-bold">Option {oIdx + 1}: <span className="font-semibold" dangerouslySetInnerHTML={{ __html: textEn }} /></span>
+                                                <span className="flex items-center gap-1 font-bold">Option {oIdx + 1}: <MathJaxText content={processQuestionHtml(textEn)} className="font-semibold" /></span>
                                                 {isCorrect && <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />}
                                               </div>
-                                              {textHi !== textEn && <span className="text-[10px] opacity-80 mt-0.5 flex items-center gap-1">हिंदी: <span dangerouslySetInnerHTML={{ __html: textHi }} /></span>}
+                                              {textHi !== textEn && <span className="text-[10px] opacity-80 mt-0.5 flex items-center gap-1">हिंदी: <MathJaxText content={processQuestionHtml(textHi)} /></span>}
                                             </div>
                                           );
                                         })}
@@ -1845,13 +1860,14 @@ export default function PracticeSeriesPage() {
                                 </button>
                               </div>
                             </div>
-                            <h3
+                            <MathJaxText
+                              component="div"
                               className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white leading-relaxed markup-content"
-                              dangerouslySetInnerHTML={{
-                                __html: viewerLang === 'hi'
+                              content={processQuestionHtml(
+                                viewerLang === 'hi'
                                   ? (activeQ.questionText?.hi || activeQ.questionText?.en || String(activeQ))
                                   : (activeQ.questionText?.en || String(activeQ))
-                              }}
+                              )}
                             />
                           </div>
 
@@ -1911,7 +1927,7 @@ export default function PracticeSeriesPage() {
                                       }`}>
                                         {oIdx + 1}
                                       </span>
-                                      <span dangerouslySetInnerHTML={{ __html: optText }} />
+                                      <MathJaxText content={processQuestionHtml(optText)} className="flex-1" />
                                     </div>
 
                                     {isReviewMode && (
