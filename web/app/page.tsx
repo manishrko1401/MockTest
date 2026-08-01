@@ -276,13 +276,16 @@ const formatSubCategoryName = (name: string) => {
 
   const testimonials: any[] = dbTestimonials.length > 0 ? dbTestimonials : SUCCESS_STORIES;
 
-  // Auto-slide testimonials every 10 seconds
+  const [announcementIndex, setAnnouncementIndex] = useState(0);
+  const activeAnnouncements = (noticesList || []).filter(n => n.category === 'announcement');
+
   React.useEffect(() => {
+    if (activeAnnouncements.length <= 1) return;
     const timer = setInterval(() => {
-      setSuccessIndex((prev) => (prev + 1) % testimonials.length);
-    }, 10000);
+      setAnnouncementIndex((prev) => (prev + 1) % activeAnnouncements.length);
+    }, 8000);
     return () => clearInterval(timer);
-  }, [testimonials.length]);
+  }, [activeAnnouncements.length]);
 
   React.useEffect(() => {
     if (!currentUser) {
@@ -439,36 +442,6 @@ const formatSubCategoryName = (name: string) => {
           </div>
         )}
 
-        {/* Promo Banner just below Live Updates */}
-        <div className="px-4 pt-3 flex justify-center w-full z-20 shrink-0">
-          {/* Promo Advertisement Banner */}
-          <div className="w-full max-w-md bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 dark:from-amber-500/20 dark:to-red-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-            
-            <div className="flex items-center gap-2.5 z-10">
-              <div className="bg-amber-500 text-white p-1.5 rounded-lg shrink-0 animate-bounce">
-                <Trophy className="h-4 w-4" />
-              </div>
-              <div className="text-left leading-tight">
-                <p className="text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-amber-300 uppercase tracking-wide">
-                  {language === 'hi' ? 'सीमित समय का ऑफर!' : 'Limited Time Offer!'}
-                </p>
-                <p className="text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-350 font-semibold">
-                  {language === 'hi' 
-                    ? '31 दिसंबर 2026 से पहले रजिस्टर करें और पाएं MockTest Hub Pass Pro!' 
-                    : 'Register before 31 Dec 2026 & get MockTest Hub Pass Pro!'}
-                </p>
-              </div>
-            </div>
-            <Link
-              href={currentUser ? "/profile" : "/auth?tab=signup"}
-              className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-sm"
-            >
-              {language === 'hi' ? 'दावा करें' : 'Claim Now'}
-            </Link>
-          </div>
-        </div>
-
         {/* MOBILE SLIDE-DOWN DRAWER MENU */}
         {mobileMenuOpen && (
           <div className="fixed inset-x-0 top-14 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-205 dark:border-slate-900 z-30 shadow-lg p-6 flex flex-col gap-6 animate-in slide-in-from-top-4 duration-200">
@@ -549,9 +522,9 @@ const formatSubCategoryName = (name: string) => {
           </div>
         )}
 
-        {/* HERO SECTION */}
-        <main className="flex-1 flex flex-col p-4 space-y-8 relative z-10 edu-grid-pattern">
-          {/* Floating Mobile Background Art Elements (Low Opacity Decorative) */}
+        {/* HERO SECTION - MOBILE VIEW */}
+        <main className="flex-1 flex flex-col p-3 sm:p-4 space-y-4 relative z-10 edu-grid-pattern">
+          {/* Floating Mobile Background Art Elements */}
           <div className="absolute top-12 left-4 opacity-[0.06] dark:opacity-[0.04] animate-float pointer-events-none">
             <svg className="w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
@@ -566,86 +539,142 @@ const formatSubCategoryName = (name: string) => {
             </svg>
           </div>
 
-          <div className="absolute bottom-24 left-6 opacity-[0.06] dark:opacity-[0.04] animate-float pointer-events-none">
-            <svg className="w-8 h-8 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M22 22 2 2v20Z" />
-              <path d="M18 18H6V6" />
-            </svg>
-          </div>
+          {/* 1. ANNOUNCEMENT BANNER PANEL (Directly Below Live Updates Bar) */}
+          <section className="border border-blue-200/80 dark:border-blue-900/50 rounded-2xl flex flex-col justify-between min-h-[250px] bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 text-white shadow-md relative overflow-hidden transition-all duration-300">
+            {activeAnnouncements.length > 1 && (
+              <div className="absolute top-3 right-3 z-20 flex gap-1 items-center bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
+                {activeAnnouncements.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setAnnouncementIndex(idx)}
+                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                      announcementIndex === idx ? 'bg-blue-400 w-4' : 'bg-white/40 w-1.5'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
 
-          <section className="text-center pt-8 pb-1 space-y-4 relative z-10">
-            <span className="inline-flex items-center gap-1.5 bg-blue-105 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-black px-4 py-1.5 rounded-full text-xs sm:text-sm uppercase tracking-wider shadow-sm">
+            {activeAnnouncements.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-4 text-slate-400">
+                <Bell className="h-6 w-6 text-slate-500 mb-1" />
+                <p className="text-[11px] font-semibold">
+                  {language === 'hi' ? 'वर्तमान में कोई सक्रिय घोषणाएं नहीं हैं।' : 'No active announcements at the moment.'}
+                </p>
+              </div>
+            ) : (
+              (() => {
+                const ann = activeAnnouncements[announcementIndex] || activeAnnouncements[0];
+                return (
+                  <div className="flex-1 flex flex-col justify-between relative h-full w-full animate-in fade-in duration-200">
+                    {ann.imageUrl && ann.imageUrl.trim() ? (
+                      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+                        <img
+                          src={ann.imageUrl.trim().replace(/^http:\/\//i, 'https://')}
+                          alt={ann.title}
+                          className="w-full h-full object-cover opacity-90"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent z-10" />
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 z-0" />
+                    )}
+
+                    <div className="relative z-10 p-4 flex flex-col justify-end h-full w-full space-y-2 pt-10 text-left">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="bg-blue-600/90 text-white font-black text-[9px] px-2.5 py-0.5 rounded-full border border-blue-400/30 uppercase tracking-wider">
+                          {ann.type || 'ANNOUNCEMENT'}
+                        </span>
+                        <span className="text-[10px] text-slate-300 font-bold flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded-md backdrop-blur-sm">
+                          <Calendar className="h-3 w-3 text-blue-400" /> {ann.date}
+                        </span>
+                      </div>
+
+                      <h4 className="font-black text-xs sm:text-sm text-white leading-snug drop-shadow line-clamp-2">
+                        {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
+                      </h4>
+
+                      {ann.lastDate && (
+                        <p className="text-[10px] font-black text-red-400 flex items-center gap-1 bg-red-950/60 border border-red-800/50 px-2 py-0.5 rounded-md self-start">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping inline-block" />
+                          {language === 'hi' ? 'अंतिम तिथि: ' : 'Last Date: '}{ann.lastDate}
+                        </p>
+                      )}
+
+                      {ann.url ? (
+                        <a
+                          href={ann.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition active:scale-95 self-start cursor-pointer mt-1 shadow-md"
+                        >
+                          <span>{language === 'hi' ? 'विवरण देखें' : 'View Details'}</span>
+                          <ChevronRight className="h-3 w-3" />
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })()
+            )}
+          </section>
+
+          {/* 2. CENTERED HERO TITLE SECTION */}
+          <section className="text-center pt-2 pb-2 space-y-3 relative z-10 flex flex-col items-center justify-center">
+            
+            {/* Completely Wide Limited Time Offer Banner at Top */}
+            <div className="w-full bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 dark:from-amber-500/20 dark:to-red-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-2xl p-2.5 px-3 flex items-center justify-between gap-2 shadow-xs relative overflow-hidden group">
+              <div className="flex items-center gap-2 z-10">
+                <div className="bg-amber-500 text-white p-1 rounded-md shrink-0 animate-bounce">
+                  <Trophy className="h-3.5 w-3.5" />
+                </div>
+                <div className="text-left leading-tight">
+                  <p className="text-[10px] font-extrabold text-slate-800 dark:text-amber-300 uppercase tracking-wide">
+                    {language === 'hi' ? 'सीमित समय का ऑफर!' : 'Limited Time Offer!'}
+                  </p>
+                  <p className="text-[9px] text-slate-600 dark:text-slate-350 font-medium">
+                    {language === 'hi' 
+                      ? 'रजिस्टर करें और पाएं Pass Pro!' 
+                      : 'Register before 31 Dec 2026 & get Pass Pro!'}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={currentUser ? "/profile" : "/auth?tab=signup"}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-xs"
+              >
+                {language === 'hi' ? 'दावा करें' : 'Claim Now'}
+              </Link>
+            </div>
+
+            {/* For Students, By Students Badge Below Offer Banner */}
+            <span className="inline-flex items-center gap-1 bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider shadow-xs">
               {t.heroBadge}
             </span>
 
-            <h1 className="text-3xl font-black leading-tight text-slate-900 dark:text-white">
-              {t.heroTitlePrefix}<br />
+            {/* Centered Hero Title */}
+            <h1 className="text-base sm:text-lg font-black leading-tight text-slate-900 dark:text-white tracking-tight max-w-xs mx-auto">
+              {t.heroTitlePrefix}{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400">
                 {t.heroTitleSuffix}
               </span>
             </h1>
 
-            <p className="text-slate-655 dark:text-slate-400 text-xs leading-relaxed max-w-sm mx-auto font-semibold">
+            <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed font-semibold max-w-xs mx-auto">
               {t.heroDesc}
             </p>
 
-            {/* Test Series Button (Mobile Only) */}
-            <div className="flex items-center justify-center gap-2.5 pt-2">
+            {/* Test Series Primary Action Button */}
+            <div className="pt-1">
               <Link
                 href="/mock-tests"
-                className="w-full max-w-[220px] bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
+                className="w-full max-w-[180px] bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2 px-4 rounded-xl text-xs transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
               >
                 <BookOpen className="h-4 w-4" />
-                {language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series'}
+                <span>{language === 'hi' ? 'टेस्ट सीरीज देखें' : 'Explore Test Series'}</span>
               </Link>
             </div>
 
-          </section>
-
-          {/* TOPPERS TESTIMONIAL PANEL */}
-          <section className="!mt-3 border border-yellow-250 dark:border-yellow-900/45 p-5.5 rounded-2xl flex flex-col justify-between min-h-[230px] glass-card glow-shadow-amber relative overflow-hidden hover:scale-[1.01] transition-all duration-300">
-            {/* Watermarked Graduation Cap */}
-            <div className="absolute -bottom-6 -right-6 opacity-[0.06] dark:opacity-[0.03] pointer-events-none">
-              <svg className="w-28 h-28 text-yellow-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-              </svg>
-            </div>
-
-            <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/40 pb-3.5 mb-3 z-10">
-              <h3 className="font-extrabold text-[10px] text-slate-905 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                <Trophy className="h-3.5 w-3.5 text-yellow-500" /> Topper Testimonials
-              </h3>
-              <div className="flex gap-1">
-                {testimonials.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSuccessIndex(idx)}
-                    className={`h-1.5 w-1.5 rounded-full transition-all cursor-pointer ${successIndex === idx ? 'bg-yellow-500 w-3' : 'bg-slate-300 dark:bg-slate-700'}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="flex-1 flex flex-col justify-center min-h-[100px] z-10 text-left">
-              <p className="text-slate-755 dark:text-slate-300 italic text-[11px] leading-relaxed mb-4 font-semibold">
-                "{language === 'hi' && activeTopper.quoteHi ? activeTopper.quoteHi : activeTopper.quote}"
-              </p>
-              
-              <div className="flex items-center gap-3">
-                {activeTopper.photoUrl ? (
-                  <img src={activeTopper.photoUrl} alt={activeTopper.name} className="h-9 w-9 rounded-full object-cover border border-yellow-400 dark:border-yellow-905 shadow-md" />
-                ) : (
-                  <div className={`h-9 w-9 rounded-full bg-gradient-to-r ${activeTopper.gradient} text-white flex items-center justify-center font-black text-[10px] shadow border border-yellow-400/30`}>
-                    {activeTopper.initials}
-                  </div>
-                )}
-                <div>
-                  <h4 className="font-extrabold text-[11px] text-slate-900 dark:text-white leading-none">{activeTopper.name}</h4>
-                  <p className="text-[8px] text-slate-505 font-bold uppercase tracking-wider mt-1">{activeTopper.exam.split(' (')[0]}</p>
-                </div>
-              </div>
-            </div>
           </section>
 
           {/* POPULAR CATEGORIES */}
@@ -1184,41 +1213,11 @@ const formatSubCategoryName = (name: string) => {
         </div>
       )}
 
-      {/* Promo Banner just below Live Updates */}
-      <div className="px-6 md:px-12 pt-4 flex justify-center w-full z-20 shrink-0">
-        {/* Promo Advertisement Banner */}
-        <div className="w-full max-w-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 dark:from-amber-500/20 dark:to-red-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-          
-          <div className="flex items-center gap-3 z-10">
-            <div className="bg-amber-500 text-white p-1.5 rounded-lg shrink-0 animate-bounce">
-              <Trophy className="h-4.5 w-4.5 text-blue-600 animate-pulse" />
-            </div>
-            <div className="text-left leading-tight">
-              <p className="text-xs font-black text-slate-800 dark:text-amber-300 uppercase tracking-wide">
-                {language === 'hi' ? 'सीमित समय का ऑफर!' : 'Limited Time Offer!'}
-              </p>
-              <p className="text-[11px] text-slate-655 dark:text-slate-350 font-semibold">
-                {language === 'hi' 
-                  ? '31 दिसंबर 2026 से पहले रजिस्टर करें और पाएं MockTest Hub Pass Pro!' 
-                  : 'Register before 31 Dec 2026 & get MockTest Hub Pass Pro!'}
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/auth"
-            className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-4 py-2 rounded-xl text-xs uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-sm"
-          >
-            {language === 'hi' ? 'दावा करें' : 'Claim Now'}
-          </Link>
-        </div>
-      </div>
-
-      {/* HERO SECTION */}
-      <section className="py-16 md:py-24 px-6 md:px-12 max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10 edu-grid-pattern">
+      {/* HERO SECTION - Starts immediately below Live Updates Bar */}
+      <section className="pt-4 pb-8 md:pt-5 md:pb-10 px-4 md:px-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch relative z-10 edu-grid-pattern">
         
         {/* Floating Book Art */}
-        <div className="absolute top-20 left-10 opacity-20 dark:opacity-[0.12] animate-float pointer-events-none hidden xl:block">
+        <div className="absolute top-10 left-6 opacity-20 dark:opacity-[0.12] animate-float pointer-events-none hidden xl:block">
           <svg className="w-14 h-14 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
             <path d="M6 6h10M6 10h10M6 14h10" />
@@ -1241,77 +1240,141 @@ const formatSubCategoryName = (name: string) => {
           </svg>
         </div>
 
-        {/* Left Side: Pitch Title */}
-        <div className="space-y-6">
-          <span className="inline-flex items-center gap-2 text-xs md:text-sm lg:text-base bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-black px-4.5 py-2 rounded-full uppercase tracking-wider shadow-sm">
+        {/* Left Side: Compact Pitch Title Section + Promo Banner Above Badge */}
+        <div className="lg:col-span-4 flex flex-col justify-center space-y-3.5 text-left">
+          {/* Compact Promo Banner Above Badge */}
+          <div className="w-full max-w-sm bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 dark:from-amber-500/20 dark:to-red-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-2xl p-2.5 px-3 flex items-center justify-between gap-2 shadow-xs group">
+            <div className="flex items-center gap-2 z-10">
+              <div className="bg-amber-500 text-white p-1 rounded-md shrink-0 animate-bounce">
+                <Trophy className="h-3.5 w-3.5" />
+              </div>
+              <div className="text-left leading-tight">
+                <p className="text-[10px] font-extrabold text-slate-800 dark:text-amber-300 uppercase tracking-wide">
+                  {language === 'hi' ? 'सीमित समय ऑफर!' : 'Limited Time Offer!'}
+                </p>
+                <p className="text-[9px] text-slate-600 dark:text-slate-350 font-medium">
+                  {language === 'hi' 
+                    ? 'रजिस्टर करें और पाएं Pass Pro!' 
+                    : 'Get Pass Pro on Register!'}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/auth"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-xs"
+            >
+              {language === 'hi' ? 'दावा करें' : 'Claim'}
+            </Link>
+          </div>
+
+          <span className="inline-flex items-center gap-1.5 text-xs bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow-xs self-start">
             {t.heroBadge}
           </span>
           
-          <h1 className="text-3xl md:text-5xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-xl md:text-3xl font-black leading-snug tracking-tight text-slate-900 dark:text-white">
             {t.heroTitlePrefix}<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400">{t.heroTitleSuffix}</span>
           </h1>
           
-          <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base leading-relaxed max-w-lg font-semibold">
+          <p className="text-slate-600 dark:text-slate-400 text-xs md:text-sm leading-relaxed max-w-sm font-semibold">
             {t.heroDesc}
           </p>
 
-
-
+          <div className="pt-1">
+            <Link
+              href="/mock-tests"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95"
+            >
+              <BookOpen className="h-4 w-4" />
+              <span>{language === 'hi' ? 'टेस्ट सीरीज देखें' : 'Explore Test Series'}</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </div>
 
-        {/* Right Side: Showcase Board */}
-        <div className="border border-yellow-250 dark:border-yellow-900/40 p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[320px] glass-card glow-shadow-amber hover:scale-[1.01] transition-all duration-300">
-          {/* Watermarked Graduation Cap */}
-          <div className="absolute -bottom-6 -right-6 opacity-5 dark:opacity-[0.03] pointer-events-none">
-            <svg className="w-48 h-48 text-yellow-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-              <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-            </svg>
-          </div>
-
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-4 mb-4">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-              <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-bounce" /> {t.topperTitle}
-            </h3>
-            <div className="flex gap-1.5">
-              {testimonials.map((_, idx) => (
+        {/* Right Side: Wider Full-Height Banner Announcement Panel */}
+        <div className="lg:col-span-8 border border-blue-200/80 dark:border-blue-900/50 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[420px] md:min-h-[460px] bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 text-white shadow-xl hover:shadow-2xl transition-all duration-300 group">
+          {activeAnnouncements.length > 1 && (
+            <div className="absolute top-4 right-4 z-20 flex gap-1.5 items-center bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+              {activeAnnouncements.map((_, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setSuccessIndex(idx)}
-                  className={`h-2 w-2 rounded-full transition-all cursor-pointer ${successIndex === idx ? 'bg-yellow-500 w-5' : 'bg-slate-350 dark:bg-slate-700'}`}
+                  onClick={() => setAnnouncementIndex(idx)}
+                  className={`h-2 rounded-full transition-all cursor-pointer ${
+                    announcementIndex === idx ? 'bg-blue-400 w-5' : 'bg-white/40 hover:bg-white/70 w-2'
+                  }`}
                 />
               ))}
             </div>
-          </div>
+          )}
 
-          <div className="flex-1 flex flex-col justify-center animate-in fade-in slide-in-from-right-4 duration-300">
-            {/* 5-star gold ratings */}
-            <div className="flex gap-1 mb-3 text-yellow-500">
-              <Sparkles className="h-3.5 w-3.5 fill-current" />
-              <Sparkles className="h-3.5 w-3.5 fill-current" />
-              <Sparkles className="h-3.5 w-3.5 fill-current" />
-              <Sparkles className="h-3.5 w-3.5 fill-current" />
-              <Sparkles className="h-3.5 w-3.5 fill-current" />
+          {activeAnnouncements.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400 space-y-2">
+              <Bell className="h-10 w-10 text-slate-600" />
+              <p className="text-sm font-semibold">
+                {language === 'hi' ? 'वर्तमान में कोई सक्रिय घोषणाएं नहीं हैं।' : 'No active announcements at the moment.'}
+              </p>
             </div>
+          ) : (
+            (() => {
+              const ann = activeAnnouncements[announcementIndex] || activeAnnouncements[0];
+              return (
+                <div className="flex-1 flex flex-col justify-between relative h-full w-full animate-in fade-in duration-300">
+                  {ann.imageUrl && ann.imageUrl.trim() ? (
+                    <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+                      <img
+                        src={ann.imageUrl.trim().replace(/^http:\/\//i, 'https://')}
+                        alt={ann.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent z-10" />
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 z-0" />
+                  )}
 
-            <p className="text-slate-700 dark:text-slate-300 italic text-xs md:text-sm leading-relaxed mb-6 font-semibold">
-              "{language === 'hi' && activeTopper.quoteHi ? activeTopper.quoteHi : activeTopper.quote}"
-            </p>
-            
-            <div className="flex items-center gap-3">
-              {activeTopper.photoUrl ? (
-                <img src={activeTopper.photoUrl} alt={activeTopper.name} className="h-11 w-11 rounded-full object-cover border-2 border-yellow-400 dark:border-yellow-905 shadow-lg" />
-              ) : (
-                <div className={`h-11 w-11 rounded-full bg-gradient-to-r ${activeTopper.gradient} text-white flex items-center justify-center font-black text-xs shadow-lg border-2 border-yellow-400/30`}>
-                  {activeTopper.initials}
+                  <div className="relative z-10 p-6 md:p-8 flex flex-col justify-end h-full w-full space-y-3 pt-12 text-left">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="bg-blue-600/90 text-white font-black text-[10px] md:text-xs px-3 py-1 rounded-full border border-blue-400/30 uppercase tracking-wider shadow-sm">
+                        {ann.type || 'ANNOUNCEMENT'}
+                      </span>
+                      <span className="text-xs text-slate-300 font-bold flex items-center gap-1.5 bg-black/40 px-2.5 py-1 rounded-lg backdrop-blur-sm">
+                        <Calendar className="h-3.5 w-3.5 text-blue-400" /> {ann.date}
+                      </span>
+                    </div>
+
+                    <h4 className="font-black text-lg md:text-2xl text-white leading-snug drop-shadow-md line-clamp-2">
+                      {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
+                    </h4>
+
+                    {language !== 'hi' && ann.titleHi && (
+                      <p className="text-xs md:text-sm text-slate-200 font-medium line-clamp-1 drop-shadow-sm">
+                        {ann.titleHi}
+                      </p>
+                    )}
+
+                    {ann.lastDate && (
+                      <p className="text-xs md:text-sm font-black text-red-400 flex items-center gap-1.5 bg-red-950/60 border border-red-800/50 px-3 py-1 rounded-lg self-start">
+                        <span className="h-2 w-2 rounded-full bg-red-500 animate-ping inline-block" />
+                        {language === 'hi' ? 'अंतिम तिथि: ' : 'Last Date: '}{ann.lastDate}
+                      </p>
+                    )}
+
+                    {ann.url ? (
+                      <a
+                        href={ann.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs md:text-sm px-5 py-2.5 rounded-xl transition shadow-lg hover:shadow-blue-500/25 active:scale-95 self-start cursor-pointer mt-2"
+                      >
+                        <span>{language === 'hi' ? 'विवरण देखें' : 'View Details'}</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </a>
+                    ) : null}
+                  </div>
                 </div>
-              )}
-              <div>
-                <h4 className="font-extrabold text-xs text-slate-905 dark:text-white leading-tight">{activeTopper.name}</h4>
-                <p className="text-[10px] text-slate-550 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5">{activeTopper.exam}</p>
-              </div>
-            </div>
-          </div>
+              );
+            })()
+          )}
         </div>
       </section>
 

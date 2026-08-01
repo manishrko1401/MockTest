@@ -137,6 +137,25 @@ export default function App() {
     }
   };
 
+  const refreshCatalog = async () => {
+    try {
+      const syncRes = await ApiClient.catalogSync(null);
+      if (syncRes.success) {
+        const updatedCatalog = {
+          examCatalog: syncRes.examCatalog || [],
+          noticesList: syncRes.noticesList || [],
+          usersList: [],
+        };
+        setNotices(updatedCatalog.noticesList);
+        setExamCatalog(updatedCatalog.examCatalog);
+        await saveCatalogToCache(updatedCatalog);
+        await setLastSyncTimestamp(syncRes.syncedAt);
+      }
+    } catch (err) {
+      console.warn('[Sync] Manual refreshCatalog failed:', err);
+    }
+  };
+
 
   // 1. Initial mounting check for saved credentials & bootstrap catalogs
   useEffect(() => {
@@ -760,6 +779,7 @@ export default function App() {
             onOpenAttemptAnalysis={handleOpenAttemptAnalysis}
             onOpenExam={handleOpenExam}
             onRefreshUser={refreshUserData}
+            onRefreshCatalog={refreshCatalog}
             isDark={isDark}
             onToggleTheme={handleToggleTheme}
             onOpenSupportChat={() => {

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth, MockUser, MockTestRecord } from '../AuthContext';
+import { useAuth, MockUser, MockTestRecord, Notice } from '../AuthContext';
 import { TRANSLATIONS } from '../translations';
 import {
   ResponsiveContainer,
@@ -454,6 +454,7 @@ export default function AdminAnalytics() {
     toggleTheme, 
     noticesList, 
     addNotice, 
+    editNotice,
     deleteNotice, 
     language, 
     setLanguage,
@@ -574,6 +575,21 @@ export default function AdminAnalytics() {
   const [isCreateAnnouncementOpen, setIsCreateAnnouncementOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
 
+  // Category Search & Filter States
+  const [catFilterSearch, setCatFilterSearch] = useState('');
+  const [catFilterCategory, setCatFilterCategory] = useState('');
+
+  // Sub Category Search & Filter States
+  const [subCatFilterSearch, setSubCatFilterSearch] = useState('');
+  const [subCatFilterCategory, setSubCatFilterCategory] = useState('');
+  const [subCatFilterSubCategory, setSubCatFilterSubCategory] = useState('');
+
+  // Sub Sub Category Search & Filter States
+  const [subSubCatFilterSearch, setSubSubCatFilterSearch] = useState('');
+  const [subSubCatFilterCategory, setSubSubCatFilterCategory] = useState('');
+  const [subSubCatFilterSubCategory, setSubSubCatFilterSubCategory] = useState('');
+  const [subSubCatFilterSubSubCategory, setSubSubCatFilterSubSubCategory] = useState('');
+
   // Mock test management form states
   const [newMockTestbookTotalUsers, setNewMockTestbookTotalUsers] = useState(0);
   const [newMockTestbookTopperScore, setNewMockTestbookTopperScore] = useState(0.0);
@@ -598,6 +614,28 @@ export default function AdminAnalytics() {
   const [editTier, setEditTier] = useState<'None' | 'Testbook Pass' | 'Testbook Pass Pro'>('None');
   const [editExpiry, setEditExpiry] = useState('');
   const [editPurchasedAt, setEditPurchasedAt] = useState('');
+  
+  // Announcement / Notice editing state
+  const [editingAnnouncement, setEditingAnnouncement] = useState<Notice | null>(null);
+  const [editAnnTitle, setEditAnnTitle] = useState('');
+  const [editAnnTitleHi, setEditAnnTitleHi] = useState('');
+  const [editAnnType, setEditAnnType] = useState('');
+  const [editAnnCategory, setEditAnnCategory] = useState<Notice['category']>('announcement');
+  const [editAnnDate, setEditAnnDate] = useState('');
+  const [editAnnUrl, setEditAnnUrl] = useState('');
+  const [editAnnImageUrl, setEditAnnImageUrl] = useState('');
+  const [isUploadingEditAnnBanner, setIsUploadingEditAnnBanner] = useState(false);
+
+  const handleOpenEditAnnouncement = (ann: Notice) => {
+    setEditingAnnouncement(ann);
+    setEditAnnTitle(ann.title || '');
+    setEditAnnTitleHi(ann.titleHi || '');
+    setEditAnnType(ann.type || 'PROMOTION');
+    setEditAnnCategory(ann.category || 'announcement');
+    setEditAnnDate(ann.publishDate || ann.date || '');
+    setEditAnnUrl(ann.url || '');
+    setEditAnnImageUrl(ann.imageUrl || '');
+  };
   
   // Set default tab based on user role
   useEffect(() => {
@@ -3123,7 +3161,13 @@ export default function AdminAnalytics() {
                               <span className="bg-slate-105 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-[10px]">{notice.type}</span>
                             </td>
                             <td className="py-3 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400">{notice.date}</td>
-                            <td className="py-3 px-4 text-right">
+                            <td className="py-3 px-4 text-right flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleOpenEditAnnouncement(notice)}
+                                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                              >
+                                Edit
+                              </button>
                               <button
                                 onClick={() => {
                                   deleteNotice(notice.id);
@@ -3149,800 +3193,982 @@ export default function AdminAnalytics() {
               </div>
             </div>
           )}
-                    {/* TAB 5: CATEGORIES MANAGEMENT */}
-          {activeTab === 'categories' && hasTabAccess('categories') && (
-            <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
-              
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Exam Categories</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete main exam categories</p>
-                </div>
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
-                  {examCatalog.length} categor{examCatalog.length !== 1 ? 'ies' : 'y'} active
-                </span>
-              </div>
 
-              {/* Collapsible Add Category Card */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateCategoryOpen(!isCreateCategoryOpen)}
-                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
-                      <FolderPlus className="h-4.5 w-4.5" />
-                    </div>
-                    <div>
-                      <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create New Category</p>
-                      <p className="text-[11px] text-slate-400">Click to expand the category creation form</p>
-                    </div>
-                  </div>
-                  <div className={`transition-transform duration-200 ${isCreateCategoryOpen ? 'rotate-180' : ''}`}>
-                    <ArrowDown className="h-4 w-4 text-slate-500" />
-                  </div>
-                </button>
+          {/* TAB 5: CATEGORIES MANAGEMENT */}
+          {activeTab === 'categories' && hasTabAccess('categories') && (() => {
+            const filteredCategories = examCatalog.filter(cat => {
+              const matchesCategory = !catFilterCategory || cat.id === catFilterCategory;
+              const matchesSearch = !catFilterSearch.trim() || 
+                cat.name.toLowerCase().includes(catFilterSearch.toLowerCase()) || 
+                (cat.description && cat.description.toLowerCase().includes(catFilterSearch.toLowerCase()));
+              return matchesCategory && matchesSearch;
+            });
 
-                {isCreateCategoryOpen && (
-                  <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-950">
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (!newCategoryName.trim()) return;
-                        addCategory(
-                          newCategoryName.trim(), 
-                          newCategoryLogoUrl.trim() || undefined,
-                          newCategoryIsPopular,
-                          newCategoryDescription.trim(),
-                          newCategoryCountText.trim(),
-                          newCategoryNameHi.trim() || undefined
-                        );
-                        setNewCategoryName('');
-                        setNewCategoryNameHi('');
-                        setNewCategoryLogoUrl('');
-                        setNewCategoryIsPopular(false);
-                        setNewCategoryDescription('');
-                        setNewCategoryCountText('');
-                        setIsCreateCategoryOpen(false);
-                        showToast('Category created successfully!');
-                      }}
-                      className="space-y-4"
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
-                            Category Name (English)
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={newCategoryName}
-                            onChange={(e) => setNewCategoryName(e.target.value)}
-                            placeholder="e.g. UPSC Exams, SSC Exams"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
-                            Category Name (Hindi)
-                          </label>
-                          <input
-                            type="text"
-                            value={newCategoryNameHi}
-                            onChange={(e) => setNewCategoryNameHi(e.target.value)}
-                            placeholder="e.g. यूपीएससी परीक्षा, एसएससी परीक्षा"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
-                          Category Logo Image URL
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={newCategoryLogoUrl}
-                            onChange={(e) => setNewCategoryLogoUrl(e.target.value)}
-                            placeholder="e.g. https://example.com/logo.png or upload image"
-                            className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                          />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            id="new-category-logo-upload"
-                            className="hidden"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              setIsUploadingCategoryLogo(true);
-                              const url = await uploadFileToTigrisDirect(file);
-                              if (url) {
-                                setNewCategoryLogoUrl(url);
-                                showToast("Logo uploaded successfully to Tigris!");
-                              }
-                              setIsUploadingCategoryLogo(false);
-                            }}
-                          />
-                          <label
-                            htmlFor={isUploadingCategoryLogo ? undefined : "new-category-logo-upload"}
-                            className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
-                              isUploadingCategoryLogo ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
-                            }`}
-                          >
-                            <Upload className={`h-3.5 w-3.5 ${isUploadingCategoryLogo ? "animate-bounce" : ""}`} />
-                            {isUploadingCategoryLogo ? "Uploading..." : "Upload Logo"}
-                          </label>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
-                          Description (e.g. SSC CGL, CHSL, MTS, GD Constable)
-                        </label>
-                        <input
-                          type="text"
-                          value={newCategoryDescription}
-                          onChange={(e) => setNewCategoryDescription(e.target.value)}
-                          placeholder="List sub-exams or a brief description"
-                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
-                          Test Count / Badge Text (e.g. 45+ Tests)
-                        </label>
-                        <input
-                          type="text"
-                          value={newCategoryCountText}
-                          onChange={(e) => setNewCategoryCountText(e.target.value)}
-                          placeholder="e.g. 45+ Tests"
-                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2 pt-1.5">
-                        <input
-                          type="checkbox"
-                          id="newCategoryIsPopular"
-                          checked={newCategoryIsPopular}
-                          onChange={(e) => setNewCategoryIsPopular(e.target.checked)}
-                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                        />
-                        <label htmlFor="newCategoryIsPopular" className="text-xs font-bold text-slate-700 dark:text-slate-350 cursor-pointer">
-                          Show in Popular Exam Mock Series section on homepage
-                        </label>
-                      </div>
-                      <div className="flex justify-end pt-2">
-                        <button
-                          type="submit"
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
-                        >
-                          Create Category
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-              </div>
-
-              {/* Categories Table Card — Full Width */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
-                  Active Exam Categories
-                </h3>
+            return (
+              <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
                 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
-                        <th className="py-3 px-4">Logo</th>
-                        <th className="py-3 px-4">Name</th>
-                        <th className="py-3 px-4">Description</th>
-                        <th className="py-3 px-4">Count Text</th>
-                        <th className="py-3 px-4">Popular?</th>
-                        <th className="py-3 px-4">Sub Categories</th>
-                        <th className="py-3 px-4 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {examCatalog.map(cat => (
-                        <tr key={cat.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                          
-                          {/* Logo */}
-                          <td className="py-3.5 px-4">
-                            {editingCategoryId === cat.id ? (
-                              <div className="flex items-center gap-1.5 w-36">
-                                <input
-                                  type="text"
-                                  value={editingCategoryLogoUrl}
-                                  onChange={(e) => setEditingCategoryLogoUrl(e.target.value)}
-                                  placeholder="e.g. Logo URL"
-                                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-20 flex-1 min-w-0"
-                                />
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  id={`edit-category-logo-${cat.id}`}
-                                  className="hidden"
-                                  onChange={async (e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
-                                    setIsUploadingCategoryLogo(true);
-                                    const url = await uploadFileToTigrisDirect(file);
-                                    if (url) {
-                                      setEditingCategoryLogoUrl(url);
-                                      showToast("Logo uploaded successfully to Tigris!");
-                                    }
-                                    setIsUploadingCategoryLogo(false);
-                                  }}
-                                />
-                                <label
-                                  htmlFor={isUploadingCategoryLogo ? undefined : `edit-category-logo-${cat.id}`}
-                                  className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 p-1.5 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center justify-center cursor-pointer shrink-0 ${
-                                    isUploadingCategoryLogo ? "opacity-50 pointer-events-none" : ""
-                                  }`}
-                                  title="Upload Logo to Tigris"
-                                >
-                                  <Upload className={`h-3.5 w-3.5 ${isUploadingCategoryLogo ? "animate-bounce" : ""}`} />
-                                </label>
-                              </div>
-                            ) : cat.logoUrl ? (
-                              <img
-                                src={cat.logoUrl}
-                                alt={cat.name}
-                                className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] text-slate-400 font-bold">
-                                None
-                              </div>
-                            )}
-                          </td>
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Exam Categories</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete main exam categories</p>
+                  </div>
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                    {filteredCategories.length} categor{filteredCategories.length !== 1 ? 'ies' : 'y'} shown
+                  </span>
+                </div>
 
-                          {/* Name */}
-                          <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
-                            {editingCategoryId === cat.id ? (
-                              <input
-                                type="text"
-                                value={editingCategoryName}
-                                onChange={(e) => setEditingCategoryName(e.target.value)}
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-28"
-                              />
-                            ) : (
-                              <span>{cat.name}</span>
-                            )}
-                          </td>
+                {/* Collapsible Add Category Card */}
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreateCategoryOpen(!isCreateCategoryOpen)}
+                    className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                        <FolderPlus className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create New Category</p>
+                        <p className="text-[11px] text-slate-400">Click to expand the category creation form</p>
+                      </div>
+                    </div>
+                    <div className={`transition-transform duration-200 ${isCreateCategoryOpen ? 'rotate-180' : ''}`}>
+                      <ArrowDown className="h-4 w-4 text-slate-500" />
+                    </div>
+                  </button>
 
-                          {/* Description */}
-                          <td className="py-3.5 px-4 text-slate-650 dark:text-slate-350">
-                            {editingCategoryId === cat.id ? (
-                              <input
-                                type="text"
-                                value={editingCategoryDescription}
-                                onChange={(e) => setEditingCategoryDescription(e.target.value)}
-                                placeholder="List sub-exams"
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-40"
-                              />
-                            ) : (
-                              <span>{cat.description || <span className="text-slate-400 italic">None</span>}</span>
-                            )}
-                          </td>
+                  {isCreateCategoryOpen && (
+                    <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-950">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (!newCategoryName.trim()) return;
+                          addCategory(
+                            newCategoryName.trim(), 
+                            newCategoryLogoUrl.trim() || undefined,
+                            newCategoryIsPopular,
+                            newCategoryDescription.trim(),
+                            newCategoryCountText.trim(),
+                            newCategoryNameHi.trim() || undefined
+                          );
+                          setNewCategoryName('');
+                          setNewCategoryNameHi('');
+                          setNewCategoryLogoUrl('');
+                          setNewCategoryIsPopular(false);
+                          setNewCategoryDescription('');
+                          setNewCategoryCountText('');
+                          setIsCreateCategoryOpen(false);
+                          showToast('Category created successfully!');
+                        }}
+                        className="space-y-4"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                              Category Name (English)
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={newCategoryName}
+                              onChange={(e) => setNewCategoryName(e.target.value)}
+                              placeholder="e.g. UPSC Exams, SSC Exams"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                              Category Name (Hindi)
+                            </label>
+                            <input
+                              type="text"
+                              value={newCategoryNameHi}
+                              onChange={(e) => setNewCategoryNameHi(e.target.value)}
+                              placeholder="e.g. यूपीएससी परीक्षा, एसएससी परीक्षा"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            Category Logo Image URL
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={newCategoryLogoUrl}
+                              onChange={(e) => setNewCategoryLogoUrl(e.target.value)}
+                              placeholder="e.g. https://example.com/logo.png or upload image"
+                              className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              id="new-category-logo-upload"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setIsUploadingCategoryLogo(true);
+                                const url = await uploadFileToTigrisDirect(file);
+                                if (url) {
+                                  setNewCategoryLogoUrl(url);
+                                  showToast("Logo uploaded successfully to Tigris!");
+                                }
+                                setIsUploadingCategoryLogo(false);
+                              }}
+                            />
+                            <label
+                              htmlFor={isUploadingCategoryLogo ? undefined : "new-category-logo-upload"}
+                              className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
+                                isUploadingCategoryLogo ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
+                              }`}
+                            >
+                              <Upload className={`h-3.5 w-3.5 ${isUploadingCategoryLogo ? "animate-bounce" : ""}`} />
+                              {isUploadingCategoryLogo ? "Uploading..." : "Upload Logo"}
+                            </label>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            Description (e.g. SSC CGL, CHSL, MTS, GD Constable)
+                          </label>
+                          <input
+                            type="text"
+                            value={newCategoryDescription}
+                            onChange={(e) => setNewCategoryDescription(e.target.value)}
+                            placeholder="List sub-exams or a brief description"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            Test Count / Badge Text (e.g. 45+ Tests)
+                          </label>
+                          <input
+                            type="text"
+                            value={newCategoryCountText}
+                            onChange={(e) => setNewCategoryCountText(e.target.value)}
+                            placeholder="e.g. 45+ Tests"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 pt-1.5">
+                          <input
+                            type="checkbox"
+                            id="newCategoryIsPopular"
+                            checked={newCategoryIsPopular}
+                            onChange={(e) => setNewCategoryIsPopular(e.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                          <label htmlFor="newCategoryIsPopular" className="text-xs font-bold text-slate-700 dark:text-slate-350 cursor-pointer">
+                            Show in Popular Exam Mock Series section on homepage
+                          </label>
+                        </div>
+                        <div className="flex justify-end pt-2">
+                          <button
+                            type="submit"
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
+                          >
+                            Create Category
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+                </div>
 
-                          {/* Count Text */}
-                          <td className="py-3.5 px-4 text-slate-650 dark:text-slate-350 font-semibold">
-                            {editingCategoryId === cat.id ? (
-                              <input
-                                type="text"
-                                value={editingCategoryCountText}
-                                onChange={(e) => setEditingCategoryCountText(e.target.value)}
-                                placeholder="e.g. 45+ Tests"
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-24"
-                              />
-                            ) : (
-                              <span>{cat.countText || <span className="text-slate-400 italic">None</span>}</span>
-                            )}
-                          </td>
+                {/* Filter Bar */}
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm font-sans">
+                  <div className="flex flex-wrap gap-3 items-center">
+                    <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                      <Search className="h-3.5 w-3.5 text-slate-400" /> Filter
+                    </div>
+                    <div className="relative flex-1 min-w-[180px]">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={catFilterSearch}
+                        onChange={(e) => setCatFilterSearch(e.target.value)}
+                        placeholder="Search exam category..."
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                      />
+                    </div>
+                    <select
+                      value={catFilterCategory}
+                      onChange={(e) => setCatFilterCategory(e.target.value)}
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                    >
+                      <option value="">All Exam Categories</option>
+                      {examCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                    </select>
+                    {(catFilterSearch || catFilterCategory) && (
+                      <button type="button" onClick={() => { setCatFilterSearch(''); setCatFilterCategory(''); }} className="text-[11px] text-slate-500 hover:text-red-500 font-bold cursor-pointer flex items-center gap-1 transition-colors">
+                        <X className="h-3.5 w-3.5" /> Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
 
-                          {/* Is Popular checkbox */}
-                          <td className="py-3.5 px-4">
-                            {editingCategoryId === cat.id ? (
-                              <input
-                                type="checkbox"
-                                checked={editingCategoryIsPopular}
-                                onChange={(e) => setEditingCategoryIsPopular(e.target.checked)}
-                                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                              />
-                            ) : cat.isPopular ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Popular</span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-400">Regular</span>
-                            )}
-                          </td>
-
-                          <td className="py-3.5 px-4 font-semibold text-slate-500">{cat.subCategories.length} Sub-cat(s)</td>
-                          <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
-                            {editingCategoryId === cat.id ? (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    if (editingCategoryName.trim()) {
-                                      editCategory(
-                                        cat.id,
-                                        editingCategoryName.trim(),
-                                        editingCategoryLogoUrl.trim() || undefined,
-                                        editingCategoryIsPopular,
-                                        editingCategoryDescription.trim(),
-                                        editingCategoryCountText.trim()
-                                      );
-                                      setEditingCategoryId(null);
-                                      showToast('Category updated successfully.');
-                                    }
-                                  }}
-                                  className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-955/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  onClick={() => setEditingCategoryId(null)}
-                                  className="text-slate-550 dark:text-slate-405 font-bold bg-slate-50 dark:bg-slate-955/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
-                                >
-                                  Cancel
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  disabled={examCatalog.indexOf(cat) === 0}
-                                  onClick={() => {
-                                    const idx = examCatalog.indexOf(cat);
-                                    if (idx > 0) {
-                                      const newCatalog = [...examCatalog];
-                                      [newCatalog[idx], newCatalog[idx - 1]] = [newCatalog[idx - 1], newCatalog[idx]];
-                                      reorderCategories(newCatalog);
-                                      showToast('Category moved up successfully.');
-                                    }
-                                  }}
-                                  className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
-                                  title="Move Up"
-                                >
-                                  <ArrowUp className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  disabled={examCatalog.indexOf(cat) === examCatalog.length - 1}
-                                  onClick={() => {
-                                    const idx = examCatalog.indexOf(cat);
-                                    if (idx < examCatalog.length - 1) {
-                                      const newCatalog = [...examCatalog];
-                                      [newCatalog[idx], newCatalog[idx + 1]] = [newCatalog[idx + 1], newCatalog[idx]];
-                                      reorderCategories(newCatalog);
-                                      showToast('Category moved down successfully.');
-                                    }
-                                  }}
-                                  className="text-slate-500 hover:text-slate-705 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
-                                  title="Move Down"
-                                >
-                                  <ArrowDown className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setEditingCategoryId(cat.id);
-                                    setEditingCategoryName(cat.name);
-                                    setEditingCategoryLogoUrl(cat.logoUrl || '');
-                                    setEditingCategoryIsPopular(cat.isPopular || false);
-                                    setEditingCategoryDescription(cat.description || '');
-                                    setEditingCategoryCountText(cat.countText || '');
-                                  }}
-                                  className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    deleteCategory(cat.id);
-                                    showToast('Category deleted successfully.');
-                                  }}
-                                  className="text-red-500 hover:text-red-650 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-105 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
-                                >
-                                  Delete
-                                </button>
-                              </>
-                            )}
-                          </td>
+                {/* Categories Table Card — Full Width */}
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
+                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
+                    Active Exam Categories
+                  </h3>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100 dark:border-slate-808 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
+                          <th className="py-3 px-4">Logo</th>
+                          <th className="py-3 px-4">Name</th>
+                          <th className="py-3 px-4">Description</th>
+                          <th className="py-3 px-4">Count Text</th>
+                          <th className="py-3 px-4">Popular?</th>
+                          <th className="py-3 px-4">Sub Categories</th>
+                          <th className="py-3 px-4 text-right">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-                    {/* TAB 6: SUB-CATEGORIES MANAGEMENT */}
-          {activeTab === 'subcategories' && hasTabAccess('subcategories') && (
-            <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
-              
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Sub-Categories</h2>
-                  <p className="text-xs text-slate-505 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete exam sub-categories under main categories</p>
-                </div>
-                <span className="text-xs font-bold text-slate-505 dark:text-slate-400 bg-slate-105 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 px-3 py-1.5 rounded-lg">
-                  {examCatalog.reduce((acc, cat) => acc + cat.subCategories.length, 0)} sub-categor{examCatalog.reduce((acc, cat) => acc + cat.subCategories.length, 0) !== 1 ? 'ies' : 'y'} active
-                </span>
-              </div>
-
-              {/* Collapsible Add Card */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateSubCategoryOpen(!isCreateSubCategoryOpen)}
-                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
-                      <Layers className="h-4.5 w-4.5" />
-                    </div>
-                    <div>
-                      <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create Sub-Category</p>
-                      <p className="text-[11px] text-slate-400">Click to expand the subcategory creation form</p>
-                    </div>
-                  </div>
-                  <div className={`transition-transform duration-200 ${isCreateSubCategoryOpen ? 'rotate-180' : ''}`}>
-                    <ArrowDown className="h-4 w-4 text-slate-505" />
-                  </div>
-                </button>
-
-                {isCreateSubCategoryOpen && (
-                  <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-955">
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (!newSubCategoryParent || !newSubCategoryName.trim()) {
-                          alert('Please select a parent category and enter a name.');
-                          return;
-                        }
-                        addSubCategory(newSubCategoryParent, newSubCategoryName.trim(), newSubCategoryNameHi.trim() || undefined);
-                        setNewSubCategoryName('');
-                        setNewSubCategoryNameHi('');
-                        setIsCreateSubCategoryOpen(false);
-                        showToast('Subcategory created successfully!');
-                      }}
-                      className="space-y-4"
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-                            Parent Category
-                          </label>
-                          <select
-                            required
-                            value={newSubCategoryParent}
-                            onChange={(e) => setNewSubCategoryParent(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
-                          >
-                            <option value="">-- Select Parent Category --</option>
-                            {examCatalog.map(cat => (
-                              <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-                            Sub Category Name (English)
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={newSubCategoryName}
-                            onChange={(e) => setNewSubCategoryName(e.target.value)}
-                            placeholder="e.g. SSC CGL, IBPS RRB PO"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-                            Sub Category Name (Hindi)
-                          </label>
-                          <input
-                            type="text"
-                            value={newSubCategoryNameHi}
-                            onChange={(e) => setNewSubCategoryNameHi(e.target.value)}
-                            placeholder="e.g. एसएससी सीजीएल, आईबीपीएस आरआरबी पीओ"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-end">
-                        <button
-                          type="submit"
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
-                        >
-                          Create Sub Category
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-              </div>
-
-              {/* Subcategories Table Card ΓÇö Full Width */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-sm p-6">
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
-                  Active Sub Categories
-                </h3>
-                
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="border-b border-slate-100 dark:border-slate-808 text-slate-404 uppercase text-[9px] tracking-wider font-extrabold">
-                        <th className="py-3 px-4">Parent Category</th>
-                        <th className="py-3 px-4">Sub Category Name</th>
-                        <th className="py-3 px-4">Mock Tests Count</th>
-                        <th className="py-3 px-4 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {examCatalog.flatMap(cat => 
-                        cat.subCategories.map(sub => (
-                          <tr key={sub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                            <td className="py-3.5 px-4 font-bold text-slate-500">{cat.name}</td>
-                            <td className="py-3.5 px-4 font-bold text-slate-909 dark:text-slate-202">
-                              {editingSubCategoryId === sub.id ? (
-                                <input
-                                  type="text"
-                                  value={editingSubCategoryName}
-                                  onChange={(e) => setEditingSubCategoryName(e.target.value)}
-                                  className="bg-slate-50 dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-505 font-bold w-full max-w-xs"
-                                />
-                              ) : (
-                                <span>{sub.name}</span>
-                              )}
-                            </td>
-                            <td className="py-3.5 px-4 font-semibold text-slate-505">{sub.tests.length} mock test(s)</td>
-                            <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
-                              {editingSubCategoryId === sub.id ? (
-                                <>
-                                  <button
-                                    onClick={() => {
-                                      if (editingSubCategoryName.trim()) {
-                                        editSubCategory(cat.id, sub.id, editingSubCategoryName.trim());
-                                        setEditingSubCategoryId(null);
-                                        showToast('Subcategory renamed successfully.');
-                                      }
-                                    }}
-                                    className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-909/30 hover:bg-green-105 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
-                                  >
-                                    Save
-                                  </button>
-                                  <button
-                                    onClick={() => setEditingSubCategoryId(null)}
-                                    className="text-slate-550 dark:text-slate-405 font-bold bg-slate-50 dark:bg-slate-955/20 border border-slate-202 dark:border-slate-808/30 hover:bg-slate-105 dark:hover:bg-slate-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
-                                  >
-                                    Cancel
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button
-                                    disabled={cat.subCategories.indexOf(sub) === 0}
-                                    onClick={() => {
-                                      const idx = cat.subCategories.indexOf(sub);
-                                      if (idx > 0) {
-                                        const newSubs = [...cat.subCategories];
-                                        [newSubs[idx], newSubs[idx - 1]] = [newSubs[idx - 1], newSubs[idx]];
-                                        reorderSubCategories(cat.id, newSubs);
-                                        showToast('Subcategory moved up successfully.');
-                                      }
-                                    }}
-                                    className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-202 dark:border-slate-800 cursor-pointer"
-                                    title="Move Up"
-                                  >
-                                    <ArrowUp className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    disabled={cat.subCategories.indexOf(sub) === cat.subCategories.length - 1}
-                                    onClick={() => {
-                                      const idx = cat.subCategories.indexOf(sub);
-                                      if (idx < cat.subCategories.length - 1) {
-                                        const newSubs = [...cat.subCategories];
-                                        [newSubs[idx], newSubs[idx + 1]] = [newSubs[idx + 1], newSubs[idx]];
-                                        reorderSubCategories(cat.id, newSubs);
-                                        showToast('Subcategory moved down successfully.');
-                                      }
-                                    }}
-                                    className="text-slate-500 hover:text-slate-705 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-55 dark:bg-slate-909 border border-slate-202 dark:border-slate-800 cursor-pointer"
-                                    title="Move Down"
-                                  >
-                                    <ArrowDown className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setEditingSubCategoryId(sub.id);
-                                      setEditingSubCategoryName(sub.name);
-                                    }}
-                                    className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      deleteSubCategory(cat.id, sub.id);
-                                      showToast('Subcategory deleted successfully.');
-                                    }}
-                                    className="text-red-500 hover:text-red-655 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-105 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
-                                  >
-                                    Delete
-                                  </button>
-                                </>
-                              )}
+                      </thead>
+                      <tbody>
+                        {filteredCategories.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="text-center py-10 text-slate-400 dark:text-slate-500 font-semibold">
+                              No exam categories found matching search filters.
                             </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                        ) : (
+                          filteredCategories.map(cat => (
+                            <tr key={cat.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                              
+                              {/* Logo */}
+                              <td className="py-3.5 px-4">
+                                {editingCategoryId === cat.id ? (
+                                  <div className="flex items-center gap-1.5 w-36">
+                                    <input
+                                      type="text"
+                                      value={editingCategoryLogoUrl}
+                                      onChange={(e) => setEditingCategoryLogoUrl(e.target.value)}
+                                      placeholder="e.g. Logo URL"
+                                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-20 flex-1 min-w-0"
+                                    />
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      id={`edit-category-logo-${cat.id}`}
+                                      className="hidden"
+                                      onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        setIsUploadingCategoryLogo(true);
+                                        const url = await uploadFileToTigrisDirect(file);
+                                        if (url) {
+                                          setEditingCategoryLogoUrl(url);
+                                          showToast("Logo uploaded successfully to Tigris!");
+                                        }
+                                        setIsUploadingCategoryLogo(false);
+                                      }}
+                                    />
+                                    <label
+                                      htmlFor={isUploadingCategoryLogo ? undefined : `edit-category-logo-${cat.id}`}
+                                      className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 p-1.5 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center justify-center cursor-pointer shrink-0 ${
+                                        isUploadingCategoryLogo ? "opacity-50 pointer-events-none" : ""
+                                      }`}
+                                      title="Upload Logo to Tigris"
+                                    >
+                                      <Upload className={`h-3.5 w-3.5 ${isUploadingCategoryLogo ? "animate-bounce" : ""}`} />
+                                    </label>
+                                  </div>
+                                ) : cat.logoUrl ? (
+                                  <img
+                                    src={cat.logoUrl}
+                                    alt={cat.name}
+                                    className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800"
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] text-slate-400 font-bold">
+                                    None
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Name */}
+                              <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
+                                {editingCategoryId === cat.id ? (
+                                  <input
+                                    type="text"
+                                    value={editingCategoryName}
+                                    onChange={(e) => setEditingCategoryName(e.target.value)}
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                                  />
+                                ) : (
+                                  <span>{cat.name}</span>
+                                )}
+                              </td>
+
+                              {/* Description */}
+                              <td className="py-3.5 px-4 text-slate-500 max-w-xs truncate">
+                                {editingCategoryId === cat.id ? (
+                                  <input
+                                    type="text"
+                                    value={editingCategoryDescription}
+                                    onChange={(e) => setEditingCategoryDescription(e.target.value)}
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium w-full"
+                                  />
+                                ) : (
+                                  <span>{cat.description || '-'}</span>
+                                )}
+                              </td>
+
+                              {/* Count Text */}
+                              <td className="py-3.5 px-4 font-semibold text-slate-600 dark:text-slate-400">
+                                {editingCategoryId === cat.id ? (
+                                  <input
+                                    type="text"
+                                    value={editingCategoryCountText}
+                                    onChange={(e) => setEditingCategoryCountText(e.target.value)}
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium w-24"
+                                  />
+                                ) : (
+                                  <span>{cat.countText || '-'}</span>
+                                )}
+                              </td>
+
+                              {/* Is Popular */}
+                              <td className="py-3.5 px-4">
+                                {editingCategoryId === cat.id ? (
+                                  <input
+                                    type="checkbox"
+                                    checked={editingCategoryIsPopular}
+                                    onChange={(e) => setEditingCategoryIsPopular(e.target.checked)}
+                                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                  />
+                                ) : cat.isPopular ? (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Popular</span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-400">Regular</span>
+                                )}
+                              </td>
+
+                              <td className="py-3.5 px-4 font-semibold text-slate-500">{cat.subCategories.length} Sub-cat(s)</td>
+                              <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
+                                {editingCategoryId === cat.id ? (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        if (editingCategoryName.trim()) {
+                                          editCategory(
+                                            cat.id,
+                                            editingCategoryName.trim(),
+                                            editingCategoryLogoUrl.trim() || undefined,
+                                            editingCategoryIsPopular,
+                                            editingCategoryDescription.trim(),
+                                            editingCategoryCountText.trim()
+                                          );
+                                          setEditingCategoryId(null);
+                                          showToast('Category updated successfully.');
+                                        }
+                                      }}
+                                      className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-955/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingCategoryId(null)}
+                                      className="text-slate-550 dark:text-slate-405 font-bold bg-slate-50 dark:bg-slate-955/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      disabled={examCatalog.indexOf(cat) === 0}
+                                      onClick={() => {
+                                        const idx = examCatalog.indexOf(cat);
+                                        if (idx > 0) {
+                                          const newCatalog = [...examCatalog];
+                                          [newCatalog[idx], newCatalog[idx - 1]] = [newCatalog[idx - 1], newCatalog[idx]];
+                                          reorderCategories(newCatalog);
+                                          showToast('Category moved up successfully.');
+                                        }
+                                      }}
+                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                      title="Move Up"
+                                    >
+                                      <ArrowUp className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      disabled={examCatalog.indexOf(cat) === examCatalog.length - 1}
+                                      onClick={() => {
+                                        const idx = examCatalog.indexOf(cat);
+                                        if (idx < examCatalog.length - 1) {
+                                          const newCatalog = [...examCatalog];
+                                          [newCatalog[idx], newCatalog[idx + 1]] = [newCatalog[idx + 1], newCatalog[idx]];
+                                          reorderCategories(newCatalog);
+                                          showToast('Category moved down successfully.');
+                                        }
+                                      }}
+                                      className="text-slate-500 hover:text-slate-705 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                      title="Move Down"
+                                    >
+                                      <ArrowDown className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setEditingCategoryId(cat.id);
+                                        setEditingCategoryName(cat.name);
+                                        setEditingCategoryLogoUrl(cat.logoUrl || '');
+                                        setEditingCategoryIsPopular(cat.isPopular || false);
+                                        setEditingCategoryDescription(cat.description || '');
+                                        setEditingCategoryCountText(cat.countText || '');
+                                      }}
+                                      className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        deleteCategory(cat.id);
+                                        showToast('Category deleted successfully.');
+                                      }}
+                                      className="text-red-500 hover:text-red-655 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-105 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                    >
+                                      Delete
+                                    </button>
+                                  </>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-                    {/* TAB 6.5: SUB-SUB-CATEGORIES MANAGEMENT */}
-          {activeTab === 'subsubcategories' && hasTabAccess('subsubcategories') && (
-            <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
-              
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Sub-Sub-Categories</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete subject sub-subcategories nested under sub-categories</p>
+            );
+          })()}
+          {activeTab === 'subcategories' && hasTabAccess('subcategories') && (() => {
+            const filteredSubCategories: { cat: any; sub: any }[] = [];
+            examCatalog
+              .filter((cat: any) => !subCatFilterCategory || cat.id === subCatFilterCategory)
+              .forEach((cat: any) => {
+                cat.subCategories
+                  .filter((sub: any) => !subCatFilterSubCategory || sub.id === subCatFilterSubCategory)
+                  .filter((sub: any) => !subCatFilterSearch.trim() || sub.name.toLowerCase().includes(subCatFilterSearch.toLowerCase()))
+                  .forEach((sub: any) => {
+                    filteredSubCategories.push({ cat, sub });
+                  });
+              });
+
+            return (
+              <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Sub-Categories</h2>
+                    <p className="text-xs text-slate-505 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete exam sub-categories under main categories</p>
+                  </div>
+                  <span className="text-xs font-bold text-slate-505 dark:text-slate-400 bg-slate-105 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 px-3 py-1.5 rounded-lg">
+                    {filteredSubCategories.length} sub-categor{filteredSubCategories.length !== 1 ? 'ies' : 'y'} shown
+                  </span>
                 </div>
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
-                  {examCatalog.reduce((acc, cat) => acc + cat.subCategories.reduce((subAcc, sub) => subAcc + (sub.subSubCategories || []).length, 0), 0)} sub-sub-categor{examCatalog.reduce((acc, cat) => acc + cat.subCategories.reduce((subAcc, sub) => subAcc + (sub.subSubCategories || []).length, 0), 0) !== 1 ? 'ies' : 'y'} active
-                </span>
-              </div>
 
-              {/* Collapsible Add Card */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateSubSubCategoryOpen(!isCreateSubSubCategoryOpen)}
-                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
-                      <FileText className="h-4.5 w-4.5" />
+                {/* Collapsible Add Card */}
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreateSubCategoryOpen(!isCreateSubCategoryOpen)}
+                    className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                        <Layers className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create Sub-Category</p>
+                        <p className="text-[11px] text-slate-400">Click to expand the subcategory creation form</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create Sub-Sub Category</p>
-                      <p className="text-[11px] text-slate-400">Click to expand the sub-subcategory creation form</p>
+                    <div className={`transition-transform duration-200 ${isCreateSubCategoryOpen ? 'rotate-180' : ''}`}>
+                      <ArrowDown className="h-4 w-4 text-slate-505" />
                     </div>
-                  </div>
-                  <div className={`transition-transform duration-200 ${isCreateSubSubCategoryOpen ? 'rotate-180' : ''}`}>
-                    <ArrowDown className="h-4 w-4 text-slate-505" />
-                  </div>
-                </button>
+                  </button>
 
-                {isCreateSubSubCategoryOpen && (
-                  <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-950">
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (!newSubSubCategoryParentCategory || !newSubSubCategoryParentSubCategory || !newSubSubCategoryName.trim()) {
-                          alert('Please select parent category, subcategory and enter a name.');
-                          return;
-                        }
-                        addSubSubCategory(newSubSubCategoryParentCategory, newSubSubCategoryParentSubCategory, newSubSubCategoryName.trim(), newSubSubCategoryNameHi.trim() || undefined);
-                        setNewSubSubCategoryName('');
-                        setNewSubSubCategoryNameHi('');
-                        setIsCreateSubSubCategoryOpen(false);
-                        showToast('Sub-subcategory created successfully!');
-                      }}
-                      className="space-y-4"
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
-                            Parent Category
-                          </label>
-                          <select
-                            required
-                            value={newSubSubCategoryParentCategory}
-                            onChange={(e) => {
-                              setNewSubSubCategoryParentCategory(e.target.value);
-                              setNewSubSubCategoryParentSubCategory('');
-                            }}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                          >
-                            <option value="">-- Select Parent Category --</option>
-                            {examCatalog.map(cat => (
-                              <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                          </select>
+                  {isCreateSubCategoryOpen && (
+                    <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-955">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (!newSubCategoryParent || !newSubCategoryName.trim()) {
+                            alert('Please select a parent category and enter a name.');
+                            return;
+                          }
+                          addSubCategory(newSubCategoryParent, newSubCategoryName.trim(), newSubCategoryNameHi.trim() || undefined);
+                          setNewSubCategoryName('');
+                          setNewSubCategoryNameHi('');
+                          setIsCreateSubCategoryOpen(false);
+                          showToast('Subcategory created successfully!');
+                        }}
+                        className="space-y-4"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                              Parent Category
+                            </label>
+                            <select
+                              required
+                              value={newSubCategoryParent}
+                              onChange={(e) => setNewSubCategoryParent(e.target.value)}
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            >
+                              <option value="">-- Select Parent Category --</option>
+                              {examCatalog.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                              Sub Category Name (English)
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={newSubCategoryName}
+                              onChange={(e) => setNewSubCategoryName(e.target.value)}
+                              placeholder="e.g. SSC CGL, IBPS RRB PO"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                              Sub Category Name (Hindi)
+                            </label>
+                            <input
+                              type="text"
+                              value={newSubCategoryNameHi}
+                              onChange={(e) => setNewSubCategoryNameHi(e.target.value)}
+                              placeholder="e.g. एसएससी सीजीएल, आईबीपीएस आरआरबी पीओ"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
                         </div>
                         
-                        <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
-                            Parent Sub Category
-                          </label>
-                          <select
-                            required
-                            value={newSubSubCategoryParentSubCategory}
-                            onChange={(e) => setNewSubSubCategoryParentSubCategory(e.target.value)}
-                            disabled={!newSubSubCategoryParentCategory}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
+                        <div className="flex justify-end">
+                          <button
+                            type="submit"
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
                           >
-                            <option value="">-- Select Parent Sub Category --</option>
-                            {examCatalog.find(c => c.id === newSubSubCategoryParentCategory)?.subCategories.map(sub => (
-                              <option key={sub.id} value={sub.id}>{sub.name}</option>
-                            )) || null}
-                          </select>
+                            Create Sub Category
+                          </button>
                         </div>
+                      </form>
+                    </div>
+                  )}
+                </div>
 
-                        <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
-                            Sub-Sub Category Name (English)
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={newSubSubCategoryName}
-                            onChange={(e) => setNewSubSubCategoryName(e.target.value)}
-                            placeholder="e.g. Full Test, PYP"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
-                            Sub-Sub Category Name (Hindi)
-                          </label>
-                          <input
-                            type="text"
-                            value={newSubSubCategoryNameHi}
-                            onChange={(e) => setNewSubSubCategoryNameHi(e.target.value)}
-                            placeholder="e.g. फुल मॉक टेस्ट, अध्याय-वार टेस्ट"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-end">
-                        <button
-                          type="submit"
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
-                        >
-                          Create Sub-Sub Category
-                        </button>
-                      </div>
-                    </form>
+                {/* Filter Bar */}
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm font-sans">
+                  <div className="flex flex-wrap gap-3 items-center">
+                    <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                      <Search className="h-3.5 w-3.5 text-slate-400" /> Filter
+                    </div>
+                    <div className="relative flex-1 min-w-[180px]">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={subCatFilterSearch}
+                        onChange={(e) => setSubCatFilterSearch(e.target.value)}
+                        placeholder="Search subcategory name..."
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                      />
+                    </div>
+                    <select
+                      value={subCatFilterCategory}
+                      onChange={(e) => { setSubCatFilterCategory(e.target.value); setSubCatFilterSubCategory(''); }}
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                    >
+                      <option value="">All Exam Categories</option>
+                      {examCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                    </select>
+                    <select
+                      value={subCatFilterSubCategory}
+                      onChange={(e) => setSubCatFilterSubCategory(e.target.value)}
+                      disabled={!subCatFilterCategory}
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
+                    >
+                      <option value="">All Sub Categories</option>
+                      {examCatalog.find((c: any) => c.id === subCatFilterCategory)?.subCategories.map((sub: any) => <option key={sub.id} value={sub.id}>{sub.name}</option>) || null}
+                    </select>
+                    {(subCatFilterSearch || subCatFilterCategory || subCatFilterSubCategory) && (
+                      <button type="button" onClick={() => { setSubCatFilterSearch(''); setSubCatFilterCategory(''); setSubCatFilterSubCategory(''); }} className="text-[11px] text-slate-500 hover:text-red-500 font-bold cursor-pointer flex items-center gap-1 transition-colors">
+                        <X className="h-3.5 w-3.5" /> Clear
+                      </button>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Sub-subcategories Table Card ΓÇö Full Width */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
-                  Active Sub-Sub Categories
-                </h3>
+                {/* Subcategories Table Card — Full Width */}
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-sm p-6">
+                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
+                    Active Sub Categories
+                  </h3>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100 dark:border-slate-808 text-slate-404 uppercase text-[9px] tracking-wider font-extrabold">
+                          <th className="py-3 px-4">Parent Category</th>
+                          <th className="py-3 px-4">Sub Category Name</th>
+                          <th className="py-3 px-4">Mock Tests Count</th>
+                          <th className="py-3 px-4 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredSubCategories.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="text-center py-10 text-slate-400 dark:text-slate-500 font-semibold">
+                              No sub categories found matching search filters.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredSubCategories.map(({ cat, sub }) => (
+                            <tr key={sub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                              <td className="py-3.5 px-4 font-bold text-slate-500">{cat.name}</td>
+                              <td className="py-3.5 px-4 font-bold text-slate-909 dark:text-slate-202">
+                                {editingSubCategoryId === sub.id ? (
+                                  <input
+                                    type="text"
+                                    value={editingSubCategoryName}
+                                    onChange={(e) => setEditingSubCategoryName(e.target.value)}
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-505 font-bold w-full max-w-xs"
+                                  />
+                                ) : (
+                                  <span>{sub.name}</span>
+                                )}
+                              </td>
+                              <td className="py-3.5 px-4 font-semibold text-slate-505">{sub.tests.length} mock test(s)</td>
+                              <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
+                                {editingSubCategoryId === sub.id ? (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        if (editingSubCategoryName.trim()) {
+                                          editSubCategory(cat.id, sub.id, editingSubCategoryName.trim());
+                                          setEditingSubCategoryId(null);
+                                          showToast('Subcategory renamed successfully.');
+                                        }
+                                      }}
+                                      className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-909/30 hover:bg-green-105 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingSubCategoryId(null)}
+                                      className="text-slate-550 dark:text-slate-405 font-bold bg-slate-50 dark:bg-slate-955/20 border border-slate-202 dark:border-slate-808/30 hover:bg-slate-105 dark:hover:bg-slate-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      disabled={cat.subCategories.indexOf(sub) === 0}
+                                      onClick={() => {
+                                        const idx = cat.subCategories.indexOf(sub);
+                                        if (idx > 0) {
+                                          const newSubs = [...cat.subCategories];
+                                          [newSubs[idx], newSubs[idx - 1]] = [newSubs[idx - 1], newSubs[idx]];
+                                          reorderSubCategories(cat.id, newSubs);
+                                          showToast('Subcategory moved up successfully.');
+                                        }
+                                      }}
+                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-202 dark:border-slate-800 cursor-pointer"
+                                      title="Move Up"
+                                    >
+                                      <ArrowUp className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      disabled={cat.subCategories.indexOf(sub) === cat.subCategories.length - 1}
+                                      onClick={() => {
+                                        const idx = cat.subCategories.indexOf(sub);
+                                        if (idx < cat.subCategories.length - 1) {
+                                          const newSubs = [...cat.subCategories];
+                                          [newSubs[idx], newSubs[idx + 1]] = [newSubs[idx + 1], newSubs[idx]];
+                                          reorderSubCategories(cat.id, newSubs);
+                                          showToast('Subcategory moved down successfully.');
+                                        }
+                                      }}
+                                      className="text-slate-500 hover:text-slate-705 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-55 dark:bg-slate-909 border border-slate-202 dark:border-slate-800 cursor-pointer"
+                                      title="Move Down"
+                                    >
+                                      <ArrowDown className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setEditingSubCategoryId(sub.id);
+                                        setEditingSubCategoryName(sub.name);
+                                      }}
+                                      className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        deleteSubCategory(cat.id, sub.id);
+                                        showToast('Subcategory deleted successfully.');
+                                      }}
+                                      className="text-red-500 hover:text-red-655 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-105 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                    >
+                                      Delete
+                                    </button>
+                                  </>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* TAB 6.5: SUB-SUB-CATEGORIES MANAGEMENT */}
+          {activeTab === 'subsubcategories' && hasTabAccess('subsubcategories') && (() => {
+            const filteredSubSubCategories: { cat: any; sub: any; subsub: any }[] = [];
+            examCatalog
+              .filter((cat: any) => !subSubCatFilterCategory || cat.id === subSubCatFilterCategory)
+              .forEach((cat: any) => {
+                cat.subCategories
+                  .filter((sub: any) => !subSubCatFilterSubCategory || sub.id === subSubCatFilterSubCategory)
+                  .forEach((sub: any) => {
+                    (sub.subSubCategories || [])
+                      .filter((subsub: any) => !subSubCatFilterSubSubCategory || subsub.id === subSubCatFilterSubSubCategory)
+                      .filter((subsub: any) => !subSubCatFilterSearch.trim() || subsub.name.toLowerCase().includes(subSubCatFilterSearch.toLowerCase()))
+                      .forEach((subsub: any) => {
+                        filteredSubSubCategories.push({ cat, sub, subsub });
+                      });
+                  });
+              });
+
+            return (
+              <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
                 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="border-b border-slate-100 dark:border-slate-808 text-slate-404 uppercase text-[9px] tracking-wider font-extrabold">
-                        <th className="py-3 px-4">Parent Category</th>
-                        <th className="py-3 px-4">Sub Category</th>
-                        <th className="py-3 px-4">Sub-Sub Category Name</th>
-                        <th className="py-3 px-4">Mock Tests Count</th>
-                        <th className="py-3 px-4 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {examCatalog.flatMap(cat => 
-                        cat.subCategories.flatMap(sub => 
-                          (sub.subSubCategories || []).map(subsub => (
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Sub-Sub-Categories</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete subject sub-subcategories nested under sub-categories</p>
+                  </div>
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                    {filteredSubSubCategories.length} sub-sub-categor{filteredSubSubCategories.length !== 1 ? 'ies' : 'y'} shown
+                  </span>
+                </div>
+
+                {/* Collapsible Add Card */}
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreateSubSubCategoryOpen(!isCreateSubSubCategoryOpen)}
+                    className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                        <FileText className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create Sub-Sub Category</p>
+                        <p className="text-[11px] text-slate-400">Click to expand the sub-subcategory creation form</p>
+                      </div>
+                    </div>
+                    <div className={`transition-transform duration-200 ${isCreateSubSubCategoryOpen ? 'rotate-180' : ''}`}>
+                      <ArrowDown className="h-4 w-4 text-slate-505" />
+                    </div>
+                  </button>
+
+                  {isCreateSubSubCategoryOpen && (
+                    <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-950">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (!newSubSubCategoryParentCategory || !newSubSubCategoryParentSubCategory || !newSubSubCategoryName.trim()) {
+                            alert('Please select parent category, subcategory and enter a name.');
+                            return;
+                          }
+                          addSubSubCategory(newSubSubCategoryParentCategory, newSubSubCategoryParentSubCategory, newSubSubCategoryName.trim(), newSubSubCategoryNameHi.trim() || undefined);
+                          setNewSubSubCategoryName('');
+                          setNewSubSubCategoryNameHi('');
+                          setIsCreateSubSubCategoryOpen(false);
+                          showToast('Sub-subcategory created successfully!');
+                        }}
+                        className="space-y-4"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                              Parent Category
+                            </label>
+                            <select
+                              required
+                              value={newSubSubCategoryParentCategory}
+                              onChange={(e) => {
+                                setNewSubSubCategoryParentCategory(e.target.value);
+                                setNewSubSubCategoryParentSubCategory('');
+                              }}
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            >
+                              <option value="">-- Select Parent Category --</option>
+                              {examCatalog.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                              Parent Sub Category
+                            </label>
+                            <select
+                              required
+                              value={newSubSubCategoryParentSubCategory}
+                              onChange={(e) => setNewSubSubCategoryParentSubCategory(e.target.value)}
+                              disabled={!newSubSubCategoryParentCategory}
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
+                            >
+                              <option value="">-- Select Parent Sub Category --</option>
+                              {examCatalog.find(c => c.id === newSubSubCategoryParentCategory)?.subCategories.map(sub => (
+                                <option key={sub.id} value={sub.id}>{sub.name}</option>
+                              )) || null}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                              Sub-Sub Category Name (English)
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={newSubSubCategoryName}
+                              onChange={(e) => setNewSubSubCategoryName(e.target.value)}
+                              placeholder="e.g. Full Test, PYP"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                              Sub-Sub Category Name (Hindi)
+                            </label>
+                            <input
+                              type="text"
+                              value={newSubSubCategoryNameHi}
+                              onChange={(e) => setNewSubSubCategoryNameHi(e.target.value)}
+                              placeholder="e.g. फुल मॉक टेस्ट, अध्याय-वार टेस्ट"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-end">
+                          <button
+                            type="submit"
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
+                          >
+                            Create Sub-Sub Category
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+                </div>
+
+                {/* Filter Bar */}
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm font-sans">
+                  <div className="flex flex-wrap gap-3 items-center">
+                    <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                      <Search className="h-3.5 w-3.5 text-slate-400" /> Filter
+                    </div>
+                    <div className="relative flex-1 min-w-[180px]">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={subSubCatFilterSearch}
+                        onChange={(e) => setSubSubCatFilterSearch(e.target.value)}
+                        placeholder="Search sub-subcategory name..."
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                      />
+                    </div>
+                    <select
+                      value={subSubCatFilterCategory}
+                      onChange={(e) => { setSubSubCatFilterCategory(e.target.value); setSubSubCatFilterSubCategory(''); setSubSubCatFilterSubSubCategory(''); }}
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                    >
+                      <option value="">All Exam Categories</option>
+                      {examCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                    </select>
+                    <select
+                      value={subSubCatFilterSubCategory}
+                      onChange={(e) => { setSubSubCatFilterSubCategory(e.target.value); setSubSubCatFilterSubSubCategory(''); }}
+                      disabled={!subSubCatFilterCategory}
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
+                    >
+                      <option value="">All Sub Categories</option>
+                      {examCatalog.find((c: any) => c.id === subSubCatFilterCategory)?.subCategories.map((sub: any) => <option key={sub.id} value={sub.id}>{sub.name}</option>) || null}
+                    </select>
+                    <select
+                      value={subSubCatFilterSubSubCategory}
+                      onChange={(e) => setSubSubCatFilterSubSubCategory(e.target.value)}
+                      disabled={!subSubCatFilterSubCategory}
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
+                    >
+                      <option value="">All Sub-Sub Categories</option>
+                      {examCatalog.find((c: any) => c.id === subSubCatFilterCategory)?.subCategories.find((s: any) => s.id === subSubCatFilterSubCategory)?.subSubCategories?.map((subsub: any) => <option key={subsub.id} value={subsub.id}>{subsub.name}</option>) || null}
+                    </select>
+                    {(subSubCatFilterSearch || subSubCatFilterCategory || subSubCatFilterSubCategory || subSubCatFilterSubSubCategory) && (
+                      <button type="button" onClick={() => { setSubSubCatFilterSearch(''); setSubSubCatFilterCategory(''); setSubSubCatFilterSubCategory(''); setSubSubCatFilterSubSubCategory(''); }} className="text-[11px] text-slate-500 hover:text-red-500 font-bold cursor-pointer flex items-center gap-1 transition-colors">
+                        <X className="h-3.5 w-3.5" /> Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sub-subcategories Table Card — Full Width */}
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
+                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
+                    Active Sub-Sub Categories
+                  </h3>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-100 dark:border-slate-808 text-slate-404 uppercase text-[9px] tracking-wider font-extrabold">
+                          <th className="py-3 px-4">Parent Category</th>
+                          <th className="py-3 px-4">Sub Category</th>
+                          <th className="py-3 px-4">Sub-Sub Category Name</th>
+                          <th className="py-3 px-4">Mock Tests Count</th>
+                          <th className="py-3 px-4 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredSubSubCategories.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="text-center py-10 text-slate-400 dark:text-slate-500 font-semibold">
+                              No sub-sub categories found matching search filters.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredSubSubCategories.map(({ cat, sub, subsub }) => (
                             <tr key={subsub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                               <td className="py-3.5 px-4 font-bold text-slate-500">{cat.name}</td>
                               <td className="py-3.5 px-4 font-bold text-slate-500">{sub.name}</td>
@@ -4038,15 +4264,16 @@ export default function AdminAnalytics() {
                               </td>
                             </tr>
                           ))
-                        )
-                      )}
-                    </tbody>
-                  </table>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-                    {/* TAB 7: MOCK TESTS MANAGEMENT */}
+            );
+          })()}
+
+          {/* TAB 7: MOCK TESTS MANAGEMENT */}
           {activeTab === 'mocks' && hasTabAccess('mocks') && (
             <MockTestManager
               examCatalog={examCatalog}
@@ -4734,7 +4961,13 @@ export default function AdminAnalytics() {
                               <span className="bg-slate-105 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-[10px]">{ann.type}</span>
                             </td>
                             <td className="py-3 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400">{ann.date}</td>
-                            <td className="py-3 px-4 text-right">
+                            <td className="py-3 px-4 text-right flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleOpenEditAnnouncement(ann)}
+                                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                              >
+                                Edit
+                              </button>
                               <button
                                 onClick={() => {
                                   deleteNotice(ann.id);
@@ -4757,6 +4990,179 @@ export default function AdminAnalytics() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* EDIT ANNOUNCEMENT MODAL OVERLAY */}
+          {editingAnnouncement && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto font-sans">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative space-y-5 animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                      <Megaphone className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">Edit Announcement</h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Update banner image, text content, publish date, or link</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setEditingAnnouncement(null)}
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!editAnnTitle.trim()) return;
+                    editNotice(
+                      editingAnnouncement.id,
+                      editAnnTitle.trim(),
+                      editAnnType.trim() || 'PROMOTION',
+                      editAnnCategory,
+                      editAnnDate,
+                      editAnnUrl.trim() || undefined,
+                      undefined,
+                      editAnnImageUrl.trim() || undefined,
+                      editAnnTitleHi.trim() || undefined
+                    );
+                    setEditingAnnouncement(null);
+                    showToast('Announcement updated successfully!');
+                  }}
+                  className="space-y-4 text-xs"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                        Announcement Type / Tag
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editAnnType}
+                        onChange={(e) => setEditAnnType(e.target.value)}
+                        placeholder="PROMOTION, ALERT, NEWS"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                        Publish Date
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={editAnnDate}
+                        onChange={(e) => setEditAnnDate(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                        Details Link / URL (Optional)
+                      </label>
+                      <input
+                        type="url"
+                        value={editAnnUrl}
+                        onChange={(e) => setEditAnnUrl(e.target.value)}
+                        placeholder="https://example.com/details"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                      Image URL / Banner (Optional)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={editAnnImageUrl}
+                        onChange={(e) => setEditAnnImageUrl(e.target.value)}
+                        placeholder="https://example.com/banner.png or upload image"
+                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="edit-announcement-banner-upload"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setIsUploadingEditAnnBanner(true);
+                          const url = await uploadFileToTigrisDirect(file);
+                          if (url) {
+                            setEditAnnImageUrl(url);
+                            showToast("Banner uploaded successfully to Tigris!");
+                          }
+                          setIsUploadingEditAnnBanner(false);
+                        }}
+                      />
+                      <label
+                        htmlFor={isUploadingEditAnnBanner ? undefined : "edit-announcement-banner-upload"}
+                        className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
+                          isUploadingEditAnnBanner ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
+                        }`}
+                      >
+                        <Upload className={`h-3.5 w-3.5 ${isUploadingEditAnnBanner ? "animate-bounce" : ""}`} />
+                        {isUploadingEditAnnBanner ? "Uploading..." : "Upload Banner"}
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                        Announcement Content (English)
+                      </label>
+                      <textarea
+                        required
+                        value={editAnnTitle}
+                        onChange={(e) => setEditAnnTitle(e.target.value)}
+                        placeholder="Type announcement description content in English..."
+                        rows={4}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                        Announcement Content (Hindi)
+                      </label>
+                      <textarea
+                        value={editAnnTitleHi}
+                        onChange={(e) => setEditAnnTitleHi(e.target.value)}
+                        placeholder="घोषणा हिन्दी में दर्ज करें (वैकल्पिक)..."
+                        rows={4}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setEditingAnnouncement(null)}
+                      className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-xs"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-md active:scale-95 cursor-pointer text-xs"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}

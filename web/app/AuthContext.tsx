@@ -182,7 +182,8 @@ interface AuthContextType {
   ) => void;
   clearOngoingSession: (testId: string) => void;
   noticesList: Notice[];
-  addNotice: (title: string, type: string, category: 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial', date?: string, url?: string, lastDateInput?: string, imageUrl?: string, titleHi?: string) => void;
+  addNotice: (title: string, type: string, category: Notice['category'], date?: string, url?: string, lastDateInput?: string, imageUrl?: string, titleHi?: string) => void;
+  editNotice: (id: string, title: string, type: string, category: Notice['category'], date?: string, url?: string, lastDateInput?: string, imageUrl?: string, titleHi?: string) => void;
   deleteNotice: (id: string) => void;
   language: 'en' | 'hi';
   setLanguage: (lang: 'en' | 'hi') => void;
@@ -991,7 +992,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     document.cookie = "tb_theme=" + nextTheme + ";path=/;max-age=31536000";
   };
 
-  const addNotice = (title: string, type: string, category: 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial', dateInput?: string, url?: string, lastDateInput?: string, imageUrl?: string, titleHi?: string) => {
+  const addNotice = (title: string, type: string, category: Notice['category'], dateInput?: string, url?: string, lastDateInput?: string, imageUrl?: string, titleHi?: string) => {
     let dateStr = '';
     const publishDateRaw = dateInput || new Date().toISOString().split('T')[0];
 
@@ -1067,6 +1068,86 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         data: { id }
       })
     }).catch(err => console.error("Delete notice error:", err));
+  };
+
+  const editNotice = (id: string, title: string, type: string, category: Notice['category'], dateInput?: string, url?: string, lastDateInput?: string, imageUrl?: string, titleHi?: string) => {
+    let dateStr = '';
+    const publishDateRaw = dateInput || new Date().toISOString().split('T')[0];
+
+    if (dateInput) {
+      const d = new Date(dateInput);
+      const day = d.getDate();
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthStr = months[d.getMonth()];
+      const year = d.getFullYear();
+      dateStr = isNaN(d.getTime()) ? dateInput : `${day} ${monthStr} ${year}`;
+    } else {
+      const d = new Date();
+      const day = d.getDate();
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthStr = months[d.getMonth()];
+      const year = d.getFullYear();
+      dateStr = `${day} ${monthStr} ${year}`;
+    }
+
+    let lastDateStr = '';
+    if (lastDateInput && lastDateInput.trim() !== '') {
+      if (category === 'testimonial') {
+        lastDateStr = lastDateInput.trim();
+      } else {
+        const d = new Date(lastDateInput);
+        if (!isNaN(d.getTime())) {
+          const day = d.getDate();
+          const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+          const monthStr = months[d.getMonth()];
+          const year = d.getFullYear();
+          lastDateStr = `${day} ${monthStr} ${year}`;
+        } else {
+          lastDateStr = lastDateInput.trim();
+        }
+      }
+    }
+
+    const updatedList = noticesList.map(n => {
+      if (n.id === id) {
+        return {
+          ...n,
+          title,
+          titleHi: titleHi?.trim() || undefined,
+          type: category === 'testimonial' ? type : type.toUpperCase(),
+          category,
+          date: dateStr,
+          publishDate: publishDateRaw,
+          url: url?.trim() || undefined,
+          lastDate: lastDateStr || undefined,
+          imageUrl: imageUrl?.trim() || undefined,
+        };
+      }
+      return n;
+    });
+
+    setNoticesList(sortNotices(updatedList));
+    try { localStorage.removeItem(CACHE_KEY_NOTICES); } catch {}
+
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'edit-notice',
+        data: {
+          id,
+          title,
+          titleHi: titleHi?.trim() || undefined,
+          type: category === 'testimonial' ? type : type.toUpperCase(),
+          category,
+          date: dateStr,
+          publishDate: publishDateRaw,
+          url: url?.trim() || undefined,
+          lastDate: lastDateStr || undefined,
+          imageUrl: imageUrl?.trim() || undefined,
+        }
+      })
+    }).catch(err => console.error("Edit notice error:", err));
   };
 
   const addCategory = (name: string, logoUrl?: string, isPopular?: boolean, description?: string, countText?: string, nameHi?: string) => {
@@ -2115,6 +2196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         clearOngoingSession,
         noticesList,
         addNotice,
+        editNotice,
         deleteNotice,
         language,
         setLanguage,

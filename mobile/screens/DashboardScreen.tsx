@@ -16,7 +16,8 @@ import {
   Share,
   Modal,
   ActivityIndicator,
-  PanResponder
+  PanResponder,
+  RefreshControl
 } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -77,6 +78,7 @@ interface DashboardScreenProps {
   onOpenAttemptAnalysis: (attempt: any) => void;
   onOpenExam: (testId: string) => void;
   onRefreshUser: (userId: string) => Promise<void>;
+  onRefreshCatalog?: () => Promise<void>;
   isDark?: boolean;
   onToggleTheme?: (dark: boolean) => void;
   onOpenSupportChat: () => void;
@@ -418,10 +420,27 @@ export default function DashboardScreen({
   language,
   onChangeLanguage,
   unreadSupportCount = 0,
+  onRefreshCatalog,
 }: DashboardScreenProps) {
 
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      if (onRefreshUser && currentUser?.id) {
+        await onRefreshUser(currentUser.id);
+      }
+      if (onRefreshCatalog) {
+        await onRefreshCatalog();
+      }
+    } catch (err) {
+      console.warn('Pull-to-refresh error:', err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [testCatalogMode, setTestCatalogMode] = useState<'mock_tests' | 'practice_series'>('mock_tests');
@@ -806,12 +825,6 @@ export default function DashboardScreen({
     }
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await onRefreshUser(currentUser.id);
-    setRefreshing(false);
-  };
-
   const handleResetAttempt = async (sessionId: string) => {
     Alert.alert(
       'Reset Attempt?',
@@ -846,7 +859,18 @@ export default function DashboardScreen({
     ).slice(0, 5);
 
     return (
-      <ScrollView contentContainerStyle={styles.tabContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.tabContent} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#2563EB']}
+            tintColor={isDark ? '#60A5FA' : '#2563EB'}
+          />
+        }
+      >
         {/* Section 1: Swipable Announcements Slider */}
         <View style={{ marginBottom: 12 }}>
           <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }]}>📢 Official Announcements</Text>
@@ -884,7 +908,6 @@ export default function DashboardScreen({
                       style={[
                         styles.carouselSlide, 
                         { width: Dimensions.get('window').width - 32 },
-                        ann.imageUrl && ann.imageUrl.trim() ? { height: 180, minHeight: 180, padding: 0, overflow: 'hidden' } : {},
                         isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }
                       ]}
                     >
@@ -892,37 +915,37 @@ export default function DashboardScreen({
                         <TouchableOpacity
                           activeOpacity={ann.url ? 0.9 : 1}
                           onPress={() => ann.url && Linking.openURL(ann.url)}
-                          style={{ width: Dimensions.get('window').width - 32, height: 180, justifyContent: 'center', alignItems: 'center' }}
+                          style={{ width: '100%', height: 140, overflow: 'hidden', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
                         >
                           <Image
                             source={{ uri: ann.imageUrl.trim().replace(/^http:\/\//i, 'https://') }}
-                            style={{ width: Dimensions.get('window').width - 34, height: 178 }}
-                            resizeMode="contain"
+                            style={{ width: '100%', height: 140 }}
+                            resizeMode="cover"
                           />
                         </TouchableOpacity>
-                      ) : (
-                        <View style={styles.announcementCardContent}>
-                          <View style={styles.announcementCardHeader}>
-                            <Text style={[styles.announcementTypeBadge, isDark && { backgroundColor: ThemeColors.dark.bg, color: '#60A5FA', borderColor: '#334155' }]}>{ann.type || 'NEWS'}</Text>
-                            <Text style={styles.announcementDateText}>{ann.date}</Text>
-                          </View>
-                          <Text style={[styles.announcementTitleText, isDark && { color: ThemeColors.dark.text }]}>{language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}</Text>
-                          {ann.lastDate && (
-                            <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#EF4444', marginTop: 4, marginBottom: 4 }}>
-                              {language === 'en' ? 'Last Date: ' : 'अंतिम तिथि: '}{ann.lastDate}
-                            </Text>
-                          )}
-                          {ann.url && (
-                            <TouchableOpacity
-                              style={styles.announcementLinkBtn}
-                              onPress={() => Linking.openURL(ann.url)}
-                            >
-                              <Text style={[styles.announcementLinkText, isDark && { color: '#60A5FA' }]}>View Details</Text>
-                              <ExternalLink size={12} color={isDark ? '#60A5FA' : '#2563EB'} />
-                            </TouchableOpacity>
-                          )}
+                      ) : null}
+
+                      <View style={[styles.announcementCardContent, { padding: 14 }]}>
+                        <View style={styles.announcementCardHeader}>
+                          <Text style={[styles.announcementTypeBadge, isDark && { backgroundColor: ThemeColors.dark.bg, color: '#60A5FA', borderColor: '#334155' }]}>{ann.type || 'NEWS'}</Text>
+                          <Text style={styles.announcementDateText}>{ann.date}</Text>
                         </View>
-                      )}
+                        <Text style={[styles.announcementTitleText, isDark && { color: ThemeColors.dark.text }]}>{language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}</Text>
+                        {ann.lastDate && (
+                          <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#EF4444', marginTop: 4, marginBottom: 4 }}>
+                            {language === 'en' ? 'Last Date: ' : 'अंतिम तिथि: '}{ann.lastDate}
+                          </Text>
+                        )}
+                        {ann.url && (
+                          <TouchableOpacity
+                            style={styles.announcementLinkBtn}
+                            onPress={() => Linking.openURL(ann.url)}
+                          >
+                            <Text style={[styles.announcementLinkText, isDark && { color: '#60A5FA' }]}>View Details</Text>
+                            <ExternalLink size={12} color={isDark ? '#60A5FA' : '#2563EB'} />
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     </View>
                   ))}
                 </ScrollView>
@@ -4341,9 +4364,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    padding: 16,
-    minHeight: 180,
-    justifyContent: 'center',
+    overflow: 'hidden',
   },
   storyDotRow: {
     flexDirection: 'row',

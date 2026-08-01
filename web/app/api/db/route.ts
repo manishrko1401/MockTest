@@ -254,6 +254,8 @@ export async function POST(request: Request) {
         return await handleResetAttempt(data);
       case 'add-notice':
         return await handleAddNotice(data);
+      case 'edit-notice':
+        return await handleEditNotice(data);
       case 'delete-notice':
         return await handleDeleteNotice(data);
       case 'add-category':
@@ -618,8 +620,8 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
     });
   }
 
-  // Delta sync — only fetch items changed since lastSyncedAt
-  const [updatedCategories, updatedExams, updatedSeries, updatedTests, newNotices] = await Promise.all([
+  // Delta sync — fetch items changed since lastSyncedAt
+  const [updatedCategories, updatedExams, updatedSeries, updatedTests, allNotices] = await Promise.all([
     prisma.category.findMany({
       // Always return all categories so logoUrl/name changes propagate to mobile on every sync
       orderBy: { orderIndex: 'asc' },
@@ -657,8 +659,8 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
       },
     }),
     prisma.notice.findMany({
-      where: { createdAt: { gt: since } },
       orderBy: { createdAt: 'desc' },
+      take: 100,
     }),
   ]);
 
@@ -667,7 +669,7 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
     updatedExams.length > 0 ||
     updatedSeries.length > 0 ||
     updatedTests.length > 0 ||
-    newNotices.length > 0;
+    allNotices.length > 0;
 
   // Map updated tests to mobile-friendly format
   const mappedNewTests = updatedTests.map((t: any) => ({
@@ -691,7 +693,7 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
     negativeMarks: t.negativeMarks ?? 0.5,
   }));
 
-  const mappedNewNotices = newNotices.map((n: any) => ({
+  const noticesList = allNotices.map((n: any) => ({
     id: n.id,
     title: n.title,
     titleHi: n.titleHi || undefined,
@@ -725,7 +727,8 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
     newExams: updatedExams.map((e: any) => ({ id: e.id, name: e.name, categoryId: e.categoryId, orderIndex: e.orderIndex })),
     newSeries: updatedSeries.map((s: any) => ({ id: s.id, title: s.title, examId: s.examId, orderIndex: s.orderIndex })),
     newTests: mappedNewTests,
-    newNotices: mappedNewNotices,
+    newNotices: noticesList,
+    noticesList,
     updatedTestIds,   // Mobile should invalidate question cache for these testIds
     deletedTestIds: [], // Future: track soft-deleted tests
     syncedAt,
@@ -1500,6 +1503,31 @@ async function handleAddNotice(data: any) {
       url: url || null,
       lastDate: lastDate || null,
       imageUrl: imageUrl || null,
+    },
+  });
+
+  return NextResponse.json({ success: true });
+}
+
+async function handleEditNotice(data: any) {
+  const { id, title, titleHi, type, category, date, publishDate, url, lastDate, imageUrl } = data || {};
+
+  if (!id) {
+    return NextResponse.json({ success: false, error: 'Notice ID is required' }, { status: 400 });
+  }
+
+  await prisma.notice.update({
+    where: { id },
+    data: {
+      ...(title !== undefined ? { title } : {}),
+      ...(titleHi !== undefined ? { titleHi: titleHi || null } : {}),
+      ...(type !== undefined ? { type } : {}),
+      ...(category !== undefined ? { category } : {}),
+      ...(date !== undefined ? { date } : {}),
+      ...(publishDate !== undefined ? { publishDate } : {}),
+      ...(url !== undefined ? { url: url || null } : {}),
+      ...(lastDate !== undefined ? { lastDate: lastDate || null } : {}),
+      ...(imageUrl !== undefined ? { imageUrl: imageUrl || null } : {}),
     },
   });
 

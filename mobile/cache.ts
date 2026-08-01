@@ -382,13 +382,15 @@ export function mergeCatalogDelta(
     }
   }
 
-  // 5. Prepend new notices
-  const mergedNotices = [
-    ...delta.newNotices,
-    ...existing.noticesList.filter(
-      n => !delta.newNotices.find((nn: any) => nn.id === n.id)
-    ),
-  ];
+  // 5. Update notices list from delta sync
+  const mergedNotices = (delta as any).noticesList && Array.isArray((delta as any).noticesList)
+    ? (delta as any).noticesList
+    : [
+        ...(delta.newNotices || []),
+        ...(existing.noticesList || []).filter(
+          n => !(delta.newNotices || []).find((nn: any) => nn.id === n.id)
+        ),
+      ];
 
   return {
     examCatalog: catalog,
