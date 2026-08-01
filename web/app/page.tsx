@@ -1347,17 +1347,35 @@ const formatSubCategoryName = (name: string) => {
         {/* Right Side: Wider Full-Height Banner Announcement Panel */}
         <div className="lg:col-span-8 border border-blue-200/80 dark:border-blue-900/50 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[420px] md:min-h-[460px] bg-slate-950 text-white shadow-xl hover:shadow-2xl transition-all duration-300 group">
           {activeAnnouncements.length > 1 && (
-            <div className="absolute top-3.5 right-3.5 z-30 flex gap-1.5 items-center bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-md">
-              {activeAnnouncements.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setAnnouncementIndex(idx)}
-                  className={`h-2 rounded-full transition-all cursor-pointer ${
-                    announcementIndex === idx ? 'bg-blue-400 w-5' : 'bg-white/40 hover:bg-white/70 w-2'
-                  }`}
-                />
-              ))}
-            </div>
+            <>
+              <div className="absolute top-3.5 right-3.5 z-30 flex gap-1.5 items-center bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-md">
+                {activeAnnouncements.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setAnnouncementIndex(idx)}
+                    className={`h-2 rounded-full transition-all cursor-pointer ${
+                      announcementIndex === idx ? 'bg-blue-400 w-5' : 'bg-white/40 hover:bg-white/70 w-2'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Small Left & Right Navigation Arrows */}
+              <button
+                onClick={() => setAnnouncementIndex((prev) => (prev - 1 + activeAnnouncements.length) % activeAnnouncements.length)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-30 p-2 bg-black/50 hover:bg-black/80 backdrop-blur-md rounded-full text-white/80 hover:text-white border border-white/10 transition active:scale-95 shadow-lg group-hover:opacity-100 opacity-80 cursor-pointer"
+                aria-label="Previous Announcement"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setAnnouncementIndex((prev) => (prev + 1) % activeAnnouncements.length)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-30 p-2 bg-black/50 hover:bg-black/80 backdrop-blur-md rounded-full text-white/80 hover:text-white border border-white/10 transition active:scale-95 shadow-lg group-hover:opacity-100 opacity-80 cursor-pointer"
+                aria-label="Next Announcement"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </>
           )}
 
           {activeAnnouncements.length === 0 ? (
