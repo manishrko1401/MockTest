@@ -539,10 +539,10 @@ const formatSubCategoryName = (name: string) => {
             </svg>
           </div>
 
-          {/* 1. ANNOUNCEMENT BANNER PANEL (Directly Below Live Updates Bar) */}
-          <section className="border border-blue-200/80 dark:border-blue-900/50 rounded-2xl flex flex-col justify-between min-h-[250px] bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 text-white shadow-md relative overflow-hidden transition-all duration-300">
+          {/* 1. ANNOUNCEMENT BANNER PANEL (Fits Banner Completely, Details at Bottom) */}
+          <section className="border border-blue-200/80 dark:border-blue-900/50 rounded-2xl flex flex-col justify-between min-h-[240px] bg-slate-950 text-white shadow-md relative overflow-hidden transition-all duration-300">
             {activeAnnouncements.length > 1 && (
-              <div className="absolute top-3 right-3 z-20 flex gap-1 items-center bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
+              <div className="absolute top-2.5 right-2.5 z-30 flex gap-1 items-center bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 shadow-sm">
                 {activeAnnouncements.map((_, idx) => (
                   <button
                     key={idx}
@@ -566,49 +566,54 @@ const formatSubCategoryName = (name: string) => {
               (() => {
                 const ann = activeAnnouncements[announcementIndex] || activeAnnouncements[0];
                 return (
-                  <div className="flex-1 flex flex-col justify-between relative h-full w-full animate-in fade-in duration-200">
-                    {ann.imageUrl && ann.imageUrl.trim() ? (
-                      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+                  <div className="flex-1 flex flex-col justify-between h-full w-full animate-in fade-in duration-200 bg-slate-950">
+                    {/* Banner Image Container - Fits 100% of Image Without Cropping */}
+                    <div className="flex-1 w-full relative min-h-[170px] max-h-[220px] flex items-center justify-center bg-slate-950 p-1.5 overflow-hidden">
+                      {ann.imageUrl && ann.imageUrl.trim() ? (
                         <img
                           src={ann.imageUrl.trim().replace(/^http:\/\//i, 'https://')}
                           alt={ann.title}
-                          className="w-full h-full object-cover opacity-90"
+                          className="w-full h-full object-contain max-h-[210px] rounded-lg"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent z-10" />
-                      </div>
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 z-0" />
-                    )}
-
-                    <div className="relative z-10 p-4 flex flex-col justify-end h-full w-full space-y-2 pt-10 text-left">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="bg-blue-600/90 text-white font-black text-[9px] px-2.5 py-0.5 rounded-full border border-blue-400/30 uppercase tracking-wider">
-                          {ann.type || 'ANNOUNCEMENT'}
-                        </span>
-                        <span className="text-[10px] text-slate-300 font-bold flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded-md backdrop-blur-sm">
-                          <Calendar className="h-3 w-3 text-blue-400" /> {ann.date}
-                        </span>
-                      </div>
-
-                      <h4 className="font-black text-xs sm:text-sm text-white leading-snug drop-shadow line-clamp-2">
-                        {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
-                      </h4>
-
-                      {ann.lastDate && (
-                        <p className="text-[10px] font-black text-red-400 flex items-center gap-1 bg-red-950/60 border border-red-800/50 px-2 py-0.5 rounded-md self-start">
-                          <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping inline-block" />
-                          {language === 'hi' ? 'अंतिम तिथि: ' : 'Last Date: '}{ann.lastDate}
-                        </p>
+                      ) : (
+                        <div className="w-full h-full min-h-[160px] rounded-lg bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 flex flex-col items-center justify-center p-4 text-center space-y-1">
+                          <Bell className="h-8 w-8 text-blue-400 animate-bounce" />
+                          <h3 className="font-extrabold text-xs text-white line-clamp-2">{ann.title}</h3>
+                        </div>
                       )}
+                    </div>
+
+                    {/* Small Announcement Info Footer at Bottom (Does NOT Block Banner) */}
+                    <div className="shrink-0 w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-2.5 px-3 flex items-center justify-between gap-2 z-20">
+                      <div className="flex-1 min-w-0 space-y-0.5 text-left">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="bg-blue-600/90 text-white font-black text-[8px] px-2 py-0.5 rounded border border-blue-400/30 uppercase tracking-wider">
+                            {ann.type || 'ANNOUNCEMENT'}
+                          </span>
+                          <span className="text-[9px] text-slate-400 font-bold flex items-center gap-0.5">
+                            <Calendar className="h-2.5 w-2.5 text-blue-400" /> {ann.date}
+                          </span>
+                          {ann.lastDate && (
+                            <span className="text-[8.5px] font-black text-red-400 flex items-center gap-1 bg-red-950/70 border border-red-800/40 px-1.5 py-0.5 rounded">
+                              <span className="h-1 w-1 rounded-full bg-red-500 animate-ping inline-block" />
+                              {language === 'hi' ? 'अंतिम तिथि: ' : 'Last: '}{ann.lastDate}
+                            </span>
+                          )}
+                        </div>
+
+                        <h4 className="font-extrabold text-[10px] text-white leading-tight line-clamp-1">
+                          {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
+                        </h4>
+                      </div>
 
                       {ann.url ? (
                         <a
                           href={ann.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition active:scale-95 self-start cursor-pointer mt-1 shadow-md"
+                          className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[9px] px-2.5 py-1.5 rounded-lg transition active:scale-95 shrink-0 cursor-pointer"
                         >
-                          <span>{language === 'hi' ? 'विवरण देखें' : 'View Details'}</span>
+                          <span>{language === 'hi' ? 'विवरण' : 'Details'}</span>
                           <ChevronRight className="h-3 w-3" />
                         </a>
                       ) : null}
@@ -1292,9 +1297,9 @@ const formatSubCategoryName = (name: string) => {
         </div>
 
         {/* Right Side: Wider Full-Height Banner Announcement Panel */}
-        <div className="lg:col-span-8 border border-blue-200/80 dark:border-blue-900/50 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[420px] md:min-h-[460px] bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 text-white shadow-xl hover:shadow-2xl transition-all duration-300 group">
+        <div className="lg:col-span-8 border border-blue-200/80 dark:border-blue-900/50 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[420px] md:min-h-[460px] bg-slate-950 text-white shadow-xl hover:shadow-2xl transition-all duration-300 group">
           {activeAnnouncements.length > 1 && (
-            <div className="absolute top-4 right-4 z-20 flex gap-1.5 items-center bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+            <div className="absolute top-3.5 right-3.5 z-30 flex gap-1.5 items-center bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-md">
               {activeAnnouncements.map((_, idx) => (
                 <button
                   key={idx}
@@ -1318,56 +1323,55 @@ const formatSubCategoryName = (name: string) => {
             (() => {
               const ann = activeAnnouncements[announcementIndex] || activeAnnouncements[0];
               return (
-                <div className="flex-1 flex flex-col justify-between relative h-full w-full animate-in fade-in duration-300">
-                  {ann.imageUrl && ann.imageUrl.trim() ? (
-                    <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+                <div className="flex-1 flex flex-col justify-between h-full w-full animate-in fade-in duration-300 bg-slate-950">
+                  {/* Top Banner Image Container - Fits Entire Image Completely Without Cropping */}
+                  <div className="flex-1 w-full relative min-h-[300px] md:min-h-[340px] flex items-center justify-center bg-slate-950 overflow-hidden p-2">
+                    {ann.imageUrl && ann.imageUrl.trim() ? (
                       <img
                         src={ann.imageUrl.trim().replace(/^http:\/\//i, 'https://')}
                         alt={ann.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
+                        className="w-full h-full object-contain max-h-[340px] md:max-h-[380px] rounded-xl group-hover:scale-[1.01] transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent z-10" />
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 z-0" />
-                  )}
-
-                  <div className="relative z-10 p-6 md:p-8 flex flex-col justify-end h-full w-full space-y-3 pt-12 text-left">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="bg-blue-600/90 text-white font-black text-[10px] md:text-xs px-3 py-1 rounded-full border border-blue-400/30 uppercase tracking-wider shadow-sm">
-                        {ann.type || 'ANNOUNCEMENT'}
-                      </span>
-                      <span className="text-xs text-slate-300 font-bold flex items-center gap-1.5 bg-black/40 px-2.5 py-1 rounded-lg backdrop-blur-sm">
-                        <Calendar className="h-3.5 w-3.5 text-blue-400" /> {ann.date}
-                      </span>
-                    </div>
-
-                    <h4 className="font-black text-lg md:text-2xl text-white leading-snug drop-shadow-md line-clamp-2">
-                      {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
-                    </h4>
-
-                    {language !== 'hi' && ann.titleHi && (
-                      <p className="text-xs md:text-sm text-slate-200 font-medium line-clamp-1 drop-shadow-sm">
-                        {ann.titleHi}
-                      </p>
+                    ) : (
+                      <div className="w-full h-full min-h-[280px] rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-2">
+                        <Bell className="h-12 w-12 text-blue-400 animate-bounce" />
+                        <h3 className="font-black text-lg md:text-xl text-white max-w-md">{ann.title}</h3>
+                      </div>
                     )}
+                  </div>
 
-                    {ann.lastDate && (
-                      <p className="text-xs md:text-sm font-black text-red-400 flex items-center gap-1.5 bg-red-950/60 border border-red-800/50 px-3 py-1 rounded-lg self-start">
-                        <span className="h-2 w-2 rounded-full bg-red-500 animate-ping inline-block" />
-                        {language === 'hi' ? 'अंतिम तिथि: ' : 'Last Date: '}{ann.lastDate}
-                      </p>
-                    )}
+                  {/* Bottom Compact Announcement Info Footer (Does NOT block the banner) */}
+                  <div className="shrink-0 w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-3 px-4 md:px-6 flex items-center justify-between gap-3 z-20">
+                    <div className="flex-1 min-w-0 space-y-1 text-left">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="bg-blue-600/90 text-white font-black text-[9px] md:text-[10px] px-2.5 py-0.5 rounded-md border border-blue-400/30 uppercase tracking-wider">
+                          {ann.type || 'ANNOUNCEMENT'}
+                        </span>
+                        <span className="text-[10px] md:text-xs text-slate-400 font-bold flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-blue-400" /> {ann.date}
+                        </span>
+                        {ann.lastDate && (
+                          <span className="text-[10px] md:text-xs font-black text-red-400 flex items-center gap-1 bg-red-950/70 border border-red-800/40 px-2 py-0.5 rounded-md">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping inline-block" />
+                            {language === 'hi' ? 'अंतिम तिथि: ' : 'Last Date: '}{ann.lastDate}
+                          </span>
+                        )}
+                      </div>
+
+                      <h4 className="font-extrabold text-xs md:text-sm text-white leading-snug line-clamp-1">
+                        {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
+                      </h4>
+                    </div>
 
                     {ann.url ? (
                       <a
                         href={ann.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs md:text-sm px-5 py-2.5 rounded-xl transition shadow-lg hover:shadow-blue-500/25 active:scale-95 self-start cursor-pointer mt-2"
+                        className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[11px] md:text-xs px-3.5 py-2 rounded-xl transition shadow-md hover:shadow-blue-500/25 active:scale-95 shrink-0 cursor-pointer"
                       >
                         <span>{language === 'hi' ? 'विवरण देखें' : 'View Details'}</span>
-                        <ChevronRight className="h-4 w-4" />
+                        <ChevronRight className="h-3.5 w-3.5" />
                       </a>
                     ) : null}
                   </div>
