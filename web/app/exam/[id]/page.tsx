@@ -525,12 +525,12 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
       {/* SSC SUB-HEADER BAR (Row 2) — only for SSC tests */}
       {(() => {
-        const isSsc = (testId.includes('ssc') || testId.toLowerCase().includes('ssc')) && !isMobile;
+        const isSsc = (testId.toLowerCase().includes('ssc') || session?.testTitle?.toLowerCase().includes('ssc') || session?.testId?.toLowerCase().includes('ssc')) && !isMobile;
         if (!isSsc) return null;
         return (
-          <div className="flex items-center justify-between bg-white border-b border-slate-300 px-3 py-1.5 shrink-0 select-none gap-2 flex-wrap">
+          <div className="flex items-center justify-between bg-white border-b border-slate-300 px-3 py-1.5 shrink-0 select-none gap-2 flex-wrap min-h-[40px]">
             {/* Left: Section name boxes styled like ssc design.html */}
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap shrink-0">
               {session.sections.map((sec, idx) => {
                 const isActive = idx === currentSectionIndex;
                 const isLocked = session.hasSectionalTiming && !isActive;
@@ -554,14 +554,23 @@ function TcsIonEngine({ testId }: { testId: string }) {
               })}
             </div>
 
-            {/* Right: Action Buttons (Submit Test removed from here) — shifted to right side */}
-            <div className="flex items-center gap-1.5 flex-wrap ml-auto">
-              {currentQuestionIndex > 0 && (
-                <button type="button" onClick={() => jumpToQuestion(currentSectionIndex, currentQuestionIndex - 1)} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Previous</button>
-              )}
-              <button type="button" onClick={markForReviewAndNext} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Mark for Review</button>
-              <button type="button" onClick={saveAndNext} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Save &amp; Next</button>
-              <button type="button" onClick={clearResponse} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap">Clear Response</button>
+            {/* Center: Action Buttons (Previous, Mark for Review, Save & Next, Clear Response) — Centered horizontally in the same line */}
+            <div className="flex-1 flex items-center justify-center gap-2 flex-wrap px-2">
+              <button
+                type="button"
+                disabled={currentQuestionIndex === 0}
+                onClick={() => currentQuestionIndex > 0 && jumpToQuestion(currentSectionIndex, currentQuestionIndex - 1)}
+                className={`font-bold px-2.5 py-1 rounded text-[10px] transition-all whitespace-nowrap ${
+                  currentQuestionIndex === 0
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                    : 'bg-[#2E66CC] hover:bg-[#1a4da6] text-white cursor-pointer active:scale-95 border border-[#2E66CC]'
+                }`}
+              >
+                Previous
+              </button>
+              <button type="button" onClick={markForReviewAndNext} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap border border-[#2E66CC]">Mark for Review</button>
+              <button type="button" onClick={saveAndNext} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap border border-[#2E66CC]">Save &amp; Next</button>
+              <button type="button" onClick={clearResponse} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap border border-[#2E66CC]">Clear Response</button>
             </div>
           </div>
         );
@@ -616,140 +625,242 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
       {/* GATING / SUBMITTED SCREEN OVERLAY */}
       {isExamSubmitted ? (
-        <div className="flex flex-1 flex-col items-center justify-center bg-white p-8">
-          <div className="max-w-md w-full border border-slate-200 rounded-lg shadow-xl p-6 bg-slate-50 text-center">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 mb-4">
-              <Check className="h-6 w-6" />
-            </div>
-            <h2 className="text-lg font-bold text-slate-900 mb-2">Test Submitted Successfully!</h2>
-            <p className="text-gray-600 text-xs mb-6 font-semibold">Your attempt details have been synced to your profile statistics dashboard.</p>
-
-            <div className="grid grid-cols-2 gap-4 text-left border-y border-slate-200 py-4 mb-6">
-              <div>
-                <p className="text-gray-500 font-semibold">Total Marks:</p>
-                <p className="text-sm font-bold text-slate-800">{score?.totalMarks}</p>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-5xl w-full shadow-2xl animate-in zoom-in-95 duration-200 text-slate-800 my-auto">
+            {/* Header Banner */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-5 border-b border-slate-200">
+              <div className="flex items-center gap-4 text-center sm:text-left">
+                <div className="h-12 w-12 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center shrink-0 shadow-sm">
+                  <Check className="h-6 w-6 stroke-[3]" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                    {language === 'hi' ? 'परीक्षा सफलतापूर्वक सबमिट की गई!' : 'Test Submitted Successfully!'}
+                  </h2>
+                  <p className="text-slate-500 text-xs font-semibold mt-0.5">
+                    {language === 'hi'
+                      ? 'आपकी परीक्षा उत्तर पुस्तिका सफलतापूर्वक दर्ज कर ली गई है। नीचे सभी अनुभागों का विवरण देखें।'
+                      : 'Your answer sheet has been recorded. Review your section-wise question response breakdown below.'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-500 font-semibold">Obtained Score:</p>
-                <p className="text-sm font-bold text-blue-600">{score?.obtainedMarks}</p>
-              </div>
-              <div>
-                <p className="text-gray-500 font-semibold">Correct Answers:</p>
-                <p className="text-sm font-bold text-green-600">{score?.correctCount}</p>
-              </div>
-              <div>
-                <p className="text-gray-500 font-semibold">Incorrect Answers:</p>
-                <p className="text-sm font-bold text-red-600">{score?.incorrectCount}</p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-gray-500 font-semibold">Accuracy Percentage:</p>
-                <p className="text-sm font-bold text-indigo-600">{score?.accuracyPercentage}%</p>
-              </div>
-            </div>
-
-            <div className="my-5 p-4 bg-white rounded-xl border border-slate-200 text-left">
-              <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Feedback & Ratings</h4>
               
-              <div className="mb-4">
-                <p className="text-[11px] font-bold text-slate-600 mb-1.5">Rate the Website:</p>
-                <div className="flex gap-1.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setWebsiteRating(star)}
-                      type="button"
-                      className="focus:outline-none transition active:scale-90"
-                    >
-                      <Star
-                        className={`h-5 w-5 ${
-                          star <= websiteRating 
-                            ? 'fill-amber-400 text-amber-400' 
-                            : 'text-slate-300 hover:text-amber-300'
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-[11px] font-bold text-slate-600 mb-1.5">Rate the Exam Experience:</p>
-                <div className="flex gap-1.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setExamRating(star)}
-                      type="button"
-                      className="focus:outline-none transition active:scale-90"
-                    >
-                      <Star
-                        className={`h-5 w-5 ${
-                          star <= examRating 
-                            ? 'fill-amber-400 text-amber-400' 
-                            : 'text-slate-300 hover:text-amber-300'
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-4 border-t border-slate-100 pt-3">
-                <p className="text-[11px] font-bold text-slate-600 mb-1.5">Write Feedback (Optional):</p>
-                <textarea
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="Share your thoughts about your test experience..."
-                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white resize-none h-16 font-semibold"
-                />
+              <div className="flex items-center gap-2 bg-green-50 px-3.5 py-1.5 rounded-full border border-green-200 text-xs font-extrabold text-green-700 shrink-0 shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span>{language === 'hi' ? 'सबमिटेड' : 'SUBMITTED'}</span>
               </div>
             </div>
 
-            <button
-              onClick={async () => {
-                // Submit rating/feedback in background
-                if (websiteRating > 0 || examRating > 0 || feedbackText.trim() !== '') {
-                  try {
-                    await fetch('/api/feedback', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        userId: currentUser?.id,
-                        testId: testId,
-                        platformRating: websiteRating,
-                        examRating: examRating,
-                        feedbackText: feedbackText
-                      })
-                    });
-                  } catch (e) {
-                    console.warn("Feedback submission failed:", e);
-                  }
-                }
+            {/* Calculate Section Stats */}
+            {(() => {
+              const sectionStats = (session?.sections || []).map((sec, idx) => {
+                const secQuestions = (session?.questions || []).filter(q => q.sectionId === sec.id);
+                const total = secQuestions.length;
+                let attempted = 0;
+                let markedForReview = 0;
+                let unattempted = 0;
 
-                try {
-                  if (typeof document !== 'undefined' && document.fullscreenElement) {
-                    const doc = document as any;
-                    let p: Promise<void> | null = null;
-                    if (document.exitFullscreen) {
-                      p = document.exitFullscreen();
-                    } else if (doc.mozCancelFullScreen) {
-                      p = doc.mozCancelFullScreen();
-                    } else if (doc.webkitExitFullscreen) {
-                      p = doc.webkitExitFullscreen();
-                    } else if (doc.msExitFullscreen) {
-                      p = doc.msExitFullscreen();
-                    }
-                    if (p && typeof p.catch === 'function') {
-                      p.catch(() => {});
+                secQuestions.forEach(q => {
+                  const resp = responses[q.id];
+                  const isAns = resp?.selectedOptionIndex !== null && resp?.selectedOptionIndex !== undefined;
+                  const isMarked = resp?.state === 4 || resp?.state === 5;
+
+                  if (isAns) {
+                    attempted++;
+                  }
+                  if (isMarked) {
+                    markedForReview++;
+                  }
+                  if (!isAns && !isMarked) {
+                    unattempted++;
+                  }
+                });
+
+                return {
+                  sectionId: sec.id,
+                  sectionName: sec.name || `Section ${idx + 1}`,
+                  partLabel: `PART-${String.fromCharCode(65 + idx)}`,
+                  total,
+                  attempted,
+                  markedForReview,
+                  unattempted,
+                };
+              });
+
+              const totalQuestionsAll = sectionStats.reduce((acc, s) => acc + s.total, 0);
+              const totalAttemptedAll = sectionStats.reduce((acc, s) => acc + s.attempted, 0);
+              const totalMarkedAll = sectionStats.reduce((acc, s) => acc + s.markedForReview, 0);
+              const totalUnattemptedAll = sectionStats.reduce((acc, s) => acc + s.unattempted, 0);
+
+              return (
+                <div className="py-5 flex flex-col gap-5">
+                  {/* Top Overview Cards (Horizontal Row) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-center">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Questions</p>
+                      <p className="text-xl font-black text-slate-800 mt-0.5">{totalQuestionsAll}</p>
+                    </div>
+                    <div className="bg-green-50/70 border border-green-200 rounded-2xl p-3.5 text-center">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-green-700">Attempted Questions</p>
+                      <p className="text-xl font-black text-green-700 mt-0.5">{totalAttemptedAll}</p>
+                    </div>
+                    <div className="bg-purple-50/70 border border-purple-200 rounded-2xl p-3.5 text-center">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700">Marked For Review</p>
+                      <p className="text-xl font-black text-purple-700 mt-0.5">{totalMarkedAll}</p>
+                    </div>
+                    <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-3.5 text-center">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Not Attempted</p>
+                      <p className="text-xl font-black text-amber-700 mt-0.5">{totalUnattemptedAll}</p>
+                    </div>
+                  </div>
+
+                  {/* Section Wise Breakdown Table */}
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+                    <div className="bg-slate-100/80 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
+                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                        {language === 'hi' ? 'अनुभाग-वार उत्तर विवरण' : 'Section-Wise Response Summary'}
+                      </h4>
+                      <span className="text-[10px] font-bold text-slate-500">
+                        {sectionStats.length} {language === 'hi' ? 'अनुभाग' : 'Sections'}
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                            <th className="py-2.5 px-4">Section Name</th>
+                            <th className="py-2.5 px-4 text-center">Total Qs</th>
+                            <th className="py-2.5 px-4 text-center">Attempted Qs</th>
+                            <th className="py-2.5 px-4 text-center">Marked For Review</th>
+                            <th className="py-2.5 px-4 text-center">Not Attempted Qs</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                          {sectionStats.map((sec) => (
+                            <tr key={sec.sectionId} className="hover:bg-slate-50/80 transition-colors">
+                              <td className="py-2.5 px-4 font-bold text-slate-900 flex items-center gap-2">
+                                <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-black shrink-0">{sec.partLabel}</span>
+                                <span className="truncate">{sec.sectionName}</span>
+                              </td>
+                              <td className="py-2.5 px-4 text-center font-bold text-slate-800">{sec.total}</td>
+                              <td className="py-2.5 px-4 text-center font-extrabold text-green-600 bg-green-50/30">{sec.attempted}</td>
+                              <td className="py-2.5 px-4 text-center font-extrabold text-purple-600 bg-purple-50/30">{sec.markedForReview}</td>
+                              <td className="py-2.5 px-4 text-center font-extrabold text-amber-600 bg-amber-50/30">{sec.unattempted}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-slate-100/90 font-black text-slate-900 border-t-2 border-slate-300 text-xs">
+                            <td className="py-2.5 px-4 uppercase tracking-wider">Total Summary</td>
+                            <td className="py-2.5 px-4 text-center">{totalQuestionsAll}</td>
+                            <td className="py-2.5 px-4 text-center text-green-700">{totalAttemptedAll}</td>
+                            <td className="py-2.5 px-4 text-center text-purple-700">{totalMarkedAll}</td>
+                            <td className="py-2.5 px-4 text-center text-amber-700">{totalUnattemptedAll}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Bottom Row: Ratings + Action Button (Horizontal Split) */}
+            <div className="pt-4 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-5">
+              {/* Feedback Rating Block (Increased Size) */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 text-left w-full md:w-auto">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs sm:text-sm font-black text-slate-700 whitespace-nowrap">Rate App:</span>
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setWebsiteRating(star)}
+                        type="button"
+                        className="focus:outline-none transition active:scale-110 p-0.5"
+                      >
+                        <Star
+                          className={`h-6 w-6 sm:h-7 sm:w-7 ${
+                            star <= websiteRating 
+                              ? 'fill-amber-400 text-amber-400 drop-shadow-sm' 
+                              : 'text-slate-300 hover:text-amber-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-xs sm:text-sm font-black text-slate-700 whitespace-nowrap">Exam Experience:</span>
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setExamRating(star)}
+                        type="button"
+                        className="focus:outline-none transition active:scale-110 p-0.5"
+                      >
+                        <Star
+                          className={`h-6 w-6 sm:h-7 sm:w-7 ${
+                            star <= examRating 
+                              ? 'fill-amber-400 text-amber-400 drop-shadow-sm' 
+                              : 'text-slate-300 hover:text-amber-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit & View Score & Analysis Button */}
+              <button
+                onClick={async () => {
+                  if (websiteRating > 0 || examRating > 0 || feedbackText.trim() !== '') {
+                    try {
+                      await fetch('/api/feedback', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          userId: currentUser?.id,
+                          testId: testId,
+                          platformRating: websiteRating,
+                          examRating: examRating,
+                          feedbackText: feedbackText
+                        })
+                      });
+                    } catch (e) {
+                      console.warn("Feedback submission failed:", e);
                     }
                   }
-                } catch (e) {}
-                router.push(`/exam/${testId}/analysis`);
-              }}
-              className="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg shadow hover:bg-blue-750 transition"
-            >
-              {language === 'hi' ? 'विश्लेषण देखें' : 'View Analysis'}
-            </button>
+
+                  try {
+                    if (typeof document !== 'undefined' && document.fullscreenElement) {
+                      const doc = document as any;
+                      let p: Promise<void> | null = null;
+                      if (document.exitFullscreen) {
+                        p = document.exitFullscreen();
+                      } else if (doc.mozCancelFullScreen) {
+                        p = doc.mozCancelFullScreen();
+                      } else if (doc.webkitExitFullscreen) {
+                        p = doc.webkitExitFullscreen();
+                      } else if (doc.msExitFullscreen) {
+                        p = doc.msExitFullscreen();
+                      }
+                      if (p && typeof p.catch === 'function') {
+                        p.catch(() => {});
+                      }
+                    }
+                  } catch (e) {}
+                  router.push(`/exam/${testId}/analysis`);
+                }}
+                className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm px-8 py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer active:scale-95 whitespace-nowrap uppercase tracking-wider"
+              >
+                {language === 'hi' ? 'स्कोर और विश्लेषण देखें' : 'View Score & Analysis'}
+              </button>
+            </div>
           </div>
         </div>
       ) : isMounted && isMobile ? (
@@ -1372,7 +1483,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
 
             {/* Bottom Actions Row — SSC uses sub-header for Mark/Save/Submit, so only Clear Response shown here */}
             {(() => {
-              const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+              const isSsc = testId.toLowerCase().includes('ssc') || session?.testTitle?.toLowerCase().includes('ssc') || session?.testId?.toLowerCase().includes('ssc');
               if (isSsc) {
                 return null; // SSC: actions are in the sub-header bar, no desktop footer needed
               }
