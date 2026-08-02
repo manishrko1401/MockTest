@@ -141,6 +141,35 @@ mjx-container[jax="CHTML"] {
   scrollbar-width: none;  /* Firefox */
 }
 
+/* Custom visible horizontal scrollbar */
+.custom-horizontal-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.custom-horizontal-scroll::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.6);
+  border-radius: 9999px;
+}
+.custom-horizontal-scroll::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 9999px;
+}
+.custom-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+.dark .custom-horizontal-scroll::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.6);
+}
+.dark .custom-horizontal-scroll::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+}
+.custom-horizontal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 rgba(226, 232, 240, 0.6);
+}
+.dark .custom-horizontal-scroll {
+  scrollbar-color: #3b82f6 rgba(30, 41, 59, 0.6);
+}
+
 /* Reading Comprehension Container Style */
 .comprehension-container {
   background-color: #f8fafc;

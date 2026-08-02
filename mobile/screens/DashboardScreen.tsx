@@ -279,21 +279,45 @@ const CategoryIcon = ({ name, color, size }: { name: string; color: string; size
 
 const CategoryLogoImage = React.memo(({ logoUrl, fallbackIcon }: { logoUrl: string; fallbackIcon: React.ReactNode }) => {
   const [hasError, setHasError] = useState(false);
-  const cleanUrl = logoUrl ? logoUrl.trim() : '';
-  const isSvg = cleanUrl ? cleanUrl.toLowerCase().split('?')[0].endsWith('.svg') : false;
 
-  if (!cleanUrl || hasError || isSvg) {
+  useEffect(() => {
+    setHasError(false);
+  }, [logoUrl]);
+
+  const cleanUrl = React.useMemo(() => {
+    if (!logoUrl) return '';
+    let url = logoUrl.trim();
+    if (!url) return '';
+
+    if (url.startsWith('//')) {
+      url = 'https:' + url;
+    } else if (url.startsWith('http://')) {
+      url = 'https://' + url.slice(7);
+    } else if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:')) {
+      url = 'https://' + url;
+    }
+
+    try {
+      return encodeURI(url);
+    } catch {
+      return url;
+    }
+  }, [logoUrl]);
+
+  if (!cleanUrl || hasError) {
     return <>{fallbackIcon}</>;
   }
 
   return (
     <ExpoImage
       source={{ uri: cleanUrl }}
-      style={{ width: '100%', height: '100%', borderRadius: 27 }}
-      contentFit="cover"
-      transition={100}
+      style={{ width: '100%', height: '100%', borderRadius: 12 }}
+      contentFit="contain"
+      transition={150}
       cachePolicy="memory-disk"
-      onError={() => setHasError(true)}
+      onError={() => {
+        setHasError(true);
+      }}
     />
   );
 });
@@ -907,45 +931,37 @@ export default function DashboardScreen({
                       key={ann.id || idx} 
                       style={[
                         styles.carouselSlide, 
-                        { width: Dimensions.get('window').width - 32 },
+                        { width: Dimensions.get('window').width - 32, overflow: 'hidden' },
                         isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }
                       ]}
                     >
+                      {/* Show Proper Announcement Image Banner & Hide Details Section */}
                       {ann.imageUrl && ann.imageUrl.trim() ? (
                         <TouchableOpacity
                           activeOpacity={ann.url ? 0.9 : 1}
                           onPress={() => ann.url && Linking.openURL(ann.url)}
-                          style={{ width: '100%', height: 140, overflow: 'hidden', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+                          style={{ width: '100%', height: 185, overflow: 'hidden', borderRadius: 14 }}
                         >
                           <Image
                             source={{ uri: ann.imageUrl.trim().replace(/^http:\/\//i, 'https://') }}
-                            style={{ width: '100%', height: 140 }}
+                            style={{ width: '100%', height: '100%' }}
                             resizeMode="cover"
                           />
                         </TouchableOpacity>
-                      ) : null}
-
-                      <View style={[styles.announcementCardContent, { padding: 14 }]}>
-                        <View style={styles.announcementCardHeader}>
-                          <Text style={[styles.announcementTypeBadge, isDark && { backgroundColor: ThemeColors.dark.bg, color: '#60A5FA', borderColor: '#334155' }]}>{ann.type || 'NEWS'}</Text>
-                          <Text style={styles.announcementDateText}>{ann.date}</Text>
-                        </View>
-                        <Text style={[styles.announcementTitleText, isDark && { color: ThemeColors.dark.text }]}>{language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}</Text>
-                        {ann.lastDate && (
-                          <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#EF4444', marginTop: 4, marginBottom: 4 }}>
-                            {language === 'en' ? 'Last Date: ' : 'अंतिम तिथि: '}{ann.lastDate}
-                          </Text>
-                        )}
-                        {ann.url && (
-                          <TouchableOpacity
-                            style={styles.announcementLinkBtn}
-                            onPress={() => Linking.openURL(ann.url)}
-                          >
-                            <Text style={[styles.announcementLinkText, isDark && { color: '#60A5FA' }]}>View Details</Text>
-                            <ExternalLink size={12} color={isDark ? '#60A5FA' : '#2563EB'} />
-                          </TouchableOpacity>
-                        )}
-                      </View>
+                      ) : (
+                        /* Text fallback if no image banner exists */
+                        <TouchableOpacity
+                          activeOpacity={ann.url ? 0.9 : 1}
+                          onPress={() => ann.url && Linking.openURL(ann.url)}
+                          style={[styles.announcementCardContent, { padding: 14, minHeight: 100, justifyContent: 'center' }]}
+                        >
+                          <View style={styles.announcementCardHeader}>
+                            <Text style={[styles.announcementTypeBadge, isDark && { backgroundColor: ThemeColors.dark.bg, color: '#60A5FA', borderColor: '#334155' }]}>{ann.type || 'NEWS'}</Text>
+                            <Text style={styles.announcementDateText}>{ann.date}</Text>
+                          </View>
+                          <Text style={[styles.announcementTitleText, isDark && { color: ThemeColors.dark.text }]} numberOfLines={2}>{language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   ))}
                 </ScrollView>

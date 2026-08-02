@@ -559,9 +559,19 @@ export default function MockTestsCatalog() {
         
         {/* MOBILE HEADER */}
         <header className="h-14 border-b border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
-          <Link href="/" className="flex items-center gap-1 text-slate-700 dark:text-white font-bold text-xs">
-            <ArrowLeft className="h-4 w-4" /> {t.navHome}
-          </Link>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Link href="/" className="flex items-center gap-1 text-slate-700 dark:text-white font-bold text-xs shrink-0">
+              <ArrowLeft className="h-4 w-4" /> {t.navHome}
+            </Link>
+
+            {/* Show Mocktest Hub logo after back to home button */}
+            <div className="flex items-center gap-1.5 pl-2.5 border-l border-slate-200 dark:border-slate-800 shrink-0">
+              <Trophy className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span className="font-black text-[10px] tracking-wider text-slate-900 dark:text-white uppercase leading-none">
+                Mocktest Hub
+              </span>
+            </div>
+          </div>
           
           <div className="flex items-center gap-2">
             {/* Bookmarked Questions Button */}
@@ -603,19 +613,21 @@ export default function MockTestsCatalog() {
 
         <main className="flex-1 p-4 flex flex-col gap-5">
           
-          {/* SEARCH FILTER */}
-          <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-              <Search className="h-4 w-4" />
+          {/* SEARCH FILTER (Hidden when sub category is open) */}
+          {selectedSubCategory === null && (
+            <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                <Search className="h-4 w-4" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t.searchMocksPlaceholder}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm"
+              />
             </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t.searchMocksPlaceholder}
-              className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm"
-            />
-          </div>
+          )}
 
           {/* RENDER BOOKMARKS OVERLAY VIEW */}
           {showBookmarks ? (
@@ -813,20 +825,17 @@ export default function MockTestsCatalog() {
               ) : selectedSubCategory === null ? (
                 /* Case 2: Category is selected, but Subcategory (Exam) is not - Render Subcategory (Exam) list */
                 <div className="flex-1 overflow-y-auto space-y-4 mobile-fade-in">
-                  <button
-                    onClick={handleCategoryBack}
-                    className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[10px] uppercase tracking-wider mb-2 cursor-pointer"
-                  >
-                    <ArrowLeft className="h-3.5 w-3.5" /> Back to Exam Categories
-                  </button>
-                  
-                  <div>
-                    <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+                  <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                    <button
+                      onClick={handleCategoryBack}
+                      className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[11px] uppercase tracking-wider cursor-pointer shrink-0 active:scale-95 transition-transform"
+                    >
+                      <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'परीक्षा श्रेणियां' : 'Back to Categories'}
+                    </button>
+                    
+                    <h2 className="text-sm font-black text-slate-900 dark:text-white truncate text-right">
                       {getLocalizedName(activeCategoryObj, language)}
                     </h2>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                      Select an exam to view available tests
-                    </p>
                   </div>
 
                   {!activeCategoryObj?.subCategories || activeCategoryObj.subCategories.length === 0 ? (
@@ -903,13 +912,6 @@ export default function MockTestsCatalog() {
               ) : (
                 /* Case 3: Subcategory (Exam) is selected - Render Tests List under it */
                 <div className="flex-1 overflow-y-auto space-y-4 mobile-fade-in">
-                  <button
-                    onClick={handleSubCategoryBack}
-                    className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[10px] uppercase tracking-wider mb-2 cursor-pointer"
-                  >
-                    <ArrowLeft className="h-3.5 w-3.5" /> Back to Exams
-                  </button>
-
                   {(() => {
                     const activeSubCat = activeCategoryObj?.subCategories.find(s => s.id === selectedSubCategory);
                     
@@ -933,13 +935,18 @@ export default function MockTestsCatalog() {
 
                     return (
                       <div className="space-y-4">
-                        <div>
-                          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+                        {/* Subcategory Header: Back button & Subcategory Name on the same horizontal line */}
+                        <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                          <button
+                            onClick={handleSubCategoryBack}
+                            className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[11px] uppercase tracking-wider cursor-pointer shrink-0 active:scale-95 transition-transform"
+                          >
+                            <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'सभी परीक्षाएं' : 'Back to Exams'}
+                          </button>
+
+                          <h2 className="text-sm font-black text-slate-900 dark:text-white truncate text-right">
                             {getLocalizedName(activeSubCat, language)}
                           </h2>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                            Practice with full length test papers
-                          </p>
                         </div>
 
                         {groups.length === 0 && fallbackTests.length === 0 ? (
@@ -962,37 +969,94 @@ export default function MockTestsCatalog() {
                               </p>
                             </div>
                           </div>
-                        ) : groups.length > 0 ? (
-                          <div className="space-y-4">
-                            {/* Horizontal Tab Navigator for Sub-subcategories */}
-                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200 dark:border-slate-800">
+                        ) : groups.length > 0 && (activeSubSubId === null || activeSubSubId === 'all') ? (
+                          /* Sub-subcategory List Page: ONLY sub-subcategories in list format matching mock test card format */
+                          <div className="space-y-3">
+                            <div className="mb-1">
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                                {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक टेस्ट सीरीज चुनें:' : 'Select a test series to start practicing:'}
+                              </p>
+                            </div>
+                            <div className="space-y-3">
                               {groups.map(group => {
-                                const isSelected = (activeSubSubId || groups[0]?.id) === group.id;
+                                const count = group.tests.length;
                                 return (
-                                  <button
+                                  <div
                                     key={group.id}
                                     onClick={() => setActiveSubSubId(group.id)}
-                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold whitespace-nowrap transition cursor-pointer border ${
-                                      isSelected
-                                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
-                                        : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
-                                    }`}
+                                    className="p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/45 border-l-4 border-l-blue-500 flex flex-col justify-between items-start gap-3 w-full cursor-pointer hover:border-blue-500/50 transition-all"
                                   >
-                                    {getLocalizedName(group.name, language)} ({group.tests.length})
-                                  </button>
+                                    <div className="space-y-1.5 flex-1 w-full text-left">
+                                      <div className="flex flex-wrap items-center gap-1.5">
+                                        <span className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-900/60 uppercase tracking-wider">
+                                          {language === 'hi' ? 'टेस्ट सीरीज' : 'TEST SERIES'}
+                                        </span>
+                                        <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/60 uppercase tracking-wider font-mono">
+                                          {count} {language === 'hi' ? 'टेस्ट उपलब्ध' : 'Mock Tests'}
+                                        </span>
+                                        <span className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 uppercase tracking-wider">
+                                          {language === 'hi' ? 'नवीनतम पैटर्न' : 'LATEST PATTERN'}
+                                        </span>
+                                      </div>
+
+                                      <h4 className="font-extrabold text-xs text-slate-850 dark:text-white leading-snug">
+                                        {getLocalizedName(group.name, language)}
+                                      </h4>
+                                      
+                                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[8px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
+                                        <span>{count} Tests</span>
+                                        <span>•</span>
+                                        <span>Full Length & Sectional</span>
+                                        <span>•</span>
+                                        <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 EN, HI</span>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 w-full border-t border-slate-100 dark:border-slate-800/80 pt-3 shrink-0">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActiveSubSubId(group.id);
+                                        }}
+                                        className="w-full bg-[#1C3D5A] hover:bg-slate-800 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                                      >
+                                        <span>{language === 'hi' ? 'सभी टेस्ट देखें' : 'Explore Mock Tests'}</span>
+                                        <ChevronRight className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
                                 );
                               })}
                             </div>
+                          </div>
+                        ) : groups.length > 0 && activeSubSubId !== null ? (
+                          /* Mocktest List Page for selected sub-subcategory */
+                          <div className="space-y-4">
+                            <button
+                              onClick={() => setActiveSubSubId(null)}
+                              className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[10px] uppercase tracking-wider mb-1 cursor-pointer"
+                            >
+                              <ArrowLeft className="h-3.5 w-3.5" /> {language === 'hi' ? 'टेस्ट सीरीज सूची पर वापस जाएं' : 'Back to Series List'}
+                            </button>
 
-                            {/* Selected Group's Tests */}
+                            {/* Tests in selected sub-subcategory */}
                             {(() => {
-                              const activeGroup = groups.find(g => g.id === (activeSubSubId || groups[0]?.id));
-                              if (!activeGroup) return null;
+                              const activeGroup = groups.find(g => g.id === activeSubSubId);
+                              if (!activeGroup || activeGroup.tests.length === 0) {
+                                return (
+                                  <div className="text-center py-8 px-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
+                                    <Clock className="h-6 w-6 text-blue-500 mx-auto animate-pulse" />
+                                    <h4 className="text-xs font-black text-slate-800 dark:text-white">
+                                      {language === 'hi' ? 'कोई मॉक टेस्ट नहीं मिला' : 'No Mock Tests Found'}
+                                    </h4>
+                                  </div>
+                                );
+                              }
+
                               return (
                                 <div className="space-y-3">
                                   {activeGroup.tests.map((test) => {
                                     const attempts = getTestAttempts(test.id);
-                                    const attemptsCount = attempts.length;
                                     const status = getTestStatus(test.id);
                                     const isTestPremium = test.isPremium;
                                     const completed = isCompleted(test.id);
@@ -1020,36 +1084,49 @@ export default function MockTestsCatalog() {
                                         className={`p-4.5 rounded-2xl shadow-sm border flex flex-col justify-between items-start gap-4 w-full ${cardStyle}`}
                                       >
                                         <div className="space-y-1.5 flex-1 w-full text-left">
-                                          <div className="flex flex-wrap items-center gap-1.5">
-                                            {isTestPremium ? (
-                                              <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-250 dark:border-amber-900/60 uppercase tracking-wider">
-                                                PRO
-                                              </span>
-                                            ) : (
-                                              <span className="bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60 uppercase tracking-wider">
-                                                FREE
-                                              </span>
-                                            )}
+                                           <div className="flex items-center justify-between gap-1.5 w-full">
+                                             <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+                                               {isTestPremium ? (
+                                                 <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-250 dark:border-amber-900/60 uppercase tracking-wider">
+                                                   PRO
+                                                 </span>
+                                               ) : (
+                                                 <span className="bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60 uppercase tracking-wider">
+                                                   FREE
+                                                 </span>
+                                               )}
 
-                                            {ongoing && (
-                                              <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-250 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-black uppercase">
-                                                PAUSED
-                                              </span>
-                                            )}
+                                               {ongoing && (
+                                                 <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-250 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                                   PAUSED
+                                                 </span>
+                                               )}
 
-                                            {completed && (
-                                              <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 border border-green-200 dark:border-green-900/60 px-1.5 py-0.5 rounded font-black uppercase">
-                                                ✓ ATTEMPTED
-                                              </span>
-                                            )}
+                                               {completed && (
+                                                 <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 border border-green-200 dark:border-green-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                                   ✓ ATTEMPTED
+                                                 </span>
+                                               )}
 
-                                            <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/60 uppercase tracking-wider font-mono">
-                                              +{test.positiveMarks ?? 2} Right
-                                            </span>
-                                            <span className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-red-200 dark:border-red-900/60 uppercase tracking-wider font-mono">
-                                              -{test.negativeMarks ?? 0.5} Wrong
-                                            </span>
-                                          </div>
+                                               <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/60 uppercase tracking-wider font-mono">
+                                                 +{test.positiveMarks ?? 2} Right
+                                               </span>
+                                               <span className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-red-200 dark:border-red-900/60 uppercase tracking-wider font-mono">
+                                                 -{test.negativeMarks ?? 0.5} Wrong
+                                               </span>
+                                             </div>
+
+                                             {latestAttempt && (
+                                               <div className="inline-flex items-center gap-1 bg-blue-50/90 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-900/60 px-2 py-0.5 rounded-lg text-[8.5px] font-bold text-slate-700 dark:text-slate-200 shrink-0 font-mono ml-auto">
+                                                 <span className="text-[8px] font-semibold text-slate-500 dark:text-slate-400">
+                                                   🏆 {language === 'hi' ? 'अंक:' : 'Score:'}
+                                                 </span>
+                                                 <span className="font-extrabold text-blue-600 dark:text-blue-400 text-[9px]">
+                                                   {latestAttempt.score ?? 0}/{latestAttempt.maxScore ?? test.maxMarks}
+                                                 </span>
+                                               </div>
+                                             )}
+                                           </div>
 
                                           <h4 className="font-extrabold text-xs text-slate-850 dark:text-white leading-snug">
                                             {getLocalizedName(test, language)}
@@ -1066,8 +1143,6 @@ export default function MockTestsCatalog() {
                                           </div>
                                         </div>
 
-                                        {renderLastAttemptMarks(attempts, language)}
-
                                         <div className="flex items-center gap-2 w-full border-t border-slate-100 dark:border-slate-800/80 pt-3 shrink-0">
                                           {ongoing ? (
                                             <>
@@ -1079,7 +1154,7 @@ export default function MockTestsCatalog() {
                                               </button>
                                               <button
                                                 onClick={() => handleReattemptExam(test)}
-                                                className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                                className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer shrink-0"
                                               >
                                                 Reset
                                               </button>
@@ -1094,7 +1169,7 @@ export default function MockTestsCatalog() {
                                               </Link>
                                               <button
                                                 onClick={() => handleReattemptExam(test)}
-                                                className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                                className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer shrink-0"
                                               >
                                                 Reattempt
                                               </button>
@@ -1102,7 +1177,7 @@ export default function MockTestsCatalog() {
                                           ) : (
                                             <button
                                               onClick={() => handleStartExam(test)}
-                                              className={`w-full text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer ${
+                                              className={`flex-1 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer ${
                                                 hasPass 
                                                   ? 'bg-[#1C3D5A] hover:bg-slate-800' 
                                                   : 'bg-yellow-600 hover:bg-yellow-700'
@@ -1852,52 +1927,116 @@ export default function MockTestsCatalog() {
                           </p>
                         </div>
                       </div>
-                    ) : groups.length > 0 ? (
-                      <div className="space-y-6">
-                        {/* Horizontal Tab Navigator for Sub-subcategories */}
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200 dark:border-slate-800">
+                    ) : groups.length > 0 && (activeSubSubId === null || activeSubSubId === 'all') ? (
+                      /* Sub-subcategory List Page: ONLY sub-subcategories in full-width list format matching mock test cards */
+                      <div className="space-y-3.5">
+                        <div className="mb-2">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                            {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक टेस्ट सीरीज चुनें:' : 'Select a test series to start practicing:'}
+                          </p>
+                        </div>
+                        <div className="space-y-3.5">
                           {groups.map(group => {
-                            const isSelected = (activeSubSubId || groups[0]?.id) === group.id;
+                            const count = group.tests.length;
                             return (
-                              <button
+                              <div
                                 key={group.id}
                                 onClick={() => setActiveSubSubId(group.id)}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border ${
-                                  isSelected
-                                    ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
-                                    : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
-                                }`}
+                                className="backdrop-blur-sm p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full bg-white/75 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 border-l-4 border-l-blue-500 relative overflow-hidden cursor-pointer hover:scale-[1.01]"
                               >
-                                {getLocalizedName(group.name, language)} ({group.tests.length})
-                              </button>
+                                <div className="space-y-2 flex-1 w-full text-left">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="bg-blue-500/10 text-blue-700 dark:bg-blue-500/5 dark:text-blue-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-blue-500/20 uppercase tracking-wider">
+                                      {language === 'hi' ? 'टेस्ट सीरीज' : 'TEST SERIES'}
+                                    </span>
+                                    <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider font-mono">
+                                      {count} {language === 'hi' ? 'मॉक टेस्ट' : 'Mock Tests'}
+                                    </span>
+                                    <span className="bg-purple-500/10 text-purple-700 dark:bg-purple-500/5 dark:text-purple-300 text-[8px] font-black px-2 py-0.5 rounded-md border border-purple-500/20 uppercase tracking-wider font-mono">
+                                      ⚡ {language === 'hi' ? 'नवीनतम पैटर्न' : 'LATEST PATTERN'}
+                                    </span>
+                                  </div>
+
+                                  <h4 className="font-extrabold text-base text-slate-900 dark:text-white leading-snug">
+                                    {getLocalizedName(group.name, language)}
+                                  </h4>
+
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
+                                    <span>{count} Total Tests</span>
+                                    <span>•</span>
+                                    <span>Full Length, Chapter & Sectional Tests</span>
+                                    <span>•</span>
+                                    <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 English, Hindi</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 w-full sm:w-auto border-t sm:border-t-0 border-slate-100 dark:border-slate-800/80 pt-3 sm:pt-0 shrink-0">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveSubSubId(group.id);
+                                    }}
+                                    className="w-full sm:w-48 bg-[#1C3D5A] hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-lg text-xs text-center shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                                  >
+                                    <span>{language === 'hi' ? 'टेस्ट सीरीज देखें' : 'Explore Test Series'}</span>
+                                    <ChevronRight className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
                             );
                           })}
                         </div>
+                      </div>
+                    ) : groups.length > 0 && activeSubSubId !== null ? (
+                      /* Mocktest List Page for selected sub-subcategory */
+                      <div className="space-y-6">
+                        {/* Horizontal Tab Navigator + Back button */}
+                        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+                          <button
+                            onClick={() => setActiveSubSubId(null)}
+                            className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold px-3.5 py-2 rounded-xl text-xs transition cursor-pointer shrink-0"
+                          >
+                            <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'सभी सीरीज' : 'All Series'}
+                          </button>
+                          <div className="flex gap-2 overflow-x-auto pb-2.5 custom-horizontal-scroll flex-1">
+                            {groups.map(group => {
+                              const isSelected = activeSubSubId === group.id;
+                              return (
+                                <button
+                                  key={group.id}
+                                  onClick={() => setActiveSubSubId(group.id)}
+                                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border ${
+                                    isSelected
+                                      ? 'bg-blue-600 border-blue-600 text-white shadow-sm font-extrabold'
+                                      : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
+                                  }`}
+                                >
+                                  {getLocalizedName(group.name, language)} ({group.tests.length})
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
 
-                        {/* Selected Group's Tests */}
+                        {/* Active group's tests */}
                         {(() => {
-                          const activeGroup = groups.find(g => g.id === (activeSubSubId || groups[0]?.id));
-                          if (!activeGroup) return null;
-                          if (activeGroup.tests.length === 0) {
+                          const activeGroup = groups.find(g => g.id === activeSubSubId);
+                          if (!activeGroup || activeGroup.tests.length === 0) {
                             return (
                               <div className="text-center py-10 sm:py-12 px-4 sm:px-6 bg-gradient-to-b from-slate-50/80 to-white dark:from-slate-950 dark:to-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3 max-w-xl mx-auto my-2">
                                 <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-sm">
                                   <Clock className="h-6 w-6 animate-pulse" />
                                 </div>
                                 <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                                  {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                                  {language === 'hi' ? 'इस श्रेणी में अभी कोई टेस्ट उपलब्ध नहीं है' : 'No tests available in this series yet.'}
                                 </h4>
-                                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto font-medium leading-relaxed">
-                                  {language === 'hi'
-                                    ? 'हमारी विशेषज्ञ टीम इस श्रेणी के लिए उच्च-गुणवत्ता वाले मॉक टेस्ट, अभ्यास सेट और विस्तृत समाधान तैयार कर रही है। जल्द ही नए टेस्ट उपलब्ध होंगे!'
-                                    : 'Our expert team is actively creating high-quality mock tests, practice sets, and detailed solutions for this category. Stay tuned — new tests are uploaded regularly!'}
-                                </p>
                               </div>
                             );
                           }
+
                           return (
                             <div className="space-y-3">
-                              {activeGroup.tests.map(test => {
+                              {activeGroup.tests.map((test) => {
                                 const hasPass = currentUser && (
                                   (test.requiredTier === 'None') ||
                                   (test.requiredTier === 'Testbook Pass' && (currentUser.subscriptionTier === 'Testbook Pass' || currentUser.subscriptionTier === 'Testbook Pass Pro')) ||

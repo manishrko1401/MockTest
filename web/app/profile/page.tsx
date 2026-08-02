@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon, Globe, ArrowLeft, ShieldCheck, Menu, X, Eye, EyeOff, Coins } from 'lucide-react';
+import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, ChevronDown, ChevronUp, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon, Globe, ArrowLeft, ShieldCheck, Menu, X, Eye, EyeOff, Coins, Trophy } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 
@@ -25,6 +25,10 @@ export default function StudentProfilePage() {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Accordion minimized states for mobile view
+  const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
+  const [isPasswordExpanded, setIsPasswordExpanded] = useState(false);
 
   const [mounted, setMounted] = useState(false);
 
@@ -117,9 +121,19 @@ export default function StudentProfilePage() {
         
         {/* MOBILE HEADER */}
         <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
-          <Link href="/" className="flex items-center gap-1 text-slate-705 dark:text-white hover:text-blue-600 font-bold text-xs">
-            <ArrowLeft className="h-4 w-4" /> {t.navHome}
-          </Link>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Link href="/" className="flex items-center gap-1 text-slate-705 dark:text-white hover:text-blue-600 font-bold text-xs shrink-0">
+              <ArrowLeft className="h-4 w-4" /> {t.navHome}
+            </Link>
+
+            {/* Mocktest Hub Logo */}
+            <div className="flex items-center gap-1.5 pl-2.5 border-l border-slate-200 dark:border-slate-800 shrink-0">
+              <Trophy className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span className="font-black text-[10px] tracking-wider text-slate-900 dark:text-white uppercase leading-none">
+                Mocktest Hub
+              </span>
+            </div>
+          </div>
 
           <div className="flex items-center gap-2">
             {/* Language Selector */}
@@ -258,128 +272,174 @@ export default function StudentProfilePage() {
           </section>
 
           {/* ACCOUNT SETTINGS FORM STACK */}
-          <section className="space-y-6">
+          <section className="space-y-4">
             
-            {/* Details Update Form */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-202 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
-              <h3 className="font-extrabold text-[11px] text-slate-850 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3.5 mb-4 flex items-center gap-2">
-                <User className="h-4 w-4 text-blue-505" /> {t.updateDetails}
-              </h3>
-
-              <form onSubmit={handleUpdateProfile} className="space-y-4">
-                <div>
-                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.fullName}</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-55 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
-                  />
+            {/* Details Update Form Accordion */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-200">
+              <button
+                type="button"
+                onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
+                className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-850/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-blue-500 shrink-0" />
+                  <span className="font-extrabold text-[11px] text-slate-850 dark:text-white uppercase tracking-wider">
+                    {t.updateDetails}
+                  </span>
                 </div>
-
-                <div>
-                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.emailAddr}</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-55 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-805 dark:text-slate-202 focus:outline-none"
-                  />
+                <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                  <span className="text-[9.5px] font-bold">
+                    {isDetailsExpanded ? (language === 'hi' ? 'छुपायें' : 'Minimize') : (language === 'hi' ? 'खोलें' : 'Expand')}
+                  </span>
+                  {isDetailsExpanded ? (
+                    <ChevronUp className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 shrink-0" />
+                  )}
                 </div>
+              </button>
 
-                <div>
-                  <label className="block text-[10px] text-slate-505 font-bold uppercase tracking-wider mb-1">{t.mobileNum}</label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-xs text-slate-400 font-mono">+91</span>
-                    <input
-                      type="tel"
-                      value={mobile}
-                      onChange={(e) => setMobile(e.target.value)}
-                      className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-202 dark:border-slate-800 rounded-xl pl-11 pr-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
-                    />
-                  </div>
+              {isDetailsExpanded && (
+                <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800/80 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <form onSubmit={handleUpdateProfile} className="space-y-4 pt-2">
+                    <div>
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.fullName}</label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full bg-slate-55 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.emailAddr}</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-slate-55 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-805 dark:text-slate-202 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-505 font-bold uppercase tracking-wider mb-1">{t.mobileNum}</label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-xs text-slate-400 font-mono">+91</span>
+                        <input
+                          type="tel"
+                          value={mobile}
+                          onChange={(e) => setMobile(e.target.value)}
+                          className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-202 dark:border-slate-800 rounded-xl pl-11 pr-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-750 text-white font-bold py-2.5 rounded-xl text-xs shadow transition cursor-pointer"
+                    >
+                      {t.saveProfileBtn}
+                    </button>
+                  </form>
                 </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-750 text-white font-bold py-2.5 rounded-xl text-xs shadow transition cursor-pointer"
-                >
-                  {t.saveProfileBtn}
-                </button>
-              </form>
+              )}
             </div>
 
-            {/* Password Update Form */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-202 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
-              <h3 className="font-extrabold text-[11px] text-slate-850 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3.5 mb-4 flex items-center gap-2">
-                <KeyRound className="h-4 w-4 text-blue-500" /> {t.changePass}
-              </h3>
-
-              <form onSubmit={handleUpdatePassword} className="space-y-4">
-                <div>
-                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.oldPass}</label>
-                  <div className="relative">
-                    <input
-                      type={showOldPassword ? "text" : "password"}
-                      value={oldPassword}
-                      onChange={(e) => setOldPassword(e.target.value)}
-                      className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowOldPassword(!showOldPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
-                    >
-                      {showOldPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
+            {/* Password Update Form Accordion */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-202 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-200">
+              <button
+                type="button"
+                onClick={() => setIsPasswordExpanded(!isPasswordExpanded)}
+                className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-850/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <KeyRound className="h-4 w-4 text-blue-500 shrink-0" />
+                  <span className="font-extrabold text-[11px] text-slate-850 dark:text-white uppercase tracking-wider">
+                    {t.changePass}
+                  </span>
                 </div>
-
-                <div>
-                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.newPass}</label>
-                  <div className="relative">
-                    <input
-                      type={showNewPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-202 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
-                    >
-                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
+                <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                  <span className="text-[9.5px] font-bold">
+                    {isPasswordExpanded ? (language === 'hi' ? 'छुपायें' : 'Minimize') : (language === 'hi' ? 'खोलें' : 'Expand')}
+                  </span>
+                  {isPasswordExpanded ? (
+                    <ChevronUp className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 shrink-0" />
+                  )}
                 </div>
+              </button>
 
-                <div>
-                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.confirmPass}</label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-202 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-slate-850 dark:text-slate-202 focus:outline-none"
-                    />
+              {isPasswordExpanded && (
+                <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800/80 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <form onSubmit={handleUpdatePassword} className="space-y-4 pt-2">
+                    <div>
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.oldPass}</label>
+                      <div className="relative">
+                        <input
+                          type={showOldPassword ? "text" : "password"}
+                          value={oldPassword}
+                          onChange={(e) => setOldPassword(e.target.value)}
+                          className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowOldPassword(!showOldPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+                        >
+                          {showOldPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.newPass}</label>
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? "text" : "password"}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-202 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+                        >
+                          {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">{t.confirmPass}</label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="w-full bg-slate-55 dark:bg-slate-955 border border-slate-202 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-slate-850 dark:text-slate-202 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+                        >
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
                     <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs shadow transition cursor-pointer"
                     >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {t.updatePassBtn}
                     </button>
-                  </div>
+                  </form>
                 </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs shadow transition cursor-pointer"
-                >
-                  {t.updatePassBtn}
-                </button>
-              </form>
+              )}
             </div>
 
           </section>

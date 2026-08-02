@@ -10,6 +10,7 @@ import {
   Image
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image as ExpoImage } from 'expo-image';
 import {
   ArrowLeft,
   Play,
@@ -254,9 +255,15 @@ export default function TestSeriesDetailScreen({
             width: 32, height: 32, borderRadius: 16,
             backgroundColor: '#FFFFFF',
             marginRight: 10, justifyContent: 'center', alignItems: 'center',
-            overflow: 'hidden'
+            overflow: 'hidden', padding: 2
           }}>
-            <Image source={{ uri: series.logoUrl.trim() }} style={{ width: 32, height: 32, borderRadius: 16, resizeMode: 'cover' }} />
+            <ExpoImage
+              source={{ uri: series.logoUrl.trim().replace(/^http:\/\//i, 'https://') }}
+              style={{ width: '100%', height: '100%', borderRadius: 14 }}
+              contentFit="contain"
+              transition={150}
+              cachePolicy="memory-disk"
+            />
           </View>
         ) : (
           <View style={{
