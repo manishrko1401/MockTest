@@ -656,23 +656,24 @@ function TcsIonEngine({ testId }: { testId: string }) {
               const sectionStats = (session?.sections || []).map((sec, idx) => {
                 const secQuestions = (session?.questions || []).filter(q => q.sectionId === sec.id);
                 const total = secQuestions.length;
-                let attempted = 0;
+                let answered = 0;
+                let answeredAndMarked = 0;
                 let markedForReview = 0;
-                let unattempted = 0;
+                let notAttempted = 0;
 
                 secQuestions.forEach(q => {
                   const resp = responses[q.id];
-                  const isAns = resp?.selectedOptionIndex !== null && resp?.selectedOptionIndex !== undefined;
+                  const hasOption = resp?.selectedOptionIndex !== null && resp?.selectedOptionIndex !== undefined;
                   const isMarked = resp?.state === 4 || resp?.state === 5;
 
-                  if (isAns) {
-                    attempted++;
-                  }
-                  if (isMarked) {
+                  if (hasOption && !isMarked) {
+                    answered++;
+                  } else if (hasOption && isMarked) {
+                    answeredAndMarked++;
+                  } else if (!hasOption && isMarked) {
                     markedForReview++;
-                  }
-                  if (!isAns && !isMarked) {
-                    unattempted++;
+                  } else {
+                    notAttempted++;
                   }
                 });
 
@@ -681,36 +682,42 @@ function TcsIonEngine({ testId }: { testId: string }) {
                   sectionName: sec.name || `Section ${idx + 1}`,
                   partLabel: `PART-${String.fromCharCode(65 + idx)}`,
                   total,
-                  attempted,
+                  answered,
+                  answeredAndMarked,
                   markedForReview,
-                  unattempted,
+                  notAttempted,
                 };
               });
 
               const totalQuestionsAll = sectionStats.reduce((acc, s) => acc + s.total, 0);
-              const totalAttemptedAll = sectionStats.reduce((acc, s) => acc + s.attempted, 0);
+              const totalAnsweredAll = sectionStats.reduce((acc, s) => acc + s.answered, 0);
+              const totalAnsweredAndMarkedAll = sectionStats.reduce((acc, s) => acc + s.answeredAndMarked, 0);
               const totalMarkedAll = sectionStats.reduce((acc, s) => acc + s.markedForReview, 0);
-              const totalUnattemptedAll = sectionStats.reduce((acc, s) => acc + s.unattempted, 0);
+              const totalNotAttemptedAll = sectionStats.reduce((acc, s) => acc + s.notAttempted, 0);
 
               return (
                 <div className="py-5 flex flex-col gap-5">
-                  {/* Top Overview Cards (Horizontal Row) */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-center">
+                  {/* Top Overview Cards (Horizontal Row - 5 Status Categories) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-center">
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Questions</p>
                       <p className="text-xl font-black text-slate-800 mt-0.5">{totalQuestionsAll}</p>
                     </div>
-                    <div className="bg-green-50/70 border border-green-200 rounded-2xl p-3.5 text-center">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-green-700">Attempted Questions</p>
-                      <p className="text-xl font-black text-green-700 mt-0.5">{totalAttemptedAll}</p>
+                    <div className="bg-green-50/70 border border-green-200 rounded-2xl p-3 text-center">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-green-700">Answered</p>
+                      <p className="text-xl font-black text-green-700 mt-0.5">{totalAnsweredAll}</p>
                     </div>
-                    <div className="bg-purple-50/70 border border-purple-200 rounded-2xl p-3.5 text-center">
+                    <div className="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3 text-center">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700">Answered &amp; Marked</p>
+                      <p className="text-xl font-black text-indigo-700 mt-0.5">{totalAnsweredAndMarkedAll}</p>
+                    </div>
+                    <div className="bg-purple-50/70 border border-purple-200 rounded-2xl p-3 text-center">
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700">Marked For Review</p>
                       <p className="text-xl font-black text-purple-700 mt-0.5">{totalMarkedAll}</p>
                     </div>
-                    <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-3.5 text-center">
+                    <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-3 text-center">
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Not Attempted</p>
-                      <p className="text-xl font-black text-amber-700 mt-0.5">{totalUnattemptedAll}</p>
+                      <p className="text-xl font-black text-amber-700 mt-0.5">{totalNotAttemptedAll}</p>
                     </div>
                   </div>
 
@@ -730,10 +737,11 @@ function TcsIonEngine({ testId }: { testId: string }) {
                         <thead>
                           <tr className="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 uppercase text-[10px] tracking-wider">
                             <th className="py-2.5 px-4">Section Name</th>
-                            <th className="py-2.5 px-4 text-center">Total Qs</th>
-                            <th className="py-2.5 px-4 text-center">Attempted Qs</th>
-                            <th className="py-2.5 px-4 text-center">Marked For Review</th>
-                            <th className="py-2.5 px-4 text-center">Not Attempted Qs</th>
+                            <th className="py-2.5 px-3 text-center">Total Qs</th>
+                            <th className="py-2.5 px-3 text-center">Answered</th>
+                            <th className="py-2.5 px-3 text-center">Ans &amp; Marked</th>
+                            <th className="py-2.5 px-3 text-center">Marked For Review</th>
+                            <th className="py-2.5 px-3 text-center">Not Attempted</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
@@ -743,20 +751,22 @@ function TcsIonEngine({ testId }: { testId: string }) {
                                 <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-black shrink-0">{sec.partLabel}</span>
                                 <span className="truncate">{sec.sectionName}</span>
                               </td>
-                              <td className="py-2.5 px-4 text-center font-bold text-slate-800">{sec.total}</td>
-                              <td className="py-2.5 px-4 text-center font-extrabold text-green-600 bg-green-50/30">{sec.attempted}</td>
-                              <td className="py-2.5 px-4 text-center font-extrabold text-purple-600 bg-purple-50/30">{sec.markedForReview}</td>
-                              <td className="py-2.5 px-4 text-center font-extrabold text-amber-600 bg-amber-50/30">{sec.unattempted}</td>
+                              <td className="py-2.5 px-3 text-center font-bold text-slate-800">{sec.total}</td>
+                              <td className="py-2.5 px-3 text-center font-extrabold text-green-600 bg-green-50/30">{sec.answered}</td>
+                              <td className="py-2.5 px-3 text-center font-extrabold text-indigo-600 bg-indigo-50/30">{sec.answeredAndMarked}</td>
+                              <td className="py-2.5 px-3 text-center font-extrabold text-purple-600 bg-purple-50/30">{sec.markedForReview}</td>
+                              <td className="py-2.5 px-3 text-center font-extrabold text-amber-600 bg-amber-50/30">{sec.notAttempted}</td>
                             </tr>
                           ))}
                         </tbody>
                         <tfoot>
                           <tr className="bg-slate-100/90 font-black text-slate-900 border-t-2 border-slate-300 text-xs">
                             <td className="py-2.5 px-4 uppercase tracking-wider">Total Summary</td>
-                            <td className="py-2.5 px-4 text-center">{totalQuestionsAll}</td>
-                            <td className="py-2.5 px-4 text-center text-green-700">{totalAttemptedAll}</td>
-                            <td className="py-2.5 px-4 text-center text-purple-700">{totalMarkedAll}</td>
-                            <td className="py-2.5 px-4 text-center text-amber-700">{totalUnattemptedAll}</td>
+                            <td className="py-2.5 px-3 text-center">{totalQuestionsAll}</td>
+                            <td className="py-2.5 px-3 text-center text-green-700">{totalAnsweredAll}</td>
+                            <td className="py-2.5 px-3 text-center text-indigo-700">{totalAnsweredAndMarkedAll}</td>
+                            <td className="py-2.5 px-3 text-center text-purple-700">{totalMarkedAll}</td>
+                            <td className="py-2.5 px-3 text-center text-amber-700">{totalNotAttemptedAll}</td>
                           </tr>
                         </tfoot>
                       </table>
