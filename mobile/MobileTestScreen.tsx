@@ -385,7 +385,9 @@ export default function MobileTestScreen({
           const secId = `sec_custom_${sectionNames.indexOf(secName)}`;
           const qOrder = sectionCounters[secName]++;
           return {
-            id: q.id || `q_custom_${idx}`,
+            id: (q.id !== undefined && q.id !== null && q.id !== '')
+              ? String(q.id)
+              : `q_custom_${idx}`,
             sectionId: secId,
             questionType: 'mcq',
             orderIndex: qOrder,

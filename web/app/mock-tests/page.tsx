@@ -432,38 +432,47 @@ export default function MockTestsCatalog() {
   // Helper: find a question from the cache by testId + questionId
   const findBookmarkedQuestion = useCallback((testId: string, questionId: string) => {
     const questions = bookmarkQsCache[testId];
-    if (!questions) return null;
-    // Custom questions from API have different shape — normalise
-    return questions.find((q: any) => q.id === questionId) || null;
+    if (!questions || !Array.isArray(questions)) return null;
+    const targetStr = String(questionId || '').trim();
+    return questions.find((q: any, idx: number) => {
+      if (!q) return false;
+      const qIdStr = String(q.id || q.questionId || q._id || `q_${idx + 1}` || `q_custom_${idx}`).trim();
+      return qIdStr === targetStr || String(idx + 1) === targetStr || (targetStr.startsWith('q_custom_') && targetStr === `q_custom_${idx}`);
+    }) || null;
   }, [bookmarkQsCache]);
 
-  // Trigger MathJax typesetting whenever bookmarks are expanded
+  // Trigger MathJax typesetting whenever bookmarks are expanded.
+  // Awaits startup.promise to ensure config is applied before typeset runs.
   useEffect(() => {
     let active = true;
-    let timeoutId: any = null;
+    let pollTimeoutId: any = null;
 
-    const triggerTypeset = () => {
+    const runTypeset = async (MathJax: any) => {
       if (!active) return;
-      const MathJax = (window as any).MathJax;
-      if (MathJax?.typesetPromise) {
-        try {
-          MathJax.typesetPromise().catch((err: any) => {
-            console.warn("MathJax typesetting failed:", err);
-          });
-        } catch (err) {
-          console.warn("MathJax typesetting failed:", err);
-        }
-      } else if (typeof window !== 'undefined') {
-        // MathJax not loaded yet, retry in 100ms
-        timeoutId = setTimeout(triggerTypeset, 100);
+      try {
+        if (MathJax.startup?.promise) await MathJax.startup.promise;
+        if (!active) return;
+        await MathJax.typesetPromise();
+      } catch (err) {
+        if (active) console.warn('MathJax typesetting failed:', err);
       }
     };
 
-    triggerTypeset();
+    const waitAndTypeset = () => {
+      if (!active) return;
+      const MathJax = (window as any).MathJax;
+      if (MathJax?.typesetPromise) {
+        runTypeset(MathJax);
+      } else if (typeof window !== 'undefined') {
+        pollTimeoutId = setTimeout(waitAndTypeset, 150);
+      }
+    };
+
+    waitAndTypeset();
 
     return () => {
       active = false;
-      if (timeoutId) clearTimeout(timeoutId);
+      if (pollTimeoutId) clearTimeout(pollTimeoutId);
     };
   }, [expandedBookmarks]);
   
@@ -1928,58 +1937,72 @@ export default function MockTestsCatalog() {
                         </div>
                       </div>
                     ) : groups.length > 0 && (activeSubSubId === null || activeSubSubId === 'all') ? (
-                      /* Sub-subcategory List Page: ONLY sub-subcategories in full-width list format matching mock test cards */
+                      /* Sub-subcategory List Page: ONLY sub-subcategories in rectangle tile grid format (3 tiles per row on desktop) */
                       <div className="space-y-3.5">
                         <div className="mb-2">
                           <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
                             {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक टेस्ट सीरीज चुनें:' : 'Select a test series to start practicing:'}
                           </p>
                         </div>
-                        <div className="space-y-3.5">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4.5">
                           {groups.map(group => {
                             const count = group.tests.length;
+
+                            const isSsc = selectedCategory === 'ssc' || group.id.includes('ssc');
+                            const isRailways = selectedCategory === 'railways' || group.id.includes('railway');
+                            const isBanking = selectedCategory === 'banking' || group.id.includes('bank');
+                            const isTeaching = selectedCategory === 'teaching' || group.id.includes('teach');
+                            const isUgcNet = selectedCategory === 'ugc_net' || group.id.includes('ugc') || group.id.includes('state');
+
+                            const accentColor = 
+                              isSsc ? 'border-t-orange-500 hover:border-orange-400' :
+                              isRailways ? 'border-t-indigo-500 hover:border-indigo-400' :
+                              isBanking ? 'border-t-emerald-500 hover:border-emerald-400' :
+                              isTeaching ? 'border-t-amber-500 hover:border-amber-400' :
+                              isUgcNet ? 'border-t-sky-500 hover:border-sky-400' :
+                              'border-t-blue-500 hover:border-blue-400';
+
                             return (
                               <div
                                 key={group.id}
                                 onClick={() => setActiveSubSubId(group.id)}
-                                className="backdrop-blur-sm p-5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full bg-white/75 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 border-l-4 border-l-blue-500 relative overflow-hidden cursor-pointer hover:scale-[1.01]"
+                                className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer group hover:border-blue-500/40 border-t-4 ${accentColor} relative overflow-hidden h-full`}
                               >
-                                <div className="space-y-2 flex-1 w-full text-left">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <span className="bg-blue-500/10 text-blue-700 dark:bg-blue-500/5 dark:text-blue-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-blue-500/20 uppercase tracking-wider">
+                                <div className="space-y-3 flex-1 flex flex-col">
+                                  {/* Top Badges */}
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <span className="bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 text-[9px] font-black px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-900/60 uppercase tracking-wider">
                                       {language === 'hi' ? 'टेस्ट सीरीज' : 'TEST SERIES'}
                                     </span>
-                                    <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider font-mono">
+                                    <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 text-[9px] font-black px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-900/60 uppercase tracking-wider font-mono">
                                       {count} {language === 'hi' ? 'मॉक टेस्ट' : 'Mock Tests'}
-                                    </span>
-                                    <span className="bg-purple-500/10 text-purple-700 dark:bg-purple-500/5 dark:text-purple-300 text-[8px] font-black px-2 py-0.5 rounded-md border border-purple-500/20 uppercase tracking-wider font-mono">
-                                      ⚡ {language === 'hi' ? 'नवीनतम पैटर्न' : 'LATEST PATTERN'}
                                     </span>
                                   </div>
 
-                                  <h4 className="font-extrabold text-base text-slate-900 dark:text-white leading-snug">
+                                  {/* Title */}
+                                  <h4 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 min-h-[2.5rem] flex-1">
                                     {getLocalizedName(group.name, language)}
                                   </h4>
 
-                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
+                                  {/* Metadata info */}
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400 font-bold pt-2 border-t border-slate-100 dark:border-slate-800/80">
                                     <span>{count} Total Tests</span>
-                                    <span>•</span>
-                                    <span>Full Length, Chapter & Sectional Tests</span>
                                     <span>•</span>
                                     <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 English, Hindi</span>
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 w-full sm:w-auto border-t sm:border-t-0 border-slate-100 dark:border-slate-800/80 pt-3 sm:pt-0 shrink-0">
+                                {/* CTA Button */}
+                                <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800/80 shrink-0">
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setActiveSubSubId(group.id);
                                     }}
-                                    className="w-full sm:w-48 bg-[#1C3D5A] hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-lg text-xs text-center shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                                    className="w-full bg-[#1C3D5A] hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-xl text-xs text-center shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
                                   >
                                     <span>{language === 'hi' ? 'टेस्ट सीरीज देखें' : 'Explore Test Series'}</span>
-                                    <ChevronRight className="h-4 w-4" />
+                                    <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                                   </button>
                                 </div>
                               </div>

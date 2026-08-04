@@ -15,36 +15,20 @@ const adapter = new (require('@prisma/adapter-pg').PrismaPg)(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function check() {
-  const testIds = [
-    'english_improvement_of_sentences_practice_practice_default',
-    'english_improvement_of_sentences_practice_default',
-    'english_improvement_of_sentences_practice_practice_practice_default'
+  const urlsToTest = [
+    { name: 'SSC Exams', url: 'https://image.pngaaa.com/279/10279-middle.png' },
+    { name: 'CBSE Exams (CTET)', url: 'https://upload.wikimedia.org/wikipedia/hi/archive/d/d5/20170528202850%21Cbse-logo.png' },
   ];
-  
-  for (const tid of testIds) {
-    const t = await prisma.mockTest.findUnique({
-      where: { id: tid },
-      select: { id: true, customQuestions: true, questionsCount: true }
-    });
-    if (t) {
-      console.log(`FOUND: ${tid}`);
-      console.log(`  customQuestions:`, JSON.stringify(t.customQuestions));
-      console.log(`  questionsCount: ${t.questionsCount}`);
-    } else {
-      console.log(`NOT FOUND: ${tid}`);
+  const fetch = (await import('node-fetch')).default;
+  for (const { name, url } of urlsToTest) {
+    try {
+      const res = await fetch(url, { method: 'HEAD', timeout: 5000 });
+      console.log(`${name}: HTTP ${res.status} ${res.statusText} - Content-Type: ${res.headers.get('content-type')}`);
+    } catch (err) {
+      console.log(`${name}: ERROR - ${err.message}`);
     }
-  }
-  
-  // Also check the S3 URL is accessible
-  const url = 'https://fly.storage.tigris.dev/mocktest-assets/questions_english_improvement_of_sentences_practice_default.json';
-  console.log('\nTesting S3 URL directly...');
-  try {
-    const fetch = (await import('node-fetch')).default;
-    const res = await fetch(url, { method: 'HEAD' });
-    console.log(`S3 HEAD response: ${res.status} ${res.statusText}`);
-  } catch (err) {
-    console.log('S3 URL error:', err.message);
   }
 }
 
 check().catch(console.error).finally(() => { prisma.$disconnect(); pool.end(); });
+

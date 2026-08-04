@@ -103,6 +103,7 @@ model Category {
   logoUrl           String?
   exams             Exam[]
   createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt @default(now())
   orderIndex        Int                @default(0)
   isPopular         Boolean            @default(false)
   isPracticeSeries  Boolean            @default(false)
@@ -121,6 +122,7 @@ model Exam {
   nameHi            String?            @default("")
   testSeries        TestSeries[]
   createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt @default(now())
   orderIndex        Int                @default(0)
 
   @@map("exams")

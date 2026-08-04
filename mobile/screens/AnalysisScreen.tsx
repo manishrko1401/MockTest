@@ -240,14 +240,20 @@ export default function AnalysisScreen({
   useEffect(() => {
     let isMounted = true;
     const fetchQuestions = async () => {
+      // Normalize helper: ensure every question has a stable string id
+      const normalizeQs = (qs: any[]): any[] =>
+        qs.map((q: any, idx: number) => ({
+          ...q,
+          id: q.id !== undefined && q.id !== null && q.id !== ''
+            ? String(q.id)
+            : `q_custom_${idx}`,
+        }));
+
       // Step 1: Render immediately from device local storage if present
       const cached = await getCachedQuestions(activeAttempt.testId);
       if (cached && Array.isArray(cached) && cached.length > 0) {
         if (isMounted) {
-          setQuestions(cached.map((q: any, idx: number) => ({
-            ...q,
-            id: q.id || `q_custom_${idx}`
-          })));
+          setQuestions(normalizeQs(cached));
           setLoadingQs(false);
         }
       } else {
@@ -266,12 +272,9 @@ export default function AnalysisScreen({
           setTestNegativeMarks(Number(res.negativeMarks));
         }
         if (res.success && res.questions && Array.isArray(res.questions)) {
-          const mappedQuestions = res.questions.map((q: any, idx: number) => ({
-            ...q,
-            id: q.id || `q_custom_${idx}`
-          }));
+          const mappedQuestions = normalizeQs(res.questions);
           setQuestions(mappedQuestions);
-          saveQuestionsToCache(activeAttempt.testId, res.questions);
+          saveQuestionsToCache(activeAttempt.testId, mappedQuestions);
         } else if (!cached || cached.length === 0) {
           const fallbackList = activeAttempt.testId.includes('ssc') 
             ? [

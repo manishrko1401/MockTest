@@ -18,7 +18,7 @@ const SYNC_TS_KEY  = 'catalog_last_synced_at';
 
 // ── TTL settings ───────────────────────────────────────────────────────────
 const QUESTIONS_TTL_MS = 30 * 24 * 60 * 60 * 1000;  // 30 days
-const CATALOG_TTL_MS   = 24 * 60 * 60 * 1000;       // 24 hours
+const CATALOG_TTL_MS   = 2 * 60 * 60 * 1000;        // 2 hours (reduced from 24h to pick up admin changes faster)
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  QUESTIONS  (raw API response — the exact array from getCustomQuestions)
@@ -303,33 +303,42 @@ export function mergeCatalogDelta(
   }
 ): { examCatalog: any[]; noticesList: any[]; usersList: any[] } {
   // Deep clone so we don't mutate in place
-  // 1. Filter out categories that have been deleted from the database
-  const validCatIds = new Set(delta.newCategories.map((c: any) => c.id));
-  const catalog = JSON.parse(JSON.stringify(existing.examCatalog)).filter((c: any) => validCatIds.has(c.id));
+  let catalog = JSON.parse(JSON.stringify(existing.examCatalog || []));
+
+  // 1. Filter out categories that have been deleted from the database (only if delta provided non-empty categories list)
+  if (delta.newCategories && delta.newCategories.length > 0) {
+    const validCatIds = new Set(delta.newCategories.map((c: any) => c.id));
+    catalog = catalog.filter((c: any) => validCatIds.has(c.id));
+  }
 
   // Add new top-level categories OR update logoUrl/name on existing ones
-  for (const newCat of delta.newCategories) {
-    const existing = catalog.find((c: any) => c.id === newCat.id);
-    if (existing) {
+  for (const newCat of (delta.newCategories || [])) {
+    const existingCat = catalog.find((c: any) => c.id === newCat.id);
+    if (existingCat) {
       // Update all mutable fields on existing category
-      existing.logoUrl = newCat.logoUrl ?? existing.logoUrl;
-      existing.name = newCat.name ?? existing.name;
-      existing.orderIndex = newCat.orderIndex ?? existing.orderIndex;
+      existingCat.logoUrl = newCat.logoUrl !== undefined ? newCat.logoUrl : existingCat.logoUrl;
+      existingCat.name = newCat.name || existingCat.name;
+      existingCat.orderIndex = newCat.orderIndex !== undefined ? newCat.orderIndex : existingCat.orderIndex;
       // Preserve isPracticeSeries and other catalog flags if present in delta
-      if (newCat.isPracticeSeries !== undefined) existing.isPracticeSeries = newCat.isPracticeSeries;
-      if (newCat.isPopular !== undefined) existing.isPopular = newCat.isPopular;
-      if (newCat.description !== undefined) existing.description = newCat.description;
-      if (newCat.countText !== undefined) existing.countText = newCat.countText;
+      if (newCat.isPracticeSeries !== undefined) existingCat.isPracticeSeries = newCat.isPracticeSeries;
+      if (newCat.isPopular !== undefined) existingCat.isPopular = newCat.isPopular;
+      if (newCat.description !== undefined) existingCat.description = newCat.description;
+      if (newCat.countText !== undefined) existingCat.countText = newCat.countText;
     } else {
       catalog.push({ ...newCat, subCategories: [] });
     }
   }
 
-  // 2. Add new exams into their parent category
-  for (const newExam of delta.newExams) {
+  // 2. Add or update exams into their parent category
+  for (const newExam of (delta.newExams || [])) {
     const parentCat = catalog.find((c: any) => c.id === newExam.categoryId);
     if (parentCat) {
-      if (!parentCat.subCategories.find((e: any) => e.id === newExam.id)) {
+      if (!parentCat.subCategories) parentCat.subCategories = [];
+      const existingExam = parentCat.subCategories.find((e: any) => e.id === newExam.id);
+      if (existingExam) {
+        existingExam.name = newExam.name || existingExam.name;
+        existingExam.orderIndex = newExam.orderIndex !== undefined ? newExam.orderIndex : existingExam.orderIndex;
+      } else {
         parentCat.subCategories.push({
           ...newExam,
           subSubCategories: [],
@@ -339,13 +348,18 @@ export function mergeCatalogDelta(
     }
   }
 
-  // 3. Add new test series into their parent exam
-  for (const newSeries of delta.newSeries) {
+  // 3. Add or update test series into their parent exam
+  for (const newSeries of (delta.newSeries || [])) {
     for (const cat of catalog) {
       const parentExam = (cat.subCategories || []).find((e: any) => e.id === newSeries.examId);
       if (parentExam) {
-        if (!(parentExam.subSubCategories || []).find((ss: any) => ss.id === newSeries.id)) {
-          if (!parentExam.subSubCategories) parentExam.subSubCategories = [];
+        if (!parentExam.subSubCategories) parentExam.subSubCategories = [];
+        const existingSeries = parentExam.subSubCategories.find((ss: any) => ss.id === newSeries.id);
+        if (existingSeries) {
+          existingSeries.title = newSeries.title || existingSeries.title;
+          existingSeries.name = newSeries.title || existingSeries.name;
+          existingSeries.orderIndex = newSeries.orderIndex !== undefined ? newSeries.orderIndex : existingSeries.orderIndex;
+        } else {
           parentExam.subSubCategories.push({ ...newSeries, name: newSeries.title, tests: [] });
         }
         break;

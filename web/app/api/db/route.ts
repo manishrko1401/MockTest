@@ -627,7 +627,7 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
       orderBy: { orderIndex: 'asc' },
     }),
     prisma.exam.findMany({
-      where: { createdAt: { gt: since } },
+      where: { updatedAt: { gt: since } },
       orderBy: { orderIndex: 'asc' },
     }),
     prisma.testSeries.findMany({
@@ -659,13 +659,12 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
       },
     }),
     prisma.notice.findMany({
+      where: { createdAt: { gt: since } },
       orderBy: { createdAt: 'desc' },
-      take: 100,
     }),
   ]);
 
   const hasNewData =
-    updatedCategories.length > 0 ||
     updatedExams.length > 0 ||
     updatedSeries.length > 0 ||
     updatedTests.length > 0 ||
@@ -710,14 +709,18 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
   // Return the list of updated test IDs so mobile can clear their question cache
   const updatedTestIds = updatedTests.map((t: any) => t.id);
 
+  // Always push full categories list so any admin change to logo/name/order syncs immediately
+  const alwaysHasNewData = true;
+
   return NextResponse.json({
     success: true,
     isFullSync: false,
-    hasNewData,
+    hasNewData: alwaysHasNewData,
     newCategories: updatedCategories.map((c: any) => ({
       id: c.id,
       name: c.name,
-      logoUrl: c.logoUrl || null,
+      nameHi: c.nameHi || '',
+      logoUrl: c.logoUrl !== undefined ? (c.logoUrl || null) : null,
       orderIndex: c.orderIndex ?? 0,
       isPracticeSeries: c.isPracticeSeries ?? false,
       isPopular: c.isPopular ?? false,
@@ -1779,6 +1782,10 @@ async function handleEditCategory(rawPayload: any) {
     },
   });
 
+  // Bust in-memory catalog cache so next sync serves fresh data
+  catalogCache.examCatalog = null;
+  catalogCache.noticesList = null;
+
   return NextResponse.json({ success: true });
 }
 
@@ -1793,6 +1800,10 @@ async function handleEditSubCategory(data: any) {
     },
   });
 
+  // Bust in-memory catalog cache so next sync serves fresh data
+  catalogCache.examCatalog = null;
+  catalogCache.noticesList = null;
+
   return NextResponse.json({ success: true });
 }
 
@@ -1806,6 +1817,10 @@ async function handleEditSubSubCategory(data: any) {
       titleHi: nameHi !== undefined ? nameHi : (titleHi !== undefined ? titleHi : undefined),
     },
   });
+
+  // Bust in-memory catalog cache so next sync serves fresh data
+  catalogCache.examCatalog = null;
+  catalogCache.noticesList = null;
 
   return NextResponse.json({ success: true });
 }
@@ -1852,6 +1867,10 @@ async function handleEditMockTestTitle(data: any) {
     },
   });
 
+  // Bust in-memory catalog cache so next sync serves fresh data
+  catalogCache.examCatalog = null;
+  catalogCache.noticesList = null;
+
   return NextResponse.json({ success: true });
 }
 
@@ -1863,6 +1882,9 @@ async function handleReorderCategories(data: any) {
       data: { orderIndex: i },
     });
   }
+  // Bust in-memory catalog cache so next sync serves fresh data
+  catalogCache.examCatalog = null;
+  catalogCache.noticesList = null;
   return NextResponse.json({ success: true });
 }
 
@@ -1874,6 +1896,9 @@ async function handleReorderSubCategories(data: any) {
       data: { orderIndex: i },
     });
   }
+  // Bust in-memory catalog cache so next sync serves fresh data
+  catalogCache.examCatalog = null;
+  catalogCache.noticesList = null;
   return NextResponse.json({ success: true });
 }
 
@@ -1885,6 +1910,9 @@ async function handleReorderSubSubCategories(data: any) {
       data: { orderIndex: i },
     });
   }
+  // Bust in-memory catalog cache so next sync serves fresh data
+  catalogCache.examCatalog = null;
+  catalogCache.noticesList = null;
   return NextResponse.json({ success: true });
 }
 
@@ -1896,6 +1924,9 @@ async function handleReorderMockTests(data: any) {
       data: { orderIndex: i },
     });
   }
+  // Bust in-memory catalog cache so next sync serves fresh data
+  catalogCache.examCatalog = null;
+  catalogCache.noticesList = null;
   return NextResponse.json({ success: true });
 }
 

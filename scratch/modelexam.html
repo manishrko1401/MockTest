@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>ModelExam.in</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Bootstrap 5 (local) -->
+  <link href="https://modelexam.in/css/bootstrap5.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://modelexam.in/css/bootstrap-icons.css" rel="stylesheet">
+  <!-- SweetAlert2 -->
+  <link href="https://modelexam.in/css/sweetalert2.min.css" rel="stylesheet">
+
+      <!-- Exam engine specific assets -->
+    <link
+      href="https://modelexam.in/css/exam-engine.24.css"
+      rel="stylesheet">
+    <!-- GOOGLE ANALYTICS (gtag) - Lazy-loaded for better performance -->
+  <link rel="preconnect" href="https://www.googletagmanager.com">
+  <!-- Lazy-load Google Analytics (gtag) -->
+  <script>
+    (function (gtagId) {
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', gtagId, { 'send_page_view': false });
+
+      function loadGtag() {
+        if (window.__gtagLoaded) return;
+        window.__gtagLoaded = true;
+        var s = document.createElement('script');
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(gtagId);
+        s.async = true;
+        document.head.appendChild(s);
+        s.onload = function () {
+          try { gtag('event', 'page_view', { send_to: gtagId }); } catch (e) { }
+        };
+      }
+
+      if ('requestIdleCallback' in window) {
+        window.addEventListener('load', function () {
+          requestIdleCallback(loadGtag, { timeout: 2000 });
+        });
+      } else {
+        window.addEventListener('load', function () {
+          setTimeout(loadGtag, 1200);
+        });
+      }
+    })('G-BPR6V23BSD');
+  </script>
+
+
+  <!-- End Google Analytics -->
+</head>
+
+<body>
+
+  <style>
+    /* Shared navbar styles (can also be moved to external CSS) */
+    .navbar-nav .nav-link {
+        border: none !important;
+        background: transparent !important;
+        white-space: nowrap;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: color 0.2s ease-in-out;
+    }
+    .navbar-nav .nav-link:hover {
+        color: var(--bs-primary);
+        background: transparent !important;
+    }
+    @media (min-width: 992px) {
+        .navbar-nav { gap: 0.25rem; }
+    }
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    .dropdown-menu {
+        border-radius: 0.75rem;
+        margin-top: 0.5rem !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    }
+    @media (max-width: 991px) {
+        .navbar-nav { padding-top: 1rem; padding-bottom: 1rem; }
+        .nav-link { padding: 0.5rem 0; }
+        .user-avatar { width: 28px; height: 28px; font-size: 0.8rem; }
+    }
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+    <div class="container-fluid px-3 px-md-4">
+        <!-- Logo -->
+        <a class="navbar-brand me-4" href="https://modelexam.in/">
+            <img src="https://modelexam.in/images_res/modelexam_engine.png" alt="ModelExam" class="d-none d-lg-block" style="height: 38px;">
+            <img src="https://modelexam.in/images_res/modelexam_engine.png" alt="ModelExam" class="d-lg-none" style="height: 32px;">
+        </a>
+
+        <!-- Mobile toggler -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#examNavbar"
+                aria-controls="examNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Collapsible menu -->
+        <div class="collapse navbar-collapse" id="examNavbar">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                
+                
+                
+                <li class="nav-item">
+                    <a class="nav-link px-3" href="https://modelexam.in/">
+                        <i class="bi bi-house-door me-1"></i> Home
+                    </a>
+                </li>
+
+                                <li class="nav-item">
+                    <a class="nav-link px-3" href="https://modelexam.in/exam-engine/logout.php">
+                        <i class="bi bi-box-arrow-right me-1"></i> Logout
+                    </a>
+                </li>
+                            </ul>
+        </div>
+    </div>
+</nav>
+<!-- MAIN CONTENT -->
+<main class="container-fluid px-2 px-md-3 py-4">
+    <div class="ee-error-container">
+        <!-- Error Icon -->
+        <div class="ee-error-icon">
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+
+        <!-- Error Title -->
+        <h3 class="ee-error-title text-muted">Oops! Something Went Wrong</h3>
+
+        <!-- Error Message -->
+        <p class="ee-error-message fw-bold">
+            Invalid exam session. Please start the exam from the exam list.        </p>
+
+        <!-- Error Actions -->
+        <div class="ee-error-actions">
+                            <!-- Front Office Student Context -->
+                <div class="d-grid gap-3 w-100">
+                                            <a href="https://modelexam.in/"
+                            class="ee-error-btn ee-error-btn-primary w-100 justify-content-center">
+                            <i class="bi bi-house me-2"></i>
+                            Go to Home Page                        </a>
+                    
+                    <div class="d-flex flex-wrap gap-2 justify-content-center w-100">
+                        
+                        <!-- Member Page -->
+                        <a href="https://modelexam.in/exam-engine/members.php"
+                            class="btn btn-outline-primary btn-sm flex-fill d-inline-flex align-items-center justify-content-center"
+                            style="min-width: 140px;">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span>Member's Page</span>
+                        </a>
+
+                        <!-- Certification Home -->
+                        <a href="https://modelexam.in/"
+                            class="btn btn-outline-secondary btn-sm flex-fill d-inline-flex align-items-center justify-content-center"
+                            style="min-width: 140px;">
+                            <i class="bi bi-journal-bookmark me-1"></i>
+                            <span>Certification Home Page</span>
+                        </a>
+
+                        <!-- Main Site Home -->
+                        <!-- <a href="https://modelexam.in/"
+                            class="btn btn-outline-secondary btn-sm flex-fill d-inline-flex align-items-center justify-content-center"
+                            style="min-width: 140px;">
+                            <i class="bi bi-house me-1"></i>
+                            <span>Modelexam Home</span>
+                        </a> -->
+
+                        <!-- Plan Buy/Upgrade Page -->
+                        
+                        <!-- Logout -->
+                        <a href="https://modelexam.in/exam-engine/logout.php"
+                            class="btn btn-outline-danger btn-sm flex-fill d-inline-flex align-items-center justify-content-center"
+                            style="min-width: 100px;">
+                            <i class="bi bi-box-arrow-right me-1"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            
+                    </div>
+
+    </div>
+</main>
+
+<!-- FOOTER -->
+    <footer class="border-top theme-modelexam mt-auto">
+        <div class="container-fluid px-3 px-md-4 py-2">
+            <div class="container-fluid text-center text-white-25 small">
+                © 2026 ModelExam.in                 </div>
+        </div>
+    </footer>
+
+<!-- jQuery -->
+<script src="https://modelexam.in/js/jquery37.js"></script>
+
+<!-- Bootstrap Bundle (includes Popper) -->
+<script src="https://modelexam.in/js/bootstrap.bundle.min.js"></script>
+
+<!--SweetAlert2-->
+<script src="https://modelexam.in/js/sweetalert2.all.min.js"></script>
+
+
+
+    <!-- Exam Engine Scripts -->
+    <script src="https://modelexam.in/js/exam-engine.34.js"></script>
+
+
+
+
+
+
+
+
+
+<!-- Bootstrap Tooltips -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+            new bootstrap.Tooltip(el);
+        });
+    });
+</script>
+
+</body>
+
+</html>

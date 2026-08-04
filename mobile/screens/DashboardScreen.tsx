@@ -240,6 +240,62 @@ const BRAND = {
   orb: '#4F6EF7',
 };
 
+/**
+ * Reliable fallback logo URLs for well-known exam categories.
+ * These are used when the database logoUrl is missing, hotlink-blocked, or returns an error.
+ * Keys are lowercase substrings matched against the category name.
+ */
+const CATEGORY_LOGO_OVERRIDES: Array<{ match: string[]; logoUrl: string }> = [
+  {
+    match: ['ssc'],
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b0/Staff_Selection_Commission_India_logo.png/200px-Staff_Selection_Commission_India_logo.png',
+  },
+  {
+    match: ['cbse', 'ctet'],
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/2/29/CBSE_new_logo.svg/200px-CBSE_new_logo.svg.png',
+  },
+  {
+    match: ['railway', 'rrb'],
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Indian_Railways_official_Logo.svg/200px-Indian_Railways_official_Logo.svg.png',
+  },
+  {
+    match: ['upsc'],
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/bf/UPSC_Logo.svg/200px-UPSC_Logo.svg.png',
+  },
+];
+
+/**
+ * Returns the best logo URL to display for a category:
+ * - If the DB logo URL is non-empty and not from a known hotlink-blocked domain → use it
+ * - Otherwise fall through to the CATEGORY_LOGO_OVERRIDES map
+ * - Returns '' if nothing matches (icon fallback will be used by CategoryLogoImage)
+ */
+const HOTLINK_BLOCKED_DOMAINS = ['pngaaa.com', 'encrypted-tbn0.gstatic.com'];
+
+function getEffectiveLogoUrl(categoryName: string, dbLogoUrl?: string | null): { primaryUrl: string; fallbackUrl: string } {
+  const norm = (categoryName || '').toLowerCase();
+  const override = CATEGORY_LOGO_OVERRIDES.find(o => o.match.some(m => norm.includes(m)));
+  const overrideUrl = override?.logoUrl || '';
+
+  // Check if the DB URL is from a domain known to block hotlinking
+  const isDbUrlBlocked = dbLogoUrl
+    ? HOTLINK_BLOCKED_DOMAINS.some(d => dbLogoUrl.includes(d))
+    : true;
+
+  if (!dbLogoUrl || !dbLogoUrl.trim()) {
+    // No DB logo — use override directly as primary
+    return { primaryUrl: overrideUrl, fallbackUrl: '' };
+  }
+
+  if (isDbUrlBlocked) {
+    // DB URL is known-blocked — skip it, use override as primary
+    return { primaryUrl: overrideUrl, fallbackUrl: '' };
+  }
+
+  // DB URL looks valid — try it first, use override as secondary fallback
+  return { primaryUrl: dbLogoUrl, fallbackUrl: overrideUrl };
+}
+
 const getCategoryStyle = (name: string, isDark: boolean) => {
   // Pick icon based on name but keep colors UNIFIED
   const norm = name.toLowerCase();
@@ -277,34 +333,63 @@ const CategoryIcon = ({ name, color, size }: { name: string; color: string; size
   }
 };
 
-const CategoryLogoImage = React.memo(({ logoUrl, fallbackIcon }: { logoUrl: string; fallbackIcon: React.ReactNode }) => {
-  const [hasError, setHasError] = useState(false);
+const CategoryLogoImage = React.memo(({ logoUrl, fallbackLogoUrl, fallbackIcon }: { logoUrl: string; fallbackLogoUrl?: string; fallbackIcon: React.ReactNode }) => {
+  const [primaryError, setPrimaryError] = useState(false);
+  const [fallbackError, setFallbackError] = useState(false);
 
   useEffect(() => {
-    setHasError(false);
-  }, [logoUrl]);
+    setPrimaryError(false);
+    setFallbackError(false);
+  }, [logoUrl, fallbackLogoUrl]);
 
   const cleanUrl = React.useMemo(() => {
-    if (!logoUrl) return '';
-    let url = logoUrl.trim();
-    if (!url) return '';
+    const raw = logoUrl || '';
+    if (!raw.trim()) return '';
+    let url = raw.trim();
 
     if (url.startsWith('//')) {
       url = 'https:' + url;
     } else if (url.startsWith('http://')) {
       url = 'https://' + url.slice(7);
-    } else if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:')) {
+    } else if (!url.startsWith('https://') && !url.startsWith('data:')) {
       url = 'https://' + url;
     }
 
-    try {
-      return encodeURI(url);
-    } catch {
-      return url;
-    }
+    try { return encodeURI(url); } catch { return url; }
   }, [logoUrl]);
 
-  if (!cleanUrl || hasError) {
+  const cleanFallbackUrl = React.useMemo(() => {
+    const raw = fallbackLogoUrl || '';
+    if (!raw.trim()) return '';
+    let url = raw.trim();
+
+    if (url.startsWith('//')) {
+      url = 'https:' + url;
+    } else if (url.startsWith('http://')) {
+      url = 'https://' + url.slice(7);
+    } else if (!url.startsWith('https://') && !url.startsWith('data:')) {
+      url = 'https://' + url;
+    }
+
+    try { return encodeURI(url); } catch { return url; }
+  }, [fallbackLogoUrl]);
+
+  // Stage 1: primary URL failed or absent → try fallback URL
+  if ((!cleanUrl || primaryError) && cleanFallbackUrl && !fallbackError) {
+    return (
+      <ExpoImage
+        source={{ uri: cleanFallbackUrl }}
+        style={{ width: '100%', height: '100%', borderRadius: 12 }}
+        contentFit="contain"
+        transition={150}
+        cachePolicy="memory-disk"
+        onError={() => setFallbackError(true)}
+      />
+    );
+  }
+
+  // Stage 2: both URLs failed or absent → show icon
+  if (!cleanUrl || (primaryError && (!cleanFallbackUrl || fallbackError))) {
     return <>{fallbackIcon}</>;
   }
 
@@ -315,9 +400,7 @@ const CategoryLogoImage = React.memo(({ logoUrl, fallbackIcon }: { logoUrl: stri
       contentFit="contain"
       transition={150}
       cachePolicy="memory-disk"
-      onError={() => {
-        setHasError(true);
-      }}
+      onError={() => setPrimaryError(true)}
     />
   );
 });
@@ -708,23 +791,34 @@ export default function DashboardScreen({
     if (bookmarks.length === 0) return;
 
     const uniqueTestIds = [...new Set(bookmarks.map((b: any) => b.testId as string))];
-    const missingIds = uniqueTestIds.filter(id => !bookmarkQsCache[id]);
+    // Always re-check all test IDs — don't skip if already in cache (may have stale empty arrays)
+    const missingIds = uniqueTestIds.filter(id => !bookmarkQsCache[id] || bookmarkQsCache[id].length === 0);
     if (missingIds.length === 0) return;
 
     setBookmarkQsLoading(true);
     Promise.all(
       missingIds.map(async (testId) => {
         try {
+          // Normalize helper: ensure every question has a stable string id
+          const normalizeQs = (qs: any[]): any[] =>
+            qs.map((q: any, idx: number) => ({
+              ...q,
+              id: q.id !== undefined && q.id !== null && q.id !== ''
+                ? String(q.id)
+                : `q_custom_${idx}`,
+            }));
+
           // 1. Check local device storage first (0ms latency, works offline)
           const cached = await getCachedQuestions(testId);
           if (cached && Array.isArray(cached) && cached.length > 0) {
-            return { testId, questions: cached };
+            return { testId, questions: normalizeQs(cached) };
           }
           // 2. Fetch from server if not cached locally
           const res = await ApiClient.getCustomQuestions(testId);
           if (res.success && Array.isArray(res.questions) && res.questions.length > 0) {
-            await saveQuestionsToCache(testId, res.questions);
-            return { testId, questions: res.questions };
+            const normalized = normalizeQs(res.questions);
+            await saveQuestionsToCache(testId, normalized);
+            return { testId, questions: normalized };
           }
         } catch (e) { /* ignore */ }
         return { testId, questions: [] };
@@ -1169,7 +1263,8 @@ export default function DashboardScreen({
                           overflow: 'hidden',
                         }}>
                           <CategoryLogoImage
-                            logoUrl={cat.logoUrl || ''}
+                            logoUrl={(() => { const { primaryUrl } = getEffectiveLogoUrl(cat.name, cat.logoUrl); return primaryUrl; })()}
+                            fallbackLogoUrl={(() => { const { fallbackUrl } = getEffectiveLogoUrl(cat.name, cat.logoUrl); return fallbackUrl; })()}
                             fallbackIcon={<CategoryIcon name={catStyle.iconName} color={catStyle.iconColor} size={22} />}
                           />
                         </View>
@@ -1380,7 +1475,8 @@ export default function DashboardScreen({
                           }
                         ]}>
                           <CategoryLogoImage
-                            logoUrl={category.logoUrl || ''}
+                            logoUrl={(() => { const { primaryUrl } = getEffectiveLogoUrl(category.name, category.logoUrl); return primaryUrl; })()}
+                            fallbackLogoUrl={(() => { const { fallbackUrl } = getEffectiveLogoUrl(category.name, category.logoUrl); return fallbackUrl; })()}
                             fallbackIcon={
                               (category.isPracticeSeries || category.id?.includes('practice') || category.name?.toLowerCase().includes('practice')) ? (
                                 <Trophy color="#F59E0B" size={24} />
@@ -1461,8 +1557,10 @@ export default function DashboardScreen({
             getItemLayout={(data, index) => ({ length: 78, offset: 78 * index, index })}
             renderItem={({ item: subSub }) => {
               const catStyle = getCategoryStyle(selectedCategory.name, isDark);
-              const rawLogo = (subSub.logoUrl && subSub.logoUrl.trim()) || (selectedSubCategory.logoUrl && selectedSubCategory.logoUrl.trim()) || (selectedCategory.logoUrl && selectedCategory.logoUrl.trim()) || null;
-              const logoUri = rawLogo && rawLogo.trim() ? rawLogo.trim() : null;
+              const { primaryUrl: logoUri } = getEffectiveLogoUrl(
+                selectedCategory.name,
+                (subSub.logoUrl && subSub.logoUrl.trim()) || (selectedSubCategory.logoUrl && selectedSubCategory.logoUrl.trim()) || (selectedCategory.logoUrl && selectedCategory.logoUrl.trim()) || null
+              );
               return (
                 <TouchableOpacity
                   style={[
@@ -1597,8 +1695,10 @@ export default function DashboardScreen({
           getItemLayout={(data, index) => ({ length: 78, offset: 78 * index, index })}
           renderItem={({ item: sub }) => {
             const catStyle = getCategoryStyle(selectedCategory.name, isDark);
-            const rawLogo = (sub.logoUrl && sub.logoUrl.trim()) || (selectedCategory.logoUrl && selectedCategory.logoUrl.trim()) || null;
-            const logoUri = rawLogo && rawLogo.trim() ? rawLogo.trim() : null;
+            const { primaryUrl: logoUri } = getEffectiveLogoUrl(
+              selectedCategory.name,
+              (sub.logoUrl && sub.logoUrl.trim()) || (selectedCategory.logoUrl && selectedCategory.logoUrl.trim()) || null
+            );
 
             const subSubCount = sub.subSubCategories?.length || 0;
             const directTestsCount = sub.tests?.length || 0;
@@ -1922,8 +2022,13 @@ export default function DashboardScreen({
     // Helper: find a question from cache by testId + questionId
     const findQ = (testId: string, questionId: string) => {
       const qs = bookmarkQsCache[testId];
-      if (!qs) return null;
-      return qs.find((q: any) => q.id === questionId) || null;
+      if (!qs || !Array.isArray(qs)) return null;
+      const targetStr = String(questionId || '').trim();
+      return qs.find((q: any, idx: number) => {
+        if (!q) return false;
+        const qIdStr = String(q.id || q.questionId || q._id || `q_${idx + 1}` || `q_custom_${idx}`).trim();
+        return qIdStr === targetStr || String(idx + 1) === targetStr || (targetStr.startsWith('q_custom_') && targetStr === `q_custom_${idx}`);
+      }) || null;
     };
 
     // Helper: find test title from catalog

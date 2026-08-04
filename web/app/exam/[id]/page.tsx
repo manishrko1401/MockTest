@@ -15,53 +15,9 @@ import { Check, CheckCircle2, ShieldAlert, ShieldCheck, Globe, User, BookOpen, A
 import { useIsMobile } from '../../useIsMobile';
 
 import { processQuestionHtml, decodeHtml } from '../../lib/mathUtils';
+import MathJaxText from '../../lib/MathJaxText';
 
 
-// Targeted, memoized component for MathJax rendering to prevent React re-render clashing
-const MathJaxText = React.memo(({ content, className, component: Component = 'span' }: { content: string, className?: string, component?: 'span' | 'div' }) => {
-  const containerRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    let active = true;
-    let timeoutId: any = null;
-
-    const triggerTypeset = () => {
-      if (!containerRef.current || !active) return;
-      const MathJax = (window as any).MathJax;
-      if (MathJax?.typesetPromise) {
-        try {
-          MathJax.typesetClear([containerRef.current]);
-          MathJax.typesetPromise([containerRef.current]).catch((err: any) => {
-            console.warn("MathJax typeset error:", err);
-          });
-        } catch (e) {
-          MathJax.typesetPromise([containerRef.current]).catch((err: any) => {
-            console.warn("MathJax typeset error:", err);
-          });
-        }
-      } else {
-        // MathJax not loaded yet, retry in 100ms
-        timeoutId = setTimeout(triggerTypeset, 100);
-      }
-    };
-
-    triggerTypeset();
-
-    return () => {
-      active = false;
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [content]);
-
-  return (
-    <Component
-      ref={containerRef as any}
-      className={className}
-      dangerouslySetInnerHTML={{ __html: content }}
-    />
-  );
-});
-MathJaxText.displayName = 'MathJaxText';
 
 
 // ============================================================================

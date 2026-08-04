@@ -1,3 +1,5 @@
+// IMPORTANT: This config MUST run before mathjax@3 CDN script loads.
+// layout.tsx loads this with strategy="beforeInteractive" to guarantee ordering.
 window.MathJax = {
   tex: {
     inlineMath: [['\\(', '\\)'], ['$', '$']],
@@ -18,6 +20,13 @@ window.MathJax = {
     load: ['[tex]/ams', '[tex]/boldsymbol', '[tex]/color']
   },
   startup: {
-    typeset: false
+    // Do NOT auto-typeset on page load — React components handle typesetting
+    typeset: false,
+    // This callback fires after MathJax has fully initialized with this config.
+    // MathJax.startup.promise resolves after this runs, so components can safely
+    // call typesetPromise() once startup.promise resolves.
+    ready() {
+      MathJax.startup.defaultReady();
+    }
   }
 };

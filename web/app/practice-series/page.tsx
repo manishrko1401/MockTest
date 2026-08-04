@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth, TestCategory } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -45,34 +45,8 @@ import { useIsMobile } from '../useIsMobile';
 import HomeSupportWidget from '../components/HomeSupportWidget';
 
 import { processQuestionHtml, decodeHtml } from '../lib/mathUtils';
+import MathJaxText from '../lib/MathJaxText';
 
-
-// MathJax-enabled text component for practice-series
-const MathJaxText = React.memo(({ content, className, component: Component = 'span' }: { content: string, className?: string, component?: 'span' | 'div' | 'p' | 'h3' }) => {
-  const containerRef = useRef<HTMLElement>(null);
-  React.useEffect(() => {
-    let active = true;
-    let timeoutId: any = null;
-    const triggerTypeset = () => {
-      if (!containerRef.current || !active) return;
-      const MathJax = (window as any).MathJax;
-      if (MathJax?.typesetPromise) {
-        try {
-          MathJax.typesetClear([containerRef.current]);
-          MathJax.typesetPromise([containerRef.current]).catch((err: any) => console.warn('MathJax error:', err));
-        } catch (e) {
-          MathJax.typesetPromise([containerRef.current]).catch((err: any) => console.warn('MathJax error:', err));
-        }
-      } else {
-        timeoutId = setTimeout(triggerTypeset, 100);
-      }
-    };
-    triggerTypeset();
-    return () => { active = false; if (timeoutId) clearTimeout(timeoutId); };
-  }, [content]);
-  return <Component ref={containerRef as any} className={className} dangerouslySetInnerHTML={{ __html: content }} />;
-});
-MathJaxText.displayName = 'MathJaxText';
 
 function renderFormattedExplanation(rawExp: any, lang: 'en' | 'hi', qId?: string, asPoints: boolean = false) {
   let expText = "";

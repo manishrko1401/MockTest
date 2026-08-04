@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,7 +6,8 @@ import {
   Text,
   StatusBar,
   BackHandler,
-  Alert
+  Alert,
+  AppState,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
@@ -356,6 +357,32 @@ export default function App() {
     return () => unsubscribe();
   }, [currentUser]);
 
+  // Trigger a fresh catalog sync whenever app returns to foreground (handles admin changes immediately)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', async (nextAppState) => {
+      if (nextAppState === 'active') {
+        console.log('[AppState] App came to foreground — triggering fresh catalog sync...');
+        try {
+          const syncRes = await ApiClient.catalogSync(null);
+          if (syncRes.success) {
+            const updatedCatalog = {
+              examCatalog: syncRes.examCatalog || [],
+              noticesList: syncRes.noticesList || [],
+              usersList: [],
+            };
+            setNotices(updatedCatalog.noticesList);
+            setExamCatalog(updatedCatalog.examCatalog);
+            await saveCatalogToCache(updatedCatalog);
+            await setLastSyncTimestamp(syncRes.syncedAt);
+          }
+        } catch (err) {
+          console.warn('[AppState] Foreground sync failed:', err);
+        }
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
   // System physical BackButton navigation handler
   useEffect(() => {
     const onBackPress = () => {
@@ -613,12 +640,22 @@ export default function App() {
       await saveUserToCache(res.user);
     }
     
-    // Refresh notices list and exam catalog to fetch newly uploaded notices
-    const bootRes = await ApiClient.bootstrap();
-    if (bootRes.success) {
-      setNotices(bootRes.noticesList || []);
-      setExamCatalog(bootRes.examCatalog || []);
-      setUsersList(bootRes.usersList || []);
+    // Refresh notices list and exam catalog using catalogSync (always fresh, bypasses server in-memory cache)
+    try {
+      const syncRes = await ApiClient.catalogSync(null);
+      if (syncRes.success) {
+        setNotices(syncRes.noticesList || []);
+        setExamCatalog(syncRes.examCatalog || []);
+        const updatedCatalog = {
+          examCatalog: syncRes.examCatalog || [],
+          noticesList: syncRes.noticesList || [],
+          usersList: [],
+        };
+        await saveCatalogToCache(updatedCatalog);
+        await setLastSyncTimestamp(syncRes.syncedAt);
+      }
+    } catch (syncErr) {
+      console.warn('[Sync] refreshUserData catalog sync failed:', syncErr);
     }
   };
 

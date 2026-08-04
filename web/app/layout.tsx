@@ -42,11 +42,15 @@ export default async function RootLayout({
           {children}
         </AuthProvider>
 
-        {/* MathJax — loaded after page interactive for fast math rendering */}
+        {/* MathJax config MUST load before the MathJax library.
+            beforeInteractive injects it into <head> before hydration,
+            guaranteeing window.MathJax is set when the CDN library loads. */}
         <Script
           src="/mathjax-config.js"
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
         />
+        {/* MathJax CDN — loads after page is interactive. By this point
+            window.MathJax config is guaranteed to already exist. */}
         <Script
           src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
           strategy="afterInteractive"
