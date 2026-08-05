@@ -69,12 +69,12 @@ export default function IndependenceDayDecorations() {
             {/* Center Content: Indian Flag Greetings */}
             <div className="flex-1 flex items-center justify-center space-x-1.5 text-center text-[10.5px] sm:text-xs font-bold tracking-wide">
               <span className="inline-block animate-flag-sway text-sm sm:text-base">🇮🇳</span>
-              <span className="bg-white/25 backdrop-blur-md border border-white/30 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase text-white shadow-xs flex items-center gap-1">
+              <span className="bg-white/25 backdrop-blur-md border border-white/30 px-2.5 py-0.5 rounded-full text-[9.5px] sm:text-[11px] font-black uppercase text-white shadow-xs flex items-center gap-1">
                 <Sparkles className="w-2.5 h-2.5 text-yellow-200 animate-pulse-glow" />
-                80th Independence Day 🇮🇳
+                Happy 80th Independence Day! 🇮🇳
               </span>
-              <span className="truncate">
-                Happy 80th Independence Day! <span className="hidden md:inline">Celebrate Freedom & Crack Your Govt Exam! 🇮🇳 Jai Hind!</span>
+              <span className="hidden md:inline text-xs font-medium">
+                Celebrate Freedom & Crack Your Govt Exam! 🇮🇳 Jai Hind!
               </span>
               <span className="inline-block animate-flag-sway text-sm sm:text-base hidden sm:inline-block">🇮🇳</span>
             </div>

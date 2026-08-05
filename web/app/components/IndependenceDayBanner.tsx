@@ -36,10 +36,10 @@ export default function IndependenceDayBanner() {
           <span className="inline-block animate-flag-sway text-base sm:text-lg">🇮🇳</span>
           <span className="bg-white/20 backdrop-blur-md border border-white/30 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold uppercase text-white shadow-sm flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-yellow-200 animate-pulse-glow" />
-            79th Independence Day
+            Happy 80th Independence Day! 🇮🇳
           </span>
-          <span className="truncate">
-            Happy Independence Day! <span className="hidden md:inline">Celebrate Freedom & Crack Your Dream Govt Exam with Mock Test Hub! 🇮🇳</span>
+          <span className="hidden md:inline font-medium">
+            Celebrate Freedom & Crack Your Dream Govt Exam with Mock Test Hub! 🇮🇳
           </span>
           <span className="inline-block animate-flag-sway text-base sm:text-lg hidden sm:inline-block">🇮🇳</span>
         </div>
