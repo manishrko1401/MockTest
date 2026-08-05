@@ -302,3 +302,110 @@ mjx-container[jax="CHTML"] {
   }
 }
 
+/* 🇮🇳 Independence Day India - Theme & Animations */
+:root {
+  --saffron: #FF9933;
+  --white: #FFFFFF;
+  --green: #138808;
+  --navy: #000080;
+}
+
+@keyframes floatBalloon {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(3deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes flagSway {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(255, 153, 51, 0.6));
+  }
+}
+
+.animate-balloon-float {
+  animation: floatBalloon 4s ease-in-out infinite;
+}
+
+.animate-balloon-float-delayed {
+  animation: floatBalloon 4.5s ease-in-out infinite 1.5s;
+}
+
+.animate-flag-sway {
+  animation: flagSway 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+.tricolor-gradient-bar {
+  background: linear-gradient(90deg, #FF9933 0%, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%, #138808 100%);
+}
+
+.tricolor-gradient-bg {
+  background: linear-gradient(135deg, rgba(255, 153, 51, 0.12) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(19, 136, 8, 0.12) 100%);
+}
+
+.dark .tricolor-gradient-bg {
+  background: linear-gradient(135deg, rgba(255, 153, 51, 0.15) 0%, rgba(15, 23, 42, 0.6) 50%, rgba(19, 136, 8, 0.15) 100%);
+}
+
+@keyframes spinChakra {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-chakra-spin {
+  animation: spinChakra 20s linear infinite;
+}
+
+.tiranga-text-gradient {
+  background: linear-gradient(90deg, #FF9933 0%, #000080 50%, #138808 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.tiranga-header-bg {
+  background: linear-gradient(135deg, #0B1B3D 0%, #162B54 50%, #0D2046 100%);
+  border-bottom: 3px solid #FF9933;
+}
+
+.tiranga-card-accent {
+  border-left: 4px solid #FF9933;
+  transition: border-color 0.3s ease;
+}
+
+.tiranga-card-accent:hover {
+  border-left-color: #138808;
+}
+
+.tiranga-pill-badge {
+  background: linear-gradient(90deg, rgba(255, 153, 51, 0.2) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(19, 136, 8, 0.2) 100%);
+  border: 1px solid rgba(255, 153, 51, 0.4);
+}
+
+
+

@@ -92,7 +92,7 @@ export async function startTestSession(req: Request, res: Response): Promise<voi
       const hasAccess =
         user.role === UserRole.ADMIN ||
         user.role === UserRole.TEST_CREATOR ||
-        user.subscriptions.some((sub) => sub.tierId === mockTest.requiredTierId);
+        user.subscriptions.some((sub: { tierId: any; }) => sub.tierId === mockTest.requiredTierId);
 
       if (!hasAccess) {
         res.status(403).json({
@@ -125,7 +125,7 @@ export async function startTestSession(req: Request, res: Response): Promise<voi
     const answerMap: Record<string, string> = {};
     const rulesMap: Record<string, string> = {};
 
-    mockTest.sections.forEach((section) => {
+    mockTest.sections.forEach((section: { id: string | number; positiveMarks: any; negativeMarks: any; questions: any[]; }) => {
       // Store section scoring config: positiveMark, negativeMark
       rulesMap[section.id] = JSON.stringify({
         positiveMarks: section.positiveMarks,
@@ -161,7 +161,7 @@ export async function startTestSession(req: Request, res: Response): Promise<voi
       sessionId: session.id,
       testTitle: mockTest.title,
       durationMinutes: mockTest.durationMinutes,
-      sections: mockTest.sections.map((s) => ({
+      sections: mockTest.sections.map((s: { id: any; name: any; orderIndex: any; positiveMarks: any; negativeMarks: any; questions: any[]; }) => ({
         id: s.id,
         name: s.name,
         orderIndex: s.orderIndex,
@@ -299,7 +299,7 @@ export async function submitTestSession(req: Request, res: Response): Promise<vo
       : 0;
 
     // 4. Persistence transactions in PostgreSQL
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: { questionResponseState: { upsert: (arg0: { where: { sessionId_questionId: { sessionId: any; questionId: any; }; }; update: { selectedOptionIndex: any; state: any; elapsedSeconds: any; }; create: { sessionId: any; questionId: any; selectedOptionIndex: any; state: any; elapsedSeconds: any; }; }) => any; }; userTestSession: { update: (arg0: { where: { id: string; }; data: { status: string; completedAt: Date; remainingSeconds: number; finalScore: number; accuracyPercentage: number; timeSpentSeconds: number; }; }) => any; }; }) => {
       // Save all question-level sitting state responses
       for (const item of responseWrites) {
         await tx.questionResponseState.upsert({

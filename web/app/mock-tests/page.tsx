@@ -1383,7 +1383,7 @@ export default function MockTestsCatalog() {
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200">
       
       {/* Navbar header */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-8 flex items-center justify-between">
+      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-8 flex items-center justify-between relative">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-3">
             <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
@@ -1398,6 +1398,14 @@ export default function MockTestsCatalog() {
           <Link href="/" className="flex items-center gap-2 text-slate-650 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors">
             <ArrowLeft className="h-4 w-4" /> {t.backToHome}
           </Link>
+        </div>
+
+        {/* Center: Happy 80th Independence Day Celebration Greeting */}
+        <div className="hidden lg:flex items-center gap-2 bg-gradient-to-r from-orange-500/15 via-white/20 to-emerald-500/15 dark:from-orange-500/25 dark:via-slate-900/40 dark:to-emerald-500/25 border border-orange-500/30 dark:border-orange-500/40 px-4 py-1.5 rounded-full shadow-xs">
+          <span className="text-sm animate-flag-sway leading-none">🇮🇳</span>
+          <span className="text-xs font-black text-slate-900 dark:text-amber-300 tracking-wide uppercase flex items-center gap-1.5">
+            Happy 80th Independence Day! 🇮🇳
+          </span>
         </div>
 
         <div className="flex items-center gap-3 max-w-md w-full justify-end">

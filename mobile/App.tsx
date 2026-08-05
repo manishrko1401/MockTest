@@ -793,7 +793,7 @@ export default function App() {
       <View style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
         <StatusBar 
           barStyle={isDark ? 'light-content' : 'dark-content'} 
-          backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
+          backgroundColor={isDark ? ThemeColors.dark.headerBg : ThemeColors.light.headerBg} 
         />
 
         {viewMode === 'auth' && (
@@ -979,5 +979,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 1,
     textTransform: 'uppercase',
+  },
+  indBannerBar: {
+    backgroundColor: '#0B1B3D',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  indBannerText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.4,
   },
 });

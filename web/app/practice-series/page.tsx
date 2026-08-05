@@ -1116,6 +1116,14 @@ export default function PracticeSeriesPage() {
           </nav>
         </div>
 
+        {/* Center: Happy 80th Independence Day Celebration Greeting */}
+        <div className="hidden lg:flex items-center gap-2 bg-gradient-to-r from-orange-500/15 via-white/20 to-emerald-500/15 dark:from-orange-500/25 dark:via-slate-900/40 dark:to-emerald-500/25 border border-orange-500/30 dark:border-orange-500/40 px-4 py-1.5 rounded-full shadow-xs">
+          <span className="text-sm animate-flag-sway leading-none">🇮🇳</span>
+          <span className="text-xs font-black text-slate-900 dark:text-amber-300 tracking-wide uppercase flex items-center gap-1.5">
+            Happy 80th Independence Day! 🇮🇳
+          </span>
+        </div>
+
         <div className="flex items-center gap-2">
           {/* Question Palette Button on Mobile View (Extreme Right of top-most header during section tests) */}
           {selectedSectionIndex !== null && (
