@@ -215,9 +215,9 @@ export default function VocabSection({ language = 'en' }: VocabSectionProps) {
   const isCurrentStarred = activeItem && activeItem.id ? starredIds.includes(activeItem.id) : false;
 
   return (
-    <section className="bg-gradient-to-br from-slate-50 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900/60 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-sm space-y-6">
+    <section className="bg-gradient-to-br from-slate-50 via-blue-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-900/60 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-sm space-y-3">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-200/80 dark:border-slate-800 pb-3">
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold text-[10px] uppercase px-2.5 py-0.5 rounded-full border border-amber-500/30">
@@ -225,22 +225,22 @@ export default function VocabSection({ language = 'en' }: VocabSectionProps) {
               {language === 'hi' ? 'दैनिक शब्दावली बूस्टर' : 'Daily Vocabulary Booster'}
             </span>
           </div>
-          <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-1 flex items-center gap-2 tracking-tight">
-            <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
+          <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white mt-0.5 flex items-center gap-1.5 tracking-tight">
+            <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
             {language === 'hi' ? 'शब्दावली बूस्टर (Vocabulary Booster)' : 'Vocabulary Booster'}
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
             {language === 'hi'
               ? 'परीक्षाओं में बार-बार पूछे जाने वाले अंग्रेजी शब्दों का सटीक अर्थ, हिंदी अनुवाद, पर्यायवाची और प्रयोग।'
-              : 'Master high-yield English words with exact definitions, Hindi meanings, synonyms, antonyms, and usage examples.'}
+              : 'Master high-yield English words with definitions, Hindi meanings, synonyms, antonyms & usage.'}
           </p>
         </div>
       </div>
 
       {/* Search Bar & Right-Shifted Starred Words Filter */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
-        <div className="relative w-full sm:w-72 shrink-0">
-          <Search className="h-3.5 w-3.5 absolute left-3 top-3 text-slate-400" />
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 w-full">
+        <div className="relative w-full sm:w-64 shrink-0">
+          <Search className="h-3 w-3 absolute left-2.5 top-2.5 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
@@ -249,7 +249,7 @@ export default function VocabSection({ language = 'en' }: VocabSectionProps) {
               setCurrentIndex(0);
             }}
             placeholder={language === 'hi' ? 'शब्द या अर्थ खोजें...' : 'Search word or meaning...'}
-            className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-xs font-medium"
+            className="w-full pl-7 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-[11px] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-xs font-medium"
           />
         </div>
 
@@ -259,7 +259,7 @@ export default function VocabSection({ language = 'en' }: VocabSectionProps) {
             setShowStarredOnly(!showStarredOnly);
             setCurrentIndex(0);
           }}
-          className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shrink-0 border ${
+          className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition cursor-pointer shrink-0 border ${
             showStarredOnly
               ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
               : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/40'
@@ -274,17 +274,17 @@ export default function VocabSection({ language = 'en' }: VocabSectionProps) {
 
       {/* CARD VIEW MODE */}
       {filteredData.length > 0 && activeItem ? (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-md hover:shadow-lg transition-all relative overflow-hidden group">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-xl p-3.5 sm:p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
           {/* Decorative Corner Art */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-500/10 via-indigo-500/5 to-transparent rounded-bl-full pointer-events-none" />
 
           {/* Top Header Row of Card */}
-          <div className="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
+          <div className="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-wide">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-wide">
                   {activeItem.id}. {activeItem.word}{' '}
-                  <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                  <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
                     {activeItem.pos}
                   </span>
                 </h3>
@@ -306,8 +306,8 @@ export default function VocabSection({ language = 'en' }: VocabSectionProps) {
               </div>
 
               {/* Hindi Meaning Block */}
-              <div className="inline-block bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50 px-3 py-1 rounded-lg">
-                <p className="text-sm font-extrabold text-amber-800 dark:text-amber-300 leading-snug whitespace-pre-line">
+              <div className="inline-block bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50 px-2.5 py-0.5 rounded-md">
+                <p className="text-xs font-extrabold text-amber-800 dark:text-amber-300 leading-snug whitespace-pre-line">
                   {activeItem.hindiMeaning}
                 </p>
               </div>
@@ -316,41 +316,41 @@ export default function VocabSection({ language = 'en' }: VocabSectionProps) {
             {/* ONLY STAR ICON BUTTON ON CARD */}
             <button
               onClick={() => activeItem.id && toggleStar(activeItem.id)}
-              className={`p-2.5 rounded-xl transition active:scale-95 cursor-pointer shrink-0 border shadow-xs ${
+              className={`p-2 rounded-lg transition active:scale-95 cursor-pointer shrink-0 border shadow-xs ${
                 isCurrentStarred
                   ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-500'
                   : 'bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-500 border-amber-300 dark:border-amber-800'
               }`}
               title={isCurrentStarred ? "Starred (Click to remove star)" : "Star word for revision"}
             >
-              <Star className={`h-5 w-5 ${isCurrentStarred ? 'fill-white text-white' : 'fill-amber-400 text-amber-500'}`} />
+              <Star className={`h-4 w-4 ${isCurrentStarred ? 'fill-white text-white' : 'fill-amber-400 text-amber-500'}`} />
             </button>
           </div>
 
           {/* Card Content Body */}
-          <div className="space-y-4 text-xs sm:text-sm">
+          <div className="space-y-2.5 text-xs">
             {/* English Meaning */}
-            <div className="bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
-              <span className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-[11px] block mb-1">
+            <div className="bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+              <span className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-[10px] block mb-0.5">
                 Meaning:
               </span>
-              <p className="text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+              <p className="text-slate-700 dark:text-slate-300 font-medium leading-relaxed text-[11px]">
                 {activeItem.meaning}
               </p>
             </div>
 
             {/* Synonyms & Antonyms Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               {/* Synonyms */}
-              <div className="bg-emerald-50/70 dark:bg-emerald-950/20 p-3.5 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
-                <span className="font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-wider text-[11px] block mb-1.5">
+              <div className="bg-emerald-50/70 dark:bg-emerald-950/20 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/40">
+                <span className="font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-wider text-[10px] block mb-1">
                   Synonyms:
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1">
                   {activeItem.synonyms.map((syn, i) => (
                     <span
                       key={i}
-                      className="px-2 py-0.5 rounded-md bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-300 font-bold text-[11px]"
+                      className="px-1.5 py-px rounded bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-300 font-bold text-[10px]"
                     >
                       {syn}
                     </span>
@@ -359,15 +359,15 @@ export default function VocabSection({ language = 'en' }: VocabSectionProps) {
               </div>
 
               {/* Antonyms */}
-              <div className="bg-rose-50/70 dark:bg-rose-950/20 p-3.5 rounded-xl border border-rose-100 dark:border-rose-900/40">
-                <span className="font-black text-rose-800 dark:text-rose-400 uppercase tracking-wider text-[11px] block mb-1.5">
+              <div className="bg-rose-50/70 dark:bg-rose-950/20 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/40">
+                <span className="font-black text-rose-800 dark:text-rose-400 uppercase tracking-wider text-[10px] block mb-1">
                   Antonyms:
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1">
                   {activeItem.antonyms.map((ant, i) => (
                     <span
                       key={i}
-                      className="px-2 py-0.5 rounded-md bg-rose-100/80 dark:bg-rose-900/40 text-rose-900 dark:text-rose-300 font-bold text-[11px]"
+                      className="px-1.5 py-px rounded bg-rose-100/80 dark:bg-rose-900/40 text-rose-900 dark:text-rose-300 font-bold text-[10px]"
                     >
                       {ant}
                     </span>
@@ -377,33 +377,33 @@ export default function VocabSection({ language = 'en' }: VocabSectionProps) {
             </div>
 
             {/* Usage */}
-            <div className="bg-blue-50/70 dark:bg-blue-950/20 p-3.5 rounded-xl border border-blue-100 dark:border-blue-900/40">
-              <span className="font-black text-blue-800 dark:text-blue-400 uppercase tracking-wider text-[11px] block mb-0.5">
+            <div className="bg-blue-50/70 dark:bg-blue-950/20 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/40">
+              <span className="font-black text-blue-800 dark:text-blue-400 uppercase tracking-wider text-[10px] block mb-0.5">
                 Usage / Example:
               </span>
-              <p className="text-slate-800 dark:text-slate-200 font-semibold italic">
+              <p className="text-slate-800 dark:text-slate-200 font-semibold italic text-[11px]">
                 "{activeItem.usage}"
               </p>
             </div>
           </div>
 
           {/* Footer Carousel Pagination */}
-          <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 mt-5">
+          <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-2.5 mt-3">
             <button
               onClick={handlePrev}
-              className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer"
+              className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-[11px] font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>{language === 'hi' ? 'पिछला शब्द' : 'Previous'}</span>
             </button>
 
-            <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Word {currentIndex + 1} of {filteredData.length}
             </span>
 
             <button
               onClick={handleNext}
-              className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-sm"
+              className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-sm"
             >
               <span>{language === 'hi' ? 'अगला शब्द' : 'Next Word'}</span>
               <ChevronRight className="h-4 w-4" />

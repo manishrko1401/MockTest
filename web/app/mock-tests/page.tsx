@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth, TestCategory, TestSubCategory, MockTestItem } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu, TrendingUp, Coins, MapPin, Sparkles, Trophy, Star, Clock, UploadCloud, FolderOpen, Zap } from 'lucide-react';
+import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu, TrendingUp, Coins, MapPin, Sparkles, Trophy, Star, Clock, UploadCloud, FolderOpen, Zap, History } from 'lucide-react';
 import { generateExamSession, EXPLANATIONS, getLocalizedName } from '../lib/examUtils';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
@@ -198,6 +198,69 @@ export default function MockTestsCatalog() {
     return [...(examCatalog || [])].sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   }, [examCatalog]);
 
+  // Compute last 5 recent tests attempted or ongoing by the user
+  const recentTests = React.useMemo(() => {
+    if (!currentUser || !currentUser.testSessions || currentUser.testSessions.length === 0) return [];
+    
+    // Sort sessions by date/updatedAt descending
+    const sortedSessions = [...currentUser.testSessions].sort((a: any, b: any) => {
+      const timeA = new Date(a.updatedAt || a.date || 0).getTime();
+      const timeB = new Date(b.updatedAt || b.date || 0).getTime();
+      return timeB - timeA;
+    });
+
+    const recentList: Array<{ test: MockTestItem; session: any; catId: string; subCatId: string; subSubId?: string | null }> = [];
+    const seen = new Set<string>();
+
+    for (const session of sortedSessions) {
+      if (!session.testId || seen.has(session.testId)) continue;
+      seen.add(session.testId);
+
+      let foundTest: MockTestItem | null = null;
+      let foundCatId: string | null = null;
+      let foundSubCatId: string | null = null;
+      let foundSubSubId: string | null = null;
+
+      for (const cat of testSeriesCatalog) {
+        for (const sub of cat.subCategories || []) {
+          const t = (sub.tests || []).find((x: any) => x.id === session.testId);
+          if (t) { 
+            foundTest = t;
+            foundCatId = cat.id;
+            foundSubCatId = sub.id;
+            break; 
+          }
+          for (const ss of (sub.subSubCategories || [])) {
+            const t2 = (ss.tests || []).find((x: any) => x.id === session.testId);
+            if (t2) { 
+              foundTest = t2; 
+              foundCatId = cat.id;
+              foundSubCatId = sub.id;
+              foundSubSubId = ss.id;
+              break; 
+            }
+          }
+          if (foundTest) break;
+        }
+        if (foundTest) break;
+      }
+
+      if (foundTest && foundCatId && foundSubCatId) {
+        recentList.push({ 
+          test: foundTest, 
+          session, 
+          catId: foundCatId, 
+          subCatId: foundSubCatId, 
+          subSubId: foundSubSubId 
+        });
+      }
+
+      if (recentList.length >= 5) break;
+    }
+
+    return recentList;
+  }, [currentUser, testSeriesCatalog]);
+
   // Filter exam catalog by search query (checks category name or subcategory exam name)
   const getFilteredCatalogForSearch = React.useMemo(() => {
     const query = examSearchQuery.toLowerCase().trim();
@@ -241,9 +304,14 @@ export default function MockTestsCatalog() {
 
   // Reset active sub-subcategory when subcategory changes, but bypass on initial mount to allow query param loading
   const isInitialSubCat = React.useRef(true);
+  const skipSubSubResetRef = React.useRef(false);
   React.useEffect(() => {
     if (isInitialSubCat.current) {
       isInitialSubCat.current = false;
+      return;
+    }
+    if (skipSubSubResetRef.current) {
+      skipSubSubResetRef.current = false;
       return;
     }
     setActiveSubSubId(null);
@@ -258,19 +326,44 @@ export default function MockTestsCatalog() {
       if (hash === '#bookmarks') {
         setShowBookmarks(true);
       } else if (hash.startsWith('#exam-')) {
-        const examId = hash.replace('#exam-', '');
-        let foundCatId = null;
+        const rawExamStr = hash.replace('#exam-', '');
+        let foundCatId: string | null = null;
+        let foundSubId: string | null = null;
+        let foundSubSubId: string | null = null;
+
         for (const cat of testSeriesCatalog) {
-          if (cat.subCategories.some(sub => sub.id === examId)) {
-            foundCatId = cat.id;
-            break;
+          for (const sub of cat.subCategories || []) {
+            if (rawExamStr === sub.id) {
+              foundCatId = cat.id;
+              foundSubId = sub.id;
+              break;
+            }
+            if (rawExamStr.startsWith(`${sub.id}-`)) {
+              foundCatId = cat.id;
+              foundSubId = sub.id;
+              foundSubSubId = rawExamStr.replace(`${sub.id}-`, '');
+              break;
+            }
+            for (const ss of (sub.subSubCategories || [])) {
+              if (rawExamStr === `${sub.id}_${ss.id}` || rawExamStr === ss.id) {
+                foundCatId = cat.id;
+                foundSubId = sub.id;
+                foundSubSubId = ss.id;
+                break;
+              }
+            }
+            if (foundSubId) break;
           }
+          if (foundSubId) break;
         }
+
         setShowBookmarks(false);
-        if (foundCatId) {
-          setSelectedCategory(foundCatId);
+        if (foundCatId) setSelectedCategory(foundCatId);
+        if (foundSubId) {
+          skipSubSubResetRef.current = true;
+          setSelectedSubCategory(foundSubId);
+          setActiveSubSubId(foundSubSubId);
         }
-        setSelectedSubCategory(examId);
       } else if (hash.startsWith('#category-')) {
         const catId = hash.replace('#category-', '');
         setShowBookmarks(false);
@@ -322,6 +415,26 @@ export default function MockTestsCatalog() {
     setSelectedSubCategory(subCatId);
     if (typeof window !== 'undefined') {
       window.location.hash = `exam-${subCatId}`;
+    }
+  };
+
+  const handleOpenRecentCategory = (catId: string, subCatId: string, subSubId?: string | null) => {
+    let targetSubSubId = subSubId;
+    if (!targetSubSubId) {
+      const cat = testSeriesCatalog.find(c => c.id === catId);
+      const sub = cat?.subCategories.find(s => s.id === subCatId);
+      if (sub?.subSubCategories && sub.subSubCategories.length > 0) {
+        targetSubSubId = sub.subSubCategories[0].id;
+      }
+    }
+
+    skipSubSubResetRef.current = true;
+    setSelectedCategory(catId);
+    setSelectedSubCategory(subCatId);
+    setActiveSubSubId(targetSubSubId || null);
+    
+    if (typeof window !== 'undefined') {
+      window.location.hash = targetSubSubId ? `exam-${subCatId}-${targetSubSubId}` : `exam-${subCatId}`;
     }
   };
 
@@ -770,8 +883,102 @@ export default function MockTestsCatalog() {
             <>
               {/* Case 1: No category selected - Render Top Level Category Cards list */}
               {selectedCategory === null ? (
-                <div className="flex-1 overflow-y-auto space-y-4 mobile-fade-in">
-                  <div className="mb-2">
+                <div className="flex-1 overflow-y-auto space-y-3 mobile-fade-in">
+                  
+                  {/* NEW SECTION: YOUR RECENT TESTS */}
+                  {recentTests.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-blue-50 dark:bg-blue-950/60 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
+                            <History className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wide">
+                              {language === 'hi' ? 'आपके हालिया टेस्ट' : 'Your Recent Tests'}
+                            </h3>
+                            <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-semibold">
+                              {language === 'hi' ? 'हाल ही में दिए गए अंतिम 5 टेस्ट' : 'Last 5 attempted or ongoing mock tests'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <span className="text-[10px] font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-800">
+                          {recentTests.length} / 5 {language === 'hi' ? 'टेस्ट' : 'Tests'}
+                        </span>
+                      </div>
+
+                      {/* Horizontal Scroll Row of Tiles */}
+                      <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+                        {recentTests.map(({ test, session, catId, subCatId, subSubId }) => {
+                          const isOngoing = session.status === 'ONGOING';
+                          return (
+                            <div 
+                              key={test.id}
+                              onClick={() => handleOpenRecentCategory(catId, subCatId, subSubId)}
+                              className="bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between border-l-4 border-l-blue-500 hover:border-l-blue-600 min-h-[95px] min-w-[210px] w-[210px] shrink-0 cursor-pointer"
+                            >
+                              <div>
+                                <div className="flex items-center justify-between gap-1 mb-1">
+                                  <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                    isOngoing 
+                                      ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-900/60'
+                                      : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/60'
+                                  }`}>
+                                    {isOngoing ? (language === 'hi' ? 'अधूरा' : 'Paused') : (language === 'hi' ? 'पूर्ण' : 'Attempted')}
+                                  </span>
+                                  
+                                  {session.score !== undefined && (
+                                    <span className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                                      {session.score}/{session.maxScore || test.maxMarks}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <h4 className="font-extrabold text-[11px] text-slate-850 dark:text-slate-100 line-clamp-1 leading-snug" title={getLocalizedName(test, language)}>
+                                  {getLocalizedName(test, language)}
+                                </h4>
+                              </div>
+
+                              {isOngoing ? (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStartExam(test);
+                                  }}
+                                  className="mt-2.5 w-full py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[9.5px] text-center shadow-2xs cursor-pointer transition active:scale-95"
+                                >
+                                  {language === 'hi' ? 'फिर शुरू करें' : 'Resume'}
+                                </button>
+                              ) : (
+                                <div className="mt-2.5 flex items-center gap-1.5">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleReattemptExam(test);
+                                    }}
+                                    className="flex-1 py-1 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-extrabold text-[9px] text-center shadow-2xs cursor-pointer transition active:scale-95 truncate"
+                                  >
+                                    {language === 'hi' ? 'पुनः प्रयास' : 'Reattempt'}
+                                  </button>
+                                  <Link
+                                    href={`/exam/${test.id}/analysis`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex-1 py-1 px-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[9px] text-center shadow-2xs transition active:scale-95 border border-blue-600 block truncate"
+                                  >
+                                    {language === 'hi' ? 'विश्लेषण' : 'Analysis'}
+                                  </Link>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* EXAM CATEGORIES SECTION */}
+                  <div className="mb-1">
                     <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
                       Exam Categories
                     </h2>
@@ -1455,7 +1662,7 @@ export default function MockTestsCatalog() {
 
 
         {/* Right Side Content (Tests list/details) */}
-        <main className="flex-1 p-8 overflow-y-auto edu-grid-pattern relative">
+        <main className="flex-1 p-5 overflow-y-auto edu-grid-pattern relative">
           {showBookmarks ? (
             <div>
               {/* Bookmarked Questions Header */}
@@ -1612,7 +1819,7 @@ export default function MockTestsCatalog() {
             </div>
           ) : selectedCategory === null ? (
             <>
-              <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+              <div className="mb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div>
                   <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-blue-500" />
@@ -1645,6 +1852,98 @@ export default function MockTestsCatalog() {
                   )}
                 </div>
               </div>
+
+              {/* YOUR RECENT TESTS — Desktop (below heading, above tiles) */}
+              {recentTests.length > 0 && (
+                <div className="mb-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-4 shadow-xs space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-blue-50 dark:bg-blue-950/60 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
+                        <History className="h-3.5 w-3.5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
+                          {language === 'hi' ? 'आपके हालिया टेस्ट' : 'Your Recent Tests'}
+                        </h3>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">
+                          {language === 'hi' ? 'हाल ही में दिए गए अंतिम 5 टेस्ट' : 'Last 5 attempted or ongoing mock tests'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-800">
+                      {recentTests.length} / 5 {language === 'hi' ? 'टेस्ट' : 'Tests'}
+                    </span>
+                  </div>
+
+                  {/* Single Horizontal Row of 5 Compact Tiles */}
+                  <div className="grid grid-cols-5 gap-2.5">
+                    {recentTests.map(({ test, session, catId, subCatId, subSubId }) => {
+                      const isOngoing = session.status === 'ONGOING';
+                      return (
+                        <div 
+                          key={test.id}
+                          onClick={() => handleOpenRecentCategory(catId, subCatId, subSubId)}
+                          className="bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between border-l-4 border-l-blue-500 hover:border-l-blue-600 min-h-[88px] cursor-pointer"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                isOngoing 
+                                  ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-900/60'
+                                  : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/60'
+                              }`}>
+                                {isOngoing ? (language === 'hi' ? 'अधूरा' : 'Paused') : (language === 'hi' ? 'पूर्ण' : 'Attempted')}
+                              </span>
+                              
+                              {session.score !== undefined && (
+                                <span className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                                  {session.score}/{session.maxScore || test.maxMarks}
+                                </span>
+                              )}
+                            </div>
+
+                            <h4 className="font-extrabold text-[11px] text-slate-850 dark:text-slate-100 line-clamp-1 leading-snug" title={getLocalizedName(test, language)}>
+                              {getLocalizedName(test, language)}
+                            </h4>
+                          </div>
+
+                          {isOngoing ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStartExam(test);
+                              }}
+                              className="mt-2.5 w-full py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[9.5px] text-center shadow-2xs cursor-pointer transition active:scale-95"
+                            >
+                              {language === 'hi' ? 'फिर शुरू करें' : 'Resume'}
+                            </button>
+                          ) : (
+                            <div className="mt-2.5 flex items-center gap-1.5">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReattemptExam(test);
+                                }}
+                                className="flex-1 py-1 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-extrabold text-[9px] text-center shadow-2xs cursor-pointer transition active:scale-95 truncate"
+                              >
+                                {language === 'hi' ? 'पुनः प्रयास' : 'Reattempt'}
+                              </button>
+                              <Link
+                                href={`/exam/${test.id}/analysis`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex-1 py-1 px-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[9px] text-center shadow-2xs transition active:scale-95 border border-blue-600 block truncate"
+                              >
+                                {language === 'hi' ? 'विश्लेषण' : 'Analysis'}
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {getFilteredCatalogForSearch.map(cat => {

@@ -407,5 +407,11 @@ mjx-container[jax="CHTML"] {
   border: 1px solid rgba(255, 153, 51, 0.4);
 }
 
-
-
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

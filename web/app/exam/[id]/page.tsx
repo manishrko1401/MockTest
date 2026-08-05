@@ -26,7 +26,7 @@ import MathJaxText from '../../lib/MathJaxText';
 import { generateExamSession } from '../../lib/examUtils';
 
 
-function TcsIonEngine({ testId }: { testId: string }) {
+function TcsIonEngine({ testId, initialExamLanguage }: { testId: string; initialExamLanguage?: 'en' | 'hi' }) {
   const {
     state,
     initSession,
@@ -151,6 +151,7 @@ function TcsIonEngine({ testId }: { testId: string }) {
       }
 
       const resumeSource = ongoingRecord || localSnap;
+      const examLangToUse = initialExamLanguage || authLanguage || 'en';
 
       if (resumeSource && resumeSource.responses) {
         initSession(examSession, 3, {
@@ -159,14 +160,14 @@ function TcsIonEngine({ testId }: { testId: string }) {
           violationsCount: resumeSource.violations ?? 0,
           currentSectionIndex: resumeSource.currentSectionIndex ?? 0,
           currentQuestionIndex: resumeSource.currentQuestionIndex ?? 0,
-        }, authLanguage);
+        }, examLangToUse);
       } else {
-        initSession(examSession, 3, undefined, authLanguage); // 3 violations allowed
+        initSession(examSession, 3, undefined, examLangToUse); // 3 violations allowed
       }
     };
 
     initialize();
-  }, [initSession, testId, authLanguage, examCatalog, currentUser, state.isExamSubmitted]);
+  }, [initSession, testId, initialExamLanguage, authLanguage, examCatalog, currentUser, state.isExamSubmitted]);
 
   // Save state to localStorage (instant, works offline) and server on unload/unmount
   useEffect(() => {
@@ -1852,8 +1853,8 @@ function TcsIonEngine({ testId }: { testId: string }) {
   );
 }
 
-function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: () => void }) {
-  const { theme, toggleTheme, language: authLang, setLanguage: setAuthLang } = useAuth();
+function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: (selectedLang: 'en' | 'hi') => void }) {
+  const { theme, toggleTheme, language: authLang } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [mounted, setMounted] = useState(false);
@@ -1873,7 +1874,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
 
   const handleLangChange = (newLang: 'en' | 'hi') => {
     setLang(newLang);
-    setAuthLang(newLang); // Sets global/default language so the test initializes in it too!
+    // Only changes language for this mocktest session (does not change global website language)
   };
   
   // Mapped metadata based on testId
@@ -2037,7 +2038,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
             </Link>
 
             <button
-              onClick={onStart}
+              onClick={() => onStart(lang)}
               disabled={!agreed}
               className={`font-bold px-8 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all active:scale-95 shadow-md ${
                 agreed 
@@ -2058,14 +2059,21 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
 export default function DynamicExamPage() {
   const params = useParams();
   const testId = (params?.id as string) || "ssc_cgl_tier1";
-  const { saveOngoingSession } = useAuth();
+  const { saveOngoingSession, language: authLanguage } = useAuth();
   
   const [mounted, setMounted] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [selectedExamLang, setSelectedExamLang] = useState<'en' | 'hi'>('en');
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (authLanguage) {
+      setSelectedExamLang(authLanguage);
+    }
+  }, [authLanguage]);
 
   if (!mounted) {
     return null;
@@ -2091,7 +2099,8 @@ export default function DynamicExamPage() {
     }
   };
 
-  const handleStart = () => {
+  const handleStart = (chosenLang: 'en' | 'hi') => {
+    setSelectedExamLang(chosenLang);
     const docEl = document.documentElement;
     const req = docEl.requestFullscreen || 
                 (docEl as any).mozRequestFullScreen || 
@@ -2122,7 +2131,7 @@ export default function DynamicExamPage() {
 
   return (
     <TestEngineProvider onStateSync={handleSaveSync} syncIntervalSeconds={12}>
-      <TcsIonEngine testId={testId} />
+      <TcsIonEngine testId={testId} initialExamLanguage={selectedExamLang} />
     </TestEngineProvider>
   );
 }
