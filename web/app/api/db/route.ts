@@ -1946,14 +1946,16 @@ async function handleSaveCustomQuestions(rawPayload: any) {
     return NextResponse.json({ success: false, error: 'Questions array is required' }, { status: 400 });
   }
 
-  const targetId = String(testId).trim();
+  const rawTargetId = String(testId).trim();
+  const targetId = rawTargetId.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+  const safeKeyId = targetId;
 
   const bucketName = process.env.TIGRIS_BUCKET_NAME;
   let s3Url: string | null = null;
 
   if (bucketName) {
     try {
-      const fileName = `questions_${targetId}.json`;
+      const fileName = `questions_${safeKeyId}.json`;
       const fileBuffer = Buffer.from(JSON.stringify(questions));
 
       await s3Client.send(
@@ -1974,15 +1976,20 @@ async function handleSaveCustomQuestions(rawPayload: any) {
   const questionsDataToStore = s3Url ? { url: s3Url } : questions;
 
   try {
-    // 1. Check if the target mock test already exists in the database
-    let existingMockTest = await prisma.mockTest.findUnique({
-      where: { id: targetId }
+    // 1. Check if the target mock test already exists in the database by slug or raw ID
+    let existingMockTest = await prisma.mockTest.findFirst({
+      where: {
+        OR: [
+          { id: targetId },
+          { id: rawTargetId }
+        ]
+      }
     });
 
     if (existingMockTest) {
       // Update existing mock test questions without creating any new categories
       await prisma.mockTest.update({
-        where: { id: targetId },
+        where: { id: existingMockTest.id },
         data: {
           customQuestions: questionsDataToStore,
           questionsCount: questions.length,
@@ -2043,8 +2050,8 @@ async function handleSaveCustomQuestions(rawPayload: any) {
         data: {
           id: targetId,
           testSeriesId: targetSeries.id,
-          title: payload.title || `Test Paper (${targetId})`,
-          durationMinutes: payload.durationMinutes || 60,
+          title: payload.title || rawTargetId || `Test Paper (${targetId})`,
+          durationMinutes: payload.durationMinutes || 150,
           questionsCount: questions.length,
           maxMarks: questions.length * 2,
           requiredTierName: 'None',

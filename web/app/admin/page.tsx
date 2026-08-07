@@ -1058,10 +1058,18 @@ export default function AdminAnalytics() {
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-key': 'super_secret_admin_key_2026'
+        },
         body: JSON.stringify({
           action: 'save-custom-questions',
-          data: { testId: selectedUploadTestId, questions: parsedQuestions }
+          data: { 
+            testId: selectedUploadTestId, 
+            title: selectedUploadTestId,
+            questions: parsedQuestions,
+            sessionId: currentUser?.currentSessionId
+          }
         })
       });
       const data = await res.json();
@@ -1075,8 +1083,8 @@ export default function AdminAnalytics() {
       } else {
         showToast('Error: ' + (data.error || 'Failed to save questions to database.'));
       }
-    } catch (e) {
-      showToast('Error saving questions.');
+    } catch (e: any) {
+      showToast('Error saving questions: ' + (e?.message || 'Network error'));
     }
   };
 
