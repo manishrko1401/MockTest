@@ -28,6 +28,7 @@ import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
 import { SpinningDotsLoader } from '../SpinningDotsLoader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { formatLogoUrl } from './DashboardScreen';
 import { getLocalizedName } from '../utils/localization';
 
 interface TestSeriesDetailScreenProps {
@@ -258,7 +259,7 @@ export default function TestSeriesDetailScreen({
             overflow: 'hidden', padding: 2
           }}>
             <ExpoImage
-              source={{ uri: series.logoUrl.trim().replace(/^http:\/\//i, 'https://') }}
+              source={{ uri: formatLogoUrl(series.logoUrl) }}
               style={{ width: '100%', height: '100%', borderRadius: 14 }}
               contentFit="contain"
               transition={150}

@@ -1009,7 +1009,7 @@ export default function MockTestsCatalog() {
                           className={`w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer border-t-4 ${accentColor}`}
                         >
                           {/* Logo/Icon Container */}
-                          <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-3 bg-slate-50 dark:bg-slate-900 transition duration-300">
+                          <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-3 bg-white transition duration-300">
                             {cat.logoUrl ? (
                               <img
                                 src={cat.logoUrl}
@@ -1100,7 +1100,7 @@ export default function MockTestsCatalog() {
                             />
 
                             {/* Icon Container */}
-                            <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-105 shadow-sm overflow-hidden ${themeInfo.iconBg}`}>
+                            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-105 shadow-sm overflow-hidden bg-white border border-slate-100">
                               {getSubCatIcon(subCat.name, subCat.logoUrl || activeCategoryObj?.logoUrl)}
                             </div>
 
@@ -1154,10 +1154,19 @@ export default function MockTestsCatalog() {
                         {/* Subcategory Header: Back button & Subcategory Name on the same horizontal line */}
                         <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-200/80 dark:border-slate-800">
                           <button
-                            onClick={handleSubCategoryBack}
+                            onClick={() => {
+                              if (activeSubSubId !== null) {
+                                setActiveSubSubId(null);
+                              } else {
+                                handleSubCategoryBack();
+                              }
+                            }}
                             className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[11px] uppercase tracking-wider cursor-pointer shrink-0 active:scale-95 transition-transform"
                           >
-                            <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'सभी परीक्षाएं' : 'Back to Exams'}
+                            <ArrowLeft className="h-4 w-4" />
+                            {activeSubSubId !== null
+                              ? (language === 'hi' ? 'सीरीज सूची' : 'Back to Series')
+                              : (language === 'hi' ? 'सभी परीक्षाएं' : 'Back to Exams')}
                           </button>
 
                           <h2 className="text-sm font-black text-slate-900 dark:text-white truncate text-right">
@@ -1224,7 +1233,7 @@ export default function MockTestsCatalog() {
                                     <div className="flex-1 flex flex-col justify-between min-w-0">
                                       <div>
                                         {/* Icon Container */}
-                                        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-2 bg-slate-50 dark:bg-slate-900 transition duration-300">
+                                        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition duration-300">
                                           {getSubCatIcon(group.name, activeCategoryObj?.logoUrl)}
                                         </div>
 
@@ -1273,13 +1282,6 @@ export default function MockTestsCatalog() {
                         ) : groups.length > 0 && activeSubSubId !== null ? (
                           /* Mocktest List Page for selected sub-subcategory */
                           <div className="space-y-4">
-                            <button
-                              onClick={() => setActiveSubSubId(null)}
-                              className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[10px] uppercase tracking-wider mb-1 cursor-pointer"
-                            >
-                              <ArrowLeft className="h-3.5 w-3.5" /> {language === 'hi' ? 'टेस्ट सीरीज सूची पर वापस जाएं' : 'Back to Series List'}
-                            </button>
-
                             {/* Tests in selected sub-subcategory */}
                             {(() => {
                               const activeGroup = groups.find(g => g.id === activeSubSubId);
@@ -1999,7 +2001,7 @@ export default function MockTestsCatalog() {
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                           {/* Logo/Icon Container */}
-                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-855 shadow-sm overflow-hidden mb-2 bg-slate-55 dark:bg-slate-900 transition duration-300">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition duration-300">
                             {cat.logoUrl ? (
                               <img
                                 src={cat.logoUrl}
@@ -2152,7 +2154,7 @@ export default function MockTestsCatalog() {
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                           {/* Icon Container */}
-                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-2 bg-slate-50 dark:bg-slate-900 transition duration-300">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition duration-300">
                             {getSubCatIcon(subCat.name, subCat.logoUrl || currentCategoryObj?.logoUrl)}
                           </div>
 
@@ -2221,19 +2223,30 @@ export default function MockTestsCatalog() {
                   <div className="space-y-6">
                     <div className="mb-6 flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
                       <button
-                        onClick={() => setSelectedSubCategory(null)}
+                        onClick={() => {
+                          if (activeSubSubId !== null) {
+                            setActiveSubSubId(null);
+                          } else {
+                            setSelectedSubCategory(null);
+                          }
+                        }}
                         className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 shrink-0"
                       >
-                        <ArrowLeft className="h-4 w-4" /> {t.backToSubcategories}
+                        <ArrowLeft className="h-4 w-4" />
+                        {activeSubSubId !== null
+                          ? (language === 'hi' ? 'सीरीज सूची पर वापस जाएं' : 'Back to Series List')
+                          : t.backToSubcategories}
                       </button>
 
                       {currentCategoryObj?.logoUrl && (
                         <div className="flex-1 flex justify-center items-center">
-                          <img 
-                            src={currentCategoryObj.logoUrl} 
-                            alt={`${currentCategoryObj.name} logo`} 
-                            className="h-16 w-auto max-h-20 object-contain rounded-xl shadow-sm"
-                          />
+                          <div className="bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm">
+                            <img 
+                              src={currentCategoryObj.logoUrl} 
+                              alt={`${currentCategoryObj.name} logo`} 
+                              className="h-14 sm:h-16 w-auto max-h-20 object-contain rounded-xl"
+                            />
+                          </div>
                         </div>
                       )}
 
@@ -2307,7 +2320,7 @@ export default function MockTestsCatalog() {
                                 <div className="flex-1 flex flex-col justify-between min-w-0">
                                   <div>
                                     {/* Icon Container */}
-                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-850 shadow-sm overflow-hidden mb-2 bg-slate-50 dark:bg-slate-900 transition duration-300">
+                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition duration-300">
                                       {getSubCatIcon(group.name, currentCategoryObj?.logoUrl)}
                                     </div>
 
@@ -2356,14 +2369,8 @@ export default function MockTestsCatalog() {
                     ) : groups.length > 0 && activeSubSubId !== null ? (
                       /* Mocktest List Page for selected sub-subcategory */
                       <div className="space-y-6">
-                        {/* Horizontal Tab Navigator + Back button */}
+                        {/* Horizontal Tab Navigator */}
                         <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-                          <button
-                            onClick={() => setActiveSubSubId(null)}
-                            className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold px-3.5 py-2 rounded-xl text-xs transition cursor-pointer shrink-0"
-                          >
-                            <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'सभी सीरीज' : 'All Series'}
-                          </button>
                           <div className="flex gap-2 overflow-x-auto pb-2.5 custom-horizontal-scroll flex-1">
                             {groups.map(group => {
                               const isSelected = activeSubSubId === group.id;

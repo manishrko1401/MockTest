@@ -310,40 +310,71 @@ const FracView: React.FC<FracProps> = ({ num, den, fontSize, color }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Image component with auto-sizing
+// Image component with fully responsive auto-sizing
 // ─────────────────────────────────────────────────────────────────────────────
 interface ImgProps { src:string; isDark?:boolean; w?:number; h?:number }
 const HtmlImg: React.FC<ImgProps> = ({ src, isDark, w, h }) => {
   const [ar, setAr] = useState<number|null>(null);
-  const [size, setSize] = useState<{w:number;h:number}|null>(null);
   const [loading, setLoading] = useState(true);
+  const [containerWidth, setContainerWidth] = useState(0);
 
   React.useEffect(() => {
-    if (w && h) { setSize({w,h}); setAr(w/h); setLoading(false); return; }
+    if (w && h) { setAr(w/h); setLoading(false); return; }
     RNImage.getSize(src,
-      (iw,ih)=>{ if(iw&&ih){setSize({w:iw,h:ih});setAr(iw/ih);} setLoading(false); },
+      (iw,ih)=>{ if(iw&&ih){ setAr(iw/ih); } setLoading(false); },
       ()=>setLoading(false)
     );
   }, [src,w,h]);
 
-  const isIcon = (w&&w<100)||(size&&size.w<100)||
-    /shortcut-trick|alternate-meth|additional-info|icon|bullet/i.test(src);
+  // Only treat as tiny inline icon if BOTH explicit width attr is given AND it's < 50px
+  const isExplicitIcon = (w !== undefined && w < 50) ||
+    /shortcut-trick|alternate-meth|additional-info/i.test(src);
 
   if (loading) {
-    if ((w&&w<100)||/icon|bullet/i.test(src))
+    if (isExplicitIcon)
       return <View style={{width:w??26,height:h??26,backgroundColor:isDark?'#1E293B':'#E2E8F0',borderRadius:4,marginHorizontal:4}} />;
-    return <View style={{width:120,height:40,backgroundColor:isDark?'#1E293B':'#E2E8F0',borderRadius:4,marginVertical:4,justifyContent:'center',alignItems:'center'}}><Text style={{fontSize:9,color:'#94A3B8'}}>…</Text></View>;
+    return <View style={{width:'100%',height:60,backgroundColor:isDark?'#1E293B':'#E2E8F0',borderRadius:6,marginVertical:4,justifyContent:'center',alignItems:'center'}}><Text style={{fontSize:10,color:'#94A3B8'}}>Loading…</Text></View>;
   }
 
-  if (isIcon && ar) {
-    const th = h??(size?Math.min(size.h,26):26);
+  // Tiny inline icons: render inline at explicit size
+  if (isExplicitIcon && ar) {
+    const th = h ?? 26;
     return <Image source={{uri:src}} style={{width:th*ar,height:th,marginHorizontal:4,alignSelf:'center'}} contentFit="contain" cachePolicy="memory-disk" recyclingKey={src} />;
   }
 
-  const boxStyle:any={marginVertical:6,alignSelf:'stretch',backgroundColor:'#fff',padding:6,borderRadius:8,borderWidth:1,borderColor:isDark?'#334155':'#E2E8F0'};
+  // Full responsive block image
+  const effectiveAr = ar ?? 1.5;
+  const innerWidth = containerWidth > 0 ? containerWidth - 8 : undefined; // subtract padding
+  const computedHeight = innerWidth ? innerWidth / effectiveAr : undefined;
+  const finalHeight = computedHeight ? Math.max(computedHeight, 60) : 120;
+
   return (
-    <View style={boxStyle}>
-      <Image source={{uri:src}} style={{width:'100%',aspectRatio:ar??1.5}} contentFit="contain" cachePolicy="memory-disk" recyclingKey={src} />
+    <View
+      style={{
+        marginVertical: 4,
+        alignSelf: 'stretch',
+        backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+        padding: 4,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: isDark ? '#334155' : '#E2E8F0',
+        overflow: 'hidden',
+      }}
+      onLayout={(e) => {
+        const lw = e.nativeEvent.layout.width;
+        if (lw > 0 && lw !== containerWidth) setContainerWidth(lw);
+      }}
+    >
+      <Image
+        source={{uri:src}}
+        style={{
+          width: '100%',
+          height: finalHeight,
+        }}
+        contentFit="contain"
+        cachePolicy="memory-disk"
+        recyclingKey={src}
+      />
     </View>
   );
 };
@@ -427,8 +458,33 @@ function cleanHtml(raw: string): string {
   s = s.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
   s = s.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
 
-  // 5. Remove ALL empty/whitespace-only block tags (the root cause of blank lines)
-  //    Repeat until stable (handles nested empty tags)
+  // 5. Replace ALL HTML superscripts <sup>...</sup> with Unicode superscripts
+  s = s.replace(/<sup[^>]*>([\s\S]*?)<\/sup>/gi, (_, inner) => {
+    const plain = inner.replace(/<[^>]+>/g, '').trim();
+    if (!plain) return '';
+    const decoded = decodeEntities(plain);
+    return decoded.split('').map((ch: string) => SUP[ch] ?? ch).join('');
+  });
+
+  // 6. Replace ALL HTML subscripts <sub>...</sub> with Unicode subscripts
+  s = s.replace(/<sub[^>]*>([\s\S]*?)<\/sub>/gi, (_, inner) => {
+    const plain = inner.replace(/<[^>]+>/g, '').trim();
+    if (!plain) return '';
+    const decoded = decodeEntities(plain);
+    return decoded.split('').map((ch: string) => SUB[ch] ?? ch).join('');
+  });
+
+  // 7. For short text (options), strip ALL block-level wrapper tags to prevent multi-block splitting
+  //    Use actual text length (without HTML markup) for the threshold check
+  const plainTextLen = s.replace(/<[^>]+>/g, '').trim().length;
+  if (plainTextLen < 200) {
+    // Replace closing block tags with a space, remove opening ones
+    s = s.replace(/<\/(?:p|div)>/gi, ' ');
+    s = s.replace(/<(?:p|div|span)[^>]*>/gi, '');
+    s = s.replace(/<\/span>/gi, '');
+  }
+
+  // 9. Remove ALL empty/whitespace-only block tags
   let prev = '';
   while (prev !== s) {
     prev = s;
@@ -440,13 +496,16 @@ function cleanHtml(raw: string): string {
       .replace(/<span[^>]*>(?:&nbsp;|\u00A0|\s)*<\/span>/gi, '');
   }
 
-  // 6. Collapse 3+ consecutive <br> into at most 2
+  // 10. Collapse 3+ consecutive <br> into at most 2
   s = s.replace(/(<br\s*\/?>\s*){3,}/gi, '<br/><br/>');
 
-  // 7. Remove invisible &nbsp; standalone runs (3+ in a row → nothing)
+  // 11. Remove invisible &nbsp; standalone runs
   s = s.replace(/(&nbsp;\s*){3,}/gi, '');
 
-  // 8. Remove data-* attributes, style="" attributes (reduce noise)
+  // 12. Collapse ALL whitespace (spaces, tabs, newlines, nbsp) into single space
+  s = s.replace(/[\s\u00A0]+/g, ' ');
+
+  // 13. Remove data-* attributes, style="" attributes
   s = s.replace(/\s+data-[a-z][a-z0-9-]*="[^"]*"/gi, '');
   s = s.replace(/\s+style="[^"]*"/gi, '');
 
@@ -633,7 +692,7 @@ function htmlToBlocks(rawHtml: string): Block[] {
         const sm3=token.match(/style=["'][^"']*height:\s*(\d+)px/i);
         const iw=sm2?parseInt(sm2[1]):wm?parseInt(wm[1]):undefined;
         const ih=sm3?parseInt(sm3[1]):hm?parseInt(hm[1]):undefined;
-        const isSmall=iw&&iw<100;
+        const isSmall=iw&&iw<50;
 
         if(isSmall){
           curNodes.push({k:'img',src,w:iw,h:ih});
@@ -656,30 +715,47 @@ function htmlToBlocks(rawHtml: string): Block[] {
 // ─────────────────────────────────────────────────────────────────────────────
 // Render blocks to React Native nodes
 // ─────────────────────────────────────────────────────────────────────────────
-let _keyId = 0;
-const K = () => `ht_${_keyId++}`;
-
-function renderInlines(nodes: InlineNode[], baseFontSize:number, baseColor:string, textStyle:any, isDark?:boolean): React.ReactNode[] {
+function renderInlines(nodes: InlineNode[], baseFontSize:number, baseColor:string, textStyle:any, isDark?:boolean, blockIdx:number = 0): React.ReactNode[] {
   const headingScale=[1.6,1.45,1.3,1.15,1.05,1.0];
-  return nodes.map(node=>{
+  return nodes.map((node, i)=>{
+    const key = `in_${blockIdx}_${i}`;
     if(node.k==='frac'){
-      return <FracView key={K()} num={node.num} den={node.den} fontSize={baseFontSize} color={baseColor}/>;
+      return <FracView key={key} num={node.num} den={node.den} fontSize={baseFontSize} color={baseColor}/>;
     }
     if(node.k==='img'){
-      return <HtmlImg key={K()} src={node.src} isDark={isDark} w={node.w} h={node.h}/>;
+      return <HtmlImg key={key} src={node.src} isDark={isDark} w={node.w} h={node.h}/>;
     }
     // text node
     const n = node as Extract<InlineNode,{k:'text'}>;
     const hFs = n.hLevel ? Math.round(baseFontSize*(headingScale[(n.hLevel??1)-1]??1)) : baseFontSize;
-    const fs = (n.sup||n.sub) ? Math.round(hFs*0.72) : hFs;
+    const fs = (n.sup||n.sub) ? Math.round(hFs*0.75) : hFs;
     const style:any[] = [
       textStyle,
-      { color:baseColor, fontSize:fs, textAlign:'left' as const, lineHeight:fs*1.55 },
+      { color:baseColor, fontSize:fs },
       n.bold  && { fontWeight:'bold' as const },
       n.italic && { fontStyle:'italic' as const },
       n.under && { textDecorationLine:'underline' as const },
     ].filter(Boolean);
-    return <Text key={K()} style={style}>{n.v}</Text>;
+    return <Text key={key} style={style}>{n.v}</Text>;
+  });
+}
+
+function renderTextInlines(nodes: InlineNode[], baseFontSize:number, baseColor:string, textStyle:any, blockIdx:number = 0): React.ReactNode[] {
+  const headingScale=[1.6,1.45,1.3,1.15,1.05,1.0];
+  return nodes.map((node, i)=>{
+    const key = `txt_${blockIdx}_${i}`;
+    if (node.k !== 'text') return null;
+    const n = node as Extract<InlineNode,{k:'text'}>;
+    const hFs = n.hLevel ? Math.round(baseFontSize*(headingScale[(n.hLevel??1)-1]??1)) : baseFontSize;
+    const fs = (n.sup||n.sub) ? Math.round(hFs*0.75) : hFs;
+    const style:any[] = [
+      textStyle,
+      { color:baseColor, fontSize:fs },
+      n.bold  && { fontWeight:'bold' as const },
+      n.italic && { fontStyle:'italic' as const },
+      n.under && { textDecorationLine:'underline' as const },
+    ].filter(Boolean);
+    return <Text key={key} style={style}>{n.v}</Text>;
   });
 }
 
@@ -688,41 +764,63 @@ function renderBlocks(blocks: Block[], textStyle:any, isDark?:boolean): React.Re
   const baseColor: string = isDark ? '#E5E7EB' : '#1F2937';
   const out: React.ReactNode[] = [];
 
-  for(const b of blocks){
+  blocks.forEach((b, blockIdx) => {
+    const key = `blk_${blockIdx}`;
     if(b.k==='hr'){
-      out.push(<View key={K()} style={{width:'100%',height:1,backgroundColor:isDark?'#334155':'#E2E8F0',marginVertical:4}}/>);
-      continue;
+      out.push(<View key={key} style={{width:'100%',height:1,backgroundColor:isDark?'#334155':'#E2E8F0',marginVertical:4}}/>);
+      return;
     }
     if(b.k==='table'){
-      const n=renderTable(b.html,textStyle,isDark,K());
+      const n=renderTable(b.html,textStyle,isDark,key);
       if(n) out.push(n);
-      continue;
+      return;
     }
     if(b.k==='img'){
-      out.push(<HtmlImg key={K()} src={b.src} isDark={isDark} w={b.w} h={b.h}/>);
-      continue;
+      out.push(<HtmlImg key={key} src={b.src} isDark={isDark} w={b.w} h={b.h}/>);
+      return;
     }
     // para / head / li
     const nodes = b.nodes;
-    if(!nodes.length) continue;
+    if(!nodes.length) return;
 
-    const inlines = renderInlines(nodes, baseFs, baseColor, textStyle, isDark);
+    const hasSpecialInlines = nodes.some(n => n.k === 'frac' || n.k === 'img');
 
-    if(b.k==='li'){
-      out.push(
-        <View key={K()} style={{flexDirection:'row',alignItems:'flex-start',marginBottom:2,width:'100%'}}>
-          <Text style={[textStyle,{color:baseColor,fontSize:baseFs,lineHeight:baseFs*1.55,fontWeight:'bold',flexShrink:0,minWidth:22}]}>{b.bullet}</Text>
-          <View style={{flex:1,flexDirection:'row',flexWrap:'wrap',alignItems:'flex-start'}}>{inlines}</View>
-        </View>
-      );
+    if (hasSpecialInlines) {
+      const inlines = renderInlines(nodes, baseFs, baseColor, textStyle, isDark, blockIdx);
+      if(b.k==='li'){
+        out.push(
+          <View key={key} style={{flexDirection:'row',alignItems:'center',marginBottom:2,width:'100%'}}>
+            <Text style={[textStyle,{color:baseColor,fontSize:baseFs,lineHeight:baseFs*1.55,fontWeight:'bold',flexShrink:0,marginRight:6}]}>{b.bullet}</Text>
+            <View style={{flex:1,flexDirection:'row',flexWrap:'wrap',alignItems:'center'}}>{inlines}</View>
+          </View>
+        );
+      } else {
+        out.push(
+          <View key={key} style={{flexDirection:'row',flexWrap:'wrap',alignItems:'center',width:'100%',marginVertical:2}}>
+            {inlines}
+          </View>
+        );
+      }
     } else {
-      out.push(
-        <View key={K()} style={{flexDirection:'row',flexWrap:'wrap',alignItems:'flex-start',width:'100%'}}>
-          {inlines}
-        </View>
-      );
+      const textChildren = renderTextInlines(nodes, baseFs, baseColor, textStyle, blockIdx);
+      if(b.k==='li'){
+        out.push(
+          <View key={key} style={{flexDirection:'row',alignItems:'flex-start',marginBottom:2,width:'100%'}}>
+            <Text style={[textStyle,{color:baseColor,fontSize:baseFs,lineHeight:baseFs*1.5,fontWeight:'bold',flexShrink:0,marginRight:6}]}>{b.bullet}</Text>
+            <Text style={[textStyle, { color: baseColor, fontSize: baseFs, lineHeight: baseFs * 1.4, flex: 1 }]}>
+              {textChildren}
+            </Text>
+          </View>
+        );
+      } else {
+        out.push(
+          <Text key={key} style={[textStyle, { color: baseColor, fontSize: baseFs, lineHeight: baseFs * 1.4, marginVertical: 1 }]}>
+            {textChildren}
+          </Text>
+        );
+      }
     }
-  }
+  });
   return out;
 }
 

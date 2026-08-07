@@ -51,6 +51,24 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
   const [websiteRating, setWebsiteRating] = useState(0);
   const [examRating, setExamRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
+  const [isBlinkingStars, setIsBlinkingStars] = useState(false);
+
+  // Prevent browser back / popstate navigation once the exam is submitted
+  useEffect(() => {
+    if (!state.isExamSubmitted) return;
+
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [state.isExamSubmitted]);
 
   const { isMobile, isMounted } = useIsMobile();
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
@@ -511,13 +529,13 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               })}
             </div>
 
-            {/* Center: Action Buttons (Previous, Mark for Review, Save & Next, Clear Response) — Centered horizontally in the same line */}
-            <div className="flex-1 flex items-center justify-center gap-2 flex-wrap px-2">
+            {/* Center: Action Buttons (Previous, Mark for Review, Save & Next, Clear Response) — Increased size with original #2E66CC colors */}
+            <div className="flex-1 flex items-center justify-center gap-2.5 sm:gap-3 flex-wrap px-3 py-1">
               <button
                 type="button"
                 disabled={currentQuestionIndex === 0}
                 onClick={() => currentQuestionIndex > 0 && jumpToQuestion(currentSectionIndex, currentQuestionIndex - 1)}
-                className={`font-bold px-2.5 py-1 rounded text-[10px] transition-all whitespace-nowrap ${
+                className={`font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded text-xs sm:text-sm transition-all whitespace-nowrap ${
                   currentQuestionIndex === 0
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
                     : 'bg-[#2E66CC] hover:bg-[#1a4da6] text-white cursor-pointer active:scale-95 border border-[#2E66CC]'
@@ -525,9 +543,27 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               >
                 Previous
               </button>
-              <button type="button" onClick={markForReviewAndNext} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap border border-[#2E66CC]">Mark for Review</button>
-              <button type="button" onClick={saveAndNext} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap border border-[#2E66CC]">Save &amp; Next</button>
-              <button type="button" onClick={clearResponse} className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-2.5 py-1 rounded text-[10px] cursor-pointer active:scale-95 transition-all whitespace-nowrap border border-[#2E66CC]">Clear Response</button>
+              <button 
+                type="button" 
+                onClick={markForReviewAndNext} 
+                className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded text-xs sm:text-sm cursor-pointer active:scale-95 transition-all whitespace-nowrap border border-[#2E66CC]"
+              >
+                Mark for Review
+              </button>
+              <button 
+                type="button" 
+                onClick={saveAndNext} 
+                className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-5 sm:px-6 py-2 sm:py-2.5 rounded text-xs sm:text-sm cursor-pointer active:scale-95 transition-all whitespace-nowrap border border-[#2E66CC]"
+              >
+                Save &amp; Next
+              </button>
+              <button 
+                type="button" 
+                onClick={clearResponse} 
+                className="bg-[#2E66CC] hover:bg-[#1a4da6] text-white font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded text-xs sm:text-sm cursor-pointer active:scale-95 transition-all whitespace-nowrap border border-[#2E66CC]"
+              >
+                Clear Response
+              </button>
             </div>
           </div>
         );
@@ -735,23 +771,28 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
             {/* Bottom Row: Ratings + Action Button (Horizontal Split) */}
             <div className="pt-4 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-5">
-              {/* Feedback Rating Block (Increased Size) */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 text-left w-full md:w-auto">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs sm:text-sm font-black text-slate-700 whitespace-nowrap">Rate App:</span>
+              {/* Feedback Rating Block */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 text-left w-full md:w-auto">
+                {/* Rate App */}
+                <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/60 text-slate-700">
+                  <span className="text-xs sm:text-sm font-black whitespace-nowrap">
+                    {language === 'hi' ? 'ऐप अनुभव:' : 'Rate App:'}
+                  </span>
                   <div className="flex gap-1.5">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         onClick={() => setWebsiteRating(star)}
                         type="button"
-                        className="focus:outline-none transition active:scale-110 p-0.5"
+                        className="focus:outline-none transition active:scale-110 p-0.5 cursor-pointer"
                       >
                         <Star
-                          className={`h-6 w-6 sm:h-7 sm:w-7 ${
+                          className={`h-6 w-6 sm:h-7 sm:w-7 transition-colors ${
                             star <= websiteRating 
                               ? 'fill-amber-400 text-amber-400 drop-shadow-sm' 
-                              : 'text-slate-300 hover:text-amber-300'
+                              : isBlinkingStars && websiteRating === 0
+                                ? 'fill-amber-400 text-amber-400 animate-pulse'
+                                : 'text-slate-300 hover:text-amber-300'
                           }`}
                         />
                       </button>
@@ -759,21 +800,26 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <span className="text-xs sm:text-sm font-black text-slate-700 whitespace-nowrap">Exam Experience:</span>
+                {/* Rate Exam */}
+                <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/60 text-slate-700">
+                  <span className="text-xs sm:text-sm font-black whitespace-nowrap">
+                    {language === 'hi' ? 'परीक्षा अनुभव:' : 'Exam Experience:'}
+                  </span>
                   <div className="flex gap-1.5">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         onClick={() => setExamRating(star)}
                         type="button"
-                        className="focus:outline-none transition active:scale-110 p-0.5"
+                        className="focus:outline-none transition active:scale-110 p-0.5 cursor-pointer"
                       >
                         <Star
-                          className={`h-6 w-6 sm:h-7 sm:w-7 ${
+                          className={`h-6 w-6 sm:h-7 sm:w-7 transition-colors ${
                             star <= examRating 
                               ? 'fill-amber-400 text-amber-400 drop-shadow-sm' 
-                              : 'text-slate-300 hover:text-amber-300'
+                              : isBlinkingStars && examRating === 0
+                                ? 'fill-amber-400 text-amber-400 animate-pulse'
+                                : 'text-slate-300 hover:text-amber-300'
                           }`}
                         />
                       </button>
@@ -785,22 +831,27 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               {/* Submit & View Score & Analysis Button */}
               <button
                 onClick={async () => {
-                  if (websiteRating > 0 || examRating > 0 || feedbackText.trim() !== '') {
-                    try {
-                      await fetch('/api/feedback', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          userId: currentUser?.id,
-                          testId: testId,
-                          platformRating: websiteRating,
-                          examRating: examRating,
-                          feedbackText: feedbackText
-                        })
-                      });
-                    } catch (e) {
-                      console.warn("Feedback submission failed:", e);
-                    }
+                  if (websiteRating === 0 || examRating === 0) {
+                    setIsBlinkingStars(true);
+                    setTimeout(() => setIsBlinkingStars(false), 900);
+                    return;
+                  }
+
+                  try {
+                    await fetch('/api/feedback', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        userId: currentUser?.id,
+                        testId: testId,
+                        platformRating: websiteRating,
+                        examRating: examRating,
+                        feedbackText: feedbackText,
+                        source: 'web'
+                      })
+                    });
+                  } catch (e) {
+                    console.warn("Feedback submission failed:", e);
                   }
 
                   try {
@@ -1448,11 +1499,11 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               )}
             </div>
 
-            {/* Bottom Actions Row — SSC uses sub-header for Mark/Save/Submit, so only Clear Response shown here */}
+            {/* Bottom Actions Row — SSC uses sub-header for Mark/Save/Submit, so remove primary bottom actions panel in SSC */}
             {(() => {
               const isSsc = testId.toLowerCase().includes('ssc') || session?.testTitle?.toLowerCase().includes('ssc') || session?.testId?.toLowerCase().includes('ssc');
               if (isSsc) {
-                return null; // SSC: actions are in the sub-header bar, no desktop footer needed
+                return null; // SSC: actions are in the sub-header bar, no bottom footer panel
               }
               return (
                 <footer className="flex flex-col sm:flex-row sm:h-14 items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 sm:py-0 shrink-0 bg-white">

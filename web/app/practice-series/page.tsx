@@ -1501,7 +1501,7 @@ export default function PracticeSeriesPage() {
                     <div className="flex-1 flex flex-col justify-between min-w-0">
                       <div>
                         {/* Target Logo/Icon Container */}
-                        <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center border border-blue-100 dark:border-blue-900/40 shadow-sm overflow-hidden mb-2 bg-blue-50/60 dark:bg-blue-955/30 transition duration-300">
+                        <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition duration-300">
                           {(cat as any).logoUrl ? (
                             <img
                               src={(cat as any).logoUrl}
@@ -1509,7 +1509,7 @@ export default function PracticeSeriesPage() {
                               className="w-full h-full object-contain p-1"
                             />
                           ) : (
-                            <Target className="h-5 w-5 sm:h-6.5 sm:w-6.5 text-blue-600 dark:text-blue-400" />
+                            <Target className="h-5 w-5 sm:h-6.5 sm:w-6.5 text-blue-600" />
                           )}
                         </div>
 

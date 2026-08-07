@@ -58,11 +58,12 @@ import {
   Pin,
   LogIn,
   Star,
-  Clock
+  Clock,
+  Play
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import { ApiClient } from '../api';
+import { ApiClient, BASE_URL } from '../api';
 import { getCachedQuestions, saveQuestionsToCache } from '../cache';
 import { ThemeColors } from '../theme';
 import { HtmlText } from '../HtmlText';
@@ -247,8 +248,8 @@ const BRAND = {
  */
 const CATEGORY_LOGO_OVERRIDES: Array<{ match: string[]; logoUrl: string }> = [
   {
-    match: ['ssc'],
-    logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b0/Staff_Selection_Commission_India_logo.png/200px-Staff_Selection_Commission_India_logo.png',
+    match: ['ssc', 'staff selection commission'],
+    logoUrl: 'https://image.pngaaa.com/279/10279-middle.png',
   },
   {
     match: ['cbse', 'ctet'],
@@ -262,38 +263,84 @@ const CATEGORY_LOGO_OVERRIDES: Array<{ match: string[]; logoUrl: string }> = [
     match: ['upsc'],
     logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/bf/UPSC_Logo.svg/200px-UPSC_Logo.svg.png',
   },
+  {
+    match: ['isro', 'indian space research organisation', 'space'],
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Indian_Space_Research_Organisation_Logo.svg/200px-Indian_Space_Research_Organisation_Logo.svg.png',
+  },
+  {
+    match: ['drdo'],
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/6/6f/Defence_Research_and_Development_Organisation_Logo.png/200px-Defence_Research_and_Development_Organisation_Logo.png',
+  },
 ];
+
+export function formatLogoUrl(rawUrl?: string | null): string {
+  if (!rawUrl || typeof rawUrl !== 'string') return '';
+  let url = rawUrl.trim();
+  if (!url) return '';
+
+  // Convert Wikipedia/Wikimedia SVG links to PNG thumbnails for React Native Image rendering
+  if (url.includes('upload.wikimedia.org') && url.endsWith('.svg') && !url.includes('/thumb/')) {
+    const filename = url.substring(url.lastIndexOf('/') + 1);
+    url = url.replace('/commons/', '/commons/thumb/').replace('/en/', '/en/thumb/') + `/200px-${filename}.png`;
+  }
+
+  if (url.startsWith('data:')) {
+    return url;
+  }
+  if (url.startsWith('//')) {
+    return 'https:' + url;
+  }
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  const base = (BASE_URL || '').replace(/\/+$/, '');
+  const path = url.replace(/^\/+/, '');
+  return `${base}/${path}`;
+}
+
+export function formatRelativeOrDate(dateStr?: string, lang: 'en' | 'hi' = 'en'): string {
+  if (!dateStr) return lang === 'hi' ? 'हाल ही में' : 'Recently';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 2) return lang === 'hi' ? 'अभी' : 'Just now';
+    if (diffMins < 60) return lang === 'hi' ? `${diffMins} मि. पहले` : `${diffMins}m ago`;
+    if (diffHours < 24) return lang === 'hi' ? `${diffHours} घंटे पहले` : `${diffHours}h ago`;
+    if (diffDays === 1) return lang === 'hi' ? 'कल' : 'Yesterday';
+    if (diffDays < 7) return lang === 'hi' ? `${diffDays} दिन पहले` : `${diffDays}d ago`;
+
+    const day = d.getDate();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${day} ${monthNames[d.getMonth()]}`;
+  } catch {
+    return dateStr;
+  }
+}
 
 /**
  * Returns the best logo URL to display for a category:
- * - If the DB logo URL is non-empty and not from a known hotlink-blocked domain → use it
- * - Otherwise fall through to the CATEGORY_LOGO_OVERRIDES map
- * - Returns '' if nothing matches (icon fallback will be used by CategoryLogoImage)
+ * - If the DB logo URL is non-empty, format it and use it as primaryUrl
+ * - Uses CATEGORY_LOGO_OVERRIDES map as secondary fallbackUrl
  */
-const HOTLINK_BLOCKED_DOMAINS = ['pngaaa.com', 'encrypted-tbn0.gstatic.com'];
-
 function getEffectiveLogoUrl(categoryName: string, dbLogoUrl?: string | null): { primaryUrl: string; fallbackUrl: string } {
   const norm = (categoryName || '').toLowerCase();
   const override = CATEGORY_LOGO_OVERRIDES.find(o => o.match.some(m => norm.includes(m)));
   const overrideUrl = override?.logoUrl || '';
 
-  // Check if the DB URL is from a domain known to block hotlinking
-  const isDbUrlBlocked = dbLogoUrl
-    ? HOTLINK_BLOCKED_DOMAINS.some(d => dbLogoUrl.includes(d))
-    : true;
+  const formattedDbUrl = formatLogoUrl(dbLogoUrl);
 
-  if (!dbLogoUrl || !dbLogoUrl.trim()) {
-    // No DB logo — use override directly as primary
+  if (!formattedDbUrl) {
     return { primaryUrl: overrideUrl, fallbackUrl: '' };
   }
 
-  if (isDbUrlBlocked) {
-    // DB URL is known-blocked — skip it, use override as primary
-    return { primaryUrl: overrideUrl, fallbackUrl: '' };
-  }
-
-  // DB URL looks valid — try it first, use override as secondary fallback
-  return { primaryUrl: dbLogoUrl, fallbackUrl: overrideUrl };
+  return { primaryUrl: formattedDbUrl, fallbackUrl: overrideUrl };
 }
 
 const getCategoryStyle = (name: string, isDark: boolean) => {
@@ -334,73 +381,35 @@ const CategoryIcon = ({ name, color, size }: { name: string; color: string; size
 };
 
 const CategoryLogoImage = React.memo(({ logoUrl, fallbackLogoUrl, fallbackIcon }: { logoUrl: string; fallbackLogoUrl?: string; fallbackIcon: React.ReactNode }) => {
-  const [primaryError, setPrimaryError] = useState(false);
-  const [fallbackError, setFallbackError] = useState(false);
+  const [currentUriIndex, setCurrentUriIndex] = useState(0);
 
   useEffect(() => {
-    setPrimaryError(false);
-    setFallbackError(false);
+    setCurrentUriIndex(0);
   }, [logoUrl, fallbackLogoUrl]);
 
-  const cleanUrl = React.useMemo(() => {
-    const raw = logoUrl || '';
-    if (!raw.trim()) return '';
-    let url = raw.trim();
+  const cleanUrl = React.useMemo(() => formatLogoUrl(logoUrl), [logoUrl]);
+  const cleanFallbackUrl = React.useMemo(() => formatLogoUrl(fallbackLogoUrl), [fallbackLogoUrl]);
 
-    if (url.startsWith('//')) {
-      url = 'https:' + url;
-    } else if (url.startsWith('http://')) {
-      url = 'https://' + url.slice(7);
-    } else if (!url.startsWith('https://') && !url.startsWith('data:')) {
-      url = 'https://' + url;
-    }
+  const candidateUris = React.useMemo(() => {
+    const list: string[] = [];
+    if (cleanUrl) list.push(cleanUrl);
+    if (cleanFallbackUrl && cleanFallbackUrl !== cleanUrl) list.push(cleanFallbackUrl);
+    return list;
+  }, [cleanUrl, cleanFallbackUrl]);
 
-    try { return encodeURI(url); } catch { return url; }
-  }, [logoUrl]);
+  const activeUri = candidateUris[currentUriIndex];
 
-  const cleanFallbackUrl = React.useMemo(() => {
-    const raw = fallbackLogoUrl || '';
-    if (!raw.trim()) return '';
-    let url = raw.trim();
-
-    if (url.startsWith('//')) {
-      url = 'https:' + url;
-    } else if (url.startsWith('http://')) {
-      url = 'https://' + url.slice(7);
-    } else if (!url.startsWith('https://') && !url.startsWith('data:')) {
-      url = 'https://' + url;
-    }
-
-    try { return encodeURI(url); } catch { return url; }
-  }, [fallbackLogoUrl]);
-
-  // Stage 1: primary URL failed or absent → try fallback URL
-  if ((!cleanUrl || primaryError) && cleanFallbackUrl && !fallbackError) {
-    return (
-      <ExpoImage
-        source={{ uri: cleanFallbackUrl }}
-        style={{ width: '100%', height: '100%', borderRadius: 12 }}
-        contentFit="contain"
-        transition={150}
-        cachePolicy="memory-disk"
-        onError={() => setFallbackError(true)}
-      />
-    );
-  }
-
-  // Stage 2: both URLs failed or absent → show icon
-  if (!cleanUrl || (primaryError && (!cleanFallbackUrl || fallbackError))) {
+  if (!activeUri || currentUriIndex >= candidateUris.length) {
     return <>{fallbackIcon}</>;
   }
 
   return (
-    <ExpoImage
-      source={{ uri: cleanUrl }}
-      style={{ width: '100%', height: '100%', borderRadius: 12 }}
-      contentFit="contain"
-      transition={150}
-      cachePolicy="memory-disk"
-      onError={() => setPrimaryError(true)}
+    <Image
+      source={{ uri: activeUri, headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } }}
+      style={{ width: '100%', height: '100%', borderRadius: 10, resizeMode: 'contain' }}
+      onError={() => {
+        setCurrentUriIndex((prev) => prev + 1);
+      }}
     />
   );
 });
@@ -532,6 +541,77 @@ export default function DashboardScreen({
 
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
+  const [localOngoingSessions, setLocalOngoingSessions] = useState<any[]>([]);
+
+  // Load locally-cached ongoing/paused test sessions so Resume Test button appears immediately
+  useEffect(() => {
+    const loadLocalOngoing = async () => {
+      try {
+        const allKeys = await AsyncStorage.getAllKeys();
+        const ongoingKeys = allKeys.filter(k => k.startsWith('ongoing_test_'));
+        const list: any[] = [];
+        for (const key of ongoingKeys) {
+          const raw = await AsyncStorage.getItem(key);
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw);
+              if (parsed?.testId && (parsed?.status === 'ONGOING' || parsed?.status === 'PAUSED')) {
+                list.push({
+                  ...parsed,
+                  id: `local_${parsed.testId}`,
+                  testId: parsed.testId,
+                  status: 'ONGOING',
+                  startedAt: parsed.updatedAt || parsed.startedAt || new Date().toISOString(),
+                });
+              }
+            } catch {}
+          }
+        }
+        setLocalOngoingSessions(list);
+      } catch (err) {
+        console.warn('[Dashboard] Failed to load local ongoing sessions:', err);
+      }
+    };
+    loadLocalOngoing();
+  }, [activeTab, currentUser?.id, currentUser?.testSessions]);
+
+  const catalogTestsMap = useMemo(() => {
+    const map = new Map<string, { title: string; categoryName: string; maxMarks: number; questionsCount: number; durationMinutes: number }>();
+    (examCatalog || []).forEach((cat: any) => {
+      (cat.tests || []).forEach((t: any) => {
+        map.set(t.id, {
+          title: t.title || cat.name,
+          categoryName: cat.name,
+          maxMarks: t.maxMarks || 200,
+          questionsCount: t.questionsCount || 100,
+          durationMinutes: t.durationMinutes || 60,
+        });
+      });
+      (cat.subCategories || []).forEach((sub: any) => {
+        (sub.tests || []).forEach((t: any) => {
+          map.set(t.id, {
+            title: t.title || sub.name || cat.name,
+            categoryName: cat.name,
+            maxMarks: t.maxMarks || 200,
+            questionsCount: t.questionsCount || 100,
+            durationMinutes: t.durationMinutes || 60,
+          });
+        });
+        (sub.subSubCategories || []).forEach((subsub: any) => {
+          (subsub.tests || []).forEach((t: any) => {
+            map.set(t.id, {
+              title: t.title || subsub.title || sub.name,
+              categoryName: cat.name,
+              maxMarks: t.maxMarks || 200,
+              questionsCount: t.questionsCount || 100,
+              durationMinutes: t.durationMinutes || 60,
+            });
+          });
+        });
+      });
+    });
+    return map;
+  }, [examCatalog]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -1125,7 +1205,9 @@ export default function DashboardScreen({
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.18,
                   shadowRadius: 8,
-                  elevation: 4
+                  elevation: 4,
+                  height: 152,
+                  justifyContent: 'space-between',
                 },
                 isDark && { borderWidth: 1 }
               ]}>
@@ -1133,6 +1215,7 @@ export default function DashboardScreen({
                 <View style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: badgeColor, opacity: 0.12 }} />
                 <View style={{ position: 'absolute', bottom: -10, left: 60, width: 35, height: 35, borderRadius: 17.5, backgroundColor: badgeColor, opacity: 0.08 }} />
                 
+                {/* Fixed Top Header Row */}
                 <View style={styles.liveUpdatesHeader}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <View style={[styles.liveCategoryBadge, { backgroundColor: '#FFFFFF', borderColor: badgeBorderColor, borderWidth: 1 }]}>
@@ -1150,19 +1233,26 @@ export default function DashboardScreen({
                   </Text>
                 </View>
                 
-                <Text style={[styles.liveUpdatesTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B', fontWeight: '900' }]} numberOfLines={2}>
-                  {language === 'hi' && activeNotice.titleHi ? activeNotice.titleHi : activeNotice.title}
-                </Text>
-                {activeNotice.lastDate && (
-                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#EF4444', marginTop: 4, marginBottom: 4 }}>
-                    {language === 'en' ? 'Last Date: ' : 'अंतिम तिथि: '}{activeNotice.lastDate}
+                {/* Title Slot (Full vertical space, no clipping) */}
+                <View style={{ flex: 1, justifyContent: 'center', marginVertical: 4 }}>
+                  <Text style={[styles.liveUpdatesTitle, isDark ? { color: '#FFFFFF' } : { color: '#1E293B', fontWeight: '900' }]} numberOfLines={2}>
+                    {language === 'hi' && activeNotice.titleHi ? activeNotice.titleHi : activeNotice.title}
                   </Text>
-                )}
+                </View>
                 
+                {/* Footer Row: Last Date in place of uploaded date on left, View Info on right */}
                 <View style={styles.liveUpdatesFooter}>
-                  <Text style={[styles.liveUpdatesDate, isDark ? { color: '#94A3B8' } : { color: '#475569', fontWeight: '600' }]}>
-                    Uploaded: {activeNotice.date}
-                  </Text>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    {activeNotice.lastDate ? (
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#EF4444' }} numberOfLines={1}>
+                        {language === 'en' ? 'Last Date: ' : 'अंतिम तिथि: '}{activeNotice.lastDate}
+                      </Text>
+                    ) : (
+                      <Text style={[styles.liveUpdatesDate, isDark ? { color: '#94A3B8' } : { color: '#64748B', fontWeight: '600' }]} numberOfLines={1}>
+                        {activeNotice.date || ''}
+                      </Text>
+                    )}
+                  </View>
                   <TouchableOpacity 
                     style={[styles.liveUpdatesBtn, { backgroundColor: badgeColor }]}
                     onPress={() => {
@@ -1179,6 +1269,350 @@ export default function DashboardScreen({
                   </TouchableOpacity>
                 </View>
               </View>
+            </View>
+          );
+        })()}
+
+        {/* Section 2.5: Recent Test Attempts (Last 5 attempts - including Ongoing / Paused tests) */}
+        {(() => {
+          const rawSessions = currentUser?.testSessions || [];
+          
+          // Map testIds to combine server sessions and locally cached ongoing sessions
+          const sessionsMap = new Map<string, any>();
+
+          // 1. Add server sessions
+          (Array.isArray(rawSessions) ? rawSessions : []).forEach((s: any) => {
+            if (s && s.testId) {
+              sessionsMap.set(s.testId, s);
+            }
+          });
+
+          // 2. Add or update with local ongoing sessions
+          localOngoingSessions.forEach((ls: any) => {
+            if (ls && ls.testId) {
+              const existing = sessionsMap.get(ls.testId);
+              // Only overwrite or add if not already marked as completed recently
+              if (!existing || existing.status === 'ONGOING' || existing.status === 'PAUSED') {
+                sessionsMap.set(ls.testId, { ...existing, ...ls });
+              }
+            }
+          });
+
+          const allRecentSessions = Array.from(sessionsMap.values())
+            .filter((s: any) => s && (
+              s.status === 'ONGOING' ||
+              s.status === 'PAUSED' ||
+              s.status === 'COMPLETED' ||
+              s.status === 'AUTO_SUBMITTED' ||
+              s.score !== undefined
+            ))
+            .sort((a: any, b: any) => {
+              // Prioritize ongoing/paused tests at the beginning
+              const isOngoingA = a.status === 'ONGOING' || a.status === 'PAUSED';
+              const isOngoingB = b.status === 'ONGOING' || b.status === 'PAUSED';
+              if (isOngoingA && !isOngoingB) return -1;
+              if (!isOngoingA && isOngoingB) return 1;
+
+              const timeA = new Date(a.updatedAt || a.completedAt || a.startedAt || a.createdAt || 0).getTime();
+              const timeB = new Date(b.updatedAt || b.completedAt || b.startedAt || b.createdAt || 0).getTime();
+              return timeB - timeA;
+            })
+            .slice(0, 5);
+
+          if (allRecentSessions.length === 0) return null;
+
+          return (
+            <View style={{ marginBottom: 14 }}>
+              {/* Section Header (without View All option) */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingRight: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <RotateCcw size={15} color="#3B82F6" />
+                  <Text style={[styles.sectionTitle, isDark && { color: ThemeColors.dark.text }, { marginBottom: 0, fontSize: 13 }]}>
+                    {language === 'hi' ? 'हाल के टेस्ट प्रयास' : 'Recent Test Attempts'}
+                  </Text>
+                  <View style={{
+                    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : '#EFF6FF',
+                    borderColor: isDark ? '#1E3A8A' : '#BFDBFE',
+                    borderWidth: 1,
+                    paddingHorizontal: 6,
+                    paddingVertical: 1,
+                    borderRadius: 8,
+                  }}>
+                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: isDark ? '#60A5FA' : '#2563EB' }}>
+                      {allRecentSessions.length} {language === 'hi' ? 'प्रयास' : 'Recent'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Horizontal Scroll of Compact Recent Attempt Cards */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingRight: 12 }}
+              >
+                {allRecentSessions.map((attempt: any, idx: number) => {
+                  const isOngoing = attempt.status === 'ONGOING' || attempt.status === 'PAUSED';
+                  const testInfo = catalogTestsMap.get(attempt.testId);
+                  const title = attempt.testTitle || attempt.title || attempt.mockTest?.title || testInfo?.title || `Mock Test #${idx + 1}`;
+                  const categoryName = testInfo?.categoryName || attempt.categoryName || 'Competitive Exam';
+                  const score = attempt.score ?? 0;
+                  const maxMarks = attempt.maxScore || attempt.mockTest?.maxMarks || testInfo?.maxMarks || 200;
+                  const scorePercent = maxMarks > 0 ? Math.round((score / maxMarks) * 100) : 0;
+                  const accuracy = attempt.accuracy !== undefined
+                    ? Math.round(attempt.accuracy)
+                    : (attempt.correctCount && attempt.totalAttempted ? Math.round((attempt.correctCount / attempt.totalAttempted) * 100) : null);
+                  const dateLabel = formatRelativeOrDate(attempt.updatedAt || attempt.completedAt || attempt.startedAt || attempt.createdAt, language);
+
+                  const isGoodScore = scorePercent >= 60;
+                  const scoreBadgeBg = isDark
+                    ? (isGoodScore ? 'rgba(16,185,129,0.18)' : 'rgba(59,130,246,0.18)')
+                    : (isGoodScore ? '#ECFDF5' : '#EFF6FF');
+                  const scoreBadgeBorder = isDark
+                    ? (isGoodScore ? '#065F46' : '#1E3A8A')
+                    : (isGoodScore ? '#A7F3D0' : '#BFDBFE');
+                  const scoreBadgeColor = isGoodScore ? '#10B981' : '#3B82F6';
+
+                  // Attempted questions in ongoing session
+                  const attemptedCount = attempt.responses
+                    ? Object.values(attempt.responses).filter((r: any) => r?.selectedOptionIndex !== null && r?.selectedOptionIndex !== undefined).length
+                    : (attempt.totalAttempted || 0);
+
+                  return (
+                    <View
+                      key={`recent-att-${attempt.testId || attempt.id || idx}`}
+                      style={{
+                        width: 215,
+                        backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                        borderRadius: 14,
+                        padding: 10,
+                        marginRight: 10,
+                        borderColor: isOngoing ? (isDark ? '#2563EB' : '#3B82F6') : (isDark ? '#334155' : '#E2E8F0'),
+                        borderWidth: isOngoing ? 1.6 : 1.2,
+                        shadowColor: isOngoing ? '#3B82F6' : '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: isDark ? 0.3 : 0.08,
+                        shadowRadius: 4,
+                        elevation: 2,
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      {/* Top Row: Category Pill & Status/Date */}
+                      <View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                          <View style={{
+                            backgroundColor: isDark ? '#0F172A' : '#F1F5F9',
+                            paddingHorizontal: 6,
+                            paddingVertical: 1.5,
+                            borderRadius: 6,
+                            borderWidth: 1,
+                            borderColor: isDark ? '#334155' : '#E2E8F0',
+                            maxWidth: 110,
+                          }}>
+                            <Text style={{ fontSize: 9, fontWeight: '700', color: isDark ? '#94A3B8' : '#475569' }} numberOfLines={1}>
+                              {categoryName}
+                            </Text>
+                          </View>
+
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                            <Clock size={9} color={isOngoing ? '#F59E0B' : (isDark ? '#94A3B8' : '#64748B')} />
+                            <Text style={{ fontSize: 9, color: isOngoing ? '#F59E0B' : (isDark ? '#94A3B8' : '#64748B'), fontWeight: '700' }}>
+                              {isOngoing ? (language === 'hi' ? 'जारी है' : 'Paused') : dateLabel}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Test Title (Reduced font size and compact height) */}
+                        <Text
+                          style={{
+                            fontSize: 11.5,
+                            fontWeight: '700',
+                            color: isDark ? '#FFFFFF' : '#0F172A',
+                            lineHeight: 15,
+                            marginBottom: 6,
+                            minHeight: 28,
+                          }}
+                          numberOfLines={2}
+                        >
+                          {title}
+                        </Text>
+
+                        {/* Performance Badges Row or Ongoing Badge */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8 }}>
+                          {isOngoing ? (
+                            <>
+                              <View style={{
+                                backgroundColor: isDark ? 'rgba(245,158,11,0.18)' : '#FEF3C7',
+                                borderColor: isDark ? '#78350F' : '#FDE68A',
+                                borderWidth: 1,
+                                paddingHorizontal: 6,
+                                paddingVertical: 2,
+                                borderRadius: 6,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 3,
+                              }}>
+                                <Clock size={10} color="#D97706" />
+                                <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#D97706' }}>
+                                  {language === 'hi' ? 'प्रगति पर' : 'In Progress'}
+                                </Text>
+                              </View>
+                              {attemptedCount > 0 && (
+                                <View style={{
+                                  backgroundColor: isDark ? 'rgba(59,130,246,0.18)' : '#EFF6FF',
+                                  borderColor: isDark ? '#1E3A8A' : '#BFDBFE',
+                                  borderWidth: 1,
+                                  paddingHorizontal: 6,
+                                  paddingVertical: 2,
+                                  borderRadius: 6,
+                                }}>
+                                  <Text style={{ fontSize: 9.5, fontWeight: '700', color: '#2563EB' }}>
+                                    {attemptedCount} {language === 'hi' ? 'हल किए' : 'Answered'}
+                                  </Text>
+                                </View>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {/* Score Pill */}
+                              <View style={{
+                                backgroundColor: scoreBadgeBg,
+                                borderColor: scoreBadgeBorder,
+                                borderWidth: 1,
+                                paddingHorizontal: 6,
+                                paddingVertical: 2,
+                                borderRadius: 6,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 3,
+                              }}>
+                                <Award size={10} color={scoreBadgeColor} />
+                                <Text style={{ fontSize: 9.5, fontWeight: '800', color: scoreBadgeColor }}>
+                                  {score} <Text style={{ fontSize: 8.5, fontWeight: '600' }}>/ {maxMarks}</Text>
+                                </Text>
+                              </View>
+
+                              {/* Accuracy / Completed Pill */}
+                              {accuracy !== null ? (
+                                <View style={{
+                                  backgroundColor: isDark ? 'rgba(245,158,11,0.15)' : '#FEF3C7',
+                                  borderColor: isDark ? '#78350F' : '#FDE68A',
+                                  borderWidth: 1,
+                                  paddingHorizontal: 6,
+                                  paddingVertical: 2,
+                                  borderRadius: 6,
+                                }}>
+                                  <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#D97706' }}>
+                                    Acc: {accuracy}%
+                                  </Text>
+                                </View>
+                              ) : (
+                                <View style={{
+                                  backgroundColor: isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5',
+                                  borderColor: isDark ? '#065F46' : '#A7F3D0',
+                                  borderWidth: 1,
+                                  paddingHorizontal: 6,
+                                  paddingVertical: 2,
+                                  borderRadius: 6,
+                                }}>
+                                  <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#10B981' }}>
+                                    {language === 'hi' ? 'पूर्ण' : 'Done'}
+                                  </Text>
+                                </View>
+                              )}
+                            </>
+                          )}
+                        </View>
+                      </View>
+
+                      {/* Action Buttons Row */}
+                      {isOngoing ? (
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          style={{
+                            width: '100%',
+                            backgroundColor: '#10B981',
+                            paddingVertical: 6.5,
+                            borderRadius: 8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 5,
+                            shadowColor: '#10B981',
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 3,
+                            elevation: 2,
+                          }}
+                          onPress={() => {
+                            onOpenExam(attempt.testId);
+                          }}
+                        >
+                          <Play size={12} color="#FFFFFF" fill="#FFFFFF" />
+                          <Text style={{ fontSize: 11, fontWeight: '800', color: '#FFFFFF' }}>
+                            {language === 'hi' ? 'टेस्ट जारी रखें' : 'Resume Test'}
+                          </Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          {/* Analysis / Solutions Button */}
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={{
+                              flex: 1,
+                              backgroundColor: '#2563EB',
+                              paddingVertical: 6,
+                              borderRadius: 8,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 4,
+                              shadowColor: '#2563EB',
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowOpacity: 0.15,
+                              shadowRadius: 2,
+                              elevation: 1,
+                            }}
+                            onPress={() => {
+                              onOpenAttemptAnalysis(attempt);
+                            }}
+                          >
+                            <Eye size={11} color="#FFFFFF" />
+                            <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#FFFFFF' }}>
+                              {language === 'hi' ? 'विश्लेषण' : 'Analysis'}
+                            </Text>
+                          </TouchableOpacity>
+
+                          {/* Re-attempt Button */}
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={{
+                              backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
+                              borderColor: isDark ? '#334155' : '#CBD5E1',
+                              borderWidth: 1,
+                              paddingVertical: 5.5,
+                              paddingHorizontal: 8,
+                              borderRadius: 8,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 3,
+                            }}
+                            onPress={() => {
+                              onOpenExam(attempt.testId);
+                            }}
+                          >
+                            <RotateCcw size={10} color={isDark ? '#60A5FA' : '#2563EB'} />
+                            <Text style={{ fontSize: 10, fontWeight: '700', color: isDark ? '#60A5FA' : '#2563EB' }}>
+                              {language === 'hi' ? 'पुनः' : 'Re-take'}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
+              </ScrollView>
             </View>
           );
         })()}
@@ -1255,12 +1689,13 @@ export default function DashboardScreen({
                           width: 42,
                           height: 42,
                           borderRadius: 13,
-                          backgroundColor: isDark ? '#111D38' : catStyle.colors[0],
-                          borderColor: catStyle.borderColor,
+                          backgroundColor: '#FFFFFF',
+                          borderColor: isDark ? '#334155' : catStyle.borderColor,
                           borderWidth: 1.5,
                           justifyContent: 'center',
                           alignItems: 'center',
                           overflow: 'hidden',
+                          padding: 2,
                         }}>
                           <CategoryLogoImage
                             logoUrl={(() => { const { primaryUrl } = getEffectiveLogoUrl(cat.name, cat.logoUrl); return primaryUrl; })()}
@@ -1469,9 +1904,10 @@ export default function DashboardScreen({
                         <View style={[
                           styles.categoryIconCircle,
                           {
-                            backgroundColor: isDark ? '#111D38' : '#FFFFFF',
-                            borderColor: catStyle.borderColor,
+                            backgroundColor: '#FFFFFF',
+                            borderColor: isDark ? '#334155' : catStyle.borderColor,
                             overflow: 'hidden',
+                            padding: 2,
                           }
                         ]}>
                           <CategoryLogoImage
@@ -1584,10 +2020,11 @@ export default function DashboardScreen({
                     {/* Icon / Logo circle */}
                     <View style={{
                       width: 44, height: 44, borderRadius: 22,
-                      backgroundColor: isDark ? '#111D38' : '#FFFFFF',
-                      borderColor: catStyle.borderColor, borderWidth: 1.5,
+                      backgroundColor: '#FFFFFF',
+                      borderColor: isDark ? '#334155' : catStyle.borderColor, borderWidth: 1.5,
                       justifyContent: 'center', alignItems: 'center', marginRight: 12,
                       overflow: 'hidden',
+                      padding: 2,
                       shadowColor: '#4F6EF7', shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.1, shadowRadius: 3, elevation: 1,
                     }}>
@@ -1730,10 +2167,11 @@ export default function DashboardScreen({
                   {/* Icon / Logo circle */}
                   <View style={{
                     width: 44, height: 44, borderRadius: 22,
-                    backgroundColor: isDark ? '#111D38' : '#FFFFFF',
-                    borderColor: catStyle.borderColor, borderWidth: 1.5,
+                    backgroundColor: '#FFFFFF',
+                    borderColor: isDark ? '#334155' : catStyle.borderColor, borderWidth: 1.5,
                     justifyContent: 'center', alignItems: 'center', marginRight: 12,
                     overflow: 'hidden',
+                    padding: 2,
                     shadowColor: '#4F6EF7', shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: 0.1, shadowRadius: 3, elevation: 1,
                   }}>
@@ -3338,20 +3776,6 @@ export default function DashboardScreen({
   };
 
   const totalTestsGiven = useMemo(() => {
-    const catalogTestsMap = new Map<string, any>();
-    (examCatalog || []).forEach(cat => {
-      (cat.subCategories || []).forEach((sub: any) => {
-        (sub.tests || []).forEach((t: any) => {
-          catalogTestsMap.set(t.id, t);
-        });
-        (sub.subSubCategories || []).forEach((subsub: any) => {
-          (subsub.tests || []).forEach((t: any) => {
-            catalogTestsMap.set(t.id, t);
-          });
-        });
-      });
-    });
-
     let count = 0;
     (currentUser.testSessions || []).forEach((s: any) => {
       if (s.status !== 'COMPLETED' && s.status !== 'AUTO_SUBMITTED') {

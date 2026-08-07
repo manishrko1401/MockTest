@@ -14,11 +14,13 @@ import {
   ActivityIndicator,
   TextInput,
   Animated,
-  PanResponder
+  PanResponder,
+  Platform,
+  BackHandler
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Globe, AlignJustify } from 'lucide-react-native';
+import { Globe, AlignJustify, ShieldCheck, ChevronDown, Check, Moon, Sun } from 'lucide-react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { ApiClient, BASE_URL } from './api';
 import { getCachedQuestions, saveQuestionsToCache } from './cache';
@@ -87,7 +89,7 @@ const instructionTexts = {
     title: "\u0915\u0943\u092a\u092f\u093e \u0928\u093f\u0930\u094d\u0926\u0947\u0936\u094b\u0902 \u0915\u094b \u0927\u094d\u092f\u093e\u0928 \u0938\u0947 \u092a\u0922\u093c\u0947\u0902",
     general: "\u0938\u093e\u092e\u093e\u0928\u094d\u092f \u0928\u093f\u0930\u094d\u0926\u0947\u0936:",
     gen1: "1. \u0918\u0921\u093c\u0940 \u0938\u0930\u094d\u0935\u0930 \u092a\u0930 \u0938\u0947\u091f \u0939\u094b\u0917\u0940\u0964 \u0938\u094d\u0915\u094d\u0930\u0940\u0928 \u0915\u0947 \u0936\u0940\u0930\u094d\u0937 \u0926\u093e\u090f\u0902 \u0915\u094b\u0928\u0947 \u092e\u0947\u0902 \u0909\u0932\u091f\u0940 \u0917\u093f\u0928\u0924\u0940 \u0918\u0921\u093c\u0940 \u0906\u092a\u0915\u0947 \u0926\u094d\u0935\u093e\u0930\u093e \u092a\u0930\u0940\u0915\u094d\u0937\u093e \u092a\u0942\u0930\u0940 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0909\u092a\u0932\u092c\u094d\u0927 \u0936\u0947\u0937 \u0938\u092e\u092f \u092a\u094d\u0930\u0926\u0930\u094d\u0936\u093f\u0924 \u0915\u0930\u0947\u0917\u0940\u0964",
-    gen2: "2. \u0938\u094d\u0915\u094d\u0930\u0940\u0928 \u0915\u0947 \u0926\u093e\u090f\u0902 \u0913\u0930 \u092a\u094d\u0930\u0926\u0930\u094d\u0936\u093f\u0924 \u092a\u094d\u0930\u0936\u094d\u0928 \u092a\u0948\u0932\u0947\u091f 5 \u092a\u094d\u0930\u0924\u0940\u0915\u094b\u0902 \u092e\u0947\u0902 \u0938\u0947 \u0915\u093f\u0938\u0940 \u090f\u0915 \u0915\u093e \u0909\u092a\u092f\u094b\u0917 \u0915\u0930\u0915\u0947 \u092a\u094d\u0930\u0924\u094d\u092f\u0947\u0915 \u092a\u094d\u0930\u0936\u094d\u0928 \u0915\u0940 \u0938\u094d\u0925\u093f\u0924\u093f \u0926\u0930\u094d\u0936\u093e\u090f\u0917\u093e\u0964",
+    gen2: "2. \u0938\u094d\u0915\u094d\u0930\u0940\u0928 \u0915\u0947 \u0926\u093e\u090f\u0902 \u0913\u0930 \u092a\u094d\u0930\u0936\u094d\u0928 \u092a\u0948\u0932\u0947\u091f 5 \u092a\u094d\u0930\u0924\u0940\u0915\u094b\u0902 \u092e\u0947\u0902 \u0938\u0947 \u0915\u093f\u0938\u0940 \u090f\u0915 \u0915\u093e \u0909\u092a\u092f\u094b\u0917 \u0915\u0930\u0915\u0947 \u092a\u094d\u0930\u0924\u094d\u092f\u0947\u0915 \u092a\u094d\u0930\u0936\u094d\u0928 \u0915\u0940 \u0938\u094d\u0925\u093f\u0924\u093f \u0926\u0930\u094d\u0936\u093e\u090f\u0917\u093e\u0964",
     gen3: "3. \u092a\u094d\u0930\u0936\u094d\u0928 \u0926\u0947\u0916\u0928\u0947 \u0915\u0947 \u0915\u094d\u0937\u0947\u0924\u094d\u0930 \u0915\u094b \u0905\u0927\u093f\u0915\u0924\u092e \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0906\u092a '>' \u0924\u0940\u0930 \u092a\u0930 \u0915\u094d\u0932\u093f\u0915 \u0915\u0930\u0915\u0947 \u092a\u094d\u0930\u0936\u094d\u0928 \u092a\u0948\u0932\u0947\u091f \u092c\u0902\u0926 \u0915\u0930 \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964",
     answering: "\u092a\u094d\u0930\u0936\u094d\u0928 \u092a\u0930 \u0928\u0947\u0935\u093f\u0917\u0947\u091f \u0915\u0930\u0928\u093e:",
     ans1: "4. \u0915\u093f\u0938\u0940 \u092a\u094d\u0930\u0936\u094d\u0928 \u0915\u093e \u0909\u0924\u094d\u0924\u0930 \u0926\u0947\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f, \u0935\u093f\u0915\u0932\u094d\u092a\u094b\u0902 \u092e\u0947\u0902 \u0938\u0947 \u0915\u093f\u0938\u0940 \u090f\u0915 \u0915\u094b \u091a\u0941\u0928\u0947\u0902 \u0914\u0930 'Save & Next' \u092a\u0930 \u0915\u094d\u0932\u093f\u0915 \u0915\u0930\u0947\u0902\u0964",
@@ -96,6 +98,140 @@ const instructionTexts = {
     btn: "\u092e\u0948\u0902 \u0924\u0948\u092f\u093e\u0930 \u0939\u0942\u0901 (I am ready to begin)"
   }
 };
+
+const formatTime = (sec: number) => {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  
+  if (h > 0) {
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+};
+
+interface QuestionCardItemProps {
+  q: MobileQuestion;
+  qIdx: number;
+  lang: 'en' | 'hi';
+  isDark: boolean;
+  qResp: any;
+  onSelectOption: (optionIdx: number, qId: string) => void;
+  posMarkText: string;
+  negMarkText: string;
+}
+
+const QuestionCardItem = React.memo<QuestionCardItemProps>(({
+  q,
+  qIdx,
+  lang,
+  isDark,
+  qResp,
+  onSelectOption,
+  posMarkText,
+  negMarkText,
+}) => {
+  const qContentEn = q?.content['en'];
+  const qContentHi = q?.content['hi'];
+  const qContent = lang === 'en'
+    ? (qContentEn?.questionText ? qContentEn : qContentHi)
+    : (qContentHi?.questionText ? qContentHi : qContentEn);
+  const qText = qContent?.questionText || '';
+  const qOptions = qContent?.options || [];
+
+  return (
+    <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
+      <ScrollView
+        style={[styles.questionContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}
+        contentContainerStyle={styles.questionContentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Question sub-header bar (website style) */}
+        <View style={[styles.qSubHeaderBar, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+          <Text style={[styles.qTypeText, isDark && { color: '#60A5FA' }]}>Question Type: MCQ</Text>
+          <View style={styles.qMarksRow}>
+            <View style={styles.posMarkBadge}>
+              <Text style={styles.posMarkText}>{posMarkText}</Text>
+            </View>
+            <View style={styles.negMarkBadge}>
+              <Text style={styles.negMarkText}>{negMarkText}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Question number header row */}
+        <View style={styles.questionHeaderRow}>
+          {/* Blue number badge */}
+          <View style={styles.questionNumBadge}>
+            <Text style={styles.questionNumText}>
+              {lang === 'hi' ? 'प्रश्न ' : 'Q. '}{qIdx + 1}
+            </Text>
+          </View>
+          {/* Per-question time spent */}
+          <View style={[styles.qTimerPill, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
+            <Text style={[styles.qTimerIcon, isDark && { color: '#94A3B8' }]}>Q Time:</Text>
+            <Text style={[styles.qTimerVal, isDark && { color: '#3B82F6' }]}>{formatTime(qResp?.elapsedSeconds || 0)}</Text>
+          </View>
+        </View>
+
+        {/* Website-identical Question Text Box */}
+        <View style={[styles.questionCardBox, isDark && styles.questionCardBoxDark]}>
+          <HtmlText
+            style={[styles.questionBody, isDark && { color: ThemeColors.dark.text }]}
+            isDark={isDark}
+            html={qText}
+          />
+        </View>
+
+        {/* Options as numbered cards */}
+        <View style={styles.optionsBlock}>
+          {qOptions.map((opt, i) => {
+            const isSelected = qResp?.tempOptionIndex === i;
+            return (
+              <TouchableOpacity
+                key={i}
+                activeOpacity={0.75}
+                style={[
+                  styles.optionCard,
+                  isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border },
+                  isSelected && styles.optionCardSelected,
+                  isSelected && isDark && { borderColor: '#3B82F6', backgroundColor: '#1E3A8A' },
+                ]}
+                onPress={() => onSelectOption(i, q.id)}
+              >
+                <View style={[
+                  styles.optionNumCircle,
+                  isDark && { borderColor: '#475569' },
+                  isSelected && styles.optionNumCircleSelected,
+                ]}>
+                  <Text style={[styles.optionNumText, isSelected && styles.optionNumTextSelected]}>
+                    {i + 1}
+                  </Text>
+                </View>
+                <HtmlText
+                  style={[styles.optionText, isDark && { color: ThemeColors.dark.text }, isSelected && styles.optionTextSelected]}
+                  isDark={isDark}
+                  html={opt}
+                />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}, (prev, next) => {
+  return (
+    prev.q.id === next.q.id &&
+    prev.qIdx === next.qIdx &&
+    prev.lang === next.lang &&
+    prev.isDark === next.isDark &&
+    prev.posMarkText === next.posMarkText &&
+    prev.negMarkText === next.negMarkText &&
+    prev.qResp?.tempOptionIndex === next.qResp?.tempOptionIndex &&
+    prev.qResp?.elapsedSeconds === next.qResp?.elapsedSeconds
+  );
+});
 
 export default function MobileTestScreen({
   currentUser,
@@ -126,6 +262,45 @@ export default function MobileTestScreen({
   const websiteRatingRef = useRef(0);
   const examRatingRef = useRef(0);
   const feedbackTextRef = useRef("");
+
+  const appRatingGoldenBlink = useRef(new Animated.Value(0)).current;
+  const examRatingGoldenBlink = useRef(new Animated.Value(0)).current;
+
+  const triggerRatingBlink = (blinkApp: boolean, blinkExam: boolean) => {
+    const anims: Animated.CompositeAnimation[] = [];
+    if (blinkApp) {
+      appRatingGoldenBlink.setValue(0);
+      anims.push(
+        Animated.sequence([
+          Animated.timing(appRatingGoldenBlink, { toValue: 1, duration: 160, useNativeDriver: false }),
+          Animated.timing(appRatingGoldenBlink, { toValue: 0, duration: 160, useNativeDriver: false }),
+          Animated.timing(appRatingGoldenBlink, { toValue: 1, duration: 160, useNativeDriver: false }),
+          Animated.timing(appRatingGoldenBlink, { toValue: 0, duration: 160, useNativeDriver: false }),
+          Animated.timing(appRatingGoldenBlink, { toValue: 1, duration: 180, useNativeDriver: false }),
+          Animated.timing(appRatingGoldenBlink, { toValue: 0, duration: 250, useNativeDriver: false }),
+        ])
+      );
+    }
+    if (blinkExam) {
+      examRatingGoldenBlink.setValue(0);
+      anims.push(
+        Animated.sequence([
+          Animated.timing(examRatingGoldenBlink, { toValue: 1, duration: 160, useNativeDriver: false }),
+          Animated.timing(examRatingGoldenBlink, { toValue: 0, duration: 160, useNativeDriver: false }),
+          Animated.timing(examRatingGoldenBlink, { toValue: 1, duration: 160, useNativeDriver: false }),
+          Animated.timing(examRatingGoldenBlink, { toValue: 0, duration: 160, useNativeDriver: false }),
+          Animated.timing(examRatingGoldenBlink, { toValue: 1, duration: 180, useNativeDriver: false }),
+          Animated.timing(examRatingGoldenBlink, { toValue: 0, duration: 250, useNativeDriver: false }),
+        ])
+      );
+    }
+    if (anims.length > 0) {
+      Animated.parallel(anims).start();
+    }
+  };
+
+  const triggerRatingBlinkRef = useRef(triggerRatingBlink);
+  triggerRatingBlinkRef.current = triggerRatingBlink;
 
   const setWebsiteRating = (val: number) => {
     _setWebsiteRating(val);
@@ -179,6 +354,14 @@ export default function MobileTestScreen({
   const [drawerSectionIdx, setDrawerSectionIdx] = useState(0);
   const [showInstructions, setShowInstructions] = useState(true);
   const [agreed, setAgreed] = useState(false);
+  const [ctetDefaultLang, setCtetDefaultLang] = useState<string>('');
+  const [ctetLang1, setCtetLang1] = useState<string>('');
+  const [ctetLang2, setCtetLang2] = useState<string>('');
+  const [ctetAgreed, setCtetAgreed] = useState<boolean>(false);
+  const [ctetDefaultLangModal, setCtetDefaultLangModal] = useState<boolean>(false);
+  const [ctetLang1Modal, setCtetLang1Modal] = useState<boolean>(false);
+  const [ctetLang2Modal, setCtetLang2Modal] = useState<boolean>(false);
+  const rawQuestionsRef = useRef<any[]>([]);
   const activeQuestionIdRef = useRef<string | null>(null);
   const isExitingRef = useRef(false);
 
@@ -224,6 +407,19 @@ export default function MobileTestScreen({
     message: '',
     buttons: [],
   });
+
+  // Lock hardware back press completely when Exam Submitted popup is visible
+  useEffect(() => {
+    const onHardwareBack = () => {
+      if (modalConfig.visible && modalConfig.isSubmittedModal) {
+        return true; // Strictly consume and block back press
+      }
+      return false;
+    };
+
+    const backSub = BackHandler.addEventListener('hardwareBackPress', onHardwareBack);
+    return () => backSub.remove();
+  }, [modalConfig.visible, modalConfig.isSubmittedModal]);
 
   // User responses dictionary mapping questionId to state
   const [responses, setResponses] = useState<Record<string, {
@@ -273,27 +469,117 @@ export default function MobileTestScreen({
   }, [testId, currentUser?.id]);
 
 
+  const findTestInCatalog = (tId: string) => {
+    if (!examCatalog || examCatalog.length === 0) return null;
+    for (const cat of examCatalog) {
+      for (const sub of cat.subCategories || []) {
+        for (const ss of sub.subSubCategories || []) {
+          const found = (ss.tests || []).find((t: any) => t.id === tId);
+          if (found) return found;
+        }
+        const found = (sub.tests || []).find((t: any) => t.id === tId);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const applyToScreen = async (
+    list: MobileQuestion[],
+    secs: MobileSection[],
+    durationSeconds: number,
+    catalogTest: any
+  ) => {
+    setQuestions(list);
+    setSections(secs);
+    sectionsRef.current = secs;
+    totalDurationRef.current = durationSeconds;
+    hasSectionalTimingRef.current = catalogTest?.hasSectionalTiming ?? false;
+
+    // Pre-warm expo-image disk cache for all question/option images
+    const allHtmlStrings = list.flatMap(q => [
+      q.content?.en?.questionText,
+      q.content?.hi?.questionText,
+      ...(q.content?.en?.options ?? []),
+      ...(q.content?.hi?.options ?? []),
+    ].filter(Boolean) as string[]);
+    preloadImages(allHtmlStrings);
+
+    // Initialise response state dictionary
+    const respDict: Record<string, any> = {};
+    list.forEach((q) => {
+      respDict[q.id] = {
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1 as PaletteState,
+        elapsedSeconds: 0
+      };
+    });
+
+    // Resume from local ongoing session cache first (zero latency)
+    let ongoing: any = null;
+    try {
+      const localOngoing = await AsyncStorage.getItem(`ongoing_test_${testId}`);
+      if (localOngoing) {
+        ongoing = JSON.parse(localOngoing);
+        console.log(`[Cache] Resumed ongoing test ${testId} from local storage`);
+      }
+    } catch (err) {
+      console.warn('[Cache] Failed to load local ongoing session:', err);
+    }
+
+    if (!ongoing) {
+      // Resume from backend ongoing session if present
+      ongoing = currentUser.testSessions?.find(
+        (s: any) => s.testId === testId && s.status === 'ONGOING'
+      );
+    }
+
+    if (ongoing) {
+      setShowInstructions(false);
+      setIsTimerRunning(true);
+      setTimeLeft(ongoing.timeRemaining ?? durationSeconds);
+      setViolationsCount(ongoing.violations ?? 0);
+      setCurrentSectionIdx(ongoing.currentSectionIndex ?? 0);
+      setCurrentQuestionIdx(ongoing.currentQuestionIndex ?? 0);
+      if (ongoing.responses) {
+        Object.entries(ongoing.responses).forEach(([qId, val]: any) => {
+          if (respDict[qId]) {
+            respDict[qId].selectedOptionIndex = val.selectedOptionIndex;
+            respDict[qId].tempOptionIndex = val.selectedOptionIndex;
+            respDict[qId].state = val.selectedOptionIndex !== null ? 3 : 2;
+            respDict[qId].elapsedSeconds = val.elapsedSeconds ?? 0;
+          }
+        });
+      }
+    } else {
+      if (catalogTest?.hasSectionalTiming && secs.length > 0 && secs[0].durationSeconds) {
+        setTimeLeft(secs[0].durationSeconds);
+      } else {
+        setTimeLeft(durationSeconds);
+      }
+    }
+
+    // Mark starting question as visited
+    const activeSecQ = list
+      .filter(q => q.sectionId === secs[0]?.id)
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+    if (activeSecQ.length > 0) {
+      const firstQId = activeSecQ[0].id;
+      if (respDict[firstQId]?.state === 1) respDict[firstQId].state = 2;
+    }
+
+    if (!isExitingRef.current) {
+      setResponses(respDict);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const loadExamData = async () => {
       if (isExitingRef.current) return;
       setLoading(true);
       setLoadingText('Loading test...');
-
-      // Find catalog test immediately to get title, duration, marks & config
-      const findTestInCatalog = (tId: string) => {
-        if (!examCatalog || examCatalog.length === 0) return null;
-        for (const cat of examCatalog) {
-          for (const sub of cat.subCategories || []) {
-            for (const ss of sub.subSubCategories || []) {
-              const found = (ss.tests || []).find((t: any) => t.id === tId);
-              if (found) return found;
-            }
-            const found = (sub.tests || []).find((t: any) => t.id === tId);
-            if (found) return found;
-          }
-        }
-        return null;
-      };
 
       const initialCatalogTest = findTestInCatalog(testId);
       let resolvedTitle = initialCatalogTest?.title;
@@ -409,102 +695,11 @@ export default function MobileTestScreen({
       };
 
       // ──────────────────────────────────────────────────────────────────
-      // Shared finalizer: applies built data to screen state
-      // ──────────────────────────────────────────────────────────────────
-      const applyToScreen = async (
-        list: MobileQuestion[],
-        secs: MobileSection[],
-        durationSeconds: number,
-        catalogTest: any
-      ) => {
-        setQuestions(list);
-        setSections(secs);
-        sectionsRef.current = secs;
-        totalDurationRef.current = durationSeconds;
-        hasSectionalTimingRef.current = catalogTest?.hasSectionalTiming ?? false;
-
-        // Pre-warm expo-image disk cache for all question/option images
-        const allHtmlStrings = list.flatMap(q => [
-          q.content?.en?.questionText,
-          q.content?.hi?.questionText,
-          ...(q.content?.en?.options ?? []),
-          ...(q.content?.hi?.options ?? []),
-        ].filter(Boolean) as string[]);
-        preloadImages(allHtmlStrings);
-
-        // Initialise response state dictionary
-        const respDict: Record<string, any> = {};
-        list.forEach((q) => {
-          respDict[q.id] = {
-            selectedOptionIndex: null,
-            tempOptionIndex: null,
-            state: 1 as PaletteState,
-            elapsedSeconds: 0
-          };
-        });
-
-        // Resume from local ongoing session cache first (zero latency)
-        let ongoing: any = null;
-        try {
-          const localOngoing = await AsyncStorage.getItem(`ongoing_test_${testId}`);
-          if (localOngoing) {
-            ongoing = JSON.parse(localOngoing);
-            console.log(`[Cache] Resumed ongoing test ${testId} from local storage`);
-          }
-        } catch (err) {
-          console.warn('[Cache] Failed to load local ongoing session:', err);
-        }
-
-        if (!ongoing) {
-          // Resume from backend ongoing session if present
-          ongoing = currentUser.testSessions?.find(
-            (s: any) => s.testId === testId && s.status === 'ONGOING'
-          );
-        }
-
-        if (ongoing) {
-          setTimeLeft(ongoing.timeRemaining ?? durationSeconds);
-          setViolationsCount(ongoing.violations ?? 0);
-          setCurrentSectionIdx(ongoing.currentSectionIndex ?? 0);
-          setCurrentQuestionIdx(ongoing.currentQuestionIndex ?? 0);
-          if (ongoing.responses) {
-            Object.entries(ongoing.responses).forEach(([qId, val]: any) => {
-              if (respDict[qId]) {
-                respDict[qId].selectedOptionIndex = val.selectedOptionIndex;
-                respDict[qId].tempOptionIndex = val.selectedOptionIndex;
-                respDict[qId].state = val.selectedOptionIndex !== null ? 3 : 2;
-                respDict[qId].elapsedSeconds = val.elapsedSeconds ?? 0;
-              }
-            });
-          }
-        } else {
-          if (catalogTest?.hasSectionalTiming && secs.length > 0 && secs[0].durationSeconds) {
-            setTimeLeft(secs[0].durationSeconds);
-          } else {
-            setTimeLeft(durationSeconds);
-          }
-        }
-
-        // Mark starting question as visited
-        const activeSecQ = list
-          .filter(q => q.sectionId === secs[0]?.id)
-          .sort((a, b) => a.orderIndex - b.orderIndex);
-        if (activeSecQ.length > 0) {
-          const firstQId = activeSecQ[0].id;
-          if (respDict[firstQId]?.state === 1) respDict[firstQId].state = 2;
-        }
-
-        if (!isExitingRef.current) {
-          setResponses(respDict);
-          setLoading(false);
-        }
-      };
-
-      // ──────────────────────────────────────────────────────────────────
       // STEP 1 — Try device cache first (instant, no network needed)
       // ──────────────────────────────────────────────────────────────────
       const cachedRaw = await getCachedQuestions(testId);
       if (cachedRaw && cachedRaw.length > 0) {
+        rawQuestionsRef.current = cachedRaw;
         // Serve from device immediately
         const { builtList, builtSecs, durationSeconds, catalogTest } = buildScreenFromApiQuestions(cachedRaw);
         await applyToScreen(builtList, builtSecs, durationSeconds, catalogTest);
@@ -522,6 +717,7 @@ export default function MobileTestScreen({
       if (res.success && res.questions && Array.isArray(res.questions) && res.questions.length > 0) {
         // Save to device for next time
         saveQuestionsToCache(testId, res.questions);
+        rawQuestionsRef.current = res.questions;
         const { builtList, builtSecs, durationSeconds, catalogTest } = buildScreenFromApiQuestions(res.questions);
         await applyToScreen(builtList, builtSecs, durationSeconds, catalogTest);
       } else {
@@ -562,6 +758,10 @@ export default function MobileTestScreen({
             { id: 'q_r1', sectionId: 'sec_reasoning', questionType: 'mcq', orderIndex: 0, correctOptionIndex: 3, content: { en: { questionText: 'Identify the pattern and choose the next term: 3, 7, 15, 31, 63, ?', options: ['125', '126', '128', '127'] }, hi: { questionText: 'पैटर्न पहचानें और श्रृंखला में अगला पद चुनें: 3, 7, 15, 31, 63, ?', options: ['125', '126', '128', '127'] } } },
             { id: 'q_e1', sectionId: 'sec_english',   questionType: 'mcq', orderIndex: 0, correctOptionIndex: 0, content: { en: { questionText: 'Select the antonym for the word: OBSTINATE', options: ['Flexible', 'Stubborn', 'Rigid', 'Dogmatic'] }, hi: { questionText: 'दिए गए शब्द का विलोम शब्द चुनें: OBSTINATE', options: ['Flexible', 'Stubborn', 'Rigid', 'Dogmatic'] } } },
           ];
+        } else if (testId.includes('ctet')) {
+          const fallbackData = getCtetFallbackQuestions(testId, 'English', 'Hindi');
+          list = fallbackData.builtList;
+          secs = fallbackData.builtSecs;
         } else {
           secs = [{ id: 'sec_paper1', name: 'Aptitude & General Studies', orderIndex: 0, positiveMark: fallbackPosMark, negativeMark: fallbackNegMark }];
           list = [
@@ -576,6 +776,179 @@ export default function MobileTestScreen({
 
     loadExamData();
   }, [testId]);
+
+  const getCtetFallbackQuestions = (tId: string, l1: string, l2: string) => {
+    const lowerId = (tId || '').toLowerCase();
+    const isPaper2 = lowerId.includes('paper2') || lowerId.includes('paper-2') || lowerId.includes('paper_2') || lowerId.includes('paper 2') || lowerId.includes('p2') || lowerId.includes('ctet2');
+
+    const selectedL1 = l1 || 'English';
+    const selectedL2 = l2 || 'Hindi';
+
+    const secs: MobileSection[] = isPaper2 ? [
+      { id: "sec_cdp", name: "Child Development & Pedagogy", orderIndex: 0, positiveMark: 1, negativeMark: 0 },
+      { id: "sec_math_sci", name: "Mathematics & Science", orderIndex: 1, positiveMark: 1, negativeMark: 0 },
+      { id: "sec_social", name: "Social Studies", orderIndex: 2, positiveMark: 1, negativeMark: 0 },
+      { id: "sec_lang1", name: `Language - I (${selectedL1})`, orderIndex: 3, positiveMark: 1, negativeMark: 0 },
+      { id: "sec_lang2", name: `Language - II (${selectedL2})`, orderIndex: 4, positiveMark: 1, negativeMark: 0 },
+    ] : [
+      { id: "sec_cdp", name: "Child Development & Pedagogy", orderIndex: 0, positiveMark: 1, negativeMark: 0 },
+      { id: "sec_math", name: "Mathematics", orderIndex: 1, positiveMark: 1, negativeMark: 0 },
+      { id: "sec_evs", name: "Environmental Studies (EVS)", orderIndex: 2, positiveMark: 1, negativeMark: 0 },
+      { id: "sec_lang1", name: `Language - I (${selectedL1})`, orderIndex: 3, positiveMark: 1, negativeMark: 0 },
+      { id: "sec_lang2", name: `Language - II (${selectedL2})`, orderIndex: 4, positiveMark: 1, negativeMark: 0 },
+    ];
+
+    let qLang1Content = {
+      en: { questionText: "Read the passage: What is the primary objective of Language-I acquisition in early childhood?", options: ["Natural exposure and meaningful context", "Rote memorization of rules", "Direct grammar translation", "Strict penalization of errors"] },
+      hi: { questionText: "भाषा-I (Language-I) अर्जन के संदर्भ में प्राथमिक उद्देश्य क्या है?", options: ["स्वाभाविक अवसर एवं सार्थक परिवेश", "नियमों को रटना", "व्याकरण अनुवाद", "त्रुटियों पर दंड देना"] }
+    };
+    if (selectedL1 === 'Hindi') {
+      qLang1Content = {
+        en: { questionText: "भाषा-I (हिंदी): 'प्राथमिक स्तर पर हिंदी भाषा शिक्षण का मुख्य उद्देश्य क्या है?'", options: ["बच्चों को विभिन्न संदर्भों में भाषा प्रयोग की क्षमता विकसित करना", "केवल पाठ्यपुस्तक पढ़ाना", "व्याकरण के नियम रटाना", "सुलेख लिखवाना"] },
+        hi: { questionText: "भाषा-I (हिंदी): 'प्राथमिक स्तर पर हिंदी भाषा शिक्षण का मुख्य उद्देश्य क्या है?'", options: ["बच्चों को विभिन्न संदर्भों में भाषा प्रयोग की क्षमता विकसित करना", "केवल पाठ्यपुस्तक पढ़ाना", "व्याकरण के नियम रटाना", "सुलेख लिखवाना"] }
+      };
+    } else if (selectedL1 === 'Sanskrit') {
+      qLang1Content = {
+        en: { questionText: "Language-I (Sanskrit): 'संस्कृत भाषा शिक्षणस्य मुख्याद्देश्यं किम् अस्ति?'", options: ["संभाषणकौशलवर्धनम् एवं बोधात्मकता", "केवललेखनम्", "कण्ठस्थीकरणम्", "अनुवादमात्रम्"] },
+        hi: { questionText: "भाषा-I (संस्कृत): 'संस्कृत भाषा शिक्षणस्य मुख्याद्देश्यं किम् अस्ति?'", options: ["संभाषणकौशलवर्धनम् एवं बोधात्मकता", "केवललेखनम्", "कण्ठस्थीकरणम्", "अनुवादमात्रम्"] }
+      };
+    }
+
+    let qLang2Content = {
+      en: { questionText: "Language-II (Hindi): 'द्वितीय भाषा (Language-II) के रूप में हिंदी शिक्षण की प्रभावकारी विधि कौन सी है?'", options: ["संप्रेषणात्मक दृष्टिकोण (Communicative Approach)", "केवल व्याकरण अनुवाद विधि", "रटना", "पाठ्यपुस्तक तक सीमित रहना"] },
+      hi: { questionText: "भाषा-II (हिंदी): 'द्वितीय भाषा (Language-II) के रूप में हिंदी शिक्षण की प्रभावकारी विधि कौन सी है?'", options: ["संप्रेषणात्मक दृष्टिकोण (Communicative Approach)", "केवल व्याकरण अनुवाद विधि", "रटना", "पाठ्यपुस्तक तक सीमित रहना"] }
+    };
+    if (selectedL2 === 'English') {
+      qLang2Content = {
+        en: { questionText: "Language-II (English): Which approach emphasizes learning language through meaningful interaction in real-world contexts?", options: ["Communicative Language Teaching (CLT)", "Grammar Translation Method", "Audio-Lingual Method", "Direct Method"] },
+        hi: { questionText: "Language-II (English): Which approach emphasizes learning language through meaningful interaction in real-world contexts?", options: ["Communicative Language Teaching (CLT)", "Grammar Translation Method", "Audio-Lingual Method", "Direct Method"] }
+      };
+    } else if (selectedL2 === 'Sanskrit') {
+      qLang2Content = {
+        en: { questionText: "Language-II (Sanskrit): 'कस्य विधेः अपरान्नाम पाठ्यपुस्तकविधिः इति अस्ति?'", options: ["डॉ. वेस्ट-महोदयस्य विधिः", "भण्डारकर-विधिः", "आगमन-विधिः", "निगमन-विधिः"] },
+        hi: { questionText: "भाषा-II (संस्कृत): 'कस्य विधेः अपरान्नाम पाठ्यपुस्तकविधिः इति अस्ति?'", options: ["डॉ. वेस्ट-महोदयस्य विधिः", "भण्डारकर-विधिः", "आगमन-विधिः", "निगमन-विधिः"] }
+      };
+    }
+
+    const list: MobileQuestion[] = [
+      {
+        id: "q_cdp1", sectionId: "sec_cdp", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
+        content: {
+          en: { questionText: "According to Jean Piaget, at which stage of cognitive development does a child develop object permanence?", options: ["Sensorimotor Stage", "Pre-operational Stage", "Concrete Operational Stage", "Formal Operational Stage"] },
+          hi: { questionText: "जीन पियाजे के अनुसार, संज्ञानात्मक विकास के किस चरण में बच्चा 'वस्तु स्थायित्व' (Object Permanence) विकसित करता है?", options: ["संवेदी-गामक अवस्था (Sensorimotor)", "पूर्व-संक्रियात्मक अवस्था", "मूर्त संक्रियात्मक अवस्था", "अमूर्त संक्रियात्मक अवस्था"] }
+        }
+      },
+      {
+        id: "q_l1_1", sectionId: "sec_lang1", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
+        content: qLang1Content
+      },
+      {
+        id: "q_l2_1", sectionId: "sec_lang2", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
+        content: qLang2Content
+      }
+    ];
+
+    return { builtList: list, builtSecs: secs, durationSeconds: 9000 };
+  };
+
+  const handleStartCtetExam = async () => {
+    const isCtetFormValid = 
+      ctetDefaultLang !== '' && ctetDefaultLang !== '-- Select --' &&
+      ctetLang1 !== '' && ctetLang1 !== '-- Select --' &&
+      ctetLang2 !== '' && ctetLang2 !== '-- Select --' &&
+      ctetAgreed;
+
+    if (!isCtetFormValid) return;
+
+    const chosenExamLang = ctetDefaultLang === 'Hindi' ? 'hi' : 'en';
+    setLang(chosenExamLang);
+
+    const catalogTest = findTestInCatalog(testId);
+    let list: MobileQuestion[] = [];
+    let secs: MobileSection[] = [];
+
+    const rawQs = rawQuestionsRef.current;
+    const lowerId = (testId || '').toLowerCase();
+    const isPaper2 = lowerId.includes('paper2') || lowerId.includes('paper-2') || lowerId.includes('paper_2') || lowerId.includes('paper 2') || lowerId.includes('p2') || lowerId.includes('ctet2');
+
+    if (Array.isArray(rawQs) && rawQs.length > 0) {
+      const targetSecConfigs = isPaper2 ? [
+        { id: 'sec_cdp', name: 'Child Development & Pedagogy', matchSection: 'child development' },
+        { id: 'sec_social', name: 'Social Studies', matchSection: 'social studies' },
+        { id: 'sec_lang1', name: `Language - I (${ctetLang1})`, matchSection: `${ctetLang1.toLowerCase()} - i` },
+        { id: 'sec_lang2', name: `Language - II (${ctetLang2})`, matchSection: `${ctetLang2.toLowerCase()} - ii` },
+      ] : [
+        { id: 'sec_cdp', name: 'Child Development & Pedagogy', matchSection: 'child development' },
+        { id: 'sec_math', name: 'Mathematics', matchSection: 'mathematics' },
+        { id: 'sec_evs', name: 'Environmental Studies (EVS)', matchSection: 'environmental studies' },
+        { id: 'sec_lang1', name: `Language - I (${ctetLang1})`, matchSection: `${ctetLang1.toLowerCase()} - i` },
+        { id: 'sec_lang2', name: `Language - II (${ctetLang2})`, matchSection: `${ctetLang2.toLowerCase()} - ii` },
+      ];
+
+      secs = targetSecConfigs.map((cfg, idx) => ({
+        id: cfg.id,
+        name: cfg.name,
+        orderIndex: idx,
+        positiveMark: 1,
+        negativeMark: 0,
+      }));
+
+      targetSecConfigs.forEach((cfg) => {
+        const matchingRawQs = rawQs.filter((item: any) => {
+          const secStr = String(item.section || item.subject || '').trim().toLowerCase();
+          if (cfg.id === 'sec_lang1') {
+            return (
+              secStr === `${ctetLang1.toLowerCase()} - i` ||
+              secStr === `language - i (${ctetLang1.toLowerCase()})` ||
+              secStr === `language 1 (${ctetLang1.toLowerCase()})` ||
+              (secStr.includes(ctetLang1.toLowerCase()) && (secStr.includes('- i') || secStr.includes('1') || secStr.includes('i'))) ||
+              secStr === 'language - i' || secStr === 'language 1'
+            );
+          }
+          if (cfg.id === 'sec_lang2') {
+            return (
+              secStr === `${ctetLang2.toLowerCase()} - ii` ||
+              secStr === `language - ii (${ctetLang2.toLowerCase()})` ||
+              secStr === `language 2 (${ctetLang2.toLowerCase()})` ||
+              (secStr.includes(ctetLang2.toLowerCase()) && (secStr.includes('- ii') || secStr.includes('2') || secStr.includes('ii'))) ||
+              secStr === 'language - ii' || secStr === 'language 2'
+            );
+          }
+          return secStr.includes(cfg.matchSection.toLowerCase());
+        });
+
+        matchingRawQs.forEach((q: any, qIdx: number) => {
+          list.push({
+            id: (q.id !== undefined && q.id !== null && q.id !== '') ? String(q.id) : `q_ctet_${cfg.id}_${qIdx}`,
+            sectionId: cfg.id,
+            questionType: 'mcq',
+            orderIndex: qIdx,
+            correctOptionIndex: q.correctIndex !== undefined ? q.correctIndex : q.correctOptionIndex || 0,
+            content: {
+              en: {
+                questionText: q.textEn || q.content?.en?.questionText || q.questionText || '',
+                options: q.optionsEn || q.content?.en?.options || q.options || [],
+              },
+              hi: {
+                questionText: q.textHi || q.content?.hi?.questionText || q.questionText || q.textEn || '',
+                options: q.optionsHi || q.content?.hi?.options || q.options || q.optionsEn || [],
+              }
+            }
+          });
+        });
+      });
+    }
+
+    if (list.length === 0) {
+      const fallbackData = getCtetFallbackQuestions(testId, ctetLang1, ctetLang2);
+      list = fallbackData.builtList;
+      secs = fallbackData.builtSecs;
+    }
+
+    await applyToScreen(list, secs, 9000, catalogTest);
+    setShowInstructions(false);
+    setIsTimerRunning(true);
+  };
 
   // Keep refs in sync with state so the timer interval always reads fresh values
   useEffect(() => { sectionsRef.current = sections; }, [sections]);
@@ -1015,12 +1388,14 @@ export default function MobileTestScreen({
         `ongoing_test_${testId}`,
         JSON.stringify({
           testId,
+          testTitle: mockTestTitle || '',
           status: 'ONGOING',
           timeRemaining: currTime,
           violations: currViolations,
           currentSectionIndex: currSec,
           currentQuestionIndex: currQ,
-          responses: formattedResponses
+          responses: formattedResponses,
+          updatedAt: new Date().toISOString()
         })
       );
     } catch (err) {
@@ -1085,7 +1460,14 @@ export default function MobileTestScreen({
             setModalConfig((prevVal) => ({ ...prevVal, visible: false }));
             setLoading(true);
             setLoadingText('Saving session progress...');
-            await saveOngoingSessionState();
+            await saveOngoingSessionStateLocally();
+            if (isOnlineRef.current) {
+              try {
+                await saveOngoingSessionState();
+              } catch (e) {
+                console.warn('Failed to sync ongoing session to server:', e);
+              }
+            }
             onBack();
           },
           style: 'destructive'
@@ -1220,6 +1602,15 @@ export default function MobileTestScreen({
             {
               text: 'View Performance',
               onPress: async () => {
+                const missingApp = !websiteRatingRef.current;
+                const missingExam = !examRatingRef.current;
+
+                if (missingApp || missingExam) {
+                  // Blink the unrated star row(s) to highlight them without any alert dialog
+                  triggerRatingBlinkRef.current(missingApp, missingExam);
+                  return;
+                }
+
                 // Always submit feedback/rating so every test completion is recorded in admin panel
                 try {
                   fetch(`${BASE_URL}/api/feedback`, {
@@ -1332,6 +1723,362 @@ export default function MobileTestScreen({
   const examName = mockTestTitle || "General Mock Test Assessment";
 
   if (showInstructions) {
+    const isCtetFullTest = (testId || '').toLowerCase().includes('ctet');
+    if (isCtetFullTest) {
+      const lowerId = (testId || '').toLowerCase();
+      const isPaper2 = lowerId.includes('paper2') || lowerId.includes('paper-2') || lowerId.includes('paper_2') || lowerId.includes('paper 2') || lowerId.includes('p2') || lowerId.includes('ctet2');
+      const totalSections = isPaper2 ? 4 : 5;
+      const lang1SectionText = isPaper2 ? "3rd" : "4th";
+      const lang2SectionText = isPaper2 ? "4th" : "5th";
+
+      const isCtetFormValid = 
+        ctetDefaultLang !== '' && ctetDefaultLang !== '-- Select --' &&
+        ctetLang1 !== '' && ctetLang1 !== '-- Select --' &&
+        ctetLang2 !== '' && ctetLang2 !== '-- Select --' &&
+        ctetAgreed;
+
+      return (
+        <View style={[styles.instContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
+          <StatusBar 
+            barStyle={isDark ? 'light-content' : 'dark-content'} 
+            backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
+          />
+          {/* Header */}
+          <View style={[
+            styles.instHeader, 
+            isDark && { backgroundColor: ThemeColors.dark.headerBg },
+            { height: vs(56) + insets.top, paddingTop: insets.top, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
+          ]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <ShieldCheck size={20} color="#2563EB" style={{ marginRight: 8 }} />
+              <Text style={styles.instHeaderTitle}>CTET Instructions Panel</Text>
+            </View>
+          </View>
+
+          {/* Content */}
+          <ScrollView contentContainerStyle={[styles.instScrollContent, { padding: 16 }]}>
+            <View style={[{
+              backgroundColor: isDark ? ThemeColors.dark.card : '#FFFFFF',
+              borderColor: isDark ? ThemeColors.dark.border : '#E2E8F0',
+              borderWidth: 1,
+              borderRadius: 12,
+              padding: 16,
+            }]}>
+              
+              {/* Header Metadata */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: isDark ? '#1F2E54' : '#F1F5F9', marginBottom: 14 }}>
+                <Text style={{ fontWeight: '700', fontSize: 13, color: isDark ? '#FFFFFF' : '#0F172A' }}>Duration: 150 Mins</Text>
+                <Text style={{ fontWeight: '700', fontSize: 13, color: isDark ? '#FFFFFF' : '#0F172A' }}>Maximum Marks: 150</Text>
+              </View>
+
+              {/* Section 1: Instructions List */}
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ fontWeight: '700', fontSize: 13, color: isDark ? '#FFFFFF' : '#0F172A', marginBottom: 10 }}>
+                  Read the following instructions carefully.
+                </Text>
+                <Text style={{ fontSize: 12, color: isDark ? '#94A3B8' : '#475569', marginBottom: 6, lineHeight: 18 }}>
+                  1. The test contain {totalSections} sections having total 150 questions.
+                </Text>
+                <Text style={{ fontSize: 12, color: isDark ? '#94A3B8' : '#475569', marginBottom: 6, lineHeight: 18 }}>
+                  2. Each question has 4 options out of which only one is correct.
+                </Text>
+                <Text style={{ fontSize: 12, color: isDark ? '#94A3B8' : '#475569', marginBottom: 6, lineHeight: 18 }}>
+                  3. You have to finish the test in 150 minutes.
+                </Text>
+                <Text style={{ fontSize: 12, color: isDark ? '#94A3B8' : '#475569', marginBottom: 6, lineHeight: 18 }}>
+                  4. There is no negative marking in this test.
+                </Text>
+                <Text style={{ fontSize: 12, color: isDark ? '#94A3B8' : '#475569', marginBottom: 6, lineHeight: 18 }}>
+                  5. You will be awarded 1 mark for each correct answer.
+                </Text>
+                <Text style={{ fontSize: 12, color: isDark ? '#94A3B8' : '#475569', marginBottom: 6, lineHeight: 18 }}>
+                  6. There is no negative marking for the questions that you have not attempted.
+                </Text>
+                <Text style={{ fontSize: 12, color: isDark ? '#94A3B8' : '#475569', marginBottom: 6, lineHeight: 18 }}>
+                  7. You can write this test only once. Make sure that you complete the test before you submit the test.
+                </Text>
+              </View>
+
+              <View style={{ height: 1, backgroundColor: isDark ? '#1F2E54' : '#E2E8F0', marginVertical: 14 }} />
+
+              {/* Section 2: Language Selectors */}
+              {/* 1. Default Language */}
+              <View style={{ marginBottom: 14 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <Text style={{ fontWeight: '700', fontSize: 12, color: isDark ? '#FFFFFF' : '#0F172A' }}>
+                    Choose your default language:
+                  </Text>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setCtetDefaultLangModal(true)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+                      borderColor: isDark ? '#334155' : '#CBD5E1',
+                      borderWidth: 1,
+                      borderRadius: 4,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      minWidth: 130,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: ctetDefaultLang ? (isDark ? '#FFFFFF' : '#0F172A') : (isDark ? '#94A3B8' : '#64748B') }}>
+                      {ctetDefaultLang || '-- Select --'}
+                    </Text>
+                    <ChevronDown size={14} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginLeft: 6 }} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={{ fontSize: 11, color: isDark ? '#F87171' : '#DC2626', fontWeight: '500', marginTop: 4 }}>
+                  Please note all questions will appear in your default language. This language can be changed for a particular question later on
+                </Text>
+              </View>
+
+              {/* 2. Language - I */}
+              <View style={{ marginBottom: 14 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <Text style={{ fontWeight: '700', fontSize: 12, color: isDark ? '#FFFFFF' : '#0F172A' }}>
+                    Language - I:
+                  </Text>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setCtetLang1Modal(true)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+                      borderColor: isDark ? '#334155' : '#CBD5E1',
+                      borderWidth: 1,
+                      borderRadius: 4,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      minWidth: 130,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: ctetLang1 ? (isDark ? '#FFFFFF' : '#0F172A') : (isDark ? '#94A3B8' : '#64748B') }}>
+                      {ctetLang1 || '-- Select --'}
+                    </Text>
+                    <ChevronDown size={14} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginLeft: 6 }} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={{ fontSize: 11, color: isDark ? '#F87171' : '#DC2626', fontWeight: '500', marginTop: 4 }}>
+                  Please note all questions in {lang1SectionText} section will appear based on your selection here. This CANNOT be changed later on once the test starts
+                </Text>
+              </View>
+
+              {/* 3. Language - II */}
+              <View style={{ marginBottom: 14 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <Text style={{ fontWeight: '700', fontSize: 12, color: isDark ? '#FFFFFF' : '#0F172A' }}>
+                    Language - II:
+                  </Text>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setCtetLang2Modal(true)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+                      borderColor: isDark ? '#334155' : '#CBD5E1',
+                      borderWidth: 1,
+                      borderRadius: 4,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      minWidth: 130,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: ctetLang2 ? (isDark ? '#FFFFFF' : '#0F172A') : (isDark ? '#94A3B8' : '#64748B') }}>
+                      {ctetLang2 || '-- Select --'}
+                    </Text>
+                    <ChevronDown size={14} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginLeft: 6 }} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={{ fontSize: 11, color: isDark ? '#F87171' : '#DC2626', fontWeight: '500', marginTop: 4 }}>
+                  Please note all questions in {lang2SectionText} section will appear based on your selection here. This CANNOT be changed later on once the test starts
+                </Text>
+              </View>
+
+              <View style={{ height: 1, backgroundColor: isDark ? '#1F2E54' : '#E2E8F0', marginVertical: 14 }} />
+
+              {/* Section 3: Declaration */}
+              <View style={{ marginBottom: 8 }}>
+                <Text style={{ fontWeight: '700', fontSize: 13, color: isDark ? '#FFFFFF' : '#0F172A', marginBottom: 8 }}>
+                  Declaration:
+                </Text>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.checkboxContainer}
+                  onPress={() => setCtetAgreed(!ctetAgreed)}
+                >
+                  <View style={[
+                    styles.checkbox,
+                    ctetAgreed && styles.checkboxChecked,
+                    isDark && { borderColor: ThemeColors.dark.border },
+                    ctetAgreed && isDark && { backgroundColor: '#10B981', borderColor: '#10B981' }
+                  ]}>
+                    {ctetAgreed && (
+                      <View style={styles.checkboxTickContainer}>
+                        <View style={styles.checkboxTickShort} />
+                        <View style={styles.checkboxTickLong} />
+                      </View>
+                    )}
+                  </View>
+                  <Text style={[styles.checkboxLabel, isDark && { color: ThemeColors.dark.textMuted }]}>
+                    I have understood and agree to all the instructions.
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+            </View>
+          </ScrollView>
+
+          {/* Footer controls */}
+          <View style={[
+            styles.instFooter, 
+            isDark && { backgroundColor: ThemeColors.dark.bottomNavBg, borderTopColor: ThemeColors.dark.bottomNavBorder },
+            { height: vs(56) + insets.bottom, paddingBottom: insets.bottom }
+          ]}>
+            <TouchableOpacity 
+              style={[styles.instCancelBtn, isDark && { backgroundColor: '#0B1329', borderColor: '#1F2E54' }]} 
+              onPress={handleCancelInstructions}
+            >
+              <Text style={[styles.instCancelText, isDark && { color: ThemeColors.dark.text }]}>Previous</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              disabled={!isCtetFormValid}
+              style={[
+                styles.instStartBtn, 
+                !isCtetFormValid && styles.instStartBtnDisabled,
+                isCtetFormValid && { backgroundColor: '#46cae4' }
+              ]} 
+              onPress={handleStartCtetExam}
+            >
+              <Text style={styles.instStartText}>I am ready to begin</Text>
+            </TouchableOpacity>
+          </View>
+          {/* Default Lang Modal */}
+          <Modal visible={ctetDefaultLangModal} transparent animationType="fade" onRequestClose={() => setCtetDefaultLangModal(false)}>
+            <TouchableOpacity activeOpacity={1} onPress={() => setCtetDefaultLangModal(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+              <View style={{ width: '100%', maxWidth: 300, backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderRadius: 10, borderWidth: 1, borderColor: isDark ? '#334155' : '#E2E8F0', padding: 14, elevation: 10 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#FFFFFF' : '#0F172A', marginBottom: 10 }}>
+                  Choose your default language:
+                </Text>
+                {['-- Select --', 'English', 'Hindi'].map(opt => {
+                  const isSel = (opt === '-- Select --' && !ctetDefaultLang) || ctetDefaultLang === opt;
+                  return (
+                    <TouchableOpacity
+                      key={opt}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setCtetDefaultLang(opt === '-- Select --' ? '' : opt);
+                        setCtetDefaultLangModal(false);
+                      }}
+                      style={{
+                        paddingVertical: 10,
+                        paddingHorizontal: 12,
+                        borderRadius: 6,
+                        marginBottom: 4,
+                        backgroundColor: isSel ? (isDark ? '#0284C7' : '#0284C7') : (isDark ? '#0F172A' : '#F8FAFC'),
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <Text style={{ fontSize: 13, fontWeight: isSel ? '700' : '500', color: isSel ? '#FFFFFF' : (isDark ? '#E2E8F0' : '#334155') }}>
+                        {opt}
+                      </Text>
+                      {isSel && <Check size={14} color="#FFFFFF" />}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </TouchableOpacity>
+          </Modal>
+
+          {/* Language 1 Modal */}
+          <Modal visible={ctetLang1Modal} transparent animationType="fade" onRequestClose={() => setCtetLang1Modal(false)}>
+            <TouchableOpacity activeOpacity={1} onPress={() => setCtetLang1Modal(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+              <View style={{ width: '100%', maxWidth: 300, backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderRadius: 10, borderWidth: 1, borderColor: isDark ? '#334155' : '#E2E8F0', padding: 14, elevation: 10 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#FFFFFF' : '#0F172A', marginBottom: 10 }}>
+                  Language - I:
+                </Text>
+                {['-- Select --', 'English', 'Hindi', 'Sanskrit'].map(opt => {
+                  const isSel = (opt === '-- Select --' && !ctetLang1) || ctetLang1 === opt;
+                  return (
+                    <TouchableOpacity
+                      key={opt}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setCtetLang1(opt === '-- Select --' ? '' : opt);
+                        setCtetLang1Modal(false);
+                      }}
+                      style={{
+                        paddingVertical: 10,
+                        paddingHorizontal: 12,
+                        borderRadius: 6,
+                        marginBottom: 4,
+                        backgroundColor: isSel ? (isDark ? '#0284C7' : '#0284C7') : (isDark ? '#0F172A' : '#F8FAFC'),
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <Text style={{ fontSize: 13, fontWeight: isSel ? '700' : '500', color: isSel ? '#FFFFFF' : (isDark ? '#E2E8F0' : '#334155') }}>
+                        {opt}
+                      </Text>
+                      {isSel && <Check size={14} color="#FFFFFF" />}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </TouchableOpacity>
+          </Modal>
+
+          {/* Language 2 Modal */}
+          <Modal visible={ctetLang2Modal} transparent animationType="fade" onRequestClose={() => setCtetLang2Modal(false)}>
+            <TouchableOpacity activeOpacity={1} onPress={() => setCtetLang2Modal(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+              <View style={{ width: '100%', maxWidth: 300, backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderRadius: 10, borderWidth: 1, borderColor: isDark ? '#334155' : '#E2E8F0', padding: 14, elevation: 10 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#FFFFFF' : '#0F172A', marginBottom: 10 }}>
+                  Language - II:
+                </Text>
+                {['-- Select --', 'English', 'Hindi', 'Sanskrit'].map(opt => {
+                  const isSel = (opt === '-- Select --' && !ctetLang2) || ctetLang2 === opt;
+                  return (
+                    <TouchableOpacity
+                      key={opt}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setCtetLang2(opt === '-- Select --' ? '' : opt);
+                        setCtetLang2Modal(false);
+                      }}
+                      style={{
+                        paddingVertical: 10,
+                        paddingHorizontal: 12,
+                        borderRadius: 6,
+                        marginBottom: 4,
+                        backgroundColor: isSel ? (isDark ? '#0284C7' : '#0284C7') : (isDark ? '#0F172A' : '#F8FAFC'),
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <Text style={{ fontSize: 13, fontWeight: isSel ? '700' : '500', color: isSel ? '#FFFFFF' : (isDark ? '#E2E8F0' : '#334155') }}>
+                        {opt}
+                      </Text>
+                      {isSel && <Check size={14} color="#FFFFFF" />}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        </View>
+      );
+    }
+
     const t = instructionTexts[lang];
 
     let maxMarks = 0;
@@ -1605,15 +2352,14 @@ export default function MobileTestScreen({
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        decelerationRate="normal"
+        decelerationRate="fast"
         disableIntervalMomentum
         bounces={false}
         keyboardShouldPersistTaps="handled"
         scrollsToTop={false}
+        removeClippedSubviews={Platform.OS === 'android'}
         onMomentumScrollEnd={(e) => {
           const pageIndex = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-          // Only update state if the page actually changed.
-          // isProgrammaticScrollRef stays false here so the useEffect skips the redundant scrollTo.
           if (pageIndex !== currentQuestionIdxLiveRef.current) {
             setCurrentQuestionIdx(pageIndex);
           }
@@ -1621,95 +2367,26 @@ export default function MobileTestScreen({
         style={{ flex: 1 }}
       >
         {sectionQuestions.map((q, qIdx) => {
-          const qContentEn = q?.content['en'];
-          const qContentHi = q?.content['hi'];
-          const qContent = lang === 'en'
-            ? (qContentEn?.questionText ? qContentEn : qContentHi)
-            : (qContentHi?.questionText ? qContentHi : qContentEn);
-          const qText = qContent?.questionText || '';
-          const qOptions = qContent?.options || [];
-          const qResp = responses[q.id];
+          const isNearVisible = Math.abs(qIdx - currentQuestionIdx) <= 2;
+          if (!isNearVisible) {
+            return <View key={q.id} style={{ width: SCREEN_WIDTH, flex: 1 }} />;
+          }
+
+          const posMarkText = activeSection?.positiveMark ? `+${activeSection.positiveMark}.0` : '+2.0';
+          const negMarkText = activeSection?.negativeMark ? `-${activeSection.negativeMark}` : '-0.5';
 
           return (
-            <View key={q.id} style={{ width: SCREEN_WIDTH, flex: 1 }}>
-              <ScrollView
-                style={[styles.questionContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}
-                contentContainerStyle={styles.questionContentContainer}
-                showsVerticalScrollIndicator={false}
-              >
-                {/* Question sub-header bar (website style) */}
-                <View style={[styles.qSubHeaderBar, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
-                  <Text style={[styles.qTypeText, isDark && { color: '#60A5FA' }]}>Question Type: MCQ</Text>
-                  <View style={styles.qMarksRow}>
-                    <View style={styles.posMarkBadge}>
-                      <Text style={styles.posMarkText}>+2.0</Text>
-                    </View>
-                    <View style={styles.negMarkBadge}>
-                      <Text style={styles.negMarkText}>-0.5</Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Question number header row */}
-                <View style={styles.questionHeaderRow}>
-                  {/* Blue number badge */}
-                  <View style={styles.questionNumBadge}>
-                    <Text style={styles.questionNumText}>
-                      {lang === 'hi' ? 'प्रश्न ' : 'Q. '}{qIdx + 1}
-                    </Text>
-                  </View>
-                  {/* Per-question time spent */}
-                  <View style={[styles.qTimerPill, isDark && { backgroundColor: '#1E293B', borderColor: '#334155' }]}>
-                    <Text style={[styles.qTimerIcon, isDark && { color: '#94A3B8' }]}>Q Time:</Text>
-                    <Text style={[styles.qTimerVal, isDark && { color: '#3B82F6' }]}>{formatTime(qResp?.elapsedSeconds || 0)}</Text>
-                  </View>
-                </View>
-
-                {/* Website-identical Question Text Box */}
-                <View style={[styles.questionCardBox, isDark && styles.questionCardBoxDark]}>
-                  <HtmlText
-                    style={[styles.questionBody, isDark && { color: ThemeColors.dark.text }]}
-                    isDark={isDark}
-                    html={qText}
-                  />
-                </View>
-
-                {/* Options as numbered cards */}
-                <View style={styles.optionsBlock}>
-                  {qOptions.map((opt, i) => {
-                    const isSelected = qResp?.tempOptionIndex === i;
-                    return (
-                      <TouchableOpacity
-                        key={i}
-                        activeOpacity={0.75}
-                        style={[
-                          styles.optionCard,
-                          isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border },
-                          isSelected && styles.optionCardSelected,
-                          isSelected && isDark && { borderColor: '#3B82F6', backgroundColor: '#1E3A8A' },
-                        ]}
-                        onPress={() => handleSelectOption(i, q.id)}
-                      >
-                        <View style={[
-                          styles.optionNumCircle,
-                          isDark && { borderColor: '#475569' },
-                          isSelected && styles.optionNumCircleSelected,
-                        ]}>
-                          <Text style={[styles.optionNumText, isSelected && styles.optionNumTextSelected]}>
-                            {i + 1}
-                          </Text>
-                        </View>
-                        <HtmlText
-                          style={[styles.optionText, isDark && { color: ThemeColors.dark.text }, isSelected && styles.optionTextSelected]}
-                          isDark={isDark}
-                          html={opt}
-                        />
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </ScrollView>
-            </View>
+            <QuestionCardItem
+              key={q.id}
+              q={q}
+              qIdx={qIdx}
+              lang={lang}
+              isDark={isDark}
+              qResp={responses[q.id]}
+              onSelectOption={handleSelectOption}
+              posMarkText={posMarkText}
+              negMarkText={negMarkText}
+            />
           );
         })}
       </ScrollView>
@@ -1862,8 +2539,8 @@ export default function MobileTestScreen({
               </View>
             </ScrollView>
 
-            {/* Submit section button if test has multiple sections */}
-            {sections && sections.length > 1 && (
+            {/* Submit section button ONLY if test has sectional timing enabled */}
+            {hasSectionalTiming && sections && sections.length > 1 && (
               <TouchableOpacity
                 style={[styles.paletteSubmitBtn, { backgroundColor: '#059669', marginBottom: 10 }]}
                 onPress={() => {
@@ -1895,7 +2572,7 @@ export default function MobileTestScreen({
         transparent
         animationType="fade"
         onRequestClose={() => {
-          if (!modalConfig.isPauseModal) {
+          if (!modalConfig.isPauseModal && !modalConfig.isSubmittedModal) {
             setModalConfig((prev) => ({ ...prev, visible: false }));
           }
         }}
@@ -2026,73 +2703,132 @@ export default function MobileTestScreen({
               </>
             )}
             
-            {modalConfig.isSubmittedModal && (
-              <View style={{ marginVertical: 12, width: '100%', alignItems: 'stretch' }}>
-                <Text style={{ fontSize: 13, fontWeight: 'bold', color: isDark ? '#FFF' : '#1E293B', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  {lang === 'hi' ? 'प्रतिक्रिया और रेटिंग' : 'Feedback & Ratings'}
-                </Text>
-                
-                <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', marginBottom: 6 }}>
-                    {lang === 'hi' ? 'ऐप अनुभव को रेटिंग दें:' : 'Rate the App Experience:'}
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 8 }}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <TouchableOpacity
-                        key={star}
-                        activeOpacity={0.7}
-                        onPress={() => setWebsiteRating(star)}
-                      >
-                        <Text style={{ fontSize: 24, color: star <= websiteRating ? '#F59E0B' : '#D1D5DB' }}>★</Text>
-                      </TouchableOpacity>
-                    ))}
+            {modalConfig.isSubmittedModal && (() => {
+              const appStarColor = appRatingGoldenBlink.interpolate({
+                inputRange: [0, 1],
+                outputRange: [isDark ? '#334155' : '#CBD5E1', '#F59E0B'],
+              });
+              const examStarColor = examRatingGoldenBlink.interpolate({
+                inputRange: [0, 1],
+                outputRange: [isDark ? '#334155' : '#CBD5E1', '#F59E0B'],
+              });
+              const appBorderColor = appRatingGoldenBlink.interpolate({
+                inputRange: [0, 1],
+                outputRange: [websiteRating > 0 ? '#10B981' : (isDark ? '#334155' : '#E2E8F0'), '#F59E0B'],
+              });
+              const examBorderColor = examRatingGoldenBlink.interpolate({
+                inputRange: [0, 1],
+                outputRange: [examRating > 0 ? '#10B981' : (isDark ? '#334155' : '#E2E8F0'), '#F59E0B'],
+              });
+
+              return (
+                <View style={{ marginVertical: 10, width: '100%', alignItems: 'stretch' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <Text style={{ fontSize: 12.5, fontWeight: 'bold', color: isDark ? '#FFF' : '#1E293B', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      {lang === 'hi' ? '⭐ रेटिंग और प्रतिक्रिया' : '⭐ Ratings & Feedback'}
+                    </Text>
+                  </View>
+                  
+                  {/* 1. Rate App Experience */}
+                  <Animated.View style={{
+                    marginBottom: 10,
+                    backgroundColor: isDark ? '#0B1329' : '#F8FAFC',
+                    padding: 10,
+                    borderRadius: 10,
+                    borderWidth: 1.5,
+                    borderColor: appBorderColor,
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={{ fontSize: 11.5, fontWeight: '700', color: isDark ? '#E2E8F0' : '#1E293B' }}>
+                        {lang === 'hi' ? '1. ऐप अनुभव को रेटिंग दें' : '1. Rate App Experience'}
+                      </Text>
+                      {websiteRating > 0 && (
+                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#10B981' }}>
+                          ✓ {websiteRating} / 5
+                        </Text>
+                      )}
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <TouchableOpacity
+                          key={star}
+                          activeOpacity={0.7}
+                          onPress={() => setWebsiteRating(star)}
+                          style={{ padding: 2 }}
+                        >
+                          <Animated.Text style={{ fontSize: 26, color: star <= websiteRating ? '#F59E0B' : appStarColor }}>★</Animated.Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </Animated.View>
+
+                  {/* 2. Rate Exam Experience */}
+                  <Animated.View style={{
+                    marginBottom: 10,
+                    backgroundColor: isDark ? '#0B1329' : '#F8FAFC',
+                    padding: 10,
+                    borderRadius: 10,
+                    borderWidth: 1.5,
+                    borderColor: examBorderColor,
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={{ fontSize: 11.5, fontWeight: '700', color: isDark ? '#E2E8F0' : '#1E293B' }}>
+                        {lang === 'hi' ? '2. परीक्षा अनुभव को रेटिंग दें' : '2. Rate Exam Experience'}
+                      </Text>
+                      {examRating > 0 && (
+                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#10B981' }}>
+                          ✓ {examRating} / 5
+                        </Text>
+                      )}
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <TouchableOpacity
+                          key={star}
+                          activeOpacity={0.7}
+                          onPress={() => setExamRating(star)}
+                          style={{ padding: 2 }}
+                        >
+                          <Animated.Text style={{ fontSize: 26, color: star <= examRating ? '#F59E0B' : examStarColor }}>★</Animated.Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </Animated.View>
+
+                  {/* 3. Written Feedback (Optional) */}
+                  <View style={{ marginTop: 2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#94A3B8' : '#64748B' }}>
+                        {lang === 'hi' ? '3. प्रतिक्रिया लिखें (वैकल्पिक):' : '3. Write Feedback (Optional):'}
+                      </Text>
+                      <Text style={{ fontSize: 9.5, color: '#64748B', fontStyle: 'italic' }}>
+                        {lang === 'hi' ? 'वैकल्पिक' : 'Optional'}
+                      </Text>
+                    </View>
+                    <TextInput
+                      value={feedbackText}
+                      onChangeText={setFeedbackText}
+                      placeholder={lang === 'hi' ? 'कृपया अपने विचार लिखें (वैकल्पिक)...' : 'Share your suggestions or feedback (optional)...'}
+                      placeholderTextColor={isDark ? '#475569' : '#94A3B8'}
+                      multiline
+                      numberOfLines={2}
+                      style={{
+                        backgroundColor: isDark ? '#0B1329' : '#F8FAFC',
+                        borderColor: isDark ? '#334155' : '#E2E8F0',
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        padding: 8,
+                        fontSize: 11,
+                        color: isDark ? '#FFF' : '#1E293B',
+                        textAlignVertical: 'top',
+                        height: 48,
+                        fontWeight: '500'
+                      }}
+                    />
                   </View>
                 </View>
-
-                <View>
-                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', marginBottom: 6 }}>
-                    {lang === 'hi' ? 'परीक्षा को रेटिंग दें:' : 'Rate the Exam Experience:'}
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 8 }}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <TouchableOpacity
-                        key={star}
-                        activeOpacity={0.7}
-                        onPress={() => setExamRating(star)}
-                      >
-                        <Text style={{ fontSize: 24, color: star <= examRating ? '#F59E0B' : '#D1D5DB' }}>★</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={{ marginTop: 12 }}>
-                  <Text style={{ fontSize: 11, fontWeight: 'bold', color: isDark ? '#94A3B8' : '#64748B', marginBottom: 6 }}>
-                    {lang === 'hi' ? 'अपनी प्रतिक्रिया लिखें (वैकल्पिक):' : 'Write Feedback (Optional):'}
-                  </Text>
-                  <TextInput
-                    value={feedbackText}
-                    onChangeText={setFeedbackText}
-                    placeholder={lang === 'hi' ? 'कृपया अपने विचार लिखें...' : 'Share your thoughts about your test experience...'}
-                    placeholderTextColor={isDark ? '#475569' : '#94A3B8'}
-                    multiline
-                    numberOfLines={2}
-                    style={{
-                      backgroundColor: isDark ? '#0B1329' : '#F8FAFC',
-                      borderColor: isDark ? '#334155' : '#E2E8F0',
-                      borderWidth: 1,
-                      borderRadius: 8,
-                      padding: 8,
-                      fontSize: 11,
-                      color: isDark ? '#FFF' : '#1E293B',
-                      textAlignVertical: 'top',
-                      height: 50,
-                      fontWeight: '600'
-                    }}
-                  />
-                </View>
-              </View>
-            )}
+              );
+            })()}
 
             <View style={styles.modalButtonsContainer}>
               {modalConfig.buttons.map((btn, idx) => (
