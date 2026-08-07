@@ -1691,7 +1691,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
                 {/* Submit Block Section */}
                 <div className={`p-4 border-t border-slate-200 flex flex-col gap-2.5 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
-                  {session && session.sections && session.sections.length > 1 && (
+                  {session && session.hasSectionalTiming && session.sections && session.sections.length > 1 && (
                     <button
                       onClick={() => {
                         pauseExam();
