@@ -48,8 +48,8 @@ interface BulkQuestionImporterProps {
   examCatalog: any[];
   selectedUploadTestId: string;
   setSelectedUploadTestId: (id: string) => void;
-  importerMode: 'json' | 'form';
-  setImporterMode: (mode: 'json' | 'form') => void;
+  importerMode: 'json' | 's3_url' | 'form';
+  setImporterMode: (mode: 'json' | 's3_url' | 'form') => void;
   loadTemplate: () => void;
   jsonInput: string;
   setJsonInput: (val: string) => void;
@@ -219,6 +219,58 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   };
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [s3UrlInput, setS3UrlInput] = React.useState('');
+  const [s3QuestionsCount, setS3QuestionsCount] = React.useState('');
+  const [isSubmittingS3Url, setIsSubmittingS3Url] = React.useState(false);
+
+  const handleDirectS3UrlSave = async () => {
+    if (!selectedUploadTestId) {
+      showToast('Error: Please select a target mock test first.');
+      return;
+    }
+    if (!s3UrlInput.trim()) {
+      showToast('Error: Please enter a valid Tigris S3 JSON URL.');
+      return;
+    }
+
+    try {
+      setIsSubmittingS3Url(true);
+      showToast('Linking S3 URL to target mock test...');
+
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': 'super_secret_admin_key_2026'
+        },
+        body: JSON.stringify({
+          action: 'save-custom-questions',
+          data: {
+            testId: selectedUploadTestId,
+            title: selectedUploadTestId,
+            questionsUrl: s3UrlInput.trim(),
+            questionsCount: s3QuestionsCount.trim() ? Number(s3QuestionsCount.trim()) : undefined
+          }
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Successfully linked S3 URL to mock test! (${data.questionsCount || 0} questions)`);
+        setS3UrlInput('');
+        setS3QuestionsCount('');
+        if (typeof window !== 'undefined') {
+          setTimeout(() => window.location.reload(), 1000);
+        }
+      } else {
+        showToast('Error: ' + (data.error || 'Failed to link S3 URL to database.'));
+      }
+    } catch (err: any) {
+      showToast('Error saving S3 URL: ' + (err?.message || 'Network error'));
+    } finally {
+      setIsSubmittingS3Url(false);
+    }
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -439,6 +491,18 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
         <div className="flex gap-3 flex-wrap">
           <button
             type="button"
+            onClick={() => setImporterMode('s3_url')}
+            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer border-2 ${
+              importerMode === 's3_url'
+                ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-500/20'
+                : 'bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-purple-400 hover:text-purple-600'
+            }`}
+          >
+            <Globe className="h-4 w-4" />
+            Direct Tigris S3 URL
+          </button>
+          <button
+            type="button"
             onClick={() => setImporterMode('json')}
             className={`flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer border-2 ${
               importerMode === 'json'
@@ -494,7 +558,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
         <div className="flex items-center gap-3 p-6 border-b border-slate-100 dark:border-slate-800">
           <div className="h-7 w-7 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center shrink-0">3</div>
           <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wide">
-            {importerMode === 'json' ? 'Paste or Upload JSON Questions Array' : `${editingQuestionIndex !== null ? `Editing Question #${editingQuestionIndex + 1}` : 'Add a New Question'}`}
+            {importerMode === 's3_url' ? 'Submit Direct Tigris S3 JSON File Link' : importerMode === 'json' ? 'Paste or Upload JSON Questions Array' : `${editingQuestionIndex !== null ? `Editing Question #${editingQuestionIndex + 1}` : 'Add a New Question'}`}
           </h3>
           {importerMode === 'form' && formQuestionsList.length > 0 && (
             <button
@@ -508,7 +572,59 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
         </div>
 
         <div className="p-6">
-          {importerMode === 'json' ? (
+          {importerMode === 's3_url' ? (
+            <div className="space-y-6">
+              <div className="p-4 bg-purple-50 dark:bg-purple-955/30 border border-purple-200 dark:border-purple-800/60 rounded-2xl">
+                <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-extrabold text-xs">
+                  <Globe className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+                  <span>Direct Tigris S3 / External S3 JSON Link Importer</span>
+                </div>
+                <p className="text-[11px] text-purple-650 dark:text-purple-350 mt-1.5 leading-relaxed">
+                  Upload your <code>.json</code> question paper directly to your Tigris S3 bucket (or any public S3 bucket), then paste the URL below. This completely bypasses Vercel & Next.js server payload limits for large test files!
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  Tigris S3 JSON URL <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="url"
+                  value={s3UrlInput}
+                  onChange={(e) => setS3UrlInput(e.target.value)}
+                  placeholder="https://fly.storage.tigris.dev/mocktest-assets/questions_ctet_paper_2___social_science_full_test_7.json"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-purple-500 shadow-sm"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                    Question Count <span className="text-slate-400 font-normal">(Optional — Auto-detected if empty)</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={s3QuestionsCount}
+                    onChange={(e) => setS3QuestionsCount(e.target.value)}
+                    placeholder="e.g. 270"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-white font-bold focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    disabled={!selectedUploadTestId || !s3UrlInput.trim() || isSubmittingS3Url}
+                    onClick={handleDirectS3UrlSave}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-black text-xs py-3 px-6 rounded-xl transition-all shadow-md shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Database className="h-4 w-4" />
+                    {isSubmittingS3Url ? 'Linking S3 URL to Test...' : 'Link & Save S3 URL to Test'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : importerMode === 'json' ? (
             <form onSubmit={handleBulkUploadSubmit} className="space-y-4">
               <div className="flex items-center justify-between">
                 <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">

@@ -44,7 +44,7 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
   const [managerTab, setManagerTab] = useState<'importer' | 'create_cat'>('importer');
 
   // Input Method for Questions Importer: JSON vs Interactive Form
-  const [importerMode, setImporterMode] = useState<'json' | 'form'>('json');
+  const [importerMode, setImporterMode] = useState<'json' | 's3_url' | 'form'>('json');
 
   // Selected Target Practice Domain Category
   const [selectedCatId, setSelectedCatId] = useState<string>('');

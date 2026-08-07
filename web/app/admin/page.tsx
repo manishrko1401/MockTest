@@ -371,7 +371,7 @@ export default function AdminAnalytics() {
   const [previewLanguage, setPreviewLanguage] = useState<'en' | 'hi'>('en');
 
   // Easy Form Importer states
-  const [importerMode, setImporterMode] = useState<'json' | 'form'>('json');
+  const [importerMode, setImporterMode] = useState<'json' | 's3_url' | 'form'>('json');
   const [formTextEn, setFormTextEn] = useState('');
   const [formTextHi, setFormTextHi] = useState('');
   const [opt1En, setOpt1En] = useState('');

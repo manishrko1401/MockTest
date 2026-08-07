@@ -42,7 +42,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
   const [managerTab, setManagerTab] = useState<'create_cat' | 'create_sub' | 'create_section' | 'create_test' | 'importer'>('create_cat');
 
   // Input Method for Questions Importer: JSON vs Interactive Form
-  const [importerMode, setImporterMode] = useState<'json' | 'form'>('json');
+  const [importerMode, setImporterMode] = useState<'json' | 's3_url' | 'form'>('json');
 
   // Selected Category, SubCategory, Section, Test for navigation across tabs
   const [selectedCatId, setSelectedCatId] = useState<string>('');
