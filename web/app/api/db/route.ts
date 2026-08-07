@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 // Persistent OTP Cache in global to survive Next.js dev server hot-reloads
 const otpCache = (global as any).otpCache || new Map<string, { code: string; expiresAt: number }>();
@@ -1747,12 +1747,81 @@ async function handleAddMockTest(data: any) {
 
 async function handleDeleteMockTest(data: any) {
   const { testId } = data;
+  if (!testId) {
+    return NextResponse.json({ success: false, error: 'testId is required' }, { status: 400 });
+  }
 
-  await prisma.mockTest.delete({
-    where: { id: testId },
-  });
+  const rawTargetId = String(testId).trim();
+  const slugId = rawTargetId.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
 
-  return NextResponse.json({ success: true });
+  try {
+    // 1. Fetch mockTest to check for stored custom questions in Tigris S3
+    const mockTest = await prisma.mockTest.findFirst({
+      where: {
+        OR: [
+          { id: rawTargetId },
+          { id: slugId }
+        ]
+      }
+    });
+
+    const bucketName = process.env.TIGRIS_BUCKET_NAME;
+
+    if (mockTest && bucketName) {
+      const keysToDelete: string[] = [
+        `questions_${slugId}.json`,
+        `questions_${rawTargetId}.json`
+      ];
+
+      // Extract S3 key from customQuestions URL if stored as object with url property
+      if (mockTest.customQuestions && typeof mockTest.customQuestions === 'object' && 'url' in (mockTest.customQuestions as any)) {
+        const urlStr = (mockTest.customQuestions as any).url;
+        try {
+          const urlObj = new URL(urlStr);
+          const pathname = decodeURIComponent(urlObj.pathname);
+          const extractedKey = pathname.startsWith(`/${bucketName}/`)
+            ? pathname.substring(bucketName.length + 2)
+            : pathname.startsWith('/') ? pathname.substring(1) : pathname;
+          if (extractedKey && !keysToDelete.includes(extractedKey)) {
+            keysToDelete.push(extractedKey);
+          }
+        } catch (e) {
+          // Ignore URL parsing errors
+        }
+      }
+
+      // Delete corresponding object(s) from Tigris S3 bucket
+      for (const key of keysToDelete) {
+        try {
+          await s3Client.send(
+            new DeleteObjectCommand({
+              Bucket: bucketName,
+              Key: key,
+            })
+          );
+          console.log(`Successfully deleted custom questions file from Tigris S3: ${key}`);
+        } catch (err: any) {
+          console.error(`Failed to delete S3 object ${key}:`, err?.message || err);
+        }
+      }
+    }
+
+    // 2. Delete mockTest record from database
+    if (mockTest) {
+      await prisma.mockTest.delete({
+        where: { id: mockTest.id }
+      });
+    }
+
+    // Bust in-memory catalog cache so all live users receive fresh data immediately
+    catalogCache.examCatalog = null;
+    catalogCache.noticesList = null;
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error("Failed to delete mockTest:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
 }
 
 async function handleEditCategory(rawPayload: any) {
