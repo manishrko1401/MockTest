@@ -1056,32 +1056,38 @@ export default function AdminAnalytics() {
       return;
     }
     try {
-      // Step 1: Upload questions JSON to S3 via /api/upload (FormData bypasses body size limits)
-      const questionsBlob = new Blob([JSON.stringify(parsedQuestions)], { type: 'application/json' });
-      const safeKeyId = selectedUploadTestId.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
-      const questionsFile = new File([questionsBlob], `questions_${safeKeyId}.json`, { type: 'application/json' });
-      
-      const formData = new FormData();
-      formData.append('file', questionsFile);
-      
-      const uploadRes = await fetch('/api/upload', {
+      // Step 1: Get a presigned S3 upload URL from the server (tiny request ~100 bytes)
+      const presignRes = await fetch('/api/db', {
         method: 'POST',
-        body: formData,
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-key': 'super_secret_admin_key_2026'
+        },
+        body: JSON.stringify({
+          action: 'get-presigned-upload-url',
+          data: { testId: selectedUploadTestId }
+        })
+      });
+      const presignData = await presignRes.json();
+      if (!presignData.success || !presignData.uploadUrl) {
+        showToast('Error: Failed to get upload URL - ' + (presignData.error || 'Unknown error'));
+        return;
+      }
+
+      // Step 2: Upload questions JSON directly to S3 from browser (bypasses Vercel entirely)
+      const questionsJson = JSON.stringify(parsedQuestions);
+      const directUploadRes = await fetch(presignData.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: questionsJson,
       });
 
-      if (!uploadRes.ok) {
-        const errText = await uploadRes.text();
-        showToast('Error uploading questions file: ' + errText);
+      if (!directUploadRes.ok) {
+        showToast('Error: Direct S3 upload failed (HTTP ' + directUploadRes.status + ')');
         return;
       }
 
-      const uploadData = await uploadRes.json();
-      if (!uploadData.success || !uploadData.url) {
-        showToast('Error: Failed to upload questions file to storage.');
-        return;
-      }
-
-      // Step 2: Send only the S3 URL + metadata to /api/db (small payload, no body size issue)
+      // Step 3: Save the S3 URL reference to the database (tiny request ~200 bytes)
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 
@@ -1093,7 +1099,7 @@ export default function AdminAnalytics() {
           data: { 
             testId: selectedUploadTestId, 
             title: selectedUploadTestId,
-            questionsUrl: uploadData.url,
+            questionsUrl: presignData.publicUrl,
             questionsCount: parsedQuestions.length,
             sessionId: currentUser?.currentSessionId
           }

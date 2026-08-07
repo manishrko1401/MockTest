@@ -3,6 +3,7 @@ import { prisma } from '../../lib/prisma';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Persistent OTP Cache in global to survive Next.js dev server hot-reloads
 const otpCache = (global as any).otpCache || new Map<string, { code: string; expiresAt: number }>();
@@ -288,6 +289,8 @@ export async function POST(request: Request) {
       case 'save-custom-questions':
       case 'bulk-import-questions':
         return await handleSaveCustomQuestions(data || body);
+      case 'get-presigned-upload-url':
+        return await handleGetPresignedUploadUrl(data);
       case 'get-custom-questions':
         return await handleGetCustomQuestions(data || body);
       case 'reorder-categories':
@@ -1999,6 +2002,43 @@ async function handleReorderMockTests(data: any) {
   catalogCache.examCatalog = null;
   catalogCache.noticesList = null;
   return NextResponse.json({ success: true });
+}
+
+async function handleGetPresignedUploadUrl(data: any) {
+  const testId = data?.testId;
+  if (!testId) {
+    return NextResponse.json({ success: false, error: 'testId is required' }, { status: 400 });
+  }
+
+  const bucketName = process.env.TIGRIS_BUCKET_NAME;
+  if (!bucketName) {
+    return NextResponse.json({ success: false, error: 'S3 storage not configured' }, { status: 500 });
+  }
+
+  const safeKeyId = String(testId).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+  const fileName = `questions_${safeKeyId}.json`;
+
+  try {
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileName,
+      ContentType: 'application/json',
+    });
+
+    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 600 }); // 10 min expiry
+
+    const publicUrl = `${process.env.TIGRIS_ENDPOINT || "https://fly.storage.tigris.dev"}/${bucketName}/${fileName}`;
+
+    return NextResponse.json({
+      success: true,
+      uploadUrl: presignedUrl,
+      publicUrl: publicUrl,
+      key: fileName,
+    });
+  } catch (err: any) {
+    console.error('Failed to generate presigned URL:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
 }
 
 async function handleSaveCustomQuestions(rawPayload: any) {
