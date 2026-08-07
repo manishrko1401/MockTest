@@ -79,7 +79,7 @@ export default function IndependenceDayDecorations() {
               <span className="inline-block animate-flag-sway text-sm sm:text-base hidden sm:inline-block">🇮🇳</span>
             </div>
 
-            {/* Right Section: Compact Balloons & Close Button */}
+            {/* Right Section: Compact Balloons */}
             <div className="flex items-center space-x-1.5">
               <div className="hidden md:flex items-center space-x-1 opacity-90 animate-balloon-float-delayed">
                 <div className="w-3.5 h-4 rounded-full bg-orange-400 border border-orange-200 shadow-xs relative flex items-center justify-center">
@@ -92,15 +92,6 @@ export default function IndependenceDayDecorations() {
                   <div className="w-0.5 h-0.5 bg-white/70 rounded-full absolute top-1 left-1" />
                 </div>
               </div>
-
-              <button
-                onClick={() => setBannerDismissed(true)}
-                className="p-0.5 rounded-full hover:bg-white/20 text-white/90 hover:text-white transition-colors cursor-pointer"
-                title="Dismiss Banner"
-                aria-label="Close"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
             </div>
           </div>
         </div>

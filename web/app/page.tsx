@@ -400,17 +400,12 @@ const formatSubCategoryName = (name: string) => {
 
         <header className="h-14 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="bg-gradient-to-tr from-orange-500 via-white to-emerald-600 p-0.5 rounded-full shadow-sm flex items-center justify-center shrink-0">
-              <div className="bg-white dark:bg-slate-900 p-1.5 rounded-full flex items-center justify-center h-8 w-8">
-                <span className="text-sm leading-none animate-flag-sway">🇮🇳</span>
-              </div>
+            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 rounded-full shadow-sm flex items-center justify-center h-8 w-8 border border-blue-200/50 dark:border-slate-700 shrink-0">
+              <Trophy className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1">
-                <h1 className="font-extrabold text-xs leading-none text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
-                <span className="text-[9px] bg-orange-500 text-white font-extrabold px-1 rounded uppercase tracking-wider">80th</span>
-              </div>
-              <p className="text-[7px] text-emerald-600 dark:text-emerald-400 font-extrabold tracking-wider uppercase mt-0.5 leading-none truncate">{t.logoSub} 🇮🇳</p>
+              <h1 className="font-extrabold text-xs leading-none text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
+              <p className="text-[8px] text-blue-600 dark:text-blue-400 font-bold tracking-wider uppercase mt-0.5 leading-none truncate">{t.logoSub}</p>
             </div>
           </Link>
 
@@ -1177,21 +1172,14 @@ const formatSubCategoryName = (name: string) => {
       {/* HEADER SECTION */}
       <header className="hidden md:flex h-16 sticky top-0 z-40 px-6 md:px-12 items-center justify-between shadow-sm glass-header transition-all duration-350">
         <div className="flex items-center gap-8">
-          {/* Logo with Indian Flag Independence Celebration Styling */}
+          {/* Original MockTest Hub Header Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <div className="bg-gradient-to-tr from-orange-500 via-white to-emerald-600 p-0.5 rounded-full shadow-md flex items-center justify-center shrink-0">
-              <div className="bg-white dark:bg-slate-900 p-2 rounded-full flex items-center justify-center h-10 w-10">
-                <span className="text-lg leading-none animate-flag-sway">🇮🇳</span>
-              </div>
+            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
+              <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
-                <span className="text-[9px] bg-gradient-to-r from-orange-500 to-emerald-600 text-white font-black px-1.5 py-0.5 rounded uppercase tracking-wider shadow-xs">
-                  80th Swatantrata 🇮🇳
-                </span>
-              </div>
-              <p className="text-[9px] text-emerald-600 dark:text-emerald-400 font-extrabold tracking-widest uppercase">{t.logoSub} • Jai Hind!</p>
+              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
+              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
             </div>
           </Link>
 

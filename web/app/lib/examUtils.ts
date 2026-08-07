@@ -36,7 +36,7 @@ export const EXPLANATIONS: Record<string, { en: string; hi: string }> = {
   }
 };
 
-export const generateExamSession = (id: string, examCatalog?: TestCategory[], customQs?: any): ActiveSession => {
+export const generateExamSession = (id: string, examCatalog?: TestCategory[], customQs?: any, lang1?: string, lang2?: string): ActiveSession => {
   let title = "Government Prep Mock Test Simulator";
   let duration = 3600; // 60 mins
   let catalogTest: MockTestItem | null = null;
@@ -87,60 +87,122 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
     const positiveMark = catalogTest?.positiveMarks !== undefined ? Number(catalogTest.positiveMarks) : (id.includes('rrb') ? 1 : 2);
     const negativeMark = catalogTest?.negativeMarks !== undefined ? Number(catalogTest.negativeMarks) : (id.includes('rrb') ? 0.33 : 0.5);
 
-    // Dynamically build sections based on unique question section fields
-    const sectionNames: string[] = [];
-    customQs.forEach((item: any) => {
-      const sec = item.section || "General Studies";
-      if (!sectionNames.includes(sec)) {
-        sectionNames.push(sec);
+    const isCtet = id.includes('ctet');
+    if (isCtet) {
+      const selectedL1 = lang1 || 'English';
+      const selectedL2 = lang2 || 'Hindi';
+
+      const targetSecConfigs = [
+        { id: 'sec_cdp', name: 'Child Development and Pedagogy', matchSection: 'Child Development and Pedagogy' },
+        { id: 'sec_subject', name: 'Social Studies', matchSection: 'Social Studies' },
+        { id: 'sec_lang1', name: `Language - I (${selectedL1})`, matchSection: `${selectedL1} - I` },
+        { id: 'sec_lang2', name: `Language - II (${selectedL2})`, matchSection: `${selectedL2} - II` },
+      ];
+
+      sections = targetSecConfigs.map((cfg, idx) => ({
+        id: cfg.id,
+        name: cfg.name,
+        orderIndex: idx,
+        positiveMark: 1,
+        negativeMark: 0,
+      }));
+
+      const filteredQuestions: Question[] = [];
+
+      targetSecConfigs.forEach((cfg) => {
+        const matchingRawQs = customQs.filter((item: any) => {
+          const secStr = String(item.section || item.subject || '').trim();
+          return secStr.toLowerCase() === cfg.matchSection.toLowerCase();
+        });
+
+        matchingRawQs.forEach((item: any, qIdx: number) => {
+          filteredQuestions.push({
+            id: item.id || `q_ctet_${cfg.id}_${qIdx}`,
+            sectionId: cfg.id,
+            questionType: 'mcq',
+            orderIndex: qIdx,
+            correctOptionIndex: item.correctIndex ?? 0,
+            content: {
+              en: {
+                questionText: item.textEn || item.questionText || '',
+                options: item.optionsEn || item.options || [],
+                imageUrl: item.imageUrlEn || item.imageUrl,
+                comprehension: item.comprehensionEn || item.comprehension
+              },
+              hi: {
+                questionText: item.textHi || item.questionText || item.textEn || '',
+                options: item.optionsHi || item.options || item.optionsEn || [],
+                imageUrl: item.imageUrlHi || item.imageUrl,
+                comprehension: item.comprehensionHi || item.comprehension
+              }
+            },
+            explanation: {
+              en: item.explanationEn || item.explanation || "Detailed explanation provided.",
+              hi: item.explanationHi || item.explanation || "विस्तृत व्याख्या प्रदान की गई है।"
+            }
+          });
+        });
+      });
+
+      if (filteredQuestions.length > 0) {
+        questions = filteredQuestions;
       }
-    });
-
-    sections = sectionNames.map((name, idx) => ({
-      id: `sec_custom_${idx}`,
-      name,
-      orderIndex: idx,
-      positiveMark,
-      negativeMark,
-      durationSeconds: hasSectionalTiming && sectionalTimingsMins[idx] ? sectionalTimingsMins[idx] * 60 : undefined,
-    }));
-
-    const sectionCounters: Record<string, number> = {};
-    sectionNames.forEach(name => {
-      sectionCounters[name] = 0;
-    });
-
-    questions = customQs.map((item: any, idx: number) => {
-      const secName = item.section || "General Studies";
-      const secId = `sec_custom_${sectionNames.indexOf(secName)}`;
-      const qOrder = sectionCounters[secName]++;
-
-      return {
-        id: item.id || `q_custom_${id}_${idx}`,
-        sectionId: secId,
-        questionType: "mcq",
-        orderIndex: qOrder,
-        correctOptionIndex: item.correctIndex ?? 0,
-        content: {
-          en: {
-            questionText: item.textEn,
-            options: item.optionsEn || [],
-            imageUrl: item.imageUrlEn || item.imageUrl,
-            comprehension: item.comprehensionEn || item.comprehension
-          },
-          hi: {
-            questionText: item.textHi,
-            options: item.optionsHi || [],
-            imageUrl: item.imageUrlHi || item.imageUrl,
-            comprehension: item.comprehensionHi || item.comprehension
-          }
-        },
-        explanation: {
-          en: item.explanationEn || "Detailed explanation under review.",
-          hi: item.explanationHi || "विस्तृत विवरण समीक्षा के अधीन है।"
+    } else {
+      // Dynamically build sections based on unique question section fields
+      const sectionNames: string[] = [];
+      customQs.forEach((item: any) => {
+        const sec = item.section || "General Studies";
+        if (!sectionNames.includes(sec)) {
+          sectionNames.push(sec);
         }
-      };
-    });
+      });
+
+      sections = sectionNames.map((name, idx) => ({
+        id: `sec_custom_${idx}`,
+        name,
+        orderIndex: idx,
+        positiveMark,
+        negativeMark,
+        durationSeconds: hasSectionalTiming && sectionalTimingsMins[idx] ? sectionalTimingsMins[idx] * 60 : undefined,
+      }));
+
+      const sectionCounters: Record<string, number> = {};
+      sectionNames.forEach(name => {
+        sectionCounters[name] = 0;
+      });
+
+      questions = customQs.map((item: any, idx: number) => {
+        const secName = item.section || "General Studies";
+        const secId = `sec_custom_${sectionNames.indexOf(secName)}`;
+        const qOrder = sectionCounters[secName]++;
+
+        return {
+          id: item.id || `q_custom_${id}_${idx}`,
+          sectionId: secId,
+          questionType: "mcq",
+          orderIndex: qOrder,
+          correctOptionIndex: item.correctIndex ?? 0,
+          content: {
+            en: {
+              questionText: item.textEn,
+              options: item.optionsEn || [],
+              imageUrl: item.imageUrlEn || item.imageUrl,
+              comprehension: item.comprehensionEn || item.comprehension
+            },
+            hi: {
+              questionText: item.textHi,
+              options: item.optionsHi || [],
+              imageUrl: item.imageUrlHi || item.imageUrl,
+              comprehension: item.comprehensionHi || item.comprehension
+            }
+          },
+          explanation: {
+            en: item.explanationEn || "Detailed explanation under review.",
+            hi: item.explanationHi || "विस्तृत विवरण समीक्षा के अधीन है।"
+          }
+        };
+      });
+    }
   }
 
   if (!hasCustomQuestions) {
@@ -218,6 +280,83 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
             en: { questionText: "Which is the largest fresh water lake in India?", options: ["Chilika Lake", "Dal Lake", "Wular Lake", "Vembanad Lake"] },
             hi: { questionText: "भारत में मीठे पानी की सबसे बड़ी झील कौन सी है?", options: ["चिल्का झील", "डल झील", "वुलर झील", "वेम्बनाड झील"] }
           }
+        }
+      ];
+    } else if (id.includes('ctet')) {
+      const isPaper1 = id.includes('paper1') || id.includes('paper-1');
+      title = isPaper1 
+        ? "CTET 2026 Paper-I (Primary Class I-V) Mock Paper" 
+        : "CTET 2026 Paper-II (Mathematics & Science)";
+      duration = 9000; // 150 Mins
+
+      const selectedL1 = lang1 || 'English';
+      const selectedL2 = lang2 || 'Hindi';
+
+      if (isPaper1) {
+        sections = [
+          { id: "sec_cdp", name: "Child Development & Pedagogy", orderIndex: 0, positiveMark: 1, negativeMark: 0 },
+          { id: "sec_math", name: "Mathematics", orderIndex: 1, positiveMark: 1, negativeMark: 0 },
+          { id: "sec_evs", name: "Environmental Studies (EVS)", orderIndex: 2, positiveMark: 1, negativeMark: 0 },
+          { id: "sec_lang1", name: `Language - I (${selectedL1})`, orderIndex: 3, positiveMark: 1, negativeMark: 0 },
+          { id: "sec_lang2", name: `Language - II (${selectedL2})`, orderIndex: 4, positiveMark: 1, negativeMark: 0 },
+        ];
+      } else {
+        sections = [
+          { id: "sec_cdp", name: "Child Development & Pedagogy", orderIndex: 0, positiveMark: 1, negativeMark: 0 },
+          { id: "sec_math_sci", name: "Mathematics & Science", orderIndex: 1, positiveMark: 1, negativeMark: 0 },
+          { id: "sec_social", name: "Social Studies", orderIndex: 2, positiveMark: 1, negativeMark: 0 },
+          { id: "sec_lang1", name: `Language - I (${selectedL1})`, orderIndex: 3, positiveMark: 1, negativeMark: 0 },
+          { id: "sec_lang2", name: `Language - II (${selectedL2})`, orderIndex: 4, positiveMark: 1, negativeMark: 0 },
+        ];
+      }
+
+      let qLang1Content = {
+        en: { questionText: "Read the passage: What is the primary objective of Language-I acquisition in early childhood?", options: ["Natural exposure and meaningful context", "Rote memorization of rules", "Direct grammar translation", "Strict penalization of errors"] },
+        hi: { questionText: "भाषा-I (Language-I) अर्जन के संदर्भ में प्राथमिक उद्देश्य क्या है?", options: ["स्वाभाविक अवसर एवं सार्थक परिवेश", "नियमों को रटना", "व्याकरण अनुवाद", "त्रुटियों पर दंड देना"] }
+      };
+      if (selectedL1 === 'Hindi') {
+        qLang1Content = {
+          en: { questionText: "भाषा-I (हिंदी): 'प्राथमिक स्तर पर हिंदी भाषा शिक्षण का मुख्य उद्देश्य क्या है?'", options: ["बच्चों को विभिन्न संदर्भों में भाषा प्रयोग की क्षमता विकसित करना", "केवल पाठ्यपुस्तक पढ़ाना", "व्याकरण के नियम रटाना", "सुलेख लिखवाना"] },
+          hi: { questionText: "भाषा-I (हिंदी): 'प्राथमिक स्तर पर हिंदी भाषा शिक्षण का मुख्य उद्देश्य क्या है?'", options: ["बच्चों को विभिन्न संदर्भों में भाषा प्रयोग की क्षमता विकसित करना", "केवल पाठ्यपुस्तक पढ़ाना", "व्याकरण के नियम रटाना", "सुलेख लिखवाना"] }
+        };
+      } else if (selectedL1 === 'Sanskrit') {
+        qLang1Content = {
+          en: { questionText: "Language-I (Sanskrit): 'संस्कृत भाषा शिक्षणस्य मुख्याद्देश्यं किम् अस्ति?'", options: ["संभाषणकौशलवर्धनम् एवं बोधात्मकता", "केवललेखनम्", "कण्ठस्थीकरणम्", "अनुवादमात्रम्"] },
+          hi: { questionText: "भाषा-I (संस्कृत): 'संस्कृत भाषा शिक्षणस्य मुख्याद्देश्यं किम् अस्ति?'", options: ["संभाषणकौशलवर्धनम् एवं बोधात्मकता", "केवललेखनम्", "कण्ठस्थीकरणम्", "अनुवादमात्रम्"] }
+        };
+      }
+
+      let qLang2Content = {
+        en: { questionText: "Language-II (Hindi): 'द्वितीय भाषा (Language-II) के रूप में हिंदी शिक्षण की प्रभावकारी विधि कौन सी है?'", options: ["संप्रेषणात्मक दृष्टिकोण (Communicative Approach)", "केवल व्याकरण अनुवाद विधि", "रटना", "पाठ्यपुस्तक तक सीमित रहना"] },
+        hi: { questionText: "भाषा-II (हिंदी): 'द्वितीय भाषा (Language-II) के रूप में हिंदी शिक्षण की प्रभावकारी विधि कौन सी है?'", options: ["संप्रेषणात्मक दृष्टिकोण (Communicative Approach)", "केवल व्याकरण अनुवाद विधि", "रटना", "पाठ्यपुस्तक तक सीमित रहना"] }
+      };
+      if (selectedL2 === 'English') {
+        qLang2Content = {
+          en: { questionText: "Language-II (English): Which approach emphasizes learning language through meaningful interaction in real-world contexts?", options: ["Communicative Language Teaching (CLT)", "Grammar Translation Method", "Audio-Lingual Method", "Direct Method"] },
+          hi: { questionText: "Language-II (English): Which approach emphasizes learning language through meaningful interaction in real-world contexts?", options: ["Communicative Language Teaching (CLT)", "Grammar Translation Method", "Audio-Lingual Method", "Direct Method"] }
+        };
+      } else if (selectedL2 === 'Sanskrit') {
+        qLang2Content = {
+          en: { questionText: "Language-II (Sanskrit): 'कस्य विधेः अपरान्नाम पाठ्यपुस्तकविधिः इति अस्ति?'", options: ["डॉ. वेस्ट-महोदयस्य विधिः", "भण्डारकर-विधिः", "आगमन-विधिः", "निगमन-विधिः"] },
+          hi: { questionText: "भाषा-II (संस्कृत): 'कस्य विधेः अपरान्नाम पाठ्यपुस्तकविधिः इति अस्ति?'", options: ["डॉ. वेस्ट-महोदयस्य विधिः", "भण्डारकर-विधिः", "आगमन-विधिः", "निगमन-विधिः"] }
+        };
+      }
+
+      questions = [
+        {
+          id: "q_cdp1", sectionId: "sec_cdp", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
+          content: {
+            en: { questionText: "According to Jean Piaget, at which stage of cognitive development does a child develop object permanence?", options: ["Sensorimotor Stage", "Pre-operational Stage", "Concrete Operational Stage", "Formal Operational Stage"] },
+            hi: { questionText: "जीन पियाजे के अनुसार, संज्ञानात्मक विकास के किस चरण में बच्चा 'वस्तु स्थायित्व' (Object Permanence) विकसित करता है?", options: ["संवेदी-गामक अवस्था (Sensorimotor)", "पूर्व-संक्रियात्मक अवस्था", "मूर्त संक्रियात्मक अवस्था", "अमूर्त संक्रियात्मक अवस्था"] }
+          }
+        },
+        {
+          id: "q_l1_1", sectionId: "sec_lang1", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
+          content: qLang1Content
+        },
+        {
+          id: "q_l2_1", sectionId: "sec_lang2", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
+          content: qLang2Content
         }
       ];
     } else {

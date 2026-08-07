@@ -60,15 +60,6 @@ export default function IndependenceDayBanner() {
               <div className="w-1 h-1 bg-white/60 rounded-full absolute top-1 left-1" />
             </div>
           </div>
-
-          <button
-            onClick={() => setDismissed(true)}
-            className="p-1 rounded-full hover:bg-white/20 text-white/90 hover:text-white transition-colors"
-            title="Dismiss Independence Day Banner"
-            aria-label="Close"
-          >
-            <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </button>
         </div>
       </div>
     </div>

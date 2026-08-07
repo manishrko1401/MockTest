@@ -26,7 +26,7 @@ import MathJaxText from '../../lib/MathJaxText';
 import { generateExamSession } from '../../lib/examUtils';
 
 
-function TcsIonEngine({ testId, initialExamLanguage }: { testId: string; initialExamLanguage?: 'en' | 'hi' }) {
+function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang2 }: { testId: string; initialExamLanguage?: 'en' | 'hi'; selectedLang1?: string; selectedLang2?: string }) {
   const {
     state,
     initSession,
@@ -130,7 +130,7 @@ function TcsIonEngine({ testId, initialExamLanguage }: { testId: string; initial
         console.error("Error fetching custom questions:", err);
       }
 
-      const examSession = generateExamSession(testId, examCatalog, customQs);
+      const examSession = generateExamSession(testId, examCatalog, customQs, selectedLang1, selectedLang2);
 
       // 1. Check server for an ongoing session first
       const ongoingRecord = currentUser?.testSessions?.find(
@@ -1853,6 +1853,197 @@ function TcsIonEngine({ testId, initialExamLanguage }: { testId: string; initial
   );
 }
 
+function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: (selectedLang: 'en' | 'hi', lang1?: string, lang2?: string) => void }) {
+  const { theme, toggleTheme } = useAuth();
+  const [defaultLang, setDefaultLang] = useState<string>('');
+  const [lang1, setLang1] = useState<string>('');
+  const [lang2, setLang2] = useState<string>('');
+  const [agreed, setAgreed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  const isFormValid = 
+    defaultLang !== '' && defaultLang !== '-- Select --' &&
+    lang1 !== '' && lang1 !== '-- Select --' &&
+    lang2 !== '' && lang2 !== '-- Select --' &&
+    agreed;
+
+  const lowerId = (testId || '').toLowerCase();
+  const isPaper2 = lowerId.includes('paper2') || lowerId.includes('paper-2') || lowerId.includes('paper_2') || lowerId.includes('paper 2') || lowerId.includes('p2') || lowerId.includes('ctet2');
+  const totalSections = isPaper2 ? 4 : 5;
+  const lang1SectionText = isPaper2 ? "3rd" : "4th";
+  const lang2SectionText = isPaper2 ? "4th" : "5th";
+
+  return (
+    <div className="min-h-screen bg-[#f4f6f9] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+      {/* Top Header bar */}
+      <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between shadow-sm">
+        <h2 className="font-extrabold text-sm tracking-wide flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-blue-600 animate-pulse" /> CTET Instructions Panel
+        </h2>
+        
+        <button 
+          onClick={toggleTheme}
+          className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-700"
+          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+        >
+          {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+        </button>
+      </header>
+
+      {/* Main Container matching image */}
+      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 md:p-8">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 md:p-8 shadow-sm space-y-5">
+          
+          {/* Header Metadata */}
+          <div className="flex items-center justify-between font-bold text-xs sm:text-sm text-slate-900 dark:text-white pb-3">
+            <span>Duration: 150 Mins</span>
+            <span>Maximum Marks: 150</span>
+          </div>
+
+          {/* Section 1: Instructions List */}
+          <div className="space-y-3">
+            <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+              Read the following instructions carefully.
+            </h3>
+
+            <ol className="list-decimal pl-5 space-y-2 text-xs text-slate-700 dark:text-slate-300 font-normal leading-relaxed">
+              <li>The test contain {totalSections} sections having total 150 questions.</li>
+              <li>Each question has 4 options out of which only one is correct.</li>
+              <li>You have to finish the test in 150 minutes.</li>
+              <li>There is no negative marking in this test.</li>
+              <li>You will be awarded 1 mark for each correct answer.</li>
+              <li>There is no negative marking for the questions that you have not attempted.</li>
+              <li>You can write this test only once. Make sure that you complete the test before you submit the test and/or close the browser.</li>
+            </ol>
+          </div>
+
+          {/* Divider */}
+          <hr className="border-slate-200 dark:border-slate-800 my-4" />
+
+          {/* Section 2: Language Selection Controls */}
+          <div className="space-y-4 text-xs">
+            {/* 1. Choose your default language */}
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="font-bold text-slate-900 dark:text-white">
+                  Choose your default language:
+                </label>
+                <select
+                  value={defaultLang}
+                  onChange={(e) => setDefaultLang(e.target.value)}
+                  className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-xs outline-none cursor-pointer font-normal text-slate-900 dark:text-white"
+                >
+                  <option value="">-- Select --</option>
+                  <option value="English">English</option>
+                  <option value="Hindi">Hindi</option>
+                </select>
+              </div>
+              <p className="text-[11px] text-red-600 dark:text-red-400 font-medium">
+                Please note all questions will appear in your default language. This language can be changed for a particular question later on
+              </p>
+            </div>
+
+            {/* 2. Language - I */}
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="font-bold text-slate-900 dark:text-white">
+                  Language - I:
+                </label>
+                <select
+                  value={lang1}
+                  onChange={(e) => setLang1(e.target.value)}
+                  className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-xs outline-none cursor-pointer font-normal text-slate-900 dark:text-white"
+                >
+                  <option value="">-- Select --</option>
+                  <option value="English">English</option>
+                  <option value="Hindi">Hindi</option>
+                  <option value="Sanskrit">Sanskrit</option>
+                </select>
+              </div>
+              <p className="text-[11px] text-red-600 dark:text-red-400 font-medium">
+                Please note all questions in {lang1SectionText} section will appear based on your selection here. This CANNOT be changed later on once the test starts
+              </p>
+            </div>
+
+            {/* 3. Language - II */}
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="font-bold text-slate-900 dark:text-white">
+                  Language - II:
+                </label>
+                <select
+                  value={lang2}
+                  onChange={(e) => setLang2(e.target.value)}
+                  className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-xs outline-none cursor-pointer font-normal text-slate-900 dark:text-white"
+                >
+                  <option value="">-- Select --</option>
+                  <option value="English">English</option>
+                  <option value="Hindi">Hindi</option>
+                  <option value="Sanskrit">Sanskrit</option>
+                </select>
+              </div>
+              <p className="text-[11px] text-red-600 dark:text-red-400 font-medium">
+                Please note all questions in {lang2SectionText} section will appear based on your selection here. This CANNOT be changed later on once the test starts
+              </p>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <hr className="border-slate-200 dark:border-slate-800 my-4" />
+
+          {/* Section 3: Declaration */}
+          <div className="space-y-2">
+            <p className="font-bold text-xs text-slate-900 dark:text-white">Declaration:</p>
+            <label className="flex items-center gap-2.5 cursor-pointer select-none text-xs text-slate-800 dark:text-slate-200 font-normal">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+              />
+              <span>I have understood and agree to all the instructions.</span>
+            </label>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between pt-4">
+            <Link
+              href="/mock-tests"
+              className="px-5 py-2 rounded bg-[#9ec5fe]/70 hover:bg-[#8bb7fa] dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all"
+            >
+              Previous
+            </Link>
+
+            <button
+              onClick={() => {
+                if (isFormValid) {
+                  const chosenExamLang = defaultLang === 'Hindi' ? 'hi' : 'en';
+                  onStart(chosenExamLang, lang1, lang2);
+                }
+              }}
+              disabled={!isFormValid}
+              className={`px-6 py-2 rounded text-xs font-bold transition-all shadow-sm ${
+                isFormValid
+                  ? 'bg-[#46cae4] hover:bg-[#36b7d1] text-white cursor-pointer active:scale-95'
+                  : 'bg-[#a2e5f2] dark:bg-slate-800 text-white/70 dark:text-slate-500 cursor-not-allowed shadow-none'
+              }`}
+            >
+              I am ready to begin
+            </button>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  );
+}
+
 function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: (selectedLang: 'en' | 'hi') => void }) {
   const { theme, toggleTheme, language: authLang } = useAuth();
   const [agreed, setAgreed] = useState(false);
@@ -2064,6 +2255,8 @@ export default function DynamicExamPage() {
   const [mounted, setMounted] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [selectedExamLang, setSelectedExamLang] = useState<'en' | 'hi'>('en');
+  const [selectedLang1, setSelectedLang1] = useState<string>('English');
+  const [selectedLang2, setSelectedLang2] = useState<string>('Hindi');
 
   useEffect(() => {
     setMounted(true);
@@ -2125,13 +2318,24 @@ export default function DynamicExamPage() {
     }
   };
 
+  const handleCtetStart = (chosenLang: 'en' | 'hi', l1?: string, l2?: string) => {
+    if (l1) setSelectedLang1(l1);
+    if (l2) setSelectedLang2(l2);
+    handleStart(chosenLang);
+  };
+
+  const isCtetFullTest = (testId || '').toLowerCase().includes('ctet');
+
   if (!isConfirmed) {
+    if (isCtetFullTest) {
+      return <CtetExamInstructionsScreen testId={testId} onStart={handleCtetStart} />;
+    }
     return <ExamInstructionsScreen testId={testId} onStart={handleStart} />;
   }
 
   return (
     <TestEngineProvider onStateSync={handleSaveSync} syncIntervalSeconds={12}>
-      <TcsIonEngine testId={testId} initialExamLanguage={selectedExamLang} />
+      <TcsIonEngine testId={testId} initialExamLanguage={selectedExamLang} selectedLang1={selectedLang1} selectedLang2={selectedLang2} />
     </TestEngineProvider>
   );
 }
