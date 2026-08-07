@@ -286,13 +286,9 @@ export async function POST(request: Request) {
         return await handleEditMockTestTitle(data);
       case 'delete-mocktest':
         return await handleDeleteMockTest(data);
-      case 'upload-question-chunk':
-        return await handleUploadQuestionChunk(data);
       case 'save-custom-questions':
       case 'bulk-import-questions':
         return await handleSaveCustomQuestions(data || body);
-      case 'get-presigned-upload-url':
-        return await handleGetPresignedUploadUrl(data);
       case 'get-custom-questions':
         return await handleGetCustomQuestions(data || body);
       case 'reorder-categories':

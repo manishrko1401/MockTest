@@ -1056,50 +1056,7 @@ export default function AdminAnalytics() {
       return;
     }
     try {
-      const CHUNK_SIZE = 30; // ~30 questions per chunk stays well under 4.5MB Vercel limit
-      const totalQuestions = parsedQuestions.length;
-      const totalChunks = Math.ceil(totalQuestions / CHUNK_SIZE);
-      const safeKeyId = selectedUploadTestId.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
-
-      showToast(`Uploading ${totalQuestions} questions in ${totalChunks} chunk(s)...`);
-
-      // Step 1: Upload each chunk to S3 via our API (each chunk is small enough for Vercel)
-      const chunkUrls: string[] = [];
-      for (let i = 0; i < totalChunks; i++) {
-        const chunk = parsedQuestions.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-        const chunkRes = await fetch('/api/db', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-admin-key': 'super_secret_admin_key_2026'
-          },
-          body: JSON.stringify({
-            action: 'upload-question-chunk',
-            data: { 
-              testId: selectedUploadTestId,
-              chunkIndex: i,
-              totalChunks: totalChunks,
-              questions: chunk
-            }
-          })
-        });
-
-        if (!chunkRes.ok) {
-          const errText = await chunkRes.text();
-          showToast(`Error uploading chunk ${i + 1}/${totalChunks}: ${errText}`);
-          return;
-        }
-
-        const chunkData = await chunkRes.json();
-        if (!chunkData.success) {
-          showToast(`Error in chunk ${i + 1}/${totalChunks}: ${chunkData.error || 'Unknown'}`);
-          return;
-        }
-        chunkUrls.push(chunkData.url);
-      }
-
-      // Step 2: Tell server to merge all chunks and save the final reference
-      const mergeRes = await fetch('/api/db', {
+      const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -1110,18 +1067,17 @@ export default function AdminAnalytics() {
           data: { 
             testId: selectedUploadTestId, 
             title: selectedUploadTestId,
-            chunkUrls: chunkUrls,
-            questionsCount: totalQuestions,
+            questions: parsedQuestions,
             sessionId: currentUser?.currentSessionId
           }
         })
       });
-      const data = await mergeRes.json();
+      const data = await res.json();
       if (data.success) {
-        showToast(`Successfully saved ${totalQuestions} questions to mock test!`);
+        showToast(`Successfully saved ${parsedQuestions.length} questions to mock test!`);
         setUploadStatus({
           type: 'success',
-          message: `Custom question paper of ${totalQuestions} question(s) successfully uploaded and saved for the target mock test!`
+          message: `Custom question paper of ${parsedQuestions.length} question(s) successfully uploaded and saved for the target mock test!`
         });
         refreshCatalog();
       } else {
