@@ -2163,6 +2163,32 @@ async function handleSaveCustomQuestions(rawPayload: any) {
     }
   }
 
+  // If direct S3 URL provided and question count is 0, read object from Tigris S3 using GetObjectCommand to auto-detect total question count
+  if (s3Url && qCount === 0 && bucketName) {
+    try {
+      const urlObj = new URL(s3Url);
+      const pathname = decodeURIComponent(urlObj.pathname);
+      const key = pathname.startsWith(`/${bucketName}/`)
+        ? pathname.substring(bucketName.length + 2)
+        : pathname.startsWith('/') ? pathname.substring(1) : pathname;
+
+      const s3Obj = await s3Client.send(new GetObjectCommand({
+        Bucket: bucketName,
+        Key: key
+      }));
+
+      if (s3Obj.Body) {
+        const strData = await s3Obj.Body.transformToString();
+        const jsonArr = JSON.parse(strData);
+        if (Array.isArray(jsonArr)) {
+          qCount = jsonArr.length;
+        }
+      }
+    } catch (e: any) {
+      console.warn("Could not auto-detect question count from direct S3 URL via GetObjectCommand:", e?.message || e);
+    }
+  }
+
   // Only upload to S3 if we have raw questions and no pre-uploaded URL
   if (!s3Url && hasQuestions && bucketName) {
     try {
