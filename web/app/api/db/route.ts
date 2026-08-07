@@ -286,6 +286,8 @@ export async function POST(request: Request) {
         return await handleEditMockTestTitle(data);
       case 'delete-mocktest':
         return await handleDeleteMockTest(data);
+      case 'upload-question-chunk':
+        return await handleUploadQuestionChunk(data);
       case 'save-custom-questions':
       case 'bulk-import-questions':
         return await handleSaveCustomQuestions(data || body);
@@ -2004,6 +2006,45 @@ async function handleReorderMockTests(data: any) {
   return NextResponse.json({ success: true });
 }
 
+async function handleUploadQuestionChunk(data: any) {
+  const testId = data?.testId;
+  const chunkIndex = data?.chunkIndex ?? 0;
+  const questions = data?.questions;
+
+  if (!testId) {
+    return NextResponse.json({ success: false, error: 'testId is required' }, { status: 400 });
+  }
+  if (!questions || !Array.isArray(questions)) {
+    return NextResponse.json({ success: false, error: 'questions array is required' }, { status: 400 });
+  }
+
+  const bucketName = process.env.TIGRIS_BUCKET_NAME;
+  if (!bucketName) {
+    return NextResponse.json({ success: false, error: 'S3 storage not configured' }, { status: 500 });
+  }
+
+  const safeKeyId = String(testId).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+  const fileName = `chunks_${safeKeyId}_part${chunkIndex}.json`;
+
+  try {
+    const fileBuffer = Buffer.from(JSON.stringify(questions));
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: fileName,
+        Body: fileBuffer,
+        ContentType: 'application/json',
+      })
+    );
+
+    const url = `${process.env.TIGRIS_ENDPOINT || "https://fly.storage.tigris.dev"}/${bucketName}/${fileName}`;
+    return NextResponse.json({ success: true, url, chunkIndex });
+  } catch (err: any) {
+    console.error(`Failed to upload chunk ${chunkIndex}:`, err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
 async function handleGetPresignedUploadUrl(data: any) {
   const testId = data?.testId;
   if (!testId) {
@@ -2047,18 +2088,20 @@ async function handleSaveCustomQuestions(rawPayload: any) {
   const categoryId = payload.categoryId || rawPayload?.categoryId;
   const questions = payload.questions || rawPayload?.questions;
   const questionsUrl = payload.questionsUrl || rawPayload?.questionsUrl;
+  const chunkUrls = payload.chunkUrls || rawPayload?.chunkUrls;
   const questionsCountFromPayload = payload.questionsCount || rawPayload?.questionsCount;
 
   if (!testId) {
     return NextResponse.json({ success: false, error: 'Target mock test ID is required' }, { status: 400 });
   }
 
-  // Accept either a pre-uploaded S3 URL or a raw questions array
+  // Accept: raw questions array, a pre-uploaded S3 URL, or chunk URLs to merge
   const hasQuestions = questions && Array.isArray(questions) && questions.length > 0;
   const hasQuestionsUrl = questionsUrl && typeof questionsUrl === 'string';
+  const hasChunkUrls = chunkUrls && Array.isArray(chunkUrls) && chunkUrls.length > 0;
 
-  if (!hasQuestions && !hasQuestionsUrl) {
-    return NextResponse.json({ success: false, error: 'Questions array or questionsUrl is required' }, { status: 400 });
+  if (!hasQuestions && !hasQuestionsUrl && !hasChunkUrls) {
+    return NextResponse.json({ success: false, error: 'Questions array, questionsUrl, or chunkUrls is required' }, { status: 400 });
   }
 
   const rawTargetId = String(testId).trim();
@@ -2067,7 +2110,58 @@ async function handleSaveCustomQuestions(rawPayload: any) {
 
   const bucketName = process.env.TIGRIS_BUCKET_NAME;
   let s3Url: string | null = hasQuestionsUrl ? questionsUrl : null;
-  const qCount = hasQuestions ? questions.length : (questionsCountFromPayload ? Number(questionsCountFromPayload) : 0);
+  let mergedQuestions: any[] | null = hasQuestions ? questions : null;
+  let qCount = hasQuestions ? questions.length : (questionsCountFromPayload ? Number(questionsCountFromPayload) : 0);
+
+  // If chunk URLs provided, fetch each chunk from S3, merge, and upload combined file
+  if (hasChunkUrls && bucketName) {
+    try {
+      const allQuestions: any[] = [];
+      for (const chunkUrl of chunkUrls) {
+        const chunkRes = await fetch(chunkUrl);
+        if (chunkRes.ok) {
+          const chunkData = await chunkRes.json();
+          if (Array.isArray(chunkData)) {
+            allQuestions.push(...chunkData);
+          }
+        }
+      }
+
+      mergedQuestions = allQuestions;
+      qCount = allQuestions.length;
+
+      // Upload the merged combined file
+      const fileName = `questions_${safeKeyId}.json`;
+      const fileBuffer = Buffer.from(JSON.stringify(allQuestions));
+      await s3Client.send(
+        new PutObjectCommand({
+          Bucket: bucketName,
+          Key: fileName,
+          Body: fileBuffer,
+          ContentType: "application/json",
+        })
+      );
+      s3Url = `${process.env.TIGRIS_ENDPOINT || "https://fly.storage.tigris.dev"}/${bucketName}/${fileName}`;
+
+      // Clean up chunk files from S3
+      for (const chunkUrl of chunkUrls) {
+        try {
+          const urlObj = new URL(chunkUrl);
+          const chunkKey = urlObj.pathname.startsWith(`/${bucketName}/`)
+            ? urlObj.pathname.substring(bucketName.length + 2)
+            : urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
+          if (chunkKey) {
+            await s3Client.send(new DeleteObjectCommand({ Bucket: bucketName, Key: chunkKey }));
+          }
+        } catch (cleanupErr) {
+          // Non-critical: chunk cleanup failure won't break the flow
+        }
+      }
+    } catch (err: any) {
+      console.error("Failed to merge chunks:", err);
+      return NextResponse.json({ success: false, error: 'Failed to merge question chunks: ' + err.message }, { status: 500 });
+    }
+  }
 
   // Only upload to S3 if we have raw questions and no pre-uploaded URL
   if (!s3Url && hasQuestions && bucketName) {
@@ -2090,7 +2184,7 @@ async function handleSaveCustomQuestions(rawPayload: any) {
     }
   }
 
-  const questionsDataToStore = s3Url ? { url: s3Url } : questions;
+  const questionsDataToStore = s3Url ? { url: s3Url } : (mergedQuestions || questions);
 
   try {
     // 1. Check if the target mock test already exists in the database by slug or raw ID
