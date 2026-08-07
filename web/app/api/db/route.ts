@@ -2006,13 +2006,19 @@ async function handleSaveCustomQuestions(rawPayload: any) {
   const testId = payload.testId || rawPayload?.testId;
   const categoryId = payload.categoryId || rawPayload?.categoryId;
   const questions = payload.questions || rawPayload?.questions;
+  const questionsUrl = payload.questionsUrl || rawPayload?.questionsUrl;
+  const questionsCountFromPayload = payload.questionsCount || rawPayload?.questionsCount;
 
   if (!testId) {
     return NextResponse.json({ success: false, error: 'Target mock test ID is required' }, { status: 400 });
   }
 
-  if (!questions || !Array.isArray(questions)) {
-    return NextResponse.json({ success: false, error: 'Questions array is required' }, { status: 400 });
+  // Accept either a pre-uploaded S3 URL or a raw questions array
+  const hasQuestions = questions && Array.isArray(questions) && questions.length > 0;
+  const hasQuestionsUrl = questionsUrl && typeof questionsUrl === 'string';
+
+  if (!hasQuestions && !hasQuestionsUrl) {
+    return NextResponse.json({ success: false, error: 'Questions array or questionsUrl is required' }, { status: 400 });
   }
 
   const rawTargetId = String(testId).trim();
@@ -2020,9 +2026,11 @@ async function handleSaveCustomQuestions(rawPayload: any) {
   const safeKeyId = targetId;
 
   const bucketName = process.env.TIGRIS_BUCKET_NAME;
-  let s3Url: string | null = null;
+  let s3Url: string | null = hasQuestionsUrl ? questionsUrl : null;
+  const qCount = hasQuestions ? questions.length : (questionsCountFromPayload ? Number(questionsCountFromPayload) : 0);
 
-  if (bucketName) {
+  // Only upload to S3 if we have raw questions and no pre-uploaded URL
+  if (!s3Url && hasQuestions && bucketName) {
     try {
       const fileName = `questions_${safeKeyId}.json`;
       const fileBuffer = Buffer.from(JSON.stringify(questions));
@@ -2061,8 +2069,8 @@ async function handleSaveCustomQuestions(rawPayload: any) {
         where: { id: existingMockTest.id },
         data: {
           customQuestions: questionsDataToStore,
-          questionsCount: questions.length,
-          maxMarks: questions.length * 2,
+          questionsCount: qCount,
+          maxMarks: qCount * 2,
         }
       });
     } else {
@@ -2121,8 +2129,8 @@ async function handleSaveCustomQuestions(rawPayload: any) {
           testSeriesId: targetSeries.id,
           title: payload.title || rawTargetId || `Test Paper (${targetId})`,
           durationMinutes: payload.durationMinutes || 150,
-          questionsCount: questions.length,
-          maxMarks: questions.length * 2,
+          questionsCount: qCount,
+          maxMarks: qCount * 2,
           requiredTierName: 'None',
           customQuestions: questionsDataToStore,
         }
@@ -2141,7 +2149,7 @@ async function handleSaveCustomQuestions(rawPayload: any) {
   return NextResponse.json({
     success: true,
     url: s3Url,
-    questionsCount: questions.length
+    questionsCount: qCount
   });
 }
 

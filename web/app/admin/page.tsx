@@ -1056,6 +1056,32 @@ export default function AdminAnalytics() {
       return;
     }
     try {
+      // Step 1: Upload questions JSON to S3 via /api/upload (FormData bypasses body size limits)
+      const questionsBlob = new Blob([JSON.stringify(parsedQuestions)], { type: 'application/json' });
+      const safeKeyId = selectedUploadTestId.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+      const questionsFile = new File([questionsBlob], `questions_${safeKeyId}.json`, { type: 'application/json' });
+      
+      const formData = new FormData();
+      formData.append('file', questionsFile);
+      
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errText = await uploadRes.text();
+        showToast('Error uploading questions file: ' + errText);
+        return;
+      }
+
+      const uploadData = await uploadRes.json();
+      if (!uploadData.success || !uploadData.url) {
+        showToast('Error: Failed to upload questions file to storage.');
+        return;
+      }
+
+      // Step 2: Send only the S3 URL + metadata to /api/db (small payload, no body size issue)
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 
@@ -1067,7 +1093,8 @@ export default function AdminAnalytics() {
           data: { 
             testId: selectedUploadTestId, 
             title: selectedUploadTestId,
-            questions: parsedQuestions,
+            questionsUrl: uploadData.url,
+            questionsCount: parsedQuestions.length,
             sessionId: currentUser?.currentSessionId
           }
         })
