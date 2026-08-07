@@ -15,6 +15,7 @@ export interface QuestionContent {
   options: OptionContent[] | string[]; // Can support raw strings or rich option objects
   imageUrl?: string;
   mathLatex?: string;
+  comprehension?: string;
 }
 
 export interface Question {
