@@ -42,6 +42,8 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
   let catalogTest: MockTestItem | null = null;
   let hasSectionalTiming = false;
   let sectionalTimingsMins: number[] = [];
+  let foundCategoryName = '';
+  let foundSubcategoryName = '';
 
   if (examCatalog) {
     for (const cat of examCatalog) {
@@ -51,6 +53,8 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
             const found = subSub.tests.find(t => t.id === id);
             if (found) {
               catalogTest = found;
+              foundCategoryName = cat.name;
+              foundSubcategoryName = sub.name || subSub.name;
               break;
             }
           }
@@ -58,6 +62,8 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
           const found = sub.tests.find(t => t.id === id);
           if (found) {
             catalogTest = found;
+            foundCategoryName = cat.name;
+            foundSubcategoryName = sub.name;
             break;
           }
         }
@@ -359,9 +365,33 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
           content: qLang2Content
         }
       ];
+    } else if (id.includes('rpsc_ras') || id.includes('rpsc-ras') || id.includes('rpsc__ras') || id.includes('rpsc') || (catalogTest && catalogTest.title && catalogTest.title.toLowerCase().includes('rpsc')) || (foundCategoryName.toLowerCase().includes('rpsc') && (foundSubcategoryName.toLowerCase().includes('ras') || (catalogTest && catalogTest.title && catalogTest.title.toLowerCase().includes('ras'))))) {
+      title = catalogTest ? catalogTest.title : "RPSC RAS Prelims Full Test - 1";
+      duration = catalogTest && catalogTest.durationMinutes ? catalogTest.durationMinutes * 60 : 10;
+      const positiveMark = 1.33;
+      const negativeMark = 0.44;
+      sections = [
+        { id: "sec_rpsc_gs", name: "General Knowledge & General Science", orderIndex: 0, positiveMark, negativeMark },
+      ];
+      questions = [
+        {
+          id: "q_rpsc_1", sectionId: "sec_rpsc_gs", questionType: "mcq", orderIndex: 0, correctOptionIndex: 0,
+          content: {
+            en: { questionText: "Which city of Rajasthan is famous for Blue Pottery art?", options: ["Jaipur", "Jodhpur", "Udaipur", "Bikaner"] },
+            hi: { questionText: "राजस्थान का कौन सा शहर ब्लू पॉटरी कला के लिए प्रसिद्ध है?", options: ["जयपुर", "जोधपुर", "उदयपुर", "बीकानेर"] }
+          }
+        },
+        {
+          id: "q_rpsc_2", sectionId: "sec_rpsc_gs", questionType: "mcq", orderIndex: 1, correctOptionIndex: 1,
+          content: {
+            en: { questionText: "In which year was the Keoladeo National Park included in UNESCO World Heritage list?", options: ["1981", "1985", "1990", "1992"] },
+            hi: { questionText: "केवलादेव राष्ट्रीय उद्यान को किस वर्ष यूनेस्को विश्व धरोहर सूची में शामिल किया गया था?", options: ["1981", "1985", "1990", "1992"] }
+          }
+        }
+      ];
     } else {
-      title = "Mock Test Assessment Series - General Mock Test";
-      duration = 3600;
+      title = catalogTest ? catalogTest.title : "Mock Test Assessment Series - General Mock Test";
+      duration = catalogTest ? catalogTest.durationMinutes * 60 : 3600;
       sections = [
         { id: "sec_paper1", name: "Aptitude & General Studies", orderIndex: 0, positiveMark, negativeMark,
           durationSeconds: hasSectionalTiming && sectionalTimingsMins[0] ? sectionalTimingsMins[0] * 60 : undefined },
@@ -389,6 +419,8 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
     sessionId: `session_${id}_${Date.now().toString().substring(8)}`,
     testId: id,
     testTitle: title,
+    testCategory: foundCategoryName,
+    testSubcategory: foundSubcategoryName,
     totalDurationSeconds: duration,
     sections,
     questions,

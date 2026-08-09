@@ -290,7 +290,7 @@ export default function AuthPage() {
                 {activeTab === 'signup' && (
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authName}</label>
-                    <div className="relative">
+                    <div className="relative" suppressHydrationWarning>
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                         <User className="h-4 w-4" />
                       </div>
@@ -300,6 +300,7 @@ export default function AuthPage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder={t.authNamePlaceholder}
+                        suppressHydrationWarning
                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
                       />
                     </div>
@@ -308,7 +309,7 @@ export default function AuthPage() {
 
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authEmail}</label>
-                  <div className="relative">
+                  <div className="relative" suppressHydrationWarning>
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
                       <Mail className="h-4 w-4" />
                     </div>
@@ -318,6 +319,7 @@ export default function AuthPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={t.authEmailPlaceholder || "name@example.com"}
+                      suppressHydrationWarning
                       className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
                     />
                   </div>
@@ -326,7 +328,7 @@ export default function AuthPage() {
                 {activeTab === 'signup' && (
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authMobile}</label>
-                    <div className="relative">
+                    <div className="relative" suppressHydrationWarning>
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                         <Phone className="h-4 w-4" />
                       </div>
@@ -337,6 +339,7 @@ export default function AuthPage() {
                         value={mobile}
                         onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
                         placeholder={t.authMobilePlaceholder || "10-digit number"}
+                        suppressHydrationWarning
                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
                       />
                     </div>
@@ -346,7 +349,7 @@ export default function AuthPage() {
                 {activeTab === 'signup' && (
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authRefOptional}</label>
-                    <div className="relative">
+                    <div className="relative" suppressHydrationWarning>
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                         <Gift className="h-4 w-4" />
                       </div>
@@ -355,6 +358,7 @@ export default function AuthPage() {
                         value={referralCodeInput}
                         onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
                         placeholder="e.g. TB-RAHUL-1029"
+                        suppressHydrationWarning
                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
                       />
                     </div>
@@ -363,7 +367,7 @@ export default function AuthPage() {
 
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authPassword}</label>
-                  <div className="relative">
+                  <div className="relative" suppressHydrationWarning>
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                       <Lock className="h-4 w-4" />
                     </div>
@@ -373,6 +377,7 @@ export default function AuthPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder={t.authPassPlaceholder || "••••••••"}
+                      suppressHydrationWarning
                       className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
                     />
                     <button
@@ -470,7 +475,7 @@ export default function AuthPage() {
                   <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
                     {t.authEmail}
                   </label>
-                  <div className="relative">
+                  <div className="relative" suppressHydrationWarning>
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-555">
                       <Mail className="h-4 w-4" />
                     </div>
@@ -480,6 +485,7 @@ export default function AuthPage() {
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       placeholder={t.authEmailPlaceholder || "name@example.com"}
+                      suppressHydrationWarning
                       className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-500 transition-all font-semibold"
                     />
                   </div>
@@ -514,6 +520,7 @@ export default function AuthPage() {
                     value={resetOtp}
                     onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, ''))}
                     placeholder="e.g. 583921"
+                    suppressHydrationWarning
                     className="w-full text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-500 transition-all"
                   />
                 </div>
@@ -522,7 +529,7 @@ export default function AuthPage() {
                   <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
                     {language === 'hi' ? 'नया पासवर्ड' : 'New Password'}
                   </label>
-                  <div className="relative">
+                  <div className="relative" suppressHydrationWarning>
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
                       <Lock className="h-4 w-4" />
                     </div>
@@ -532,7 +539,8 @@ export default function AuthPage() {
                       value={resetNewPassword}
                       onChange={(e) => setResetNewPassword(e.target.value)}
                       placeholder="At least 4 characters"
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-550 transition-all font-semibold"
+                      suppressHydrationWarning
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-555 transition-all font-semibold"
                     />
                     <button
                       type="button"

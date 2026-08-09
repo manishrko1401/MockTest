@@ -47,6 +47,8 @@ export interface ActiveSession {
   sessionId: string;
   testId: string;
   testTitle: string;
+  testCategory?: string;
+  testSubcategory?: string;
   totalDurationSeconds: number;
   sections: Section[];
   questions: Question[];
@@ -83,6 +85,11 @@ export interface EngineState {
   maxViolationsAllowed: number;
   isExamSubmitted: boolean;
   isSyncing: boolean;
+  // RPSC RAS Extra Time Mode fields
+  isRpscRasMode: boolean;
+  isExtraTimeMode: boolean;
+  extraTimeRemaining: number;
+  isExtraTimeRulesShown: boolean;
   score: {
     totalMarks: number;
     obtainedMarks: number;
@@ -94,7 +101,7 @@ export interface EngineState {
 }
 
 type EngineAction =
-  | { type: 'INIT_SESSION'; payload: { session: ActiveSession; maxViolations?: number; defaultLanguage?: 'en' | 'hi'; resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number } } }
+  | { type: 'INIT_SESSION'; payload: { session: ActiveSession; maxViolations?: number; defaultLanguage?: 'en' | 'hi'; isRpscRasMode?: boolean; resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number } } }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'hi' }
   | { type: 'TICK_TIMER' }
   | { type: 'SELECT_OPTION'; payload: { optionIndex: number | null } }
@@ -108,7 +115,10 @@ type EngineAction =
   | { type: 'SUBMIT_EXAM' }
   | { type: 'SET_SYNCING'; payload: boolean }
   | { type: 'PAUSE_EXAM' }
-  | { type: 'RESUME_EXAM' };
+  | { type: 'RESUME_EXAM' }
+  | { type: 'ENTER_EXTRA_TIME_MODE' }
+  | { type: 'TICK_EXTRA_TIMER' }
+  | { type: 'DISMISS_EXTRA_TIME_RULES' };
 
 // ============================================================================
 // HELPER UTILITIES FOR THE ENGINE
@@ -138,7 +148,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
   switch (action.type) {
     case 'INIT_SESSION': {
-      const { session, maxViolations = 3, defaultLanguage = 'en', resumeData } = action.payload;
+      const { session, maxViolations = 3, defaultLanguage = 'en', isRpscRasMode = false, resumeData } = action.payload;
       let initialResponses: Record<string, QuestionResponse> = {};
       // For sectional timing: start with Section 0's duration; otherwise full test duration
       let initialTimeRemaining = session.hasSectionalTiming && session.sections[0]?.durationSeconds
@@ -196,6 +206,10 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         maxViolationsAllowed: maxViolations,
         isExamSubmitted: false,
         isSyncing: false,
+        isRpscRasMode,
+        isExtraTimeMode: false,
+        extraTimeRemaining: 0,
+        isExtraTimeRulesShown: false,
         score: null,
       };
     }
@@ -255,6 +269,15 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
             );
           }
         }
+
+        // RPSC RAS: Enter extra time mode instead of auto-submitting
+        if (state.isRpscRasMode && !state.isExtraTimeMode) {
+          return engineReducer(
+            { ...state, timeRemaining: 0, responses: updatedResponses },
+            { type: 'ENTER_EXTRA_TIME_MODE' }
+          );
+        }
+
         // Non-sectional: submit on global timer expiry
         return engineReducer(
           { ...state, timeRemaining: 0, responses: updatedResponses },
@@ -584,8 +607,11 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
           // TCS iON scoring validation rule:
           // Count only ANSWERED (3) or ANSWERED_AND_MARKED_FOR_REVIEW (5)
-          if (resp && (resp.state === 3 || resp.state === 5)) {
-            if (resp.selectedOptionIndex === q.correctOptionIndex) {
+          if (resp && (resp.state === 3 || resp.state === 5 || (resp.selectedOptionIndex !== null && resp.selectedOptionIndex !== undefined))) {
+            // RPSC RAS: Option index 4 = "Leave Question Unattempted" — 0 marks, no penalty
+            if (state.isRpscRasMode && resp.selectedOptionIndex === 4) {
+              unattemptedCount += 1;
+            } else if (resp.selectedOptionIndex === q.correctOptionIndex) {
               obtainedMarks += positive;
               correctCount += 1;
             } else {
@@ -593,7 +619,15 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
               incorrectCount += 1;
             }
           } else {
-            unattemptedCount += 1;
+            // RPSC RAS: If question is still completely unattempted without Option 5 selected, apply penalty
+            if (state.isRpscRasMode) {
+              const rpscPenalty = negative > 0 ? negative : 0.44;
+              obtainedMarks -= rpscPenalty;
+              incorrectCount += 1;
+              unattemptedCount += 1;
+            } else {
+              unattemptedCount += 1;
+            }
           }
         });
       });
@@ -607,6 +641,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         ...state,
         isTimerRunning: false,
         isExamSubmitted: true,
+        isExtraTimeMode: false,
         score: {
           totalMarks,
           obtainedMarks: parseFloat(obtainedMarks.toFixed(2)),
@@ -639,6 +674,94 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       };
     }
 
+    // ========================================================================
+    // RPSC RAS EXTRA TIME MODE ACTIONS
+    // ========================================================================
+
+    case 'ENTER_EXTRA_TIME_MODE': {
+      if (state.isExamSubmitted || !state.isRpscRasMode) return state;
+
+      // Check if there are unattempted questions — if none, just submit normally
+      const allQuestions = session.questions;
+      const hasUnattempted = allQuestions.some((q) => {
+        const resp = state.responses[q.id];
+        return !resp || resp.state === 1 || resp.state === 2 || 
+               (resp.state !== 3 && resp.state !== 5);
+      });
+
+      if (!hasUnattempted) {
+        // All questions attempted, submit directly
+        return engineReducer(state, { type: 'SUBMIT_EXAM' });
+      }
+
+      // Find the first unattempted question across all sections
+      let firstUnattemptedSectionIdx = 0;
+      let firstUnattemptedQuestionIdx = 0;
+      let found = false;
+      for (let sIdx = 0; sIdx < session.sections.length && !found; sIdx++) {
+        const secQuestions = getSectionQuestions(session, sIdx);
+        for (let qIdx = 0; qIdx < secQuestions.length && !found; qIdx++) {
+          const resp = state.responses[secQuestions[qIdx].id];
+          if (!resp || resp.state === 1 || resp.state === 2 || 
+              (resp.state !== 3 && resp.state !== 5)) {
+            firstUnattemptedSectionIdx = sIdx;
+            firstUnattemptedQuestionIdx = qIdx;
+            found = true;
+          }
+        }
+      }
+
+      return {
+        ...state,
+        isExtraTimeMode: true,
+        isExtraTimeRulesShown: true, // Show rules modal first
+        extraTimeRemaining: 600, // 10 minutes
+        isTimerRunning: false, // Paused until user dismisses rules modal
+        timeRemaining: 0,
+        currentSectionIndex: firstUnattemptedSectionIdx,
+        currentQuestionIndex: firstUnattemptedQuestionIdx,
+      };
+    }
+
+    case 'DISMISS_EXTRA_TIME_RULES': {
+      return {
+        ...state,
+        isExtraTimeRulesShown: false,
+        isTimerRunning: true, // Start extra time countdown
+      };
+    }
+
+    case 'TICK_EXTRA_TIMER': {
+      if (state.isExamSubmitted || !state.isExtraTimeMode || !state.isTimerRunning) return state;
+
+      const nextExtraTime = Math.max(0, state.extraTimeRemaining - 1);
+
+      // Track elapsed time for current question
+      const activeSectionQuestions = getSectionQuestions(session, state.currentSectionIndex);
+      const activeQuestion = activeSectionQuestions[state.currentQuestionIndex];
+      const updatedResponses = { ...state.responses };
+      if (activeQuestion && updatedResponses[activeQuestion.id]) {
+        updatedResponses[activeQuestion.id] = {
+          ...updatedResponses[activeQuestion.id],
+          elapsedSeconds: updatedResponses[activeQuestion.id].elapsedSeconds + 1,
+        };
+      }
+
+      if (nextExtraTime === 0) {
+        // Extra time expired — auto-submit with penalties
+        return engineReducer(
+          { ...state, extraTimeRemaining: 0, responses: updatedResponses },
+          { type: 'SUBMIT_EXAM' }
+        );
+      }
+
+      return {
+        ...state,
+        extraTimeRemaining: nextExtraTime,
+        responses: updatedResponses,
+      };
+    }
+
     default:
       return state;
   }
@@ -650,7 +773,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
 interface TestEngineContextType {
   state: EngineState;
-  initSession: (session: ActiveSession, maxViolations?: number, resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number }, defaultLanguage?: 'en' | 'hi') => void;
+  initSession: (session: ActiveSession, maxViolations?: number, resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number }, defaultLanguage?: 'en' | 'hi', isRpscRasMode?: boolean) => void;
   selectOption: (optionIndex: number | null) => void;
   saveAndNext: () => void;
   clearResponse: () => void;
@@ -663,6 +786,8 @@ interface TestEngineContextType {
   submitExam: () => void;
   pauseExam: () => void;
   resumeExam: () => void;
+  dismissExtraTimeRules: () => void;
+  enterExtraTimeMode: () => void;
 }
 
 const TestEngineContext = createContext<TestEngineContextType | undefined>(undefined);
@@ -698,6 +823,10 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
     maxViolationsAllowed: 3,
     isExamSubmitted: false,
     isSyncing: false,
+    isRpscRasMode: false,
+    isExtraTimeMode: false,
+    extraTimeRemaining: 0,
+    isExtraTimeRulesShown: false,
     score: null,
   });
 
@@ -706,9 +835,10 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
     session: ActiveSession,
     maxViolations?: number,
     resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number },
-    defaultLanguage?: 'en' | 'hi'
+    defaultLanguage?: 'en' | 'hi',
+    isRpscRasMode?: boolean
   ) => {
-    dispatch({ type: 'INIT_SESSION', payload: { session, maxViolations, resumeData, defaultLanguage } });
+    dispatch({ type: 'INIT_SESSION', payload: { session, maxViolations, resumeData, defaultLanguage, isRpscRasMode } });
   }, []);
 
   const selectOption = useCallback((optionIndex: number | null) => {
@@ -759,16 +889,29 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
     dispatch({ type: 'RESUME_EXAM' });
   }, []);
 
+  const dismissExtraTimeRules = useCallback(() => {
+    dispatch({ type: 'DISMISS_EXTRA_TIME_RULES' });
+  }, []);
+
+  const enterExtraTimeMode = useCallback(() => {
+    dispatch({ type: 'ENTER_EXTRA_TIME_MODE' });
+  }, []);
+
   // 1. Timer ticking effect
   useEffect(() => {
     if (!state.isTimerRunning || state.isExamSubmitted) return;
 
     const timer = setInterval(() => {
-      dispatch({ type: 'TICK_TIMER' });
+      // Use extra timer tick when in extra time mode
+      if (state.isExtraTimeMode) {
+        dispatch({ type: 'TICK_EXTRA_TIMER' });
+      } else {
+        dispatch({ type: 'TICK_TIMER' });
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [state.isTimerRunning, state.isExamSubmitted]);
+  }, [state.isTimerRunning, state.isExamSubmitted, state.isExtraTimeMode]);
 
   // 2. Anti-Cheat: Tab/Window Blur tracker
   useEffect(() => {
@@ -875,6 +1018,8 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
         submitExam,
         pauseExam,
         resumeExam,
+        dismissExtraTimeRules,
+        enterExtraTimeMode,
       }}
     >
       {children}

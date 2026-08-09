@@ -452,6 +452,22 @@ const DEFAULT_EXAM_CATALOG: TestCategory[] = [
         tests: [
           { id: 'bihar_ssc', title: 'BSSC Inter-Level Full Practice Mock Paper', questionsCount: 150, durationMinutes: 135, maxMarks: 600, isPremium: true, requiredTier: 'Testbook Pass' }
         ]
+      },
+      {
+        id: 'rpsc_ras',
+        name: 'RPSC RAS Exams',
+        subSubCategories: [
+          {
+            id: 'rpsc_ras_prelims_series',
+            name: 'RPSC RAS Prelims Series',
+            tests: [
+              { id: 'rpsc_ras_prelims_full_1', title: 'RPSC RAS Prelims Full Test - 1', questionsCount: 150, durationMinutes: 180, maxMarks: 200, isPremium: false, requiredTier: 'None' }
+            ]
+          }
+        ],
+        tests: [
+          { id: 'rpsc_ras_prelims_full_1', title: 'RPSC RAS Prelims Full Test - 1', questionsCount: 10, durationMinutes: 1, maxMarks: 20, isPremium: false, requiredTier: 'None' }
+        ]
       }
     ]
   },
