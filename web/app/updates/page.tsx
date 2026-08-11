@@ -387,7 +387,7 @@ export default function UpdatesCenterPage() {
         </main>
 
         <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-6 px-4 text-center text-[10px] text-slate-500 font-bold">
-          <p>© 2026 Mock Test CBT Portal. All rights reserved.</p>
+          <p>© 2026 MockTest Hub. All rights reserved.</p>
         </footer>
       </div>
     );
@@ -765,7 +765,7 @@ export default function UpdatesCenterPage() {
 
       {/* FOOTER */}
       <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-10 px-6 md:px-12 mt-auto text-center text-xs text-slate-500 dark:text-slate-500 transition-colors duration-200 font-bold">
-        <p>© 2026 {language === 'hi' ? 'मॉक टेस्ट सीबीटी मॉक पोर्टल सिम्युलेटर' : 'Mock Test CBT Mock Portal Simulator'}. {language === 'hi' ? 'सर्वाधिकार सुरक्षित।' : 'All rights reserved.'}</p>
+        <p>© 2026 MockTest Hub. {language === 'hi' ? 'सर्वाधिकार सुरक्षित।' : 'All rights reserved.'}</p>
         <p className="mt-1 font-semibold text-slate-400">{language === 'hi' ? 'वास्तविक सरकारी चयन कंप्यूटर आधारित परीक्षाओं का अनुकरण करने के लिए विकसित।' : 'Developed to simulate real-world government selection computer based assessments.'}</p>
       </footer>
 

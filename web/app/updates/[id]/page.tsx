@@ -108,9 +108,16 @@ function sanitizeNoticeHtml(html: string): string {
   });
   clean = clean.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?Selection\s*(?:Procedure|Process|Mode)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, '');
   clean = clean.replace(/<h[234][^>]*>(?:(?!<\/h[234]>)[\s\S])*?Selection\s*(?:Procedure|Process|Mode)(?:(?!<\/h[234]>)[\s\S])*?<\/h[234]>/gi, '');
-  clean = clean.replace(/<p[^>]*>(?:(?!<\/p>)[\s\S])*?Selection\s*(?:Procedure|Process|Mode)(?:(?!<\/p>)[\s\S])*?<\/p>/gi, '');
+  // 8. Clean fixed inline width attributes from tables, th, td to prevent responsive overflow
+  clean = clean.replace(/\s*width=["']?\d+(?:px|%)?["']?/gi, '');
 
-  // 8. Remove any leftover empty paragraphs or &nbsp; at top
+  // 9. Wrap all table elements (like Category-wise Vacancy tables) in a responsive scroll container
+  clean = clean.replace(/<table[^>]*>([\s\S]*?)<\/table>/gi, (match) => {
+    const tableBody = match.replace(/^<table[^>]*>/i, '').replace(/<\/table>$/i, '');
+    return `<div class="notice-table-wrapper overflow-x-auto max-w-full my-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900"><table class="w-full text-left">${tableBody}</table></div>`;
+  });
+
+  // 10. Remove any leftover empty paragraphs or &nbsp; at top
   clean = clean.replace(/^(?:\s*<p>\s*(?:&nbsp;|\s*)*<\/p>)*/gi, '');
 
   return clean.trim();
@@ -947,7 +954,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
       {/* FOOTER */}
       <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-8 px-4 text-center text-xs text-slate-500 font-bold transition-colors duration-200 mt-16">
-        <p>© 2026 Mock Test CBT Portal. All rights reserved.</p>
+        <p>© 2026 MockTest Hub. All rights reserved.</p>
       </footer>
     </div>
   );

@@ -225,7 +225,7 @@ export default function PrivacyPolicyPage() {
 
       {/* SITE FOOTER */}
       <footer className="mt-auto py-6 border-t border-slate-200 dark:border-slate-808 bg-white dark:bg-slate-955 text-center text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
-        © {new Date().getFullYear()} Mock Test Hub. All Rights Reserved.
+        © 2026 MockTest Hub. All rights reserved.
       </footer>
 
     </div>

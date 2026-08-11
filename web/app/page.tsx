@@ -996,7 +996,7 @@ const formatSubCategoryName = (name: string) => {
 
         {/* FOOTER */}
         <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-6 px-4 text-center text-[10px] text-slate-500 transition-colors duration-200">
-          <p className="font-bold">© 2026 Mock Test CBT Portal. All rights reserved.</p>
+          <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
           <div className="mt-2 flex items-center justify-center gap-3">
             <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Privacy Policy</Link>
           </div>
@@ -1782,7 +1782,7 @@ const formatSubCategoryName = (name: string) => {
           <span>Made in India • Jai Hind!</span>
           <span className="animate-flag-sway text-sm leading-none">🇮🇳</span>
         </div>
-        <p className="font-bold">© 2026 Mock Test CBT Mock Portal Simulator. All rights reserved.</p>
+        <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
         <p className="mt-1 text-[11px]">Developed to simulate real-world government selection computer based assessments.</p>
         <div className="mt-3 flex items-center justify-center gap-4">
           <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Privacy Policy</Link>

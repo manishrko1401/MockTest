@@ -2452,7 +2452,7 @@ export default function PracticeSeriesPage() {
 
       {/* FOOTER */}
       <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-6 px-4 text-center text-xs text-slate-500">
-        <p className="font-bold">© 2026 Mock Test CBT Portal. All rights reserved.</p>
+        <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
       </footer>
 
       {/* Floating Support & Suggestion Widgets (Hidden on mobile view as requested) */}
