@@ -61,6 +61,7 @@ model User {
   supportMessages         SupportMessage[]
   lastSeen                DateTime?
   lastPlatform            String?            @default("web")
+  trackedJobs             Json?
 
   @@map("users")
 }

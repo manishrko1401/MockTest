@@ -1769,6 +1769,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     if (typeof window !== 'undefined') {
       localStorage.setItem(`mocktesthub_tracked_jobs_${currentUser.id}`, JSON.stringify(trackedJobs));
     }
+
+    // Sync to database for cross-device access (fire-and-forget)
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update-tracked-jobs',
+        data: { userId: currentUser.id, trackedJobs }
+      })
+    }).catch(err => console.error("Sync tracked jobs to DB error:", err));
   };
 
   const updatePassword = (oldPass: string, newPass: string): boolean => {

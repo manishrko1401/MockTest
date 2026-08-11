@@ -145,7 +145,7 @@ export async function POST(request: Request) {
       'update-profile', 'update-password', 'toggle-bookmark', 
       'add-attempt', 'save-ongoing-session', 'clear-ongoing-session',
       'get-support-messages', 'send-support-message', 'get-user-details',
-      'claim-pass-pro'
+      'claim-pass-pro', 'update-tracked-jobs'
     ];
 
     // Helper: Parse cookie manually
@@ -240,6 +240,8 @@ export async function POST(request: Request) {
         return await handleLogin(data);
       case 'update-profile':
         return await handleUpdateProfile(data);
+      case 'update-tracked-jobs':
+        return await handleUpdateTrackedJobs(data);
       case 'update-password':
         return await handleUpdatePassword(data);
       case 'claim-pass-pro':
@@ -937,6 +939,7 @@ async function handleLogin(data: any) {
     coins: user.coins,
     referralCoinsCredited: user.referralCoinsCredited,
     bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],
+    trackedJobs: user.trackedJobs ? (user.trackedJobs as any) : [],
     testSessions: user.testSessions.map((session: any) => {
       const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
       session.responses.forEach((r: any) => {
@@ -1058,6 +1061,22 @@ async function handleUpdateProfile(data: any) {
   });
 
   return NextResponse.json({ success: true, user: { name: updated.fullName, email: updated.email, mobile: updated.mobile } });
+}
+
+async function handleUpdateTrackedJobs(data: any) {
+  const { userId, trackedJobs } = data;
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      trackedJobs: trackedJobs || [],
+    },
+  });
+
+  return NextResponse.json({ success: true });
 }
 
 async function handleUpdatePassword(data: any) {
@@ -3389,6 +3408,7 @@ async function handleGetUserDetails(data: any) {
     referralCoinsCredited: u.referralCoinsCredited,
     password: u.passwordHash,
     bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
+    trackedJobs: u.trackedJobs ? (u.trackedJobs as any) : [],
     testSessions: u.testSessions.map((session: any) => {
       const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
       session.responses.forEach((r: any) => {
