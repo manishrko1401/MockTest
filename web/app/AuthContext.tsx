@@ -1766,11 +1766,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(`mocktesthub_tracked_jobs_${currentUser.id}`, JSON.stringify(trackedJobs));
-    }
-
-    // Sync to database for cross-device access (fire-and-forget)
+    // Sync to database only for cross-device access
     fetch('/api/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

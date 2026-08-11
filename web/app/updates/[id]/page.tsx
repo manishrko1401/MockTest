@@ -148,14 +148,13 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
   // Load tracked state for current user
   React.useEffect(() => {
-    if (!noticeId || !currentUser || typeof window === 'undefined') {
+    if (!noticeId || !currentUser) {
       setIsTrackedSaved(false);
       setIsTrackedApplied(false);
       return;
     }
     try {
-      const userKey = `mocktesthub_tracked_jobs_${currentUser.id}`;
-      const stored = currentUser.trackedJobs || JSON.parse(localStorage.getItem(userKey) || '[]');
+      const stored = currentUser.trackedJobs || [];
       const item = stored.find((j: any) => j.noticeId === noticeId);
       if (item) {
         setIsTrackedSaved(!!item.isSaved);
@@ -172,10 +171,9 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   }, [noticeId, currentUser]);
 
   const saveToTrackedJobs = (newSaved: boolean, newApplied: boolean, dateStr?: string, appNoStr?: string) => {
-    if (!notice || !currentUser || typeof window === 'undefined') return;
+    if (!notice || !currentUser) return;
     try {
-      const userKey = `mocktesthub_tracked_jobs_${currentUser.id}`;
-      let list = currentUser.trackedJobs || JSON.parse(localStorage.getItem(userKey) || '[]');
+      let list = currentUser.trackedJobs || [];
       const index = list.findIndex((j: any) => j.noticeId === notice.id);
 
       const updatedObj = {

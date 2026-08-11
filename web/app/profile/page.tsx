@@ -21,14 +21,8 @@ export default function StudentProfilePage() {
   const [jobToRemove, setJobToRemove] = useState<{ noticeId: string; title: string } | null>(null);
 
   useEffect(() => {
-    if (!currentUser || typeof window === 'undefined') return;
-    try {
-      const userKey = `mocktesthub_tracked_jobs_${currentUser.id}`;
-      const stored = currentUser.trackedJobs || JSON.parse(localStorage.getItem(userKey) || '[]');
-      setTrackedJobs(stored);
-    } catch (e) {
-      console.error(e);
-    }
+    if (!currentUser) return;
+    setTrackedJobs(currentUser.trackedJobs || []);
   }, [currentUser]);
 
   const removeTrackedJob = (noticeId: string) => {
