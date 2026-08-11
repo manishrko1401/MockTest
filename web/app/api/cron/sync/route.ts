@@ -107,6 +107,74 @@ function mapCategoryAndType(xmlCategoriesStr: string, url: string, title: string
   }
 }
 
+// Extract inner details from notification heading to Useful Important Links section
+function extractNoticeContent(pageHtml: string): string | null {
+  if (!pageHtml) return null;
+
+  let contentStart = -1;
+  const entryHeaderIdx = pageHtml.indexOf('class="entry-header"');
+  const entryContentIdx = pageHtml.indexOf('class="entry-content"');
+
+  if (entryHeaderIdx !== -1) {
+    contentStart = entryHeaderIdx;
+    const headerTagIdx = pageHtml.lastIndexOf('<header', entryHeaderIdx);
+    if (headerTagIdx !== -1) contentStart = headerTagIdx;
+  } else if (entryContentIdx !== -1) {
+    contentStart = entryContentIdx;
+    const divTagIdx = pageHtml.lastIndexOf('<div', entryContentIdx);
+    if (divTagIdx !== -1) contentStart = divTagIdx;
+  } else {
+    const h1Idx = pageHtml.indexOf('<h1');
+    if (h1Idx !== -1) contentStart = h1Idx;
+  }
+
+  if (contentStart === -1) return null;
+
+  let contentEnd = -1;
+  let linksHeadingIdx = pageHtml.toLowerCase().indexOf('useful important links');
+  if (linksHeadingIdx === -1 || linksHeadingIdx < contentStart) {
+    linksHeadingIdx = pageHtml.toLowerCase().indexOf('important links');
+  }
+
+  if (linksHeadingIdx !== -1 && linksHeadingIdx > contentStart) {
+    const tableEndIdx = pageHtml.indexOf('</table>', linksHeadingIdx);
+    if (tableEndIdx !== -1) {
+      contentEnd = tableEndIdx + 8; // Include </table>
+    }
+  }
+
+  if (contentEnd === -1) {
+    const faqIdx = pageHtml.toLowerCase().indexOf('important faqs');
+    if (faqIdx !== -1 && faqIdx > contentStart) {
+      contentEnd = faqIdx;
+    } else {
+      const articleEndIdx = pageHtml.indexOf('</article>', contentStart);
+      if (articleEndIdx !== -1) {
+        contentEnd = articleEndIdx;
+      } else {
+        contentEnd = contentStart + 15000;
+      }
+    }
+  }
+
+  let extracted = pageHtml.substring(contentStart, contentEnd);
+
+  // Clean ads & scripts
+  extracted = extracted.replace(/<ins[^>]*class=["']adsbygoogle["'][\s\S]*?<\/ins>/gi, '');
+  extracted = extracted.replace(/<script[\s\S]*?<\/script>/gi, '');
+
+  // Remove People Also Viewed
+  extracted = extracted.replace(/<div[^>]*class=["']rr-people-viewed["'][\s\S]*?<\/div>/gi, '');
+
+  // Remove Social link tables (Facebook, Telegram, WhatsApp, Instagram, etc.)
+  extracted = extracted.replace(/<table[^>]*>[\s\S]*?(?:Face\s*Book|Telegram\s*Channel|WhatsApp\s*Channel|Instagram\s*Reels)[\s\S]*?<\/table>/gi, '');
+
+  // Ensure all <a> links open in new tab securely
+  extracted = extracted.replace(/<a\s+(?!.*?target=)/gi, '<a target="_blank" rel="noopener noreferrer" ');
+
+  return extracted.trim();
+}
+
 // Helper to fetch text with User-Agent
 async function fetchUrl(url: string): Promise<string> {
   const response = await fetch(url, {
@@ -212,15 +280,17 @@ export async function GET(request: Request) {
         });
 
         if (existing) {
-          if (existing.title !== item.title) {
-            console.log(`Cron: Found UPDATED ${target.name}: "${existing.title}" -> "${item.title}"`);
+          if (existing.title !== item.title || !(existing as any).contentHtml) {
+            console.log(`Cron: Found UPDATED/UNFETCHED ${target.name}: "${existing.title}" -> "${item.title}"`);
             let dateObj = new Date();
             let directUrl = item.url;
             let lastDate = existing.lastDate;
+            let contentHtml: string | null = null;
 
             try {
               const pageHtml = await fetchUrl(item.url);
               directUrl = extractDirectLink(pageHtml, item.url, target.category);
+              contentHtml = extractNoticeContent(pageHtml);
 
               const parsedLastDate = extractLastDate(pageHtml);
               if (parsedLastDate) lastDate = parsedLastDate;
@@ -244,7 +314,9 @@ export async function GET(request: Request) {
                 date: dateStr,
                 publishDate: publishDateStr,
                 url: directUrl,
+                rawUrl: item.url,
                 lastDate,
+                contentHtml,
                 createdAt: createdAtTimestamp
               }
             });
@@ -260,10 +332,12 @@ export async function GET(request: Request) {
         let dateObj = new Date();
         let directUrl = item.url;
         let lastDate: string | null = null;
+        let contentHtml: string | null = null;
 
         try {
           const pageHtml = await fetchUrl(item.url);
           directUrl = extractDirectLink(pageHtml, item.url, target.category);
+          contentHtml = extractNoticeContent(pageHtml);
 
           const parsedLastDate = extractLastDate(pageHtml);
           if (parsedLastDate) lastDate = parsedLastDate;
@@ -289,7 +363,9 @@ export async function GET(request: Request) {
             type: target.type,
             category: target.category,
             url: directUrl,
+            rawUrl: item.url,
             lastDate,
+            contentHtml,
             createdAt: createdAtTimestamp
           }
         });

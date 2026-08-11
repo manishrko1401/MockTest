@@ -124,6 +124,74 @@ function extractDirectLink(pageHtml, defaultUrl, category) {
   return defaultUrl;
 }
 
+// Extract inner details from notification heading to Useful Important Links section
+function extractNoticeContent(pageHtml) {
+  if (!pageHtml) return null;
+
+  let contentStart = -1;
+  const entryHeaderIdx = pageHtml.indexOf('class="entry-header"');
+  const entryContentIdx = pageHtml.indexOf('class="entry-content"');
+
+  if (entryHeaderIdx !== -1) {
+    contentStart = entryHeaderIdx;
+    const headerTagIdx = pageHtml.lastIndexOf('<header', entryHeaderIdx);
+    if (headerTagIdx !== -1) contentStart = headerTagIdx;
+  } else if (entryContentIdx !== -1) {
+    contentStart = entryContentIdx;
+    const divTagIdx = pageHtml.lastIndexOf('<div', entryContentIdx);
+    if (divTagIdx !== -1) contentStart = divTagIdx;
+  } else {
+    const h1Idx = pageHtml.indexOf('<h1');
+    if (h1Idx !== -1) contentStart = h1Idx;
+  }
+
+  if (contentStart === -1) return null;
+
+  let contentEnd = -1;
+  let linksHeadingIdx = pageHtml.toLowerCase().indexOf('useful important links');
+  if (linksHeadingIdx === -1 || linksHeadingIdx < contentStart) {
+    linksHeadingIdx = pageHtml.toLowerCase().indexOf('important links');
+  }
+
+  if (linksHeadingIdx !== -1 && linksHeadingIdx > contentStart) {
+    const tableEndIdx = pageHtml.indexOf('</table>', linksHeadingIdx);
+    if (tableEndIdx !== -1) {
+      contentEnd = tableEndIdx + 8; // Include </table>
+    }
+  }
+
+  if (contentEnd === -1) {
+    const faqIdx = pageHtml.toLowerCase().indexOf('important faqs');
+    if (faqIdx !== -1 && faqIdx > contentStart) {
+      contentEnd = faqIdx;
+    } else {
+      const articleEndIdx = pageHtml.indexOf('</article>', contentStart);
+      if (articleEndIdx !== -1) {
+        contentEnd = articleEndIdx;
+      } else {
+        contentEnd = contentStart + 15000;
+      }
+    }
+  }
+
+  let extracted = pageHtml.substring(contentStart, contentEnd);
+
+  // Clean ads & scripts
+  extracted = extracted.replace(/<ins[^>]*class=["']adsbygoogle["'][\s\S]*?<\/ins>/gi, '');
+  extracted = extracted.replace(/<script[\s\S]*?<\/script>/gi, '');
+
+  // Remove People Also Viewed
+  extracted = extracted.replace(/<div[^>]*class=["']rr-people-viewed["'][\s\S]*?<\/div>/gi, '');
+
+  // Remove Social link tables (Facebook, Telegram, WhatsApp, Instagram, etc.)
+  extracted = extracted.replace(/<table[^>]*>[\s\S]*?(?:Face\s*Book|Telegram\s*Channel|WhatsApp\s*Channel|Instagram\s*Reels)[\s\S]*?<\/table>/gi, '');
+
+  // Ensure all <a> links open in new tab securely
+  extracted = extracted.replace(/<a\s+(?!.*?target=)/gi, '<a target="_blank" rel="noopener noreferrer" ');
+
+  return extracted.trim();
+}
+
 // Map RSS feed categories/tags to database notice category and type
 function mapCategoryAndType(xmlCategoriesStr, url, title) {
   const categories = xmlCategoriesStr.toLowerCase();
@@ -142,7 +210,7 @@ function mapCategoryAndType(xmlCategoriesStr, url, title) {
 }
 
 async function syncFeed() {
-  console.log("Starting full Rojgar Result sync from category pages...");
+  console.log("Starting full feed sync...");
   
   const targets = [
     {
@@ -180,12 +248,12 @@ async function syncFeed() {
   let importedIndex = 0;
 
   for (const target of targets) {
-    console.log(`Fetching listing for ${target.name} from ${target.url}...`);
+    console.log(`Fetching listing page for ${target.name}...`);
     let html = '';
     try {
       html = await fetchUrl(target.url);
     } catch (err) {
-      console.error(`Failed to fetch category listing for ${target.name}:`, err.message);
+      console.error(`Failed to fetch listing page for ${target.name}:`, err.message);
       continue;
     }
 
@@ -226,17 +294,19 @@ async function syncFeed() {
       });
 
       if (existing) {
-        if (existing.title !== item.title) {
-          console.log(`Found UPDATED notice in ${target.name}: "${existing.title}" -> "${item.title}"`);
+        if (existing.title !== item.title || !existing.contentHtml) {
+          console.log(`Updating/Backfilling detail content for ${target.name}: "${existing.title}"`);
           console.log(`  Link: ${item.url}`);
 
           let dateObj = new Date();
           let directUrl = item.url;
           let lastDate = existing.lastDate;
+          let contentHtml = null;
 
           try {
             const pageHtml = await fetchUrl(item.url);
             directUrl = extractDirectLink(pageHtml, item.url, target.category);
+            contentHtml = extractNoticeContent(pageHtml);
 
             const parsedLastDate = extractLastDate(pageHtml);
             if (parsedLastDate) lastDate = parsedLastDate;
@@ -246,7 +316,7 @@ async function syncFeed() {
               dateObj = new Date(schemaMatch[1]);
             }
           } catch (err) {
-            console.error(`  Warning: Failed to fetch detail page for updated notice ${item.url}. Using existing metadata where possible.`);
+            console.error(`  Warning: Failed to fetch detail page for updated notice ${item.url}.`);
           }
 
           const dateStr = formatPublishDate(dateObj);
@@ -260,30 +330,14 @@ async function syncFeed() {
               date: dateStr,
               publishDate: publishDateStr,
               url: directUrl,
+              rawUrl: item.url,
               lastDate,
+              contentHtml,
               createdAt: createdAtTimestamp
             }
           });
 
-          console.log(`  Successfully updated: "${item.title}" -> Direct Link: ${directUrl}`);
-          updatedNoticesCount++;
-          importedIndex++;
-        } else if (!existing.lastDate) {
-          // Title same but lastDate is null — backfill lastDate from detail page
-          console.log(`Backfilling lastDate for: "${existing.title.substring(0, 55)}"`);
-          let lastDate = null;
-          try {
-            const pageHtml = await fetchUrl(item.url);
-            lastDate = extractLastDate(pageHtml);
-          } catch (err) {
-            console.error(`  Warning: Failed to fetch detail page for ${item.url}.`);
-          }
-          const updateValue = lastDate || 'See Notification';
-          await prisma.notice.update({
-            where: { id },
-            data: { lastDate: updateValue }
-          });
-          console.log(`  Backfilled lastDate: "${updateValue}"`);
+          console.log(`  Successfully updated notice with inner details.`);
           updatedNoticesCount++;
           importedIndex++;
         }
@@ -296,10 +350,12 @@ async function syncFeed() {
       let dateObj = new Date();
       let directUrl = item.url;
       let lastDate = null;
+      let contentHtml = null;
 
       try {
         const pageHtml = await fetchUrl(item.url);
         directUrl = extractDirectLink(pageHtml, item.url, target.category);
+        contentHtml = extractNoticeContent(pageHtml);
 
         const parsedLastDate = extractLastDate(pageHtml);
         if (parsedLastDate) lastDate = parsedLastDate;
@@ -325,7 +381,9 @@ async function syncFeed() {
           type: target.type,
           category: target.category,
           url: directUrl,
+          rawUrl: item.url,
           lastDate,
+          contentHtml,
           createdAt: createdAtTimestamp
         }
       });
@@ -336,9 +394,8 @@ async function syncFeed() {
     }
   }
 
-  console.log(`Sync complete. Mapped and imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices.`);
-
-}
+  console.log(`Sync complete. Mapped and imported ${newNoticesCount} new notices, updated/backfilled ${updatedNoticesCount} notices.`);
+};
 
 if (require.main === module) {
   syncFeed()

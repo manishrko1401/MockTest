@@ -415,3 +415,181 @@ mjx-container[jax="CHTML"] {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Custom Notice Detail Styling */
+.notice-custom-body {
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.notice-custom-body h1, .notice-custom-body h2, .notice-custom-body h3 {
+  font-weight: 800;
+  margin-top: 1.5rem;
+  margin-bottom: 0.85rem;
+  color: inherit;
+  letter-spacing: -0.01em;
+}
+
+.notice-custom-body h1 {
+  font-size: 1.25rem;
+  color: #1e293b;
+}
+
+.dark .notice-custom-body h1 {
+  color: #f8fafc;
+}
+
+.notice-custom-body h2 {
+  font-size: 1.1rem;
+  padding: 0.5rem 0.85rem;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%);
+  border-left: 4px solid #2563eb;
+  border-radius: 0.5rem;
+  color: #1e293b;
+  margin-top: 1.75rem;
+}
+
+.dark .notice-custom-body h2 {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(49, 46, 129, 0.15) 100%);
+  border-left-color: #3b82f6;
+  color: #f1f5f9;
+}
+
+.notice-custom-body h3 {
+  font-size: 0.975rem;
+}
+
+.notice-custom-body p {
+  margin-bottom: 0.85rem;
+}
+
+.notice-custom-body table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  margin: 1.25rem 0 !important;
+  border-radius: 0.875rem !important;
+  overflow: hidden !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
+  background-color: #ffffff;
+}
+
+.dark .notice-custom-body table {
+  border-color: #334155 !important;
+  background-color: #0f172a;
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.2) !important;
+}
+
+.notice-custom-body tr:nth-child(even) {
+  background-color: rgba(248, 250, 252, 0.8);
+}
+
+.dark .notice-custom-body tr:nth-child(even) {
+  background-color: rgba(30, 41, 59, 0.4);
+}
+
+.notice-custom-body tr:hover {
+  background-color: rgba(239, 246, 255, 0.6);
+}
+
+.dark .notice-custom-body tr:hover {
+  background-color: rgba(30, 58, 138, 0.2);
+}
+
+.notice-custom-body td, .notice-custom-body th {
+  padding: 0.75rem 1rem !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  border-right: 1px solid #e2e8f0 !important;
+  font-size: 0.84rem !important;
+}
+
+.dark .notice-custom-body td, .dark .notice-custom-body th {
+  border-bottom-color: #1e293b !important;
+  border-right-color: #1e293b !important;
+}
+
+.notice-custom-body tr:last-child td {
+  border-bottom: none !important;
+}
+
+.notice-custom-body td:last-child, .notice-custom-body th:last-child {
+  border-right: none !important;
+}
+
+/* Styled Interactive Action Links inside tables */
+.notice-custom-body a {
+  color: #2563eb;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  items-center: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.notice-custom-body td a {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #bfdbfe;
+  font-size: 0.78rem;
+  font-weight: 800;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.dark .notice-custom-body td a {
+  background-color: rgba(30, 58, 138, 0.4);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.notice-custom-body td a:hover {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.25);
+}
+
+.dark .notice-custom-body td a:hover {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+
+.notice-custom-body ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.notice-custom-body ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.notice-custom-body li {
+  margin-bottom: 0.55rem !important;
+  line-height: 1.65 !important;
+  color: #334155;
+  font-weight: 500;
+}
+
+.dark .notice-custom-body li {
+  color: #cbd5e1;
+}
+
+.notice-custom-body li::marker {
+  color: #2563eb;
+  font-weight: bold;
+}
+
+.dark .notice-custom-body li::marker {
+  color: #60a5fa;
+}

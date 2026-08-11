@@ -18,10 +18,11 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Persistent Exam Catalog and Notices Cache to survive Next.js dev server hot-reloads
-const catalogCache = (global as any).catalogCache || {
-  examCatalog: null,
-  noticesList: null
-};
+// noticesLastFetched tracks freshness — if missing (old cache shape), we force a re-fetch
+const catalogCache: { examCatalog: any; noticesList: any; noticesLastFetched: number | null } = 
+  (global as any).catalogCache && (global as any).catalogCache.noticesLastFetched !== undefined
+    ? (global as any).catalogCache
+    : { examCatalog: null, noticesList: null, noticesLastFetched: null };
 if (process.env.NODE_ENV !== 'production') {
   (global as any).catalogCache = catalogCache;
 }
@@ -537,11 +538,12 @@ async function handleBootstrap() {
     });
   }
 
-  // Use memory cache if populated with actual items
-  if (catalogCache.examCatalog && catalogCache.examCatalog.length > 0 && catalogCache.noticesList) {
+  // Use memory cache if populated with actual items and notices cache is fresh (< 15 seconds)
+  const isNoticesCacheFresh = catalogCache.noticesLastFetched && (Date.now() - catalogCache.noticesLastFetched < 15000);
+  if (catalogCache.examCatalog && catalogCache.examCatalog.length > 0 && catalogCache.noticesList && isNoticesCacheFresh) {
     return NextResponse.json(
       { success: true, usersList: [], noticesList: catalogCache.noticesList, examCatalog: catalogCache.examCatalog, reportedQuestionsList: [] },
-      { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
+      { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' } }
     );
   }
 
@@ -565,8 +567,10 @@ async function handleBootstrap() {
     type: n.type,
     category: n.category as 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial' | 'answer_key',
     url: n.url || undefined,
+    rawUrl: n.rawUrl || undefined,
     lastDate: n.lastDate || undefined,
     imageUrl: n.imageUrl || undefined,
+    contentHtml: n.contentHtml || undefined,
   }));
 
   // Fetch Exam Catalog using optimized memory assembler
@@ -575,6 +579,7 @@ async function handleBootstrap() {
   // Populate cache
   catalogCache.examCatalog = examCatalog;
   catalogCache.noticesList = noticesList;
+  catalogCache.noticesLastFetched = Date.now();
 
   // Fetch Reported Questions is now disabled in public bootstrap.
   // Admins will fetch this data separately using the 'admin-data' action.

@@ -265,8 +265,10 @@ model Notice {
   type        String
   category    String   // notice, result, admit_card
   url         String?
+  rawUrl      String?
   lastDate    String?
   imageUrl    String?
+  contentHtml String?  @db.Text
   createdAt   DateTime @default(now())
 
   @@map("notices")

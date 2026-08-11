@@ -4,14 +4,43 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, ChevronDown, ChevronUp, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon, Globe, ArrowLeft, ShieldCheck, Menu, X, Eye, EyeOff, Coins, Trophy } from 'lucide-react';
+import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, ChevronDown, ChevronUp, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon, Globe, ArrowLeft, ShieldCheck, Menu, X, Eye, EyeOff, Coins, Trophy, Bookmark, BookmarkCheck, ArrowUpRight, Trash2 } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 
 export default function StudentProfilePage() {
-  const { currentUser, updateProfile, updatePassword, logout, theme, toggleTheme, language, setLanguage } = useAuth();
+  const { currentUser, updateProfile, updatePassword, updateTrackedJobs, logout, theme, toggleTheme, language, setLanguage } = useAuth();
   const router = useRouter();
   const t = TRANSLATIONS[language];
+
+  // Tracked Jobs State (Saved & Applied)
+  const [trackedJobs, setTrackedJobs] = useState<any[]>([]);
+  const [jobFilter, setJobFilter] = useState<'all' | 'applied' | 'saved'>('all');
+
+  // Confirmation Modal State for Job Removal
+  const [jobToRemove, setJobToRemove] = useState<{ noticeId: string; title: string } | null>(null);
+
+  useEffect(() => {
+    if (!currentUser || typeof window === 'undefined') return;
+    try {
+      const userKey = `mocktesthub_tracked_jobs_${currentUser.id}`;
+      const stored = currentUser.trackedJobs || JSON.parse(localStorage.getItem(userKey) || '[]');
+      setTrackedJobs(stored);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [currentUser]);
+
+  const removeTrackedJob = (noticeId: string) => {
+    if (!currentUser) return;
+    try {
+      const updated = trackedJobs.filter(j => j.noticeId !== noticeId);
+      setTrackedJobs(updated);
+      updateTrackedJobs(updated);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Input states
   const [name, setName] = useState('');
@@ -269,6 +298,147 @@ export default function StudentProfilePage() {
                 </Link>
               </div>
             </div>
+          </section>
+
+          {/* SAVED & APPLIED JOBS TRACKER SECTION */}
+          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 md:p-6 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/50 shrink-0">
+                  <BookmarkCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                    {language === 'hi' ? 'मेरे आवेदन किए गए और सेव किए गए जॉब्स' : 'My Applied & Saved Jobs Tracker'}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-semibold">Track your application dates, roll numbers, and saved alerts</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-1.5 flex-wrap self-start sm:self-auto">
+                <button
+                  onClick={() => setJobFilter('all')}
+                  className={`px-3 py-1 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+                    jobFilter === 'all'
+                      ? 'bg-blue-600 text-white shadow-2xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                  }`}
+                >
+                  {language === 'hi' ? 'सभी' : 'All'} ({trackedJobs.length})
+                </button>
+                <button
+                  onClick={() => setJobFilter('applied')}
+                  className={`px-3 py-1 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1 ${
+                    jobFilter === 'applied'
+                      ? 'bg-emerald-600 text-white shadow-2xs'
+                      : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100'
+                  }`}
+                >
+                  <CheckCircle2 className="h-3 w-3" />
+                  {language === 'hi' ? 'आवेदन किया गया' : 'Applied'} ({trackedJobs.filter(j => j.isApplied).length})
+                </button>
+                <button
+                  onClick={() => setJobFilter('saved')}
+                  className={`px-3 py-1 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1 ${
+                    jobFilter === 'saved'
+                      ? 'bg-blue-600 text-white shadow-2xs'
+                      : 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100'
+                  }`}
+                >
+                  <Bookmark className="h-3 w-3" />
+                  {language === 'hi' ? 'सेव किया गया' : 'Saved'} ({trackedJobs.filter(j => j.isSaved).length})
+                </button>
+              </div>
+            </div>
+
+            {trackedJobs.filter(j => jobFilter === 'all' ? true : (jobFilter === 'applied' ? j.isApplied : j.isSaved)).length > 0 ? (
+              <div className="space-y-3">
+                {trackedJobs
+                  .filter(j => jobFilter === 'all' ? true : (jobFilter === 'applied' ? j.isApplied : j.isSaved))
+                  .map((job: any) => (
+                    <div 
+                      key={job.noticeId}
+                      className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-955 border border-slate-200/80 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 group hover:border-blue-300 dark:hover:border-blue-700 transition"
+                    >
+                      <div className="space-y-1.5 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {job.isApplied && (
+                            <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[9px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                              <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Applied
+                            </span>
+                          )}
+                          {job.isSaved && (
+                            <span className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 text-[9px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-blue-200 dark:border-blue-800 flex items-center gap-1">
+                              <Bookmark className="h-3 w-3 text-blue-600" /> Saved
+                            </span>
+                          )}
+                          {job.appliedDate && (
+                            <span className="text-[10px] text-slate-500 font-bold bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-800">
+                              📅 Applied Date: {job.appliedDate}
+                            </span>
+                          )}
+                          {job.applicationNo && (
+                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-extrabold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-900">
+                              Reg / Roll No: {job.applicationNo}
+                            </span>
+                          )}
+                        </div>
+
+                        <h4 className="font-bold text-xs sm:text-sm text-slate-850 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
+                          {job.title}
+                        </h4>
+
+                        <div className="flex items-center gap-3 text-[10px] text-slate-400 font-semibold flex-wrap">
+                          {job.date && <span>Notice Date: {job.date}</span>}
+                          {job.lastDate && (
+                            <span className="text-rose-600 font-bold uppercase tracking-wider">
+                              Deadline: {job.lastDate}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-200/60 dark:border-slate-800">
+                        <Link
+                          href={`/updates/${job.noticeId}`}
+                          className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+                        >
+                          <span>View Details</span>
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </Link>
+                        
+                        <button
+                          type="button"
+                          onClick={() => setJobToRemove({ noticeId: job.noticeId, title: job.title })}
+                          className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                          title="Remove from Tracker"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
+                <BookmarkCheck className="h-8 w-8 text-slate-300 mx-auto" />
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                  {language === 'hi' ? 'अभी कोई सेव या आवेदन नहीं किया गया' : 'No saved or applied jobs yet'}
+                </p>
+                <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+                  {language === 'hi'
+                    ? 'अधिसूचनाओं पर जाएं और ट्रैक करने के लिए "Save Job" या "Mark as Applied" पर क्लिक करें।'
+                    : 'Visit any notification announcement and click "Save Job" or "Mark as Applied" to track your applications here.'}
+                </p>
+                <Link
+                  href="/updates"
+                  className="inline-flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:underline pt-1"
+                >
+                  <span>{language === 'hi' ? 'सरकारी सूचनाएं ब्राउज़ करें' : 'Browse Government Notifications'}</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            )}
           </section>
 
           {/* ACCOUNT SETTINGS FORM STACK */}
@@ -603,8 +773,152 @@ export default function StudentProfilePage() {
 
         </aside>
 
-        {/* Right Side: Account Settings Grid */}
+        {/* Right Side: Account Settings & Tracker */}
         <main className="flex-1 space-y-8">
+          
+          {/* SAVED & APPLIED JOBS TRACKER SECTION (DESKTOP) */}
+          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 md:p-6 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/50 shrink-0">
+                  <BookmarkCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                    {language === 'hi' ? 'मेरे आवेदन किए गए और सेव किए गए जॉब्स' : 'My Applied & Saved Jobs Tracker'}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-semibold">Track your application dates, roll numbers, and saved alerts</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-1.5 flex-wrap self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setJobFilter('all')}
+                  className={`px-3 py-1 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+                    jobFilter === 'all'
+                      ? 'bg-blue-600 text-white shadow-2xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                  }`}
+                >
+                  {language === 'hi' ? 'सभी' : 'All'} ({trackedJobs.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJobFilter('applied')}
+                  className={`px-3 py-1 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1 ${
+                    jobFilter === 'applied'
+                      ? 'bg-emerald-600 text-white shadow-2xs'
+                      : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100'
+                  }`}
+                >
+                  <CheckCircle2 className="h-3 w-3" />
+                  {language === 'hi' ? 'आवेदन किया गया' : 'Applied'} ({trackedJobs.filter(j => j.isApplied).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJobFilter('saved')}
+                  className={`px-3 py-1 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1 ${
+                    jobFilter === 'saved'
+                      ? 'bg-blue-600 text-white shadow-2xs'
+                      : 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100'
+                  }`}
+                >
+                  <Bookmark className="h-3 w-3" />
+                  {language === 'hi' ? 'सेव किया गया' : 'Saved'} ({trackedJobs.filter(j => j.isSaved).length})
+                </button>
+              </div>
+            </div>
+
+            {trackedJobs.filter(j => jobFilter === 'all' ? true : (jobFilter === 'applied' ? j.isApplied : j.isSaved)).length > 0 ? (
+              <div className="space-y-3">
+                {trackedJobs
+                  .filter(j => jobFilter === 'all' ? true : (jobFilter === 'applied' ? j.isApplied : j.isSaved))
+                  .map((job: any) => (
+                    <div 
+                      key={job.noticeId}
+                      className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-955 border border-slate-200/80 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 group hover:border-blue-300 dark:hover:border-blue-700 transition"
+                    >
+                      <div className="space-y-1.5 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {job.isApplied && (
+                            <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[9px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                              <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Applied
+                            </span>
+                          )}
+                          {job.isSaved && (
+                            <span className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 text-[9px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-blue-200 dark:border-blue-800 flex items-center gap-1">
+                              <Bookmark className="h-3 w-3 text-blue-600" /> Saved
+                            </span>
+                          )}
+                          {job.appliedDate && (
+                            <span className="text-[10px] text-slate-500 font-bold bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-800">
+                              📅 Applied Date: {job.appliedDate}
+                            </span>
+                          )}
+                          {job.applicationNo && (
+                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-extrabold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-900">
+                              Reg / Roll No: {job.applicationNo}
+                            </span>
+                          )}
+                        </div>
+
+                        <h4 className="font-bold text-xs sm:text-sm text-slate-850 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
+                          {job.title}
+                        </h4>
+
+                        <div className="flex items-center gap-3 text-[10px] text-slate-400 font-semibold flex-wrap">
+                          {job.date && <span>Notice Date: {job.date}</span>}
+                          {job.lastDate && (
+                            <span className="text-rose-600 font-bold uppercase tracking-wider">
+                              Deadline: {job.lastDate}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-200/60 dark:border-slate-800">
+                        <Link
+                          href={`/updates/${job.noticeId}`}
+                          className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+                        >
+                          <span>View Details</span>
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </Link>
+                        
+                        <button
+                          type="button"
+                          onClick={() => setJobToRemove({ noticeId: job.noticeId, title: job.title })}
+                          className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                          title="Remove from Tracker"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
+                <BookmarkCheck className="h-8 w-8 text-slate-300 mx-auto" />
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                  {language === 'hi' ? 'अभी कोई सेव या आवेदन नहीं किया गया' : 'No saved or applied jobs yet'}
+                </p>
+                <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+                  {language === 'hi'
+                    ? 'अधिसूचनाओं पर जाएं और ट्रैक करने के लिए "Save Job" या "Mark as Applied" पर क्लिक करें।'
+                    : 'Visit any notification announcement and click "Save Job" or "Mark as Applied" to track your applications here.'}
+                </p>
+                <Link
+                  href="/updates"
+                  className="inline-flex items-center gap-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:underline pt-1"
+                >
+                  <span>{language === 'hi' ? 'सरकारी सूचनाएं ब्राउज़ करें' : 'Browse Government Notifications'}</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            )}
+          </section>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
@@ -847,10 +1161,57 @@ export default function StudentProfilePage() {
           <span>{successMsg}</span>
         </div>
       )}
-      {errorMsg && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-950 border border-red-800 text-red-400 px-4 py-3 rounded-lg shadow-2xl flex items-center gap-2 text-xs font-bold animate-in slide-in-from-bottom duration-300">
-          <AlertCircle className="h-4 w-4 text-red-500" />
-          <span>{errorMsg}</span>
+      {/* CONFIRMATION POPUP MODAL FOR REMOVING TRACKED JOB */}
+      {jobToRemove && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+            
+            <div className="flex items-start gap-4">
+              <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 shrink-0">
+                <Trash2 className="h-6 w-6" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                  {language === 'hi' ? 'ट्रैकर से जॉब हटाएं?' : 'Remove Job from Tracker?'}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                  {language === 'hi' 
+                    ? `क्या आप वास्तव में '${jobToRemove.title}' को अपने आवेदन और सेव किए गए जॉब ट्रैकर से हटाना चाहते हैं?` 
+                    : `Are you sure you want to remove '${jobToRemove.title}' from your saved & applied jobs tracker?`}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-slate-50 dark:bg-slate-955 rounded-2xl border border-slate-200/80 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-snug">
+              {language === 'hi'
+                ? 'यह क्रिया आपके प्रोफाइल से इस जॉब के स्टेटस, आवेदन तिथि और रोल नंबर को हटा देगी।'
+                : 'This action will reset your tracked status, application date, and registration details for this notification.'}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setJobToRemove(null)}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer active:scale-95"
+              >
+                {language === 'hi' ? 'रद्द करें' : 'Cancel'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  removeTrackedJob(jobToRemove.noticeId);
+                  setJobToRemove(null);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black transition cursor-pointer shadow-md shadow-rose-600/20 active:scale-95 flex items-center gap-1.5"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>{language === 'hi' ? 'हाँ, हटाएं' : 'Yes, Remove Job'}</span>
+              </button>
+            </div>
+
+          </div>
         </div>
       )}
 

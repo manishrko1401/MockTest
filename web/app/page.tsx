@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 import Link from 'next/link';
 import HomeSupportWidget from './components/HomeSupportWidget';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, GraduationCap, ChevronRight, ChevronLeft, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target } from 'lucide-react';
+import { ShieldCheck, GraduationCap, ChevronRight, ChevronLeft, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target, ArrowRight } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
 import { getLocalizedName } from './lib/examUtils';
 import { useIsMobile } from './useIsMobile';
@@ -282,6 +282,58 @@ const formatSubCategoryName = (name: string) => {
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
+  const renderNotificationTile = (notice: any, themeColor: 'blue' | 'amber' | 'emerald' | 'purple') => {
+    const typeTagColors = {
+      blue: 'bg-blue-50 text-blue-700 dark:bg-blue-955 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+      amber: 'bg-amber-50 text-amber-800 dark:bg-amber-955 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+      emerald: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-955 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+      purple: 'bg-purple-50 text-purple-800 dark:bg-purple-955 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+    };
+
+    const hoverBorderColors = {
+      blue: 'hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50/40 dark:hover:bg-blue-950/40',
+      amber: 'hover:border-amber-400 dark:hover:border-amber-600 hover:bg-amber-50/40 dark:hover:bg-amber-950/40',
+      emerald: 'hover:border-emerald-400 dark:hover:border-emerald-600 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/40',
+      purple: 'hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-50/40 dark:hover:bg-purple-950/40',
+    };
+
+    return (
+      <div
+        key={notice.id}
+        onClick={() => router.push(`/updates/${notice.id}`)}
+        className={`group w-full bg-slate-50/90 dark:bg-slate-950/70 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/90 dark:border-slate-800 ${hoverBorderColors[themeColor]} rounded-2xl p-4 shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col gap-2`}
+      >
+        {/* Top Badges & Date */}
+        <div className="flex items-center justify-between gap-2 w-full">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`text-[9px] font-extrabold px-2.5 py-0.5 rounded-md uppercase tracking-wider border ${typeTagColors[themeColor]}`}>
+              {notice.type}
+            </span>
+            {isNewlyPublished(notice.publishDate) && (
+              <span className="bg-rose-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider animate-pulse shadow-2xs">
+                {t.newBadge}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold whitespace-nowrap">{notice.date}</span>
+        </div>
+
+        {/* Regular Normal Weight Title (Clean font style) */}
+        <h5 className="font-semibold text-xs sm:text-[13px] text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug transition-colors">
+          {notice.title}
+        </h5>
+
+        {/* Last Date Deadline */}
+        {notice.lastDate && (
+          <p className="text-[9.5px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1 mt-0.5">
+            <span>{t.lastDate}</span>
+            <span>{notice.lastDate}</span>
+          </p>
+        )}
+      </div>
+    );
+  };
+
   const handleTouchStart = (e: React.TouchEvent) => {
     touchEndX.current = null;
     touchStartX.current = e.targetTouches[0].clientX;
@@ -459,7 +511,7 @@ const formatSubCategoryName = (name: string) => {
               },
               noticesList.map((notice) => (
                 <span key={notice.id} className="mx-4 hover:underline">
-                  <Link href="/updates">
+                  <Link href={`/updates/${notice.id}`}>
                     {(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title} ({notice.date})
                   </Link>
                   <span className="ml-4 text-blue-300">|</span>
@@ -475,7 +527,6 @@ const formatSubCategoryName = (name: string) => {
             <nav className="flex flex-col gap-4 text-sm font-bold text-slate-655 dark:text-slate-300">
               <Link href="/mock-tests" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navTestSeries}</Link>
               <Link href="/updates" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navUpdates}</Link>
-              <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navProfile}</Link>
               {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
                 <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navAdmin}</Link>
               )}
@@ -869,9 +920,10 @@ const formatSubCategoryName = (name: string) => {
                         'bg-purple-50/40 dark:bg-purple-950/10 border-purple-100 dark:border-purple-900/30 border-l-4 border-l-purple-500';
 
                       return (
-                        <div
+                        <Link
                           key={notice.id}
-                          className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm transition-all duration-200 hover:scale-[1.015] ${noticeStyle}`}
+                          href={`/updates/${notice.id}`}
+                          className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm transition-all duration-200 hover:scale-[1.015] active:scale-98 cursor-pointer block ${noticeStyle}`}
                         >
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-1">
@@ -890,20 +942,14 @@ const formatSubCategoryName = (name: string) => {
                             </div>
                             <span className="text-[7px] text-slate-400 font-semibold">{notice.date}</span>
                           </div>
-                          <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-normal">
-                            {notice.url ? (
-                              <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-0.5">
-                                {(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title}
-                                <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
-                              </a>
-                            ) : (
-                              (language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title
-                            )}
+                          <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1">
+                            <span>{(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title}</span>
+                            <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
                           </h5>
                           <p className="text-[8px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
                             {t.lastDate} {notice.lastDate || (language === 'hi' ? 'उपलब्ध नहीं' : 'N/A')}
                           </p>
-                        </div>
+                        </Link>
                       );
                     })
                   ) : (
@@ -1187,7 +1233,6 @@ const formatSubCategoryName = (name: string) => {
           <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-505 dark:text-slate-400">
             <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
             <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navUpdates}</Link>
-            <Link href="/profile" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navProfile}</Link>
             {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
               <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navAdmin}</Link>
             )}
@@ -1267,7 +1312,7 @@ const formatSubCategoryName = (name: string) => {
             },
             noticesList.map((notice) => (
               <span key={notice.id} className="mx-6 hover:underline">
-                <Link href="/updates">
+                <Link href={`/updates/${notice.id}`}>
                   {(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title} ({notice.date})
                 </Link>
                 <span className="ml-6 text-blue-300">|</span>
@@ -1444,17 +1489,13 @@ const formatSubCategoryName = (name: string) => {
                       </h4>
                     </div>
 
-                    {ann.url ? (
-                      <a
-                        href={ann.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[10px] md:text-[11px] px-3 py-1.5 rounded-lg transition shadow-md hover:shadow-blue-500/25 active:scale-95 shrink-0 cursor-pointer"
-                      >
-                        <span>{language === 'hi' ? 'विवरण देखें' : 'View Details'}</span>
-                        <ChevronRight className="h-3 w-3" />
-                      </a>
-                    ) : null}
+                    <Link
+                      href={`/updates/${ann.id}`}
+                      className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[10px] md:text-[11px] px-3 py-1.5 rounded-lg transition shadow-md hover:shadow-blue-500/25 active:scale-95 shrink-0 cursor-pointer"
+                    >
+                      <span>{language === 'hi' ? 'विवरण देखें' : 'View Details'}</span>
+                      <ChevronRight className="h-3 w-3" />
+                    </Link>
                   </div>
                 </div>
               );
@@ -1530,12 +1571,12 @@ const formatSubCategoryName = (name: string) => {
         </div>
       </section>
 
-      {/* DESKTOP VOCABULARY BOOSTER SECTION */}
-      <section className="py-12 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900">
+      {/* DESKTOP VOCABULARY BOOSTER SECTION - HIDDEN AS REQUESTED */}
+      {/* <section className="py-12 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900">
         <VocabSection language={language} />
-      </section>
+      </section> */}
 
-      {/* PORTAL UPDATES BOARD */}
+      {/* PORTAL UPDATES BOARD (RESULTNOTIFY STYLE 4-COLUMN CONTAINER GRID) */}
       <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900 space-y-12">
         <div className="text-center max-w-xl mx-auto">
           <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.liveUpdatesTitle}</h2>
@@ -1543,179 +1584,99 @@ const formatSubCategoryName = (name: string) => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Tile 1: Live Notices & Announcements */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-1.5 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
-            <div>
-              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 px-3">
-                <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce" /> {t.liveNotices}
-              </h3>
-              
-              <div className="space-y-3 flex-1">
-                {noticesList.filter(n => n.category === 'notice').length > 0 ? (
-                  [...noticesList]
-                    .filter(n => n.category === 'notice')
-                    .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
-                    .slice(0, 6)
-                    .map(notice => (
-                    <div
-                      key={notice.id}
-                      className="w-[98%] mx-auto p-3.5 rounded-2xl bg-blue-50/40 dark:bg-blue-950/10 border border-blue-155 dark:border-blue-900/30 border-l-4 border-l-blue-500 hover:scale-[1.015] hover:shadow-sm transition-all duration-205 flex flex-col gap-1.5"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="inline-block bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-900 text-blue-700 dark:text-blue-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
-                            {notice.type}
-                          </span>
-                          {isNewlyPublished(notice.publishDate) && (
-                            <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
-                              {t.newBadge}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold whitespace-nowrap">{notice.date}</span>
-                      </div>
-                      <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-snug">
-                        {notice.url ? (
-                          <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline flex items-center gap-1">
-                            {notice.title}
-                            <ChevronRight className="h-3 w-3 inline shrink-0 animate-pulse text-blue-500" />
-                          </a>
-                        ) : (
-                          notice.title
-                        )}
-                      </h5>
-                      <p className="text-[10px] text-red-500 font-extrabold mt-1 uppercase tracking-wider">
-                        {t.lastDate} {notice.lastDate || (language === 'hi' ? 'उपलब्ध नहीं' : 'N/A')}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
-                    {language === 'hi' ? 'फिलहाल कोई सक्रिय नोटिस नहीं है।' : 'No active notices at the moment.'}
-                  </div>
-                )}
-              </div>
+          
+          {/* Column 1: Live Notices & Announcements (Blue Theme) */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] border-t-4 border-t-blue-600 relative overflow-hidden">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+              <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce shrink-0" />
+              <span>{t.liveNotices}</span>
+            </h3>
+
+            <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
+              {noticesList.filter(n => n.category === 'notice').length > 0 ? (
+                [...noticesList]
+                  .filter(n => n.category === 'notice')
+                  .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                  .slice(0, 6)
+                  .map((notice) => renderNotificationTile(notice, 'blue'))
+              ) : (
+                <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
+                  {language === 'hi' ? 'कोई सक्रिय सूचना नहीं।' : 'No active notices.'}
+                </div>
+              )}
             </div>
-            
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-              <Link href="/updates" className="text-[9px] uppercase font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-                {language === 'hi' ? 'सभी नोटिस देखें' : 'View All Notices'} <ChevronRight className="h-3.5 w-3.5" />
+
+            <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
+              <Link 
+                href="/updates?category=notice"
+                className="w-full py-2.5 px-4 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+              >
+                <span>View All {t.liveNotices}</span>
+                <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           </div>
 
-          {/* Tile 2: Live Result Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-1.5 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
-            <div>
-              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 px-3">
-                <Trophy className="h-4.5 w-4.5 text-yellow-500 animate-pulse" /> {t.resultsMerits}
-              </h3>
-              
-              <div className="space-y-3 flex-1">
-                {noticesList.filter(n => n.category === 'result').length > 0 ? (
-                  [...noticesList]
-                    .filter(n => n.category === 'result')
-                    .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
-                    .slice(0, 6)
-                    .map(notice => (
-                    <div
-                      key={notice.id}
-                      className="w-[98%] mx-auto p-3.5 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-155 dark:border-emerald-900/30 border-l-4 border-l-emerald-500 hover:scale-[1.015] hover:shadow-sm transition-all duration-205 flex flex-col gap-1.5"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="inline-block bg-yellow-100 dark:bg-yellow-950/50 border border-yellow-300 dark:border-yellow-900/50 text-yellow-700 dark:text-yellow-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
-                            {notice.type}
-                          </span>
-                          {isNewlyPublished(notice.publishDate) && (
-                            <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
-                              {t.newBadge}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold whitespace-nowrap">{notice.date}</span>
-                      </div>
-                      <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-snug">
-                        {notice.url ? (
-                          <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:text-yellow-600 dark:hover:text-yellow-400 hover:underline flex items-center gap-1">
-                            {notice.title}
-                            <ChevronRight className="h-3 w-3 inline shrink-0 animate-pulse text-yellow-500" />
-                          </a>
-                        ) : (
-                          notice.title
-                        )}
-                      </h5>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
-                    {language === 'hi' ? 'फिलहाल कोई सक्रिय परिणाम नहीं हैं।' : 'No active results at the moment.'}
-                  </div>
-                )}
-              </div>
+          {/* Column 2: Results & Merit Lists (Amber Theme) */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] border-t-4 border-t-amber-500 relative overflow-hidden">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+              <Trophy className="h-4.5 w-4.5 text-amber-500 animate-pulse shrink-0" />
+              <span>{t.resultsMerits}</span>
+            </h3>
+
+            <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
+              {noticesList.filter(n => n.category === 'result').length > 0 ? (
+                [...noticesList]
+                  .filter(n => n.category === 'result')
+                  .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                  .slice(0, 6)
+                  .map((notice) => renderNotificationTile(notice, 'amber'))
+              ) : (
+                <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
+                  {language === 'hi' ? 'कोई सक्रिय परिणाम नहीं।' : 'No active results.'}
+                </div>
+              )}
             </div>
-            
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-              <Link href="/updates" className="text-[9px] uppercase font-black text-yellow-600 dark:text-yellow-400 hover:underline flex items-center gap-1">
-                {language === 'hi' ? 'सभी परिणाम देखें' : 'View All Results'} <ChevronRight className="h-3.5 w-3.5" />
+
+            <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
+              <Link 
+                href="/updates?category=result"
+                className="w-full py-2.5 px-4 rounded-2xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/70 dark:hover:bg-amber-900/80 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+              >
+                <span>View All {t.resultsMerits}</span>
+                <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           </div>
 
-          {/* Tile 3: Live Admit Card Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-6 px-1.5 rounded-3xl shadow-sm flex flex-col justify-between min-h-[646px]">
-            <div>
-              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2 px-3">
-                <FileText className="h-4.5 w-4.5 text-green-550" /> {t.admitCards}
-              </h3>
-              
-              <div className="space-y-3 flex-1">
-                {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
-                  [...noticesList]
-                    .filter(n => n.category === 'admit_card')
-                    .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
-                    .slice(0, 6)
-                    .map(notice => (
-                    <div
-                      key={notice.id}
-                      className="w-[98%] mx-auto p-3.5 rounded-2xl bg-amber-50/40 dark:bg-amber-950/10 border border-amber-155 dark:border-amber-900/30 border-l-4 border-l-amber-500 hover:scale-[1.015] hover:shadow-sm transition-all duration-205 flex flex-col gap-1.5"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="inline-block bg-green-100 dark:bg-green-950 border border-green-300 dark:border-green-900 text-green-700 dark:text-green-400 text-[8px] font-black px-2 py-0.5 rounded tracking-wider">
-                            {notice.type}
-                          </span>
-                          {isNewlyPublished(notice.publishDate) && (
-                            <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase shrink-0">
-                              {t.newBadge}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold whitespace-nowrap">{notice.date}</span>
-                      </div>
-                      <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-snug">
-                        {notice.url ? (
-                          <a href={notice.url} target="_blank" rel="noopener noreferrer" className="hover:text-green-600 dark:hover:text-green-400 hover:underline flex items-center gap-1">
-                            {notice.title}
-                            <ChevronRight className="h-3 w-3 inline shrink-0 animate-pulse text-green-550" />
-                          </a>
-                        ) : (
-                          notice.title
-                        )}
-                      </h5>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
-                    {language === 'hi' ? 'फिलहाल कोई सक्रिय एडमिट कार्ड नहीं हैं।' : 'No active admit cards at the moment.'}
-                  </div>
-                )}
-              </div>
+          {/* Column 3: Admit Cards & City Info (Emerald Theme) */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] border-t-4 border-t-emerald-600 relative overflow-hidden">
+            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+              <FileText className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+              <span>{t.admitCards}</span>
+            </h3>
+
+            <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
+              {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
+                [...noticesList]
+                  .filter(n => n.category === 'admit_card')
+                  .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                  .slice(0, 6)
+                  .map((notice) => renderNotificationTile(notice, 'emerald'))
+              ) : (
+                <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
+                  {language === 'hi' ? 'कोई सक्रिय प्रवेश पत्र नहीं।' : 'No active admit cards.'}
+                </div>
+              )}
             </div>
-            
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-              <Link href="/updates" className="text-[9px] uppercase font-black text-green-600 dark:text-green-400 hover:underline flex items-center gap-1">
-                {language === 'hi' ? 'सभी एडमिट कार्ड देखें' : 'View All Admit Cards'} <ChevronRight className="h-3.5 w-3.5" />
+
+            <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
+              <Link 
+                href="/updates?category=admit_card"
+                className="w-full py-2.5 px-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+              >
+                <span>View All {t.admitCards}</span>
+                <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           </div>

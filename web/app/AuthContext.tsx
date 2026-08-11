@@ -79,8 +79,10 @@ export interface Notice {
   type: string;
   category: 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial' | 'answer_key';
   url?: string;
+  rawUrl?: string;
   lastDate?: string; // e.g. "10 July 2026"
   imageUrl?: string;
+  contentHtml?: string;
 }
 
 export interface MockUser {
@@ -106,6 +108,21 @@ export interface MockUser {
   referralCoinsCredited: boolean;
   lastSeen?: string | null;
   lastPlatform?: string | null;
+  trackedJobs?: TrackedJob[];
+}
+
+export interface TrackedJob {
+  noticeId: string;
+  title: string;
+  category: string;
+  date: string;
+  lastDate?: string;
+  isSaved?: boolean;
+  isApplied?: boolean;
+  appliedDate?: string;
+  applicationNo?: string;
+  notes?: string;
+  updatedAt: string;
 }
 
 export interface ReportedQuestion {
@@ -130,6 +147,7 @@ interface AuthContextType {
   logout: () => void;
   updateProfile: (name: string, email: string, mobile: string) => void;
   updatePassword: (oldPass: string, newPass: string) => boolean;
+  updateTrackedJobs: (trackedJobs: TrackedJob[]) => void;
   reportedQuestionsList: ReportedQuestion[];
   reportQuestion: (
     questionId: string,
@@ -1738,6 +1756,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }).catch(err => console.error("Update profile API error:", err));
   };
 
+  const updateTrackedJobs = (trackedJobs: TrackedJob[]) => {
+    if (!currentUser) return;
+
+    const updatedUser = { ...currentUser, trackedJobs };
+    setCurrentUser(updatedUser);
+    syncUserCookieAndCache(updatedUser);
+
+    const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
+    setUsersList(updatedList);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`mocktesthub_tracked_jobs_${currentUser.id}`, JSON.stringify(trackedJobs));
+    }
+  };
+
   const updatePassword = (oldPass: string, newPass: string): boolean => {
     if (!currentUser) return false;
 
@@ -2205,6 +2238,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         logout,
         updateProfile,
         updatePassword,
+        updateTrackedJobs,
         addAttempt,
         toggleBookmark,
         resetAttempt,
