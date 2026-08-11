@@ -202,13 +202,8 @@ function renderLatexMath(latex: string): string {
     return `${indexPart}√${char}`;
   });
 
-  // 4. ^{superscript} or ^x (simple) → <sup>
-  result = result.replace(/\^\{([^}]*)\}/g, (_, inner) => `<sup style="font-size:0.75em">${renderLatexMath(inner)}</sup>`);
-  result = result.replace(/\^([a-zA-Z0-9])/g, (_, c) => `<sup style="font-size:0.75em">${c}</sup>`);
-
-  // 5. _{subscript} or _x (simple) → <sub>
-  result = result.replace(/_\{([^}]*)\}/g, (_, inner) => `<sub style="font-size:0.75em">${renderLatexMath(inner)}</sub>`);
-  result = result.replace(/_([a-zA-Z0-9])/g, (_, c) => `<sub style="font-size:0.75em">${c}</sub>`);
+  // 4. Comprehensive Superscripts (cubes, squares, powers) & Subscripts
+  result = renderPowersAndSubscripts(result);
 
   // 6. \text{...} → plain text span
   result = result.replace(/\\text\s*\{([^}]*)\}/g, (_, inner) => `<span>${inner}</span>`);
@@ -434,7 +429,56 @@ export function processQuestionHtml(rawContent: string | null | undefined): stri
     }
   }
 
+  // Step 5: Always format any remaining bare powers (^3, ^2, ^4, ^5, ^-1, unicode powers) & subscripts
+  processed = renderPowersAndSubscripts(processed);
+
   return processed;
+}
+
+/**
+ * Universal Power & Subscript Formatter.
+ * Handles cubes (^3, ³), squares (^2, ²), power 4 (^4, ⁴), power 5 (^5, ⁵), multi-digit powers (^10, ^{-2}),
+ * and subscripts (_1, _{n}) everywhere — inside and outside math delimiters.
+ */
+export function renderPowersAndSubscripts(text: string): string {
+  if (!text) return '';
+  let s = text;
+
+  // 1. Standardize Unicode superscripts (³, ², ¹, ⁴, ⁵, ⁶, ⁷, ⁸, ⁹, ⁰, ⁺, ⁻, ⁿ) -> <sup>
+  const superMap: Record<string, string> = {
+    '³': '3', '²': '2', '¹': '1', '⁴': '4', '⁵': '5',
+    '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁰': '0',
+    '⁺': '+', '⁻': '-', 'ⁿ': 'n'
+  };
+  s = s.replace(/[³²¹⁴⁵⁶⁷⁸⁹⁰⁺⁻ⁿ]/g, m => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${superMap[m] || m}</sup>`);
+
+  // 2. Caret powers:
+  // ^{inner} -> <sup>inner</sup>
+  s = s.replace(/(?<!\\)\^\{([^}]+)\}/g, (_, inner) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${inner}</sup>`);
+
+  // ^(inner) -> <sup>inner</sup>
+  s = s.replace(/(?<!\\)\^\(([^)]+)\)/g, (_, inner) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${inner}</sup>`);
+
+  // ^+123 or ^-123 or ^123 (multi-digit exponents, negative exponents, signed exponents)
+  s = s.replace(/(?<!\\)\^([\+\-]?\d+)/g, (_, num) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${num}</sup>`);
+
+  // ^n, ^x, ^a, ^k (single variable exponents)
+  s = s.replace(/(?<!\\)\^([a-zA-Z])(?![a-zA-Z0-9])/g, (_, char) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${char}</sup>`);
+
+  // 3. Subscripts:
+  // _{inner} -> <sub>inner</sub>
+  s = s.replace(/(?<!\\)_\{([^}]+)\}/g, (_, inner) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${inner}</sub>`);
+
+  // _(inner) -> <sub>inner</sub>
+  s = s.replace(/(?<!\\)_\(([^)]+)\)/g, (_, inner) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${inner}</sub>`);
+
+  // _+123 or _-123 or _123
+  s = s.replace(/(?<!\\)_([\+\-]?\d+)/g, (_, num) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${num}</sub>`);
+
+  // _n, _x, _i, _j
+  s = s.replace(/(?<!\\)_([a-zA-Z])(?![a-zA-Z0-9])/g, (_, char) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${char}</sub>`);
+
+  return s;
 }
 
 /**

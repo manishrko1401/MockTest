@@ -153,13 +153,15 @@ function latexToUnicode(s: string): string {
   c = c.replace(/\\dot\s*\{([^{}]*)\}/g,'$1̇');
   c = c.replace(/\\ddot\s*\{([^{}]*)\}/g,'$1̈');
 
-  // ── Superscripts: ^{…} and ^x ─────────────────────────────────────────────
+  // ── Superscripts: ^{…}, ^(…), ^123, ^-2, ^x ────────────────────────────────────────
   c = c.replace(/\^\{([^{}]+)\}/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
-  c = c.replace(/\^([0-9a-zA-Z+\-])/g, (_,ch)=>SUP[ch]??`^${ch}`);
+  c = c.replace(/\^\(([^()]+)\)/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
+  c = c.replace(/\^([0-9a-zA-Z+\-]+)/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
 
-  // ── Subscripts: _{…} and _x ───────────────────────────────────────────────
+  // ── Subscripts: _{…}, _(…), _123, _-2, _x ─────────────────────────────────────────
   c = c.replace(/_\{([^{}]+)\}/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
-  c = c.replace(/_([0-9a-zA-Z+\-])/g, (_,ch)=>SUB[ch]??`_${ch}`);
+  c = c.replace(/_\(([^()]+)\)/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
+  c = c.replace(/_([0-9a-zA-Z+\-]+)/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
 
   // ── Delimiters ────────────────────────────────────────────────────────────
   c = c.replace(/\\left\s*([\(\[\{|\\])/g,'$1');
