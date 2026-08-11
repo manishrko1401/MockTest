@@ -1,35 +1,41 @@
 /**
- * mathUtils.ts
- * Comprehensive utility for processing mathematical content from question databases.
- * Handles HTML entities, LaTeX, Unicode math symbols, and ensures MathJax compatibility.
+ * mathUtils.ts — Permanent, comprehensive math & symbol rendering utility.
+ *
+ * STRATEGY:
+ * Instead of relying on MathJax (async CDN, race conditions, unprocessed elements),
+ * we convert ALL known LaTeX patterns → rendered HTML directly in processQuestionHtml.
+ * MathJax then only needs to handle exotic edge cases that weren't caught here.
+ *
+ * This guarantees correct rendering regardless of how or where the HTML is rendered
+ * (MathJaxText component, plain dangerouslySetInnerHTML, SSR, etc.)
  */
 
 // ─────────────────────────────────────────────────────────────
-// 1. COMPREHENSIVE HTML ENTITY DECODER
+// 1. HTML ENTITY MAP
 // ─────────────────────────────────────────────────────────────
 
 const HTML_ENTITIES: Record<string, string> = {
   // Basic
   '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'",
-  '&apos;': "'", '&nbsp;': ' ', '&ensp;': ' ', '&emsp;': '  ', '&thinsp;': '\u202F',
-  // Math symbols → Unicode
+  '&apos;': "'", '&nbsp;': '\u00A0', '&ensp;': '\u2002', '&emsp;': '\u2003', '&thinsp;': '\u202F',
+  // Math symbols
   '&times;': '×', '&divide;': '÷', '&plusmn;': '±', '&minus;': '−',
   '&bull;': '•', '&middot;': '·', '&sdot;': '⋅', '&circ;': 'ˆ',
-  // Fractions → Unicode
+  // Fractions (HTML entity)
   '&frac12;': '½', '&frac13;': '⅓', '&frac14;': '¼', '&frac34;': '¾',
   '&frac23;': '⅔', '&frac15;': '⅕', '&frac25;': '⅖', '&frac35;': '⅗',
   '&frac45;': '⅘', '&frac16;': '⅙', '&frac56;': '⅚', '&frac18;': '⅛',
   '&frac38;': '⅜', '&frac58;': '⅝', '&frac78;': '⅞',
-  // Superscripts / Powers
+  // Superscripts
   '&sup1;': '¹', '&sup2;': '²', '&sup3;': '³',
-  // Greek letters – uppercase
+  // Greek – uppercase
   '&Alpha;': 'Α', '&Beta;': 'Β', '&Gamma;': 'Γ', '&Delta;': 'Δ',
   '&Epsilon;': 'Ε', '&Zeta;': 'Ζ', '&Eta;': 'Η', '&Theta;': 'Θ',
   '&Iota;': 'Ι', '&Kappa;': 'Κ', '&Lambda;': 'Λ', '&Mu;': 'Μ',
   '&Nu;': 'Ν', '&Xi;': 'Ξ', '&Omicron;': 'Ο', '&Pi;': 'Π',
   '&Rho;': 'Ρ', '&Sigma;': 'Σ', '&Tau;': 'Τ', '&Upsilon;': 'Υ',
   '&Phi;': 'Φ', '&Chi;': 'Χ', '&Psi;': 'Ψ', '&Omega;': 'Ω',
-  // Greek letters – lowercase
+  // Greek – lowercase
   '&alpha;': 'α', '&beta;': 'β', '&gamma;': 'γ', '&delta;': 'δ',
   '&epsilon;': 'ε', '&zeta;': 'ζ', '&eta;': 'η', '&theta;': 'θ',
   '&iota;': 'ι', '&kappa;': 'κ', '&lambda;': 'λ', '&mu;': 'μ',
@@ -48,236 +54,380 @@ const HTML_ENTITIES: Record<string, string> = {
   '&oplus;': '⊕', '&otimes;': '⊗', '&empty;': '∅', '&nabla;': '∇',
   '&ang;': '∠', '&perp;': '⊥', '&prime;': '′', '&Prime;': '″',
   '&deg;': '°', '&sim;': '∼', '&asymp;': '≈', '&cong;': '≅',
+  // Currency
+  '&cent;': '¢', '&pound;': '£', '&euro;': '€', '&yen;': '¥',
+  '&curren;': '¤', '&dollar;': '$',
   // Misc
   '&laquo;': '«', '&raquo;': '»', '&lsquo;': '\u2018', '&rsquo;': '\u2019',
   '&ldquo;': '\u201C', '&rdquo;': '\u201D', '&ndash;': '–', '&mdash;': '—',
-  '&trade;': '™', '&reg;': '®', '&copy;': '©', '&cent;': '¢',
-  '&pound;': '£', '&euro;': '€', '&yen;': '¥',
+  '&trade;': '™', '&reg;': '®', '&copy;': '©',
 };
 
-/**
- * Decodes all HTML entities in a string (both named and numeric).
- * Works in both browser and server (SSR) environments.
- */
+// ─────────────────────────────────────────────────────────────
+// 2. HTML ENTITY DECODER
+// ─────────────────────────────────────────────────────────────
+
 export function decodeHtmlEntities(text: string): string {
   if (!text) return '';
 
-  // Replace named entities first (case-sensitive, like the HTML spec)
-  let decoded = text.replace(/&[a-zA-Z][a-zA-Z0-9]*;/g, (match) => HTML_ENTITIES[match] || match);
+  let decoded = text.replace(/&[a-zA-Z][a-zA-Z0-9]*;/g, (m) => HTML_ENTITIES[m] || m);
+  decoded = decoded.replace(/&#(\d+);/g, (_, c) => String.fromCharCode(Number(c)));
+  decoded = decoded.replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
 
-  // Replace decimal numeric entities: &#123;
-  decoded = decoded.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)));
-
-  // Replace hex numeric entities: &#x1F600;
-  decoded = decoded.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
-
-  // Handle double-encoded entities (e.g. &amp;frac12; → &frac12; → ½)
+  // Handle double-encoded (e.g. &amp;frac12; → &frac12; → ½)
   if (decoded.includes('&') && decoded.includes(';')) {
-    decoded = decoded.replace(/&[a-zA-Z][a-zA-Z0-9]*;/g, (match) => HTML_ENTITIES[match] || match);
-    decoded = decoded.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)));
-    decoded = decoded.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    decoded = decoded.replace(/&[a-zA-Z][a-zA-Z0-9]*;/g, (m) => HTML_ENTITIES[m] || m);
+    decoded = decoded.replace(/&#(\d+);/g, (_, c) => String.fromCharCode(Number(c)));
+    decoded = decoded.replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
   }
 
   return decoded;
 }
 
 // ─────────────────────────────────────────────────────────────
-// 2. HTML TAG PROCESSORS (for math-in-HTML patterns)
+// 3. LATEX COMMAND → UNICODE / HTML CONVERTER
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Converts <sup>...</sup> and <sub>...</sub> inside text to LaTeX notation
- * when they appear to contain mathematical content.
- * Only converts inside LaTeX blocks (\\(...\\)) – leaves HTML for display content.
+ * Maps simple LaTeX commands to their Unicode/display equivalents.
+ * These are converted BEFORE MathJax processes anything, so they always render.
  */
-function convertSupSubToLatex(html: string): string {
-  // Convert <sup>n</sup> → ^{n} and <sub>n</sub> → _{n} for simple numeric/letter content
-  // Only when they appear in math-like contexts (near operators, numbers, letters)
-  return html
-    .replace(/<sup>([\d\w+\-*/\\^{}(). ]+?)<\/sup>/gi, (_, inner) => `<sup>${inner}</sup>`)
-    .replace(/<sub>([\d\w+\-*/\\^{}(). ]+?)<\/sub>/gi, (_, inner) => `<sub>${inner}</sub>`);
+const LATEX_TO_UNICODE: Record<string, string> = {
+  // Greek lowercase
+  '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ',
+  '\\epsilon': 'ε', '\\varepsilon': 'ε', '\\zeta': 'ζ', '\\eta': 'η',
+  '\\theta': 'θ', '\\vartheta': 'ϑ', '\\iota': 'ι', '\\kappa': 'κ',
+  '\\lambda': 'λ', '\\mu': 'μ', '\\nu': 'ν', '\\xi': 'ξ',
+  '\\pi': 'π', '\\varpi': 'ϖ', '\\rho': 'ρ', '\\varrho': 'ϱ',
+  '\\sigma': 'σ', '\\varsigma': 'ς', '\\tau': 'τ', '\\upsilon': 'υ',
+  '\\phi': 'φ', '\\varphi': 'φ', '\\chi': 'χ', '\\psi': 'ψ', '\\omega': 'ω',
+  // Greek uppercase
+  '\\Alpha': 'Α', '\\Beta': 'Β', '\\Gamma': 'Γ', '\\Delta': 'Δ',
+  '\\Epsilon': 'Ε', '\\Zeta': 'Ζ', '\\Eta': 'Η', '\\Theta': 'Θ',
+  '\\Iota': 'Ι', '\\Kappa': 'Κ', '\\Lambda': 'Λ', '\\Mu': 'Μ',
+  '\\Nu': 'Ν', '\\Xi': 'Ξ', '\\Pi': 'Π', '\\Rho': 'Ρ',
+  '\\Sigma': 'Σ', '\\Tau': 'Τ', '\\Upsilon': 'Υ', '\\Phi': 'Φ',
+  '\\Chi': 'Χ', '\\Psi': 'Ψ', '\\Omega': 'Ω',
+  // Math operators
+  '\\times': '×', '\\div': '÷', '\\pm': '±', '\\mp': '∓',
+  '\\cdot': '·', '\\cdots': '⋯', '\\ldots': '…', '\\vdots': '⋮', '\\ddots': '⋱',
+  '\\leq': '≤', '\\le': '≤', '\\geq': '≥', '\\ge': '≥',
+  '\\neq': '≠', '\\ne': '≠', '\\approx': '≈', '\\equiv': '≡',
+  '\\sim': '∼', '\\simeq': '≃', '\\cong': '≅', '\\propto': '∝',
+  '\\infty': '∞', '\\partial': '∂', '\\nabla': '∇', '\\forall': '∀',
+  '\\exists': '∃', '\\nexists': '∄', '\\emptyset': '∅', '\\varnothing': '∅',
+  '\\in': '∈', '\\notin': '∉', '\\subset': '⊂', '\\supset': '⊃',
+  '\\subseteq': '⊆', '\\supseteq': '⊇', '\\cup': '∪', '\\cap': '∩',
+  '\\oplus': '⊕', '\\otimes': '⊗', '\\perp': '⊥', '\\parallel': '∥',
+  '\\angle': '∠', '\\triangle': '△', '\\therefore': '∴', '\\because': '∵',
+  '\\sum': '∑', '\\prod': '∏', '\\int': '∫', '\\oint': '∮',
+  '\\sqrt{}': '√', '\\lfloor': '⌊', '\\rfloor': '⌋', '\\lceil': '⌈', '\\rceil': '⌉',
+  // Arrows
+  '\\to': '→', '\\rightarrow': '→', '\\leftarrow': '←',
+  '\\Rightarrow': '⇒', '\\Leftarrow': '⇐', '\\Leftrightarrow': '⇔',
+  '\\leftrightarrow': '↔', '\\uparrow': '↑', '\\downarrow': '↓',
+  '\\longrightarrow': '⟶', '\\longleftarrow': '⟵',
+  // Misc math
+  '\\degree': '°', '\\circ': '°', '\\prime': '′', '\\ddagger': '‡', '\\dagger': '†',
+  '\\bullet': '•', '\\star': '★', '\\ast': '*', '\\|': '‖',
+  // Currency (LaTeX style)
+  '\\rupee': '₹', '\\Rs': '₹', '\\$': '$',
+  // Trig functions (display as text)
+  '\\sin': 'sin', '\\cos': 'cos', '\\tan': 'tan', '\\cot': 'cot',
+  '\\sec': 'sec', '\\csc': 'csc', '\\log': 'log', '\\ln': 'ln',
+  '\\exp': 'exp', '\\lim': 'lim', '\\max': 'max', '\\min': 'min',
+  '\\gcd': 'gcd', '\\lcm': 'lcm', '\\det': 'det', '\\mod': 'mod',
+  // Spacing (collapse to single space)
+  '\\,': ' ', '\\;': ' ', '\\:': ' ', '\\!': '',
+  '\\quad': '\u2003', '\\qquad': '\u2003\u2003',
+  // Brackets
+  '\\{': '{', '\\}': '}', '\\(': '', '\\)': '', '\\[': '', '\\]': '',
+  '\\left': '', '\\right': '', '\\big': '', '\\Big': '', '\\bigg': '', '\\Bigg': '',
+};
+
+// ─────────────────────────────────────────────────────────────
+// 4. BRACE PARSER — extracts content of a LaTeX {} group
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Given a string starting at index `start` (which should be `{`),
+ * returns [innerContent, endIndex] where endIndex is the index AFTER the closing `}`.
+ */
+function parseBraceGroup(s: string, start: number): [string, number] {
+  if (s[start] !== '{') return ['', start];
+  let depth = 0;
+  let i = start;
+  while (i < s.length) {
+    if (s[i] === '{') depth++;
+    else if (s[i] === '}') {
+      depth--;
+      if (depth === 0) return [s.substring(start + 1, i), i + 1];
+    }
+    i++;
+  }
+  // Unclosed brace — return rest
+  return [s.substring(start + 1), s.length];
 }
 
 // ─────────────────────────────────────────────────────────────
-// 3. LATEX PREPROCESSOR FOR MATHJAX
+// 5. LATEX MATH BLOCK RENDERER
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Ensures LaTeX commands outside of MathJax delimiters get wrapped.
- * This handles questions where the LaTeX is not delimited.
- */
-function wrapOrphanLatex(text: string): string {
-  // If already contains math delimiters \( \), \[ \], or $, don't double-wrap
-  if (/\\[(\[]/.test(text) || /(?<![\\])\$/.test(text)) {
-    return text; // Let MathJax handle it as-is
-  }
-
-  // Detect bare LaTeX patterns that need wrapping
-  const BARE_LATEX_PATTERNS = [
-    /\\frac\s*\{/,
-    /\\sqrt\s*[\[{]/,
-    /\\sum[\s_^{]/,
-    /\\int[\s_^{]/,
-    /\\prod[\s_^{]/,
-    /\\lim[\s_^{]/,
-    /\\sin\s*(?:\^\{|[\(\s])/,
-    /\\cos\s*(?:\^\{|[\(\s])/,
-    /\\tan\s*(?:\^\{|[\(\s])/,
-    /\\log\s*(?:\^\{|[\(\s])/,
-    /\\ln\s*(?:\^\{|[\(\s])/,
-    /\\alpha\b/,
-    /\\beta\b/,
-    /\\gamma\b/,
-    /\\delta\b/,
-    /\\theta\b/,
-    /\\pi\b/,
-    /\\times\b/,
-    /\\div\b/,
-    /\\pm\b/,
-    /\\leq\b/,
-    /\\geq\b/,
-    /\\neq\b/,
-    /\\infty\b/,
-    /\\cdot\b/,
-    /\\text\s*\{/,
-    /\^\{[\d\w+\-]+\}/,
-    /_\{[\d\w+\-]+\}/,
-  ];
-
-  const hasBareLatex = BARE_LATEX_PATTERNS.some(p => p.test(text));
-  if (hasBareLatex) {
-    // Wrap the whole text in inline math
-    return `\\(${text}\\)`;
-  }
-
-  return text;
-}
-
-// ─────────────────────────────────────────────────────────────
-// 4. LATEX SPECIAL CHARACTER ESCAPER
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Escapes LaTeX-special characters (#, %, &, ~, _, ^) that appear OUTSIDE of
- * math delimiters. Inside math blocks, only # needs escaping (macro parameter).
+ * Converts a LaTeX math string (without delimiters) into rendered HTML.
+ * Handles: \frac, \sqrt, ^{}, _{}, \text{}, simple commands, numbers, operators.
  *
- * Characters like # cause "You can't use 'macro parameter character #' in math mode"
- * errors when MathJax encounters them unescaped in TeX.
+ * PERMANENT FIX STRATEGY: Convert all known patterns to HTML here.
+ * This means math renders correctly even without MathJax.
  */
-function escapeLatexSpecialChars(text: string): string {
+function renderLatexMath(latex: string): string {
+  if (!latex) return '';
+
+  let result = latex;
+
+  // 1. Strip outer \left \right \big etc. (visual size hints, not semantic)
+  result = result.replace(/\\(left|right|big|Big|bigg|Bigg)\s*/g, '');
+
+  // 2. \frac{numerator}{denominator} → rendered HTML fraction (handles nesting)
+  result = renderFrac(result);
+
+  // 3. \sqrt{content} or \sqrt[n]{content} → √(content)
+  result = result.replace(/\\sqrt(?:\[([^\]]*)\])?\s*\{([^}]*)\}/g, (_, idx, inner) => {
+    const rendered = renderLatexMath(inner);
+    const indexPart = idx ? `<sup style="font-size:0.7em">${idx}</sup>` : '';
+    return `${indexPart}√<span style="text-decoration:overline">${rendered}</span>`;
+  });
+  result = result.replace(/\\sqrt(?:\[([^\]]*)\])?\s*([^{}\s])/g, (_, idx, char) => {
+    const indexPart = idx ? `<sup style="font-size:0.7em">${idx}</sup>` : '';
+    return `${indexPart}√${char}`;
+  });
+
+  // 4. ^{superscript} or ^x (simple) → <sup>
+  result = result.replace(/\^\{([^}]*)\}/g, (_, inner) => `<sup style="font-size:0.75em">${renderLatexMath(inner)}</sup>`);
+  result = result.replace(/\^([a-zA-Z0-9])/g, (_, c) => `<sup style="font-size:0.75em">${c}</sup>`);
+
+  // 5. _{subscript} or _x (simple) → <sub>
+  result = result.replace(/_\{([^}]*)\}/g, (_, inner) => `<sub style="font-size:0.75em">${renderLatexMath(inner)}</sub>`);
+  result = result.replace(/_([a-zA-Z0-9])/g, (_, c) => `<sub style="font-size:0.75em">${c}</sub>`);
+
+  // 6. \text{...} → plain text span
+  result = result.replace(/\\text\s*\{([^}]*)\}/g, (_, inner) => `<span>${inner}</span>`);
+  result = result.replace(/\\textrm\s*\{([^}]*)\}/g, (_, inner) => `<span>${inner}</span>`);
+  result = result.replace(/\\textbf\s*\{([^}]*)\}/g, (_, inner) => `<strong>${inner}</strong>`);
+  result = result.replace(/\\textit\s*\{([^}]*)\}/g, (_, inner) => `<em>${inner}</em>`);
+  result = result.replace(/\\mathrm\s*\{([^}]*)\}/g, (_, inner) => `<span>${inner}</span>`);
+  result = result.replace(/\\mathbf\s*\{([^}]*)\}/g, (_, inner) => `<strong>${inner}</strong>`);
+  result = result.replace(/\\mathit\s*\{([^}]*)\}/g, (_, inner) => `<em>${inner}</em>`);
+
+  // 7. Simple LaTeX commands → Unicode
+  for (const [cmd, unicode] of Object.entries(LATEX_TO_UNICODE)) {
+    // Skip multi-char replacements that need special handling
+    if (cmd.startsWith('\\sqrt') || cmd.startsWith('\\frac') || cmd.startsWith('\\text') || cmd === '\\(' || cmd === '\\)' || cmd === '\\[' || cmd === '\\]') continue;
+    // Escape for regex: \alpha → \\alpha
+    const escaped = cmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Match command at word boundary or followed by non-letter
+    const re = new RegExp(escaped + '(?![a-zA-Z])', 'g');
+    result = result.replace(re, unicode);
+  }
+
+  // 8. Remove remaining curly braces {}, these are LaTeX grouping
+  result = result.replace(/\{([^}]*)\}/g, '$1');
+
+  // 9. Remove remaining backslash commands we didn't handle
+  result = result.replace(/\\[a-zA-Z]+/g, '');
+
+  // 10. Collapse multiple spaces
+  result = result.replace(/\s{2,}/g, ' ');
+
+  return result.trim();
+}
+
+/**
+ * Iterative \frac renderer that correctly handles nested braces.
+ */
+function renderFrac(input: string): string {
+  if (!input.includes('\\frac')) return input;
+
+  let result = input;
+  let safetyLimit = 30;
+
+  while (result.includes('\\frac') && safetyLimit-- > 0) {
+    const fracIdx = result.indexOf('\\frac');
+    if (fracIdx < 0) break;
+
+    let pos = fracIdx + 5; // skip '\frac'
+    while (pos < result.length && result[pos] === ' ') pos++;
+
+    let num: string, den: string, endPos: number;
+
+    if (result[pos] === '{') {
+      [num, pos] = parseBraceGroup(result, pos);
+      while (pos < result.length && result[pos] === ' ') pos++;
+      if (result[pos] === '{') {
+        [den, endPos] = parseBraceGroup(result, pos);
+      } else {
+        // Single char denominator
+        den = result[pos] || '';
+        endPos = pos + (den ? 1 : 0);
+      }
+    } else {
+      // Single char numerator
+      num = result[pos] || '';
+      pos++;
+      while (pos < result.length && result[pos] === ' ') pos++;
+      if (result[pos] === '{') {
+        [den, endPos] = parseBraceGroup(result, pos);
+      } else {
+        den = result[pos] || '';
+        endPos = pos + (den ? 1 : 0);
+      }
+    }
+
+    // Recursively render num and den (handle nested \frac)
+    const renderedNum = renderFrac(num);
+    const renderedDen = renderFrac(den);
+
+    const fracHtml = `<span class="math-frac" style="display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.2;font-size:0.92em;margin:0 2px;"><span style="border-bottom:1.5px solid currentColor;padding:0 3px;min-width:10px;text-align:center;">${renderedNum}</span><span style="padding:0 3px;min-width:10px;text-align:center;">${renderedDen}</span></span>`;
+
+    result = result.substring(0, fracIdx) + fracHtml + result.substring(endPos);
+  }
+
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 6. MATH DELIMITER STRIPPER & SEGMENT PROCESSOR
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Processes a full text string that may contain math delimiters.
+ * Segments: \( ... \), \[ ... \], $$ ... $$, $ ... $
+ * Each math segment is rendered by renderLatexMath().
+ * Non-math segments are left as-is (just HTML text).
+ */
+function processAllMath(text: string): string {
   if (!text) return '';
 
-  // Split the text into math and non-math segments
-  // We need to handle: \( ... \), \[ ... \], $$ ... $$, $ ... $
+  // Quick bail: if no LaTeX-like content, return as-is
+  if (!text.includes('\\') && !text.includes('$')) return text;
+
   const result: string[] = [];
   let i = 0;
 
   while (i < text.length) {
-    // Check for \( or \[  (inline/display math start)
-    if (text[i] === '\\' && (text[i + 1] === '(' || text[i + 1] === '[')) {
-      const closeDelim = text[i + 1] === '(' ? '\\)' : '\\]';
-      const start = i;
-      i += 2;
-      // Find the matching close delimiter
-      let depth = 1;
-      while (i < text.length && depth > 0) {
-        if (text[i] === '\\' && text.substring(i, i + closeDelim.length) === closeDelim) {
-          depth--;
-          if (depth === 0) {
-            i += closeDelim.length;
-            break;
-          }
-        }
-        i++;
+
+    // ── \[ ... \] display math ──
+    if (text[i] === '\\' && text[i + 1] === '[') {
+      const start = i + 2;
+      const end = text.indexOf('\\]', start);
+      if (end >= 0) {
+        const mathContent = text.substring(start, end);
+        result.push(`<span class="math-display" style="display:block;text-align:center;padding:4px 0;font-size:1.05em">${renderLatexMath(mathContent)}</span>`);
+        i = end + 2;
+        continue;
       }
-      // Extract math block and escape # inside it
-      let mathBlock = text.substring(start, i);
-      mathBlock = mathBlock.replace(/(?<!\\)#/g, '\\#');
-      result.push(mathBlock);
-      continue;
     }
 
-    // Check for $$ (display math)
+    // ── \( ... \) inline math ──
+    if (text[i] === '\\' && text[i + 1] === '(') {
+      const start = i + 2;
+      const end = text.indexOf('\\)', start);
+      if (end >= 0) {
+        const mathContent = text.substring(start, end);
+        result.push(`<span class="math-inline">${renderLatexMath(mathContent)}</span>`);
+        i = end + 2;
+        continue;
+      }
+    }
+
+    // ── $$ ... $$ display math ──
     if (text[i] === '$' && text[i + 1] === '$') {
-      const start = i;
-      i += 2;
-      while (i < text.length - 1 && !(text[i] === '$' && text[i + 1] === '$')) {
-        i++;
+      const start = i + 2;
+      const end = text.indexOf('$$', start);
+      if (end >= 0) {
+        const mathContent = text.substring(start, end);
+        result.push(`<span class="math-display" style="display:block;text-align:center;padding:4px 0;font-size:1.05em">${renderLatexMath(mathContent)}</span>`);
+        i = end + 2;
+        continue;
       }
-      if (i < text.length - 1) i += 2; else i = text.length;
-      let mathBlock = text.substring(start, i);
-      mathBlock = mathBlock.replace(/(?<!\\)#/g, '\\#');
-      result.push(mathBlock);
-      continue;
     }
 
-    // Check for $ (inline math) — but not escaped \$
+    // ── $ ... $ inline math ──
     if (text[i] === '$' && (i === 0 || text[i - 1] !== '\\')) {
-      const start = i;
-      i += 1;
-      while (i < text.length && !(text[i] === '$' && text[i - 1] !== '\\')) {
-        i++;
+      const start = i + 1;
+      let end = -1;
+      for (let j = start; j < text.length; j++) {
+        if (text[j] === '$' && text[j - 1] !== '\\') { end = j; break; }
       }
-      if (i < text.length) i += 1;
-      let mathBlock = text.substring(start, i);
-      mathBlock = mathBlock.replace(/(?<!\\)#/g, '\\#');
-      result.push(mathBlock);
-      continue;
+      if (end > start) {
+        const mathContent = text.substring(start, end);
+        result.push(`<span class="math-inline">${renderLatexMath(mathContent)}</span>`);
+        i = end + 1;
+        continue;
+      }
     }
 
-    // Non-math character — collect until next math delimiter
-    const start = i;
+    // ── Plain text character ── collect until next math delimiter
+    const plainStart = i;
     while (i < text.length) {
       if (text[i] === '\\' && (text[i + 1] === '(' || text[i + 1] === '[')) break;
       if (text[i] === '$') break;
       i++;
     }
-    // Non-math text: escape # so MathJax doesn't try to interpret it as TeX
-    let nonMath = text.substring(start, i);
-    // Only escape # that is not already escaped and not inside an HTML tag
-    nonMath = nonMath.replace(/(?<!\\)#/g, '\\#');
-    result.push(nonMath);
+    if (i > plainStart) {
+      result.push(text.substring(plainStart, i));
+    } else {
+      // Avoid infinite loop if nothing was consumed
+      result.push(text[i]);
+      i++;
+    }
   }
 
   return result.join('');
 }
 
 // ─────────────────────────────────────────────────────────────
-// 5. MASTER CONTENT PROCESSOR
+// 7. MASTER CONTENT PROCESSOR
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Full pipeline for processing question/option/explanation HTML content.
- * - Decodes all HTML entities
- * - Escapes LaTeX-special characters (#) to prevent MathJax errors
- * - Wraps orphan LaTeX commands (bare \frac{}, \sqrt{} etc.) in math delimiters
- * - Preserves existing MathJax delimiters intact
- * - Handles <sup>, <sub> tags correctly
- * - Strips invalid or display-breaking tags
+ * Full pipeline for processing question/option/explanation content.
  *
- * IMPORTANT: Returns HTML string (safe for dangerouslySetInnerHTML / MathJaxText).
+ * Steps:
+ *  1. Decode HTML entities (&amp;, &times;, &frac12;, etc.)
+ *  2. Normalize newlines
+ *  3. If content contains HTML tags: process math ONLY in text nodes (skip tags)
+ *     If plain text: run full math processing
+ *  4. Convert \frac{}{}, \sqrt{}, ^{}, _{}, \alpha etc. → HTML
+ *  5. Return rendered HTML string safe for dangerouslySetInnerHTML
+ *
+ * PERMANENT: Works without MathJax. MathJax is a bonus for exotic expressions.
  */
 export function processQuestionHtml(rawContent: string | null | undefined): string {
   if (!rawContent) return '';
 
-  // Step 1: Decode all HTML entities (including &frac12;, &times;, &radic;, etc.)
+  // Step 1: Decode HTML entities
   let processed = decodeHtmlEntities(rawContent);
 
   // Step 2: Normalize newlines
   processed = processed.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-  // Step 3: Escape LaTeX-special characters (#) to prevent MathJax errors
-  // This fixes "You can't use 'macro parameter character #' in math mode"
-  processed = escapeLatexSpecialChars(processed);
+  // Step 3 & 4: Process math
+  const hasHtmlTags = /<[a-zA-Z]/.test(processed);
 
-  // Step 4: Wrap orphan LaTeX commands that are not inside math delimiters
-  // This fixes bare \frac{}{}, \sqrt{} etc. not rendering
-  processed = wrapOrphanLatex(processed);
+  if (hasHtmlTags) {
+    // Content has HTML tags — process math only in text nodes (between tags)
+    // Split by HTML tags, process text segments, reassemble
+    processed = processed.replace(/(<[^>]+>)|([^<]+)/g, (match, tag, text) => {
+      if (tag) return tag; // Keep HTML tags as-is
+      if (text) return processAllMath(text); // Process math in text
+      return match;
+    });
+  } else {
+    // Plain text — process all math
+    processed = processAllMath(processed);
 
-  // Step 5: Convert standalone newlines (not inside HTML) to <br> only for plain text
-  // (HTML content already uses <p>, <br> etc.)
-  if (!/<[a-zA-Z]/.test(processed)) {
-    // Plain text – convert newlines to <br>
+    // Convert newlines to <br> for plain text display
     processed = processed.replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>');
     if (processed.includes('</p><p>')) {
       processed = `<p>${processed}</p>`;
@@ -288,7 +438,7 @@ export function processQuestionHtml(rawContent: string | null | undefined): stri
 }
 
 /**
- * Simple decode for plain text contexts (no HTML needed, just entity decoding).
+ * Simple decode for plain text contexts (no HTML/math processing needed).
  */
 export function decodeHtml(text: string | null | undefined): string {
   if (!text) return '';
