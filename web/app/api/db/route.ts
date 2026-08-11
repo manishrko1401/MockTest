@@ -264,6 +264,8 @@ export async function POST(request: Request) {
         return await handleEditNotice(data);
       case 'delete-notice':
         return await handleDeleteNotice(data);
+      case 'get-single-notice-content':
+        return await handleGetSingleNoticeContent(data);
       case 'add-category':
       case 'create-category':
         return await handleAddCategory(data || body?.category || body);
@@ -572,7 +574,8 @@ async function handleBootstrap() {
     rawUrl: n.rawUrl || undefined,
     lastDate: n.lastDate || undefined,
     imageUrl: n.imageUrl || undefined,
-    contentHtml: n.contentHtml || undefined,
+    // Note: contentHtml is intentionally excluded from bootstrap to reduce Supabase Egress by 99%.
+    // Full notice HTML is loaded on demand when the user opens a notice detail page.
   }));
 
   // Fetch Exam Catalog using optimized memory assembler
@@ -1519,7 +1522,7 @@ async function handleResetAttempt(data: any) {
 }
 
 async function handleAddNotice(data: any) {
-  const { id, title, titleHi, type, category, date, publishDate, url, lastDate, imageUrl } = data;
+  const { id, title, titleHi, type, category, date, publishDate, url, lastDate, imageUrl, contentHtml } = data;
 
   await prisma.notice.create({
     data: {
@@ -1533,6 +1536,7 @@ async function handleAddNotice(data: any) {
       url: url || null,
       lastDate: lastDate || null,
       imageUrl: imageUrl || null,
+      contentHtml: contentHtml || null,
     },
   });
 
@@ -1540,7 +1544,7 @@ async function handleAddNotice(data: any) {
 }
 
 async function handleEditNotice(data: any) {
-  const { id, title, titleHi, type, category, date, publishDate, url, lastDate, imageUrl } = data || {};
+  const { id, title, titleHi, type, category, date, publishDate, url, lastDate, imageUrl, contentHtml } = data || {};
 
   if (!id) {
     return NextResponse.json({ success: false, error: 'Notice ID is required' }, { status: 400 });
@@ -1558,10 +1562,42 @@ async function handleEditNotice(data: any) {
       ...(url !== undefined ? { url: url || null } : {}),
       ...(lastDate !== undefined ? { lastDate: lastDate || null } : {}),
       ...(imageUrl !== undefined ? { imageUrl: imageUrl || null } : {}),
+      ...(contentHtml !== undefined ? { contentHtml: contentHtml || null } : {}),
     },
   });
 
   return NextResponse.json({ success: true });
+}
+
+async function handleGetSingleNoticeContent(data: any) {
+  const { id } = data || {};
+  if (!id) {
+    return NextResponse.json({ success: false, error: 'Notice ID is required' }, { status: 400 });
+  }
+
+  const notice = await prisma.notice.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      titleHi: true,
+      date: true,
+      publishDate: true,
+      type: true,
+      category: true,
+      url: true,
+      rawUrl: true,
+      lastDate: true,
+      imageUrl: true,
+      contentHtml: true,
+    }
+  });
+
+  if (!notice) {
+    return NextResponse.json({ success: false, error: 'Notice not found' }, { status: 404 });
+  }
+
+  return NextResponse.json({ success: true, notice });
 }
 
 async function handleDeleteNotice(data: any) {

@@ -138,11 +138,42 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   const [applicationNo, setApplicationNo] = React.useState('');
   const [saveToast, setSaveToast] = React.useState<string | null>(null);
 
+  const [fetchedNotice, setFetchedNotice] = React.useState<any>(null);
+  const [noticeLoading, setNoticeLoading] = React.useState(false);
+
   React.useEffect(() => {
     params.then(p => setNoticeId(p.id));
   }, [params]);
 
-  const notice = noticeId ? noticesList.find(n => n.id === noticeId) : null;
+  React.useEffect(() => {
+    if (!noticeId) return;
+    const inList = noticesList.find(n => n.id === noticeId);
+    if (inList && inList.contentHtml) {
+      setFetchedNotice(inList);
+    } else {
+      setNoticeLoading(true);
+      fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get-single-notice-content', data: { id: noticeId } })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.notice) {
+            setFetchedNotice(data.notice);
+          } else if (inList) {
+            setFetchedNotice(inList);
+          }
+        })
+        .catch(err => {
+          console.error("Fetch single notice error:", err);
+          if (inList) setFetchedNotice(inList);
+        })
+        .finally(() => setNoticeLoading(false));
+    }
+  }, [noticeId, noticesList]);
+
+  const notice = fetchedNotice || (noticeId ? noticesList.find(n => n.id === noticeId) : null);
   const parsedLinks = React.useMemo(() => notice?.contentHtml ? extractParsedLinks(notice.contentHtml) : [], [notice]);
   const sanitizedContent = React.useMemo(() => notice?.contentHtml ? sanitizeNoticeHtml(notice.contentHtml) : '', [notice]);
 
