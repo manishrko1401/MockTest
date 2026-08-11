@@ -98,7 +98,7 @@ export default function IndependenceDayDecorations() {
       )}
 
       {/* 2. FLOATING SIDE TRICOLOR BALLOONS (Visible on Mobile & Desktop) */}
-      <div className="fixed bottom-4 left-2 sm:bottom-6 sm:left-3 z-40 pointer-events-none flex flex-col items-center gap-1.5 opacity-90 animate-balloon-float scale-75 sm:scale-100 origin-bottom-left">
+      <div className="fixed bottom-2 left-1 sm:bottom-6 sm:left-3 z-30 pointer-events-none flex flex-col items-center gap-1 opacity-80 sm:opacity-90 animate-balloon-float scale-50 sm:scale-100 origin-bottom-left">
         <div className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-slate-900/90 backdrop-blur-md border border-orange-500/50 rounded-full text-[9px] sm:text-[10px] text-white font-black flex items-center gap-1.5 shadow-xl">
           <span className="animate-flag-sway inline-block">🇮🇳</span> Jai Hind!
         </div>

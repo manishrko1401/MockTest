@@ -415,16 +415,16 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
       </header>
 
       {/* MAIN CONTAINER */}
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6 relative z-10">
+      <main className="max-w-7xl mx-auto px-2.5 sm:px-6 md:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 relative z-10 overflow-x-hidden w-full">
 
         {/* HERO HEADER CARD (RESULTNOTIFY STYLE TOP CARD) */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm relative overflow-hidden">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 shadow-sm relative overflow-hidden w-full">
           
           {/* Small Share Icon Button on Top Right Corner (Mobile View Only) */}
           <button
             type="button"
             onClick={handleShare}
-            className="sm:hidden absolute top-3.5 right-3.5 p-2.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 shrink-0 active:scale-95 transition cursor-pointer shadow-sm z-20 backdrop-blur-xs"
+            className="sm:hidden absolute top-3.5 right-3.5 p-2 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 shrink-0 active:scale-95 transition cursor-pointer shadow-sm z-20 backdrop-blur-xs"
             title="Share Notice Link"
           >
             {copied ? <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <Share2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
@@ -459,7 +459,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                   )}
                 </div>
 
-                <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-snug sm:leading-tight tracking-tight">
+                <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-snug sm:leading-tight tracking-tight break-words">
                   {notice.title}
                 </h1>
 
@@ -547,13 +547,13 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </section>
 
         {/* TWO-COLUMN LAYOUT (LEFT CONTENT + RIGHT SIDEBAR DOCK) */}
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] w-full">
 
           {/* LEFT MAIN CONTENT COLUMN */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6 w-full min-w-0">
 
             {/* QUICK ACCESS NAVIGATION BAR (RESULTNOTIFY PILL NAV WITH HORIZONTAL SCROLL) */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-2 sm:p-2.5 rounded-2xl shadow-sm overflow-x-auto no-scrollbar flex items-center gap-2 sticky top-16 sm:top-20 z-30 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 whitespace-nowrap scroll-smooth touch-pan-x">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-2 sm:p-2.5 rounded-2xl shadow-sm overflow-x-auto no-scrollbar flex items-center gap-2 sticky top-16 sm:top-20 z-30 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 whitespace-nowrap scroll-smooth touch-pan-x w-full">
               <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider px-2 sm:px-3 py-1 shrink-0 flex items-center gap-1">
                 <Compass className="h-3.5 w-3.5 text-blue-500" /> Quick Access:
               </span>
@@ -593,58 +593,58 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
             </div>
 
             {/* 1. OVERVIEW & QUICK METRICS CARD */}
-            <div id="sec-overview" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-4 sm:p-6 md:p-8 rounded-3xl shadow-sm space-y-4 sm:space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3.5 sm:pb-4 gap-2 flex-wrap sm:flex-nowrap">
+            <div id="sec-overview" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-3.5 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-sm space-y-3.5 sm:space-y-5 overflow-hidden w-full">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4 gap-2 flex-wrap sm:flex-nowrap min-w-0">
                 <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
                   <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shrink-0">
                     <Building2 className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">Recruitment Overview</h2>
-                    <p className="text-[10px] sm:text-[11px] text-slate-400 font-semibold truncate">Key summary metrics at a glance</p>
+                    <h2 className="text-xs sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">Recruitment Overview</h2>
+                    <p className="text-[9.5px] sm:text-[11px] text-slate-400 font-semibold truncate">Key summary metrics at a glance</p>
                   </div>
                 </div>
 
-                <span className="text-[9px] sm:text-[10px] bg-green-50 text-green-700 dark:bg-green-950/60 dark:text-green-300 font-extrabold px-2.5 sm:px-3 py-1 rounded-full uppercase border border-green-200 dark:border-green-800 flex items-center gap-1 shrink-0">
+                <span className="text-[8.5px] sm:text-[10px] bg-green-50 text-green-700 dark:bg-green-950/60 dark:text-green-300 font-extrabold px-2 sm:px-3 py-1 rounded-full uppercase border border-green-200 dark:border-green-800 flex items-center gap-1 shrink-0">
                   <CheckCircle2 className="h-3 w-3" /> Official Verified
                 </span>
               </div>
 
               {/* 4 Metrics Cards Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-                <div className="bg-slate-50 dark:bg-slate-950/50 p-3 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-1 min-w-0">
-                  <span className="text-[9px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Notice Category</span>
-                  <p className="text-xs font-black text-slate-900 dark:text-white uppercase truncate">{notice.category?.replace('_', ' ')}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full">
+                <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
+                  <span className="text-[8px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Notice Category</span>
+                  <p className="text-[10.5px] sm:text-xs font-black text-slate-900 dark:text-white uppercase truncate">{notice.category?.replace('_', ' ')}</p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-950/50 p-3 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-1 min-w-0">
-                  <span className="text-[9px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Publish Date</span>
-                  <p className="text-xs font-black text-slate-900 dark:text-white truncate">{notice.date}</p>
+                <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
+                  <span className="text-[8px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Publish Date</span>
+                  <p className="text-[10.5px] sm:text-xs font-black text-slate-900 dark:text-white truncate">{notice.date}</p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-950/50 p-3 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-1 min-w-0">
-                  <span className="text-[9px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Application Deadline</span>
-                  <p className="text-xs font-black text-rose-600 dark:text-rose-400 truncate">{notice.lastDate || 'See Notification'}</p>
+                <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
+                  <span className="text-[8px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Application Deadline</span>
+                  <p className="text-[10.5px] sm:text-xs font-black text-rose-600 dark:text-rose-400 truncate">{notice.lastDate || 'See Notification'}</p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-950/50 p-3 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-1 min-w-0">
-                  <span className="text-[9px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Portal Status</span>
-                  <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 truncate">Active Window</p>
+                <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
+                  <span className="text-[8px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Portal Status</span>
+                  <p className="text-[10.5px] sm:text-xs font-black text-emerald-600 dark:text-emerald-400 truncate">Active Window</p>
                 </div>
               </div>
             </div>
 
             {/* 2. PARSED SOME USEFUL IMPORTANT LINKS GRID CARD (LIGHT THEME) */}
             {parsedLinks.length > 0 && (
-              <div id="sec-links" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm space-y-4 sm:space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3.5 sm:pb-4 gap-2 flex-wrap sm:flex-nowrap">
-                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                    <div className="p-2 sm:p-2.5 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shrink-0">
-                      <ExternalLink className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+              <div id="sec-links" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 shadow-sm space-y-3.5 sm:space-y-5 overflow-hidden w-full">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4 gap-2 flex-wrap sm:flex-nowrap min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shrink-0">
+                      <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
-                    <div className="min-w-0">
-                      <h2 className="text-sm sm:text-base font-black tracking-wide text-slate-900 dark:text-white uppercase truncate">Some Useful Important Links</h2>
-                      <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold truncate">Direct access buttons for online registration, syllabus, PDF notification & website</p>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-xs sm:text-base font-black tracking-wide text-slate-900 dark:text-white uppercase truncate">Some Useful Important Links</h2>
+                      <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Direct access buttons for online registration, syllabus & notification PDF</p>
                     </div>
                   </div>
                   <span className="bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[9px] sm:text-[10px] font-black px-2.5 sm:px-3 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800 hidden sm:inline-block shrink-0">
@@ -653,34 +653,34 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 </div>
 
                 {/* Grid of Link Cards in Light Theme */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3.5 w-full">
                   {parsedLinks.map((link, i) => (
                     <a
                       key={i}
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group bg-slate-50 dark:bg-slate-955 hover:bg-blue-50/80 dark:hover:bg-blue-950/40 border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-800 p-4 rounded-2xl transition-all duration-200 flex items-center justify-between gap-3 shadow-2xs hover:shadow-sm active:scale-98 cursor-pointer"
+                      className="group bg-slate-50 dark:bg-slate-955 hover:bg-blue-50/80 dark:hover:bg-blue-950/40 border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-800 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex items-center justify-between gap-2 sm:gap-3 shadow-2xs hover:shadow-sm active:scale-98 cursor-pointer w-full min-w-0"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/60 group-hover:bg-blue-600 text-blue-700 dark:text-blue-300 group-hover:text-white transition shrink-0">
-                          {link.iconType === 'apply' && <Sparkles className="h-4 w-4" />}
-                          {link.iconType === 'download' && <Download className="h-4 w-4" />}
-                          {link.iconType === 'official' && <Building2 className="h-4 w-4" />}
-                          {link.iconType === 'video' && <BookOpen className="h-4 w-4" />}
-                          {link.iconType === 'general' && <ExternalLink className="h-4 w-4" />}
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-blue-100 dark:bg-blue-900/60 group-hover:bg-blue-600 text-blue-700 dark:text-blue-300 group-hover:text-white transition shrink-0">
+                          {link.iconType === 'apply' && <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+                          {link.iconType === 'download' && <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+                          {link.iconType === 'official' && <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+                          {link.iconType === 'video' && <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+                          {link.iconType === 'general' && <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate leading-snug">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug break-words">
                             {link.label}
                           </p>
-                          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-extrabold uppercase tracking-wider block mt-0.5">
+                          <span className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mt-0.5 truncate">
                             Click to Open Direct Portal
                           </span>
                         </div>
                       </div>
 
-                      <span className="bg-blue-600 text-white group-hover:bg-blue-700 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 transition flex items-center gap-1 shadow-sm">
+                      <span className="bg-blue-600 text-white group-hover:bg-blue-700 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider shrink-0 transition flex items-center gap-0.5 sm:gap-1 shadow-sm">
                         Open <ChevronRight className="h-3 w-3" />
                       </span>
                     </a>
@@ -690,7 +690,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
             )}
 
             {/* 3. COMPLETE RECRUITMENT DETAILS (BODY HTML RENDER) */}
-            <div id="sec-full-content" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden p-6 md:p-8 space-y-6">
+            <div id="sec-full-content" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden p-3.5 sm:p-6 md:p-8 space-y-4 sm:space-y-6 w-full">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
