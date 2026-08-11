@@ -107,8 +107,8 @@ function convertSupSubToLatex(html: string): string {
  * This handles questions where the LaTeX is not delimited.
  */
 function wrapOrphanLatex(text: string): string {
-  // If already fully wrapped in \( ... \) or \[ ... \], don't double-wrap
-  if (/\\\(/.test(text) || /\\\[/.test(text) || /\$/.test(text)) {
+  // If already contains math delimiters \( \), \[ \], or $, don't double-wrap
+  if (/\\[(\[]/.test(text) || /(?<![\\])\$/.test(text)) {
     return text; // Let MathJax handle it as-is
   }
 
@@ -116,23 +116,32 @@ function wrapOrphanLatex(text: string): string {
   const BARE_LATEX_PATTERNS = [
     /\\frac\s*\{/,
     /\\sqrt\s*[\[{]/,
-    /\\sum\s/,
-    /\\int\s/,
-    /\\prod\s/,
-    /\\lim\s/,
-    /\\sin\s/,
-    /\\cos\s/,
-    /\\tan\s/,
-    /\\log\s/,
-    /\\ln\s/,
-    /\\alpha\s/,
-    /\\beta\s/,
-    /\\gamma\s/,
-    /\\delta\s/,
-    /\\theta\s/,
+    /\\sum[\s_^{]/,
+    /\\int[\s_^{]/,
+    /\\prod[\s_^{]/,
+    /\\lim[\s_^{]/,
+    /\\sin\s*(?:\^\{|[\(\s])/,
+    /\\cos\s*(?:\^\{|[\(\s])/,
+    /\\tan\s*(?:\^\{|[\(\s])/,
+    /\\log\s*(?:\^\{|[\(\s])/,
+    /\\ln\s*(?:\^\{|[\(\s])/,
+    /\\alpha\b/,
+    /\\beta\b/,
+    /\\gamma\b/,
+    /\\delta\b/,
+    /\\theta\b/,
     /\\pi\b/,
-    /\^\{[\d\w]+\}/,
-    /_\{[\d\w]+\}/,
+    /\\times\b/,
+    /\\div\b/,
+    /\\pm\b/,
+    /\\leq\b/,
+    /\\geq\b/,
+    /\\neq\b/,
+    /\\infty\b/,
+    /\\cdot\b/,
+    /\\text\s*\{/,
+    /\^\{[\d\w+\-]+\}/,
+    /_\{[\d\w+\-]+\}/,
   ];
 
   const hasBareLatex = BARE_LATEX_PATTERNS.some(p => p.test(text));
@@ -145,12 +154,103 @@ function wrapOrphanLatex(text: string): string {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 4. MASTER CONTENT PROCESSOR
+// 4. LATEX SPECIAL CHARACTER ESCAPER
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Escapes LaTeX-special characters (#, %, &, ~, _, ^) that appear OUTSIDE of
+ * math delimiters. Inside math blocks, only # needs escaping (macro parameter).
+ *
+ * Characters like # cause "You can't use 'macro parameter character #' in math mode"
+ * errors when MathJax encounters them unescaped in TeX.
+ */
+function escapeLatexSpecialChars(text: string): string {
+  if (!text) return '';
+
+  // Split the text into math and non-math segments
+  // We need to handle: \( ... \), \[ ... \], $$ ... $$, $ ... $
+  const result: string[] = [];
+  let i = 0;
+
+  while (i < text.length) {
+    // Check for \( or \[  (inline/display math start)
+    if (text[i] === '\\' && (text[i + 1] === '(' || text[i + 1] === '[')) {
+      const closeDelim = text[i + 1] === '(' ? '\\)' : '\\]';
+      const start = i;
+      i += 2;
+      // Find the matching close delimiter
+      let depth = 1;
+      while (i < text.length && depth > 0) {
+        if (text[i] === '\\' && text.substring(i, i + closeDelim.length) === closeDelim) {
+          depth--;
+          if (depth === 0) {
+            i += closeDelim.length;
+            break;
+          }
+        }
+        i++;
+      }
+      // Extract math block and escape # inside it
+      let mathBlock = text.substring(start, i);
+      mathBlock = mathBlock.replace(/(?<!\\)#/g, '\\#');
+      result.push(mathBlock);
+      continue;
+    }
+
+    // Check for $$ (display math)
+    if (text[i] === '$' && text[i + 1] === '$') {
+      const start = i;
+      i += 2;
+      while (i < text.length - 1 && !(text[i] === '$' && text[i + 1] === '$')) {
+        i++;
+      }
+      if (i < text.length - 1) i += 2; else i = text.length;
+      let mathBlock = text.substring(start, i);
+      mathBlock = mathBlock.replace(/(?<!\\)#/g, '\\#');
+      result.push(mathBlock);
+      continue;
+    }
+
+    // Check for $ (inline math) — but not escaped \$
+    if (text[i] === '$' && (i === 0 || text[i - 1] !== '\\')) {
+      const start = i;
+      i += 1;
+      while (i < text.length && !(text[i] === '$' && text[i - 1] !== '\\')) {
+        i++;
+      }
+      if (i < text.length) i += 1;
+      let mathBlock = text.substring(start, i);
+      mathBlock = mathBlock.replace(/(?<!\\)#/g, '\\#');
+      result.push(mathBlock);
+      continue;
+    }
+
+    // Non-math character — collect until next math delimiter
+    const start = i;
+    while (i < text.length) {
+      if (text[i] === '\\' && (text[i + 1] === '(' || text[i + 1] === '[')) break;
+      if (text[i] === '$') break;
+      i++;
+    }
+    // Non-math text: escape # so MathJax doesn't try to interpret it as TeX
+    let nonMath = text.substring(start, i);
+    // Only escape # that is not already escaped and not inside an HTML tag
+    nonMath = nonMath.replace(/(?<!\\)#/g, '\\#');
+    result.push(nonMath);
+  }
+
+  return result.join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+// 5. MASTER CONTENT PROCESSOR
 // ─────────────────────────────────────────────────────────────
 
 /**
  * Full pipeline for processing question/option/explanation HTML content.
  * - Decodes all HTML entities
+ * - Escapes LaTeX-special characters (#) to prevent MathJax errors
+ * - Wraps orphan LaTeX commands (bare \frac{}, \sqrt{} etc.) in math delimiters
  * - Preserves existing MathJax delimiters intact
  * - Handles <sup>, <sub> tags correctly
  * - Strips invalid or display-breaking tags
@@ -166,7 +266,15 @@ export function processQuestionHtml(rawContent: string | null | undefined): stri
   // Step 2: Normalize newlines
   processed = processed.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-  // Step 3: Convert standalone newlines (not inside HTML) to <br> only for plain text
+  // Step 3: Escape LaTeX-special characters (#) to prevent MathJax errors
+  // This fixes "You can't use 'macro parameter character #' in math mode"
+  processed = escapeLatexSpecialChars(processed);
+
+  // Step 4: Wrap orphan LaTeX commands that are not inside math delimiters
+  // This fixes bare \frac{}{}, \sqrt{} etc. not rendering
+  processed = wrapOrphanLatex(processed);
+
+  // Step 5: Convert standalone newlines (not inside HTML) to <br> only for plain text
   // (HTML content already uses <p>, <br> etc.)
   if (!/<[a-zA-Z]/.test(processed)) {
     // Plain text – convert newlines to <br>
