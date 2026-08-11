@@ -153,15 +153,15 @@ function latexToUnicode(s: string): string {
   c = c.replace(/\\dot\s*\{([^{}]*)\}/g,'$1̇');
   c = c.replace(/\\ddot\s*\{([^{}]*)\}/g,'$1̈');
 
-  // ── Superscripts: ^{…}, ^(…), ^123, ^-2, ^x ────────────────────────────────────────
-  c = c.replace(/\^\{([^{}]+)\}/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
-  c = c.replace(/\^\(([^()]+)\)/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
-  c = c.replace(/\^([0-9a-zA-Z+\-]+)/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
+  // ── Superscripts: ^{…}, ^(…), ^123, ^-2, ^ 3, ^x (with spaces) ──────────────────────
+  c = c.replace(/\s*\^\s*\{([^{}]+)\}/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
+  c = c.replace(/\s*\^\s*\(([^()]+)\)/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
+  c = c.replace(/\s*\^\s*([0-9a-zA-Z+\-]+)/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
 
-  // ── Subscripts: _{…}, _(…), _123, _-2, _x ─────────────────────────────────────────
-  c = c.replace(/_\{([^{}]+)\}/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
-  c = c.replace(/_\(([^()]+)\)/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
-  c = c.replace(/_([0-9a-zA-Z+\-]+)/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
+  // ── Subscripts: _{…}, _(…), _123, _-2, _ 1, _x (with spaces) ────────────────────────
+  c = c.replace(/\s*_\s*\{([^{}]+)\}/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
+  c = c.replace(/\s*_\s*\(([^()]+)\)/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
+  c = c.replace(/\s*_\s*([0-9a-zA-Z+\-]+)/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
 
   // ── Delimiters ────────────────────────────────────────────────────────────
   c = c.replace(/\\left\s*([\(\[\{|\\])/g,'$1');

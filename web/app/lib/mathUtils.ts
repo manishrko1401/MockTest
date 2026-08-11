@@ -452,31 +452,31 @@ export function renderPowersAndSubscripts(text: string): string {
   };
   s = s.replace(/[³²¹⁴⁵⁶⁷⁸⁹⁰⁺⁻ⁿ]/g, m => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${superMap[m] || m}</sup>`);
 
-  // 2. Caret powers:
+  // 2. Caret powers (handles spaces like "31 ^ 3", "x ^ {3}", "10 ^ -5"):
   // ^{inner} -> <sup>inner</sup>
-  s = s.replace(/(?<!\\)\^\{([^}]+)\}/g, (_, inner) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${inner}</sup>`);
+  s = s.replace(/(?<!\\)\s*\^\s*\{([^}]+)\}/g, (_, inner) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${inner}</sup>`);
 
   // ^(inner) -> <sup>inner</sup>
-  s = s.replace(/(?<!\\)\^\(([^)]+)\)/g, (_, inner) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${inner}</sup>`);
+  s = s.replace(/(?<!\\)\s*\^\s*\(([^)]+)\)/g, (_, inner) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${inner}</sup>`);
 
-  // ^+123 or ^-123 or ^123 (multi-digit exponents, negative exponents, signed exponents)
-  s = s.replace(/(?<!\\)\^([\+\-]?\d+)/g, (_, num) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${num}</sup>`);
+  // ^+123 or ^-123 or ^123 or ^ 3 (multi-digit exponents, negative exponents, signed exponents, spaces)
+  s = s.replace(/(?<!\\)\s*\^\s*([\+\-]?\d+)/g, (_, num) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${num}</sup>`);
 
   // ^n, ^x, ^a, ^k (single variable exponents)
-  s = s.replace(/(?<!\\)\^([a-zA-Z])(?![a-zA-Z0-9])/g, (_, char) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${char}</sup>`);
+  s = s.replace(/(?<!\\)\s*\^\s*([a-zA-Z])(?![a-zA-Z0-9])/g, (_, char) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${char}</sup>`);
 
-  // 3. Subscripts:
+  // 3. Subscripts (handles spaces like "a _ 1", "x _ {n}"):
   // _{inner} -> <sub>inner</sub>
-  s = s.replace(/(?<!\\)_\{([^}]+)\}/g, (_, inner) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${inner}</sub>`);
+  s = s.replace(/(?<!\\)\s*_\s*\{([^}]+)\}/g, (_, inner) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${inner}</sub>`);
 
   // _(inner) -> <sub>inner</sub>
-  s = s.replace(/(?<!\\)_\(([^)]+)\)/g, (_, inner) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${inner}</sub>`);
+  s = s.replace(/(?<!\\)\s*_\s*\(([^)]+)\)/g, (_, inner) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${inner}</sub>`);
 
   // _+123 or _-123 or _123
-  s = s.replace(/(?<!\\)_([\+\-]?\d+)/g, (_, num) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${num}</sub>`);
+  s = s.replace(/(?<!\\)\s*_\s*([\+\-]?\d+)/g, (_, num) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${num}</sub>`);
 
   // _n, _x, _i, _j
-  s = s.replace(/(?<!\\)_([a-zA-Z])(?![a-zA-Z0-9])/g, (_, char) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${char}</sub>`);
+  s = s.replace(/(?<!\\)\s*_\s*([a-zA-Z])(?![a-zA-Z0-9])/g, (_, char) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${char}</sub>`);
 
   return s;
 }
