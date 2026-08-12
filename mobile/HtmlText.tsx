@@ -115,6 +115,9 @@ function latexToUnicode(s: string): string {
 
   // Restore protected currency & reasoning dollar signs
   c = c.replaceAll(currencyToken, '$');
+  c = c.replaceAll('___SAFE_DOLLAR_SYM___', '$');
+  c = c.replaceAll('&#36;', '$');
+  c = c.replaceAll('&#x24;', '$');
 
   // Currency & Unit commands: \rupee, \Rs, \inr, \dollar, \euro, \pound, \yen, \degree, \celsius
   c = c.replace(/\\rupee\b|\\Rs\b|\\inr\b/gi, '₹');
