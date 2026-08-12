@@ -74,36 +74,64 @@ const HTML_ENTITIES: Record<string, string> = {
 // 2. CURRENCY & HTML ENTITY DECODER & PROTECTOR
 // ─────────────────────────────────────────────────────────────
 
+const SAFE_DOLLAR_SYM = '___SAFE_DOLLAR_SYM___';
+
 /**
- * Protects currency dollar signs from being misinterpreted as LaTeX math delimiters.
- * Converts currency '$' (like $50, $ 100, $10.50, $5,000, $1.5M, \$50) to literal currency.
+ * Determines if content inside $ ... $ is genuine LaTeX math vs plain text / reasoning operators.
+ */
+export function isActualLatexMath(inner: string): boolean {
+  if (!inner || !inner.trim()) return false;
+  const s = inner.trim();
+
+  // Contains LaTeX backslash commands: \frac, \sqrt, \alpha, \sum, etc.
+  if (/\\/.test(s)) return true;
+
+  // Contains LaTeX structural math symbols: ^, _, {, }
+  if (/[\^_{}]/.test(s)) return true;
+
+  // Contains explicit math operators: +, -, =, *, /, <, >, ≤, ≥, ±, ×, ÷
+  if (/[+=*/<>≤≥±×÷]/.test(s)) return true;
+
+  // Single mathematical variable formula e.g. "$x$", "$y$", "$a, b$"
+  if (/^[a-zA-Z](\s*,\s*[a-zA-Z])*$/.test(s)) return true;
+
+  return false;
+}
+
+/**
+ * Protects currency dollar signs & reasoning operators ($50, $ 100, 12 $ 10 $ 6, 'P $ Q')
+ * from being misinterpreted as LaTeX math delimiters.
  */
 export function protectCurrencySymbols(text: string): string {
   if (!text || !text.includes('$')) return text;
 
   let s = text;
 
-  // 1. Escaped dollar sign \$ -> $
-  s = s.replace(/\\\$([0-9a-zA-Z\s,.]*)/g, '$1');
+  // 1. Escaped dollar sign \$ -> SAFE_DOLLAR_SYM
+  s = s.replace(/\\\$([0-9a-zA-Z\s,.]*)/g, `${SAFE_DOLLAR_SYM}$1`);
 
-  // 2. Dollar sign followed by numbers/currency ($50, $ 100, $10.50, $5,000, $0.99, $.50, $1M, $2.5 billion)
-  s = s.replace(/\$(\s*)([0-9]+(?:[,.][0-9]+)*(?:\s*(?:million|billion|trillion|lakh|crore|[kKmMbB]))?)/g, '&#36;$1$2');
+  // 2. Dollar sign followed by numbers ($50, $ 100, $10.50, $5,000, $0.99, $.50, $1M, $2.5 billion)
+  s = s.replace(/\$(\s*)([0-9]+(?:[,.][0-9]+)*(?:\s*(?:million|billion|trillion|lakh|crore|[kKmMbB]))?)/g, `${SAFE_DOLLAR_SYM}$1$2`);
 
-  // 3. Number followed by dollar sign (50$, 100$)
-  s = s.replace(/([0-9]+)\s*\$/g, '$1&#36;');
+  // 3. Number followed by dollar sign (50$, 100$, 12 $)
+  s = s.replace(/([0-9]+)\s*\$/g, `$1${SAFE_DOLLAR_SYM}`);
 
-  // 4. If $ ... $ contains plain regular text or numbers without math operators (+, -, =, ^, _, <, >), treat as currency
-  s = s.replace(/\$(\s*[a-zA-Z0-9\s,.-]+?\s*)\$/g, (match, inner) => {
-    if (!/[\\+=\^_{}<>]/.test(inner) && /\d/.test(inner)) {
-      return `&#36;${inner}&#36;`;
+  // 4. Reasoning operators & variables: "12 $ 10", "A $ B", "P $ Q", " $ "
+  s = s.replace(/([a-zA-Z0-9'"])\s*\$\s*([a-zA-Z0-9'"])/g, `$1 ${SAFE_DOLLAR_SYM} $2`);
+  s = s.replace(/\s+\$\s+/g, ` ${SAFE_DOLLAR_SYM} `);
+
+  // 5. If $ ... $ contains plain regular text or numbers without LaTeX commands or math operators, protect both $
+  s = s.replace(/\$(\s*[a-zA-Z0-9\s,.'"-]+?\s*)\$/g, (match, inner) => {
+    if (!isActualLatexMath(inner)) {
+      return `${SAFE_DOLLAR_SYM}${inner}${SAFE_DOLLAR_SYM}`;
     }
     return match;
   });
 
-  // 5. Lone dollar signs preceded or followed by whitespace/punctuation
+  // 6. Lone or unclosed dollar signs
   const matches = s.match(/(?<!\\)\$/g);
   if (matches && matches.length % 2 !== 0) {
-    s = s.replace(/\$(\s+|$|(?=[.,;!?\s]))/g, '&#36;$1');
+    s = s.replace(/\$(\s+|$|(?=[.,;!?\s]))/g, `${SAFE_DOLLAR_SYM}$1`);
   }
 
   return s;
@@ -401,9 +429,11 @@ function processAllMath(text: string): string {
       }
       if (end > start) {
         const mathContent = text.substring(start, end);
-        result.push(`<span class="math-inline">${renderLatexMath(mathContent)}</span>`);
-        i = end + 1;
-        continue;
+        if (isActualLatexMath(mathContent)) {
+          result.push(`<span class="math-inline">${renderLatexMath(mathContent)}</span>`);
+          i = end + 1;
+          continue;
+        }
       }
     }
 
@@ -452,10 +482,10 @@ export function processQuestionHtml(rawContent: string | null | undefined): stri
   // Step 2: Decode HTML entities (&amp;, &times;, &frac12;, &rupee;, &dollar;, etc.)
   processed = decodeHtmlEntities(processed);
 
-  // Step 2: Normalize newlines
+  // Step 3: Normalize newlines
   processed = processed.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-  // Step 3 & 4: Process math
+  // Step 4: Process math
   const hasHtmlTags = /<[a-zA-Z]/.test(processed);
 
   if (hasHtmlTags) {
@@ -479,6 +509,9 @@ export function processQuestionHtml(rawContent: string | null | undefined): stri
 
   // Step 5: Always format any remaining bare powers (^3, ^2, ^4, ^5, ^-1, unicode powers) & subscripts
   processed = renderPowersAndSubscripts(processed);
+
+  // Step 6: Restore all protected currency and reasoning operator dollar signs
+  processed = processed.replaceAll(SAFE_DOLLAR_SYM, '$');
 
   return processed;
 }

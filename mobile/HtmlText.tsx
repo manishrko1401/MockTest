@@ -101,17 +101,19 @@ function latexToUnicode(s: string): string {
   if (!s) return '';
   let c = s;
 
-  // Protect currency dollar signs ($50, $ 100, $10.50, $5,000, \$50, 50$)
+  // Protect currency dollar signs & reasoning operators ($50, $ 100, 12 $ 10 $ 6, 'P $ Q')
   const currencyToken = '___CURRENCY_DOLLAR___';
   c = c.replace(/\\\$([0-9a-zA-Z\s,.]*)/g, `${currencyToken}$1`);
   c = c.replace(/\$(\s*)([0-9]+(?:[,.][0-9]+)*(?:\s*(?:million|billion|trillion|lakh|crore|[kKmMbB]))?)/g, `${currencyToken}$1$2`);
   c = c.replace(/([0-9]+)\s*\$/g, `$1${currencyToken}`);
+  c = c.replace(/([a-zA-Z0-9'"])\s*\$\s*([a-zA-Z0-9'"])/g, `$1 ${currencyToken} $2`);
+  c = c.replace(/\s+\$\s+/g, ` ${currencyToken} `);
 
   // Strip math delimiters \( \) \[ \] $$ and remaining LaTeX math $
   c = c.replace(/\\\(|\\\)|\\\[|\\\]|\$\$/g,'');
   c = c.replace(/(?<![a-zA-Z])\$(?!\$)/g,'');
 
-  // Restore protected currency dollar signs
+  // Restore protected currency & reasoning dollar signs
   c = c.replaceAll(currencyToken, '$');
 
   // Currency & Unit commands: \rupee, \Rs, \inr, \dollar, \euro, \pound, \yen, \degree, \celsius
