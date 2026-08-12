@@ -28,6 +28,7 @@ export default function UpdatesCenterPage() {
   const t = TRANSLATIONS[language];
   
   const { isMobile, isMounted } = useIsMobile();
+  const displayNotices = isMounted ? noticesList : [];
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [activeMobileTab, setActiveMobileTab] = React.useState<'notice' | 'result' | 'admit_card' | 'answer_key'>('notice');
   const [categoryFilter, setCategoryFilter] = React.useState<'notice' | 'result' | 'admit_card' | 'answer_key' | null>(null);
@@ -359,13 +360,13 @@ export default function UpdatesCenterPage() {
                 {activeMobileTab === 'answer_key' && <><ShieldCheck className="h-4.5 w-4.5 text-purple-600" /> Answer Keys</>}
               </span>
               <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500">
-                {noticesList.filter(n => n.category === activeMobileTab).length} items
+                {displayNotices.filter(n => n.category === activeMobileTab).length} items
               </span>
             </h3>
 
             <div className="space-y-3 max-h-[550px] overflow-y-auto no-scrollbar">
-              {noticesList.filter(n => n.category === activeMobileTab).length > 0 ? (
-                [...noticesList]
+              {displayNotices.filter(n => n.category === activeMobileTab).length > 0 ? (
+                [...displayNotices]
                   .filter(n => n.category === activeMobileTab)
                   .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                   .map((notice, idx) => {
@@ -501,7 +502,7 @@ export default function UpdatesCenterPage() {
                       {categoryFilter.replace('_', ' ')}
                     </span>
                     <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 font-extrabold px-3 py-1 rounded-full">
-                      {noticesList.filter(n => n.category === categoryFilter).length} {language === 'hi' ? 'आइटम' : 'Items'}
+                      {displayNotices.filter(n => n.category === categoryFilter).length} {language === 'hi' ? 'आइटम' : 'Items'}
                     </span>
                   </div>
                   <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mt-2 uppercase tracking-tight">
@@ -543,14 +544,14 @@ export default function UpdatesCenterPage() {
 
             {/* Category Items List Format (Single Column Vertical List) */}
             <div className="flex flex-col gap-3.5 w-full">
-              {noticesList
+              {displayNotices
                 .filter(n => n.category === categoryFilter)
                 .filter(n => searchQuery ? n.title.toLowerCase().includes(searchQuery.toLowerCase()) : true)
                 .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                 .map((notice, idx) => renderTileCard(notice, idx, categoryMeta[categoryFilter].color as any))}
             </div>
 
-            {noticesList.filter(n => n.category === categoryFilter).filter(n => searchQuery ? n.title.toLowerCase().includes(searchQuery.toLowerCase()) : true).length === 0 && (
+            {displayNotices.filter(n => n.category === categoryFilter).filter(n => searchQuery ? n.title.toLowerCase().includes(searchQuery.toLowerCase()) : true).length === 0 && (
               <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-slate-400 text-xs font-semibold">
                 {language === 'hi' ? 'कोई परिणाम नहीं मिला।' : 'No matching notifications found in this section.'}
               </div>
@@ -649,8 +650,8 @@ export default function UpdatesCenterPage() {
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-blue-600 relative overflow-hidden">
                 {/* List Starts Directly */}
                 <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
-                  {noticesList.filter(n => n.category === 'notice').length > 0 ? (
-                    [...noticesList]
+                  {displayNotices.filter(n => n.category === 'notice').length > 0 ? (
+                    [...displayNotices]
                       .filter(n => n.category === 'notice')
                       .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                       .map((notice, idx) => renderTileCard(notice, idx, 'blue'))
@@ -677,8 +678,8 @@ export default function UpdatesCenterPage() {
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-amber-500 relative overflow-hidden">
                 {/* List Starts Directly */}
                 <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
-                  {noticesList.filter(n => n.category === 'result').length > 0 ? (
-                    [...noticesList]
+                  {displayNotices.filter(n => n.category === 'result').length > 0 ? (
+                    [...displayNotices]
                       .filter(n => n.category === 'result')
                       .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                       .map((notice, idx) => renderTileCard(notice, idx, 'amber'))
@@ -705,8 +706,8 @@ export default function UpdatesCenterPage() {
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-emerald-600 relative overflow-hidden">
                 {/* List Starts Directly */}
                 <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
-                  {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
-                    [...noticesList]
+                  {displayNotices.filter(n => n.category === 'admit_card').length > 0 ? (
+                    [...displayNotices]
                       .filter(n => n.category === 'admit_card')
                       .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                       .map((notice, idx) => renderTileCard(notice, idx, 'emerald'))
@@ -733,8 +734,8 @@ export default function UpdatesCenterPage() {
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-purple-600 relative overflow-hidden">
                 {/* List Starts Directly */}
                 <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
-                  {noticesList.filter(n => n.category === 'answer_key').length > 0 ? (
-                    [...noticesList]
+                  {displayNotices.filter(n => n.category === 'answer_key').length > 0 ? (
+                    [...displayNotices]
                       .filter(n => n.category === 'answer_key')
                       .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                       .map((notice, idx) => renderTileCard(notice, idx, 'purple'))

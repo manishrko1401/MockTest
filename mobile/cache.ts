@@ -11,7 +11,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ── Cache version prefix (bump this string if question data shape changes) ─
-const Q_KEY_PREFIX = 'qs_v2_';   // "v2" auto-busts any old v1 cache
+const Q_KEY_PREFIX = 'qs_v3_';   // "v3" auto-busts old v1/v2 cache to ensure clean image tags
 const CAT_KEY      = 'catalog_v4'; // v4: force full-sync to include practice series isPracticeSeries + sections
 const USER_KEY     = 'user_profile_cache';
 const SYNC_TS_KEY  = 'catalog_last_synced_at';

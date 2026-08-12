@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
+import { uploadNoticeHtmlToTigris } from '../../../lib/tigrisNoticeStorage';
 import crypto from 'crypto';
 
 // Format date to: 30 June 2026
@@ -107,72 +108,150 @@ function mapCategoryAndType(xmlCategoriesStr: string, url: string, title: string
   }
 }
 
-// Extract inner details from notification heading to Useful Important Links section
+// Shared HTML cleanup logic for extracted notice content
+function cleanExtracted(extracted: string): string {
+  let s = extracted;
+  // Remove header and h1 tags if present
+  s = s.replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '');
+  s = s.replace(/<h1[^>]*>[\s\S]*?<\/h1>/gi, '');
+  s = s.replace(/<p[^>]*>(?:(?!<\/p>)[\s\S]){1,300}?Post\s*(?:Update\s*)?Date(?:(?!<\/p>)[\s\S]){1,300}?<\/p>/gi, '');
+
+  // Remove Short Description sections safely (li, p, h2-h4, tr, b/strong)
+  s = s.replace(/<li[^>]*>(?:(?!<\/li>)[\s\S])*?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)(?:(?!<\/li>)[\s\S])*?<\/li>/gi, '');
+  s = s.replace(/<p[^>]*>(?:(?!<\/p>)[\s\S]){1,400}?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)(?:(?!<\/p>)[\s\S]){1,400}?<\/p>/gi, '');
+  s = s.replace(/<h[2-4][^>]*>(?:(?!<\/h[2-4]>)[\s\S])*?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)(?:(?!<\/h[2-4]>)[\s\S])*?<\/h[2-4]>/gi, '');
+  s = s.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, '');
+  s = s.replace(/(?:<b>|<strong>)?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)\s*:?\s*(?:<\/b>|<\/strong>)?(?:[^<\n\r]{0,250})/gi, '');
+
+  // Clean ads & scripts
+  s = s.replace(/<ins[^>]*class=["']adsbygoogle["'][\s\S]*?<\/ins>/gi, '');
+  s = s.replace(/<script[\s\S]*?<\/script>/gi, '');
+
+  // Remove People Also Viewed widget
+  s = s.replace(/<div[^>]*class=["']rr-people-viewed["'][\s\S]*?<\/div>/gi, '');
+
+  // Remove Social link tables safely using negative lookahead (?!<\/table>) so other tables are never touched
+  s = s.replace(/<table[^>]*>(?:(?!<\/table>)[\s\S])*?(?:Mobile\s*Android\s*App|Twitter\s*\(X\)|Face\s*Book|Telegram\s*Channel|WhatsApp\s*Channel|Instagram\s*Reels)(?:(?!<\/table>)[\s\S])*?<\/table>/gi, '');
+
+  // Ensure all <a> links open in new tab
+  s = s.replace(/<a\s+(?!.*?target=)/gi, '<a target="_blank" rel="noopener noreferrer" ');
+  return s.trim();
+}
+
+// Extract ONLY specified target sections (Heading, Overview, Important Dates, Application Fees, Age Limit, Vacancy Details, Category Wise Vacancy Details, Useful Important Links)
 function extractNoticeContent(pageHtml: string): string | null {
   if (!pageHtml) return null;
 
-  let contentStart = -1;
-  const entryHeaderIdx = pageHtml.indexOf('class="entry-header"');
-  const entryContentIdx = pageHtml.indexOf('class="entry-content"');
+  // 1. Find <article> block or entry-content
+  const articleStart = pageHtml.indexOf('<article');
+  let bodyHtml = pageHtml;
 
-  if (entryHeaderIdx !== -1) {
-    contentStart = entryHeaderIdx;
-    const headerTagIdx = pageHtml.lastIndexOf('<header', entryHeaderIdx);
-    if (headerTagIdx !== -1) contentStart = headerTagIdx;
-  } else if (entryContentIdx !== -1) {
-    contentStart = entryContentIdx;
-    const divTagIdx = pageHtml.lastIndexOf('<div', entryContentIdx);
-    if (divTagIdx !== -1) contentStart = divTagIdx;
-  } else {
-    const h1Idx = pageHtml.indexOf('<h1');
-    if (h1Idx !== -1) contentStart = h1Idx;
+  if (articleStart !== -1) {
+    let articleEnd = pageHtml.indexOf('</article>', articleStart);
+    if (articleEnd === -1) articleEnd = articleStart + 60000;
+    else articleEnd += 10;
+    bodyHtml = pageHtml.substring(articleStart, articleEnd);
+
+    // Detect homepage redirect: many gb-loop-items = not an individual post page
+    const loopItemCount = (bodyHtml.match(/gb-loop-item/g) || []).length;
+    if (loopItemCount > 5) return null;
   }
 
-  if (contentStart === -1) return null;
-
-  let contentEnd = -1;
-  let linksHeadingIdx = pageHtml.toLowerCase().indexOf('useful important links');
-  if (linksHeadingIdx === -1 || linksHeadingIdx < contentStart) {
-    linksHeadingIdx = pageHtml.toLowerCase().indexOf('important links');
+  const entryContentIdx = bodyHtml.indexOf('class="entry-content"');
+  if (entryContentIdx !== -1) {
+    const divStart = bodyHtml.lastIndexOf('<div', entryContentIdx);
+    if (divStart !== -1) bodyHtml = bodyHtml.substring(divStart);
   }
 
-  if (linksHeadingIdx !== -1 && linksHeadingIdx > contentStart) {
-    const tableEndIdx = pageHtml.indexOf('</table>', linksHeadingIdx);
-    if (tableEndIdx !== -1) {
-      contentEnd = tableEndIdx + 8; // Include </table>
+  const allowedBlocks: string[] = [];
+
+  // A. HEADING (Notice main title heading)
+  const headingMatch = /<h[12][^>]*>([\s\S]*?)<\/h[12]>/i.exec(bodyHtml);
+  if (headingMatch) {
+    let hText = headingMatch[1].replace(/<[^>]*>/g, '').trim();
+    hText = hText.replace(/&amp;/g, '&').replace(/&#038;/g, '&').replace(/&#8211;/g, '-');
+    if (hText && !/Rojgar\s*Result/i.test(hText) && hText.length > 10) {
+      allowedBlocks.push(`<h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white my-3">${hText}</h2>`);
     }
   }
 
-  if (contentEnd === -1) {
-    const faqIdx = pageHtml.toLowerCase().indexOf('important faqs');
-    if (faqIdx !== -1 && faqIdx > contentStart) {
-      contentEnd = faqIdx;
-    } else {
-      const articleEndIdx = pageHtml.indexOf('</article>', contentStart);
-      if (articleEndIdx !== -1) {
-        contentEnd = articleEndIdx;
-      } else {
-        contentEnd = contentStart + 15000;
-      }
+  // B. OVERVIEW SECTION (Summary paragraph describing post)
+  const pMatches = bodyHtml.match(/<p[^>]*>[\s\S]*?<\/p>/gi) || [];
+  for (const p of pMatches) {
+    const text = p.replace(/<[^>]*>/g, '').trim();
+    if (
+      (text.includes('released notification') || text.includes('invited online application') || text.includes('issued notification') || text.includes('has released') || text.includes('short details') || text.includes('Short Description')) &&
+      !text.startsWith('Post Update Date') &&
+      !text.includes('Post Date') &&
+      text.length > 40 &&
+      text.length < 1500
+    ) {
+      let cleanP = p.replace(/<a[^>]*href=["'][^"']*rojgarresult\.com[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, '$1');
+      cleanP = cleanP.replace(/Rojgar\s*Result®?\s*/gi, '').replace(/rojgarresult\.com/gi, '').replace(/\.Com/gi, '');
+      cleanP = cleanP.replace(/(?:<b>|<strong>)?\s*Short\s*Description\s*:?\s*(?:<\/b>|<\/strong>)?\s*/gi, '<strong>Overview: </strong>');
+      allowedBlocks.push(`<div class="notice-overview p-4 my-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-slate-800 dark:text-slate-200 text-sm leading-relaxed">${cleanP}</div>`);
+      break;
     }
   }
 
-  let extracted = pageHtml.substring(contentStart, contentEnd);
+  // C. TABLES / SECTIONS ONLY:
+  // - Important Dates
+  // - Application Fees
+  // - Age Limit
+  // - Vacancy Details
+  // - Category Wise Vacancy Details
+  // - Some Useful Important Links
+  const tableRegex = /<table[^>]*>([\s\S]*?)<\/table>/gi;
+  let tMatch: RegExpExecArray | null;
 
-  // Clean ads & scripts
-  extracted = extracted.replace(/<ins[^>]*class=["']adsbygoogle["'][\s\S]*?<\/ins>/gi, '');
-  extracted = extracted.replace(/<script[\s\S]*?<\/script>/gi, '');
+  while ((tMatch = tableRegex.exec(bodyHtml)) !== null) {
+    const fullTable = tMatch[0];
+    const tableContent = tMatch[1];
+    const lower = tableContent.toLowerCase();
 
-  // Remove People Also Viewed
-  extracted = extracted.replace(/<div[^>]*class=["']rr-people-viewed["'][\s\S]*?<\/div>/gi, '');
+    // Whitelist criteria:
+    const isUsefulLinks = lower.includes('useful important link') || lower.includes('important link') || lower.includes('direct link') || lower.includes('apply online') || lower.includes('download notification') || lower.includes('official website');
+    const isImportantDates = lower.includes('important date') || lower.includes('application begin') || lower.includes('last date for apply');
+    const isApplicationFee = lower.includes('application fee') || lower.includes('exam fee') || lower.includes('general / obc');
+    const isAgeLimit = lower.includes('age limit') || lower.includes('minimum age') || lower.includes('maximum age');
+    const isVacancyDetails = lower.includes('vacancy detail') || lower.includes('total post') || lower.includes('eligibility');
+    const isCategoryVacancy = lower.includes('category wise') || lower.includes('category-wise') || (lower.includes('post name') && (lower.includes('ur') || lower.includes('obc') || lower.includes('sc') || lower.includes('st')));
 
-  // Remove Social link tables (Facebook, Telegram, WhatsApp, Instagram, etc.)
-  extracted = extracted.replace(/<table[^>]*>[\s\S]*?(?:Face\s*Book|Telegram\s*Channel|WhatsApp\s*Channel|Instagram\s*Reels)[\s\S]*?<\/table>/gi, '');
+    // Only skip standalone pure social media tables (NEVER skip Useful Links tables)
+    const isPureSocialMediaTable = !isUsefulLinks && !isImportantDates && !isApplicationFee && !isAgeLimit && !isVacancyDetails && !isCategoryVacancy &&
+      (lower.includes('face book') || lower.includes('telegram') || lower.includes('whatsapp') || lower.includes('instagram') || lower.includes('android app') || lower.includes('twitter'));
 
-  // Ensure all <a> links open in new tab securely
-  extracted = extracted.replace(/<a\s+(?!.*?target=)/gi, '<a target="_blank" rel="noopener noreferrer" ');
+    if (isPureSocialMediaTable) continue;
 
-  return extracted.trim();
+    // Blacklist non-requested standalone tables (Selection Procedure only, How to Apply only, FAQs)
+    const isSelectionProcedureOnly = (lower.includes('selection procedure') || lower.includes('selection process') || lower.includes('selection mode')) && !isVacancyDetails && !isImportantDates;
+    const isHowToApplyOnly = lower.includes('how to apply') || lower.includes('how to fill') || lower.includes('step to apply');
+    const isFaqOnly = lower.includes('faq') || lower.includes('question') || lower.includes('answer');
+
+    if (isSelectionProcedureOnly || isHowToApplyOnly || isFaqOnly) continue;
+
+    if (isUsefulLinks || isImportantDates || isApplicationFee || isAgeLimit || isVacancyDetails || isCategoryVacancy) {
+      let cleanTable = fullTable.replace(/\s*width=["']?\d+(?:px|%)?["']?/gi, '');
+      
+      // Strip social media & promo rows inside tables (e.g. WhatsApp/Telegram rows inside Useful Links table)
+      cleanTable = cleanTable.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:Watch\s*Video|Hindi\s*Video|Short\s*Notification\s*\(?[\w\s]*Video|Join\s*Free\s*Information|Information\s*Channel|Official\s*Whatsapp|Whats-App|WhatsApp|Telegram|Instagram|Face\s*Book|You\s*Tube|Reels)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, '');
+      
+      // Remove purely branding <a> tags where anchor text is "Rojgar Result" or "rojgarresult.com"
+      cleanTable = cleanTable.replace(/<a[^>]*>\s*(?:Rojgar\s*Result®?|rojgarresult\.com|\.Com)\s*<\/a>/gi, '');
+
+      // Remove branding text strictly inside text nodes (between > and <) without corrupting href URLs
+      cleanTable = cleanTable.replace(/>([^<]*)(?:Rojgar\s*Result®?|rojgarresult\.com)([^<]*)</gi, '>$1$2<');
+
+      // Ensure all <a> tags open in new tab
+      cleanTable = cleanTable.replace(/<a\s+(?!.*?target=)/gi, '<a target="_blank" rel="noopener noreferrer" ');
+
+      const tableBody = cleanTable.replace(/^<table[^>]*>/i, '').replace(/<\/table>$/i, '');
+      allowedBlocks.push(`<div class="notice-table-wrapper overflow-x-auto max-w-full my-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900"><table class="w-full text-left">${tableBody}</table></div>`);
+    }
+  }
+
+  if (allowedBlocks.length === 0) return null;
+  return allowedBlocks.join('\n\n');
 }
 
 // Helper to fetch text with User-Agent
@@ -251,18 +330,24 @@ export async function GET(request: Request) {
       for (let i = 1; i < parts.length; i++) {
         const part = parts[i];
         const h2Match = /<h2[^>]*>([\s\S]+?)<\/h2>/i.exec(part);
-        const hrefMatch = /href="([^"]+)"/i.exec(part);
         
-        if (h2Match && hrefMatch) {
-          const title = h2Match[1]
-            .replace(/<[^>]*>/g, '')
-            .replace(/&amp;/g, '&')
-            .replace(/&#038;/g, '&')
-            .replace(/&#8211;/g, '-')
-            .replace(/\s+/g, ' ')
-            .trim();
-          const url = hrefMatch[1].trim();
-          parsedItems.push({ title, url });
+        if (h2Match) {
+          // Extract href from WITHIN the h2 tag (the actual post URL, not thumbnail)
+          const h2Content = h2Match[1];
+          const hrefInH2 = /href="([^"]+)"/i.exec(h2Content);
+          const hrefAnywhere = /href="([^"]+)"/i.exec(part);
+          const urlCandidate = hrefInH2 ? hrefInH2[1].trim() : (hrefAnywhere ? hrefAnywhere[1].trim() : null);
+          
+          if (urlCandidate && urlCandidate.includes('rojgarresult.com')) {
+            const title = h2Content
+              .replace(/<[^>]*>/g, '')
+              .replace(/&amp;/g, '&')
+              .replace(/&#038;/g, '&')
+              .replace(/&#8211;/g, '-')
+              .replace(/\s+/g, ' ')
+              .trim();
+            parsedItems.push({ title, url: urlCandidate });
+          }
         }
       }
 
@@ -307,6 +392,16 @@ export async function GET(request: Request) {
             const publishDateStr = dateObj.toISOString().split('T')[0];
             const createdAtTimestamp = new Date(Date.now() + (importedIndex * 1000));
 
+            let contentLink: string | null = null;
+            if (contentHtml) {
+              try {
+                contentLink = await uploadNoticeHtmlToTigris(id, contentHtml);
+              } catch (e: any) {
+                console.error(`Failed to upload updated notice ${id} HTML to Tigris:`, e.message);
+                contentLink = contentHtml;
+              }
+            }
+
             await prisma.notice.update({
               where: { id },
               data: {
@@ -316,7 +411,7 @@ export async function GET(request: Request) {
                 url: directUrl,
                 rawUrl: item.url,
                 lastDate,
-                contentHtml,
+                contentHtml: contentLink,
                 createdAt: createdAtTimestamp
               }
             });
@@ -354,6 +449,16 @@ export async function GET(request: Request) {
         const publishDateStr = dateObj.toISOString().split('T')[0];
         const createdAtTimestamp = new Date(Date.now() + (importedIndex * 1000));
 
+        let contentLink: string | null = null;
+        if (contentHtml) {
+          try {
+            contentLink = await uploadNoticeHtmlToTigris(id, contentHtml);
+          } catch (e: any) {
+            console.error(`Failed to upload notice ${id} HTML to Tigris:`, e.message);
+            contentLink = contentHtml;
+          }
+        }
+
         await prisma.notice.create({
           data: {
             id,
@@ -365,7 +470,7 @@ export async function GET(request: Request) {
             url: directUrl,
             rawUrl: item.url,
             lastDate,
-            contentHtml,
+            contentHtml: contentLink,
             createdAt: createdAtTimestamp
           }
         });
@@ -373,6 +478,13 @@ export async function GET(request: Request) {
         newNoticesCount++;
         importedTitles.push(item.title);
         importedIndex++;
+      }
+    }
+
+    if (newNoticesCount > 0 || updatedNoticesCount > 0) {
+      if ((global as any).catalogCache) {
+        (global as any).catalogCache.noticesList = null;
+        (global as any).catalogCache.noticesLastFetched = null;
       }
     }
 

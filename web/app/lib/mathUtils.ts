@@ -480,8 +480,60 @@ export function processQuestionHtml(rawContent: string | null | undefined): stri
   // Step 1: Protect currency symbols ($50, $ 100, $10.50, $5,000, etc.) from math parser
   let processed = protectCurrencySymbols(rawContent);
 
-  // Step 2: Decode HTML entities (&amp;, &times;, &frac12;, &rupee;, &dollar;, etc.)
-  processed = decodeHtmlEntities(processed);
+  // Step 2: Decode HTML entities (&amp;, &times;, &frac12;, &rupee;, &dollar;, etc.) 4 passes
+  for (let i = 0; i < 4; i++) {
+    const n = decodeHtmlEntities(processed);
+    if (n === processed) break;
+    processed = n;
+  }
+
+  // Step 2b: Rescue broken or truncated <img> tag fragments and bare image filenames
+  // (E.g. `10.3.21_Pallavi_D13.png" style="width: 344px; height: 81px;" />`, `//cdn.testbook.com/... width="26px" />`)
+  processed = processed.replace(
+    /(?:<img\b([^>]*?)\bsrc=["']?([^"'\s>]+)["']?([^>]*?)>)|((?:https?:)?\/\/[^\s"'<>]+\.(?:png|jpg|jpeg|gif|webp|svg|PNG|JPG|JPEG))\s*"?\s*(?:width=["']?(\d+)px?["']?)?\s*(?:style=["']?[^"']*?(?:width:\s*(\d+)px)?[^"']*?(?:height:\s*(\d+)px)?[^"']*?["']?)?\s*\/?\s*>|([a-zA-Z0-9_.\-%]+\.(?:png|jpg|jpeg|gif|webp|svg|PNG|JPG|JPEG))\s*"?\s*(?:width=["']?(\d+)px?["']?)?\s*(?:style=["']?[^"']*?(?:width:\s*(\d+)px)?[^"']*?(?:height:\s*(\d+)px)?[^"']*?["']?)?\s*\/?\s*>/gi,
+    (match, imgAttrs1, existingSrc, imgAttrs2, protoUrl, pW1, pW2, pH, bareFile, bW1, bW2, bH) => {
+      // Case A: Valid <img> tag
+      if (existingSrc !== undefined) {
+        let src = existingSrc.trim();
+        if (src.startsWith('//')) src = 'https:' + src;
+        const attrs = (imgAttrs1 || '') + ` src="${src}" ` + (imgAttrs2 || '');
+        let cleanAttrs = attrs.trim().replace(/\s+/g, ' ');
+        if (cleanAttrs.endsWith('/')) cleanAttrs = cleanAttrs.slice(0, -1).trim();
+        return `<img ${cleanAttrs} />`;
+      }
+
+      // Case B: Truncated URL fragment
+      if (protoUrl) {
+        let src = protoUrl.trim();
+        if (src.startsWith('//')) src = 'https:' + src;
+        const w = pW1 || pW2;
+        const h = pH;
+        const wAttr = w ? ` width="${w}"` : '';
+        const hAttr = h ? ` height="${h}"` : '';
+        return `<img src="${src}"${wAttr}${hAttr} />`;
+      }
+
+      // Case C: Bare image filename fragment
+      if (bareFile) {
+        let file = bareFile.trim();
+        let src = file;
+        if (!src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//') && !src.startsWith('data:') && !src.startsWith('/')) {
+          src = `https://storage.googleapis.com/tb-img/production/21/03/${file}`;
+        }
+        if (src.startsWith('//')) src = 'https:' + src;
+        const w = bW1 || bW2;
+        const h = bH;
+        const wAttr = w ? ` width="${w}"` : '';
+        const hAttr = h ? ` height="${h}"` : '';
+        return `<img src="${src}"${wAttr}${hAttr} />`;
+      }
+
+      return match;
+    }
+  );
+
+  // Step 2c: Normalize ALL <img ... src="//..." ...> to https://
+  processed = processed.replace(/<img\b([^>]*)\bsrc=["']\/\//gi, '<img$1src="https://');
 
   // Step 3: Normalize newlines
   processed = processed.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -526,6 +578,22 @@ export function renderPowersAndSubscripts(text: string): string {
   if (!text) return '';
   let s = text;
 
+  // Protect HTML img tags first, then standalone URLs from subscript/power mangling
+  // Use underscore-free immune token keys (e.g. @@@IMGTAGTOKENX0@@@) to prevent subscript regex mangling
+  const protectedTokens: Array<{ token: string; key: string }> = [];
+
+  s = s.replace(/<img[^>]+>/gi, (imgTag) => {
+    const key = `@@@IMGTAGTOKENX${protectedTokens.length}@@@`;
+    protectedTokens.push({ token: imgTag, key });
+    return key;
+  });
+
+  s = s.replace(/(?:https?:\/\/|\/\/)[^\s"'<>]+/gi, (url) => {
+    const key = `@@@URLTOKENX${protectedTokens.length}@@@`;
+    protectedTokens.push({ token: url, key });
+    return key;
+  });
+
   // 1. Standardize Unicode superscripts (³, ², ¹, ⁴, ⁵, ⁶, ⁷, ⁸, ⁹, ⁰, ⁺, ⁻, ⁿ) -> <sup>
   const superMap: Record<string, string> = {
     '³': '3', '²': '2', '¹': '1', '⁴': '4', '⁵': '5',
@@ -547,18 +615,45 @@ export function renderPowersAndSubscripts(text: string): string {
   // ^n, ^x, ^a, ^k (single variable exponents)
   s = s.replace(/(?<!\\)\s*\^\s*([a-zA-Z])(?![a-zA-Z0-9])/g, (_, char) => `<sup style="font-size:0.75em;line-height:0;vertical-align:super;">${char}</sup>`);
 
-  // 3. Subscripts (handles spaces like "a _ 1", "x _ {n}"):
+  // Protect fill-in-the-blank reasoning series underscores (e.g. "_ P N I E X _ N I E Y P N", "a _ b", " _ ")
+  const blankToken = '@@@BLANKUNDERSCOREX@@@';
+
+  // 1. Multiple consecutive underscores: __, ___, ____
+  s = s.replace(/_{2,}/g, (m) => m.split('').map(() => blankToken).join(''));
+
+  // 2. Underscore surrounded by spaces: " _ "
+  s = s.replace(/\s+_\s+/g, ` ${blankToken} `);
+
+  // 3. Underscore at start of line/string followed by space: "^_ "
+  s = s.replace(/(^|\n)\s*_\s+/g, `$1${blankToken} `);
+
+  // 4. Underscore preceded by space and followed by space or capital letters (reasoning series: " _ P N", " _ N I")
+  s = s.replace(/\s+_\s*([A-Z](?:\s+[A-Z])*\b)/g, ` ${blankToken} $1`);
+
+  // 5. Underscore at start of string before capital letter in series: "^_ P", "^_P"
+  s = s.replace(/^_\s*([A-Z]\b)/g, `${blankToken} $1`);
+
+  // 3. Subscripts (ONLY apply if preceded by a valid variable/identifier character e.g. x_1, a_n, H_2O, a_{n})
   // _{inner} -> <sub>inner</sub>
-  s = s.replace(/(?<!\\)\s*_\s*\{([^}]+)\}/g, (_, inner) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${inner}</sub>`);
+  s = s.replace(/([a-zA-Z0-9\)])\s*_\s*\{([^}]+)\}/g, '$1<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">$2</sub>');
 
   // _(inner) -> <sub>inner</sub>
-  s = s.replace(/(?<!\\)\s*_\s*\(([^)]+)\)/g, (_, inner) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${inner}</sub>`);
+  s = s.replace(/([a-zA-Z0-9\)])\s*_\s*\(([^)]+)\)/g, '$1<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">$2</sub>');
 
-  // _+123 or _-123 or _123
-  s = s.replace(/(?<!\\)\s*_\s*([\+\-]?\d+)/g, (_, num) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${num}</sub>`);
+  // x_123 or x_-1 or a_1 (numeric subscript)
+  s = s.replace(/([a-zA-Z0-9\)])\s*_\s*([\+\-]?\d+)/g, '$1<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">$2</sub>');
 
-  // _n, _x, _i, _j
-  s = s.replace(/(?<!\\)\s*_\s*([a-zA-Z])(?![a-zA-Z0-9])/g, (_, char) => `<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">${char}</sub>`);
+  // a_n, x_i, k_j (single variable subscript, requires preceding letter/number)
+  s = s.replace(/([a-zA-Z0-9\)])\s*_\s*([a-zA-Z])(?![a-zA-Z0-9])/g, '$1<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">$2</sub>');
+
+  // Restore protected blank underscores
+  s = s.replaceAll(blankToken, '_');
+
+  // Restore protected tokens in reverse order
+  for (let i = protectedTokens.length - 1; i >= 0; i--) {
+    const { token, key } = protectedTokens[i];
+    s = s.replaceAll(key, token);
+  }
 
   return s;
 }

@@ -66,11 +66,11 @@ const ENTITIES: Record<string, string> = {
   ldots:'…',cdots:'⋯',vdots:'⋮',ddots:'⋱',
   lceil:'⌈',rceil:'⌉',lfloor:'⌊',rfloor:'⌋',lang:'⟨',rang:'⟩',
   // Currencies (Complete World Currencies)
-  dollar:'$', rupee:'₹', inr:'₹', euro:'€', pound:'£', yen:'¥', cent:'¢', curren:'¤',
+  dollar:'$', rupee:'₹', inr:'₹',
   bitcoin:'₿', ruble:'₽', won:'₩', peso:'₱', lira:'₺', hryvnia:'₴', baht:'฿', dong:'₫',
   shekel:'₪', taka:'৳', real:'R$',
   // Misc
-  micro:'µ', celsius:'°C', fahrenheit:'°F', degree:'°',
+  celsius:'°C', fahrenheit:'°F', degree:'°',
 };
 
 function decodeEntities(s: string): string {
@@ -100,6 +100,22 @@ const SUB: Record<string,string> = {
 function latexToUnicode(s: string): string {
   if (!s) return '';
   let c = s;
+
+  // Protect HTML img tags first, then standalone URLs from math subscript replacements
+  // Use underscore-free immune token keys (e.g. @@@IMGTAGTOKENX0@@@) to prevent subscript regex mangling
+  const protectedTokens: Array<{ token: string; key: string }> = [];
+
+  c = c.replace(/<img[^>]+>/gi, (imgTag) => {
+    const key = `@@@IMGTAGTOKENX${protectedTokens.length}@@@`;
+    protectedTokens.push({ token: imgTag, key });
+    return key;
+  });
+
+  c = c.replace(/(?:https?:\/\/|\/\/)[^\s"'<>]+/gi, (url) => {
+    const key = `@@@URLTOKENX${protectedTokens.length}@@@`;
+    protectedTokens.push({ token: url, key });
+    return key;
+  });
 
   // Protect currency dollar signs & reasoning operators ($50, $ 100, 12 $ 10 $ 6, 'P $ Q')
   const currencyToken = '___CURRENCY_DOLLAR___';
@@ -166,10 +182,21 @@ function latexToUnicode(s: string): string {
   c = c.replace(/\s*\^\s*\(([^()]+)\)/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
   c = c.replace(/\s*\^\s*([0-9a-zA-Z+\-]+)/g, (_,exp)=> exp.split('').map((ch:string)=>SUP[ch]??ch).join(''));
 
-  // ── Subscripts: _{…}, _(…), _123, _-2, _ 1, _x (with spaces) ────────────────────────
-  c = c.replace(/\s*_\s*\{([^{}]+)\}/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
-  c = c.replace(/\s*_\s*\(([^()]+)\)/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
-  c = c.replace(/\s*_\s*([0-9a-zA-Z+\-]+)/g, (_,sub)=> sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
+  // Protect fill-in-the-blank reasoning series underscores (e.g. "_ P N I E X _ N I E Y P N", "a _ b", " _ ")
+  const blankToken = '@@@BLANKUNDERSCOREX@@@';
+  c = c.replace(/_{2,}/g, (m) => m.split('').map(() => blankToken).join(''));
+  c = c.replace(/\s+_\s+/g, ` ${blankToken} `);
+  c = c.replace(/(^|\n)\s*_\s+/g, `$1${blankToken} `);
+  c = c.replace(/\s+_\s*([A-Z](?:\s+[A-Z])*\b)/g, ` ${blankToken} $1`);
+  c = c.replace(/^_\s*([A-Z]\b)/g, `${blankToken} $1`);
+
+  // ── Subscripts: _{…}, _(…), x_123, a_n (requires preceding variable/identifier character) ─
+  c = c.replace(/([a-zA-Z0-9\)])\s*_\s*\{([^{}]+)\}/g, (_,base,sub)=> base + sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
+  c = c.replace(/([a-zA-Z0-9\)])\s*_\s*\(([^()]+)\)/g, (_,base,sub)=> base + sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
+  c = c.replace(/([a-zA-Z0-9\)])\s*_\s*([0-9a-zA-Z+\-]+)/g, (_,base,sub)=> base + sub.split('').map((ch:string)=>SUB[ch]??ch).join(''));
+
+  // Restore protected blank underscores
+  c = c.replaceAll(blankToken, '_');
 
   // ── Delimiters ────────────────────────────────────────────────────────────
   c = c.replace(/\\left\s*([\(\[\{|\\])/g,'$1');
@@ -301,6 +328,12 @@ function latexToUnicode(s: string): string {
   c = c.replace(/\\/g,'');
   c = c.replace(/[ \t]{2,}/g,' ').trim();
 
+  // Restore protected URLs and IMG tags in reverse order
+  for (let i = protectedTokens.length - 1; i >= 0; i--) {
+    const { token, key } = protectedTokens[i];
+    c = c.replaceAll(key, token);
+  }
+
   return c;
 }
 
@@ -328,17 +361,23 @@ const HtmlImg: React.FC<ImgProps> = ({ src, isDark, w, h }) => {
   const [loading, setLoading] = useState(true);
   const [containerWidth, setContainerWidth] = useState(0);
 
+  let fullSrc = src ? (src.startsWith('//') ? 'https:' + src : src) : '';
+  if (fullSrc && !fullSrc.startsWith('http://') && !fullSrc.startsWith('https://') && !fullSrc.startsWith('data:') && !fullSrc.startsWith('/')) {
+    fullSrc = `https://storage.googleapis.com/tb-img/production/21/03/${fullSrc}`;
+  }
+
   React.useEffect(() => {
-    if (w && h) { setAr(w/h); setLoading(false); return; }
-    RNImage.getSize(src,
+    if (!fullSrc) { setLoading(false); return; }
+    if (w && h && w > 0 && h > 0) { setAr(w/h); setLoading(false); return; }
+    RNImage.getSize(fullSrc,
       (iw,ih)=>{ if(iw&&ih){ setAr(iw/ih); } setLoading(false); },
       ()=>setLoading(false)
     );
-  }, [src,w,h]);
+  }, [fullSrc,w,h]);
 
   // Only treat as tiny inline icon if BOTH explicit width attr is given AND it's < 50px
   const isExplicitIcon = (w !== undefined && w < 50) ||
-    /shortcut-trick|alternate-meth|additional-info/i.test(src);
+    /shortcut-trick|alternate-meth|additional-info/i.test(fullSrc);
 
   if (loading) {
     if (isExplicitIcon)
@@ -349,14 +388,14 @@ const HtmlImg: React.FC<ImgProps> = ({ src, isDark, w, h }) => {
   // Tiny inline icons: render inline at explicit size
   if (isExplicitIcon && ar) {
     const th = h ?? 26;
-    return <Image source={{uri:src}} style={{width:th*ar,height:th,marginHorizontal:4,alignSelf:'center'}} contentFit="contain" cachePolicy="memory-disk" recyclingKey={src} />;
+    return <Image source={{uri:fullSrc}} style={{width:th*ar,height:th,marginHorizontal:4,alignSelf:'center'}} contentFit="contain" cachePolicy="memory-disk" recyclingKey={fullSrc} />;
   }
 
   // Full responsive block image
-  const effectiveAr = ar ?? 1.5;
+  const effectiveAr = ar ?? (w && h ? w / h : 1.5);
   const innerWidth = containerWidth > 0 ? containerWidth - 8 : undefined; // subtract padding
   const computedHeight = innerWidth ? innerWidth / effectiveAr : undefined;
-  const finalHeight = computedHeight ? Math.max(computedHeight, 60) : 120;
+  const finalHeight = computedHeight ? Math.max(computedHeight, 60) : (h ?? 120);
 
   return (
     <View
@@ -376,14 +415,14 @@ const HtmlImg: React.FC<ImgProps> = ({ src, isDark, w, h }) => {
       }}
     >
       <Image
-        source={{uri:src}}
+        source={{uri:fullSrc}}
         style={{
           width: '100%',
           height: finalHeight,
         }}
         contentFit="contain"
         cachePolicy="memory-disk"
-        recyclingKey={src}
+        recyclingKey={fullSrc}
       />
     </View>
   );
@@ -455,14 +494,66 @@ type Block =
 function cleanHtml(raw: string): string {
   let s = raw;
 
-  // 1. Decode entities (3 passes for double-encoded)
-  for(let i=0;i<3;i++){ const n=decodeEntities(s); if(n===s)break; s=n; }
+  // 1. Decode entities (4 passes for double/triple encoded &amp;lt; &lt; etc.)
+  for (let i = 0; i < 4; i++) {
+    const n = decodeEntities(s);
+    if (n === s) break;
+    s = n;
+  }
+
+  // 1b. Rescue broken or truncated <img> tag fragments and bare image filenames
+  // (E.g. `10.3.21_Pallavi_D13.png" style="width: 344px; height: 81px;" />`, `//cdn.testbook.com/... width="26px" />`)
+  s = s.replace(
+    /(?:<img\b([^>]*?)\bsrc=["']?([^"'\s>]+)["']?([^>]*?)>)|((?:https?:)?\/\/[^\s"'<>]+\.(?:png|jpg|jpeg|gif|webp|svg|PNG|JPG|JPEG))\s*"?\s*(?:width=["']?(\d+)px?["']?)?\s*(?:style=["']?[^"']*?(?:width:\s*(\d+)px)?[^"']*?(?:height:\s*(\d+)px)?[^"']*?["']?)?\s*\/?\s*>|([a-zA-Z0-9_.\-%]+\.(?:png|jpg|jpeg|gif|webp|svg|PNG|JPG|JPEG))\s*"?\s*(?:width=["']?(\d+)px?["']?)?\s*(?:style=["']?[^"']*?(?:width:\s*(\d+)px)?[^"']*?(?:height:\s*(\d+)px)?[^"']*?["']?)?\s*\/?\s*>/gi,
+    (match, imgAttrs1, existingSrc, imgAttrs2, protoUrl, pW1, pW2, pH, bareFile, bW1, bW2, bH) => {
+      // Case A: Valid <img> tag
+      if (existingSrc !== undefined) {
+        let src = existingSrc.trim();
+        if (src.startsWith('//')) src = 'https:' + src;
+        const attrs = (imgAttrs1 || '') + ` src="${src}" ` + (imgAttrs2 || '');
+        let cleanAttrs = attrs.trim().replace(/\s+/g, ' ');
+        if (cleanAttrs.endsWith('/')) cleanAttrs = cleanAttrs.slice(0, -1).trim();
+        return `<img ${cleanAttrs} />`;
+      }
+
+      // Case B: Truncated URL fragment
+      if (protoUrl) {
+        let src = protoUrl.trim();
+        if (src.startsWith('//')) src = 'https:' + src;
+        const w = pW1 || pW2;
+        const h = pH;
+        const wAttr = w ? ` width="${w}"` : '';
+        const hAttr = h ? ` height="${h}"` : '';
+        return `<img src="${src}"${wAttr}${hAttr} />`;
+      }
+
+      // Case C: Bare image filename fragment
+      if (bareFile) {
+        let file = bareFile.trim();
+        let src = file;
+        if (!src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//') && !src.startsWith('data:') && !src.startsWith('/')) {
+          src = `https://storage.googleapis.com/tb-img/production/21/03/${file}`;
+        }
+        if (src.startsWith('//')) src = 'https:' + src;
+        const w = bW1 || bW2;
+        const h = bH;
+        const wAttr = w ? ` width="${w}"` : '';
+        const hAttr = h ? ` height="${h}"` : '';
+        return `<img src="${src}"${wAttr}${hAttr} />`;
+      }
+
+      return match;
+    }
+  );
+
+  // 1c. Ensure ALL <img ... src="//..." ...> tags have explicit https: protocol
+  s = s.replace(/<img\b([^>]*)\bsrc=["']\/\//gi, '<img$1src="https://');
 
   // 2. Strip HTML comments
   s = s.replace(/<!--[\s\S]*?-->/g, '');
 
   // 3. Normalize line endings
-  s = s.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  s = s.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
   // 4. Remove style/script blocks entirely
   s = s.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
@@ -488,7 +579,6 @@ function cleanHtml(raw: string): string {
   //    Use actual text length (without HTML markup) for the threshold check
   const plainTextLen = s.replace(/<[^>]+>/g, '').trim().length;
   if (plainTextLen < 200) {
-    // Replace closing block tags with a space, remove opening ones
     s = s.replace(/<\/(?:p|div)>/gi, ' ');
     s = s.replace(/<(?:p|div|span)[^>]*>/gi, '');
     s = s.replace(/<\/span>/gi, '');
@@ -515,7 +605,26 @@ function cleanHtml(raw: string): string {
   // 12. Collapse ALL whitespace (spaces, tabs, newlines, nbsp) into single space
   s = s.replace(/[\s\u00A0]+/g, ' ');
 
-  // 13. Remove data-* attributes, style="" attributes
+  // 13. Extract width/height from style="width: 344px; height: 81px;" into explicit attributes on <img> tags
+  s = s.replace(/<img\b([^>]*)>/gi, (_match, attrs: string) => {
+    let a = attrs.trim();
+    const selfClosing = a.endsWith('/');
+    if (selfClosing) a = a.slice(0, -1).trim();
+    if (!/\bwidth=/i.test(a)) {
+      const wm = a.match(/style="[^"]*width:\s*(\d+)px/i);
+      if (wm) a += ` width="${wm[1]}"`;
+    }
+    if (!/\bheight=/i.test(a)) {
+      const hm = a.match(/style="[^"]*height:\s*(\d+)px/i);
+      if (hm) a += ` height="${hm[1]}"`;
+    }
+    a = a.replace(/\s+style="[^"]*"/gi, '');
+    a = a.replace(/\s+class="[^"]*"/gi, '');
+    a = a.replace(/\s+data-[a-z][a-z0-9-]*="[^"]*"/gi, '');
+    return `<img ${a.trim()} />`;
+  });
+
+  // 14. Remove data-* and style attributes from remaining non-img tags
   s = s.replace(/\s+data-[a-z][a-z0-9-]*="[^"]*"/gi, '');
   s = s.replace(/\s+style="[^"]*"/gi, '');
 

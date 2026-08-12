@@ -678,16 +678,30 @@ export default function MobileTestScreen({
             questionType: 'mcq',
             orderIndex: qOrder,
             correctOptionIndex: q.correctIndex !== undefined ? q.correctIndex : q.correctOptionIndex || 0,
-            content: {
-              en: {
-                questionText: q.textEn || q.content?.en?.questionText || '',
-                options: q.optionsEn || q.content?.en?.options || []
-              },
-              hi: {
-                questionText: q.textHi || q.content?.hi?.questionText || '',
-                options: q.optionsHi || q.content?.hi?.options || []
+            content: (() => {
+              let qTextEn = q.textEn || q.content?.en?.questionText || q.questionText || q.text || '';
+              let qTextHi = q.textHi || q.content?.hi?.questionText || q.questionText || q.textHi || qTextEn || '';
+
+              const imgEn = q.imageUrlEn || q.imageUrl || q.content?.en?.imageUrl;
+              if (imgEn && !qTextEn.includes('<img') && !qTextEn.includes(imgEn)) {
+                const fullImg = imgEn.startsWith('//') ? 'https:' + imgEn : imgEn;
+                qTextEn = `${qTextEn}\n<p><img src="${fullImg}" /></p>`;
               }
-            }
+
+              const imgHi = q.imageUrlHi || q.imageUrl || q.content?.hi?.imageUrl || imgEn;
+              if (imgHi && !qTextHi.includes('<img') && !qTextHi.includes(imgHi)) {
+                const fullImgHi = imgHi.startsWith('//') ? 'https:' + imgHi : imgHi;
+                qTextHi = `${qTextHi}\n<p><img src="${fullImgHi}" /></p>`;
+              }
+
+              const optsEn = q.optionsEn || q.content?.en?.options || q.options || [];
+              const optsHi = q.optionsHi || q.content?.hi?.options || q.optionsHi || optsEn || [];
+
+              return {
+                en: { questionText: qTextEn, options: optsEn },
+                hi: { questionText: qTextHi, options: optsHi }
+              };
+            })()
           };
         });
 

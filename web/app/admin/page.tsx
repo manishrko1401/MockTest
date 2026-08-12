@@ -24,6 +24,7 @@ import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
 import { DatabaseMonitor } from './components/DatabaseMonitor';
 import { VocabManager } from './components/VocabManager';
+import NoticeInnerDetailsManager from './components/NoticeInnerDetailsManager';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -110,9 +111,9 @@ const formatTimeAgo = (dateStr?: string | null): string => {
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -686,7 +687,7 @@ export default function AdminAnalytics() {
       return ['support', 'suggestions'].includes(tab);
     }
     if (role === 'NOTICES_MANAGER') {
-      return ['notices', 'announcements', 'testimonials'].includes(tab);
+      return ['notices', 'notice_details', 'announcements', 'testimonials'].includes(tab);
     }
     return false;
   };
@@ -1486,6 +1487,19 @@ export default function AdminAnalytics() {
                 Live Notices & Updates
               </button>
             )}
+            {hasTabAccess('notices') && (
+              <button
+                onClick={() => selectTab('notice_details')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'notice_details'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Layers className="h-4 w-4 text-indigo-400" />
+                Inner Details Editor ⚡
+              </button>
+            )}
             {hasTabAccess('announcements') && (
               <button
                 onClick={() => selectTab('announcements')}
@@ -1701,7 +1715,9 @@ export default function AdminAnalytics() {
                 : activeTab === 'users'
                 ? (language === 'hi' ? 'αñëαñ¬αñ»αÑïαñùαñòαñ░αÑìαññαñ╛ αñ¬αÑìαñ░αñ¼αñéαñºαñ¿ αñöαñ░ αñ¬αñ╣αÑüαñüαñÜ αñ¿αñ┐αñ»αñéαññαÑìαñ░αñú' : 'User Management & Access Control')
                 : activeTab === 'notices'
-                ? (language === 'hi' ? 'αñ▓αñ╛αñçαñ╡ αñàαñ¬αñíαÑçαñƒ αñöαñ░ αñ¿αÑïαñƒαñ┐αñ╕ αñ¬αÑìαñ░αñ¼αñéαñºαñò' : 'Live Updates & Notices Manager')
+                ? (language === 'hi' ? 'लाइव अपडेट और नोटिस प्रबंधक' : 'Live Updates & Notices Manager')
+                : activeTab === 'notice_details'
+                ? (language === 'hi' ? 'नोटिफिकेशन विवरण और रिक्रूटमेंट ब्रेकडाउन एडिटर' : 'Notification Inner Details & Breakdown Editor')
                 : activeTab === 'testimonials'
                 ? (language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αñéαñ╕αñ╛αñ¬αññαÑìαñ░ αñ¬αÑìαñ░αñ¼αñéαñºαñò' : 'Toppers Testimonials Manager')
                 : activeTab === 'categories'
@@ -3171,6 +3187,12 @@ export default function AdminAnalytics() {
                             <td className="py-3 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400">{notice.date}</td>
                             <td className="py-3 px-4 text-right flex items-center justify-end gap-2">
                               <button
+                                onClick={() => selectTab('notice_details')}
+                                className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-955/40 transition px-2.5 py-1.5 rounded cursor-pointer flex items-center gap-1"
+                              >
+                                <Layers className="h-3 w-3" /> Breakdown
+                              </button>
+                              <button
                                 onClick={() => handleOpenEditAnnouncement(notice)}
                                 className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                               >
@@ -3200,6 +3222,14 @@ export default function AdminAnalytics() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* TAB 4.5: NOTIFICATION INNER DETAILS & BREAKDOWN EDITOR */}
+          {activeTab === 'notice_details' && hasTabAccess('notices') && (
+            <NoticeInnerDetailsManager
+              noticesList={noticesList}
+              showToast={showToast}
+            />
           )}
 
           {/* TAB 5: CATEGORIES MANAGEMENT */}

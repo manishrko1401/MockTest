@@ -14,6 +14,8 @@ import {
 import { TRANSLATIONS } from '../../translations';
 import { useIsMobile } from '../../useIsMobile';
 
+import { processQuestionHtml } from '../../lib/mathUtils';
+
 interface NoticeDetailPageProps {
   params: Promise<{ id: string }>;
 }
@@ -28,47 +30,60 @@ function extractParsedLinks(html: string): ParsedActionLink[] {
   if (!html) return [];
   const links: ParsedActionLink[] = [];
 
-  const idx = html.toLowerCase().indexOf('important link');
+  let idx = html.toLowerCase().indexOf('useful important link');
+  if (idx === -1) idx = html.toLowerCase().indexOf('important link');
+  if (idx === -1) idx = html.toLowerCase().indexOf('direct link');
+  if (idx === -1) idx = html.toLowerCase().indexOf('apply online');
   if (idx === -1) return [];
 
   const linksSection = html.substring(idx);
-  const linkRegex = /<tr[^>]*>\s*<td[^>]*>([\s\S]*?)<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>\s*<\/tr>/gi;
-  let match;
+  const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let rowMatch;
 
-  while ((match = linkRegex.exec(linksSection)) !== null) {
-    const rawLabel = match[1].replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
-    const cell2 = match[2];
+  while ((rowMatch = rowRegex.exec(linksSection)) !== null) {
+    const rowHtml = rowMatch[1];
     
-    const hrefMatch = /href=["']([^"']*)["']/i.exec(cell2);
-    if (hrefMatch && rawLabel) {
-      const url = hrefMatch[1].trim();
-      const lowerLabel = rawLabel.toLowerCase();
+    const aMatch = /<a[^>]*href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/i.exec(rowHtml);
+    if (!aMatch) continue;
 
-      if (
-        lowerLabel.includes('whatsapp') || 
-        lowerLabel.includes('telegram') || 
-        lowerLabel.includes('reels') || 
-        lowerLabel.includes('youtube') ||
-        lowerLabel.includes('video') ||
-        lowerLabel.includes('how to fill') ||
-        lowerLabel.includes('watch') ||
-        lowerLabel.includes('hindi video') ||
-        lowerLabel.includes('short notification')
-      ) {
-        continue;
-      }
+    const url = aMatch[1].trim();
+    const linkText = aMatch[2].replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
 
-      let iconType: 'apply' | 'download' | 'official' | 'video' | 'general' = 'general';
-      if (lowerLabel.includes('apply') || lowerLabel.includes('form') || lowerLabel.includes('login') || lowerLabel.includes('registration')) {
-        iconType = 'apply';
-      } else if (lowerLabel.includes('download') || lowerLabel.includes('notification') || lowerLabel.includes('pdf') || lowerLabel.includes('syllabus') || lowerLabel.includes('result') || lowerLabel.includes('admit')) {
-        iconType = 'download';
-      } else if (lowerLabel.includes('official') || lowerLabel.includes('website')) {
-        iconType = 'official';
-      }
-
-      links.push({ label: rawLabel, url, iconType });
+    const tdMatch = /<td[^>]*>([\s\S]*?)<\/td>/i.exec(rowHtml);
+    let label = '';
+    if (tdMatch) {
+      label = tdMatch[1].replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
     }
+    if (!label || label.toLowerCase() === linkText.toLowerCase()) {
+      label = linkText || 'Click Here';
+    }
+
+    const lowerLabel = label.toLowerCase();
+
+    if (
+      lowerLabel.includes('whatsapp') || 
+      lowerLabel.includes('telegram') || 
+      lowerLabel.includes('reels') || 
+      lowerLabel.includes('youtube') ||
+      lowerLabel.includes('video') ||
+      lowerLabel.includes('how to fill') ||
+      lowerLabel.includes('watch') ||
+      lowerLabel.includes('hindi video') ||
+      lowerLabel.includes('short notification')
+    ) {
+      continue;
+    }
+
+    let iconType: 'apply' | 'download' | 'official' | 'video' | 'general' = 'general';
+    if (lowerLabel.includes('apply') || lowerLabel.includes('form') || lowerLabel.includes('login') || lowerLabel.includes('registration')) {
+      iconType = 'apply';
+    } else if (lowerLabel.includes('download') || lowerLabel.includes('notification') || lowerLabel.includes('pdf') || lowerLabel.includes('syllabus') || lowerLabel.includes('result') || lowerLabel.includes('admit')) {
+      iconType = 'download';
+    } else if (lowerLabel.includes('official') || lowerLabel.includes('website')) {
+      iconType = 'official';
+    }
+
+    links.push({ label, url, iconType });
   }
 
   return links;
@@ -77,6 +92,9 @@ function extractParsedLinks(html: string): ParsedActionLink[] {
 function sanitizeNoticeHtml(html: string): string {
   if (!html) return '';
   let clean = html;
+
+  // Run master HTML rescue processor (decodes entities, rescues broken tags, fixes // -> https://)
+  clean = processQuestionHtml(clean);
 
   // 1. Remove <header class="entry-header">...</header>
   clean = clean.replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '');
@@ -90,34 +108,29 @@ function sanitizeNoticeHtml(html: string): string {
     return '';
   });
 
-  // 4. Remove Post Update Date / Post Date paragraphs
-  clean = clean.replace(/<p[^>]*>(?:(?!<\/p>)[\s\S])*?Post\s*(?:Update\s*)?Date(?:(?!<\/p>)[\s\S])*?<\/p>/gi, '');
+  // 4. Remove Post Update Date / Post Date paragraphs ONLY within single paragraph boundary (max 300 chars)
+  clean = clean.replace(/<p[^>]*>(?:(?!<\/p>)[\s\S]){1,300}?Post\s*(?:Update\s*)?Date(?:(?!<\/p>)[\s\S]){1,300}?<\/p>/gi, '');
 
-  // 5. Remove Short Description paragraphs
-  clean = clean.replace(/<p[^>]*>(?:(?!<\/p>)[\s\S])*?Short\s*Description(?:(?!<\/p>)[\s\S])*?<\/p>/gi, '');
+  // 5. Remove all Short Description / Short Details / Short Information sections safely (li, p, h2-h4, tr, text)
+  clean = clean.replace(/<li[^>]*>(?:(?!<\/li>)[\s\S])*?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)(?:(?!<\/li>)[\s\S])*?<\/li>/gi, '');
+  clean = clean.replace(/<p[^>]*>(?:(?!<\/p>)[\s\S]){1,400}?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)(?:(?!<\/p>)[\s\S]){1,400}?<\/p>/gi, '');
+  clean = clean.replace(/<h[2-4][^>]*>(?:(?!<\/h[2-4]>)[\s\S])*?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)(?:(?!<\/h[2-4]>)[\s\S])*?<\/h[2-4]>/gi, '');
+  clean = clean.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, '');
+  clean = clean.replace(/(?:<b>|<strong>)?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)\s*:?\s*(?:<\/b>|<\/strong>)?(?:[^<\n\r]{0,250})/gi, '');
 
   // 6. Remove video and social media promotion rows in ANY table (Watch Video, Hindi Video, Telegram/Whatsapp)
   clean = clean.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:Watch\s*Video|Hindi\s*Video|Short\s*Notification\s*\(?[\w\s]*Video|Join\s*Free\s*Information|Information\s*Channel|Official\s*Whatsapp|Official\s*Telegram)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, '');
 
-  // 7. Remove Selection Procedure / Selection Process / Selection Mode tables, rows, headings, and paragraphs
-  clean = clean.replace(/<table[^>]*>(?:(?!<\/table>)[\s\S])*?Selection\s*(?:Procedure|Process|Mode)(?:(?!<\/table>)[\s\S])*?<\/table>/gi, (match) => {
-    if (/(?:Application\s*Fee|Important\s*Dates|Age\s*Limit|Vacancy|Eligibility|Overview)/i.test(match)) {
-      return match.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?Selection\s*(?:Procedure|Process|Mode)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, '');
-    }
-    return '';
-  });
-  clean = clean.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?Selection\s*(?:Procedure|Process|Mode)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, '');
-  clean = clean.replace(/<h[234][^>]*>(?:(?!<\/h[234]>)[\s\S])*?Selection\s*(?:Procedure|Process|Mode)(?:(?!<\/h[234]>)[\s\S])*?<\/h[234]>/gi, '');
-  // 8. Clean fixed inline width attributes from tables, th, td to prevent responsive overflow
+  // 7. Clean fixed inline width attributes from tables, th, td to prevent responsive overflow
   clean = clean.replace(/\s*width=["']?\d+(?:px|%)?["']?/gi, '');
 
-  // 9. Wrap all table elements (like Category-wise Vacancy tables) in a responsive scroll container
+  // 8. Wrap all table elements (like Category-wise Vacancy tables) in a responsive scroll container
   clean = clean.replace(/<table[^>]*>([\s\S]*?)<\/table>/gi, (match) => {
     const tableBody = match.replace(/^<table[^>]*>/i, '').replace(/<\/table>$/i, '');
     return `<div class="notice-table-wrapper overflow-x-auto max-w-full my-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900"><table class="w-full text-left">${tableBody}</table></div>`;
   });
 
-  // 10. Remove any leftover empty paragraphs or &nbsp; at top
+  // 9. Remove any leftover empty paragraphs or &nbsp; at top
   clean = clean.replace(/^(?:\s*<p>\s*(?:&nbsp;|\s*)*<\/p>)*/gi, '');
 
   return clean.trim();
@@ -148,7 +161,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   React.useEffect(() => {
     if (!noticeId) return;
     const inList = noticesList.find(n => n.id === noticeId);
-    if (inList && inList.contentHtml) {
+    if (inList && inList.contentHtml && !inList.contentHtml.startsWith('tigris://') && inList.contentHtml.length > 200) {
       setFetchedNotice(inList);
     } else {
       setNoticeLoading(true);
@@ -161,6 +174,9 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         .then(data => {
           if (data.success && data.notice) {
             setFetchedNotice(data.notice);
+            if (inList) {
+              inList.contentHtml = data.notice.contentHtml;
+            }
           } else if (inList) {
             setFetchedNotice(inList);
           }
@@ -670,25 +686,25 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
               </div>
             </div>
 
-            {/* 2. PARSED SOME USEFUL IMPORTANT LINKS GRID CARD (LIGHT THEME) */}
-            {parsedLinks.length > 0 && (
-              <div id="sec-links" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 shadow-sm space-y-3.5 sm:space-y-5 overflow-hidden w-full">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4 gap-2 flex-wrap sm:flex-nowrap min-w-0">
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                    <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shrink-0">
-                      <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h2 className="text-xs sm:text-base font-black tracking-wide text-slate-900 dark:text-white uppercase truncate">Some Useful Important Links</h2>
-                      <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Direct access buttons for online registration, syllabus & notification PDF</p>
-                    </div>
+            {/* 2. PARSED SOME USEFUL IMPORTANT LINKS GRID CARD (PERMANENTLY RENDERED) */}
+            <div id="sec-links" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 shadow-sm space-y-3.5 sm:space-y-5 overflow-hidden w-full">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4 gap-2 flex-wrap sm:flex-nowrap min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shrink-0">
+                    <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
-                  <span className="bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[9px] sm:text-[10px] font-black px-2.5 sm:px-3 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800 hidden sm:inline-block shrink-0">
-                    {parsedLinks.length} Direct Links
-                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-xs sm:text-base font-black tracking-wide text-slate-900 dark:text-white uppercase truncate">Some Useful Important Links</h2>
+                    <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Direct access buttons for online registration, syllabus & notification PDF</p>
+                  </div>
                 </div>
+                <span className="bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[9px] sm:text-[10px] font-black px-2.5 sm:px-3 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800 hidden sm:inline-block shrink-0">
+                  {parsedLinks.length > 0 ? `${parsedLinks.length} Direct Links` : 'Official Links'}
+                </span>
+              </div>
 
-                {/* Grid of Link Cards in Light Theme */}
+              {/* Grid of Link Cards */}
+              {parsedLinks.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3.5 w-full">
                   {parsedLinks.map((link, i) => (
                     <a
@@ -722,8 +738,54 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     </a>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3.5 w-full">
+                  {notice.url && (
+                    <a
+                      href={notice.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group bg-blue-600 text-white hover:bg-blue-700 border border-blue-600 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex items-center justify-between gap-3 shadow-md cursor-pointer w-full"
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="p-2.5 rounded-xl bg-white/20 text-white shrink-0">
+                          <Sparkles className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-black leading-snug">Apply Online / Official Portal</p>
+                          <span className="text-[9px] text-blue-100 font-bold uppercase tracking-wider block mt-0.5">Click to Open Portal</span>
+                        </div>
+                      </div>
+                      <span className="bg-white text-blue-700 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1">
+                        Apply Now <ArrowUpRight className="h-3.5 w-3.5" />
+                      </span>
+                    </a>
+                  )}
+
+                  {notice.rawUrl && (
+                    <a
+                      href={notice.rawUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex items-center justify-between gap-3 cursor-pointer w-full"
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 shrink-0">
+                          <Download className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-black text-slate-900 dark:text-white leading-snug">Detailed Official Notification</p>
+                          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5">View Source Circular</span>
+                        </div>
+                      </div>
+                      <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1">
+                        View <ChevronRight className="h-3.5 w-3.5" />
+                      </span>
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* 3. COMPLETE RECRUITMENT DETAILS (BODY HTML RENDER) */}
             <div id="sec-full-content" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden p-3.5 sm:p-6 md:p-8 space-y-4 sm:space-y-6 w-full">

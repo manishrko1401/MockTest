@@ -66,6 +66,46 @@ function cleanHtml(text) {
   cleaned = cleaned.replace(/color:\s*rgb\(33,\s*37,\s*41\);?/gi, '');
   cleaned = cleaned.replace(/color:\s*rgb\(68,\s*68,\s*68\);?/gi, '');
   
+  // Rescue broken/truncated <img> tag fragments and bare image filenames
+  cleaned = cleaned.replace(
+    /(?:<img\b([^>]*?)\bsrc=["']?([^"'\s>]+)["']?([^>]*?)>)|((?:https?:)?\/\/[^\s"'<>]+\.(?:png|jpg|jpeg|gif|webp|svg|PNG|JPG|JPEG))\s*"?\s*(?:width=["']?(\d+)px?["']?)?\s*(?:style=["']?[^"']*?(?:width:\s*(\d+)px)?[^"']*?(?:height:\s*(\d+)px)?[^"']*?["']?)?\s*\/?\s*>|([a-zA-Z0-9_.\-%]+\.(?:png|jpg|jpeg|gif|webp|svg|PNG|JPG|JPEG))\s*"?\s*(?:width=["']?(\d+)px?["']?)?\s*(?:style=["']?[^"']*?(?:width:\s*(\d+)px)?[^"']*?(?:height:\s*(\d+)px)?[^"']*?["']?)?\s*\/?\s*>/gi,
+    (match, imgAttrs1, existingSrc, imgAttrs2, protoUrl, pW1, pW2, pH, bareFile, bW1, bW2, bH) => {
+      if (existingSrc !== undefined) {
+        let src = existingSrc.trim();
+        if (src.startsWith('//')) src = 'https:' + src;
+        const attrs = (imgAttrs1 || '') + ` src="${src}" ` + (imgAttrs2 || '');
+        let cleanAttrs = attrs.trim().replace(/\s+/g, ' ');
+        if (cleanAttrs.endsWith('/')) cleanAttrs = cleanAttrs.slice(0, -1).trim();
+        return `<img ${cleanAttrs} />`;
+      }
+      if (protoUrl) {
+        let src = protoUrl.trim();
+        if (src.startsWith('//')) src = 'https:' + src;
+        const w = pW1 || pW2;
+        const h = pH;
+        const wAttr = w ? ` width="${w}"` : '';
+        const hAttr = h ? ` height="${h}"` : '';
+        return `<img src="${src}"${wAttr}${hAttr} />`;
+      }
+      if (bareFile) {
+        let file = bareFile.trim();
+        let src = file;
+        if (!src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//') && !src.startsWith('data:') && !src.startsWith('/')) {
+          src = `https://storage.googleapis.com/tb-img/production/21/03/${file}`;
+        }
+        if (src.startsWith('//')) src = 'https:' + src;
+        const w = bW1 || bW2;
+        const h = bH;
+        const wAttr = w ? ` width="${w}"` : '';
+        const hAttr = h ? ` height="${h}"` : '';
+        return `<img src="${src}"${wAttr}${hAttr} />`;
+      }
+      return match;
+    }
+  );
+
+  cleaned = cleaned.replace(/<img\b([^>]*)\bsrc=["']\/\//gi, '<img$1src="https://');
+
   // Normalize internal formatting spaces, but keep the raw HTML markup
   return cleaned.trim();
 }

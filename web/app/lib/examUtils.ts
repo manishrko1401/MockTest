@@ -190,14 +190,14 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
           correctOptionIndex: item.correctIndex ?? 0,
           content: {
             en: {
-              questionText: item.textEn,
-              options: item.optionsEn || [],
+              questionText: item.textEn || item.questionText || item.text || '',
+              options: item.optionsEn || item.options || [],
               imageUrl: item.imageUrlEn || item.imageUrl,
               comprehension: item.comprehensionEn || item.comprehension
             },
             hi: {
-              questionText: item.textHi,
-              options: item.optionsHi || [],
+              questionText: item.textHi || item.questionText || item.textHi || item.textEn || item.text || '',
+              options: item.optionsHi || item.options || item.optionsEn || item.options || [],
               imageUrl: item.imageUrlHi || item.imageUrl,
               comprehension: item.comprehensionHi || item.comprehension
             }

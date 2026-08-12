@@ -5,6 +5,8 @@ import { AuthProvider } from "./AuthContext";
 import IndependenceDayDecorations from "./components/IndependenceDayDecorations";
 import { cookies } from "next/headers";
 
+import Script from "next/script";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -36,9 +38,9 @@ export default async function RootLayout({
     >
       <head>
         {/* MathJax config MUST load before the MathJax library. */}
-        <script src="/mathjax-config.js" />
+        <Script src="/mathjax-config.js" strategy="beforeInteractive" />
         {/* MathJax CDN */}
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async />
+        <Script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" strategy="beforeInteractive" />
       </head>
       <body
         suppressHydrationWarning

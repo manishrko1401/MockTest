@@ -1540,6 +1540,8 @@ async function handleAddNotice(data: any) {
     },
   });
 
+  catalogCache.noticesList = null;
+
   return NextResponse.json({ success: true });
 }
 
@@ -1566,6 +1568,8 @@ async function handleEditNotice(data: any) {
     },
   });
 
+  catalogCache.noticesList = null;
+
   return NextResponse.json({ success: true });
 }
 
@@ -1575,7 +1579,7 @@ async function handleGetSingleNoticeContent(data: any) {
     return NextResponse.json({ success: false, error: 'Notice ID is required' }, { status: 400 });
   }
 
-  const notice = await prisma.notice.findUnique({
+  let notice = await prisma.notice.findUnique({
     where: { id },
     select: {
       id: true,
@@ -1597,6 +1601,46 @@ async function handleGetSingleNoticeContent(data: any) {
     return NextResponse.json({ success: false, error: 'Notice not found' }, { status: 404 });
   }
 
+  // Auto-heal: If contentHtml is missing or empty, search for a notice with matching title that HAS contentHtml
+  if (!notice.contentHtml || notice.contentHtml.trim().length === 0) {
+    const matchingWithContent = await prisma.notice.findFirst({
+      where: {
+        title: { contains: notice.title.substring(0, 25), mode: 'insensitive' },
+        contentHtml: { not: null }
+      },
+      select: { contentHtml: true, url: true, lastDate: true }
+    });
+
+    if (matchingWithContent && matchingWithContent.contentHtml) {
+      notice.contentHtml = matchingWithContent.contentHtml;
+      if (!notice.url) notice.url = matchingWithContent.url;
+      if (!notice.lastDate) notice.lastDate = matchingWithContent.lastDate;
+
+      // Update DB record so subsequent requests are fast
+      await prisma.notice.update({
+        where: { id },
+        data: {
+          contentHtml: matchingWithContent.contentHtml,
+          ...(matchingWithContent.url ? { url: matchingWithContent.url } : {}),
+          ...(matchingWithContent.lastDate ? { lastDate: matchingWithContent.lastDate } : {})
+        }
+      }).catch(() => {});
+    }
+  }
+
+  // Resolve Tigris Object Storage content HTML if stored as a tiny link
+  if (notice.contentHtml && (notice.contentHtml.startsWith('tigris://') || notice.contentHtml.startsWith('http://') || notice.contentHtml.startsWith('https://'))) {
+    try {
+      const { fetchNoticeHtmlFromTigris } = await import('../../lib/tigrisNoticeStorage');
+      const resolvedHtml = await fetchNoticeHtmlFromTigris(notice.contentHtml);
+      if (resolvedHtml) {
+        notice.contentHtml = resolvedHtml;
+      }
+    } catch (e: any) {
+      console.error(`Failed to resolve Tigris content for notice ${notice.id}:`, e.message);
+    }
+  }
+
   return NextResponse.json({ success: true, notice });
 }
 
@@ -1606,6 +1650,8 @@ async function handleDeleteNotice(data: any) {
   await prisma.notice.delete({
     where: { id },
   });
+
+  catalogCache.noticesList = null;
 
   return NextResponse.json({ success: true });
 }
