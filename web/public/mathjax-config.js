@@ -8,6 +8,15 @@ window.MathJax = {
     packages: {'[+]': ['ams', 'boldsymbol', 'color']},
     macros: {
       rupee: '{\\text{₹}}',
+      Rs: '{\\text{₹}}',
+      inr: '{\\text{₹}}',
+      dollar: '{\\text{\\$}}',
+      euro: '{\\text{€}}',
+      pound: '{\\text{£}}',
+      yen: '{\\text{¥}}',
+      cent: '{\\text{¢}}',
+      celsius: '{\\text{°C}}',
+      fahrenheit: '{\\text{°F}}',
       degree: '{^{\\circ}}',
     }
   },

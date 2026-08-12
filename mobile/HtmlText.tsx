@@ -65,33 +65,12 @@ const ENTITIES: Record<string, string> = {
   loz:'◊',spades:'♠',clubs:'♣',hearts:'♥',diams:'♦',
   ldots:'…',cdots:'⋯',vdots:'⋮',ddots:'⋱',
   lceil:'⌈',rceil:'⌉',lfloor:'⌊',rfloor:'⌋',lang:'⟨',rang:'⟩',
-  // ── CURRENCIES ───────────────────────────────────────────────────────────────
-  inr:'₹',rupee:'₹',won:'₩',peso:'₱',bitcoin:'₿',ruble:'₽',
-  // ── GREEK LOWERCASE ──────────────────────────────────────────────────────────
-  alpha:'α',beta:'β',gamma:'γ',delta:'δ',epsilon:'ε',zeta:'ζ',
-  eta:'η',theta:'θ',iota:'ι',kappa:'κ',lambda:'λ',mu:'μ',
-  nu:'ν',xi:'ξ',omicron:'ο',pi:'π',rho:'ρ',sigma:'σ',
-  tau:'τ',upsilon:'υ',phi:'φ',chi:'χ',psi:'ψ',omega:'ω',
-  sigmaf:'ς',thetasym:'ϑ',upsih:'ϒ',piv:'ϖ',
-  // ── GREEK UPPERCASE ──────────────────────────────────────────────────────────
-  Alpha:'Α',Beta:'Β',Gamma:'Γ',Delta:'Δ',Epsilon:'Ε',Zeta:'Ζ',
-  Eta:'Η',Theta:'Θ',Iota:'Ι',Kappa:'Κ',Lambda:'Λ',Mu:'Μ',
-  Nu:'Ν',Xi:'Ξ',Omicron:'Ο',Pi:'Π',Rho:'Ρ',Sigma:'Σ',
-  Tau:'Τ',Upsilon:'Υ',Phi:'Φ',Chi:'Χ',Psi:'Ψ',Omega:'Ω',
-  // ── LATIN EXTENDED ───────────────────────────────────────────────────────────
-  Aacute:'Á',aacute:'á',Agrave:'À',agrave:'à',Acirc:'Â',acirc:'â',
-  Atilde:'Ã',atilde:'ã',Auml:'Ä',auml:'ä',Aring:'Å',aring:'å',
-  AElig:'Æ',aelig:'æ',Ccedil:'Ç',ccedil:'ç',Eacute:'É',eacute:'é',
-  Egrave:'È',egrave:'è',Ecirc:'Ê',ecirc:'ê',Euml:'Ë',euml:'ë',
-  Iacute:'Í',iacute:'í',Igrave:'Ì',igrave:'ì',Icirc:'Î',icirc:'î',
-  Iuml:'Ï',iuml:'ï',ETH:'Ð',eth:'ð',Ntilde:'Ñ',ntilde:'ñ',
-  Oacute:'Ó',oacute:'ó',Ograve:'Ò',ograve:'ò',Ocirc:'Ô',ocirc:'ô',
-  Otilde:'Õ',otilde:'õ',Ouml:'Ö',ouml:'ö',Oslash:'Ø',oslash:'ø',
-  Uacute:'Ú',uacute:'ú',Ugrave:'Ù',ugrave:'ù',Ucirc:'Û',ucirc:'û',
-  Uuml:'Ü',uuml:'ü',Yacute:'Ý',yacute:'ý',THORN:'Þ',thorn:'þ',
-  szlig:'ß',yuml:'ÿ',OElig:'Œ',oelig:'œ',Scaron:'Š',scaron:'š',Yuml:'Ÿ',
-  // ── MATH LETTERS ─────────────────────────────────────────────────────────────
-  fnof:'ƒ',weierp:'℘',image:'ℑ',real:'ℜ',alefsym:'ℵ',
+  // Currencies (Complete World Currencies)
+  dollar:'$', rupee:'₹', inr:'₹', euro:'€', pound:'£', yen:'¥', cent:'¢', curren:'¤',
+  bitcoin:'₿', ruble:'₽', won:'₩', peso:'₱', lira:'₺', hryvnia:'₴', baht:'฿', dong:'₫',
+  shekel:'₪', taka:'৳', real:'R$',
+  // Misc
+  micro:'µ', celsius:'°C', fahrenheit:'°F', degree:'°',
 };
 
 function decodeEntities(s: string): string {
@@ -122,12 +101,36 @@ function latexToUnicode(s: string): string {
   if (!s) return '';
   let c = s;
 
-  // Strip math delimiters
+  // Protect currency dollar signs ($50, $ 100, $10.50, $5,000, \$50, 50$)
+  const currencyToken = '___CURRENCY_DOLLAR___';
+  c = c.replace(/\\\$([0-9a-zA-Z\s,.]*)/g, `${currencyToken}$1`);
+  c = c.replace(/\$(\s*)([0-9]+(?:[,.][0-9]+)*(?:\s*(?:million|billion|trillion|lakh|crore|[kKmMbB]))?)/g, `${currencyToken}$1$2`);
+  c = c.replace(/([0-9]+)\s*\$/g, `$1${currencyToken}`);
+
+  // Strip math delimiters \( \) \[ \] $$ and remaining LaTeX math $
   c = c.replace(/\\\(|\\\)|\\\[|\\\]|\$\$/g,'');
   c = c.replace(/(?<![a-zA-Z])\$(?!\$)/g,'');
 
+  // Restore protected currency dollar signs
+  c = c.replaceAll(currencyToken, '$');
+
+  // Currency & Unit commands: \rupee, \Rs, \inr, \dollar, \euro, \pound, \yen, \degree, \celsius
+  c = c.replace(/\\rupee\b|\\Rs\b|\\inr\b/gi, '₹');
+  c = c.replace(/\\dollar\b/gi, '$');
+  c = c.replace(/\\euro\b/gi, '€');
+  c = c.replace(/\\pound\b/gi, '£');
+  c = c.replace(/\\yen\b/gi, '¥');
+  c = c.replace(/\\cent\b/gi, '¢');
+  c = c.replace(/\\degree\b|\\deg\b/gi, '°');
+  c = c.replace(/\\celsius\b/gi, '°C');
+  c = c.replace(/\\fahrenheit\b/gi, '°F');
+  c = c.replace(/\\angle\b|\\ang\b/gi, '∠');
+  c = c.replace(/\\triangle\b/gi, '△');
+  c = c.replace(/\\parallel\b/gi, '∥');
+  c = c.replace(/\\perp\b/gi, '⊥');
+
   // Text-mode commands: \text{…} \mathrm{…} etc.
-  c = c.replace(/\\(?:text|rm|mathrm|mathbf|textbf|textrm|mathit|mathbb|mathcal|mbox|hbox)\s*\{([^{}]*)\}/g,'$1');
+  c = c.replace(/\\(?:text|rm|mathrm|mathbf|textbf|textrm|mathit|labelledby|mathbb|mathcal|mbox|hbox)\s*\{([^{}]*)\}/g,'$1');
 
   // ── Fractions (nested up to 4 passes) ─────────────────────────────────────
   for (let i=0;i<4;i++) {

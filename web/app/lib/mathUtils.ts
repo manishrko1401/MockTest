@@ -18,16 +18,19 @@ const HTML_ENTITIES: Record<string, string> = {
   // Basic
   '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'",
   '&apos;': "'", '&nbsp;': '\u00A0', '&ensp;': '\u2002', '&emsp;': '\u2003', '&thinsp;': '\u202F',
-  // Math symbols
+  // Math symbols & Operators
   '&times;': '×', '&divide;': '÷', '&plusmn;': '±', '&minus;': '−',
   '&bull;': '•', '&middot;': '·', '&sdot;': '⋅', '&circ;': 'ˆ',
+  '&lowast;': '∗', '&radic;': '√', '&infin;': '∞', '&sum;': '∑',
+  '&prod;': '∏', '&int;': '∫', '&part;': '∂', '&nabla;': '∇',
   // Fractions (HTML entity)
   '&frac12;': '½', '&frac13;': '⅓', '&frac14;': '¼', '&frac34;': '¾',
   '&frac23;': '⅔', '&frac15;': '⅕', '&frac25;': '⅖', '&frac35;': '⅗',
   '&frac45;': '⅘', '&frac16;': '⅙', '&frac56;': '⅚', '&frac18;': '⅛',
   '&frac38;': '⅜', '&frac58;': '⅝', '&frac78;': '⅞',
-  // Superscripts
-  '&sup1;': '¹', '&sup2;': '²', '&sup3;': '³',
+  // Superscripts & Subscripts
+  '&sup1;': '¹', '&sup2;': '²', '&sup3;': '³', '&sup0;': '⁰', '&sup4;': '⁴',
+  '&sup5;': '⁵', '&sup6;': '⁶', '&sup7;': '⁷', '&sup8;': '⁸', '&sup9;': '⁹',
   // Greek – uppercase
   '&Alpha;': 'Α', '&Beta;': 'Β', '&Gamma;': 'Γ', '&Delta;': 'Δ',
   '&Epsilon;': 'Ε', '&Zeta;': 'Ζ', '&Eta;': 'Η', '&Theta;': 'Θ',
@@ -42,30 +45,69 @@ const HTML_ENTITIES: Record<string, string> = {
   '&nu;': 'ν', '&xi;': 'ξ', '&omicron;': 'ο', '&pi;': 'π',
   '&rho;': 'ρ', '&sigma;': 'σ', '&tau;': 'τ', '&upsilon;': 'υ',
   '&phi;': 'φ', '&chi;': 'χ', '&psi;': 'ψ', '&omega;': 'ω',
+  '&sigmaf;': 'ς', '&thetasym;': 'ϑ', '&upsih;': 'ϒ', '&piv;': 'ϖ',
   // Arrows
   '&larr;': '←', '&uarr;': '↑', '&rarr;': '→', '&darr;': '↓',
   '&harr;': '↔', '&lArr;': '⇐', '&rArr;': '⇒', '&hArr;': '⇔',
-  // Math operators
+  '&crarr;': '↵', '&nearr;': '↗', '&searr;': '↘', '&swarr;': '↙', '&nwarr;': '↖',
+  // Math relations & Sets
   '&le;': '≤', '&ge;': '≥', '&ne;': '≠', '&equiv;': '≡',
-  '&prop;': '∝', '&infin;': '∞', '&sum;': '∑', '&prod;': '∏',
-  '&int;': '∫', '&radic;': '√', '&there4;': '∴', '&because;': '∵',
+  '&prop;': '∝', '&there4;': '∴', '&because;': '∵',
   '&forall;': '∀', '&exist;': '∃', '&isin;': '∈', '&notin;': '∉',
   '&sub;': '⊂', '&sup;': '⊃', '&cup;': '∪', '&cap;': '∩',
-  '&oplus;': '⊕', '&otimes;': '⊗', '&empty;': '∅', '&nabla;': '∇',
+  '&oplus;': '⊕', '&otimes;': '⊗', '&empty;': '∅',
   '&ang;': '∠', '&perp;': '⊥', '&prime;': '′', '&Prime;': '″',
   '&deg;': '°', '&sim;': '∼', '&asymp;': '≈', '&cong;': '≅',
-  // Currency
-  '&cent;': '¢', '&pound;': '£', '&euro;': '€', '&yen;': '¥',
-  '&curren;': '¤', '&dollar;': '$',
+  // Currencies (Complete World Currencies)
+  '&dollar;': '$', '&rupee;': '₹', '&inr;': '₹', '&euro;': '€',
+  '&pound;': '£', '&yen;': '¥', '&cent;': '¢', '&curren;': '¤',
+  '&bitcoin;': '₿', '&ruble;': '₽', '&won;': '₩', '&peso;': '₱',
+  '&lira;': '₺', '&hryvnia;': '₴', '&baht;': '฿', '&dong;': '₫',
+  '&shekel;': '₪', '&taka;': '৳', '&real;': 'R$',
   // Misc
   '&laquo;': '«', '&raquo;': '»', '&lsquo;': '\u2018', '&rsquo;': '\u2019',
   '&ldquo;': '\u201C', '&rdquo;': '\u201D', '&ndash;': '–', '&mdash;': '—',
-  '&trade;': '™', '&reg;': '®', '&copy;': '©',
+  '&trade;': '™', '&reg;': '®', '&copy;': '©', '&micro;': 'µ',
 };
 
 // ─────────────────────────────────────────────────────────────
-// 2. HTML ENTITY DECODER
+// 2. CURRENCY & HTML ENTITY DECODER & PROTECTOR
 // ─────────────────────────────────────────────────────────────
+
+/**
+ * Protects currency dollar signs from being misinterpreted as LaTeX math delimiters.
+ * Converts currency '$' (like $50, $ 100, $10.50, $5,000, $1.5M, \$50) to literal currency.
+ */
+export function protectCurrencySymbols(text: string): string {
+  if (!text || !text.includes('$')) return text;
+
+  let s = text;
+
+  // 1. Escaped dollar sign \$ -> $
+  s = s.replace(/\\\$([0-9a-zA-Z\s,.]*)/g, '$1');
+
+  // 2. Dollar sign followed by numbers/currency ($50, $ 100, $10.50, $5,000, $0.99, $.50, $1M, $2.5 billion)
+  s = s.replace(/\$(\s*)([0-9]+(?:[,.][0-9]+)*(?:\s*(?:million|billion|trillion|lakh|crore|[kKmMbB]))?)/g, '&#36;$1$2');
+
+  // 3. Number followed by dollar sign (50$, 100$)
+  s = s.replace(/([0-9]+)\s*\$/g, '$1&#36;');
+
+  // 4. If $ ... $ contains plain regular text or numbers without math operators (+, -, =, ^, _, <, >), treat as currency
+  s = s.replace(/\$(\s*[a-zA-Z0-9\s,.-]+?\s*)\$/g, (match, inner) => {
+    if (!/[\\+=\^_{}<>]/.test(inner) && /\d/.test(inner)) {
+      return `&#36;${inner}&#36;`;
+    }
+    return match;
+  });
+
+  // 5. Lone dollar signs preceded or followed by whitespace/punctuation
+  const matches = s.match(/(?<!\\)\$/g);
+  if (matches && matches.length % 2 !== 0) {
+    s = s.replace(/\$(\s+|$|(?=[.,;!?\s]))/g, '&#36;$1');
+  }
+
+  return s;
+}
 
 export function decodeHtmlEntities(text: string): string {
   if (!text) return '';
@@ -119,19 +161,22 @@ const LATEX_TO_UNICODE: Record<string, string> = {
   '\\in': '∈', '\\notin': '∉', '\\subset': '⊂', '\\supset': '⊃',
   '\\subseteq': '⊆', '\\supseteq': '⊇', '\\cup': '∪', '\\cap': '∩',
   '\\oplus': '⊕', '\\otimes': '⊗', '\\perp': '⊥', '\\parallel': '∥',
-  '\\angle': '∠', '\\triangle': '△', '\\therefore': '∴', '\\because': '∵',
-  '\\sum': '∑', '\\prod': '∏', '\\int': '∫', '\\oint': '∮',
+  '\\angle': '∠', '\\ang': '∠', '\\triangle': '△', '\\therefore': '∴', '\\because': '∵',
+  '\\sum': '∑', '\\prod': '∏', '\\int': '∫', '\\oint': '∮', '\\iint': '∬', '\\iiint': '∭',
   '\\sqrt{}': '√', '\\lfloor': '⌊', '\\rfloor': '⌋', '\\lceil': '⌈', '\\rceil': '⌉',
   // Arrows
   '\\to': '→', '\\rightarrow': '→', '\\leftarrow': '←',
   '\\Rightarrow': '⇒', '\\Leftarrow': '⇐', '\\Leftrightarrow': '⇔',
   '\\leftrightarrow': '↔', '\\uparrow': '↑', '\\downarrow': '↓',
   '\\longrightarrow': '⟶', '\\longleftarrow': '⟵',
-  // Misc math
-  '\\degree': '°', '\\circ': '°', '\\prime': '′', '\\ddagger': '‡', '\\dagger': '†',
+  // Misc math & Units
+  '\\degree': '°', '\\deg': '°', '\\circ': '°', '\\celsius': '°C', '\\fahrenheit': '°F',
+  '\\prime': '′', '\\ddagger': '‡', '\\dagger': '†',
   '\\bullet': '•', '\\star': '★', '\\ast': '*', '\\|': '‖',
-  // Currency (LaTeX style)
-  '\\rupee': '₹', '\\Rs': '₹', '\\$': '$',
+  '\\hbar': 'ℏ', '\\ell': 'ℓ', '\\wp': '℘', '\\Re': 'ℜ', '\\Im': 'ℑ', '\\aleph': 'ℵ',
+  // Currencies (LaTeX commands & standard symbols)
+  '\\rupee': '₹', '\\Rs': '₹', '\\inr': '₹', '\\$': '$', '\\dollar': '$',
+  '\\euro': '€', '\\pound': '£', '\\yen': '¥', '\\cent': '¢',
   // Trig functions (display as text)
   '\\sin': 'sin', '\\cos': 'cos', '\\tan': 'tan', '\\cot': 'cot',
   '\\sec': 'sec', '\\csc': 'csc', '\\log': 'log', '\\ln': 'ln',
@@ -401,8 +446,11 @@ function processAllMath(text: string): string {
 export function processQuestionHtml(rawContent: string | null | undefined): string {
   if (!rawContent) return '';
 
-  // Step 1: Decode HTML entities
-  let processed = decodeHtmlEntities(rawContent);
+  // Step 1: Protect currency symbols ($50, $ 100, $10.50, $5,000, etc.) from math parser
+  let processed = protectCurrencySymbols(rawContent);
+
+  // Step 2: Decode HTML entities (&amp;, &times;, &frac12;, &rupee;, &dollar;, etc.)
+  processed = decodeHtmlEntities(processed);
 
   // Step 2: Normalize newlines
   processed = processed.replace(/\r\n/g, '\n').replace(/\r/g, '\n');

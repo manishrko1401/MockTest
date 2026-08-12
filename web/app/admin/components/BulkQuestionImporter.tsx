@@ -1,21 +1,10 @@
 import React from 'react';
 import { Database, Edit, FileText, CheckCircle2, AlertCircle, PlusCircle, X, Globe, Upload, FolderOpen, Monitor, Smartphone, LayoutGrid, Wifi, Battery, ArrowLeft, Check, Sparkles, BookOpen } from 'lucide-react';
+import { processQuestionHtml, decodeHtml as decodeHtmlUtils } from '../../lib/mathUtils';
 
 function decodeHtml(text: string): string {
   if (!text) return "";
-  let decoded = text;
-  for (let i = 0; i < 3; i++) {
-    const temp = decoded
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ');
-    if (temp === decoded) break;
-    decoded = temp;
-  }
-  return decoded;
+  return processQuestionHtml(text);
 }
 
 function stripHtmlToPlainText(html: string): string {
