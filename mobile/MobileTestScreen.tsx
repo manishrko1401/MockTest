@@ -1685,7 +1685,16 @@ export default function MobileTestScreen({
             {
               text: 'View Performance',
               onPress: async () => {
-                // Always submit feedback/rating so every test completion is recorded in admin panel
+                const missingApp = !websiteRatingRef.current;
+                const missingExam = !examRatingRef.current;
+
+                if (missingApp || missingExam) {
+                  // Trigger golden pulse animation on unrated star cards
+                  triggerRatingBlinkRef.current(missingApp, missingExam);
+                  return;
+                }
+
+                // Submit feedback/rating to server
                 try {
                   fetch(`${BASE_URL}/api/feedback`, {
                     method: 'POST',
@@ -1693,8 +1702,8 @@ export default function MobileTestScreen({
                     body: JSON.stringify({
                       userId: currentUser?.id,
                       testId: testId,
-                      platformRating: websiteRatingRef.current || 5,
-                      examRating: examRatingRef.current || 5,
+                      platformRating: websiteRatingRef.current,
+                      examRating: examRatingRef.current,
                       feedbackText: feedbackTextRef.current || '',
                       source: 'app'
                     })

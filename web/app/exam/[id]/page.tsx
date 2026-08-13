@@ -1017,10 +1017,16 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
             <div className="pt-4 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-5">
               {/* Feedback Rating Block */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 text-left w-full md:w-auto">
-                {/* Rate App */}
-                <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/60 text-slate-700">
+                {/* Rate Website */}
+                <div className={`flex items-center gap-3 px-3 py-1.5 rounded-xl border transition-all ${
+                  isBlinkingStars && websiteRating === 0 
+                    ? 'border-amber-500 bg-amber-50/80 dark:bg-amber-950/40 ring-2 ring-amber-400 animate-pulse' 
+                    : websiteRating > 0
+                      ? 'border-emerald-300 bg-emerald-50/40 dark:bg-emerald-950/20 text-slate-700'
+                      : 'border-slate-200 bg-slate-50/60 text-slate-700'
+                }`}>
                   <span className="text-xs sm:text-sm font-black whitespace-nowrap">
-                    {language === 'hi' ? 'ऐप अनुभव:' : 'Rate App:'}
+                    {language === 'hi' ? 'वेबसाइट अनुभव:' : 'Rate Website:'} <span className="text-red-500">*</span>
                   </span>
                   <div className="flex gap-1.5">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -1035,7 +1041,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                             star <= websiteRating 
                               ? 'fill-amber-400 text-amber-400 drop-shadow-sm' 
                               : isBlinkingStars && websiteRating === 0
-                                ? 'fill-amber-400 text-amber-400 animate-pulse'
+                                ? 'fill-amber-300 text-amber-400 animate-bounce'
                                 : 'text-slate-300 hover:text-amber-300'
                           }`}
                         />
@@ -1045,9 +1051,15 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                 </div>
 
                 {/* Rate Exam */}
-                <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/60 text-slate-700">
+                <div className={`flex items-center gap-3 px-3 py-1.5 rounded-xl border transition-all ${
+                  isBlinkingStars && examRating === 0 
+                    ? 'border-amber-500 bg-amber-50/80 dark:bg-amber-950/40 ring-2 ring-amber-400 animate-pulse' 
+                    : examRating > 0
+                      ? 'border-emerald-300 bg-emerald-50/40 dark:bg-emerald-950/20 text-slate-700'
+                      : 'border-slate-200 bg-slate-50/60 text-slate-700'
+                }`}>
                   <span className="text-xs sm:text-sm font-black whitespace-nowrap">
-                    {language === 'hi' ? 'परीक्षा अनुभव:' : 'Exam Experience:'}
+                    {language === 'hi' ? 'परीक्षा अनुभव:' : 'Exam Experience:'} <span className="text-red-500">*</span>
                   </span>
                   <div className="flex gap-1.5">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -1062,7 +1074,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                             star <= examRating 
                               ? 'fill-amber-400 text-amber-400 drop-shadow-sm' 
                               : isBlinkingStars && examRating === 0
-                                ? 'fill-amber-400 text-amber-400 animate-pulse'
+                                ? 'fill-amber-300 text-amber-400 animate-bounce'
                                 : 'text-slate-300 hover:text-amber-300'
                           }`}
                         />
@@ -1075,6 +1087,12 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               {/* Submit & View Score & Analysis Button */}
               <button
                 onClick={async () => {
+                  if (websiteRating === 0 || examRating === 0) {
+                    setIsBlinkingStars(true);
+                    setTimeout(() => setIsBlinkingStars(false), 1200);
+                    return;
+                  }
+
                   try {
                     await fetch('/api/feedback', {
                       method: 'POST',
@@ -1082,8 +1100,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                       body: JSON.stringify({
                         userId: currentUser?.id,
                         testId: testId,
-                        platformRating: websiteRating || 5,
-                        examRating: examRating || 5,
+                        platformRating: websiteRating,
+                        examRating: examRating,
                         feedbackText: feedbackText || '',
                         source: 'web'
                       })

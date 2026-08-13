@@ -1241,15 +1241,24 @@ export default function DashboardScreen({
           // Map testIds from server sessions — keep the most recent session per testId
           const sessionsMap = new Map<string, any>();
 
+          const getSessionTime = (s: any): number => {
+            if (!s) return 0;
+            const raw = s.updatedAt || s.completedAt || s.startedAt || s.createdAt || s.savedAt || s.date;
+            if (!raw) return 0;
+            if (typeof raw === 'number') return isNaN(raw) ? 0 : raw;
+            const parsed = new Date(raw).getTime();
+            return isNaN(parsed) ? 0 : parsed;
+          };
+
           (Array.isArray(rawSessions) ? rawSessions : []).forEach((s: any) => {
             if (s && s.testId) {
               const existing = sessionsMap.get(s.testId);
               if (!existing) {
                 sessionsMap.set(s.testId, s);
               } else {
-                const existingTime = new Date(existing.updatedAt || existing.completedAt || existing.startedAt || existing.createdAt || existing.savedAt || existing.date || 0).getTime();
-                const sTime = new Date(s.updatedAt || s.completedAt || s.startedAt || s.createdAt || s.savedAt || s.date || 0).getTime();
-                if (sTime > existingTime) {
+                const existingTime = getSessionTime(existing);
+                const sTime = getSessionTime(s);
+                if (sTime >= existingTime) {
                   sessionsMap.set(s.testId, s);
                 }
               }
@@ -1265,14 +1274,8 @@ export default function DashboardScreen({
               s.score !== undefined
             ))
             .sort((a: any, b: any) => {
-              // Prioritize ongoing/paused tests at the beginning
-              const isOngoingA = a.status === 'ONGOING' || a.status === 'PAUSED';
-              const isOngoingB = b.status === 'ONGOING' || b.status === 'PAUSED';
-              if (isOngoingA && !isOngoingB) return -1;
-              if (!isOngoingA && isOngoingB) return 1;
-
-              const timeA = new Date(a.updatedAt || a.completedAt || a.startedAt || a.createdAt || a.savedAt || a.date || 0).getTime();
-              const timeB = new Date(b.updatedAt || b.completedAt || b.startedAt || b.createdAt || b.savedAt || b.date || 0).getTime();
+              const timeA = getSessionTime(a);
+              const timeB = getSessionTime(b);
               return timeB - timeA;
             })
             .slice(0, 5);

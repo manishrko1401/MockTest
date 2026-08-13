@@ -203,6 +203,15 @@ export default function MockTestsCatalog() {
     // Map each testId to its most recent session
     const sessionsMap = new Map<string, any>();
 
+    const getSessionTime = (s: any): number => {
+      if (!s) return 0;
+      const raw = s.updatedAt || s.completedAt || s.startedAt || s.createdAt || s.savedAt || s.date;
+      if (!raw) return 0;
+      if (typeof raw === 'number') return isNaN(raw) ? 0 : raw;
+      const parsed = new Date(raw).getTime();
+      return isNaN(parsed) ? 0 : parsed;
+    };
+
     // 1. Add server sessions — keep the most recent session per testId
     (Array.isArray(rawSessions) ? rawSessions : []).forEach((s: any) => {
       if (s && s.testId) {
@@ -210,16 +219,16 @@ export default function MockTestsCatalog() {
         if (!existing) {
           sessionsMap.set(s.testId, s);
         } else {
-          const existingTime = new Date(existing.updatedAt || existing.completedAt || existing.startedAt || existing.createdAt || existing.savedAt || existing.date || 0).getTime();
-          const sTime = new Date(s.updatedAt || s.completedAt || s.startedAt || s.createdAt || s.savedAt || s.date || 0).getTime();
-          if (sTime > existingTime) {
+          const existingTime = getSessionTime(existing);
+          const sTime = getSessionTime(s);
+          if (sTime >= existingTime) {
             sessionsMap.set(s.testId, s);
           }
         }
       }
     });
 
-    // 2. Sort: ongoing/paused first, then most recent by timestamp
+    // 2. Sort: strictly by most recent timestamp
     const sortedSessions = Array.from(sessionsMap.values())
       .filter((s: any) => s && (
         s.status === 'ONGOING' ||
@@ -229,13 +238,8 @@ export default function MockTestsCatalog() {
         s.score !== undefined
       ))
       .sort((a: any, b: any) => {
-        const isOngoingA = a.status === 'ONGOING' || a.status === 'PAUSED';
-        const isOngoingB = b.status === 'ONGOING' || b.status === 'PAUSED';
-        if (isOngoingA && !isOngoingB) return -1;
-        if (!isOngoingA && isOngoingB) return 1;
-
-        const timeA = new Date(a.updatedAt || a.completedAt || a.startedAt || a.createdAt || a.savedAt || a.date || 0).getTime();
-        const timeB = new Date(b.updatedAt || b.completedAt || b.startedAt || b.createdAt || b.savedAt || b.date || 0).getTime();
+        const timeA = getSessionTime(a);
+        const timeB = getSessionTime(b);
         return timeB - timeA;
       });
 

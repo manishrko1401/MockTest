@@ -2083,16 +2083,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
   const resetAttempt = (userId: string, sessionId: string) => {
     const updatedList = usersList.map(u => {
       if (u.id === userId) {
-        const cleanedSessions = u.testSessions.filter(s => s.id !== sessionId);
+        const cleanedSessions = (u.testSessions || []).filter(s => s.id !== sessionId);
         const updatedU = { ...u, testSessions: cleanedSessions };
-
-        if (currentUser && currentUser.id === userId) {
-          setCurrentUser(updatedU);
-        }
         return updatedU;
       }
       return u;
     });
+
+    if (currentUser && currentUser.id === userId) {
+      const currentCleaned = (currentUser.testSessions || []).filter(s => s.id !== sessionId);
+      setCurrentUser({
+        ...currentUser,
+        testSessions: currentCleaned
+      });
+    }
 
     setUsersList(updatedList);
 
@@ -2141,14 +2145,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           isBlocked: isBlocked ?? u.isBlocked ?? false,
           coins: coins !== undefined ? coins : u.coins ?? 0
         };
-
-        if (currentUser && currentUser.id === userId) {
-          setCurrentUser(updatedU);
-        }
         return updatedU;
       }
       return u;
     });
+
+    if (currentUser && currentUser.id === userId) {
+      const updatedSelf: MockUser = {
+        ...currentUser,
+        name,
+        email,
+        mobile,
+        referralCode,
+        referredBy,
+        referralsCount,
+        role,
+        subscriptionTier: tier,
+        subscriptionPurchasedAt: purchasedAt,
+        subscriptionExpiresAt: expiry,
+        password: password || currentUser.password || 'password123',
+        isBlocked: isBlocked ?? currentUser.isBlocked ?? false,
+        coins: coins !== undefined ? coins : currentUser.coins ?? 0,
+        testSessions: currentUser.testSessions || []
+      };
+      setCurrentUser(updatedSelf);
+      syncUserCookieAndCache(updatedSelf);
+    }
 
     return fetch('/api/db', {
       method: 'POST',
