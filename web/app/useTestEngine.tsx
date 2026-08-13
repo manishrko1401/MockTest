@@ -32,6 +32,8 @@ export interface Question {
     en: string;
     hi: string;
   };
+  positiveMark?: number;
+  negativeMark?: number;
 }
 
 export interface Section {
@@ -600,8 +602,8 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
         questions.forEach((q) => {
           const resp = state.responses[q.id];
-          const positive = Number(section.positiveMark);
-          const negative = Number(section.negativeMark);
+          const positive = q.positiveMark !== undefined && q.positiveMark !== null ? Number(q.positiveMark) : Number(section.positiveMark);
+          const negative = q.negativeMark !== undefined && q.negativeMark !== null ? Number(q.negativeMark) : Number(section.negativeMark);
 
           totalMarks += positive;
 
@@ -634,7 +636,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
       const accuracyPercentage =
         correctCount + incorrectCount > 0
-          ? (correctCount / (correctCount + incorrectCount)) * 100
+          ? Math.round((correctCount / (correctCount + incorrectCount)) * 10000) / 100
           : 0;
 
       return {
@@ -643,12 +645,12 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         isExamSubmitted: true,
         isExtraTimeMode: false,
         score: {
-          totalMarks,
-          obtainedMarks: parseFloat(obtainedMarks.toFixed(2)),
+          totalMarks: Math.round(totalMarks * 100) / 100,
+          obtainedMarks: Math.round(obtainedMarks * 100) / 100,
           correctCount,
           incorrectCount,
           unattemptedCount,
-          accuracyPercentage: parseFloat(accuracyPercentage.toFixed(2)),
+          accuracyPercentage,
         },
       };
     }

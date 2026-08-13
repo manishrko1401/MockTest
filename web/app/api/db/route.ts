@@ -137,7 +137,7 @@ export async function POST(request: Request) {
       'add-category', 'create-category', 'edit-category', 'delete-category',
       'add-subcategory', 'edit-subcategory', 'delete-subcategory',
       'add-subsubcategory', 'edit-subsubcategory', 'delete-subsubcategory',
-      'add-mocktest', 'edit-mocktest-title', 'delete-mocktest',
+      'add-mocktest', 'edit-mocktest-title', 'delete-mocktest', 'save-section-rules',
       'save-custom-questions', 'bulk-import-questions', 'save-profile-admin', 'db-stats'
     ];
 
@@ -214,7 +214,7 @@ export async function POST(request: Request) {
         'add-category', 'create-category', 'edit-category', 'delete-category',
         'add-subcategory', 'edit-subcategory', 'delete-subcategory',
         'add-subsubcategory', 'edit-subsubcategory', 'delete-subsubcategory',
-        'add-mocktest', 'edit-mocktest-title', 'delete-mocktest',
+        'add-mocktest', 'edit-mocktest-title', 'delete-mocktest', 'save-section-rules',
         'save-custom-questions', 'bulk-import-questions',
         'reorder-categories', 'reorder-subcategories', 'reorder-subsubcategories', 'reorder-mocktests',
         'refresh-catalog'
@@ -291,6 +291,8 @@ export async function POST(request: Request) {
         return await handleEditMockTestTitle(data);
       case 'delete-mocktest':
         return await handleDeleteMockTest(data);
+      case 'save-section-rules':
+        return await handleSaveSectionRules(data || body);
       case 'save-custom-questions':
       case 'bulk-import-questions':
         return await handleSaveCustomQuestions(data || body);
@@ -1849,6 +1851,22 @@ async function handleAddMockTest(data: any) {
     },
   });
 
+  if (Array.isArray(data.sections) && data.sections.length > 0) {
+    for (let i = 0; i < data.sections.length; i++) {
+      const s = data.sections[i];
+      await prisma.section.create({
+        data: {
+          id: `sec_${id}_${i}_${Math.random().toString(36).substring(2, 7)}`,
+          mockTestId: id,
+          name: s.name || `Section ${i + 1}`,
+          orderIndex: i,
+          positiveMarks: s.positiveMarks !== undefined ? Number(s.positiveMarks) : (positiveMarks ?? 2.0),
+          negativeMarks: s.negativeMarks !== undefined ? Number(s.negativeMarks) : (negativeMarks ?? 0.5),
+        }
+      });
+    }
+  }
+
   return NextResponse.json({ success: true });
 }
 
@@ -2045,11 +2063,64 @@ async function handleEditMockTestTitle(data: any) {
     },
   });
 
+  if (Array.isArray(data.sections) && data.sections.length > 0) {
+    await prisma.section.deleteMany({ where: { mockTestId: testId } });
+    for (let i = 0; i < data.sections.length; i++) {
+      const s = data.sections[i];
+      await prisma.section.create({
+        data: {
+          id: `sec_${testId}_${i}_${Math.random().toString(36).substring(2, 7)}`,
+          mockTestId: testId,
+          name: s.name || `Section ${i + 1}`,
+          orderIndex: i,
+          positiveMarks: s.positiveMarks !== undefined ? Number(s.positiveMarks) : (positiveMarks ?? 2.0),
+          negativeMarks: s.negativeMarks !== undefined ? Number(s.negativeMarks) : (negativeMarks ?? 0.5),
+        }
+      });
+    }
+  }
+
   // Bust in-memory catalog cache so next sync serves fresh data
   catalogCache.examCatalog = null;
   catalogCache.noticesList = null;
 
   return NextResponse.json({ success: true });
+}
+
+async function handleSaveSectionRules(data: any) {
+  const { testId, sections } = data || {};
+  if (!testId || !Array.isArray(sections)) {
+    return NextResponse.json({ success: false, error: 'testId and sections array are required' }, { status: 400 });
+  }
+
+  try {
+    // Delete existing section records for this test and recreate with custom marks
+    await prisma.section.deleteMany({
+      where: { mockTestId: testId }
+    });
+
+    for (let i = 0; i < sections.length; i++) {
+      const s = sections[i];
+      await prisma.section.create({
+        data: {
+          id: `sec_${testId}_${i}_${Math.random().toString(36).substring(2, 7)}`,
+          mockTestId: testId,
+          name: s.name || `Section ${i + 1}`,
+          orderIndex: s.orderIndex ?? i,
+          positiveMarks: s.positiveMarks !== undefined ? Number(s.positiveMarks) : 2.0,
+          negativeMarks: s.negativeMarks !== undefined ? Number(s.negativeMarks) : 0.5,
+        }
+      });
+    }
+
+    catalogCache.examCatalog = null;
+    catalogCache.noticesList = null;
+
+    return NextResponse.json({ success: true, count: sections.length });
+  } catch (err: any) {
+    console.error('Failed to save section rules:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
 }
 
 async function handleReorderCategories(data: any) {
@@ -2314,6 +2385,12 @@ async function handleSaveCustomQuestions(rawPayload: any) {
 
   const questionsDataToStore = s3Url ? { url: s3Url } : (mergedQuestions || questions);
 
+  // Dynamically compute total max marks based on individual question positive marks if available
+  const rawQArray = Array.isArray(mergedQuestions) ? mergedQuestions : (Array.isArray(questions) ? questions : []);
+  const calculatedMaxMarks = rawQArray.length > 0
+    ? rawQArray.reduce((sum: number, q: any) => sum + (q.positiveMarks !== undefined && q.positiveMarks !== null ? Number(q.positiveMarks) : 2.0), 0)
+    : qCount * 2;
+
   try {
     // 1. Check if the target mock test already exists in the database by slug or raw ID
     let existingMockTest = await prisma.mockTest.findFirst({
@@ -2326,13 +2403,18 @@ async function handleSaveCustomQuestions(rawPayload: any) {
     });
 
     if (existingMockTest) {
-      // Update existing mock test questions without creating any new categories
+      // Update existing mock test questions and test metadata without creating any new categories
       await prisma.mockTest.update({
         where: { id: existingMockTest.id },
         data: {
           customQuestions: questionsDataToStore,
           questionsCount: qCount,
-          maxMarks: qCount * 2,
+          maxMarks: calculatedMaxMarks,
+          ...(payload.durationMinutes !== undefined ? { durationMinutes: Number(payload.durationMinutes) } : {}),
+          ...(payload.positiveMarks !== undefined ? { positiveMarks: Number(payload.positiveMarks) } : {}),
+          ...(payload.negativeMarks !== undefined ? { negativeMarks: Number(payload.negativeMarks) } : {}),
+          ...(payload.hasSectionalTiming !== undefined ? { hasSectionalTiming: Boolean(payload.hasSectionalTiming) } : {}),
+          ...(payload.sectionalTimings !== undefined ? { sectionalTimings: payload.sectionalTimings } : {}),
         }
       });
     } else {
@@ -2390,29 +2472,57 @@ async function handleSaveCustomQuestions(rawPayload: any) {
           id: targetId,
           testSeriesId: targetSeries.id,
           title: payload.title || rawTargetId || `Test Paper (${targetId})`,
-          durationMinutes: payload.durationMinutes || 150,
+          durationMinutes: payload.durationMinutes !== undefined ? Number(payload.durationMinutes) : 150,
           questionsCount: qCount,
-          maxMarks: qCount * 2,
+          maxMarks: calculatedMaxMarks,
+          positiveMarks: payload.positiveMarks !== undefined ? Number(payload.positiveMarks) : 2.0,
+          negativeMarks: payload.negativeMarks !== undefined ? Number(payload.negativeMarks) : 0.5,
+          hasSectionalTiming: payload.hasSectionalTiming !== undefined ? Boolean(payload.hasSectionalTiming) : false,
+          sectionalTimings: payload.sectionalTimings !== undefined ? payload.sectionalTimings : undefined,
           requiredTierName: 'None',
           customQuestions: questionsDataToStore,
         }
       });
     }
 
+    // Save/update section rules if sections array provided
+    const targetMockId = existingMockTest ? existingMockTest.id : targetId;
+    if (Array.isArray(payload.sections) && payload.sections.length > 0) {
+      try {
+        await prisma.section.deleteMany({ where: { mockTestId: targetMockId } });
+        for (let i = 0; i < payload.sections.length; i++) {
+          const s = payload.sections[i];
+          await prisma.section.create({
+            data: {
+              id: `sec_${targetMockId}_${i}_${Math.random().toString(36).substring(2, 7)}`,
+              mockTestId: targetMockId,
+              name: s.name || `Section ${i + 1}`,
+              orderIndex: s.orderIndex ?? i,
+              positiveMarks: s.positiveMarks !== undefined ? Number(s.positiveMarks) : (payload.positiveMarks ? Number(payload.positiveMarks) : 2.0),
+              negativeMarks: s.negativeMarks !== undefined ? Number(s.negativeMarks) : (payload.negativeMarks ? Number(payload.negativeMarks) : 0.5),
+            }
+          });
+        }
+      } catch (secErr) {
+        console.warn('Could not update section rules during custom questions save:', secErr);
+      }
+    }
+
     // Clear in-memory catalog cache so all live users receive fresh data
     catalogCache.examCatalog = null;
     catalogCache.noticesList = null;
 
+    return NextResponse.json({
+      success: true,
+      testId: targetMockId,
+      url: s3Url,
+      questionsCount: qCount,
+      maxMarks: calculatedMaxMarks,
+    });
   } catch (err: any) {
-    console.error("Prisma mockTest update error:", err);
+    console.error("Failed to save custom questions to DB:", err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
-
-  return NextResponse.json({
-    success: true,
-    url: s3Url,
-    questionsCount: qCount
-  });
 }
 
 async function handleGetCustomQuestions(rawPayload: any) {
@@ -2456,6 +2566,21 @@ async function handleGetCustomQuestions(rawPayload: any) {
         customQuestions: true,
         positiveMarks: true,
         negativeMarks: true,
+        durationMinutes: true,
+        questionsCount: true,
+        maxMarks: true,
+        hasSectionalTiming: true,
+        sectionalTimings: true,
+        sections: {
+          select: {
+            id: true,
+            name: true,
+            orderIndex: true,
+            positiveMarks: true,
+            negativeMarks: true,
+          },
+          orderBy: { orderIndex: 'asc' }
+        }
       },
     });
     if (mockTest && mockTest.customQuestions) {
@@ -2517,6 +2642,12 @@ async function handleGetCustomQuestions(rawPayload: any) {
     customQuestions: questions,
     positiveMarks: mockTest?.positiveMarks ?? null,
     negativeMarks: mockTest?.negativeMarks ?? null,
+    durationMinutes: mockTest?.durationMinutes ?? null,
+    questionsCount: mockTest?.questionsCount ?? null,
+    maxMarks: mockTest?.maxMarks ?? null,
+    hasSectionalTiming: mockTest?.hasSectionalTiming ?? null,
+    sectionalTimings: mockTest?.sectionalTimings ?? null,
+    sections: mockTest?.sections ?? [],
   });
 }
 

@@ -209,6 +209,8 @@ model Question {
   imageUrl          String?
   mathLatex         String?
   orderIndex        Int
+  positiveMarks     Float?                  // Optional per-question override
+  negativeMarks     Float?                  // Optional per-question override
   createdAt         DateTime                @default(now())
 
   @@unique([sectionId, orderIndex])

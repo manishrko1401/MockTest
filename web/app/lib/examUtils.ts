@@ -88,10 +88,32 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
 
   // Check if we have custom uploaded questions
   let hasCustomQuestions = false;
-  if (customQs && Array.isArray(customQs) && customQs.length > 0) {
+  const rawCustomQs = Array.isArray(customQs) ? customQs : (customQs?.questions || null);
+
+  if (customQs && !Array.isArray(customQs)) {
+    if (customQs.durationMinutes) {
+      duration = Number(customQs.durationMinutes) * 60;
+    }
+    if (customQs.hasSectionalTiming !== undefined && customQs.hasSectionalTiming !== null) {
+      hasSectionalTiming = Boolean(customQs.hasSectionalTiming);
+    }
+    if (customQs.sectionalTimings) {
+      if (Array.isArray(customQs.sectionalTimings)) {
+        sectionalTimingsMins = customQs.sectionalTimings;
+      } else if (typeof customQs.sectionalTimings === 'string' && customQs.sectionalTimings.trim()) {
+        sectionalTimingsMins = customQs.sectionalTimings.split(',').map((s: string) => Number(s.trim())).filter((n: number) => !isNaN(n) && n > 0);
+      }
+    }
+  }
+
+  if (rawCustomQs && Array.isArray(rawCustomQs) && rawCustomQs.length > 0) {
     hasCustomQuestions = true;
-    const positiveMark = catalogTest?.positiveMarks !== undefined ? Number(catalogTest.positiveMarks) : (id.includes('rrb') ? 1 : 2);
-    const negativeMark = catalogTest?.negativeMarks !== undefined ? Number(catalogTest.negativeMarks) : (id.includes('rrb') ? 0.33 : 0.5);
+    const positiveMark = customQs?.positiveMarks !== undefined && customQs?.positiveMarks !== null
+      ? Number(customQs.positiveMarks)
+      : (catalogTest?.positiveMarks !== undefined ? Number(catalogTest.positiveMarks) : (id.includes('rrb') ? 1 : 2));
+    const negativeMark = customQs?.negativeMarks !== undefined && customQs?.negativeMarks !== null
+      ? Number(customQs.negativeMarks)
+      : (catalogTest?.negativeMarks !== undefined ? Number(catalogTest.negativeMarks) : (id.includes('rrb') ? 0.33 : 0.5));
 
     const isCtet = id.includes('ctet');
     if (isCtet) {
@@ -116,7 +138,7 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
       const filteredQuestions: Question[] = [];
 
       targetSecConfigs.forEach((cfg) => {
-        const matchingRawQs = customQs.filter((item: any) => {
+        const matchingRawQs = rawCustomQs.filter((item: any) => {
           const secStr = String(item.section || item.subject || '').trim();
           return secStr.toLowerCase() === cfg.matchSection.toLowerCase();
         });
@@ -156,31 +178,65 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
     } else {
       // Dynamically build sections based on unique question section fields
       const sectionNames: string[] = [];
-      customQs.forEach((item: any) => {
+      rawCustomQs.forEach((item: any) => {
         const sec = item.section || "General Studies";
         if (!sectionNames.includes(sec)) {
           sectionNames.push(sec);
         }
       });
 
-      sections = sectionNames.map((name, idx) => ({
-        id: `sec_custom_${idx}`,
-        name,
-        orderIndex: idx,
-        positiveMark,
-        negativeMark,
-        durationSeconds: hasSectionalTiming && sectionalTimingsMins[idx] ? sectionalTimingsMins[idx] * 60 : undefined,
-      }));
+      // Check if customQs or catalogTest has custom section rules
+      const customSectionsMap: Record<string, { positiveMark: number; negativeMark: number }> = {};
+      const metaSections = (customQs && typeof customQs === 'object' && 'sections' in customQs) ? customQs.sections : ((catalogTest as any)?.sections || []);
+      if (Array.isArray(metaSections)) {
+        metaSections.forEach((s: any) => {
+          if (s && s.name) {
+            customSectionsMap[s.name.trim().toLowerCase()] = {
+              positiveMark: s.positiveMarks !== undefined ? Number(s.positiveMarks) : (s.positiveMark !== undefined ? Number(s.positiveMark) : positiveMark),
+              negativeMark: s.negativeMarks !== undefined ? Number(s.negativeMarks) : (s.negativeMark !== undefined ? Number(s.negativeMark) : negativeMark),
+            };
+          }
+        });
+      }
+
+      sections = sectionNames.map((name, idx) => {
+        const secLower = name.trim().toLowerCase();
+        const secRule = customSectionsMap[secLower];
+        const secPosMark = secRule?.positiveMark !== undefined ? secRule.positiveMark : positiveMark;
+        const secNegMark = secRule?.negativeMark !== undefined ? secRule.negativeMark : negativeMark;
+
+        return {
+          id: `sec_custom_${idx}`,
+          name,
+          orderIndex: idx,
+          positiveMark: secPosMark,
+          negativeMark: secNegMark,
+          durationSeconds: hasSectionalTiming && sectionalTimingsMins[idx] ? sectionalTimingsMins[idx] * 60 : undefined,
+        };
+      });
 
       const sectionCounters: Record<string, number> = {};
       sectionNames.forEach(name => {
         sectionCounters[name] = 0;
       });
 
-      questions = customQs.map((item: any, idx: number) => {
+      questions = rawCustomQs.map((item: any, idx: number) => {
         const secName = item.section || "General Studies";
         const secId = `sec_custom_${sectionNames.indexOf(secName)}`;
         const qOrder = sectionCounters[secName]++;
+
+        const secLower = secName.trim().toLowerCase();
+        const secRule = customSectionsMap[secLower];
+        const defaultPosForSection = secRule?.positiveMark !== undefined ? secRule.positiveMark : positiveMark;
+        const defaultNegForSection = secRule?.negativeMark !== undefined ? secRule.negativeMark : negativeMark;
+
+        const qPosMark = item.positiveMarks !== undefined && item.positiveMarks !== null && item.positiveMarks !== '' 
+          ? Number(item.positiveMarks) 
+          : (item.positiveMark !== undefined && item.positiveMark !== null && item.positiveMark !== '' ? Number(item.positiveMark) : defaultPosForSection);
+
+        const qNegMark = item.negativeMarks !== undefined && item.negativeMarks !== null && item.negativeMarks !== '' 
+          ? Number(item.negativeMarks) 
+          : (item.negativeMark !== undefined && item.negativeMark !== null && item.negativeMark !== '' ? Number(item.negativeMark) : defaultNegForSection);
 
         return {
           id: item.id || `q_custom_${id}_${idx}`,
@@ -188,6 +244,8 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
           questionType: "mcq",
           orderIndex: qOrder,
           correctOptionIndex: item.correctIndex ?? 0,
+          positiveMark: qPosMark,
+          negativeMark: qNegMark,
           content: {
             en: {
               questionText: item.textEn || item.questionText || item.text || '',

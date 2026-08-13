@@ -28,6 +28,7 @@ import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
 import { SpinningDotsLoader } from '../SpinningDotsLoader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { formatTestMarkingScheme } from '../utils/markingUtils';
 import { formatLogoUrl } from './DashboardScreen';
 import { getLocalizedName } from '../utils/localization';
 
@@ -429,15 +430,30 @@ export default function TestSeriesDetailScreen({
                                 <Coins size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
                                 <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.maxMarks} Marks</Text>
                               </View>
-                              <View style={styles.metaItem}>
-                                <PlusCircle size={12} color={isDark ? '#34D399' : '#059669'} />
-                                <Text style={[styles.metaText, { color: isDark ? '#34D399' : '#059669', fontWeight: 'bold' }]}>+{test.positiveMarks ?? 2}</Text>
-                              </View>
-                              <View style={styles.metaItem}>
-                                <MinusCircle size={12} color={isDark ? '#F87171' : '#DC2626'} />
-                                <Text style={[styles.metaText, { color: isDark ? '#F87171' : '#DC2626', fontWeight: 'bold' }]}>-{test.negativeMarks ?? 0.5}</Text>
-                              </View>
                             </View>
+                            {(() => {
+                              const scheme = formatTestMarkingScheme(test);
+                              return (
+                                <View style={{ marginTop: 6, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                                  <View style={{
+                                    backgroundColor: scheme.isCustom ? (isDark ? 'rgba(245, 158, 11, 0.15)' : '#FEF3C7') : (isDark ? 'rgba(16, 185, 129, 0.15)' : '#D1FAE5'),
+                                    borderColor: scheme.isCustom ? '#F59E0B' : (isDark ? '#059669' : '#10B981'),
+                                    borderWidth: 1,
+                                    borderRadius: 6,
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 3,
+                                  }}>
+                                    <Text style={{
+                                      fontSize: 10,
+                                      fontWeight: '800',
+                                      color: scheme.isCustom ? (isDark ? '#FBBF24' : '#D97706') : (isDark ? '#34D399' : '#059669'),
+                                    }}>
+                                      {scheme.isCustom ? '⚡ ' : '🎯 '}{scheme.badgeText}
+                                    </Text>
+                                  </View>
+                                </View>
+                              );
+                            })()}
 
                             {/* Subtitle / Status */}
                             {isCompleted && attempt && (
@@ -641,15 +657,30 @@ export default function TestSeriesDetailScreen({
                       <Coins size={14} color={isDark ? ThemeColors.dark.textMuted : '#6B7280'} />
                       <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.maxMarks} Marks</Text>
                     </View>
-                    <View style={styles.metaItem}>
-                      <PlusCircle size={12} color={isDark ? '#34D399' : '#059669'} />
-                      <Text style={[styles.metaText, { color: isDark ? '#34D399' : '#059669', fontWeight: 'bold' }]}>+{test.positiveMarks ?? 2}</Text>
-                    </View>
-                    <View style={styles.metaItem}>
-                      <MinusCircle size={12} color={isDark ? '#F87171' : '#DC2626'} />
-                      <Text style={[styles.metaText, { color: isDark ? '#F87171' : '#DC2626', fontWeight: 'bold' }]}>-{test.negativeMarks ?? 0.5}</Text>
-                    </View>
                   </View>
+                  {(() => {
+                    const scheme = formatTestMarkingScheme(test);
+                    return (
+                      <View style={{ marginTop: 6, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <View style={{
+                          backgroundColor: scheme.isCustom ? (isDark ? 'rgba(245, 158, 11, 0.15)' : '#FEF3C7') : (isDark ? 'rgba(16, 185, 129, 0.15)' : '#D1FAE5'),
+                          borderColor: scheme.isCustom ? '#F59E0B' : (isDark ? '#059669' : '#10B981'),
+                          borderWidth: 1,
+                          borderRadius: 6,
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                        }}>
+                          <Text style={{
+                            fontSize: 10,
+                            fontWeight: '800',
+                            color: scheme.isCustom ? (isDark ? '#FBBF24' : '#D97706') : (isDark ? '#34D399' : '#059669'),
+                          }}>
+                            {scheme.isCustom ? '⚡ ' : '🎯 '}{scheme.badgeText}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })()}
 
                   {/* Subtitle / Status */}
                   {isCompleted && attempt && (

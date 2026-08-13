@@ -453,17 +453,21 @@ export default function ExamSolutionAnalysisPage() {
       const userStatus = questionStatuses[idx];
       const selectedIdx = userStatus ? userStatus.userSelectedOptionIndex : -1;
 
+      const qPos = (q.positiveMark !== undefined && q.positiveMark !== null) ? Number(q.positiveMark) : info.positiveMark;
+      const qNeg = (q.negativeMark !== undefined && q.negativeMark !== null) ? Number(q.negativeMark) : info.negativeMark;
+
       if (selectedIdx === -1 || selectedIdx === null || selectedIdx === undefined) {
         stats.unattempted++;
       } else {
         stats.attempted++;
         if (userStatus.status === 'correct') {
           stats.correct++;
-          stats.score += info.positiveMark;
+          stats.score += qPos;
         } else {
           stats.incorrect++;
-          stats.score -= info.negativeMark;
+          stats.score -= qNeg;
         }
+        stats.score = Math.round(stats.score * 100) / 100;
       }
     });
 

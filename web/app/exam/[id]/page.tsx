@@ -144,7 +144,17 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
         });
         const data = await res.json();
         if (data.success && data.questions) {
-          customQs = data.questions;
+          customQs = {
+            questions: data.questions,
+            positiveMarks: data.positiveMarks,
+            negativeMarks: data.negativeMarks,
+            durationMinutes: data.durationMinutes,
+            questionsCount: data.questionsCount,
+            maxMarks: data.maxMarks,
+            hasSectionalTiming: data.hasSectionalTiming,
+            sectionalTimings: data.sectionalTimings,
+            sections: data.sections,
+          };
         }
       } catch (err) {
         console.error("Error fetching custom questions:", err);
@@ -989,9 +999,14 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     <div className="mb-3 pb-2 border-b border-slate-100 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <div className="flex flex-col">
-                          <h3 className="text-xs font-bold text-slate-800">
-                            Q No. {currentQuestionIndex + 1}
-                          </h3>
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="text-xs font-bold text-slate-800">
+                              Q No. {currentQuestionIndex + 1}
+                            </h3>
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              +{currentQuestion.positiveMark ?? currentSection?.positiveMark ?? 2} | -{currentQuestion.negativeMark ?? currentSection?.negativeMark ?? 0.5}
+                            </span>
+                          </div>
                           <span className="text-[8px] text-slate-400 font-mono">
                             ID: {currentQuestion.id}
                           </span>
@@ -1405,13 +1420,16 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
             {/* Question Header Bar */}
             {(() => {
               const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
+              const activePos = currentQuestion?.positiveMark !== undefined && currentQuestion?.positiveMark !== null ? Number(currentQuestion.positiveMark) : Number(currentSection.positiveMark);
+              const activeNeg = currentQuestion?.negativeMark !== undefined && currentQuestion?.negativeMark !== null ? Number(currentQuestion.negativeMark) : Number(currentSection.negativeMark);
+
               if (!isSsc) {
                 return (
                   <div className="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-2 text-[11px] font-bold shrink-0">
                     <span className="text-slate-400">Question Type: Multiple Choice Question</span>
                     <div className="flex gap-2">
-                      <span className="text-slate-550 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[10px]">
-                        Section Marks: +{currentSection.positiveMark} | -{currentSection.negativeMark}
+                      <span className="text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[10px]">
+                        Question Marks: +{activePos} | -{activeNeg}
                       </span>
                     </div>
                   </div>
@@ -1423,10 +1441,10 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   <span className="text-[#0747A6] text-xs">Question Type: Multiple Choice Question</span>
                   <div className="flex gap-2">
                     <span className="text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded">
-                      Marks: +{currentSection.positiveMark}
+                      Marks: +{activePos}
                     </span>
                     <span className="text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
-                      Negative: -{currentSection.negativeMark}
+                      Negative: -{activeNeg}
                     </span>
                   </div>
                 </div>

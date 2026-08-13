@@ -128,13 +128,19 @@ export async function startTestSession(req: Request, res: Response): Promise<voi
     mockTest.sections.forEach((section: { id: string | number; positiveMarks: any; negativeMarks: any; questions: any[]; }) => {
       // Store section scoring config: positiveMark, negativeMark
       rulesMap[section.id] = JSON.stringify({
-        positiveMarks: section.positiveMarks,
-        negativeMarks: section.negativeMarks,
+        positiveMarks: section.positiveMarks ?? (mockTest as any).positiveMarks ?? 2.0,
+        negativeMarks: section.negativeMarks ?? (mockTest as any).negativeMarks ?? 0.5,
       });
 
-      // Map question IDs to their correct answers
-      section.questions.forEach((q) => {
+      // Map question IDs to their correct answers and store per-question rules
+      section.questions.forEach((q: any) => {
         answerMap[q.id] = q.correctIndex.toString();
+        const pos = q.positiveMarks ?? section.positiveMarks ?? (mockTest as any).positiveMarks ?? 2.0;
+        const neg = q.negativeMarks ?? section.negativeMarks ?? (mockTest as any).negativeMarks ?? 0.5;
+        rulesMap[`q:${q.id}`] = JSON.stringify({
+          positiveMarks: Number(pos),
+          negativeMarks: Number(neg),
+        });
       });
     });
 
@@ -167,7 +173,7 @@ export async function startTestSession(req: Request, res: Response): Promise<voi
         orderIndex: s.orderIndex,
         positiveMarks: s.positiveMarks,
         negativeMarks: s.negativeMarks,
-        questions: s.questions.map((q) => ({
+        questions: s.questions.map((q: any) => ({
           id: q.id,
           type: q.type,
           textEn: q.textEn,
@@ -177,36 +183,39 @@ export async function startTestSession(req: Request, res: Response): Promise<voi
           imageUrl: q.imageUrl,
           mathLatex: q.mathLatex,
           orderIndex: q.orderIndex,
+          positiveMarks: q.positiveMarks ?? s.positiveMarks ?? (mockTest as any).positiveMarks ?? 2.0,
+          negativeMarks: q.negativeMarks ?? s.negativeMarks ?? (mockTest as any).negativeMarks ?? 0.5,
         })),
       })),
     });
-  } catch (error) {
-    logger.error('Failed to initialize test session', { error, userId, mockTestId });
-    res.status(500).json({ error: 'Internal system failure during session initialization.' });
+  } catch (error: any) {
+    logger.error('Failed to start test session', { error: error.message, stack: error.stack });
+    res.status(500).json({ error: 'Internal server error while starting test session.' });
   }
 }
 
 /**
- * 2. PROCESS SECURE TEST SUBMISSION
- * Extracts responses, evaluates score against Redis matrix, updates DB and flushes Redis.
+ * Submit candidate test session, compute final scores, and finalize session
  */
-export async function submitTestSession(req: Request, res: Response): Promise<void> {
-  const { sessionId, responses } = req.body as SubmitSessionRequest;
-
-  if (!sessionId || !responses) {
-    res.status(400).json({ error: 'Missing sessionId or responses payload.' });
-    return;
-  }
-
+export const submitTestSession = async (req: Request, res: Response): Promise<void> => {
   try {
-    // 1. Fetch active session state from PostgreSQL
+    const { sessionId, responses } = req.body;
+
+    if (!sessionId || !Array.isArray(responses)) {
+      res.status(400).json({ error: 'sessionId and responses array are required.' });
+      return;
+    }
+
+    // 1. Fetch user session and database structure
     const session = await prisma.userTestSession.findUnique({
       where: { id: sessionId },
       include: {
         mockTest: {
           include: {
             sections: {
-              include: { questions: true },
+              include: {
+                questions: true,
+              },
             },
           },
         },
@@ -214,7 +223,7 @@ export async function submitTestSession(req: Request, res: Response): Promise<vo
     });
 
     if (!session) {
-      res.status(404).json({ error: 'Session record not found.' });
+      res.status(404).json({ error: 'Exam session not found.' });
       return;
     }
 
@@ -248,14 +257,32 @@ export async function submitTestSession(req: Request, res: Response): Promise<vo
         ? JSON.parse(cachedRules[section.id])
         : { positiveMarks: section.positiveMarks, negativeMarks: section.negativeMarks };
 
-      const positive = Number(sectionRules.positiveMarks);
-      const negative = Number(sectionRules.negativeMarks);
-
       for (const question of section.questions) {
+        // Resolve Question Marking Scheme with Fallback Cascade: Question -> Section -> MockTest -> Default
+        const qRules = hasCachedData && cachedRules[`q:${question.id}`]
+          ? JSON.parse(cachedRules[`q:${question.id}`])
+          : null;
+
+        const positive = Number(
+          qRules?.positiveMarks ??
+          (question as any).positiveMarks ??
+          sectionRules.positiveMarks ??
+          (session.mockTest as any).positiveMarks ??
+          2.0
+        );
+
+        const negative = Number(
+          qRules?.negativeMarks ??
+          (question as any).negativeMarks ??
+          sectionRules.negativeMarks ??
+          (session.mockTest as any).negativeMarks ??
+          0.5
+        );
+
         totalMarks += positive;
 
         // Find candidate response in the submission payload
-        const userResp = responses.find((r) => r.questionId === question.id);
+        const userResp = responses.find((r: any) => r.questionId === question.id);
         const selectedIndex = userResp?.selectedOptionIndex ?? null;
         const stateCode = userResp?.state ?? 1; // 1 = NOT_VISITED
         const elapsedSec = userResp?.elapsedSeconds ?? 0;

@@ -388,6 +388,8 @@ export default function AdminAnalytics() {
   const [formCorrectIndex, setFormCorrectIndex] = useState(0);
   const [formExplanationEn, setFormExplanationEn] = useState('');
   const [formExplanationHi, setFormExplanationHi] = useState('');
+  const [formPositiveMarks, setFormPositiveMarks] = useState<string>('');
+  const [formNegativeMarks, setFormNegativeMarks] = useState<string>('');
   const [formQuestionsList, setFormQuestionsList] = useState<any[]>([]);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
 
@@ -1047,7 +1049,7 @@ export default function AdminAnalytics() {
     }
   };
 
-  const handleConfirmIngestCustomQuestions = async () => {
+  const handleConfirmIngestCustomQuestions = async (metaPayload?: any) => {
     if (!selectedUploadTestId) {
       showToast('Error: No target mock test selected.');
       return;
@@ -1057,6 +1059,18 @@ export default function AdminAnalytics() {
       return;
     }
     try {
+      const questionsToSave = (metaPayload && Array.isArray(metaPayload.questions) && metaPayload.questions.length > 0)
+        ? metaPayload.questions
+        : parsedQuestions;
+
+      const payloadData = {
+        testId: selectedUploadTestId,
+        title: metaPayload?.title || selectedUploadTestId,
+        sessionId: currentUser?.currentSessionId,
+        ...(metaPayload || {}),
+        questions: questionsToSave,
+      };
+
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 
@@ -1065,20 +1079,15 @@ export default function AdminAnalytics() {
         },
         body: JSON.stringify({
           action: 'save-custom-questions',
-          data: { 
-            testId: selectedUploadTestId, 
-            title: selectedUploadTestId,
-            questions: parsedQuestions,
-            sessionId: currentUser?.currentSessionId
-          }
+          data: payloadData
         })
       });
       const data = await res.json();
       if (data.success) {
-        showToast(`Successfully saved ${parsedQuestions.length} questions to mock test!`);
+        showToast(`Successfully saved ${parsedQuestions.length} questions & test metadata to database!`);
         setUploadStatus({
           type: 'success',
-          message: `Custom question paper of ${parsedQuestions.length} question(s) successfully uploaded and saved for the target mock test!`
+          message: `Custom question paper of ${parsedQuestions.length} question(s) and test metadata successfully uploaded and saved in database & Tigris S3!`
         });
         refreshCatalog();
       } else {
@@ -1100,17 +1109,21 @@ export default function AdminAnalytics() {
         correctIndex: 0,
         explanationEn: "Ampere is the base unit of electric current.",
         explanationHi: "ऐम्पियर विद्युत धारा की मूल इकाई है।",
-        section: "General Studies"
+        section: "General Studies",
+        positiveMarks: 2.0,
+        negativeMarks: 0.5
       },
       {
-        textEn: "Is light an electromagnetic wave?",
-        textHi: "क्या प्रकाश एक विद्युत चुंबकीय तरंग है?",
-        optionsEn: ["Yes", "No"],
-        optionsHi: ["हाँ", "नहीं"],
+        textEn: "Special High-Weightage Case Study Question: What is Faraday's Law of Induction?",
+        textHi: "विशेष उच्च-अंक मामला अध्ययन प्रश्न: फैराडे का प्रेरण नियम क्या है?",
+        optionsEn: ["EMF is proportional to rate of change of magnetic flux", "EMF is independent of flux", "Voltage is constant", "Current is zero"],
+        optionsHi: ["ईएमएफ चुंबकीय प्रवाह में परिवर्तन की दर के समानुपाती होता है", "ईएमएफ प्रवाह से स्वतंत्र है", "वोल्टेज स्थिर है", "धारा शून्य है"],
         correctIndex: 0,
-        explanationEn: "Yes, light is an electromagnetic wave.",
-        explanationHi: "हाँ, प्रकाश एक विद्युत चुंबकीय तरंग है।",
-        section: "General Studies"
+        explanationEn: "Faraday's law states that induced EMF is equal to negative rate of change of magnetic flux.",
+        explanationHi: "फैराडे का नियम कहता है कि प्रेरित ईएमएफ चुंबकीय प्रवाह में परिवर्तन की नकारात्मक दर के बराबर होता है।",
+        section: "Physics / General Studies",
+        positiveMarks: 4.0,
+        negativeMarks: 1.0
       }
     ];
     setJsonInput(JSON.stringify(template, null, 2));
@@ -1167,7 +1180,9 @@ export default function AdminAnalytics() {
       correctIndex: Number(formCorrectIndex),
       explanationEn: formExplanationEn.trim() || undefined,
       explanationHi: formExplanationHi.trim() || undefined,
-      section: sectionToSave
+      section: sectionToSave,
+      positiveMarks: formPositiveMarks.trim() !== '' ? Number(formPositiveMarks) : undefined,
+      negativeMarks: formNegativeMarks.trim() !== '' ? Number(formNegativeMarks) : undefined,
     };
 
     let updatedList;
@@ -1202,6 +1217,8 @@ export default function AdminAnalytics() {
     setFormCorrectIndex(0);
     setFormExplanationEn('');
     setFormExplanationHi('');
+    setFormPositiveMarks('');
+    setFormNegativeMarks('');
     setSelectedSection(sectionToSave);
     setCustomSectionName('');
   };
@@ -1964,6 +1981,10 @@ export default function AdminAnalytics() {
               setFormExplanationEn={setFormExplanationEn}
               formExplanationHi={formExplanationHi}
               setFormExplanationHi={setFormExplanationHi}
+              formPositiveMarks={formPositiveMarks}
+              setFormPositiveMarks={setFormPositiveMarks}
+              formNegativeMarks={formNegativeMarks}
+              setFormNegativeMarks={setFormNegativeMarks}
               handleAddFormQuestion={handleAddFormQuestion}
               previewLanguage={previewLanguage}
               setPreviewLanguage={setPreviewLanguage}

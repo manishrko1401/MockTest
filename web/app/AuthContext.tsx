@@ -19,6 +19,7 @@ export interface MockTestItem {
   testbookCutoffScore?: number;
   positiveMarks?: number;
   negativeMarks?: number;
+  sections?: any[];
 }
 
 export interface TestSubSubCategory {

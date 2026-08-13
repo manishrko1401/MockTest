@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PlusCircle, ArrowDown, ArrowUp, Edit, Trash2, X, Search, FileText, Clock, Plus, RotateCcw, Zap } from 'lucide-react';
+import { formatTestMarkingScheme } from '../../lib/markingUtils';
 
 const DEFAULT_SECTIONAL_TIMING_PRESETS = [
   '15, 15, 15, 15',
@@ -309,8 +310,8 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     testbookTopperScore: Number(newMockTestbookTopperScore),
                     testbookAverageScore: Number(newMockTestbookAverageScore),
                     testbookCutoffScore: Number(newMockTestbookCutoffScore),
-                    positiveMarks: Number(newMockPositiveMarks),
-                    negativeMarks: Number(newMockNegativeMarks),
+                    positiveMarks: 2.0,
+                    negativeMarks: 0.5,
                   } as any);
                 }
 
@@ -319,8 +320,6 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                 setNewMockSubSubCategoryParent('');
                 setNewMockHasSectionalTiming(false);
                 setNewMockSectionalTimingsStr('');
-                setNewMockPositiveMarks(2.0);
-                setNewMockNegativeMarks(0.5);
                 setNewMockTestbookTotalUsers(0);
                 setNewMockTestbookTopperScore(0.0);
                 setNewMockTestbookAverageScore(0.0);
@@ -643,20 +642,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                 )}
               </div>
               
-              {/* Scoring Rules */}
-              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
-                <h4 className="text-[10px] font-extrabold text-slate-555 dark:text-slate-400 uppercase tracking-wider">Scoring Parameters</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Marks per Correct Answer (+ve)</label>
-                    <input type="number" required step="0.01" min={0} value={newMockPositiveMarks} onChange={(e) => setNewMockPositiveMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Negative Mark per Wrong Answer (-ve)</label>
-                    <input type="number" required step="0.01" min={0} value={newMockNegativeMarks} onChange={(e) => setNewMockNegativeMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
-                  </div>
-                </div>
-              </div>
+
 
               {/* Benchmark Stats */}
               <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
@@ -776,9 +762,18 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                       <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-md">
                         🏆 {test.maxMarks} Marks
                       </span>
-                      <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-md text-emerald-600 dark:text-emerald-400">
-                        🎯 +{test.positiveMarks ?? 2.0} / -{test.negativeMarks ?? 0.5}
-                      </span>
+                      {(() => {
+                        const scheme = formatTestMarkingScheme(test);
+                        return (
+                          <span className={`flex items-center gap-1 border px-2 py-0.5 rounded-md font-extrabold ${
+                            scheme.isCustom
+                              ? 'bg-amber-50 dark:bg-amber-955/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                              : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400'
+                          }`}>
+                            {scheme.isCustom ? '⚡ ' : '🎯 '}{scheme.badgeText}
+                          </span>
+                        );
+                      })()}
                     </div>
 
                     {/* Sectional Timing & Duration Display */}
@@ -1057,18 +1052,6 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                       )}
                     </div>
 
-                    {/* Marking Scheme */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Positive Marks (+ve)</label>
-                        <input type="number" step="0.01" min={0} value={editingMockPositiveMarks} onChange={(e) => setEditingMockPositiveMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
-                      </div>
-                      <div>
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Negative Marks (-ve)</label>
-                        <input type="number" step="0.01" min={0} value={editingMockNegativeMarks} onChange={(e) => setEditingMockNegativeMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
-                      </div>
-                    </div>
-
                     {/* Benchmark Stats */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
@@ -1111,8 +1094,6 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                               testbookTopperScore: Number(editingMockTestbookTopperScore),
                               testbookAverageScore: Number(editingMockTestbookAverageScore),
                               testbookCutoffScore: Number(editingMockTestbookCutoffScore),
-                              positiveMarks: Number(editingMockPositiveMarks),
-                              negativeMarks: Number(editingMockNegativeMarks),
                               durationMinutes: finalDuration,
                               questionsCount: Number(editingMockQsCount),
                               maxMarks: Number(editingMockMaxMarks),

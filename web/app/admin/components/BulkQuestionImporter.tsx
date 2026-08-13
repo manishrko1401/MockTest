@@ -88,12 +88,16 @@ interface BulkQuestionImporterProps {
   setFormExplanationEn: (val: string) => void;
   formExplanationHi: string;
   setFormExplanationHi: (val: string) => void;
+  formPositiveMarks?: string;
+  setFormPositiveMarks?: (val: string) => void;
+  formNegativeMarks?: string;
+  setFormNegativeMarks?: (val: string) => void;
   handleAddFormQuestion: (e: React.FormEvent) => void;
   previewLanguage: 'en' | 'hi';
   setPreviewLanguage: (lang: 'en' | 'hi') => void;
   previewQuestionIndex: number;
   setPreviewQuestionIndex: (idx: number) => void;
-  handleConfirmIngestCustomQuestions: () => void;
+  handleConfirmIngestCustomQuestions: (metaPayload?: any) => void;
   showToast: (msg: string) => void;
   setFormQuestionsList: (val: any[]) => void;
   setParsedQuestions: (val: any[]) => void;
@@ -154,6 +158,10 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   setFormExplanationEn,
   formExplanationHi,
   setFormExplanationHi,
+  formPositiveMarks = '',
+  setFormPositiveMarks = () => {},
+  formNegativeMarks = '',
+  setFormNegativeMarks = () => {},
   handleAddFormQuestion,
   previewLanguage,
   setPreviewLanguage,
@@ -168,6 +176,22 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   const [selSubId, setSelSubId] = React.useState<string>('');
   const [selSubSubId, setSelSubSubId] = React.useState<string>('');
   const [previewLayoutMode, setPreviewLayoutMode] = React.useState<'both' | 'web' | 'mobile'>('both');
+
+  // Scoring Strategy Selection State (1: Complete Test, 2: Section-Wise, 3: Question-Wise)
+  const [scoringStrategyMode, setScoringStrategyMode] = React.useState<'test' | 'section' | 'question'>('test');
+  const [testLevelPosMarks, setTestLevelPosMarks] = React.useState<number>(2.0);
+  const [testLevelNegMarks, setTestLevelNegMarks] = React.useState<number>(0.5);
+  const [sectionLevelMarks, setSectionLevelMarks] = React.useState<Record<string, { positiveMarks: number; negativeMarks: number }>>({});
+
+  const detectedSectionsList = React.useMemo(() => {
+    if (!parsedQuestions || parsedQuestions.length === 0) return [];
+    const set = new Set<string>();
+    parsedQuestions.forEach((q: any) => {
+      const secName = (q.section || q.sectionName || q.subject || 'General Studies').trim();
+      if (secName) set.add(secName);
+    });
+    return Array.from(set);
+  }, [parsedQuestions]);
 
   const loadQuestionIntoForm = (index: number) => {
     const q = parsedQuestions[index] || formQuestionsList[index];
@@ -190,6 +214,8 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
     setFormCorrectIndex(q.correctIndex ?? q.correctOption ?? 0);
     setFormExplanationEn(stripHtmlToPlainText(q.explanationEn || q.explanation?.en || ''));
     setFormExplanationHi(stripHtmlToPlainText(q.explanationHi || q.explanation?.hi || ''));
+    setFormPositiveMarks(q.positiveMarks !== undefined && q.positiveMarks !== null ? String(q.positiveMarks) : '');
+    setFormNegativeMarks(q.negativeMarks !== undefined && q.negativeMarks !== null ? String(q.negativeMarks) : '');
     setSelectedSection(q.section || 'General Studies');
     setImporterMode('form');
     showToast(`Loaded Question #${index + 1} into Form Builder!`);
@@ -203,6 +229,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
     setOpt3En(''); setOpt3Hi(''); setOpt4En(''); setOpt4Hi('');
     setOpt5En(''); setOpt5Hi('');
     setFormCorrectIndex(0); setFormExplanationEn(''); setFormExplanationHi('');
+    setFormPositiveMarks(''); setFormNegativeMarks('');
     setSelectedSection('General Studies'); setCustomSectionName('');
     showToast("Form cleared for new question.");
   };
@@ -317,12 +344,13 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   const currentSubSubCategory = availableSubSubCategories.find((ss: any) => ss.id === selSubSubId);
   const availableTests = currentSubSubCategory ? currentSubSubCategory.tests || [] : [];
 
-  const allTests: { id: string; title: string; categoryName: string; subCategoryName: string }[] = [];
+  const allTests: any[] = [];
   testSeriesCatalog.forEach(cat => {
     (cat.subCategories || []).forEach((sub: any) => {
       (sub.subSubCategories || []).forEach((subsub: any) => {
         (subsub.tests || []).forEach((t: any) => {
           allTests.push({
+            ...t,
             id: t.id,
             title: t.title,
             categoryName: cat.name,
@@ -334,12 +362,179 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
   });
 
   const selectedTest = allTests.find(t => t.id === selectedUploadTestId);
+
+  const testAnalysis = React.useMemo(() => {
+    if (!parsedQuestions || parsedQuestions.length === 0) return null;
+
+    let totalQuestions = parsedQuestions.length;
+    let totalMaxMarks = 0;
+    let passageQuestionsCount = 0;
+    let explanationCount = 0;
+    let englishCount = 0;
+    let hindiCount = 0;
+    let optionWarnings = 0;
+    let answerKeyWarnings = 0;
+
+    const sectionsMap: { [key: string]: { count: number; posMarks: Set<number>; negMarks: Set<number>; totalMarks: number; passageCount: number } } = {};
+
+    parsedQuestions.forEach((q: any) => {
+      const secName = (q.section || q.sectionName || q.subject || 'General Studies').trim();
+      if (!sectionsMap[secName]) {
+        sectionsMap[secName] = { count: 0, posMarks: new Set(), negMarks: new Set(), totalMarks: 0, passageCount: 0 };
+      }
+      sectionsMap[secName].count += 1;
+
+      let pMarks = 2.0;
+      let nMarks = 0.5;
+
+      if (scoringStrategyMode === 'test') {
+        pMarks = Number(testLevelPosMarks) || 2.0;
+        nMarks = Number(testLevelNegMarks) || 0.5;
+      } else if (scoringStrategyMode === 'section') {
+        const secRule = sectionLevelMarks[secName];
+        pMarks = secRule?.positiveMarks !== undefined ? Number(secRule.positiveMarks) : 2.0;
+        nMarks = secRule?.negativeMarks !== undefined ? Number(secRule.negativeMarks) : 0.5;
+      } else {
+        // Question-wise
+        pMarks = q.positiveMarks !== undefined && q.positiveMarks !== null && q.positiveMarks !== '' ? Number(q.positiveMarks) : (selectedTest?.positiveMarks ?? 2.0);
+        nMarks = q.negativeMarks !== undefined && q.negativeMarks !== null && q.negativeMarks !== '' ? Number(q.negativeMarks) : (selectedTest?.negativeMarks ?? 0.5);
+      }
+
+      sectionsMap[secName].posMarks.add(pMarks);
+      sectionsMap[secName].negMarks.add(nMarks);
+      sectionsMap[secName].totalMarks += pMarks;
+      totalMaxMarks += pMarks;
+
+      if (q.passageEn || q.passageHi || q.passage?.en || q.passage?.hi) {
+        passageQuestionsCount++;
+        sectionsMap[secName].passageCount++;
+      }
+      if (q.explanationEn || q.explanationHi || q.explanation?.en || q.explanation?.hi || q.solutionEn || q.solutionHi) {
+        explanationCount++;
+      }
+      if (q.textEn || q.questionText?.en) englishCount++;
+      if (q.textHi || q.questionText?.hi) hindiCount++;
+
+      const optsEn = q.optionsEn || q.options || [];
+      const optsHi = q.optionsHi || [];
+      if (optsEn.length < 2 && optsHi.length < 2) {
+        optionWarnings++;
+      }
+
+      const cIdx = q.correctIndex !== undefined ? q.correctIndex : q.correctOption;
+      if (cIdx === undefined || cIdx < 0 || cIdx >= Math.max(optsEn.length, optsHi.length, 4)) {
+        answerKeyWarnings++;
+      }
+    });
+
+    const sectionsList = Object.entries(sectionsMap).map(([name, data]) => {
+      const posArr = Array.from(data.posMarks);
+      const negArr = Array.from(data.negMarks);
+
+      return {
+        name,
+        count: data.count,
+        positiveMarks: posArr.length === 1 ? `+${posArr[0]}` : 'Variable',
+        negativeMarks: negArr.length === 1 ? `-${negArr[0]}` : 'Variable',
+        totalMarks: data.totalMarks,
+        passageCount: data.passageCount,
+      };
+    });
+
+    let totalTestDurationMinutes = selectedTest?.durationMinutes || 60;
+    let hasSectionalTimings = !!selectedTest?.hasSectionalTiming;
+    let sectionalTimingsList: number[] = [];
+
+    if (Array.isArray(selectedTest?.sectionalTimings)) {
+      sectionalTimingsList = selectedTest.sectionalTimings;
+    } else if (typeof selectedTest?.sectionalTimings === 'string' && selectedTest.sectionalTimings.trim()) {
+      sectionalTimingsList = selectedTest.sectionalTimings.split(',').map((s: string) => Number(s.trim())).filter((n: number) => !isNaN(n) && n > 0);
+    }
+
+    if (hasSectionalTimings && sectionalTimingsList.length > 0) {
+      totalTestDurationMinutes = sectionalTimingsList.reduce((a, b) => a + b, 0);
+    }
+
+    return {
+      totalQuestions,
+      totalMaxMarks,
+      sectionsCount: sectionsList.length,
+      sectionsList,
+      totalTestDurationMinutes,
+      hasSectionalTimings,
+      sectionalTimingsList,
+      passageQuestionsCount,
+      explanationCount,
+      englishCount,
+      hindiCount,
+      optionWarnings,
+      answerKeyWarnings,
+    };
+  }, [parsedQuestions, selectedTest, scoringStrategyMode, testLevelPosMarks, testLevelNegMarks, sectionLevelMarks]);
   const questionCount = formQuestionsList.length;
   const sectionColors: Record<string, string> = {};
   const sectionColorPalette = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4', '#EC4899'];
-  getAvailableSections().forEach((sec, i) => {
-    sectionColors[sec] = sectionColorPalette[i % sectionColorPalette.length];
-  });
+  const handleFinalSaveWithStrategy = async () => {
+    if (!parsedQuestions || parsedQuestions.length === 0) return;
+
+    // Resolve positiveMarks & negativeMarks per question based on selected strategy mode
+    const resolvedQuestions = parsedQuestions.map((q: any) => {
+      const secName = (q.section || q.sectionName || q.subject || 'General Studies').trim();
+      let pMarks = 2.0;
+      let nMarks = 0.5;
+
+      if (scoringStrategyMode === 'test') {
+        pMarks = Number(testLevelPosMarks) || 2.0;
+        nMarks = Number(testLevelNegMarks) || 0.5;
+      } else if (scoringStrategyMode === 'section') {
+        const secRule = sectionLevelMarks[secName];
+        pMarks = secRule?.positiveMarks !== undefined ? Number(secRule.positiveMarks) : 2.0;
+        nMarks = secRule?.negativeMarks !== undefined ? Number(secRule.negativeMarks) : 0.5;
+      } else {
+        pMarks = q.positiveMarks !== undefined && q.positiveMarks !== null && q.positiveMarks !== '' ? Number(q.positiveMarks) : (selectedTest?.positiveMarks ?? 2.0);
+        nMarks = q.negativeMarks !== undefined && q.negativeMarks !== null && q.negativeMarks !== '' ? Number(q.negativeMarks) : (selectedTest?.negativeMarks ?? 0.5);
+      }
+
+      return {
+        ...q,
+        positiveMarks: pMarks,
+        negativeMarks: nMarks,
+      };
+    });
+
+    setParsedQuestions(resolvedQuestions);
+
+    const sectionsArray = (testAnalysis?.sectionsList || []).map((sec: any, idx: number) => {
+      const secRule = sectionLevelMarks[sec.name];
+      const p = secRule?.positiveMarks !== undefined ? Number(secRule.positiveMarks) : (scoringStrategyMode === 'test' ? (Number(testLevelPosMarks) || 2.0) : 2.0);
+      const n = secRule?.negativeMarks !== undefined ? Number(secRule.negativeMarks) : (scoringStrategyMode === 'test' ? (Number(testLevelNegMarks) || 0.5) : 0.5);
+      return {
+        name: sec.name,
+        orderIndex: idx,
+        positiveMarks: p,
+        negativeMarks: n,
+      };
+    });
+
+    const metaPayload = {
+      testId: selectedUploadTestId,
+      title: selectedTest?.title || selectedUploadTestId,
+      questions: resolvedQuestions,
+      questionsCount: testAnalysis?.totalQuestions || resolvedQuestions.length,
+      maxMarks: testAnalysis?.totalMaxMarks || resolvedQuestions.length * 2,
+      durationMinutes: testAnalysis?.totalTestDurationMinutes || 60,
+      hasSectionalTiming: testAnalysis?.hasSectionalTimings || false,
+      sectionalTimings: testAnalysis?.sectionalTimingsList || [],
+      scoringStrategyMode: scoringStrategyMode,
+      positiveMarks: testLevelPosMarks,
+      negativeMarks: testLevelNegMarks,
+      sections: sectionsArray,
+    };
+
+    setTimeout(() => {
+      handleConfirmIngestCustomQuestions(metaPayload);
+    }, 100);
+  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 text-slate-800 dark:text-slate-100 font-sans">
@@ -704,33 +899,65 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
 
               {/* Main Interactive Form */}
               <form onSubmit={handleAddFormQuestion} className="space-y-5 text-xs">
-                {/* Section Selector */}
-                <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Section Category</label>
-                  <div className="flex gap-2 max-w-md">
-                    <select
-                      value={selectedSection}
-                      onChange={(e) => {
-                        setSelectedSection(e.target.value);
-                        if (e.target.value !== 'create_new') setCustomSectionName('');
-                      }}
-                      className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
-                    >
-                      {getAvailableSections().map((sec) => (
-                        <option key={sec} value={sec}>{sec}</option>
-                      ))}
-                      <option value="create_new">+ New Section...</option>
-                    </select>
-                    {selectedSection === 'create_new' && (
-                      <input
-                        type="text"
-                        required
-                        value={customSectionName}
-                        onChange={(e) => setCustomSectionName(e.target.value)}
-                        placeholder="Section name..."
-                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-blue-500 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none font-bold"
-                      />
-                    )}
+                {/* Section Selector & Per-Question Marks Override */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <div className="md:col-span-1">
+                    <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Section Category</label>
+                    <div className="flex gap-2">
+                      <select
+                        value={selectedSection}
+                        onChange={(e) => {
+                          setSelectedSection(e.target.value);
+                          if (e.target.value !== 'create_new') setCustomSectionName('');
+                        }}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
+                      >
+                        {getAvailableSections().map((sec) => (
+                          <option key={sec} value={sec}>{sec}</option>
+                        ))}
+                        <option value="create_new">+ New Section...</option>
+                      </select>
+                      {selectedSection === 'create_new' && (
+                        <input
+                          type="text"
+                          required
+                          value={customSectionName}
+                          onChange={(e) => setCustomSectionName(e.target.value)}
+                          placeholder="Section name..."
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-blue-500 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none font-bold"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                      Question +ve Marks <span className="text-slate-400 font-normal">(Optional — Inherits if empty)</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min={0}
+                      value={formPositiveMarks}
+                      onChange={(e) => setFormPositiveMarks(e.target.value)}
+                      placeholder="Inherit Section/Test (+2.0)"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                      Question -ve Marks <span className="text-slate-400 font-normal">(Optional — Inherits if empty)</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min={0}
+                      value={formNegativeMarks}
+                      onChange={(e) => setFormNegativeMarks(e.target.value)}
+                      placeholder="Inherit Section/Test (-0.5)"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-red-500 font-bold"
+                    />
                   </div>
                 </div>
 
@@ -944,10 +1171,14 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                           <p className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-2 leading-relaxed">
                             {q.textEn || q.textHi || q.questionText?.en || q.questionText?.hi || 'Question'}
                           </p>
-                          <div className="flex flex-wrap gap-1 pt-1 text-[10px] text-slate-500">
-                            <span>{q.optionsEn?.length || q.options?.length || 4} Options</span>
-                            <span>•</span>
+                          <div className="flex flex-wrap items-center gap-2 pt-1 text-[10px]">
+                            <span className="text-slate-500 font-bold">{q.optionsEn?.length || q.options?.length || 4} Options</span>
+                            <span className="text-slate-400">•</span>
                             <span className="text-emerald-600 dark:text-emerald-400 font-bold">Correct: Option {String.fromCharCode(65 + (q.correctIndex ?? q.correctOption ?? 0))}</span>
+                            <span className="text-slate-400">•</span>
+                            <span className={`font-extrabold px-2 py-0.5 rounded ${q.positiveMarks !== undefined || q.negativeMarks !== undefined ? 'bg-purple-50 text-purple-700 dark:bg-purple-955/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+                              🎯 Marks: {q.positiveMarks !== undefined ? `+${q.positiveMarks}` : '+2.0'} / {q.negativeMarks !== undefined ? `-${q.negativeMarks}` : '-0.5'} {q.positiveMarks !== undefined || q.negativeMarks !== undefined ? '(Custom)' : '(Inherited)'}
+                            </span>
                           </div>
                         </div>
                       );
@@ -1093,6 +1324,9 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-slate-500 font-bold">Q{previewQuestionIndex + 1} of {parsedQuestions.length}</span>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-955/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      🎯 Marks: {activeQ.positiveMarks !== undefined ? `+${activeQ.positiveMarks}` : '+2.0'} / {activeQ.negativeMarks !== undefined ? `-${activeQ.negativeMarks}` : '-0.5'}
+                    </span>
                     <button
                       type="button"
                       onClick={() => loadQuestionIntoForm(previewQuestionIndex)}
@@ -1298,16 +1532,466 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
         </div>
       )}
 
-      {/* STEP 5 — Save to Database */}
+      {/* STEP 5 — Full Test Analysis & Pre-Import Audit Report */}
+      {parsedQuestions.length > 0 && testAnalysis && (
+        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg overflow-hidden font-sans space-y-6">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 p-6 text-white flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-2xl bg-purple-500/20 border border-purple-400/30 text-purple-300 flex items-center justify-center shrink-0 font-black">
+                5
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-purple-500/30 text-purple-200 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border border-purple-400/30">Pre-Import Audit</span>
+                  <h3 className="font-extrabold text-base tracking-tight text-white">Full Test Paper Analysis & Verification</h3>
+                </div>
+                <p className="text-xs text-purple-200/80 mt-0.5">
+                  Audit total questions, calculated max marks, sectional timings, and question quality before confirming save
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/15">
+              <Database className="w-4 h-4 text-purple-300" />
+              <div className="text-left text-xs">
+                <span className="block text-[9px] text-purple-200 uppercase font-extrabold">Target Mock Test</span>
+                <span className="font-bold text-white">{selectedTest?.title || 'Selected Test'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-6">
+            {/* MARKING STRATEGY SELECTION BOX */}
+            <div className="bg-gradient-to-r from-slate-900 to-indigo-950 p-5 rounded-2xl border border-indigo-800/60 space-y-4 text-white font-sans shadow-xl">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-xl bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 flex items-center justify-center font-black text-sm">
+                    🎯
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-sm text-white uppercase tracking-wide">Select Test Marking Strategy</h4>
+                    <p className="text-[11px] text-indigo-200/80 font-medium">Choose one marking rule strategy for this mock test paper before final analysis</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-extrabold px-3 py-1 rounded-lg bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 uppercase tracking-wider">
+                  Active Strategy: {scoringStrategyMode === 'test' ? '1. Complete Test Marks' : scoringStrategyMode === 'section' ? '2. Section-Wise Marks' : '3. Question-Wise Custom Marks'}
+                </span>
+              </div>
+
+              {/* 3 Strategy Mode Options */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Option 1: Complete Test Marks */}
+                <button
+                  type="button"
+                  onClick={() => setScoringStrategyMode('test')}
+                  className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    scoringStrategyMode === 'test'
+                      ? 'bg-indigo-600/90 border-indigo-400 text-white shadow-lg ring-2 ring-indigo-400'
+                      : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-extrabold text-xs">1. Complete Test Marks</span>
+                    {scoringStrategyMode === 'test' && <CheckCircle2 className="w-4 h-4 text-indigo-200" />}
+                  </div>
+                  <p className="text-[10px] text-slate-300/80 leading-relaxed font-medium">
+                    Apply uniform positive (+ve) & negative (-ve) marks to all questions across the paper.
+                  </p>
+                </button>
+
+                {/* Option 2: Section-Wise Marks */}
+                <button
+                  type="button"
+                  onClick={() => setScoringStrategyMode('section')}
+                  className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    scoringStrategyMode === 'section'
+                      ? 'bg-purple-600/90 border-purple-400 text-white shadow-lg ring-2 ring-purple-400'
+                      : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-extrabold text-xs">2. Section-Wise Marks</span>
+                    {scoringStrategyMode === 'section' && <CheckCircle2 className="w-4 h-4 text-purple-200" />}
+                  </div>
+                  <p className="text-[10px] text-slate-300/80 leading-relaxed font-medium">
+                    Specify distinct positive (+ve) & negative (-ve) marks for each section.
+                  </p>
+                </button>
+
+                {/* Option 3: Question-Wise Marks */}
+                <button
+                  type="button"
+                  onClick={() => setScoringStrategyMode('question')}
+                  className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    scoringStrategyMode === 'question'
+                      ? 'bg-emerald-600/90 border-emerald-400 text-white shadow-lg ring-2 ring-emerald-400'
+                      : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-extrabold text-xs">3. Question-Wise Marks</span>
+                    {scoringStrategyMode === 'question' && <CheckCircle2 className="w-4 h-4 text-emerald-200" />}
+                  </div>
+                  <p className="text-[10px] text-slate-300/80 leading-relaxed font-medium">
+                    Respect individual positive (+ve) & negative (-ve) marks defined per question.
+                  </p>
+                </button>
+              </div>
+
+              {/* Active Mode Interactive Controls */}
+              {scoringStrategyMode === 'test' && (
+                <div className="p-4 bg-indigo-950/60 border border-indigo-800/80 rounded-xl space-y-3">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-300">Set Uniform Test Marking Rule</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">Positive Marks (+ve per correct answer)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        value={testLevelPosMarks}
+                        onChange={(e) => setTestLevelPosMarks(Number(e.target.value))}
+                        className="w-full bg-slate-900 border border-indigo-700/60 rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-indigo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">Negative Penalty (-ve per wrong answer)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        value={testLevelNegMarks}
+                        onChange={(e) => setTestLevelNegMarks(Number(e.target.value))}
+                        className="w-full bg-slate-900 border border-indigo-700/60 rounded-lg px-3 py-2 text-xs text-red-300 font-bold focus:outline-none focus:border-red-400"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {scoringStrategyMode === 'section' && (
+                <div className="p-4 bg-purple-950/60 border border-purple-800/80 rounded-xl space-y-3">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-300">Configure Marks Per Section</span>
+                  <div className="space-y-2">
+                    {detectedSectionsList.map((secName) => {
+                      const currentRule = sectionLevelMarks[secName] || { positiveMarks: 2.0, negativeMarks: 0.5 };
+                      return (
+                        <div key={secName} className="p-3 bg-slate-900/90 border border-purple-900/60 rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                          <div className="sm:col-span-6 font-bold text-xs text-white">
+                            {secName}
+                          </div>
+                          <div className="sm:col-span-3">
+                            <label className="block text-[9px] font-bold text-purple-300 uppercase mb-0.5">+ve Marks</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min={0}
+                              value={currentRule.positiveMarks}
+                              onChange={(e) => {
+                                setSectionLevelMarks({
+                                  ...sectionLevelMarks,
+                                  [secName]: { ...currentRule, positiveMarks: Number(e.target.value) }
+                                });
+                              }}
+                              className="w-full bg-slate-955 border border-purple-700/60 rounded-lg px-2.5 py-1 text-xs text-emerald-400 font-bold focus:outline-none"
+                            />
+                          </div>
+                          <div className="sm:col-span-3">
+                            <label className="block text-[9px] font-bold text-purple-300 uppercase mb-0.5">-ve Marks</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min={0}
+                              value={currentRule.negativeMarks}
+                              onChange={(e) => {
+                                setSectionLevelMarks({
+                                  ...sectionLevelMarks,
+                                  [secName]: { ...currentRule, negativeMarks: Number(e.target.value) }
+                                });
+                              }}
+                              className="w-full bg-slate-955 border border-purple-700/60 rounded-lg px-2.5 py-1 text-xs text-red-400 font-bold focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {scoringStrategyMode === 'question' && (
+                <div className="p-4 bg-emerald-955/80 border border-emerald-800/80 rounded-xl space-y-4 font-sans">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-800/50 pb-3">
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300 block">
+                        Question-Wise Custom Marking Editor
+                      </span>
+                      <p className="text-[11px] text-emerald-200/80 font-medium">
+                        Set positive (+ve) and negative (-ve) marks for each question individually below.
+                      </p>
+                    </div>
+
+                    {/* Bulk Fast Fill Controls */}
+                    <div className="flex items-center gap-2 bg-slate-900/90 p-2 rounded-xl border border-emerald-700/50">
+                      <span className="text-[10px] font-bold text-slate-300 uppercase">Fast Fill All Qs:</span>
+                      <input
+                        type="number"
+                        placeholder="+ve"
+                        step="0.01"
+                        id="bulkPosInput"
+                        className="w-16 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-emerald-400 font-bold focus:outline-none"
+                      />
+                      <input
+                        type="number"
+                        placeholder="-ve"
+                        step="0.01"
+                        id="bulkNegInput"
+                        className="w-16 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-red-400 font-bold focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const pVal = (document.getElementById('bulkPosInput') as HTMLInputElement)?.value;
+                          const nVal = (document.getElementById('bulkNegInput') as HTMLInputElement)?.value;
+                          if (pVal !== '' || nVal !== '') {
+                            const updated = parsedQuestions.map((q: any) => ({
+                              ...q,
+                              positiveMarks: pVal !== '' ? Number(pVal) : (q.positiveMarks ?? 2.0),
+                              negativeMarks: nVal !== '' ? Number(nVal) : (q.negativeMarks ?? 0.5),
+                            }));
+                            setParsedQuestions(updated);
+                          }
+                        }}
+                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold transition cursor-pointer shadow-xs"
+                      >
+                        Apply to All Qs
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* High-Density Scrollable Questions Table */}
+                  <div className="max-h-96 overflow-y-auto border border-emerald-800/60 rounded-xl bg-slate-900/95 font-sans shadow-inner">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-955 text-slate-300 uppercase text-[9px] font-black tracking-wider border-b border-emerald-800/60 sticky top-0 z-10">
+                        <tr>
+                          <th className="py-2.5 px-3.5 w-16">Q #</th>
+                          <th className="py-2.5 px-3">Question Text & Section</th>
+                          <th className="py-2.5 px-3 w-36 text-center">Positive Marks (+ve)</th>
+                          <th className="py-2.5 px-3 w-36 text-center">Negative Marks (-ve)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60">
+                        {parsedQuestions.map((q: any, idx: number) => {
+                          const qText = stripHtmlToPlainText(q.textEn || q.textHi || q.questionText?.en || q.questionText?.hi || `Question ${idx + 1}`);
+                          const qSec = (q.section || q.sectionName || q.subject || 'General Studies').trim();
+                          const posVal = q.positiveMarks !== undefined && q.positiveMarks !== null && q.positiveMarks !== '' ? Number(q.positiveMarks) : 2.0;
+                          const negVal = q.negativeMarks !== undefined && q.negativeMarks !== null && q.negativeMarks !== '' ? Number(q.negativeMarks) : 0.5;
+
+                          return (
+                            <tr key={idx} className="hover:bg-slate-800/50 transition">
+                              <td className="py-2.5 px-3.5 font-black text-emerald-400 text-xs">
+                                Q{idx + 1}
+                              </td>
+                              <td className="py-2.5 px-3">
+                                <p className="font-bold text-white line-clamp-1 text-xs">
+                                  {qText}
+                                </p>
+                                <span className="text-[10px] text-indigo-300 font-semibold">
+                                  Section: {qSec}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min={0}
+                                  value={posVal}
+                                  onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    const updated = [...parsedQuestions];
+                                    updated[idx] = { ...updated[idx], positiveMarks: val };
+                                    setParsedQuestions(updated);
+                                  }}
+                                  className="w-24 bg-slate-950 border border-emerald-700/60 rounded-lg px-2.5 py-1 text-xs text-emerald-400 font-bold text-center focus:outline-none focus:border-emerald-400"
+                                />
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min={0}
+                                  value={negVal}
+                                  onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    const updated = [...parsedQuestions];
+                                    updated[idx] = { ...updated[idx], negativeMarks: val };
+                                    setParsedQuestions(updated);
+                                  }}
+                                  className="w-24 bg-slate-950 border border-red-700/60 rounded-lg px-2.5 py-1 text-xs text-red-400 font-bold text-center focus:outline-none focus:border-red-400"
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Overview Stat Cards Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Card 1: Total Questions */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Questions</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-slate-900 dark:text-white">{testAnalysis.totalQuestions}</span>
+                  <span className="text-xs font-bold text-slate-500">Qs</span>
+                </div>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">✓ Fully Loaded</span>
+              </div>
+
+              {/* Card 2: Calculated Max Marks */}
+              <div className="p-4 rounded-xl bg-purple-50/70 dark:bg-purple-955/20 border border-purple-200 dark:border-purple-800/60 space-y-1">
+                <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-400 uppercase tracking-wider block">Calculated Max Marks</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-purple-900 dark:text-purple-100">{testAnalysis.totalMaxMarks}</span>
+                  <span className="text-xs font-bold text-purple-600 dark:text-purple-400">Marks</span>
+                </div>
+                <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium block">Sum of question positive marks</span>
+              </div>
+
+              {/* Card 3: Total Test Duration */}
+              <div className="p-4 rounded-xl bg-blue-50/70 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-800/60 space-y-1">
+                <span className="text-[10px] font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider block">Total Test Time</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-blue-900 dark:text-blue-100">{testAnalysis.totalTestDurationMinutes}</span>
+                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400">Minutes</span>
+                </div>
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold block">
+                  {testAnalysis.hasSectionalTimings ? `⏱️ Sectional Timing Enabled` : `⏳ Overall Test Duration`}
+                </span>
+              </div>
+
+              {/* Card 4: Detected Sections */}
+              <div className="p-4 rounded-xl bg-amber-50/70 dark:bg-amber-955/20 border border-amber-200 dark:border-amber-800/60 space-y-1">
+                <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider block">Sections Count</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-amber-900 dark:text-amber-100">{testAnalysis.sectionsCount}</span>
+                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400">Sections</span>
+                </div>
+                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium block">Categorized subjects</span>
+              </div>
+            </div>
+
+            {/* Sectional Breakdown Table */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  Section-Wise Scoring & Timing Breakdown
+                </h4>
+                {testAnalysis.hasSectionalTimings && testAnalysis.sectionalTimingsList.length > 0 && (
+                  <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-955/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                    Sectional Durations: {testAnalysis.sectionalTimingsList.join(' min, ')} min
+                  </span>
+                )}
+              </div>
+
+              <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                <table className="w-full text-left text-xs font-sans">
+                  <thead className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 uppercase text-[9px] font-black tracking-wider border-b border-slate-200 dark:border-slate-800">
+                    <tr>
+                      <th className="py-2.5 px-4">Section Name</th>
+                      <th className="py-2.5 px-4 text-center">Questions</th>
+                      <th className="py-2.5 px-4 text-center">+ve Marks / Q</th>
+                      <th className="py-2.5 px-4 text-center">-ve Penalty / Q</th>
+                      <th className="py-2.5 px-4 text-center">Section Total Marks</th>
+                      <th className="py-2.5 px-4 text-center">Passage Qs</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200 font-medium">
+                    {testAnalysis.sectionsList.map((sec, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-purple-500 shrink-0" />
+                          {sec.name}
+                        </td>
+                        <td className="py-3 px-4 text-center font-extrabold">{sec.count} Qs</td>
+                        <td className="py-3 px-4 text-center text-emerald-600 dark:text-emerald-400 font-bold">{sec.positiveMarks}</td>
+                        <td className="py-3 px-4 text-center text-red-600 dark:text-red-400 font-bold">{sec.negativeMarks}</td>
+                        <td className="py-3 px-4 text-center font-black text-purple-700 dark:text-purple-300">{sec.totalMarks} Marks</td>
+                        <td className="py-3 px-4 text-center text-slate-500 font-bold">{sec.passageCount > 0 ? `${sec.passageCount} Qs` : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-slate-50 dark:bg-slate-900/80 font-black text-slate-900 dark:text-white border-t border-slate-200 dark:border-slate-800">
+                    <tr>
+                      <td className="py-3 px-4">TOTAL PAPER AUDIT</td>
+                      <td className="py-3 px-4 text-center text-purple-600 dark:text-purple-400">{testAnalysis.totalQuestions} Qs</td>
+                      <td className="py-3 px-4 text-center text-slate-500">—</td>
+                      <td className="py-3 px-4 text-center text-slate-500">—</td>
+                      <td className="py-3 px-4 text-center text-purple-600 dark:text-purple-400">{testAnalysis.totalMaxMarks} Marks</td>
+                      <td className="py-3 px-4 text-center text-slate-500">{testAnalysis.passageQuestionsCount} Qs</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            {/* Quality & Integrity Audit Checks Card */}
+            <div className="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
+              <h4 className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Content Quality & Integrity Verification</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="flex items-center gap-2.5 p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <div>
+                    <span className="font-extrabold block text-slate-900 dark:text-white">Explanations & Solutions</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">{testAnalysis.explanationCount} of {testAnalysis.totalQuestions} questions ({Math.round((testAnalysis.explanationCount / testAnalysis.totalQuestions) * 100)}%)</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg">
+                  <Globe className="w-4 h-4 text-blue-500 shrink-0" />
+                  <div>
+                    <span className="font-extrabold block text-slate-900 dark:text-white">Language Medium</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">{testAnalysis.englishCount} English • {testAnalysis.hindiCount} Hindi</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg">
+                  {testAnalysis.optionWarnings === 0 && testAnalysis.answerKeyWarnings === 0 ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                  )}
+                  <div>
+                    <span className="font-extrabold block text-slate-900 dark:text-white">Answer Key Integrity</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">
+                      {testAnalysis.optionWarnings === 0 && testAnalysis.answerKeyWarnings === 0
+                        ? '✓ All options & correct answers verified'
+                        : `${testAnalysis.answerKeyWarnings} potential key warnings`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 6 — Confirm & Save to Database */}
       <div className={`rounded-2xl border-2 p-6 transition-all ${
         parsedQuestions.length > 0
           ? 'bg-green-50 dark:bg-green-955/20 border-green-200 dark:border-green-800'
           : 'bg-slate-50 dark:bg-slate-900 border-dashed border-slate-200 dark:border-slate-800'
       }`}>
         <div className="flex items-center gap-3 mb-4">
-          <div className={`h-7 w-7 rounded-full text-white text-xs font-black flex items-center justify-center shrink-0 ${parsedQuestions.length > 0 ? 'bg-green-600' : 'bg-slate-400'}`}>5</div>
+          <div className={`h-7 w-7 rounded-full text-white text-xs font-black flex items-center justify-center shrink-0 ${parsedQuestions.length > 0 ? 'bg-green-600' : 'bg-slate-400'}`}>6</div>
           <h3 className={`font-extrabold text-sm uppercase tracking-wide ${parsedQuestions.length > 0 ? 'text-green-800 dark:text-green-300' : 'text-slate-400 dark:text-slate-600'}`}>
-            Save to Database
+            Confirm & Save to Database
           </h3>
         </div>
         {parsedQuestions.length > 0 ? (
@@ -1320,7 +2004,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
             </div>
             <button
               type="button"
-              onClick={handleConfirmIngestCustomQuestions}
+              onClick={handleFinalSaveWithStrategy}
               disabled={!selectedUploadTestId}
               className="flex items-center gap-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-xl text-sm active:scale-95 transition-all cursor-pointer shadow-lg shadow-green-500/25"
             >

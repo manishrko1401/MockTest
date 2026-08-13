@@ -11,6 +11,31 @@ import { useIsMobile } from '../useIsMobile';
 import HomeSupportWidget from '../components/HomeSupportWidget';
 
 import { processQuestionHtml, decodeHtml } from '../lib/mathUtils';
+import { formatTestMarkingScheme } from '../lib/markingUtils';
+
+const renderTestMarkingSchemePill = (test: MockTestItem) => {
+  const scheme = formatTestMarkingScheme(test);
+  if (scheme.isCustom) {
+    return (
+      <span
+        title={scheme.badgeText}
+        className="inline-flex items-center gap-1 bg-amber-500/10 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 text-[7.5px] font-black px-1.5 py-0.5 rounded border border-amber-500/30 uppercase tracking-wider font-mono max-w-[240px] truncate shadow-2xs"
+      >
+        ⚡ {scheme.badgeText}
+      </span>
+    );
+  }
+  return (
+    <>
+      <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider font-mono">
+        +{test.positiveMarks ?? 2} Right
+      </span>
+      <span className="bg-red-500/10 text-red-700 dark:bg-red-500/5 dark:text-red-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-red-500/20 uppercase tracking-wider font-mono">
+        -{test.negativeMarks ?? 0.5} Wrong
+      </span>
+    </>
+  );
+};
 
 const formatSubCategoryName = (name: string) => {
   let cleanName = name
@@ -1351,12 +1376,7 @@ export default function MockTestsCatalog() {
                                                  </span>
                                                )}
 
-                                               <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/60 uppercase tracking-wider font-mono">
-                                                 +{test.positiveMarks ?? 2} Right
-                                               </span>
-                                               <span className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-red-200 dark:border-red-900/60 uppercase tracking-wider font-mono">
-                                                 -{test.negativeMarks ?? 0.5} Wrong
-                                               </span>
+                                               {renderTestMarkingSchemePill(test)}
                                              </div>
 
                                              {latestAttempt && (
@@ -1384,6 +1404,8 @@ export default function MockTestsCatalog() {
                                             <span>•</span>
                                             <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 EN, HI</span>
                                           </div>
+
+                                          {renderTestMarkingSchemePill(test)}
                                         </div>
 
                                         <div className="flex items-center gap-2 w-full border-t border-slate-100 dark:border-slate-800/80 pt-3 shrink-0">
@@ -1492,12 +1514,7 @@ export default function MockTestsCatalog() {
                                         </span>
                                       )}
 
-                                      <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/60 uppercase tracking-wider font-mono">
-                                        +{test.positiveMarks ?? 2} Right
-                                      </span>
-                                      <span className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-red-200 dark:border-red-900/60 uppercase tracking-wider font-mono">
-                                        -{test.negativeMarks ?? 0.5} Wrong
-                                      </span>
+                                      {renderTestMarkingSchemePill(test)}
                                     </div>
 
                                     <h4 className="font-extrabold text-xs text-slate-850 dark:text-white leading-snug">
@@ -2471,7 +2488,6 @@ export default function MockTestsCatalog() {
                                             ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                           </span>
                                         )}
-
                                         <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider font-mono">
                                           +{test.positiveMarks ?? 2} {language === 'hi' ? 'सही' : 'Right'}
                                         </span>
@@ -2499,7 +2515,8 @@ export default function MockTestsCatalog() {
                                         <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 English, Hindi</span>
                                       </div>
 
-                                      {renderSectionalTimingPill(test, language)}
+                                      {renderTestMarkingSchemePill(test)}
+                                     {renderSectionalTimingPill(test, language)}
                                     </div>
 
                                     {renderLastAttemptMarks(attempts, language)}
