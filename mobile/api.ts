@@ -160,6 +160,7 @@ export const ApiClient = {
   addAttempt: (params: {
     userId: string;
     testId: string;
+    title?: string;
     score: number;
     maxScore: number;
     accuracy: number;

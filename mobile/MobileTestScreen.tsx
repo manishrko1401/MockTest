@@ -1625,6 +1625,7 @@ export default function MobileTestScreen({
        const attemptPayload = {
          userId: currentUser.id,
          testId,
+         title: mockTestTitle || 'Mock Test',
          score: totalMarks,
          maxScore: totalMaxScore,
          accuracy,
