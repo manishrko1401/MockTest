@@ -260,13 +260,7 @@ export default function MockTestsCatalog() {
         }
 
         for (const sub of cat.subCategories || []) {
-          const t = (sub.tests || []).find((x: any) => x.id === session.testId);
-          if (t) { 
-            foundTest = t;
-            foundCatId = cat.id;
-            foundSubCatId = sub.id;
-            break; 
-          }
+          // Check specific subSubCategory series tabs first so we match the exact tab (e.g. Full Test vs PYQ)
           for (const ss of (sub.subSubCategories || [])) {
             const t2 = (ss.tests || []).find((x: any) => x.id === session.testId);
             if (t2) { 
@@ -278,6 +272,19 @@ export default function MockTestsCatalog() {
             }
           }
           if (foundTest) break;
+
+          const t = (sub.tests || []).find((x: any) => x.id === session.testId);
+          if (t) { 
+            foundTest = t;
+            foundCatId = cat.id;
+            foundSubCatId = sub.id;
+            // Also check if any subSubCategory has this test
+            const matchingSs = (sub.subSubCategories || []).find((ss: any) => (ss.tests || []).some((x: any) => x.id === session.testId));
+            if (matchingSs) {
+              foundSubSubId = matchingSs.id;
+            }
+            break; 
+          }
         }
         if (foundTest) break;
       }
@@ -474,7 +481,8 @@ export default function MockTestsCatalog() {
       const cat = testSeriesCatalog.find(c => c.id === catId);
       const sub = cat?.subCategories.find(s => s.id === subCatId);
       if (sub?.subSubCategories && sub.subSubCategories.length > 0) {
-        targetSubSubId = sub.subSubCategories[0].id;
+        const withTests = sub.subSubCategories.find(ss => ss.tests && ss.tests.length > 0);
+        targetSubSubId = withTests ? withTests.id : sub.subSubCategories[0].id;
       }
     }
 
