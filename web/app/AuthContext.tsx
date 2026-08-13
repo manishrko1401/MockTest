@@ -1946,18 +1946,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     })
       .then(res => res.json())
       .then(resData => {
-        if (resData.success && resData.coins !== undefined) {
-          setCurrentUser(prev => prev ? {
-            ...prev,
-            coins: resData.coins,
-            referralCoinsCredited: resData.referralCoinsCredited
-          } : null);
-          setUsersList(prevList => prevList.map(u => u.id === currentUser.id ? {
-            ...u,
-            coins: resData.coins,
-            referralCoinsCredited: resData.referralCoinsCredited,
-            testSessions: updatedSessions
-          } : u));
+        if (resData.success) {
+          if (resData.coins !== undefined) {
+            setCurrentUser(prev => prev ? {
+              ...prev,
+              coins: resData.coins,
+              referralCoinsCredited: resData.referralCoinsCredited
+            } : null);
+          }
+          refreshUserSessions(currentUser.id);
         }
       })
       .catch(err => console.error("Add attempt API error:", err));

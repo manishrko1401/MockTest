@@ -1213,6 +1213,51 @@ async function handleToggleBookmark(data: any) {
   return NextResponse.json({ success: true });
 }
 
+async function ensureMockTestExists(testId: string, title?: string, maxMarks?: number, durationMinutes?: number) {
+  if (!testId) return null;
+  try {
+    const existing = await prisma.mockTest.findUnique({ where: { id: testId } });
+    if (existing) return existing;
+
+    // Find or create default category, exam, and series to attach dynamic test to
+    let defaultCat = await prisma.category.findFirst();
+    if (!defaultCat) {
+      defaultCat = await prisma.category.create({
+        data: { id: 'general_cat', name: 'General Competitive Exams', description: 'General mock tests' }
+      });
+    }
+
+    let defaultExam = await prisma.exam.findFirst({ where: { categoryId: defaultCat.id } });
+    if (!defaultExam) {
+      defaultExam = await prisma.exam.create({
+        data: { id: 'general_exam', categoryId: defaultCat.id, name: 'General Mock Tests' }
+      });
+    }
+
+    let defaultSeries = await prisma.testSeries.findFirst({ where: { examId: defaultExam.id } });
+    if (!defaultSeries) {
+      defaultSeries = await prisma.testSeries.create({
+        data: { id: 'general_series', examId: defaultExam.id, title: 'General Test Series' }
+      });
+    }
+
+    return await prisma.mockTest.create({
+      data: {
+        id: testId,
+        testSeriesId: defaultSeries.id,
+        title: title || 'Mock Test',
+        maxMarks: maxMarks || 200,
+        durationMinutes: durationMinutes || 60,
+        questionsCount: 100,
+        requiredTierName: 'None',
+      }
+    });
+  } catch (err) {
+    console.error("ensureMockTestExists error:", err);
+    return null;
+  }
+}
+
 async function handleAddAttempt(data: any, request?: Request) {
   const { userId, testId, title, score, maxScore, accuracy, durationSeconds, violations, responses } = data;
 
@@ -1228,6 +1273,9 @@ async function handleAddAttempt(data: any, request?: Request) {
     }
   }
   if (!source) source = 'web';
+
+  // Ensure mock test record exists in database before creating session
+  await ensureMockTestExists(testId, title, maxScore, durationSeconds ? Math.ceil(durationSeconds / 60) : 60);
 
   // Remove any ongoing session first
   await prisma.userTestSession.deleteMany({
@@ -1439,6 +1487,9 @@ async function handleSaveOngoingSession(data: any, request?: Request) {
     }
   }
   if (!source) source = 'web';
+
+  // Ensure mock test record exists in database before creating session
+  await ensureMockTestExists(testId, title, undefined, timeRemaining ? Math.ceil(timeRemaining / 60) : 60);
 
   const existing = await prisma.userTestSession.findFirst({
     where: {
