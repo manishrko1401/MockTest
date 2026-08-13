@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ── Cache version prefix (bump this string if question data shape changes) ─
 const Q_KEY_PREFIX = 'qs_v3_';   // "v3" auto-busts old v1/v2 cache to ensure clean image tags
-const CAT_KEY      = 'catalog_v4'; // v4: force full-sync to include practice series isPracticeSeries + sections
+const CAT_KEY      = 'catalog_v5'; // v5: force full-sync to receive fresh full live notices list
 const USER_KEY     = 'user_profile_cache';
 const SYNC_TS_KEY  = 'catalog_last_synced_at';
 
@@ -397,14 +397,10 @@ export function mergeCatalogDelta(
   }
 
   // 5. Update notices list from delta sync
-  const mergedNotices = (delta as any).noticesList && Array.isArray((delta as any).noticesList)
-    ? (delta as any).noticesList
-    : [
-        ...(delta.newNotices || []),
-        ...(existing.noticesList || []).filter(
-          n => !(delta.newNotices || []).find((nn: any) => nn.id === n.id)
-        ),
-      ];
+  const incomingList = (delta as any).noticesList || delta.newNotices;
+  const mergedNotices = Array.isArray(incomingList) && incomingList.length > 0
+    ? incomingList
+    : (existing.noticesList || []);
 
   return {
     examCatalog: catalog,

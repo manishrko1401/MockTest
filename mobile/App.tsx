@@ -231,7 +231,7 @@ export default function App() {
               newExams: syncRes.newExams || [],
               newSeries: syncRes.newSeries || [],
               newTests: syncRes.newTests || [],
-              newNotices: syncRes.newNotices || [],
+              newNotices: syncRes.noticesList || syncRes.newNotices || [],
               updatedTestIds: syncRes.updatedTestIds || [],
             });
 
@@ -585,7 +585,7 @@ export default function App() {
                 newExams: syncRes.newExams || [],
                 newSeries: syncRes.newSeries || [],
                 newTests: syncRes.newTests || [],
-                newNotices: syncRes.newNotices || [],
+                newNotices: syncRes.noticesList || syncRes.newNotices || [],
                 updatedTestIds: syncRes.updatedTestIds || [],
               });
               // Invalidate question cache for updated tests

@@ -620,6 +620,7 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
       type: n.type,
       category: n.category,
       url: n.url || undefined,
+      rawUrl: n.rawUrl || undefined,
       lastDate: n.lastDate || undefined,
       imageUrl: n.imageUrl || undefined,
     }));
@@ -674,7 +675,6 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
       },
     }),
     prisma.notice.findMany({
-      where: { createdAt: { gt: since } },
       orderBy: { createdAt: 'desc' },
     }),
   ]);
@@ -716,6 +716,7 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
     type: n.type,
     category: n.category,
     url: n.url || undefined,
+    rawUrl: n.rawUrl || undefined,
     lastDate: n.lastDate || undefined,
     imageUrl: n.imageUrl || undefined,
   }));
