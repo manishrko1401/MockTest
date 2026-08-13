@@ -238,30 +238,86 @@ function mapCategoryAndType(xmlCategoriesStr, url, title) {
   }
 }
 
+function parseAllNoticeLinks(html) {
+  const aRegex = /<a[^>]*href=["'](https:\/\/rojgarresult\.com\/[^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let match;
+  const items = [];
+  const seen = new Set();
+
+  while ((match = aRegex.exec(html)) !== null) {
+    const url = match[1].trim();
+    let text = match[2]
+      .replace(/<[^>]*>/g, '')
+      .replace(/&amp;/g, '&')
+      .replace(/&#038;/g, '&')
+      .replace(/&#8211;/g, '-')
+      .replace(/&#8217;/g, "'")
+      .replace(/&rsquo;/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (
+      !url ||
+      url === 'https://rojgarresult.com/' ||
+      url.includes('/page/') ||
+      url.includes('/category/') ||
+      url.includes('/tag/') ||
+      url.includes('/result/') ||
+      url.includes('/admit-card/') ||
+      url.includes('/answer-key/') ||
+      url.includes('/recruitments/') ||
+      url.includes('/syllabus/') ||
+      url.includes('/admission/') ||
+      url.includes('/sarkari-yojna/') ||
+      url.includes('/upcoming/') ||
+      url.includes('/wp-content/') ||
+      url.includes('/privacy') ||
+      url.includes('/contact') ||
+      url.includes('/about') ||
+      url.includes('/disclaimer')
+    ) {
+      continue;
+    }
+
+    if (text.length < 4 || /^(?:click\s*here|link|view|open|details|server\s*\d*)$/i.test(text)) continue;
+
+    const normUrl = url.toLowerCase().replace(/\/$/, '');
+    if (!seen.has(normUrl)) {
+      seen.add(normUrl);
+      items.push({ title: text, url });
+    }
+  }
+
+  return items;
+}
+
+function inferCategoryAndType(title, url, defaultCategory, defaultType, defaultPrefix) {
+  const lowerTitle = title.toLowerCase();
+  const lowerUrl = url.toLowerCase();
+
+  if (lowerTitle.includes('result') || lowerUrl.includes('result')) {
+    return { category: 'result', type: 'RESULT', prefix: 'res_' };
+  }
+  if (lowerTitle.includes('admit card') || lowerTitle.includes('call letter') || lowerTitle.includes('exam city') || lowerUrl.includes('admit')) {
+    return { category: 'admit_card', type: 'ADMIT CARD', prefix: 'ac_' };
+  }
+  if (lowerTitle.includes('answer key') || lowerUrl.includes('answer-key') || lowerTitle.includes('key 202')) {
+    return { category: 'answer_key', type: 'ANSWER KEY', prefix: 'ak_' };
+  }
+
+  return { category: defaultCategory, type: defaultType, prefix: defaultPrefix };
+}
+
 async function syncFeed() {
-  console.log("Starting full feed sync...");
+  console.log("Starting full feed sync across all RojgarResult sections...");
   
   const targets = [
     {
-      name: 'Result',
-      url: 'https://rojgarresult.com/result/',
-      category: 'result',
-      type: 'RESULT',
-      prefix: 'res_'
-    },
-    {
-      name: 'Admit Card',
-      url: 'https://rojgarresult.com/admit-card/',
-      category: 'admit_card',
-      type: 'ADMIT CARD',
-      prefix: 'ac_'
-    },
-    {
-      name: 'Answer Key',
-      url: 'https://rojgarresult.com/answer-key/',
-      category: 'answer_key',
-      type: 'ANSWER KEY',
-      prefix: 'ak_'
+      name: 'Homepage Live Notices',
+      url: 'https://rojgarresult.com/',
+      category: 'notice',
+      type: 'JOB',
+      prefix: 'job_'
     },
     {
       name: 'Latest Jobs',
@@ -269,6 +325,27 @@ async function syncFeed() {
       category: 'notice',
       type: 'JOB',
       prefix: 'job_'
+    },
+    {
+      name: 'Result Archive',
+      url: 'https://rojgarresult.com/result/',
+      category: 'result',
+      type: 'RESULT',
+      prefix: 'res_'
+    },
+    {
+      name: 'Admit Card Archive',
+      url: 'https://rojgarresult.com/admit-card/',
+      category: 'admit_card',
+      type: 'ADMIT CARD',
+      prefix: 'ac_'
+    },
+    {
+      name: 'Answer Key Archive',
+      url: 'https://rojgarresult.com/answer-key/',
+      category: 'answer_key',
+      type: 'ANSWER KEY',
+      prefix: 'ak_'
     }
   ];
 
@@ -277,45 +354,25 @@ async function syncFeed() {
   let importedIndex = 0;
 
   for (const target of targets) {
-    console.log(`Fetching listing page for ${target.name}...`);
+    console.log(`Fetching section: ${target.name} (${target.url})...`);
     let html = '';
     try {
       html = await fetchUrl(target.url);
     } catch (err) {
-      console.error(`Failed to fetch listing page for ${target.name}:`, err.message);
+      console.error(`Failed to fetch ${target.name}:`, err.message);
       continue;
     }
 
-    const parts = html.split('class="gb-loop-item');
-    const parsedItems = [];
-    for (let i = 1; i < parts.length; i++) {
-      const part = parts[i];
-      const h2Match = /<h2[^>]*>([\s\S]+?)<\/h2>/i.exec(part);
-      const hrefMatch = /href="([^"]+)"/i.exec(part);
-      
-      if (h2Match && hrefMatch) {
-        const title = h2Match[1]
-          .replace(/<[^>]*>/g, '')
-          .replace(/&amp;/g, '&')
-          .replace(/&#038;/g, '&')
-          .replace(/&#8211;/g, '-')
-          .replace(/\s+/g, ' ')
-          .trim();
-        const url = hrefMatch[1].trim();
-        parsedItems.push({ title, url });
-      }
-    }
+    const parsedItems = parseAllNoticeLinks(html);
+    console.log(`Parsed ${parsedItems.length} notice links from ${target.name}.`);
 
-    console.log(`Parsed ${parsedItems.length} items from ${target.name} page.`);
-    
-    // Process the latest 40 items in reverse (oldest first)
-    const itemsToCheck = parsedItems.slice(0, 40);
-    itemsToCheck.reverse();
+    // Process all items in reverse (oldest first) so newest remain on top
+    const itemsToCheck = [...parsedItems].reverse();
 
     for (const item of itemsToCheck) {
-      // Hash URL for unique ID
+      const meta = inferCategoryAndType(item.title, item.url, target.category, target.type, target.prefix);
       const hash = crypto.createHash('md5').update(item.url).digest('hex').substring(0, 10);
-      const id = `${target.prefix}${hash}`;
+      const id = `${meta.prefix}${hash}`;
 
       // Check if already exists in DB
       const existing = await prisma.notice.findUnique({
@@ -324,8 +381,7 @@ async function syncFeed() {
 
       if (existing) {
         if (existing.title !== item.title || !existing.contentHtml) {
-          console.log(`Updating/Backfilling detail content for ${target.name}: "${existing.title}"`);
-          console.log(`  Link: ${item.url}`);
+          console.log(`Updating/Backfilling content for: "${existing.title}"`);
 
           let dateObj = new Date();
           let directUrl = item.url;
@@ -334,7 +390,7 @@ async function syncFeed() {
 
           try {
             const pageHtml = await fetchUrl(item.url);
-            directUrl = extractDirectLink(pageHtml, item.url, target.category);
+            directUrl = extractDirectLink(pageHtml, item.url, meta.category);
             contentHtml = extractNoticeContent(pageHtml);
 
             const parsedLastDate = extractLastDate(pageHtml);
@@ -358,6 +414,8 @@ async function syncFeed() {
               title: item.title,
               date: dateStr,
               publishDate: publishDateStr,
+              type: meta.type,
+              category: meta.category,
               url: directUrl,
               rawUrl: item.url,
               lastDate,
@@ -366,7 +424,7 @@ async function syncFeed() {
             }
           });
 
-          console.log(`  Successfully updated notice with inner details.`);
+          console.log(`  Updated notice inner details.`);
           updatedNoticesCount++;
           importedIndex++;
         }
@@ -383,7 +441,7 @@ async function syncFeed() {
 
       try {
         const pageHtml = await fetchUrl(item.url);
-        directUrl = extractDirectLink(pageHtml, item.url, target.category);
+        directUrl = extractDirectLink(pageHtml, item.url, meta.category);
         contentHtml = extractNoticeContent(pageHtml);
 
         const parsedLastDate = extractLastDate(pageHtml);
@@ -394,7 +452,7 @@ async function syncFeed() {
           dateObj = new Date(schemaMatch[1]);
         }
       } catch (err) {
-        console.error(`  Warning: Failed to fetch detail page for ${item.url}. Using default date metadata.`);
+        console.error(`  Warning: Failed to fetch detail page for ${item.url}. Using fallback.`);
       }
 
       const dateStr = formatPublishDate(dateObj);
@@ -407,8 +465,8 @@ async function syncFeed() {
           title: item.title,
           date: dateStr,
           publishDate: publishDateStr,
-          type: target.type,
-          category: target.category,
+          type: meta.type,
+          category: meta.category,
           url: directUrl,
           rawUrl: item.url,
           lastDate,
@@ -423,7 +481,7 @@ async function syncFeed() {
     }
   }
 
-  console.log(`Sync complete. Mapped and imported ${newNoticesCount} new notices, updated/backfilled ${updatedNoticesCount} notices.`);
+  console.log(`\nSync complete. Mapped and imported ${newNoticesCount} new notices, updated/backfilled ${updatedNoticesCount} notices.`);
 };
 
 if (require.main === module) {

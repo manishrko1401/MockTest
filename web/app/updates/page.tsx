@@ -304,7 +304,35 @@ export default function UpdatesCenterPage() {
           </div>
         )}
 
-        <main className="flex-1 p-4 space-y-5">
+        <main className="flex-1 p-4 space-y-4">
+
+          {/* TOP FULL-WIDTH STRETCH SEARCH BAR (MOBILE) */}
+          <div className="w-full">
+            <div className="relative flex items-center w-full bg-white dark:bg-slate-900 border-2 border-blue-500/20 dark:border-slate-800 focus-within:border-blue-600 dark:focus-within:border-blue-500 rounded-2xl p-2.5 shadow-md shadow-blue-500/5 transition-all duration-200 group">
+              <div className="pl-2 pr-1 text-slate-400 dark:text-slate-500 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors shrink-0">
+                <Search className="h-4.5 w-4.5" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={
+                  language === 'hi'
+                    ? 'सभी नौकरियों, रिजल्ट, एडमिट कार्ड और आंसर की में खोजें...'
+                    : 'Search in all Jobs, Results, Admit Cards & Answer Keys...'
+                }
+                className="w-full bg-transparent text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none px-1"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
 
           {/* MOBILE TABS FILTER */}
           <div className="flex bg-slate-200/70 dark:bg-slate-900 p-1 rounded-2xl shrink-0 gap-1 border border-slate-300/50 dark:border-slate-800">
@@ -359,15 +387,15 @@ export default function UpdatesCenterPage() {
                 {activeMobileTab === 'admit_card' && <><FileText className="h-4.5 w-4.5 text-emerald-600" /> {t.admitCards}</>}
                 {activeMobileTab === 'answer_key' && <><ShieldCheck className="h-4.5 w-4.5 text-purple-600" /> Answer Keys</>}
               </span>
-              <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500">
-                {displayNotices.filter(n => n.category === activeMobileTab).length} items
-              </span>
             </h3>
 
             <div className="space-y-3 max-h-[550px] overflow-y-auto no-scrollbar">
-              {displayNotices.filter(n => n.category === activeMobileTab).length > 0 ? (
+              {displayNotices
+                .filter(n => n.category === activeMobileTab)
+                .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                 [...displayNotices]
                   .filter(n => n.category === activeMobileTab)
+                  .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
                   .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                   .map((notice, idx) => {
                     const themeMap: Record<string, 'blue' | 'amber' | 'emerald' | 'purple'> = {
@@ -395,6 +423,13 @@ export default function UpdatesCenterPage() {
   }
 
   // DESKTOP LAYOUT (RESULTNOTIFY DESIGN)
+  const matchingTotalCount = displayNotices.filter(n =>
+    !searchQuery.trim() ||
+    n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+    (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())) ||
+    (n.category && n.category.toLowerCase().includes(searchQuery.toLowerCase().trim()))
+  ).length;
+
   return (
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200">
       
@@ -485,7 +520,38 @@ export default function UpdatesCenterPage() {
       </header>
 
       {/* BODY CONTENT */}
-      <main className="py-10 px-6 md:px-10 max-w-7xl w-full mx-auto flex-1 flex flex-col relative z-10 space-y-8">
+      <main className="py-8 px-4 sm:px-6 md:px-10 max-w-7xl w-full mx-auto flex-1 flex flex-col relative z-10 space-y-6">
+
+        {/* TOP FULL-WIDTH STRETCH SEARCH BAR (DESKTOP) */}
+        <div className="w-full">
+          <div className="relative flex items-center w-full bg-white dark:bg-slate-900 border-2 border-blue-500/25 dark:border-slate-800 focus-within:border-blue-600 dark:focus-within:border-blue-500 rounded-2xl md:rounded-3xl p-2.5 sm:p-3.5 shadow-md shadow-blue-500/5 transition-all duration-200 group">
+            <div className="pl-2 sm:pl-3 pr-2 text-slate-400 dark:text-slate-500 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors shrink-0">
+              <Search className="h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={
+                language === 'hi'
+                  ? 'सभी नौकरियों, रिजल्ट, एडमिट कार्ड और आंसर की में खोजें...'
+                  : 'Search across all Jobs, Results, Admit Cards & Answer Keys...'
+              }
+              className="w-full bg-transparent text-sm sm:text-base font-extrabold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none px-2 tracking-wide"
+            />
+            {searchQuery && (
+              <div className="flex items-center gap-2 pr-1 shrink-0">
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition cursor-pointer active:scale-95"
+                  title="Clear Search"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
         
         {/* IF CATEGORY FILTER IS ACTIVE -> DEDICATED SECTION PAGE FOR THAT PARTICULAR SECTION */}
         {categoryFilter && categoryMeta[categoryFilter] ? (
@@ -500,9 +566,6 @@ export default function UpdatesCenterPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full border ${categoryMeta[categoryFilter].badgeBg}`}>
                       {categoryFilter.replace('_', ' ')}
-                    </span>
-                    <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 font-extrabold px-3 py-1 rounded-full">
-                      {displayNotices.filter(n => n.category === categoryFilter).length} {language === 'hi' ? 'आइटम' : 'Items'}
                     </span>
                   </div>
                   <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mt-2 uppercase tracking-tight">
@@ -525,33 +588,16 @@ export default function UpdatesCenterPage() {
               </div>
             </div>
 
-            {/* Search Bar for Category */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs flex items-center gap-3">
-              <Search className="h-4.5 w-4.5 text-slate-400 shrink-0" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={language === 'hi' ? 'इस श्रेणी में खोजें...' : 'Search within this section...'}
-                className="w-full bg-transparent text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none placeholder-slate-400"
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-xs font-bold text-slate-400 hover:text-slate-600">
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
             {/* Category Items List Format (Single Column Vertical List) */}
             <div className="flex flex-col gap-3.5 w-full">
               {displayNotices
                 .filter(n => n.category === categoryFilter)
-                .filter(n => searchQuery ? n.title.toLowerCase().includes(searchQuery.toLowerCase()) : true)
+                .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
                 .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                 .map((notice, idx) => renderTileCard(notice, idx, categoryMeta[categoryFilter].color as any))}
             </div>
 
-            {displayNotices.filter(n => n.category === categoryFilter).filter(n => searchQuery ? n.title.toLowerCase().includes(searchQuery.toLowerCase()) : true).length === 0 && (
+            {displayNotices.filter(n => n.category === categoryFilter).filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length === 0 && (
               <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-slate-400 text-xs font-semibold">
                 {language === 'hi' ? 'कोई परिणाम नहीं मिला।' : 'No matching notifications found in this section.'}
               </div>
@@ -560,8 +606,6 @@ export default function UpdatesCenterPage() {
         ) : (
           /* STANDARD ALL-SECTIONS VIEW */
           <>
-
-
             {/* TOP QUICK FEATURE CARDS (RESULTNOTIFY TOP QUICK BAR) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
@@ -648,16 +692,22 @@ export default function UpdatesCenterPage() {
               
               {/* Column 1: Latest Notices (Blue Theme) */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-blue-600 relative overflow-hidden">
+                <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="font-black text-xs uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                    <Bell className="h-4 w-4" /> {t.liveNotices}
+                  </span>
+                </div>
                 {/* List Starts Directly */}
                 <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
-                  {displayNotices.filter(n => n.category === 'notice').length > 0 ? (
+                  {displayNotices.filter(n => n.category === 'notice').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'notice')
+                      .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
                       .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                       .map((notice, idx) => renderTileCard(notice, idx, 'blue'))
                   ) : (
                     <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                      {language === 'hi' ? 'कोई सक्रिय सूचना नहीं।' : 'No active notices.'}
+                      {language === 'hi' ? 'कोई परिणाम नहीं।' : 'No matching notices.'}
                     </div>
                   )}
                 </div>
@@ -676,16 +726,22 @@ export default function UpdatesCenterPage() {
 
               {/* Column 2: Results & Merits (Amber Theme) */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-amber-500 relative overflow-hidden">
+                <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="font-black text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                    <Trophy className="h-4 w-4" /> {t.resultsMerits}
+                  </span>
+                </div>
                 {/* List Starts Directly */}
                 <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
-                  {displayNotices.filter(n => n.category === 'result').length > 0 ? (
+                  {displayNotices.filter(n => n.category === 'result').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'result')
+                      .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
                       .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                       .map((notice, idx) => renderTileCard(notice, idx, 'amber'))
                   ) : (
                     <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                      {language === 'hi' ? 'कोई सक्रिय परिणाम नहीं।' : 'No active results.'}
+                      {language === 'hi' ? 'कोई परिणाम नहीं।' : 'No matching results.'}
                     </div>
                   )}
                 </div>
@@ -704,16 +760,22 @@ export default function UpdatesCenterPage() {
 
               {/* Column 3: Admit Cards (Emerald Theme) */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-emerald-600 relative overflow-hidden">
+                <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="font-black text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                    <FileText className="h-4 w-4" /> {t.admitCards}
+                  </span>
+                </div>
                 {/* List Starts Directly */}
                 <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
-                  {displayNotices.filter(n => n.category === 'admit_card').length > 0 ? (
+                  {displayNotices.filter(n => n.category === 'admit_card').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'admit_card')
+                      .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
                       .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                       .map((notice, idx) => renderTileCard(notice, idx, 'emerald'))
                   ) : (
                     <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                      {language === 'hi' ? 'कोई सक्रिय प्रवेश पत्र नहीं।' : 'No active admit cards.'}
+                      {language === 'hi' ? 'कोई परिणाम नहीं।' : 'No matching admit cards.'}
                     </div>
                   )}
                 </div>
@@ -732,16 +794,22 @@ export default function UpdatesCenterPage() {
 
               {/* Column 4: Answer Keys (Purple Theme) */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-purple-600 relative overflow-hidden">
+                <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="font-black text-xs uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                    <ShieldCheck className="h-4 w-4" /> Answer Keys
+                  </span>
+                </div>
                 {/* List Starts Directly */}
                 <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
-                  {displayNotices.filter(n => n.category === 'answer_key').length > 0 ? (
+                  {displayNotices.filter(n => n.category === 'answer_key').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'answer_key')
+                      .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
                       .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                       .map((notice, idx) => renderTileCard(notice, idx, 'purple'))
                   ) : (
                     <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                      {language === 'hi' ? 'कोई सक्रिय उत्तर कुंजी नहीं।' : 'No active answer keys.'}
+                      {language === 'hi' ? 'कोई परिणाम नहीं।' : 'No matching answer keys.'}
                     </div>
                   )}
                 </div>

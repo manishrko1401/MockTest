@@ -23,7 +23,43 @@ interface NoticeDetailPageProps {
 interface ParsedActionLink {
   label: string;
   url: string;
-  iconType: 'apply' | 'download' | 'official' | 'video' | 'general';
+  iconType: 'apply' | 'download' | 'official' | 'video' | 'channel' | 'general';
+  priority?: number;
+}
+
+function getRojgarLinkPriority(label: string, url: string, iconType: string): number {
+  const lowerLabel = label.toLowerCase();
+  const lowerUrl = url.toLowerCase();
+
+  // 1. Primary Action Links (Apply Online, Online Form, Registration, Check Result, Download Admit Card)
+  if (lowerLabel.includes('apply online') || lowerLabel.includes('online apply') || lowerLabel.includes('online form')) return 10;
+  if (lowerLabel.includes('check result') || lowerLabel.includes('download result') || lowerLabel.includes('merit list') || lowerLabel.includes('result 202')) return 12;
+  if (lowerLabel.includes('download admit card') || lowerLabel.includes('admit card') || lowerLabel.includes('call letter') || lowerLabel.includes('exam city')) return 14;
+  if (lowerLabel.includes('download answer key') || lowerLabel.includes('answer key') || lowerLabel.includes('objection key')) return 16;
+  if (lowerLabel.includes('registration') || lowerLabel.includes('register') || iconType === 'apply') return 18;
+
+  // 2. Secondary Application / Server Links (Server 1, Server 2, Backlog, Login, Re-Print, Correction Window)
+  if (lowerLabel.includes('server') || lowerLabel.includes('backlog') || lowerLabel.includes('login') || lowerLabel.includes('re-print') || lowerLabel.includes('correction')) return 25;
+
+  // 3. Official Notification PDF & Detailed Circulars
+  if (lowerLabel.includes('download notification') || lowerLabel.includes('official notification') || lowerLabel.includes('notification pdf') || lowerLabel.includes('detailed advt') || lowerLabel.includes('advertisement') || lowerLabel.includes('circular')) return 30;
+
+  // 4. Download Syllabus & Exam Pattern
+  if (lowerLabel.includes('syllabus') || lowerLabel.includes('exam pattern')) return 40;
+
+  // 5. Other Downloads (PDFs, Documents)
+  if (iconType === 'download' || lowerLabel.includes('download') || lowerLabel.includes('pdf')) return 50;
+
+  // 6. Video Tutorials & Guides (How to Fill Form, Watch Video)
+  if (iconType === 'video' || lowerLabel.includes('video') || lowerLabel.includes('how to fill') || lowerLabel.includes('watch') || lowerUrl.includes('youtube') || lowerUrl.includes('youtu.be')) return 60;
+
+  // 7. Information & Social Channels (WhatsApp, Telegram)
+  if (iconType === 'channel' || lowerLabel.includes('whatsapp') || lowerLabel.includes('telegram') || lowerLabel.includes('channel') || lowerLabel.includes('group')) return 70;
+
+  // 8. Official Website / Official Portal (Placed near bottom)
+  if (iconType === 'official' || lowerLabel.includes('official website') || lowerLabel.includes('official portal') || lowerLabel.includes('official site') || lowerLabel.includes('board website')) return 80;
+
+  return 90;
 }
 
 function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
@@ -31,7 +67,7 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
   const links: ParsedActionLink[] = [];
   const seenUrls = new Set<string>();
 
-  function addLink(label: string, url: string, iconType: 'apply' | 'download' | 'official' | 'video' | 'general' = 'general') {
+  function addLink(label: string, url: string, iconType: 'apply' | 'download' | 'official' | 'video' | 'channel' | 'general' = 'general') {
     if (!url || typeof url !== 'string') return;
     let cleanUrl = url.trim();
     if (!cleanUrl || cleanUrl === '#' || cleanUrl.startsWith('javascript:')) return;
@@ -57,13 +93,11 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
     if (!cleanLabel || cleanLabel.length < 2) cleanLabel = 'Official Portal Link';
 
     const lowerLabel = cleanLabel.toLowerCase();
+    const lowerUrl = cleanUrl.toLowerCase();
 
-    // 1. REJECT INSTRUCTIONAL BLOCKS, HOW-TO-FILL TEXT & LONG PARAGRAPHS (>75 CHARS)
+    // 1. REJECT INSTRUCTIONAL PARAGRAPH BLOCKS (>75 CHARS or LONG HOW-TO PARAGRAPHS)
     if (
       cleanLabel.length > 75 ||
-      lowerLabel.includes('how to fill') ||
-      lowerLabel.includes('how to apply') ||
-      lowerLabel.includes('how to download') ||
       lowerLabel.includes('candidate read') ||
       lowerLabel.includes('while applying') ||
       lowerLabel.includes('before submitting') ||
@@ -83,24 +117,14 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
       return;
     }
 
-    // 2. REJECT SOCIAL MEDIA, VIDEO & PROMO LINKS
-    if (
-      lowerLabel.includes('whatsapp') ||
-      lowerLabel.includes('telegram') ||
-      lowerLabel.includes('instagram') ||
-      lowerLabel.includes('facebook') ||
-      lowerLabel.includes('reels') ||
-      lowerLabel.includes('youtube') ||
-      lowerLabel.includes('video') ||
-      lowerLabel.includes('join group') ||
-      lowerLabel.includes('channel')
-    ) {
-      return;
-    }
-
+    // Auto-detect iconType if set to general
     if (iconType === 'general') {
-      if (lowerLabel.includes('apply') || lowerLabel.includes('form') || lowerLabel.includes('login') || lowerLabel.includes('registration') || lowerLabel.includes('register')) {
+      if (lowerLabel.includes('apply') || lowerLabel.includes('online form') || lowerLabel.includes('registration') || lowerLabel.includes('register')) {
         iconType = 'apply';
+      } else if (lowerLabel.includes('whatsapp') || lowerLabel.includes('telegram') || lowerLabel.includes('channel') || lowerLabel.includes('group')) {
+        iconType = 'channel';
+      } else if (lowerLabel.includes('video') || lowerLabel.includes('how to fill') || lowerLabel.includes('watch') || lowerUrl.includes('youtube') || lowerUrl.includes('youtu.be')) {
+        iconType = 'video';
       } else if (lowerLabel.includes('download') || lowerLabel.includes('notification') || lowerLabel.includes('pdf') || lowerLabel.includes('syllabus') || lowerLabel.includes('result') || lowerLabel.includes('admit') || lowerLabel.includes('key') || lowerLabel.includes('schedule') || lowerLabel.includes('city')) {
         iconType = 'download';
       } else if (lowerLabel.includes('official') || lowerLabel.includes('website') || lowerLabel.includes('portal') || lowerLabel.includes('board')) {
@@ -108,12 +132,23 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
       }
     }
 
-    links.push({ label: cleanLabel, url: cleanUrl, iconType });
+    const priority = getRojgarLinkPriority(cleanLabel, cleanUrl, iconType);
+    links.push({ label: cleanLabel, url: cleanUrl, iconType, priority });
   }
 
   // 1. Primary Direct Portal link from notice.url if present
   if (notice && notice.url && typeof notice.url === 'string' && notice.url.startsWith('http')) {
-    addLink('Apply Online / Direct Portal', notice.url, 'apply');
+    const isJob = !notice.category || notice.category === 'notice' || notice.category === 'job';
+    const isResult = notice.category === 'result';
+    const isAdmit = notice.category === 'admit_card';
+    const isKey = notice.category === 'answer_key';
+
+    const defaultLabel = isResult ? 'Check Result / Official Portal' :
+                         isAdmit ? 'Download Admit Card / Portal' :
+                         isKey ? 'Download Answer Key / Portal' :
+                         'Apply Online / Direct Portal';
+                         
+    addLink(defaultLabel, notice.url, isJob ? 'apply' : 'download');
   }
 
   // 2. Parse HTML table rows & standalone links from notice.contentHtml
@@ -133,7 +168,7 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
         const anchorText = aMatch[2].replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
         
         let label = '';
-        const isGenericAnchor = /^(?:click\s*here|link|download|open|server\s*[i|1|2|3|4]*)$/i.test(anchorText);
+        const isGenericAnchor = /^(?:click\s*here|link|download|open|server\s*[i|1|2|3|4]*|watch\s*video)$/i.test(anchorText);
 
         if (firstColText && !isGenericAnchor && anchorText && firstColText.toLowerCase() !== anchorText.toLowerCase()) {
           label = `${firstColText} (${anchorText})`;
@@ -165,7 +200,8 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
     addLink('Official Notification Source & Full Circular', notice.rawUrl, 'download');
   }
 
-  return links;
+  // 4. Sort links in exact RojgarResult standard priority order (Apply Online -> Notification PDF -> Syllabus -> Channels -> Official Website)
+  return links.sort((a, b) => (a.priority ?? 90) - (b.priority ?? 90));
 }
 
 function sanitizeNoticeHtml(html: string): string {
@@ -787,16 +823,16 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
               </div>
             </div>
 
-            {/* 2. PARSED SOME USEFUL IMPORTANT LINKS GRID CARD (PERMANENTLY RENDERED) */}
-            <div id="sec-links" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 shadow-sm space-y-3.5 sm:space-y-5 overflow-hidden w-full">
+            {/* 2. PARSED SOME USEFUL IMPORTANT LINKS CARD (ROJGARRESULT LIST FORMAT) */}
+            <div id="sec-links" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 shadow-sm space-y-4 sm:space-y-5 overflow-hidden w-full">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4 gap-2 flex-wrap sm:flex-nowrap min-w-0">
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                   <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shrink-0">
                     <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h2 className="text-xs sm:text-base font-black tracking-wide text-slate-900 dark:text-white uppercase truncate">Some Useful Important Links</h2>
-                    <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Direct access buttons for online registration, syllabus & notification PDF</p>
+                    <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Direct portal links arranged in official sequence</p>
                   </div>
                 </div>
                 <span className="bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[9px] sm:text-[10px] font-black px-2.5 sm:px-3 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800 hidden sm:inline-block shrink-0">
@@ -804,62 +840,92 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 </span>
               </div>
 
-              {/* Grid of Link Cards */}
+              {/* Vertical Stack List Format */}
               {parsedLinks.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3.5 w-full">
+                <div className="flex flex-col gap-2.5 sm:gap-3 w-full">
                   {parsedLinks.map((link, i) => (
                     <a
                       key={i}
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group bg-slate-50 dark:bg-slate-955 hover:bg-blue-50/80 dark:hover:bg-blue-950/40 border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-800 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex items-center justify-between gap-2 sm:gap-3 shadow-2xs hover:shadow-sm active:scale-98 cursor-pointer w-full min-w-0"
+                      className="group bg-slate-50 dark:bg-slate-955 hover:bg-blue-50/80 dark:hover:bg-blue-950/40 border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs hover:shadow-md active:scale-[0.99] cursor-pointer w-full min-w-0"
                     >
-                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                        <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-blue-100 dark:bg-blue-900/60 group-hover:bg-blue-600 text-blue-700 dark:text-blue-300 group-hover:text-white transition shrink-0">
-                          {link.iconType === 'apply' && <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
-                          {link.iconType === 'download' && <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
-                          {link.iconType === 'official' && <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
-                          {link.iconType === 'video' && <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
-                          {link.iconType === 'general' && <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                        <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition shrink-0 ${
+                          link.iconType === 'apply' ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 group-hover:bg-emerald-600 group-hover:text-white' :
+                          link.iconType === 'download' ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 group-hover:bg-blue-600 group-hover:text-white' :
+                          link.iconType === 'official' ? 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white' :
+                          link.iconType === 'video' ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 group-hover:bg-rose-600 group-hover:text-white' :
+                          link.iconType === 'channel' ? 'bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 group-hover:bg-teal-600 group-hover:text-white' :
+                          'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-blue-600 group-hover:text-white'
+                        }`}>
+                          {link.iconType === 'apply' && <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />}
+                          {link.iconType === 'download' && <Download className="h-4 w-4 sm:h-5 sm:w-5" />}
+                          {link.iconType === 'official' && <Building2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+                          {link.iconType === 'video' && <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />}
+                          {link.iconType === 'channel' && <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+                          {link.iconType === 'general' && <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug break-words">
+                          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug break-words">
                             {link.label}
+                          </h4>
+                          <p className="text-[9px] sm:text-[10.5px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5 truncate">
+                            {link.iconType === 'apply' ? 'Click to open application portal' :
+                             link.iconType === 'download' ? 'Direct PDF document link' :
+                             link.iconType === 'official' ? 'Official organization portal' :
+                             link.iconType === 'video' ? 'Watch video tutorial' :
+                             link.iconType === 'channel' ? 'Join updates group' :
+                             'Click to open link'}
                           </p>
-                          <span className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mt-0.5 truncate">
-                            Click to Open Direct Portal
-                          </span>
                         </div>
                       </div>
 
-                      <span className="bg-blue-600 text-white group-hover:bg-blue-700 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider shrink-0 transition flex items-center gap-0.5 sm:gap-1 shadow-sm">
-                        Open <ChevronRight className="h-3 w-3" />
-                      </span>
+                      <div className="flex items-center justify-end shrink-0">
+                        <span className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 shadow-xs ${
+                          link.iconType === 'apply' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20' :
+                          link.iconType === 'download' ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20' :
+                          link.iconType === 'official' ? 'bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white' :
+                          link.iconType === 'video' ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20' :
+                          link.iconType === 'channel' ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-600/20' :
+                          'bg-blue-600 hover:bg-blue-700 text-white'
+                        }`}>
+                          {link.iconType === 'apply' ? 'Click Here' :
+                           link.iconType === 'download' ? 'Download' :
+                           link.iconType === 'official' ? 'Visit Site' :
+                           link.iconType === 'video' ? 'Watch Video' :
+                           link.iconType === 'channel' ? 'Join Channel' :
+                           'Click Here'}
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </span>
+                      </div>
                     </a>
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3.5 w-full">
+                <div className="flex flex-col gap-2.5 sm:gap-3 w-full">
                   {notice.url && (
                     <a
                       href={notice.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group bg-blue-600 text-white hover:bg-blue-700 border border-blue-600 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex items-center justify-between gap-3 shadow-md cursor-pointer w-full"
+                      className="group bg-blue-600 text-white hover:bg-blue-700 border border-blue-600 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md cursor-pointer w-full"
                     >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="p-2.5 rounded-xl bg-white/20 text-white shrink-0">
-                          <Sparkles className="h-4 w-4" />
+                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                        <div className="p-2.5 sm:p-3 rounded-xl bg-white/20 text-white shrink-0">
+                          <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-black leading-snug">Apply Online / Official Portal</p>
-                          <span className="text-[9px] text-blue-100 font-bold uppercase tracking-wider block mt-0.5">Click to Open Portal</span>
+                          <h4 className="text-xs sm:text-sm font-black leading-snug">Apply Online / Official Portal</h4>
+                          <p className="text-[9px] sm:text-[10.5px] text-blue-100 font-bold uppercase tracking-wider block mt-0.5">Click to Open Portal</p>
                         </div>
                       </div>
-                      <span className="bg-white text-blue-700 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1">
-                        Apply Now <ArrowUpRight className="h-3.5 w-3.5" />
-                      </span>
+                      <div className="flex items-center justify-end shrink-0">
+                        <span className="bg-white text-blue-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider shrink-0 flex items-center gap-1.5 shadow-xs">
+                          Apply Now <ArrowUpRight className="h-3.5 w-3.5" />
+                        </span>
+                      </div>
                     </a>
                   )}
 
@@ -868,20 +934,22 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                       href={notice.rawUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex items-center justify-between gap-3 cursor-pointer w-full"
+                      className="group bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer w-full"
                     >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 shrink-0">
-                          <Download className="h-4 w-4" />
+                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                        <div className="p-2.5 sm:p-3 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 shrink-0">
+                          <Download className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-black text-slate-900 dark:text-white leading-snug">Official Notification Source & Circular</p>
-                          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5">View Source Circular</span>
+                          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-snug">Official Notification Source & Circular</h4>
+                          <p className="text-[9px] sm:text-[10.5px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5">View Source Circular PDF</p>
                         </div>
                       </div>
-                      <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1">
-                        View <ChevronRight className="h-3.5 w-3.5" />
-                      </span>
+                      <div className="flex items-center justify-end shrink-0">
+                        <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider shrink-0 flex items-center gap-1.5">
+                          View <ChevronRight className="h-3.5 w-3.5" />
+                        </span>
+                      </div>
                     </a>
                   )}
                 </div>
