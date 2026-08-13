@@ -1278,13 +1278,15 @@ async function handleAddAttempt(data: any, request?: Request) {
   await ensureMockTestExists(testId, title, maxScore, durationSeconds ? Math.ceil(durationSeconds / 60) : 60);
 
   // Remove any ongoing session first
-  await prisma.userTestSession.deleteMany({
-    where: {
-      userId,
-      mockTestId: testId,
-      status: 'ONGOING',
-    },
-  });
+  if (userId && testId) {
+    await prisma.userTestSession.deleteMany({
+      where: {
+        userId,
+        mockTestId: testId,
+        status: 'ONGOING',
+      },
+    }).catch(() => {});
+  }
 
   // Calculate estimated rank and percentile using Testbook Normal CDF model
   let testbookRank: number | null = null;
@@ -1307,7 +1309,7 @@ async function handleAddAttempt(data: any, request?: Request) {
 
       // Estimate standard deviation (minimum width 5.0)
       const sigma = Math.max(5.0, (topper - avg) / 2.0);
-      const z = (score - avg) / sigma;
+      const z = ((score ?? 0) - avg) / sigma;
 
       // Abramowitz and Stegun Normal CDF approximation formula
       const t = 1 / (1 + 0.2316419 * Math.abs(z));
@@ -1323,11 +1325,11 @@ async function handleAddAttempt(data: any, request?: Request) {
   }
 
   // Calculate actual time spent from responses if available
-  let actualTimeSpent = durationSeconds;
+  let actualTimeSpent = typeof durationSeconds === 'number' && !isNaN(durationSeconds) ? Math.max(0, Math.round(durationSeconds)) : 0;
   if (responses && typeof responses === 'object' && Object.keys(responses).length > 0) {
     const sumElapsed = Object.values(responses).reduce((sum: number, r: any) => sum + (r?.elapsedSeconds ?? 0), 0);
     if (sumElapsed > 0) {
-      actualTimeSpent = sumElapsed;
+      actualTimeSpent = Math.round(sumElapsed);
     }
   }
 
@@ -1337,15 +1339,15 @@ async function handleAddAttempt(data: any, request?: Request) {
       userId,
       mockTestId: testId,
       status: 'COMPLETED',
-      finalScore: score,
-      accuracyPercentage: accuracy,
+      finalScore: typeof score === 'number' && !isNaN(score) ? score : 0,
+      accuracyPercentage: typeof accuracy === 'number' && !isNaN(accuracy) ? accuracy : 0,
       timeSpentSeconds: actualTimeSpent,
-      violationsCount: violations,
+      violationsCount: typeof violations === 'number' && !isNaN(violations) ? Math.round(violations) : 0,
       remainingSeconds: 0,
       completedAt: new Date(),
       testbookRank,
       testbookPercentile,
-      source,
+      source: source || 'web',
     },
   });
 
@@ -1412,7 +1414,7 @@ async function handleAddAttempt(data: any, request?: Request) {
         questionId: qId,
         selectedOptionIndex: val.selectedOptionIndex,
         state: val.selectedOptionIndex !== null ? 3 : 2,
-        elapsedSeconds: val.elapsedSeconds,
+        elapsedSeconds: val.elapsedSeconds || 0,
       }));
       if (responsesData.length > 0) {
         // Use skipDuplicates and catch FK errors gracefully
@@ -1507,14 +1509,16 @@ async function handleSaveOngoingSession(data: any, request?: Request) {
   });
 
   let sessionId = '';
+  const safeTimeRemaining = typeof timeRemaining === 'number' && !isNaN(timeRemaining) ? Math.max(0, Math.round(timeRemaining)) : 0;
+  const safeViolations = typeof violations === 'number' && !isNaN(violations) ? Math.round(violations) : 0;
 
   if (existing) {
     sessionId = existing.id;
     await prisma.userTestSession.update({
       where: { id: sessionId },
       data: {
-        remainingSeconds: timeRemaining,
-        violationsCount: violations,
+        remainingSeconds: safeTimeRemaining,
+        violationsCount: safeViolations,
         currentSectionIndex: currentSectionIndex ?? 0,
         currentQuestionIndex: currentQuestionIndex ?? 0,
       },
@@ -1523,18 +1527,18 @@ async function handleSaveOngoingSession(data: any, request?: Request) {
     // Delete existing responses and insert new ones
     await prisma.questionResponseState.deleteMany({
       where: { sessionId },
-    });
+    }).catch(() => {});
   } else {
     const created = await prisma.userTestSession.create({
       data: {
         userId,
         mockTestId: testId,
         status: 'ONGOING',
-        remainingSeconds: timeRemaining,
-        violationsCount: violations,
+        remainingSeconds: safeTimeRemaining,
+        violationsCount: safeViolations,
         currentSectionIndex: currentSectionIndex ?? 0,
         currentQuestionIndex: currentQuestionIndex ?? 0,
-        source,
+        source: source || 'web',
       },
     });
     sessionId = created.id;
@@ -1547,7 +1551,7 @@ async function handleSaveOngoingSession(data: any, request?: Request) {
         questionId: qId,
         selectedOptionIndex: val.selectedOptionIndex,
         state: val.state !== undefined ? val.state : (val.selectedOptionIndex !== null ? 3 : 2),
-        elapsedSeconds: val.elapsedSeconds,
+        elapsedSeconds: val.elapsedSeconds || 0,
       }));
       if (responsesData.length > 0) {
         await prisma.questionResponseState.createMany({
@@ -1568,13 +1572,15 @@ async function handleSaveOngoingSession(data: any, request?: Request) {
 async function handleClearOngoingSession(data: any) {
   const { userId, testId } = data;
 
-  await prisma.userTestSession.deleteMany({
-    where: {
-      userId,
-      mockTestId: testId,
-      status: 'ONGOING',
-    },
-  });
+  if (userId && testId) {
+    await prisma.userTestSession.deleteMany({
+      where: {
+        userId,
+        mockTestId: testId,
+        status: 'ONGOING',
+      },
+    }).catch(() => {});
+  }
 
   return NextResponse.json({ success: true });
 }
@@ -1582,9 +1588,11 @@ async function handleClearOngoingSession(data: any) {
 async function handleResetAttempt(data: any) {
   const { userId, sessionId } = data;
 
-  await prisma.userTestSession.delete({
-    where: { id: sessionId },
-  });
+  if (sessionId) {
+    await prisma.userTestSession.deleteMany({
+      where: { id: sessionId },
+    }).catch(() => {});
+  }
 
   return NextResponse.json({ success: true });
 }
