@@ -174,6 +174,8 @@ export const ApiClient = {
   clearOngoingSession: (userId: string, testId: string) => 
     postRequest('clear-ongoing-session', { userId, testId }),
 
+
+
   /**
    * Resets a completed/saved attempt to let the user re-attempt
    */
@@ -251,6 +253,16 @@ export const ApiClient = {
    * Fetch administrative panel data (users list, reported questions)
    */
   fetchAdminData: (userId: string) => postRequest('admin-data', { userId }),
+
+  /**
+   * Fetches single notice contentHtml details for mobile detail screen
+   */
+  getSingleNoticeContent: (id: string) => postRequest('get-single-notice-content', { id }),
+
+  /**
+   * Updates user's saved and applied tracked jobs list
+   */
+  updateTrackedJobs: (userId: string, trackedJobs: any[]) => postRequest('update-tracked-jobs', { userId, trackedJobs }),
 
 
   /**

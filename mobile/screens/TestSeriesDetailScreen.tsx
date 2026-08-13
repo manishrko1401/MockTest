@@ -95,33 +95,6 @@ export default function TestSeriesDetailScreen({
     return [...series.subSubCategories].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   }, [series.subSubCategories]);
 
-  // Load locally-cached ongoing sessions so Resume button shows correctly even when offline
-  const [localOngoingIds, setLocalOngoingIds] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    const loadLocalOngoing = async () => {
-      try {
-        const allKeys = await AsyncStorage.getAllKeys();
-        const ongoingKeys = allKeys.filter(k => k.startsWith('ongoing_test_'));
-        const ids = new Set<string>();
-        for (const key of ongoingKeys) {
-          const raw = await AsyncStorage.getItem(key);
-          if (raw) {
-            try {
-              const parsed = JSON.parse(raw);
-              if (parsed?.testId && parsed?.status === 'ONGOING') {
-                ids.add(parsed.testId);
-              }
-            } catch {}
-          }
-        }
-        setLocalOngoingIds(ids);
-      } catch (err) {
-        console.warn('[Resume] Failed to load local ongoing sessions:', err);
-      }
-    };
-    loadLocalOngoing();
-  }, []);
-
   // Fast O(1) map for latest completed attempt per testId
   const completedAttemptMap = React.useMemo(() => {
     const map = new Map<string, any>();
@@ -139,18 +112,18 @@ export default function TestSeriesDetailScreen({
     return map;
   }, [currentUser?.testSessions]);
 
-  // Fast O(1) set for paused/ongoing testIds
+  // Fast O(1) set for paused/ongoing testIds directly from server testSessions
   const pausedTestIdsSet = React.useMemo(() => {
-    const set = new Set<string>(localOngoingIds);
+    const set = new Set<string>();
     if (currentUser?.testSessions) {
       for (const s of currentUser.testSessions) {
-        if (s.status === 'ONGOING') {
+        if (s.status === 'ONGOING' || s.status === 'PAUSED') {
           set.add(s.testId);
         }
       }
     }
     return set;
-  }, [currentUser?.testSessions, localOngoingIds]);
+  }, [currentUser?.testSessions]);
 
   // Helper to check if a user has access to a mock test based on their subscription tier
   const hasAccess = (requiredTier: string) => {
@@ -431,29 +404,6 @@ export default function TestSeriesDetailScreen({
                                 <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.maxMarks} Marks</Text>
                               </View>
                             </View>
-                            {(() => {
-                              const scheme = formatTestMarkingScheme(test);
-                              return (
-                                <View style={{ marginTop: 6, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
-                                  <View style={{
-                                    backgroundColor: scheme.isCustom ? (isDark ? 'rgba(245, 158, 11, 0.15)' : '#FEF3C7') : (isDark ? 'rgba(16, 185, 129, 0.15)' : '#D1FAE5'),
-                                    borderColor: scheme.isCustom ? '#F59E0B' : (isDark ? '#059669' : '#10B981'),
-                                    borderWidth: 1,
-                                    borderRadius: 6,
-                                    paddingHorizontal: 8,
-                                    paddingVertical: 3,
-                                  }}>
-                                    <Text style={{
-                                      fontSize: 10,
-                                      fontWeight: '800',
-                                      color: scheme.isCustom ? (isDark ? '#FBBF24' : '#D97706') : (isDark ? '#34D399' : '#059669'),
-                                    }}>
-                                      {scheme.isCustom ? '⚡ ' : '🎯 '}{scheme.badgeText}
-                                    </Text>
-                                  </View>
-                                </View>
-                              );
-                            })()}
 
                             {/* Subtitle / Status */}
                             {isCompleted && attempt && (
@@ -658,29 +608,6 @@ export default function TestSeriesDetailScreen({
                       <Text style={[styles.metaText, isDark && { color: ThemeColors.dark.textMuted }]}>{test.maxMarks} Marks</Text>
                     </View>
                   </View>
-                  {(() => {
-                    const scheme = formatTestMarkingScheme(test);
-                    return (
-                      <View style={{ marginTop: 6, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
-                        <View style={{
-                          backgroundColor: scheme.isCustom ? (isDark ? 'rgba(245, 158, 11, 0.15)' : '#FEF3C7') : (isDark ? 'rgba(16, 185, 129, 0.15)' : '#D1FAE5'),
-                          borderColor: scheme.isCustom ? '#F59E0B' : (isDark ? '#059669' : '#10B981'),
-                          borderWidth: 1,
-                          borderRadius: 6,
-                          paddingHorizontal: 8,
-                          paddingVertical: 3,
-                        }}>
-                          <Text style={{
-                            fontSize: 10,
-                            fontWeight: '800',
-                            color: scheme.isCustom ? (isDark ? '#FBBF24' : '#D97706') : (isDark ? '#34D399' : '#059669'),
-                          }}>
-                            {scheme.isCustom ? '⚡ ' : '🎯 '}{scheme.badgeText}
-                          </Text>
-                        </View>
-                      </View>
-                    );
-                  })()}
 
                   {/* Subtitle / Status */}
                   {isCompleted && attempt && (

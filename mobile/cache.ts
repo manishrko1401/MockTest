@@ -165,12 +165,27 @@ export async function saveCatalogToCache(data: {
   usersList: any[];
 }): Promise<void> {
   try {
+    // Strip heavy HTML content from notices before caching to prevent SQLITE_FULL errors in AsyncStorage
+    const sanitizedNotices = (data.noticesList || []).map((n: any) => {
+      if (!n) return n;
+      const { contentHtml, ...rest } = n;
+      return {
+        ...rest,
+        contentHtml: contentHtml ? contentHtml.slice(0, 300) : '',
+      };
+    });
+
+    const lightData = {
+      ...data,
+      noticesList: sanitizedNotices,
+    };
+
     await AsyncStorage.setItem(
       CAT_KEY,
-      JSON.stringify({ data, savedAt: Date.now() })
+      JSON.stringify({ data: lightData, savedAt: Date.now() })
     );
-  } catch (err) {
-    console.warn('[Cache] Failed to save catalog:', err);
+  } catch (err: any) {
+    console.log('[Cache] saveCatalogToCache storage warning:', err?.message || err);
   }
 }
 

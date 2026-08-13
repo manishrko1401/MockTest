@@ -198,21 +198,51 @@ export default function MockTestsCatalog() {
 
   // Compute last 5 recent tests attempted or ongoing by the user
   const recentTests = React.useMemo(() => {
-    if (!currentUser || !currentUser.testSessions || currentUser.testSessions.length === 0) return [];
-    
-    // Sort sessions by date/updatedAt descending
-    const sortedSessions = [...currentUser.testSessions].sort((a: any, b: any) => {
-      const timeA = new Date(a.updatedAt || a.date || 0).getTime();
-      const timeB = new Date(b.updatedAt || b.date || 0).getTime();
-      return timeB - timeA;
+    const rawSessions = currentUser?.testSessions || [];
+
+    // Map each testId to its most recent session
+    const sessionsMap = new Map<string, any>();
+
+    // 1. Add server sessions — keep the most recent session per testId
+    (Array.isArray(rawSessions) ? rawSessions : []).forEach((s: any) => {
+      if (s && s.testId) {
+        const existing = sessionsMap.get(s.testId);
+        if (!existing) {
+          sessionsMap.set(s.testId, s);
+        } else {
+          const existingTime = new Date(existing.updatedAt || existing.completedAt || existing.startedAt || existing.createdAt || existing.savedAt || existing.date || 0).getTime();
+          const sTime = new Date(s.updatedAt || s.completedAt || s.startedAt || s.createdAt || s.savedAt || s.date || 0).getTime();
+          if (sTime > existingTime) {
+            sessionsMap.set(s.testId, s);
+          }
+        }
+      }
     });
 
+    // 2. Sort: ongoing/paused first, then most recent by timestamp
+    const sortedSessions = Array.from(sessionsMap.values())
+      .filter((s: any) => s && (
+        s.status === 'ONGOING' ||
+        s.status === 'PAUSED' ||
+        s.status === 'COMPLETED' ||
+        s.status === 'AUTO_SUBMITTED' ||
+        s.score !== undefined
+      ))
+      .sort((a: any, b: any) => {
+        const isOngoingA = a.status === 'ONGOING' || a.status === 'PAUSED';
+        const isOngoingB = b.status === 'ONGOING' || b.status === 'PAUSED';
+        if (isOngoingA && !isOngoingB) return -1;
+        if (!isOngoingA && isOngoingB) return 1;
+
+        const timeA = new Date(a.updatedAt || a.completedAt || a.startedAt || a.createdAt || a.savedAt || a.date || 0).getTime();
+        const timeB = new Date(b.updatedAt || b.completedAt || b.startedAt || b.createdAt || b.savedAt || b.date || 0).getTime();
+        return timeB - timeA;
+      });
+
     const recentList: Array<{ test: MockTestItem; session: any; catId: string; subCatId: string; subSubId?: string | null }> = [];
-    const seen = new Set<string>();
 
     for (const session of sortedSessions) {
-      if (!session.testId || seen.has(session.testId)) continue;
-      seen.add(session.testId);
+      if (!session.testId) continue;
 
       let foundTest: MockTestItem | null = null;
       let foundCatId: string | null = null;
@@ -220,6 +250,15 @@ export default function MockTestsCatalog() {
       let foundSubSubId: string | null = null;
 
       for (const cat of testSeriesCatalog) {
+        // Check top-level category tests
+        const topMatch = (cat.tests || []).find((x: any) => x.id === session.testId);
+        if (topMatch) {
+          foundTest = topMatch;
+          foundCatId = cat.id;
+          foundSubCatId = '';
+          break;
+        }
+
         for (const sub of cat.subCategories || []) {
           const t = (sub.tests || []).find((x: any) => x.id === session.testId);
           if (t) { 
@@ -243,15 +282,28 @@ export default function MockTestsCatalog() {
         if (foundTest) break;
       }
 
-      if (foundTest && foundCatId && foundSubCatId) {
-        recentList.push({ 
-          test: foundTest, 
-          session, 
-          catId: foundCatId, 
-          subCatId: foundSubCatId, 
-          subSubId: foundSubSubId 
-        });
+      // Fallback: if not found in catalog hierarchy, construct test metadata from session
+      if (!foundTest) {
+        foundTest = {
+          id: session.testId,
+          title: session.title || session.mockTest?.title || 'Mock Test',
+          questionsCount: session.mockTest?.questionsCount || 0,
+          durationMinutes: session.durationMinutes || session.mockTest?.durationMinutes || 60,
+          maxMarks: session.maxScore || session.mockTest?.maxMarks || 200,
+          isPremium: false,
+          requiredTier: 'None',
+        };
+        foundCatId = '';
+        foundSubCatId = '';
       }
+
+      recentList.push({ 
+        test: foundTest, 
+        session, 
+        catId: foundCatId || '', 
+        subCatId: foundSubCatId || '', 
+        subSubId: foundSubSubId 
+      });
 
       if (recentList.length >= 5) break;
     }
@@ -909,10 +961,10 @@ export default function MockTestsCatalog() {
                       {/* Horizontal Scroll Row of Tiles */}
                       <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
                         {recentTests.map(({ test, session, catId, subCatId, subSubId }) => {
-                          const isOngoing = session.status === 'ONGOING';
+                          const isOngoing = session.status === 'ONGOING' || session.status === 'PAUSED';
                           return (
                             <div 
-                              key={test.id}
+                              key={session.id || test.id}
                               onClick={() => handleOpenRecentCategory(catId, subCatId, subSubId)}
                               className="bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between border-l-4 border-l-blue-500 hover:border-l-blue-600 min-h-[95px] min-w-[210px] w-[210px] shrink-0 cursor-pointer"
                             >
@@ -1897,10 +1949,10 @@ export default function MockTestsCatalog() {
                   {/* Single Horizontal Row of 5 Compact Tiles */}
                   <div className="grid grid-cols-5 gap-2.5">
                     {recentTests.map(({ test, session, catId, subCatId, subSubId }) => {
-                      const isOngoing = session.status === 'ONGOING';
+                      const isOngoing = session.status === 'ONGOING' || session.status === 'PAUSED';
                       return (
                         <div 
-                          key={test.id}
+                          key={session.id || test.id}
                           onClick={() => handleOpenRecentCategory(catId, subCatId, subSubId)}
                           className="bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between border-l-4 border-l-blue-500 hover:border-l-blue-600 min-h-[88px] cursor-pointer"
                         >

@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Globe, AlignJustify, ShieldCheck, ChevronDown, Check, Moon, Sun } from 'lucide-react-native';
+import { Globe, AlignJustify, ShieldCheck, ChevronDown, Check, Moon, Sun, Clock } from 'lucide-react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { ApiClient, BASE_URL } from './api';
 import { getCachedQuestions, saveQuestionsToCache } from './cache';
@@ -61,6 +61,8 @@ interface MobileQuestion {
   };
   correctOptionIndex: number;
   orderIndex: number;
+  positiveMark?: number;
+  negativeMark?: number;
 }
 
 interface MobileSection {
@@ -74,28 +76,38 @@ interface MobileSection {
 
 const instructionTexts = {
   en: {
-    title: "Please read the instructions carefully",
+    title: "Please read all instructions carefully before starting the examination",
     general: "General Instructions:",
     gen1: "1. The clock will be set at the server. The countdown timer in the top right corner of screen will display the remaining time available for you to complete the examination.",
-    gen2: "2. The Question Palette displayed on the right side of screen will show the status of each question using one of the 5 symbols.",
+    gen2: "2. The Question Palette displayed on the right side of screen will show the status of each question using color symbols.",
     gen3: "3. You can click on the '>' arrow to collapse the question palette to maximize the question viewing area.",
-    answering: "Navigating to a Question:",
-    ans1: "4. To answer a question, select the radio button of one of the options and click 'Save & Next'.",
-    ans2: "5. To change your answer, click on the 'Clear Response' button to reset the selection.",
+    gen4: "4. Do not refresh or switch tabs during the exam. Any suspicious tab switches may result in auto-submission.",
+    answering: "Navigating to & Answering a Question:",
+    ans1: "5. To answer a question, select the radio button of one of the options and click 'Save & Next'.",
+    ans2: "6. To change your answer, click on the 'Clear Response' button to reset the selection.",
+    ans3: "7. To mark a question for review, click 'Mark for Review & Next'.",
+    rpscTitle: "Special Instructions (RPSC RAS Mandatory-Attempt Rule):",
+    rpsc1: "8. Unattempted questions after main exam time must be marked in the 10-minute extra time phase using Option (E) 'Leave Question Unattempted'.",
+    rpsc2: "9. Failure to mark Option (E) for unattempted questions will attract a penalty of -0.44 negative marks per unattempted question.",
     disclaimer: "I have read and understood all the instructions. All computer hardware allotted to me is in proper working condition. I agree that in case of any cheating or tab switching, the exam will be auto-submitted.",
     btn: "I am ready to begin"
   },
   hi: {
-    title: "\u0915\u0943\u092a\u092f\u093e \u0928\u093f\u0930\u094d\u0926\u0947\u0936\u094b\u0902 \u0915\u094b \u0927\u094d\u092f\u093e\u0928 \u0938\u0947 \u092a\u0922\u093c\u0947\u0902",
-    general: "\u0938\u093e\u092e\u093e\u0928\u094d\u092f \u0928\u093f\u0930\u094d\u0926\u0947\u0936:",
-    gen1: "1. \u0918\u0921\u093c\u0940 \u0938\u0930\u094d\u0935\u0930 \u092a\u0930 \u0938\u0947\u091f \u0939\u094b\u0917\u0940\u0964 \u0938\u094d\u0915\u094d\u0930\u0940\u0928 \u0915\u0947 \u0936\u0940\u0930\u094d\u0937 \u0926\u093e\u090f\u0902 \u0915\u094b\u0928\u0947 \u092e\u0947\u0902 \u0909\u0932\u091f\u0940 \u0917\u093f\u0928\u0924\u0940 \u0918\u0921\u093c\u0940 \u0906\u092a\u0915\u0947 \u0926\u094d\u0935\u093e\u0930\u093e \u092a\u0930\u0940\u0915\u094d\u0937\u093e \u092a\u0942\u0930\u0940 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0909\u092a\u0932\u092c\u094d\u0927 \u0936\u0947\u0937 \u0938\u092e\u092f \u092a\u094d\u0930\u0926\u0930\u094d\u0936\u093f\u0924 \u0915\u0930\u0947\u0917\u0940\u0964",
-    gen2: "2. \u0938\u094d\u0915\u094d\u0930\u0940\u0928 \u0915\u0947 \u0926\u093e\u090f\u0902 \u0913\u0930 \u092a\u094d\u0930\u0936\u094d\u0928 \u092a\u0948\u0932\u0947\u091f 5 \u092a\u094d\u0930\u0924\u0940\u0915\u094b\u0902 \u092e\u0947\u0902 \u0938\u0947 \u0915\u093f\u0938\u0940 \u090f\u0915 \u0915\u093e \u0909\u092a\u092f\u094b\u0917 \u0915\u0930\u0915\u0947 \u092a\u094d\u0930\u0924\u094d\u092f\u0947\u0915 \u092a\u094d\u0930\u0936\u094d\u0928 \u0915\u0940 \u0938\u094d\u0925\u093f\u0924\u093f \u0926\u0930\u094d\u0936\u093e\u090f\u0917\u093e\u0964",
-    gen3: "3. \u092a\u094d\u0930\u0936\u094d\u0928 \u0926\u0947\u0916\u0928\u0947 \u0915\u0947 \u0915\u094d\u0937\u0947\u0924\u094d\u0930 \u0915\u094b \u0905\u0927\u093f\u0915\u0924\u092e \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0906\u092a '>' \u0924\u0940\u0930 \u092a\u0930 \u0915\u094d\u0932\u093f\u0915 \u0915\u0930\u0915\u0947 \u092a\u094d\u0930\u0936\u094d\u0928 \u092a\u0948\u0932\u0947\u091f \u092c\u0902\u0926 \u0915\u0930 \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964",
-    answering: "\u092a\u094d\u0930\u0936\u094d\u0928 \u092a\u0930 \u0928\u0947\u0935\u093f\u0917\u0947\u091f \u0915\u0930\u0928\u093e:",
-    ans1: "4. \u0915\u093f\u0938\u0940 \u092a\u094d\u0930\u0936\u094d\u0928 \u0915\u093e \u0909\u0924\u094d\u0924\u0930 \u0926\u0947\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f, \u0935\u093f\u0915\u0932\u094d\u092a\u094b\u0902 \u092e\u0947\u0902 \u0938\u0947 \u0915\u093f\u0938\u0940 \u090f\u0915 \u0915\u094b \u091a\u0941\u0928\u0947\u0902 \u0914\u0930 'Save & Next' \u092a\u0930 \u0915\u094d\u0932\u093f\u0915 \u0915\u0930\u0947\u0902\u0964",
-    ans2: "5. \u0905\u092a\u0928\u093e \u0909\u0924\u094d\u0924\u0930 \u092c\u0926\u0932\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f, \u091a\u092f\u0928 \u0915\u094b \u0930\u0940\u0938\u0947\u091f \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f 'Clear Response' \u092c\u091f\u0928 \u092a\u0930 \u0915\u094d\u0932\u093f\u0915 \u0915\u0930\u0947\u0902\u0964",
-    disclaimer: "\u092e\u0948\u0902\u0928\u0947 \u0938\u092d\u0940 \u0928\u093f\u0930\u094d\u0926\u0947\u0936\u094b\u0902 \u0915\u094b \u092a\u0922\u093c \u0914\u0930 \u0938\u092e\u091d \u0932\u093f\u092f\u093e \u0939\u0948\u0964 \u092e\u0941\u091d\u0947 \u0906\u0935\u0902\u091f\u093f\u0924 \u0938\u092d\u0940 \u0915\u0902\u092a\u094d\u092f\u0942\u091f\u0930 \u0939\u093e\u0930\u094d\u0921\u0935\u0947\u092f\u0930 \u0909\u091a\u093f\u0924 \u0915\u093e\u0930\u094d\u092f\u0936\u0940\u0932 \u0938\u094d\u0925\u093f\u0924\u093f \u092e\u0947\u0902 \u0939\u0948\u0902\u0964 \u092e\u0948\u0902 \u0938\u0939\u092e\u0924 \u0939\u0942\u0902 \u0915\u093f \u0915\u093f\u0938\u0940 \u092d\u0940 \u0928\u0915\u0932 \u092f\u093e \u091f\u0948\u092c \u0938\u094d\u0935\u093f\u091a\u093f\u0902\u0917 \u0915\u0947 \u092e\u093e\u092e\u0932\u0947 \u092e\u0947\u0902, \u092a\u0930\u0940\u0915\u094d\u0937\u093e \u0938\u094d\u0935\u0924\u0903 \u0938\u092c\u092e\u093f\u091f \u0939\u094b \u091c\u093e\u090f\u0917\u0940\u0964",
-    btn: "\u092e\u0948\u0902 \u0924\u0948\u092f\u093e\u0930 \u0939\u0942\u0901 (I am ready to begin)"
+    title: "परीक्षा शुरू करने से पहले कृपया सभी निर्देशों को ध्यान से पढ़ें",
+    general: "सामान्य निर्देश:",
+    gen1: "1. सर्वर घड़ी के अनुसार उलटी गिनती का समय स्क्रीन के ऊपरी दाएं कोने पर प्रदर्शित होगा।",
+    gen2: "2. स्क्रीन के दाईं ओर प्रश्न पैलेट रंग प्रतीकों का उपयोग करके प्रत्येक प्रश्न की स्थिति दर्शाएगा।",
+    gen3: "3. प्रश्न क्षेत्र को बड़ा करने के लिए आप '>' तीर पर क्लिक करके पैलेट छुपा सकते हैं।",
+    gen4: "4. परीक्षा के दौरान पेज रीफ्रेश या टैब स्विच न करें। ऐसा करने पर परीक्षा स्वतः सबमिट हो सकती है।",
+    answering: "प्रश्न पर जाना और उत्तर देना:",
+    ans1: "5. उत्तर देने के लिए विकल्प चुनें और 'Save & Next' पर क्लिक करें।",
+    ans2: "6. चयन बदलने के लिए 'Clear Response' पर क्लिक करके रीसेट करें।",
+    ans3: "7. समीक्षा के लिए चिन्हित करने हेतु 'Mark for Review & Next' पर क्लिक करें।",
+    rpscTitle: "विशेष निर्देश (RPSC RAS अनिवार्य प्रयास नियम):",
+    rpsc1: "8. मुख्य समय समाप्त होने के बाद अनुत्तरित प्रश्नों के लिए 10 मिनट का अतिरिक्त समय मिलेगा, जिसमें विकल्प (E) 'प्रश्न अनुत्तरित छोड़ें' चुनना अनिवार्य है।",
+    rpsc2: "9. अनुत्तरित प्रश्नों पर विकल्प (E) न चुनने पर प्रति प्रश्न -0.44 अंक का दंड लागू होगा।",
+    disclaimer: "मैंने सभी निर्देशों को पढ़ और समझ लिया है। मुझे आवंटित सभी कंप्यूटर हार्डवेयर उचित कार्यशील स्थिति में हैं। मैं सहमत हूं कि किसी भी नकल या टैब स्विचिंग के मामले में परीक्षा स्वतः सबमिट हो जाएगी।",
+    btn: "मैं तैयार हूँ (I am ready to begin)"
   }
 };
 
@@ -255,6 +267,37 @@ export default function MobileTestScreen({
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [violationsCount, setViolationsCount] = useState(0);
+  const [requestingUpload, setRequestingUpload] = useState(false);
+  const [isRequested, setIsRequested] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(`requested_upload_${testId}`).then(val => {
+      if (val === 'true') setIsRequested(true);
+    }).catch(() => {});
+  }, [testId]);
+
+  const handleRequestUpload = async () => {
+    if (requestingUpload || isRequested) return;
+    setRequestingUpload(true);
+    try {
+      await ApiClient.submitSuggestion({
+        userId: currentUser?.id || 'guest_mobile',
+        name: currentUser?.name || 'Mobile App Candidate',
+        email: currentUser?.email || 'guest@app.com',
+        category: 'Test Upload Request',
+        message: `Request to upload questions for test: ${mockTestTitle || 'Mock Test'} (Test ID: ${testId})`,
+        source: 'app'
+      });
+      setIsRequested(true);
+      await AsyncStorage.setItem(`requested_upload_${testId}`, 'true');
+      Alert.alert('Request Received 🚀', 'Your upload request for this test has been submitted to the admin suggestion box!');
+    } catch (err) {
+      setIsRequested(true);
+      Alert.alert('Request Received 🚀', 'Your upload request for this test has been submitted to the admin suggestion box!');
+    } finally {
+      setRequestingUpload(false);
+    }
+  };
   const [websiteRating, _setWebsiteRating] = useState(0);
   const [examRating, _setExamRating] = useState(0);
   const [feedbackText, _setFeedbackText] = useState("");
@@ -516,23 +559,22 @@ export default function MobileTestScreen({
       };
     });
 
-    // Resume from local ongoing session cache first (zero latency)
-    let ongoing: any = null;
-    try {
-      const localOngoing = await AsyncStorage.getItem(`ongoing_test_${testId}`);
-      if (localOngoing) {
-        ongoing = JSON.parse(localOngoing);
-        console.log(`[Cache] Resumed ongoing test ${testId} from local storage`);
-      }
-    } catch (err) {
-      console.warn('[Cache] Failed to load local ongoing session:', err);
-    }
+    // 1. Resume from server ongoing session first (synced across web & app)
+    let ongoing: any = currentUser?.testSessions?.find(
+      (s: any) => s.testId === testId && (s.status === 'ONGOING' || s.status === 'PAUSED')
+    );
 
+    // 2. Fallback: check local storage if offline or not found
     if (!ongoing) {
-      // Resume from backend ongoing session if present
-      ongoing = currentUser.testSessions?.find(
-        (s: any) => s.testId === testId && s.status === 'ONGOING'
-      );
+      try {
+        const localOngoing = await AsyncStorage.getItem(`ongoing_test_${testId}`);
+        if (localOngoing) {
+          ongoing = JSON.parse(localOngoing);
+          if (ongoing?.status !== 'ONGOING' && ongoing?.status !== 'PAUSED') ongoing = null;
+        }
+      } catch (err) {
+        console.warn('[Cache] Failed to load local ongoing session:', err);
+      }
     }
 
     if (ongoing) {
@@ -601,7 +643,7 @@ export default function MobileTestScreen({
       // ──────────────────────────────────────────────────────────────────
       // Shared builder: turns raw API questions into screen state
       // ──────────────────────────────────────────────────────────────────
-      const buildScreenFromApiQuestions = (rawQuestions: any[]) => {
+      const buildScreenFromApiQuestions = (rawQuestions: any[], customQsMeta?: any) => {
         // Save questions to local device storage for 0ms offline/instant rendering next time
         if (Array.isArray(rawQuestions) && rawQuestions.length > 0) {
           saveQuestionsToCache(testId, rawQuestions);
@@ -628,9 +670,15 @@ export default function MobileTestScreen({
           hasSectionalTimingRef.current = true;
         }
 
-        const isRRB = testId.includes('rrb');
-        const posMark = catalogTest?.positiveMarks !== undefined ? Number(catalogTest.positiveMarks) : (isRRB ? 1 : 2);
-        const negMark = catalogTest?.negativeMarks !== undefined ? Number(catalogTest.negativeMarks) : (isRRB ? 0.33 : 0.5);
+        // Resolve overall default positive and negative marks from customQsMeta or catalogTest
+        const isRRB = testId.includes('rrb') || testId.includes('railway');
+        const posMark = customQsMeta?.positiveMarks !== undefined && customQsMeta?.positiveMarks !== null && customQsMeta?.positiveMarks !== ''
+          ? Number(customQsMeta.positiveMarks)
+          : (catalogTest?.positiveMarks !== undefined && catalogTest?.positiveMarks !== null ? Number(catalogTest.positiveMarks) : (isRRB ? 1 : 2));
+
+        const negMark = customQsMeta?.negativeMarks !== undefined && customQsMeta?.negativeMarks !== null && customQsMeta?.negativeMarks !== ''
+          ? Number(customQsMeta.negativeMarks)
+          : (catalogTest?.negativeMarks !== undefined && catalogTest?.negativeMarks !== null ? Number(catalogTest.negativeMarks) : (isRRB ? 0.33 : 0.5));
 
         const sectionNames: string[] = [];
         rawQuestions.forEach((q: any) => {
@@ -652,16 +700,61 @@ export default function MobileTestScreen({
           }
         }
 
-        const builtSecs: MobileSection[] = sectionNames.map((name, idx) => ({
-          id: `sec_custom_${idx}`,
-          name,
-          orderIndex: idx,
-          positiveMark: posMark,
-          negativeMark: negMark,
-          durationSeconds: catalogTest?.hasSectionalTiming && parsedTimings.length > idx
-            ? (parsedTimings[idx] ?? 0) * 60
-            : undefined,
-        }));
+        // Section rules mapping from customQsMeta (res.sections / res.sectionsBreakdown) or catalogTest.sections
+        const customSectionsMap: Record<string, { positiveMark: number; negativeMark: number }> = {};
+        const metaSections = customQsMeta?.sections || customQsMeta?.sectionsBreakdown || catalogTest?.sections || [];
+        if (Array.isArray(metaSections)) {
+          metaSections.forEach((s: any) => {
+            if (s && (s.name || s.sectionName)) {
+              const sKey = (s.name || s.sectionName).trim().toLowerCase();
+              customSectionsMap[sKey] = {
+                positiveMark: s.positiveMarks !== undefined ? Number(s.positiveMarks) : (s.positiveMark !== undefined ? Number(s.positiveMark) : posMark),
+                negativeMark: s.negativeMarks !== undefined ? Number(s.negativeMarks) : (s.negativeMark !== undefined ? Number(s.negativeMark) : negMark),
+              };
+            }
+          });
+        }
+
+        // Also inspect rawQuestions items for section-level marks or question-level marks
+        if (rawQuestions && Array.isArray(rawQuestions)) {
+          rawQuestions.forEach((q: any) => {
+            const sKey = (q.section || 'General Studies').trim().toLowerCase();
+            if (sKey && !customSectionsMap[sKey]) {
+              const sPos = q.sectionPositiveMark !== undefined ? Number(q.sectionPositiveMark) : (q.sectionPositiveMarks !== undefined ? Number(q.sectionPositiveMarks) : undefined);
+              const sNeg = q.sectionNegativeMark !== undefined ? Number(q.sectionNegativeMark) : (q.sectionNegativeMarks !== undefined ? Number(q.sectionNegativeMarks) : undefined);
+              if (sPos !== undefined || sNeg !== undefined) {
+                customSectionsMap[sKey] = {
+                  positiveMark: sPos !== undefined ? sPos : posMark,
+                  negativeMark: sNeg !== undefined ? sNeg : negMark,
+                };
+              }
+            }
+          });
+        }
+
+        const builtSecs: MobileSection[] = sectionNames.map((name, idx) => {
+          const secKey = name.trim().toLowerCase();
+          const secRule = customSectionsMap[secKey];
+
+          // Fallback: If no section rule found, compute section's positive & negative mark from questions in this section
+          const secQs = rawQuestions.filter(q => (q.section || 'General Studies').trim().toLowerCase() === secKey);
+          const firstQWithPos = secQs.find(q => q.positiveMarks !== undefined || q.positiveMark !== undefined);
+          const firstQWithNeg = secQs.find(q => q.negativeMarks !== undefined || q.negativeMark !== undefined);
+
+          const defaultSecPos = firstQWithPos ? (firstQWithPos.positiveMarks !== undefined ? Number(firstQWithPos.positiveMarks) : Number(firstQWithPos.positiveMark)) : posMark;
+          const defaultSecNeg = firstQWithNeg ? (firstQWithNeg.negativeMarks !== undefined ? Number(firstQWithNeg.negativeMarks) : Number(firstQWithNeg.negativeMark)) : negMark;
+
+          return {
+            id: `sec_custom_${idx}`,
+            name,
+            orderIndex: idx,
+            positiveMark: secRule?.positiveMark !== undefined ? secRule.positiveMark : defaultSecPos,
+            negativeMark: secRule?.negativeMark !== undefined ? secRule.negativeMark : defaultSecNeg,
+            durationSeconds: catalogTest?.hasSectionalTiming && parsedTimings.length > idx
+              ? (parsedTimings[idx] ?? 0) * 60
+              : undefined,
+          };
+        });
 
         const sectionCounters: Record<string, number> = {};
         sectionNames.forEach(name => { sectionCounters[name] = 0; });
@@ -669,7 +762,17 @@ export default function MobileTestScreen({
         const builtList: MobileQuestion[] = rawQuestions.map((q: any, idx: number) => {
           const secName = q.section || 'General Studies';
           const secId = `sec_custom_${sectionNames.indexOf(secName)}`;
+          const secObj = builtSecs.find(s => s.id === secId);
           const qOrder = sectionCounters[secName]++;
+
+          const qPosMark = q.positiveMarks !== undefined && q.positiveMarks !== null && q.positiveMarks !== ''
+            ? Number(q.positiveMarks)
+            : (q.positiveMark !== undefined && q.positiveMark !== null && q.positiveMark !== '' ? Number(q.positiveMark) : secObj?.positiveMark);
+
+          const qNegMark = q.negativeMarks !== undefined && q.negativeMarks !== null && q.negativeMarks !== ''
+            ? Number(q.negativeMarks)
+            : (q.negativeMark !== undefined && q.negativeMark !== null && q.negativeMark !== '' ? Number(q.negativeMark) : secObj?.negativeMark);
+
           return {
             id: (q.id !== undefined && q.id !== null && q.id !== '')
               ? String(q.id)
@@ -678,6 +781,8 @@ export default function MobileTestScreen({
             questionType: 'mcq',
             orderIndex: qOrder,
             correctOptionIndex: q.correctIndex !== undefined ? q.correctIndex : q.correctOptionIndex || 0,
+            positiveMark: qPosMark,
+            negativeMark: qNegMark,
             content: (() => {
               let qTextEn = q.textEn || q.content?.en?.questionText || q.questionText || q.text || '';
               let qTextHi = q.textHi || q.content?.hi?.questionText || q.questionText || q.textHi || qTextEn || '';
@@ -732,58 +837,15 @@ export default function MobileTestScreen({
         // Save to device for next time
         saveQuestionsToCache(testId, res.questions);
         rawQuestionsRef.current = res.questions;
-        const { builtList, builtSecs, durationSeconds, catalogTest } = buildScreenFromApiQuestions(res.questions);
+        const { builtList, builtSecs, durationSeconds, catalogTest } = buildScreenFromApiQuestions(res.questions, res);
         await applyToScreen(builtList, builtSecs, durationSeconds, catalogTest);
       } else {
-        // ── Fallback static bank (mirrors useTestEngine seeds) ─────────────
-        // Find test config from catalog for duration/timing even if no custom Qs
-        let catalogTest: any = null;
-        if (examCatalog && examCatalog.length > 0) {
-          for (const cat of examCatalog) {
-            for (const sub of cat.subCategories || []) {
-              const found = (sub.tests || []).find((t: any) => t.id === testId);
-              if (found) { catalogTest = found; break; }
-            }
-            if (catalogTest) break;
-          }
+        AsyncStorage.removeItem(`ongoing_test_${testId}`).catch(() => {});
+        if (currentUser?.id) {
+          ApiClient.clearOngoingSession(currentUser.id, testId).catch(() => {});
         }
-        let durationSeconds = catalogTest?.durationMinutes
-          ? catalogTest.durationMinutes * 60
-          : testId.includes('rrb') ? 5400 : testId.includes('ctet') ? 9000 : 3600;
-        setTotalDuration(durationSeconds);
-        totalDurationRef.current = durationSeconds;
-
-        // Always read admin-configured marks first, then fall back to exam-type defaults
-        const isRRBFallback = testId.includes('rrb') || testId.includes('railway');
-        const fallbackPosMark = catalogTest?.positiveMarks !== undefined ? Number(catalogTest.positiveMarks) : (isRRBFallback ? 1 : 2);
-        const fallbackNegMark = catalogTest?.negativeMarks !== undefined ? Number(catalogTest.negativeMarks) : (isRRBFallback ? 0.33 : 0.5);
-
-        let list: MobileQuestion[] = [];
-        let secs: MobileSection[] = [];
-        if (testId.includes('ssc')) {
-          secs = [
-            { id: 'sec_quant',     name: 'Quantitative Aptitude',              orderIndex: 0, positiveMark: fallbackPosMark, negativeMark: fallbackNegMark },
-            { id: 'sec_reasoning', name: 'General Intelligence & Reasoning',   orderIndex: 1, positiveMark: fallbackPosMark, negativeMark: fallbackNegMark },
-            { id: 'sec_english',   name: 'English Comprehension',              orderIndex: 2, positiveMark: fallbackPosMark, negativeMark: fallbackNegMark },
-          ];
-          list = [
-            { id: 'q_q1', sectionId: 'sec_quant',     questionType: 'mcq', orderIndex: 0, correctOptionIndex: 1, content: { en: { questionText: 'If x + 1/x = 5, then find the value of x² + 1/x².', options: ['23', '25', '27', '21'] }, hi: { questionText: 'यदि x + 1/x = 5 है, तो x² + 1/x² का मान ज्ञात कीजिए।', options: ['23', '25', '27', '21'] } } },
-            { id: 'q_q2', sectionId: 'sec_quant',     questionType: 'mcq', orderIndex: 1, correctOptionIndex: 0, content: { en: { questionText: 'The ratio of present ages of A and B is 4:5. After 5 years, the ratio becomes 5:6. What is A’s present age?', options: ['20 years', '25 years', '30 years', '15 years'] }, hi: { questionText: 'A और B की वर्तमान आयु का अनुपात 4:5 है।', options: ['20 वर्ष', '25 वर्ष', '30 वर्ष', '15 वर्ष'] } } },
-            { id: 'q_r1', sectionId: 'sec_reasoning', questionType: 'mcq', orderIndex: 0, correctOptionIndex: 3, content: { en: { questionText: 'Identify the pattern and choose the next term: 3, 7, 15, 31, 63, ?', options: ['125', '126', '128', '127'] }, hi: { questionText: 'पैटर्न पहचानें और श्रृंखला में अगला पद चुनें: 3, 7, 15, 31, 63, ?', options: ['125', '126', '128', '127'] } } },
-            { id: 'q_e1', sectionId: 'sec_english',   questionType: 'mcq', orderIndex: 0, correctOptionIndex: 0, content: { en: { questionText: 'Select the antonym for the word: OBSTINATE', options: ['Flexible', 'Stubborn', 'Rigid', 'Dogmatic'] }, hi: { questionText: 'दिए गए शब्द का विलोम शब्द चुनें: OBSTINATE', options: ['Flexible', 'Stubborn', 'Rigid', 'Dogmatic'] } } },
-          ];
-        } else if (testId.includes('ctet')) {
-          const fallbackData = getCtetFallbackQuestions(testId, 'English', 'Hindi');
-          list = fallbackData.builtList;
-          secs = fallbackData.builtSecs;
-        } else {
-          secs = [{ id: 'sec_paper1', name: 'Aptitude & General Studies', orderIndex: 0, positiveMark: fallbackPosMark, negativeMark: fallbackNegMark }];
-          list = [
-            { id: 'q_gen1', sectionId: 'sec_paper1', questionType: 'mcq', orderIndex: 0, correctOptionIndex: 1, content: { en: { questionText: 'What is the unit of electric current?', options: ['Volt', 'Ampere', 'Ohm', 'Watt'] }, hi: { questionText: 'विद्युत धारा की इकाई क्या है?', options: ['वोल्ट', 'एम्पीयर', 'ओम', 'वाट'] } } },
-            { id: 'q_gen2', sectionId: 'sec_paper1', questionType: 'mcq', orderIndex: 1, correctOptionIndex: 1, content: { en: { questionText: 'Which planet is known as the Red Planet?', options: ['Earth', 'Mars', 'Jupiter', 'Saturn'] }, hi: { questionText: 'किस ग्रह को लाल ग्रह कहा जाता है?', options: ['पृथ्वी', 'मंगल', 'बृहस्पति', 'शनि'] } } },
-          ];
-        }
-        await applyToScreen(list, secs, durationSeconds, catalogTest);
+        const catalogTest = findTestInCatalog(testId);
+        await applyToScreen([], [], catalogTest?.durationMinutes ? catalogTest.durationMinutes * 60 : 3600, catalogTest);
       }
       setLoading(false);
     };
@@ -1389,6 +1451,7 @@ export default function MobileTestScreen({
     currSec = currentSectionIdx,
     currQ = currentQuestionIdx
   ) => {
+    if (!questionsRef.current || questionsRef.current.length === 0) return;
     try {
       const formattedResponses: Record<string, any> = {};
       Object.entries(currentResps).forEach(([qId, val]) => {
@@ -1419,6 +1482,7 @@ export default function MobileTestScreen({
 
   // Sync state with database
   const saveOngoingSessionState = async () => {
+    if (!questions || questions.length === 0) return;
     const formattedResponses: Record<string, any> = {};
     Object.entries(responses).forEach(([qId, val]) => {
       formattedResponses[qId] = {
@@ -1525,8 +1589,12 @@ export default function MobileTestScreen({
         const resp = liveResponses[q.id];
         const selected = resp ? (resp.selectedOptionIndex !== null ? resp.selectedOptionIndex : resp.tempOptionIndex) : null;
         const qSection = liveSections.find((s) => s.id === q.sectionId);
-        const positiveMark = qSection ? qSection.positiveMark : 2;
-        const negativeMark = qSection ? qSection.negativeMark : 0.5;
+        const positiveMark = q.positiveMark !== undefined && q.positiveMark !== null
+          ? Number(q.positiveMark)
+          : (qSection ? qSection.positiveMark : 2);
+        const negativeMark = q.negativeMark !== undefined && q.negativeMark !== null
+          ? Number(q.negativeMark)
+          : (qSection ? qSection.negativeMark : 0.5);
 
         totalMaxScore += positiveMark;
 
@@ -1720,6 +1788,98 @@ export default function MobileTestScreen({
     return (
       <View style={[styles.loadingContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
         <SpinningDotsLoader size={56} isDark={isDark} message={loadingText} />
+      </View>
+    );
+  }
+
+  if (!loading && questions.length === 0) {
+    return (
+      <View style={[styles.instContainer, isDark && { backgroundColor: ThemeColors.dark.bg }, { justifyContent: 'center', alignItems: 'center', padding: 24 }]}>
+        <StatusBar 
+          barStyle={isDark ? 'light-content' : 'dark-content'} 
+          backgroundColor={isDark ? ThemeColors.dark.headerBg : '#0F2942'} 
+        />
+        <View style={{
+          width: '100%',
+          maxWidth: 340,
+          backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+          borderColor: isDark ? '#334155' : '#E2E8F0',
+          borderWidth: 1,
+          borderRadius: 20,
+          padding: 24,
+          alignItems: 'center',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.15,
+          shadowRadius: 16,
+          elevation: 8,
+        }}>
+          <View style={{
+            width: 64,
+            height: 64,
+            borderRadius: 20,
+            backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : '#FEF3C7',
+            borderColor: '#F59E0B',
+            borderWidth: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 16,
+          }}>
+            <Clock size={32} color="#F59E0B" />
+          </View>
+          <Text style={{ fontSize: 20, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0F172A', textAlign: 'center', marginBottom: 8 }}>
+            Test Uploaded Soon
+          </Text>
+          <Text style={{ fontSize: 13, color: isDark ? '#94A3B8' : '#64748B', textAlign: 'center', lineHeight: 20, marginBottom: 16 }}>
+            Questions for <Text style={{ fontWeight: '700', color: '#3B82F6' }}>{mockTestTitle || 'this mock test'}</Text> are currently being curated and will be uploaded soon. Please check back later!
+          </Text>
+          <View style={{
+            backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
+            borderColor: isDark ? '#334155' : '#E2E8F0',
+            borderWidth: 1,
+            borderRadius: 12,
+            paddingVertical: 10,
+            paddingHorizontal: 14,
+            width: '100%',
+            marginBottom: 20,
+            alignItems: 'center',
+          }}>
+            <Text style={{ fontSize: 12, fontWeight: '600', color: isDark ? '#FBBF24' : '#D97706', textAlign: 'center' }}>
+              ⚡ यह टेस्ट जल्द ही ऐप पर उपलब्ध होगा।
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={{
+              width: '100%',
+              backgroundColor: isRequested ? 'rgba(16, 185, 129, 0.15)' : '#F59E0B',
+              borderColor: isRequested ? '#10B981' : '#D97706',
+              borderWidth: 1,
+              paddingVertical: 14,
+              borderRadius: 12,
+              alignItems: 'center',
+              marginBottom: 12,
+            }}
+            onPress={handleRequestUpload}
+            disabled={requestingUpload || isRequested}
+          >
+            <Text style={{ fontSize: 14, fontWeight: '800', color: isRequested ? '#10B981' : '#0F172A' }}>
+              {isRequested ? '✓ Upload Requested' : requestingUpload ? 'Submitting Request...' : '🚀 Request to Upload Test'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              width: '100%',
+              backgroundColor: '#2563EB',
+              paddingVertical: 14,
+              borderRadius: 12,
+              alignItems: 'center',
+            }}
+            onPress={onBack}
+          >
+            <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>Return to Test Series</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -2098,9 +2258,11 @@ export default function MobileTestScreen({
     let maxMarks = 0;
     questions.forEach(q => {
       const qSec = sections.find(s => s.id === q.sectionId);
-      maxMarks += qSec ? qSec.positiveMark : 2;
+      maxMarks += q.positiveMark !== undefined && q.positiveMark !== null ? Number(q.positiveMark) : (qSec ? qSec.positiveMark : 2);
     });
     if (maxMarks === 0) maxMarks = 200;
+
+    const isRpscRas = (testId || '').toLowerCase().includes('rpsc') || (examName || '').toLowerCase().includes('rpsc') || (examName || '').toLowerCase().includes('ras');
 
     return (
       <View style={[styles.instContainer, isDark && { backgroundColor: ThemeColors.dark.bg }]}>
@@ -2112,9 +2274,14 @@ export default function MobileTestScreen({
         <View style={[
           styles.instHeader, 
           isDark && { backgroundColor: ThemeColors.dark.headerBg },
-          { height: vs(56) + insets.top, paddingTop: insets.top }
+          { height: vs(56) + insets.top, paddingTop: insets.top, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
         ]}>
-          <Text style={styles.instHeaderTitle}>Instructions Panel</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 10 }}>
+            <ShieldCheck size={18} color="#2563EB" style={{ marginRight: 6 }} />
+            <Text style={[styles.instHeaderTitle, { flex: 1 }]} numberOfLines={1}>
+              {examName || 'Mock Exam Instructions Panel'}
+            </Text>
+          </View>
           <TouchableOpacity 
             style={[styles.instLangBtn, isDark && { backgroundColor: '#16223F', borderColor: '#1F2E54' }]} 
             onPress={() => setLang(lang === 'en' ? 'hi' : 'en')}
@@ -2130,7 +2297,7 @@ export default function MobileTestScreen({
         <ScrollView contentContainerStyle={styles.instScrollContent}>
           <Text style={[styles.instExamName, isDark && { color: '#FFF' }]}>{examName}</Text>
           
-          {/* Metadata Row */}
+          {/* Metadata Row Grid (Duration, Qs, Max Marks, Total Sections) */}
           <View style={[styles.instMetaRow, isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }]}>
             <View style={styles.instMetaItem}>
               <Text style={[styles.instMetaValue, isDark && { color: '#60A5FA' }]}>{Math.round(totalDuration / 60)} Mins</Text>
@@ -2146,6 +2313,114 @@ export default function MobileTestScreen({
               <Text style={[styles.instMetaValue, isDark && { color: '#60A5FA' }]}>{maxMarks} Marks</Text>
               <Text style={[styles.instMetaLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Max Marks</Text>
             </View>
+            <View style={[styles.instMetaDivider, isDark && { backgroundColor: ThemeColors.dark.border }]} />
+            <View style={styles.instMetaItem}>
+              <Text style={[styles.instMetaValue, { color: '#10B981' }]}>{sections.length} Secs</Text>
+              <Text style={[styles.instMetaLabel, isDark && { color: ThemeColors.dark.textMuted }]}>Sections</Text>
+            </View>
+          </View>
+
+          {/* Section Breakdown Table */}
+          {sections.length > 0 && (
+            <View style={[
+              styles.instTextBox,
+              { padding: 12, marginBottom: 14 },
+              isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }
+            ]}>
+              <Text style={[{ fontSize: 12, fontWeight: '800', marginBottom: 10, textTransform: 'uppercase' }, isDark ? { color: '#E2E8F0' } : { color: '#334155' }]}>
+                {lang === 'hi' ? 'परीक्षा संरचना एवं खंड विवरण' : 'Exam Structure & Section Breakdown'}
+              </Text>
+              <View style={{ borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: isDark ? '#334155' : '#E2E8F0' }}>
+                <View style={{ flexDirection: 'row', backgroundColor: isDark ? '#1E293B' : '#F1F5F9', paddingVertical: 8, paddingHorizontal: 10 }}>
+                  <Text style={{ flex: 2, fontSize: 11, fontWeight: '800', color: isDark ? '#CBD5E1' : '#475569' }}>Section</Text>
+                  <Text style={{ flex: 1, fontSize: 11, fontWeight: '800', textAlign: 'center', color: isDark ? '#CBD5E1' : '#475569' }}>Qs</Text>
+                  <Text style={{ flex: 1, fontSize: 11, fontWeight: '800', textAlign: 'center', color: '#10B981' }}>+Mark</Text>
+                  <Text style={{ flex: 1, fontSize: 11, fontWeight: '800', textAlign: 'center', color: '#EF4444' }}>-Mark</Text>
+                  <Text style={{ flex: 1.2, fontSize: 11, fontWeight: '800', textAlign: 'right', color: '#3B82F6' }}>Total</Text>
+                </View>
+                {sections.map((sec, idx) => {
+                  const secQs = questions.filter(q => q.sectionId === sec.id).length;
+                  const secMarks = secQs * (sec.positiveMark || 2);
+                  return (
+                    <View
+                      key={sec.id || idx}
+                      style={{
+                        flexDirection: 'row',
+                        paddingVertical: 8,
+                        paddingHorizontal: 10,
+                        borderTopWidth: idx > 0 ? 1 : 0,
+                        borderTopColor: isDark ? '#334155' : '#F1F5F9',
+                        backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+                      }}
+                    >
+                      <Text style={{ flex: 2, fontSize: 11, fontWeight: '700', color: isDark ? '#E2E8F0' : '#1E293B' }}>{sec.name}</Text>
+                      <Text style={{ flex: 1, fontSize: 11, textAlign: 'center', color: isDark ? '#94A3B8' : '#64748B' }}>{secQs}</Text>
+                      <Text style={{ flex: 1, fontSize: 11, textAlign: 'center', fontWeight: '700', color: '#10B981' }}>+{sec.positiveMark}</Text>
+                      <Text style={{ flex: 1, fontSize: 11, textAlign: 'center', fontWeight: '700', color: '#EF4444' }}>-{sec.negativeMark}</Text>
+                      <Text style={{ flex: 1.2, fontSize: 11, textAlign: 'right', fontWeight: '800', color: '#3B82F6' }}>{secMarks}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {/* Question Palette Status Legend */}
+          <View style={[
+            styles.instTextBox,
+            { padding: 12, marginBottom: 14 },
+            isDark && { backgroundColor: ThemeColors.dark.card, borderColor: ThemeColors.dark.border }
+          ]}>
+            <Text style={[{ fontSize: 12, fontWeight: '800', marginBottom: 10, textTransform: 'uppercase' }, isDark ? { color: '#E2E8F0' } : { color: '#334155' }]}>
+              {lang === 'hi' ? 'प्रश्न पैलेट स्थिति गाइड' : 'Question Palette Status Legend'}
+            </Text>
+            <View style={{ gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 24, height: 24, borderRadius: 4, backgroundColor: '#CBD5E1', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#475569' }}>1</Text>
+                </View>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: isDark ? '#94A3B8' : '#475569' }}>
+                  {lang === 'hi' ? 'देखा नहीं गया (Not Visited)' : 'Not Visited'}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 24, height: 24, borderRadius: 4, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#FFF' }}>2</Text>
+                </View>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: isDark ? '#94A3B8' : '#475569' }}>
+                  {lang === 'hi' ? 'उत्तर नहीं दिया गया (Not Answered)' : 'Not Answered'}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 24, height: 24, borderRadius: 4, backgroundColor: '#10B981', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#FFF' }}>3</Text>
+                </View>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: isDark ? '#94A3B8' : '#475569' }}>
+                  {lang === 'hi' ? 'उत्तर दिया गया (Answered)' : 'Answered'}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 24, height: 24, borderRadius: 4, backgroundColor: '#8B5CF6', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#FFF' }}>4</Text>
+                </View>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: isDark ? '#94A3B8' : '#475569' }}>
+                  {lang === 'hi' ? 'समीक्षा के लिए चिह्नित (Marked for Review)' : 'Marked for Review'}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 24, height: 24, borderRadius: 4, backgroundColor: '#8B5CF6', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#FFF' }}>5</Text>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#34D399', position: 'absolute', top: 2, right: 2 }} />
+                </View>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: isDark ? '#94A3B8' : '#475569' }}>
+                  {lang === 'hi' ? 'उत्तर दिया एवं समीक्षा के लिए चिह्नित' : 'Answered & Marked for Review'}
+                </Text>
+              </View>
+            </View>
           </View>
 
           {/* Instructions Box */}
@@ -2156,10 +2431,20 @@ export default function MobileTestScreen({
             <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.gen1}</Text>
             <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.gen2}</Text>
             <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.gen3}</Text>
+            <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.gen4}</Text>
 
             <Text style={[styles.instTextHeading, { marginTop: 14 }, isDark && { color: ThemeColors.dark.text }]}>{t.answering}</Text>
             <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.ans1}</Text>
             <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.ans2}</Text>
+            <Text style={[styles.instTextBody, isDark && { color: ThemeColors.dark.textMuted }]}>{t.ans3}</Text>
+
+            {isRpscRas && (
+              <View style={{ marginTop: 14, paddingTop: 10, borderTopWidth: 1, borderTopColor: isDark ? '#334155' : '#F1F5F9' }}>
+                <Text style={[{ fontWeight: '800', color: '#EF4444', marginBottom: 4 }]}>{t.rpscTitle}</Text>
+                <Text style={[{ fontSize: 11, color: isDark ? '#FCA5A5' : '#DC2626', marginBottom: 4 }]}>{t.rpsc1}</Text>
+                <Text style={[{ fontSize: 11, color: isDark ? '#FCA5A5' : '#DC2626' }]}>{t.rpsc2}</Text>
+              </View>
+            )}
           </View>
 
           {/* Default Language Selector */}
@@ -2386,8 +2671,11 @@ export default function MobileTestScreen({
             return <View key={q.id} style={{ width: SCREEN_WIDTH, flex: 1 }} />;
           }
 
-          const posMarkText = activeSection?.positiveMark ? `+${activeSection.positiveMark}.0` : '+2.0';
-          const negMarkText = activeSection?.negativeMark ? `-${activeSection.negativeMark}` : '-0.5';
+          const posVal = q.positiveMark !== undefined && q.positiveMark !== null ? q.positiveMark : (activeSection?.positiveMark ?? 2);
+          const negVal = q.negativeMark !== undefined && q.negativeMark !== null ? q.negativeMark : (activeSection?.negativeMark ?? 0.5);
+
+          const posMarkText = `+${posVal}`;
+          const negMarkText = `-${negVal}`;
 
           return (
             <QuestionCardItem

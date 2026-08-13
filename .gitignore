@@ -41,3 +41,7 @@ Thumbs.db
 # Android build outputs (too large for GitHub)
 *.apk
 *.aab
+
+# Scratch directory
+scratch/
+

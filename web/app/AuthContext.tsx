@@ -49,6 +49,7 @@ export interface TestCategory {
   description?: string;
   countText?: string;
   subCategories: TestSubCategory[];
+  tests?: MockTestItem[];
 }
 
 export interface MockTestRecord {
@@ -62,6 +63,12 @@ export interface MockTestRecord {
   status: 'COMPLETED' | 'AUTO_SUBMITTED' | 'ONGOING';
   violations: number;
   date: string;
+  startedAt?: string;
+  completedAt?: string | null;
+  updatedAt?: string;
+  createdAt?: string;
+  positiveMarks?: number | null;
+  negativeMarks?: number | null;
   responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; }>;
   timeRemaining?: number;
   currentSectionIndex?: number;
@@ -794,28 +801,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           subscriptionTier: user.subscriptionTier,
           coins: user.coins
         };
+        document.cookie = "tb_user_id=" + user.id + ";path=/;max-age=31536000";
         document.cookie = "tb_user_profile=" + encodeURIComponent(JSON.stringify(simplifiedUser)) + ";path=/;max-age=31536000";
       } catch {}
     } else {
       try {
         localStorage.removeItem(CACHE_KEY_USER);
+        document.cookie = "tb_user_id=;path=/;max-age=0";
         document.cookie = "tb_user_profile=;path=/;max-age=0";
       } catch {}
     }
   };
-  // Pre-populate currentUser from server-side cookie prop (first priority) or localStorage
+  // Pre-populate currentUser from localStorage (first priority for full testSessions) or server cookie
   const [currentUser, setCurrentUser] = useState<MockUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY_USER);
+        if (raw) {
+          const parsed = JSON.parse(raw) as MockUser;
+          if (parsed && parsed.id) return parsed;
+        }
+      } catch {}
+    }
     if (initialUserProfile) {
       try {
         return JSON.parse(decodeURIComponent(initialUserProfile)) as MockUser;
       } catch (e) {}
     }
-    if (typeof window === 'undefined') return null;
-    // No TTL on user cache — we always re-validate in background, but show cached state immediately
-    try {
-      const raw = localStorage.getItem(CACHE_KEY_USER);
-      return raw ? (JSON.parse(raw) as MockUser) : null;
-    } catch { return null; }
+    return null;
   });
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   // Pre-populate from localStorage so the UI renders immediately from cache
@@ -849,7 +862,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         if (parts.length === 2) return parts.pop()?.split(';').shift();
         return null;
       };
-      const savedUserId = getCookie('tb_user_id');
+      let savedUserId = getCookie('tb_user_id');
+      if (!savedUserId && typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem(CACHE_KEY_USER);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.id) savedUserId = parsed.id;
+          }
+        } catch {}
+      }
+      if (!savedUserId && currentUser?.id) {
+        savedUserId = currentUser.id;
+      }
 
       // 🚀 Fire bootstrap + user fetch IN PARALLEL — eliminates the serial waterfall
       // Include userId in bootstrap so presence tracking works on every page load
@@ -903,6 +928,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }
   };
 
+  /**
+   * Refreshes ONLY the current user's testSessions from DB.
+   * Called on tab-focus so app attempts (mobile) instantly appear on web, and vice versa.
+   */
+  const refreshUserSessions = async (userId?: string) => {
+    const uid = userId || currentUser?.id;
+    if (!uid) return;
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get-user-details', data: { userId: uid } })
+      });
+      const data = await res.json();
+      if (data.success && data.user && !data.user.isBlocked) {
+        setCurrentUser(data.user);
+        syncUserCookieAndCache(data.user);
+      }
+    } catch {
+      // Silent fail — stale data still shown from localStorage
+    }
+  };
+
   const refreshCatalog = async () => {
     try {
       const res = await fetch('/api/db', {
@@ -943,10 +991,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }
   };
 
-  // Load initial data from Supabase
+  // Load initial data from DB and set up cross-platform session sync
   useEffect(() => {
     fetchUsersList();
 
+    // Re-fetch fresh user sessions from DB when user returns to the tab.
+    // This ensures test attempts from other platforms (mobile app) immediately
+    // appear on the website without requiring a full page reload.
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const getCookieInner = (name: string) => {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop()?.split(';').shift();
+          return null;
+        };
+        const uid = getCookieInner('tb_user_id');
+        if (uid) refreshUserSessions(uid);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Load theme and language from cookies on mount
+  useEffect(() => {
     const getCookie = (name: string) => {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
@@ -1826,6 +1901,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       status: 'COMPLETED',
       violations,
       date: new Date().toISOString().split('T')[0],
+      startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       responses
     };
 
@@ -1910,6 +1989,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       status: 'ONGOING',
       violations,
       date: new Date().toISOString().split('T')[0],
+      startedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       responses,
       timeRemaining,
       currentSectionIndex,

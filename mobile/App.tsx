@@ -25,7 +25,7 @@ import AnalysisScreen from './screens/AnalysisScreen';
 import SupportChatScreen from './screens/SupportChatScreen';
 import { Trophy } from 'lucide-react-native';
 import { ThemeColors } from './theme';
-import { requestNotificationPermissions, triggerLocalNotification, addNotificationResponseListener } from './notifications';
+import { requestNotificationPermissions, triggerLocalNotification, addNotificationResponseListener, checkAndAlertSavedJobsDeadlines } from './notifications';
 import { registerBackgroundFetchAsync } from './backgroundTask';
 
 type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis' | 'support_chat';
@@ -357,11 +357,11 @@ export default function App() {
     return () => unsubscribe();
   }, [currentUser]);
 
-  // Trigger a fresh catalog sync whenever app returns to foreground (handles admin changes immediately)
+  // Trigger a fresh catalog sync + user session refresh whenever app returns to foreground
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async (nextAppState) => {
       if (nextAppState === 'active') {
-        console.log('[AppState] App came to foreground — triggering fresh catalog sync...');
+        console.log('[AppState] App came to foreground — triggering fresh catalog + session sync...');
         try {
           const syncRes = await ApiClient.catalogSync(null);
           if (syncRes.success) {
@@ -376,12 +376,32 @@ export default function App() {
             await setLastSyncTimestamp(syncRes.syncedAt);
           }
         } catch (err) {
-          console.warn('[AppState] Foreground sync failed:', err);
+          console.warn('[AppState] Foreground catalog sync failed:', err);
+        }
+
+        // Also re-fetch user sessions from DB so web attempts appear here immediately
+        if (currentUser?.email) {
+          try {
+            const savedPassword = await SecureStore.getItemAsync('tb_user_password');
+            if (savedPassword) {
+              const existingSession = currentUser?.currentSessionId || '';
+              const res = existingSession
+                ? await ApiClient.loginRefresh(currentUser.email, savedPassword, existingSession)
+                : await ApiClient.login(currentUser.email, savedPassword);
+              if (res.success && res.user) {
+                setCurrentUser(res.user);
+                ApiClient.setApiSession(res.user.id, res.user.currentSessionId);
+                await saveUserToCache(res.user);
+              }
+            }
+          } catch (err) {
+            console.warn('[AppState] Foreground session sync failed:', err);
+          }
         }
       }
     });
     return () => subscription.remove();
-  }, []);
+  }, [currentUser?.email, currentUser?.currentSessionId]);
 
   // System physical BackButton navigation handler
   useEffect(() => {
@@ -638,6 +658,9 @@ export default function App() {
       ApiClient.setApiSession(res.user.id, res.user.currentSessionId);
       prefetchCompletedTests(res.user);
       await saveUserToCache(res.user);
+      if (res.user.trackedJobs) {
+        checkAndAlertSavedJobsDeadlines(res.user.trackedJobs);
+      }
     }
     
     // Refresh notices list and exam catalog using catalogSync (always fresh, bypasses server in-memory cache)
@@ -857,9 +880,11 @@ export default function App() {
             currentUser={currentUser}
             testId={activeTestId}
             examCatalog={examCatalog}
-            onBack={async () => {
-              await refreshUserData(currentUser.id);
+            onBack={() => {
               setViewMode(previousViewMode);
+              if (currentUser?.id) {
+                refreshUserData(currentUser.id).catch(() => {});
+              }
             }}
             onComplete={async (submittedTestId?: string) => {
               // Keep track of the current sessions before login refresh

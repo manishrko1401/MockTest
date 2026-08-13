@@ -68,6 +68,7 @@ import { getCachedQuestions, saveQuestionsToCache } from '../cache';
 import { ThemeColors } from '../theme';
 import { HtmlText } from '../HtmlText';
 import { getLocalizedName } from '../utils/localization';
+import NoticeDetailScreen from './NoticeDetailScreen';
 
 interface DashboardScreenProps {
   currentUser: any;
@@ -541,39 +542,6 @@ export default function DashboardScreen({
 
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
-  const [localOngoingSessions, setLocalOngoingSessions] = useState<any[]>([]);
-
-  // Load locally-cached ongoing/paused test sessions so Resume Test button appears immediately
-  useEffect(() => {
-    const loadLocalOngoing = async () => {
-      try {
-        const allKeys = await AsyncStorage.getAllKeys();
-        const ongoingKeys = allKeys.filter(k => k.startsWith('ongoing_test_'));
-        const list: any[] = [];
-        for (const key of ongoingKeys) {
-          const raw = await AsyncStorage.getItem(key);
-          if (raw) {
-            try {
-              const parsed = JSON.parse(raw);
-              if (parsed?.testId && (parsed?.status === 'ONGOING' || parsed?.status === 'PAUSED')) {
-                list.push({
-                  ...parsed,
-                  id: `local_${parsed.testId}`,
-                  testId: parsed.testId,
-                  status: 'ONGOING',
-                  startedAt: parsed.updatedAt || parsed.startedAt || new Date().toISOString(),
-                });
-              }
-            } catch {}
-          }
-        }
-        setLocalOngoingSessions(list);
-      } catch (err) {
-        console.warn('[Dashboard] Failed to load local ongoing sessions:', err);
-      }
-    };
-    loadLocalOngoing();
-  }, [activeTab, currentUser?.id, currentUser?.testSessions]);
 
   const catalogTestsMap = useMemo(() => {
     const map = new Map<string, { title: string; categoryName: string; maxMarks: number; questionsCount: number; durationMinutes: number }>();
@@ -754,25 +722,23 @@ export default function DashboardScreen({
   const [announcementIndex, setAnnouncementIndex] = useState(0);
   const [userHasSwiped, setUserHasSwiped] = useState(false);
 
+  // Selected Notice for NoticeDetailScreen navigation
+  const [selectedNotice, setSelectedNotice] = useState<any | null>(null);
+
+  // Profile tracked jobs filter state (all, applied, saved)
+  const [profileJobFilter, setProfileJobFilter] = useState<'all' | 'applied' | 'saved'>('all');
+
   // Live updates states (notices, results, answer keys, admit cards - last 5 days)
   const [recentNoticeIndex, setRecentNoticeIndex] = useState(0);
 
   const recentNotices = React.useMemo(() => {
-    return notices.filter(n => {
-      if (!['notice', 'result', 'answer_key', 'admit_card'].includes(n.category)) return false;
-      if (!n.publishDate) return false;
-      try {
-        const now = new Date();
-        const pubDate = new Date(n.publishDate);
-        pubDate.setHours(0, 0, 0, 0);
-        now.setHours(0, 0, 0, 0);
-        const diffTime = now.getTime() - pubDate.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays >= 0 && diffDays <= 5;
-      } catch (e) {
-        return false;
-      }
-    });
+    return notices
+      .filter(n => ['notice', 'result', 'answer_key', 'admit_card'].includes(n.category))
+      .sort((a, b) => {
+        const dateA = a.publishDate || a.date || '';
+        const dateB = b.publishDate || b.date || '';
+        return dateB.localeCompare(dateA);
+      });
   }, [notices]);
 
   useEffect(() => {
@@ -840,6 +806,8 @@ export default function DashboardScreen({
   useEffect(() => {
     if (activeTab === 'notices') {
       markAllNoticesAsSeen();
+    } else if (activeTab === 'profile' && currentUser?.id && onRefreshUser) {
+      onRefreshUser(currentUser.id);
     }
   }, [activeTab, notices]);
 
@@ -1255,16 +1223,9 @@ export default function DashboardScreen({
                   </View>
                   <TouchableOpacity 
                     style={[styles.liveUpdatesBtn, { backgroundColor: badgeColor }]}
-                    onPress={() => {
-                      if (activeNotice.url) {
-                        Linking.openURL(activeNotice.url);
-                      } else {
-                        // Navigate to notice screen
-                        setActiveTab('notices');
-                      }
-                    }}
+                    onPress={() => setSelectedNotice(activeNotice)}
                   >
-                    <Text style={styles.liveUpdatesBtnText}>View Info</Text>
+                    <Text style={styles.liveUpdatesBtnText}>View Details</Text>
                     <ExternalLink size={11} color="#FFFFFF" style={{ marginLeft: 3 }} />
                   </TouchableOpacity>
                 </View>
@@ -1277,23 +1238,20 @@ export default function DashboardScreen({
         {(() => {
           const rawSessions = currentUser?.testSessions || [];
           
-          // Map testIds to combine server sessions and locally cached ongoing sessions
+          // Map testIds from server sessions — keep the most recent session per testId
           const sessionsMap = new Map<string, any>();
 
-          // 1. Add server sessions
           (Array.isArray(rawSessions) ? rawSessions : []).forEach((s: any) => {
             if (s && s.testId) {
-              sessionsMap.set(s.testId, s);
-            }
-          });
-
-          // 2. Add or update with local ongoing sessions
-          localOngoingSessions.forEach((ls: any) => {
-            if (ls && ls.testId) {
-              const existing = sessionsMap.get(ls.testId);
-              // Only overwrite or add if not already marked as completed recently
-              if (!existing || existing.status === 'ONGOING' || existing.status === 'PAUSED') {
-                sessionsMap.set(ls.testId, { ...existing, ...ls });
+              const existing = sessionsMap.get(s.testId);
+              if (!existing) {
+                sessionsMap.set(s.testId, s);
+              } else {
+                const existingTime = new Date(existing.updatedAt || existing.completedAt || existing.startedAt || existing.createdAt || existing.savedAt || existing.date || 0).getTime();
+                const sTime = new Date(s.updatedAt || s.completedAt || s.startedAt || s.createdAt || s.savedAt || s.date || 0).getTime();
+                if (sTime > existingTime) {
+                  sessionsMap.set(s.testId, s);
+                }
               }
             }
           });
@@ -1313,8 +1271,8 @@ export default function DashboardScreen({
               if (isOngoingA && !isOngoingB) return -1;
               if (!isOngoingA && isOngoingB) return 1;
 
-              const timeA = new Date(a.updatedAt || a.completedAt || a.startedAt || a.createdAt || 0).getTime();
-              const timeB = new Date(b.updatedAt || b.completedAt || b.startedAt || b.createdAt || 0).getTime();
+              const timeA = new Date(a.updatedAt || a.completedAt || a.startedAt || a.createdAt || a.savedAt || a.date || 0).getTime();
+              const timeB = new Date(b.updatedAt || b.completedAt || b.startedAt || b.createdAt || b.savedAt || b.date || 0).getTime();
               return timeB - timeA;
             })
             .slice(0, 5);
@@ -2291,9 +2249,13 @@ export default function DashboardScreen({
       }
     })();
 
+    const targetUrl = notice.rawUrl || notice.url;
+
     return (
-      <View
+      <TouchableOpacity
         key={notice.id}
+        activeOpacity={0.85}
+        onPress={() => setSelectedNotice(notice)}
         style={[
           styles.noticeCard,
           {
@@ -2326,16 +2288,16 @@ export default function DashboardScreen({
         {notice.lastDate && (
           <Text style={[styles.noticeSubText, { color: '#EF4444', fontWeight: 'bold' }]}>Last Date: {notice.lastDate}</Text>
         )}
-        {notice.url && (
-          <TouchableOpacity
-            style={[styles.noticeLinkBtn, { borderColor: catColor, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF' }]}
-            onPress={() => Linking.openURL(notice.url)}
-          >
-            <Text style={[styles.noticeLinkText, { color: catColor }]}>Official Link</Text>
-            <ExternalLink size={12} color={catColor} />
-          </TouchableOpacity>
-        )}
-      </View>
+        <TouchableOpacity
+          style={[styles.noticeLinkBtn, { borderColor: catColor, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF' }]}
+          onPress={() => setSelectedNotice(notice)}
+        >
+          <Text style={[styles.noticeLinkText, { color: catColor }]}>
+            {language === 'hi' ? 'विवरण देखें' : 'View Details'}
+          </Text>
+          <ExternalLink size={12} color={catColor} />
+        </TouchableOpacity>
+      </TouchableOpacity>
     );
   };
 
@@ -2419,12 +2381,20 @@ export default function DashboardScreen({
           style={{ flex: 1 }}
         >
           {NOTICE_TABS.map((tab) => {
+            const query = noticeSearchQuery.trim().toLowerCase();
             const tabNotices = notices
               .filter(n => n.category === tab)
               .filter(n =>
-                activeNoticeTab !== tab || noticeSearchQuery.trim() === '' ||
-                (n.title || '').toLowerCase().includes(noticeSearchQuery.toLowerCase())
-              );
+                activeNoticeTab !== tab || !query ||
+                (n.title || '').toLowerCase().includes(query) ||
+                (n.titleHi || '').toLowerCase().includes(query) ||
+                (n.type || '').toLowerCase().includes(query)
+              )
+              .sort((a, b) => {
+                const dateA = a.publishDate || a.date || '';
+                const dateB = b.publishDate || b.date || '';
+                return dateB.localeCompare(dateA);
+              });
 
             return (
               <View key={tab} style={{ width: pageWidth, flex: 1 }}>
@@ -2973,6 +2943,187 @@ export default function DashboardScreen({
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* MY TRACKED JOBS SECTION (Saved & Applied) */}
+        {(() => {
+          const trackedList: any[] = currentUser?.trackedJobs || [];
+          const appliedCount = trackedList.filter((j: any) => j.isApplied).length;
+          const savedCount = trackedList.filter((j: any) => j.isSaved).length;
+
+          const filteredJobs = trackedList.filter((j: any) => {
+            if (profileJobFilter === 'applied') return j.isApplied;
+            if (profileJobFilter === 'saved') return j.isSaved;
+            return true;
+          });
+
+          return (
+            <View style={[
+              styles.formCard,
+              isDark ? { backgroundColor: '#1E293B', borderColor: '#334155' } : { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
+              { borderLeftWidth: 4, borderLeftColor: '#10B981', padding: 16 }
+            ]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Bookmark size={18} color="#10B981" />
+                  <Text style={[styles.formCardTitle, isDark && { color: ThemeColors.dark.text }]}>
+                    {language === 'hi' ? '💼 मेरे ट्रैक किए गए जॉब्स' : '💼 My Tracked Jobs'}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#94A3B8' : '#64748B' }}>
+                  {trackedList.length} {language === 'hi' ? 'जॉब्स' : 'Jobs'}
+                </Text>
+              </View>
+
+              {/* Filter Tabs */}
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 14 }}>
+                <TouchableOpacity
+                  onPress={() => setProfileJobFilter('all')}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 10,
+                    backgroundColor: profileJobFilter === 'all' ? '#2563EB' : (isDark ? '#0F172A' : '#F1F5F9'),
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: profileJobFilter === 'all' ? '#FFF' : (isDark ? '#94A3B8' : '#475569') }}>
+                    {language === 'hi' ? 'सभी' : 'All'} ({trackedList.length})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setProfileJobFilter('applied')}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 10,
+                    backgroundColor: profileJobFilter === 'applied' ? '#10B981' : (isDark ? '#0F172A' : '#ECFDF5'),
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: profileJobFilter === 'applied' ? '#FFF' : '#059669' }}>
+                    {language === 'hi' ? 'आवेदन किया गया' : 'Applied'} ({appliedCount})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setProfileJobFilter('saved')}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 10,
+                    backgroundColor: profileJobFilter === 'saved' ? '#3B82F6' : (isDark ? '#0F172A' : '#EFF6FF'),
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: profileJobFilter === 'saved' ? '#FFF' : '#2563EB' }}>
+                    {language === 'hi' ? 'सेव किया गया' : 'Saved'} ({savedCount})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Jobs Cards List */}
+              {filteredJobs.length > 0 ? (
+                <View style={{ gap: 10 }}>
+                  {filteredJobs.map((job: any) => {
+                    const matchingNotice = notices.find(n => n.id === job.noticeId);
+                    return (
+                      <View
+                        key={job.noticeId}
+                        style={{
+                          backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
+                          borderRadius: 12,
+                          padding: 12,
+                          borderWidth: 1,
+                          borderColor: isDark ? '#334155' : '#E2E8F0',
+                          gap: 8,
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
+                            {job.isApplied && (
+                              <View style={{ backgroundColor: '#ECFDF5', borderColor: '#10B981', borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                <Text style={{ color: '#059669', fontSize: 9, fontWeight: '900' }}>APPLIED</Text>
+                              </View>
+                            )}
+                            {job.isSaved && (
+                              <View style={{ backgroundColor: '#EFF6FF', borderColor: '#3B82F6', borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                <Text style={{ color: '#2563EB', fontSize: 9, fontWeight: '900' }}>SAVED</Text>
+                              </View>
+                            )}
+                            {job.appliedDate ? (
+                              <Text style={{ fontSize: 10, color: isDark ? '#94A3B8' : '#64748B', fontWeight: '700' }}>
+                                📅 {job.appliedDate}
+                              </Text>
+                            ) : null}
+                          </View>
+                        </View>
+
+                        <Text style={{ fontSize: 13, fontWeight: '900', color: isDark ? '#FFF' : '#1E293B', lineHeight: 18 }}>
+                          {job.title}
+                        </Text>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                          <TouchableOpacity
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 4,
+                              backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                              borderColor: '#3B82F6',
+                              borderWidth: 1,
+                              paddingHorizontal: 10,
+                              paddingVertical: 5,
+                              borderRadius: 8,
+                            }}
+                            onPress={() => {
+                              if (matchingNotice) {
+                                setSelectedNotice(matchingNotice);
+                              } else {
+                                setSelectedNotice({
+                                  id: job.noticeId,
+                                  title: job.title,
+                                  category: job.category,
+                                  date: job.date,
+                                  lastDate: job.lastDate,
+                                });
+                              }
+                            }}
+                          >
+                            <Text style={{ fontSize: 11, fontWeight: '800', color: '#3B82F6' }}>
+                              {language === 'hi' ? 'विवरण देखें' : 'View Info'}
+                            </Text>
+                            <ExternalLink size={11} color="#3B82F6" />
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={{ padding: 4 }}
+                            onPress={async () => {
+                              const updatedList = trackedList.filter((j: any) => j.noticeId !== job.noticeId);
+                              if (currentUser?.id) {
+                                await ApiClient.updateTrackedJobs(currentUser.id, updatedList);
+                                if (onRefreshUser) await onRefreshUser(currentUser.id);
+                              }
+                            }}
+                          >
+                            <Text style={{ fontSize: 11, fontWeight: '800', color: '#EF4444' }}>
+                              {language === 'hi' ? 'हटाएं' : 'Remove'}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : (
+                <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 12, color: isDark ? '#94A3B8' : '#64748B', textAlign: 'center', fontStyle: 'italic' }}>
+                    {language === 'hi'
+                      ? 'कोई जॉब्स ट्रैक नहीं की गई हैं। नोटिफिकेशन विवरण में "जॉब सेव करें" या "आवेदन मार्क करें" दबाएं।'
+                      : 'No jobs tracked yet. Open any notification details screen and tap "Save Job" or "Mark as Applied".'}
+                  </Text>
+                </View>
+              )}
+            </View>
+          );
+        })()}
 
         {/* Referral Card */}
         <View style={[
@@ -3823,6 +3974,23 @@ export default function DashboardScreen({
 
     return count;
   }, [examCatalog, currentUser.testSessions]);
+
+  if (selectedNotice) {
+    return (
+      <NoticeDetailScreen
+        initialNotice={selectedNotice}
+        onBack={() => setSelectedNotice(null)}
+        isDark={isDark}
+        language={language}
+        currentUser={currentUser}
+        onUpdateUser={async (updated) => {
+          if (onRefreshUser && currentUser?.id) {
+            await onRefreshUser(currentUser.id);
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <View style={[styles.container, isDark && { backgroundColor: ThemeColors.dark.bg }]}>

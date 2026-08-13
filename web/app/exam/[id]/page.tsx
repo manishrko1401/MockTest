@@ -20,6 +20,178 @@ import MathJaxText from '../../lib/MathJaxText';
 
 
 
+function handleReturnToTestSeries(testId: string, catalog: any[], router: any) {
+  if (typeof window !== 'undefined') {
+    // 1. If referrer is a mock-tests page with query params or hash, history back works best
+    if (document.referrer && document.referrer.includes(window.location.host) && document.referrer.includes('/mock-tests') && (document.referrer.includes('sub=') || document.referrer.includes('#exam-'))) {
+      window.history.back();
+      return;
+    }
+
+    // 2. Search catalog for exact category, subcategory, and sub-subcategory
+    if (catalog && catalog.length > 0) {
+      for (const cat of catalog) {
+        for (const sub of cat.subCategories || []) {
+          // Check sub-subcategories first for deepest specificity
+          for (const ss of sub.subSubCategories || []) {
+            const foundInSubSub = (ss.tests || []).find((t: any) => t.id === testId);
+            if (foundInSubSub) {
+              const url = `/mock-tests?cat=${cat.id}&sub=${sub.id}&subsub=${ss.id}#exam-${sub.id}-${ss.id}`;
+              if (router && router.push) {
+                router.push(url);
+              } else {
+                window.location.href = url;
+              }
+              return;
+            }
+          }
+          // Check direct subcategory tests
+          const foundInSub = (sub.tests || []).find((t: any) => t.id === testId);
+          if (foundInSub) {
+            const url = `/mock-tests?cat=${cat.id}&sub=${sub.id}#exam-${sub.id}`;
+            if (router && router.push) {
+              router.push(url);
+            } else {
+              window.location.href = url;
+            }
+            return;
+          }
+        }
+      }
+    }
+
+    // 3. Exam ID fallback heuristic matching
+    const lower = (testId || '').toLowerCase();
+    if (lower.includes('ctet')) {
+      const isPaper2 = lower.includes('paper2') || lower.includes('paper-2') || lower.includes('p2');
+      const url = `/mock-tests?cat=teaching&sub=ctet${isPaper2 ? '&subsub=paper2' : ''}#exam-ctet${isPaper2 ? '-paper2' : ''}`;
+      if (router && router.push) router.push(url); else window.location.href = url;
+      return;
+    }
+    if (lower.includes('rpsc') || lower.includes('ras')) {
+      const url = `/mock-tests?cat=rpsc&sub=rpsc_ras#exam-rpsc_ras`;
+      if (router && router.push) router.push(url); else window.location.href = url;
+      return;
+    }
+    if (lower.includes('ssc')) {
+      const url = `/mock-tests?cat=ssc&sub=ssc_cgl#exam-ssc_cgl`;
+      if (router && router.push) router.push(url); else window.location.href = url;
+      return;
+    }
+    if (lower.includes('rrb') || lower.includes('railway')) {
+      const url = `/mock-tests?cat=railways&sub=rrb_ntpc#exam-rrb_ntpc`;
+      if (router && router.push) router.push(url); else window.location.href = url;
+      return;
+    }
+
+    // 4. History back fallback
+    if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
+      window.history.back();
+      return;
+    }
+
+    // 5. Default fallback
+    if (router && router.push) {
+      router.push('/mock-tests');
+    } else {
+      window.location.href = '/mock-tests';
+    }
+  }
+}
+
+function TestUploadedSoonCard({ testId, testTitle, catalog, router, currentUser }: { testId: string; testTitle: string; catalog: any[]; router: any; currentUser?: any }) {
+  const [requesting, setRequesting] = useState(false);
+  const [requested, setRequested] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(`requested_upload_${testId}`) === 'true') {
+        setRequested(true);
+      }
+    } catch {}
+  }, [testId]);
+
+  const handleRequestUpload = async () => {
+    if (requesting || requested) return;
+    setRequesting(true);
+    try {
+      await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'submit-suggestion',
+          data: {
+            userId: currentUser?.id || 'guest_web',
+            name: currentUser?.name || 'Website Candidate',
+            email: currentUser?.email || 'guest@website.com',
+            category: 'Test Upload Request',
+            message: `Request to upload questions for test: ${testTitle || 'Mock Test'} (Test ID: ${testId})`,
+            source: 'website'
+          }
+        })
+      });
+      setRequested(true);
+      try {
+        localStorage.setItem(`requested_upload_${testId}`, 'true');
+      } catch {}
+      alert('Request Received 🚀\nYour upload request for this test has been submitted to the admin suggestion box!');
+    } catch (err) {
+      setRequested(true);
+      alert('Request Received 🚀\nYour upload request for this test has been submitted to the admin suggestion box!');
+    } finally {
+      setRequesting(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4 font-sans text-slate-100">
+      <div className="w-full max-w-md text-center bg-slate-800/90 border border-slate-700/80 rounded-2xl p-8 shadow-2xl backdrop-blur-md">
+        <div className="w-16 h-16 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-amber-500/10">
+          <Clock className="w-8 h-8 animate-pulse text-amber-400" />
+        </div>
+        <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Test Uploaded Soon</h2>
+        <p className="text-slate-300 text-sm mb-6 leading-relaxed">
+          Questions for <span className="text-blue-400 font-bold">{testTitle || 'this mock test'}</span> are currently being curated and will be uploaded soon. Please check back later!
+        </p>
+        <div className="p-3 bg-slate-900/80 border border-slate-700/50 rounded-xl mb-5 text-xs text-amber-300 font-medium flex items-center justify-center gap-2">
+          <span>⚡</span>
+          <span>यह टेस्ट जल्द ही पोर्टल पर अपलोड कर दिया जाएगा।</span>
+        </div>
+        
+        <button
+          onClick={handleRequestUpload}
+          disabled={requesting || requested}
+          className={`w-full py-3 px-6 rounded-xl font-bold text-sm transition-all shadow-md mb-3 flex items-center justify-center gap-2 cursor-pointer ${
+            requested
+              ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 cursor-default'
+              : requesting
+              ? 'bg-amber-600/50 text-white cursor-wait'
+              : 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold shadow-amber-500/20 active:scale-95'
+          }`}
+        >
+          {requested ? (
+            <>
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <span>✓ Upload Requested</span>
+            </>
+          ) : requesting ? (
+            <span>Submitting Request...</span>
+          ) : (
+            <span>🚀 Request to Upload Test</span>
+          )}
+        </button>
+
+        <button
+          onClick={() => handleReturnToTestSeries(testId, catalog, router)}
+          className="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition-all cursor-pointer text-sm"
+        >
+          Return to Test Series
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ============================================================================
 // DYNAMIC EXAM GENERATOR IMPORTED FROM UTILS
 // ============================================================================
@@ -227,7 +399,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
   useEffect(() => {
     const handleSave = () => {
       const currentState = stateRef.current;
-      if (currentState.session && !currentState.isExamSubmitted) {
+      if (currentState.session && currentState.session.questions && currentState.session.questions.length > 0 && !currentState.isExamSubmitted) {
         // Always save to localStorage immediately (works offline, zero latency)
         const localSnap = {
           testId,
@@ -238,6 +410,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
           currentQuestionIndex: currentState.currentQuestionIndex,
           responses: currentState.responses,
           savedAt: Date.now(),
+          updatedAt: new Date().toISOString(),
+          startedAt: new Date().toISOString(),
         };
         try {
           localStorage.setItem(`ongoing_web_${testId}`, JSON.stringify(localSnap));
@@ -318,6 +492,10 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
         </div>
       </div>
     );
+  }
+
+  if (state.session && state.session.questions.length === 0) {
+    return <TestUploadedSoonCard testId={testId} testTitle={state.session.testTitle} catalog={examCatalog} router={router} currentUser={currentUser} />;
   }
 
   const { session, currentSectionIndex, currentQuestionIndex, responses, timeRemaining, language, violationsCount, isExamSubmitted, score } = state;
@@ -2131,13 +2309,15 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 }
 
 function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: (selectedLang: 'en' | 'hi', lang1?: string, lang2?: string) => void }) {
-  const { theme, toggleTheme, examCatalog } = useAuth();
+  const router = useRouter();
+  const { theme, toggleTheme, examCatalog, currentUser } = useAuth();
   const [defaultLang, setDefaultLang] = useState<string>('English');
   const [lang1, setLang1] = useState<string>('English');
   const [lang2, setLang2] = useState<string>('Hindi');
   const [agreed, setAgreed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [customQs, setCustomQs] = useState<any>(null);
+  const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -2149,17 +2329,37 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
           body: JSON.stringify({ action: 'get-custom-questions', data: { testId } })
         });
         const data = await res.json();
-        if (data.success && data.questions) {
+        if (data.success && data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
           setCustomQs(data);
+        } else {
+          setCustomQs({ questions: [] });
         }
       } catch (err) {
         console.error("Error fetching custom CTET questions:", err);
+        setCustomQs({ questions: [] });
+      } finally {
+        setFetching(false);
       }
     };
     fetchQs();
   }, [testId]);
 
-  if (!mounted) return null;
+  if (!mounted || fetching) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-900 font-sans text-slate-100">
+        <div className="text-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-slate-300 font-medium text-sm">Loading test details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const examSession = generateExamSession(testId, examCatalog, customQs, lang1, lang2);
+
+  if (!examSession.questions || examSession.questions.length === 0) {
+    return <TestUploadedSoonCard testId={testId} testTitle={examSession.testTitle} catalog={examCatalog} router={router} currentUser={currentUser} />;
+  }
 
   const isFormValid = 
     defaultLang !== '' && defaultLang !== '-- Select --' &&
@@ -2167,7 +2367,6 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
     lang2 !== '' && lang2 !== '-- Select --' &&
     agreed;
 
-  const examSession = generateExamSession(testId, examCatalog, customQs, lang1, lang2);
   const lowerId = (testId || '').toLowerCase();
   const isPaper2 = lowerId.includes('paper2') || lowerId.includes('paper-2') || lowerId.includes('paper_2') || lowerId.includes('paper 2') || lowerId.includes('p2') || lowerId.includes('ctet2');
   const lang1SectionText = isPaper2 ? "3rd" : "4th";
@@ -2421,11 +2620,13 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
 }
 
 function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: (selectedLang: 'en' | 'hi') => void }) {
-  const { theme, toggleTheme, language: authLang, examCatalog } = useAuth();
+  const router = useRouter();
+  const { theme, toggleTheme, language: authLang, examCatalog, currentUser } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [mounted, setMounted] = useState(false);
   const [customQs, setCustomQs] = useState<any>(null);
+  const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -2437,11 +2638,16 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
           body: JSON.stringify({ action: 'get-custom-questions', data: { testId } })
         });
         const data = await res.json();
-        if (data.success && data.questions) {
+        if (data.success && data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
           setCustomQs(data);
+        } else {
+          setCustomQs({ questions: [] });
         }
       } catch (err) {
         console.error("Error fetching custom test questions:", err);
+        setCustomQs({ questions: [] });
+      } finally {
+        setFetching(false);
       }
     };
     fetchQs();
@@ -2453,13 +2659,27 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
     }
   }, [authLang]);
 
-  if (!mounted) return null;
+  if (!mounted || fetching) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-900 font-sans text-slate-100">
+        <div className="text-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-slate-300 font-medium text-sm">Loading test details...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLangChange = (newLang: 'en' | 'hi') => {
     setLang(newLang);
   };
   
   const examSession = generateExamSession(testId, examCatalog, customQs);
+
+  if (!examSession.questions || examSession.questions.length === 0) {
+    return <TestUploadedSoonCard testId={testId} testTitle={examSession.testTitle} catalog={examCatalog} router={router} currentUser={currentUser} />;
+  }
+
   const durationMins = Math.round((examSession.totalDurationSeconds || 3600) / 60);
   const totalQs = examSession.questions?.length || 100;
   const totalMarks = examSession.questions?.reduce((sum, q) => {
@@ -2753,7 +2973,7 @@ export default function DynamicExamPage() {
       remaining: engineState.timeRemaining,
       violations: engineState.violationsCount
     });
-    if (engineState.session && !engineState.isExamSubmitted) {
+    if (engineState.session && engineState.session.questions && engineState.session.questions.length > 0 && !engineState.isExamSubmitted) {
       saveOngoingSession(
         testId,
         engineState.session.testTitle,
