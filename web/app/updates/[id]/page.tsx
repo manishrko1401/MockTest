@@ -26,64 +26,143 @@ interface ParsedActionLink {
   iconType: 'apply' | 'download' | 'official' | 'video' | 'general';
 }
 
-function extractParsedLinks(html: string): ParsedActionLink[] {
-  if (!html) return [];
+function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
+  if (!html && !notice) return [];
   const links: ParsedActionLink[] = [];
+  const seenUrls = new Set<string>();
 
-  let idx = html.toLowerCase().indexOf('useful important link');
-  if (idx === -1) idx = html.toLowerCase().indexOf('important link');
-  if (idx === -1) idx = html.toLowerCase().indexOf('direct link');
-  if (idx === -1) idx = html.toLowerCase().indexOf('apply online');
-  if (idx === -1) return [];
+  function addLink(label: string, url: string, iconType: 'apply' | 'download' | 'official' | 'video' | 'general' = 'general') {
+    if (!url || typeof url !== 'string') return;
+    let cleanUrl = url.trim();
+    if (!cleanUrl || cleanUrl === '#' || cleanUrl.startsWith('javascript:')) return;
+    if (cleanUrl.startsWith('//')) cleanUrl = 'https:' + cleanUrl;
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) return;
 
-  const linksSection = html.substring(idx);
-  const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-  let rowMatch;
+    const normUrl = cleanUrl.toLowerCase().replace(/\/$/, '');
+    if (seenUrls.has(normUrl)) return;
+    seenUrls.add(normUrl);
 
-  while ((rowMatch = rowRegex.exec(linksSection)) !== null) {
-    const rowHtml = rowMatch[1];
-    
-    const aMatch = /<a[^>]*href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/i.exec(rowHtml);
-    if (!aMatch) continue;
+    let cleanLabel = label
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&#8211;/g, '-')
+      .replace(/&amp;/g, '&')
+      .replace(/&#038;/g, '&')
+      .replace(/&#8217;/g, "'")
+      .replace(/&rsquo;/g, "'")
+      .trim();
+    cleanLabel = cleanLabel.replace(/\s+/g, ' ');
+    cleanLabel = cleanLabel.replace(/^(?:Click\s*Here|Link|Server\s*[I|1|2|3|4]+|Direct\s*Link)\s*:?\s*/gi, '');
+    cleanLabel = cleanLabel.replace(/\s*:?\s*(?:Click\s*Here|Link|Server\s*[I|1|2|3|4]+|Direct\s*Link)$/gi, '');
+    if (!cleanLabel || cleanLabel.length < 2) cleanLabel = 'Official Portal Link';
 
-    const url = aMatch[1].trim();
-    const linkText = aMatch[2].replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
+    const lowerLabel = cleanLabel.toLowerCase();
 
-    const tdMatch = /<td[^>]*>([\s\S]*?)<\/td>/i.exec(rowHtml);
-    let label = '';
-    if (tdMatch) {
-      label = tdMatch[1].replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
-    }
-    if (!label || label.toLowerCase() === linkText.toLowerCase()) {
-      label = linkText || 'Click Here';
-    }
-
-    const lowerLabel = label.toLowerCase();
-
+    // 1. REJECT INSTRUCTIONAL BLOCKS, HOW-TO-FILL TEXT & LONG PARAGRAPHS (>75 CHARS)
     if (
-      lowerLabel.includes('whatsapp') || 
-      lowerLabel.includes('telegram') || 
-      lowerLabel.includes('reels') || 
+      cleanLabel.length > 75 ||
+      lowerLabel.includes('how to fill') ||
+      lowerLabel.includes('how to apply') ||
+      lowerLabel.includes('how to download') ||
+      lowerLabel.includes('candidate read') ||
+      lowerLabel.includes('while applying') ||
+      lowerLabel.includes('before submitting') ||
+      lowerLabel.includes('after submitting') ||
+      lowerLabel.includes('re-check all') ||
+      lowerLabel.includes('qualification details') ||
+      lowerLabel.includes('take a print') ||
+      lowerLabel.includes('name of the candidate') ||
+      lowerLabel.includes('father') ||
+      lowerLabel.includes('mother') ||
+      lowerLabel.includes('date of birth') ||
+      lowerLabel.includes('step to fill') ||
+      lowerLabel.includes('step by step') ||
+      lowerLabel.includes('instructions') ||
+      lowerLabel.includes('guidelines')
+    ) {
+      return;
+    }
+
+    // 2. REJECT SOCIAL MEDIA, VIDEO & PROMO LINKS
+    if (
+      lowerLabel.includes('whatsapp') ||
+      lowerLabel.includes('telegram') ||
+      lowerLabel.includes('instagram') ||
+      lowerLabel.includes('facebook') ||
+      lowerLabel.includes('reels') ||
       lowerLabel.includes('youtube') ||
       lowerLabel.includes('video') ||
-      lowerLabel.includes('how to fill') ||
-      lowerLabel.includes('watch') ||
-      lowerLabel.includes('hindi video') ||
-      lowerLabel.includes('short notification')
+      lowerLabel.includes('join group') ||
+      lowerLabel.includes('channel')
     ) {
-      continue;
+      return;
     }
 
-    let iconType: 'apply' | 'download' | 'official' | 'video' | 'general' = 'general';
-    if (lowerLabel.includes('apply') || lowerLabel.includes('form') || lowerLabel.includes('login') || lowerLabel.includes('registration')) {
-      iconType = 'apply';
-    } else if (lowerLabel.includes('download') || lowerLabel.includes('notification') || lowerLabel.includes('pdf') || lowerLabel.includes('syllabus') || lowerLabel.includes('result') || lowerLabel.includes('admit')) {
-      iconType = 'download';
-    } else if (lowerLabel.includes('official') || lowerLabel.includes('website')) {
-      iconType = 'official';
+    if (iconType === 'general') {
+      if (lowerLabel.includes('apply') || lowerLabel.includes('form') || lowerLabel.includes('login') || lowerLabel.includes('registration') || lowerLabel.includes('register')) {
+        iconType = 'apply';
+      } else if (lowerLabel.includes('download') || lowerLabel.includes('notification') || lowerLabel.includes('pdf') || lowerLabel.includes('syllabus') || lowerLabel.includes('result') || lowerLabel.includes('admit') || lowerLabel.includes('key') || lowerLabel.includes('schedule') || lowerLabel.includes('city')) {
+        iconType = 'download';
+      } else if (lowerLabel.includes('official') || lowerLabel.includes('website') || lowerLabel.includes('portal') || lowerLabel.includes('board')) {
+        iconType = 'official';
+      }
     }
 
-    links.push({ label, url, iconType });
+    links.push({ label: cleanLabel, url: cleanUrl, iconType });
+  }
+
+  // 1. Primary Direct Portal link from notice.url if present
+  if (notice && notice.url && typeof notice.url === 'string' && notice.url.startsWith('http')) {
+    addLink('Apply Online / Direct Portal', notice.url, 'apply');
+  }
+
+  // 2. Parse HTML table rows & standalone links from notice.contentHtml
+  if (html && typeof html === 'string') {
+    const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+    let rowMatch;
+    while ((rowMatch = rowRegex.exec(html)) !== null) {
+      const rowHtml = rowMatch[1];
+      const aMatches = Array.from(rowHtml.matchAll(/<a[^>]*href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi));
+      if (aMatches.length === 0) continue;
+
+      const tds = Array.from(rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)).map(m => m[1].replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim());
+      const firstColText = tds[0] || '';
+
+      for (const aMatch of aMatches) {
+        const url = aMatch[1];
+        const anchorText = aMatch[2].replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
+        
+        let label = '';
+        const isGenericAnchor = /^(?:click\s*here|link|download|open|server\s*[i|1|2|3|4]*)$/i.test(anchorText);
+
+        if (firstColText && !isGenericAnchor && anchorText && firstColText.toLowerCase() !== anchorText.toLowerCase()) {
+          label = `${firstColText} (${anchorText})`;
+        } else if (firstColText) {
+          label = firstColText;
+        } else {
+          label = anchorText || 'Click Here';
+        }
+
+        if (/notification|pdf|advt|circular|advertisement/i.test(label) || /notification|pdf/i.test(url)) {
+          if (!/official notification/i.test(label) && label.length < 40) {
+            label = `Official Notification Link: ${label}`;
+          }
+        }
+        addLink(label, url);
+      }
+    }
+
+    // Scan standalone links (e.g. Official Website: https://...)
+    const urlRegex = /(?:Official\s*Website|Portal|Website)\s*:?\s*(https?:\/\/[^\s<"']+)/gi;
+    let uMatch;
+    while ((uMatch = urlRegex.exec(html)) !== null) {
+      addLink('Official Website', uMatch[1], 'official');
+    }
+  }
+
+  // 3. Fallback Raw Notification Source link from notice.rawUrl if present
+  if (notice && notice.rawUrl && typeof notice.rawUrl === 'string' && notice.rawUrl.startsWith('http')) {
+    addLink('Official Notification Source & Full Circular', notice.rawUrl, 'download');
   }
 
   return links;
@@ -120,6 +199,28 @@ function sanitizeNoticeHtml(html: string): string {
 
   // 6. Remove video and social media promotion rows in ANY table (Watch Video, Hindi Video, Telegram/Whatsapp)
   clean = clean.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:Watch\s*Video|Hindi\s*Video|Short\s*Notification\s*\(?[\w\s]*Video|Join\s*Free\s*Information|Information\s*Channel|Official\s*Whatsapp|Official\s*Telegram)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, '');
+
+  // 6b. REMOVE BRANDING TEXT, STANDALONE URLS & UNWANTED "www..com" / ".Com" / "Rojgar Result" ROWS AND TAGS
+  clean = clean.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:www\s*\.\s*\.\s*com|\.Com|rojgarresult\.com|Rojgar\s*Result®?)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, (match) => {
+    const text = match.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
+    if (/^(?:www\s*\.\s*\.\s*com|\.Com|Website|\.Com\s*Website|Website\s*\.Com|Rojgar\s*Result®?|rojgarresult\.com)$/i.test(text) || text.length < 15) {
+      return '';
+    }
+    return match;
+  });
+
+  clean = clean.replace(/<h[1-6][^>]*>(?:(?!<\/h[1-6]>)[\s\S])*?(?:www\s*\.\s*\.\s*com|\.Com|Rojgar\s*Result®?|rojgarresult\.com)(?:(?!<\/h[1-6]>)[\s\S])*?<\/h[1-6]>/gi, '');
+  clean = clean.replace(/<p[^>]*>(?:(?!<\/p>)[\s\S])*?(?:www\s*\.\s*\.\s*com|\.Com|Rojgar\s*Result®?|rojgarresult\.com)(?:(?!<\/p>)[\s\S])*?<\/p>/gi, '');
+
+  clean = clean.replace(/>([^<]*)(?:www\s*\.\s*\.\s*com|Rojgar\s*Result®?|rojgarresult\.com|\.Com)([^<]*)</gi, (match, p1, p2) => {
+    const combined = (p1 + p2).replace(/&nbsp;/gi, ' ').trim();
+    if (!combined || combined === '.') return '><';
+    return `>${p1}${p2}<`;
+  });
+
+  clean = clean.replace(/<h[1-6][^>]*>\s*(?:<[^>]*>\s*)*<\/h[1-6]>/gi, '');
+  clean = clean.replace(/<p[^>]*>\s*(?:<[^>]*>\s*)*<\/p>/gi, '');
+  clean = clean.replace(/<tr[^>]*>\s*(?:<td[^>]*>\s*(?:<[^>]*>\s*)*<\/td>\s*)*<\/tr>/gi, '');
 
   // 7. Clean fixed inline width attributes from tables, th, td to prevent responsive overflow
   clean = clean.replace(/\s*width=["']?\d+(?:px|%)?["']?/gi, '');
@@ -190,7 +291,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   }, [noticeId, noticesList]);
 
   const notice = fetchedNotice || (noticeId ? noticesList.find(n => n.id === noticeId) : null);
-  const parsedLinks = React.useMemo(() => notice?.contentHtml ? extractParsedLinks(notice.contentHtml) : [], [notice]);
+  const parsedLinks = React.useMemo(() => notice ? extractParsedLinks(notice, notice.contentHtml || '') : [], [notice]);
   const sanitizedContent = React.useMemo(() => notice?.contentHtml ? sanitizeNoticeHtml(notice.contentHtml) : '', [notice]);
 
   // Load tracked state for current user
@@ -774,7 +875,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                           <Download className="h-4 w-4" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-black text-slate-900 dark:text-white leading-snug">Detailed Official Notification</p>
+                          <p className="text-xs font-black text-slate-900 dark:text-white leading-snug">Official Notification Source & Circular</p>
                           <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5">View Source Circular</span>
                         </div>
                       </div>

@@ -14,27 +14,7 @@ import { processQuestionHtml, decodeHtml } from '../lib/mathUtils';
 import { formatTestMarkingScheme } from '../lib/markingUtils';
 
 const renderTestMarkingSchemePill = (test: MockTestItem) => {
-  const scheme = formatTestMarkingScheme(test);
-  if (scheme.isCustom) {
-    return (
-      <span
-        title={scheme.badgeText}
-        className="inline-flex items-center gap-1 bg-amber-500/10 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 text-[7.5px] font-black px-1.5 py-0.5 rounded border border-amber-500/30 uppercase tracking-wider font-mono max-w-[240px] truncate shadow-2xs"
-      >
-        ⚡ {scheme.badgeText}
-      </span>
-    );
-  }
-  return (
-    <>
-      <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider font-mono">
-        +{test.positiveMarks ?? 2} Right
-      </span>
-      <span className="bg-red-500/10 text-red-700 dark:bg-red-500/5 dark:text-red-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-red-500/20 uppercase tracking-wider font-mono">
-        -{test.negativeMarks ?? 0.5} Wrong
-      </span>
-    </>
-  );
+  return null;
 };
 
 const formatSubCategoryName = (name: string) => {
@@ -64,19 +44,12 @@ const renderSectionalTimingPill = (test: MockTestItem, lang: string = 'en') => {
   }
 
   const isHi = lang === 'hi';
-  const total = timingsArr.reduce((a: number, b: number) => a + b, 0);
+  const timingText = timingsArr.length > 0 ? `${timingsArr.join('m, ')}m` : (isHi ? 'सक्षम' : 'ENABLED');
 
   return (
-    <div className="hidden sm:inline-flex items-center gap-1.5 bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/80 px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-bold text-purple-700 dark:text-purple-300 mt-1.5 shadow-2xs">
-      <Zap className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 fill-purple-500 shrink-0" />
-      <span>
-        {isHi ? 'अनुभागीय समय' : 'Sectional Timing'}:{' '}
-        <strong className="font-extrabold text-purple-900 dark:text-purple-100 font-mono">
-          {timingsArr.length > 0 ? `${timingsArr.join('m, ')}m` : isHi ? 'अनुभाग टाइमर सक्षम' : 'Per-Section Lock'}
-        </strong>
-        {total > 0 && <span className="text-[8.5px] sm:text-[9px] text-purple-600 dark:text-purple-400 font-medium ml-1.5 border-l border-purple-200 dark:border-purple-800 pl-1.5">({total} min total)</span>}
-      </span>
-    </div>
+    <span className="bg-purple-500/10 text-purple-700 dark:bg-purple-500/5 dark:text-purple-300 text-[8px] font-black px-2 py-0.5 rounded-md border border-purple-500/20 uppercase tracking-wider font-mono flex items-center gap-1">
+      ⚡ {isHi ? 'अनुभागीय समय' : 'SECTIONAL TIMING'}: {timingText}
+    </span>
   );
 };
 
@@ -1377,6 +1350,7 @@ export default function MockTestsCatalog() {
                                                )}
 
                                                {renderTestMarkingSchemePill(test)}
+                                               {renderSectionalTimingPill(test, language)}
                                              </div>
 
                                              {latestAttempt && (
@@ -2488,17 +2462,7 @@ export default function MockTestsCatalog() {
                                             ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                           </span>
                                         )}
-                                        <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider font-mono">
-                                          +{test.positiveMarks ?? 2} {language === 'hi' ? 'सही' : 'Right'}
-                                        </span>
-                                        <span className="bg-red-500/10 text-red-700 dark:bg-red-500/5 dark:text-red-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-red-500/20 uppercase tracking-wider font-mono">
-                                          -{test.negativeMarks ?? 0.5} {language === 'hi' ? 'गलत' : 'Wrong'}
-                                        </span>
-                                        {test.hasSectionalTiming && (
-                                          <span className="bg-purple-500/10 text-purple-700 dark:bg-purple-500/5 dark:text-purple-300 text-[8px] font-black px-2 py-0.5 rounded-md border border-purple-500/20 uppercase tracking-wider font-mono flex items-center gap-1">
-                                            ⚡ {language === 'hi' ? 'अनुभागीय समय' : 'SECTIONAL'}
-                                          </span>
-                                        )}
+                                        {renderSectionalTimingPill(test, language)}
                                       </div>
 
                                       <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">
@@ -2514,9 +2478,6 @@ export default function MockTestsCatalog() {
                                         <span>•</span>
                                         <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 English, Hindi</span>
                                       </div>
-
-                                      {renderTestMarkingSchemePill(test)}
-                                     {renderSectionalTimingPill(test, language)}
                                     </div>
 
                                     {renderLastAttemptMarks(attempts, language)}
@@ -2636,18 +2597,7 @@ export default function MockTestsCatalog() {
                                       ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                     </span>
                                   )}
-
-                                  <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider font-mono">
-                                    +{test.positiveMarks ?? 2} {language === 'hi' ? 'सही' : 'Right'}
-                                  </span>
-                                  <span className="bg-red-500/10 text-red-700 dark:bg-red-500/5 dark:text-red-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-red-500/20 uppercase tracking-wider font-mono">
-                                    -{test.negativeMarks ?? 0.5} {language === 'hi' ? 'गलत' : 'Wrong'}
-                                  </span>
-                                  {test.hasSectionalTiming && (
-                                    <span className="bg-purple-500/10 text-purple-700 dark:bg-purple-500/5 dark:text-purple-300 text-[8px] font-black px-2 py-0.5 rounded-md border border-purple-500/20 uppercase tracking-wider font-mono flex items-center gap-1">
-                                      ⚡ {language === 'hi' ? 'अनुभागीय समय' : 'SECTIONAL'}
-                                    </span>
-                                  )}
+                                  {renderSectionalTimingPill(test, language)}
                                 </div>
 
                                 <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">
@@ -2663,8 +2613,6 @@ export default function MockTestsCatalog() {
                                   <span>•</span>
                                   <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 English, Hindi</span>
                                 </div>
-
-                                {renderSectionalTimingPill(test, language)}
                               </div>
 
                               {renderLastAttemptMarks(attempts, language)}

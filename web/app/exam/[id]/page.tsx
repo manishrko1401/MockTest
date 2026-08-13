@@ -976,17 +976,23 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
           </div>
 
           {/* 3. QUESTION HEADER BAR */}
-          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2 text-[10px] font-bold shrink-0">
-            <span className="text-[#0747A6]">Question Type: MCQ</span>
-            <div className="flex gap-2">
-              <span className="text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded text-[9px]">
-                +{currentSection.positiveMark}
-              </span>
-              <span className="text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded text-[9px]">
-                -{currentSection.negativeMark}
-              </span>
-            </div>
-          </div>
+          {(() => {
+            const activePos = currentQuestion?.positiveMark !== undefined && currentQuestion?.positiveMark !== null ? Number(currentQuestion.positiveMark) : Number(currentSection?.positiveMark ?? 2);
+            const activeNeg = currentQuestion?.negativeMark !== undefined && currentQuestion?.negativeMark !== null ? Number(currentQuestion.negativeMark) : Number(currentSection?.negativeMark ?? 0.5);
+            return (
+              <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2 text-[10px] font-bold shrink-0">
+                <span className="text-[#0747A6]">Question Type: MCQ</span>
+                <div className="flex gap-2">
+                  <span className="text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded text-[9px]">
+                    +{activePos}
+                  </span>
+                  <span className="text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded text-[9px]">
+                    -{activeNeg}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* 4. ACTIVE QUESTION TEXT & OPTIONS AREA */}
           <div className="flex-1 overflow-y-auto p-4 bg-white pb-20">
@@ -1004,7 +1010,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                               Q No. {currentQuestionIndex + 1}
                             </h3>
                             <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              +{currentQuestion.positiveMark ?? currentSection?.positiveMark ?? 2} | -{currentQuestion.negativeMark ?? currentSection?.negativeMark ?? 0.5}
+                              +{currentQuestion?.positiveMark ?? currentSection?.positiveMark ?? 2} | -{currentQuestion?.negativeMark ?? currentSection?.negativeMark ?? 0.5}
                             </span>
                           </div>
                           <span className="text-[8px] text-slate-400 font-mono">
@@ -1419,22 +1425,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
             {/* Question Header Bar */}
             {(() => {
-              const isSsc = testId.includes('ssc') || testId.toLowerCase().includes('ssc');
-              const activePos = currentQuestion?.positiveMark !== undefined && currentQuestion?.positiveMark !== null ? Number(currentQuestion.positiveMark) : Number(currentSection.positiveMark);
-              const activeNeg = currentQuestion?.negativeMark !== undefined && currentQuestion?.negativeMark !== null ? Number(currentQuestion.negativeMark) : Number(currentSection.negativeMark);
-
-              if (!isSsc) {
-                return (
-                  <div className="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-2 text-[11px] font-bold shrink-0">
-                    <span className="text-slate-400">Question Type: Multiple Choice Question</span>
-                    <div className="flex gap-2">
-                      <span className="text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[10px]">
-                        Question Marks: +{activePos} | -{activeNeg}
-                      </span>
-                    </div>
-                  </div>
-                );
-              }
+              const activePos = currentQuestion?.positiveMark !== undefined && currentQuestion?.positiveMark !== null ? Number(currentQuestion.positiveMark) : Number(currentSection?.positiveMark ?? 2);
+              const activeNeg = currentQuestion?.negativeMark !== undefined && currentQuestion?.negativeMark !== null ? Number(currentQuestion.negativeMark) : Number(currentSection?.negativeMark ?? 0.5);
 
               return (
                 <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2 text-[11px] font-bold shrink-0">
@@ -1475,10 +1467,10 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-slate-500 font-bold">Marks:</span>
                                   <span className="bg-[#2E7D32] text-white font-extrabold px-2 py-0.5 rounded-md text-[9px]">
-                                    +{currentSection.positiveMark}
+                                    +{currentQuestion?.positiveMark ?? currentSection?.positiveMark ?? 2}
                                   </span>
                                   <span className="bg-[#C62828] text-white font-extrabold px-2 py-0.5 rounded-md text-[9px]">
-                                    -{currentSection.negativeMark}
+                                    -{currentQuestion?.negativeMark ?? currentSection?.negativeMark ?? 0.5}
                                   </span>
                                 </div>
 
@@ -2139,16 +2131,33 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 }
 
 function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: (selectedLang: 'en' | 'hi', lang1?: string, lang2?: string) => void }) {
-  const { theme, toggleTheme } = useAuth();
-  const [defaultLang, setDefaultLang] = useState<string>('');
-  const [lang1, setLang1] = useState<string>('');
-  const [lang2, setLang2] = useState<string>('');
+  const { theme, toggleTheme, examCatalog } = useAuth();
+  const [defaultLang, setDefaultLang] = useState<string>('English');
+  const [lang1, setLang1] = useState<string>('English');
+  const [lang2, setLang2] = useState<string>('Hindi');
   const [agreed, setAgreed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [customQs, setCustomQs] = useState<any>(null);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    const fetchQs = async () => {
+      try {
+        const res = await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'get-custom-questions', data: { testId } })
+        });
+        const data = await res.json();
+        if (data.success && data.questions) {
+          setCustomQs(data);
+        }
+      } catch (err) {
+        console.error("Error fetching custom CTET questions:", err);
+      }
+    };
+    fetchQs();
+  }, [testId]);
 
   if (!mounted) return null;
 
@@ -2158,18 +2167,25 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
     lang2 !== '' && lang2 !== '-- Select --' &&
     agreed;
 
+  const examSession = generateExamSession(testId, examCatalog, customQs, lang1, lang2);
   const lowerId = (testId || '').toLowerCase();
   const isPaper2 = lowerId.includes('paper2') || lowerId.includes('paper-2') || lowerId.includes('paper_2') || lowerId.includes('paper 2') || lowerId.includes('p2') || lowerId.includes('ctet2');
-  const totalSections = isPaper2 ? 4 : 5;
   const lang1SectionText = isPaper2 ? "3rd" : "4th";
   const lang2SectionText = isPaper2 ? "4th" : "5th";
+
+  const durationMins = Math.round((examSession.totalDurationSeconds || 9000) / 60);
+  const totalQs = examSession.questions?.length || 150;
+  const totalMarks = examSession.questions?.reduce((sum, q) => {
+    const sec = examSession.sections.find(s => s.id === q.sectionId);
+    return sum + (q.positiveMark ?? sec?.positiveMark ?? 1);
+  }, 0) || 150;
 
   return (
     <div className="min-h-screen bg-[#f4f6f9] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
       {/* Top Header bar */}
-      <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between shadow-sm">
-        <h2 className="font-extrabold text-sm tracking-wide flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-blue-600 animate-pulse" /> CTET Instructions Panel
+      <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between shadow-sm sticky top-0 z-20">
+        <h2 className="font-extrabold text-sm tracking-wide flex items-center gap-2 text-blue-600 dark:text-blue-400">
+          <ShieldCheck className="h-5 w-5 text-blue-600 animate-pulse" /> {examSession.testTitle || 'CTET Comprehensive Exam Instructions'}
         </h2>
         
         <button 
@@ -2181,38 +2197,119 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
         </button>
       </header>
 
-      {/* Main Container matching image */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 md:p-8">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 md:p-8 shadow-sm space-y-5">
+      {/* Main Container */}
+      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 md:p-8">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 md:p-8 shadow-md space-y-6">
           
-          {/* Header Metadata */}
-          <div className="flex items-center justify-between font-bold text-xs sm:text-sm text-slate-900 dark:text-white pb-3">
-            <span>Duration: 150 Mins</span>
-            <span>Maximum Marks: 150</span>
+          {/* Header Metadata Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Duration</span>
+              <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{durationMins} Mins</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Questions</span>
+              <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{totalQs} Qs</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Max Marks</span>
+              <span className="text-sm font-extrabold text-blue-600 dark:text-blue-400">{totalMarks} Marks</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Marking Scheme</span>
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">+1.0 Correct / No Negative</span>
+            </div>
           </div>
 
-          {/* Section 1: Instructions List */}
+          {/* Section Pattern & Breakdown Table */}
+          <div className="space-y-2">
+            <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Exam Structure & Sectional Breakdown
+            </h3>
+            <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th className="p-3">Section Name</th>
+                    <th className="p-3 text-center">Questions</th>
+                    <th className="p-3 text-center">Positive Mark</th>
+                    <th className="p-3 text-center">Negative Mark</th>
+                    <th className="p-3 text-right">Total Marks</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+                  {examSession.sections.map((sec) => {
+                    const secQs = examSession.questions.filter(q => q.sectionId === sec.id).length;
+                    const secMarks = secQs * (sec.positiveMark || 1);
+                    return (
+                      <tr key={sec.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/50 font-medium">
+                        <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{sec.name}</td>
+                        <td className="p-3 text-center font-mono">{secQs}</td>
+                        <td className="p-3 text-center font-bold text-emerald-600">+{sec.positiveMark || 1}</td>
+                        <td className="p-3 text-center font-bold text-slate-400">{sec.negativeMark || 0}</td>
+                        <td className="p-3 text-right font-extrabold text-blue-600">{secMarks}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Question Palette Color Legend */}
+          <div className="space-y-2">
+            <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Question Palette Status Legend
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px] font-semibold">
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                <span className="w-5 h-5 rounded bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-[10px]">1</span>
+                <span>Not Visited</span>
+              </div>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                <span className="w-5 h-5 rounded bg-red-500 text-white flex items-center justify-center font-bold text-[10px]">2</span>
+                <span>Not Answered</span>
+              </div>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                <span className="w-5 h-5 rounded bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px]">3</span>
+                <span>Answered</span>
+              </div>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                <span className="w-5 h-5 rounded bg-purple-600 text-white flex items-center justify-center font-bold text-[10px]">4</span>
+                <span>Marked Review</span>
+              </div>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 col-span-2 sm:col-span-1">
+                <span className="w-5 h-5 rounded bg-purple-600 text-white flex items-center justify-center font-bold text-[10px] relative">
+                  5<span className="w-1.5 h-1.5 bg-emerald-400 rounded-full absolute -top-0.5 -right-0.5" />
+                </span>
+                <span>Answered & Review</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 1: Detailed General Instructions */}
           <div className="space-y-3">
-            <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
-              Read the following instructions carefully.
+            <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              General Exam Instructions & Answering Guide
             </h3>
 
             <ol className="list-decimal pl-5 space-y-2 text-xs text-slate-700 dark:text-slate-300 font-normal leading-relaxed">
-              <li>The test contain {totalSections} sections having total 150 questions.</li>
-              <li>Each question has 4 options out of which only one is correct.</li>
-              <li>You have to finish the test in 150 minutes.</li>
-              <li>There is no negative marking in this test.</li>
-              <li>You will be awarded 1 mark for each correct answer.</li>
-              <li>There is no negative marking for the questions that you have not attempted.</li>
-              <li>You can write this test only once. Make sure that you complete the test before you submit the test and/or close the browser.</li>
+              <li>The test contains {examSession.sections.length} sections having a total of {totalQs} questions.</li>
+              <li>Each question has 4 multiple-choice options out of which only one option is correct.</li>
+              <li>You have to complete the test within the allotted time of {durationMins} minutes.</li>
+              <li><strong>No Negative Marking:</strong> There is no penalty for incorrect answers in this exam. You will be awarded 1 mark for each correct response.</li>
+              <li><strong>Navigation:</strong> Click on &apos;Save &amp; Next&apos; to submit your answer and move to the next question. Use &apos;Clear Response&apos; to deselect your option if needed.</li>
+              <li><strong>Mark for Review:</strong> You can mark questions for review if you want to inspect them later before final submission.</li>
+              <li>You can attempt this test only once. Ensure stable internet connectivity before submitting.</li>
             </ol>
           </div>
 
-          {/* Divider */}
-          <hr className="border-slate-200 dark:border-slate-800 my-4" />
-
           {/* Section 2: Language Selection Controls */}
-          <div className="space-y-4 text-xs">
+          <div className="space-y-4 text-xs border-t border-slate-200 dark:border-slate-800 pt-4">
+            <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-white">
+              Configure Test Languages
+            </h3>
+            
             {/* 1. Choose your default language */}
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -2222,15 +2319,14 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
                 <select
                   value={defaultLang}
                   onChange={(e) => setDefaultLang(e.target.value)}
-                  className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-xs outline-none cursor-pointer font-normal text-slate-900 dark:text-white"
+                  className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-xs outline-none cursor-pointer font-bold text-slate-900 dark:text-white"
                 >
-                  <option value="">-- Select --</option>
                   <option value="English">English</option>
                   <option value="Hindi">Hindi</option>
                 </select>
               </div>
-              <p className="text-[11px] text-red-600 dark:text-red-400 font-medium">
-                Please note all questions will appear in your default language. This language can be changed for a particular question later on
+              <p className="text-[11px] text-slate-500 font-medium">
+                Questions will appear in your default language. You can also switch individual question language later on during the test.
               </p>
             </div>
 
@@ -2243,16 +2339,15 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
                 <select
                   value={lang1}
                   onChange={(e) => setLang1(e.target.value)}
-                  className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-xs outline-none cursor-pointer font-normal text-slate-900 dark:text-white"
+                  className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-xs outline-none cursor-pointer font-bold text-slate-900 dark:text-white"
                 >
-                  <option value="">-- Select --</option>
                   <option value="English">English</option>
                   <option value="Hindi">Hindi</option>
                   <option value="Sanskrit">Sanskrit</option>
                 </select>
               </div>
-              <p className="text-[11px] text-red-600 dark:text-red-400 font-medium">
-                Please note all questions in {lang1SectionText} section will appear based on your selection here. This CANNOT be changed later on once the test starts
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                Note: Questions in {lang1SectionText} section will appear based on your selection here. This cannot be changed after the test starts.
               </p>
             </div>
 
@@ -2265,34 +2360,30 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
                 <select
                   value={lang2}
                   onChange={(e) => setLang2(e.target.value)}
-                  className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-xs outline-none cursor-pointer font-normal text-slate-900 dark:text-white"
+                  className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-xs outline-none cursor-pointer font-bold text-slate-900 dark:text-white"
                 >
-                  <option value="">-- Select --</option>
                   <option value="English">English</option>
                   <option value="Hindi">Hindi</option>
                   <option value="Sanskrit">Sanskrit</option>
                 </select>
               </div>
-              <p className="text-[11px] text-red-600 dark:text-red-400 font-medium">
-                Please note all questions in {lang2SectionText} section will appear based on your selection here. This CANNOT be changed later on once the test starts
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                Note: Questions in {lang2SectionText} section will appear based on your selection here. This cannot be changed after the test starts.
               </p>
             </div>
           </div>
 
-          {/* Divider */}
-          <hr className="border-slate-200 dark:border-slate-800 my-4" />
-
           {/* Section 3: Declaration */}
-          <div className="space-y-2">
+          <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 pt-4">
             <p className="font-bold text-xs text-slate-900 dark:text-white">Declaration:</p>
             <label className="flex items-center gap-2.5 cursor-pointer select-none text-xs text-slate-800 dark:text-slate-200 font-normal">
               <input
                 type="checkbox"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
               />
-              <span>I have understood and agree to all the instructions.</span>
+              <span>I have read all instructions carefully and agree to comply with all examination rules.</span>
             </label>
           </div>
 
@@ -2300,7 +2391,7 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
           <div className="flex items-center justify-between pt-4">
             <Link
               href="/mock-tests"
-              className="px-5 py-2 rounded bg-[#9ec5fe]/70 hover:bg-[#8bb7fa] dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all"
+              className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all"
             >
               Previous
             </Link>
@@ -2313,10 +2404,10 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
                 }
               }}
               disabled={!isFormValid}
-              className={`px-6 py-2 rounded text-xs font-bold transition-all shadow-sm ${
+              className={`px-7 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all shadow-md ${
                 isFormValid
-                  ? 'bg-[#46cae4] hover:bg-[#36b7d1] text-white cursor-pointer active:scale-95'
-                  : 'bg-[#a2e5f2] dark:bg-slate-800 text-white/70 dark:text-slate-500 cursor-not-allowed shadow-none'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer active:scale-95 shadow-blue-500/20'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
               }`}
             >
               I am ready to begin
@@ -2330,16 +2421,32 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
 }
 
 function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: (selectedLang: 'en' | 'hi') => void }) {
-  const { theme, toggleTheme, language: authLang } = useAuth();
+  const { theme, toggleTheme, language: authLang, examCatalog } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [mounted, setMounted] = useState(false);
+  const [customQs, setCustomQs] = useState<any>(null);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    const fetchQs = async () => {
+      try {
+        const res = await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'get-custom-questions', data: { testId } })
+        });
+        const data = await res.json();
+        if (data.success && data.questions) {
+          setCustomQs(data);
+        }
+      } catch (err) {
+        console.error("Error fetching custom test questions:", err);
+      }
+    };
+    fetchQs();
+  }, [testId]);
 
-  // Sync instruction selection with default auth context language
   useEffect(() => {
     if (authLang) {
       setLang(authLang);
@@ -2350,60 +2457,53 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
 
   const handleLangChange = (newLang: 'en' | 'hi') => {
     setLang(newLang);
-    // Only changes language for this mocktest session (does not change global website language)
   };
   
-  // Mapped metadata based on testId
-  let examName = "General Mock Test Assessment";
-  let questionsCount = 100;
-  let durationMinutes = 60;
-  let maxMarks = 200;
-  
-  if (testId.includes('ssc')) {
-    examName = "SSC CGL 2026 - Tier-I Combined Graduate Level Exam";
-    questionsCount = 4;
-    durationMinutes = 60;
-    maxMarks = 8;
-  } else if (testId.includes('rrb') || testId.includes('railway')) {
-    examName = "RRB NTPC CBT-1 Stage 1 Practice Simulator";
-    questionsCount = 2;
-    durationMinutes = 90;
-    maxMarks = 2;
-  } else if (testId.includes('ugc_net')) {
-    examName = "UGC NET Paper-1 Teaching & Research Aptitude";
-    questionsCount = 2;
-    durationMinutes = 60;
-    maxMarks = 4;
-  } else if (testId.includes('ctet') || testId.includes('teaching')) {
-    examName = "CTET 2026 Paper-I (Primary Class I-V) Mock Paper";
-    questionsCount = 2;
-    durationMinutes = 150;
-    maxMarks = 4;
-  }
-  
+  const examSession = generateExamSession(testId, examCatalog, customQs);
+  const durationMins = Math.round((examSession.totalDurationSeconds || 3600) / 60);
+  const totalQs = examSession.questions?.length || 100;
+  const totalMarks = examSession.questions?.reduce((sum, q) => {
+    const sec = examSession.sections.find(s => s.id === q.sectionId);
+    return sum + (q.positiveMark ?? sec?.positiveMark ?? 2);
+  }, 0) || 200;
+
+  const lowerId = (testId || '').toLowerCase();
+  const titleLower = (examSession.testTitle || '').toLowerCase();
+  const isRpscRas = lowerId.includes('rpsc') || titleLower.includes('rpsc') || titleLower.includes('ras');
+
   const text = {
     en: {
-      title: "Please read the instructions carefully",
+      title: "Please read all instructions carefully before starting the examination",
       general: "General Instructions:",
       gen1: "1. The clock will be set at the server. The countdown timer in the top right corner of screen will display the remaining time available for you to complete the examination.",
-      gen2: "2. The Question Palette displayed on the right side of screen will show the status of each question using one of the 5 symbols.",
+      gen2: "2. The Question Palette displayed on the right side of screen will show the status of each question using color symbols.",
       gen3: "3. You can click on the character '>' arrow to collapse the question palette to maximize the question viewing area.",
-      answering: "Navigating to a Question:",
-      ans1: "4. To answer a question, select the radio button of one of the options and click 'Save & Next'.",
-      ans2: "5. To change your answer, click on the 'Clear Response' button to reset the selection.",
+      gen4: "4. Do not refresh or switch tabs during the exam. Any suspicious tab switches may result in auto-submission.",
+      answering: "Navigating to & Answering a Question:",
+      ans1: "5. To answer a question, select the radio button of one of the options and click 'Save & Next'.",
+      ans2: "6. To change your answer, click on the 'Clear Response' button to reset the selection.",
+      ans3: "7. To mark a question for review, click 'Mark for Review & Next'.",
+      rpscTitle: "Special Instructions (RPSC RAS Mandatory-Attempt Rule):",
+      rpsc1: "8. Unattempted questions after main exam time must be marked in the 10-minute extra time phase using Option (E) 'Leave Question Unattempted'.",
+      rpsc2: "9. Failure to mark Option (E) for unattempted questions will attract a penalty of -0.44 negative marks per unattempted question.",
       disclaimer: "I have read and understood all the instructions. All computer hardware allotted to me is in proper working condition. I agree that in case of any cheating or tab switching, the exam will be auto-submitted.",
       btn: "I am ready to begin"
     },
     hi: {
-      title: "कृपया निर्देशों को ध्यान से पढ़ें",
+      title: "परीक्षा शुरू करने से पहले कृपया सभी निर्देशों को ध्यान से पढ़ें",
       general: "सामान्य निर्देश:",
-      gen1: "1. घड़ी सर्वर पर परीक्षा घड़ी के रूप में सेट की जाएगी। स्क्रीन के शीर्ष दाएं कोने में उलटी गिनती घड़ी आपके द्वारा परीक्षा पूरी करने के लिए उपलब्ध शेष समय को प्रदर्शित करेगी।",
-      gen2: "2. स्क्रीन के दाईं ओर प्रदर्शित प्रश्न पैलेट 5 प्रतीकों में से किसी एक का उपयोग करके प्रत्येक प्रश्न की स्थिति को दर्शाएगा।",
-      gen3: "3. प्रश्न देखने के क्षेत्र को अधिकतम करने के लिए आप प्रश्न पैलेट को बंद करने के लिए '>' तीर पर क्लिक कर सकते हैं।",
-      answering: "प्रश्न पर नेविगेट करना:",
-      ans1: "4. किसी प्रश्न का उत्तर देने के लिए, विकल्पों में से किसी एक को चुनें और 'Save & Next' पर क्लिक करें।",
-      ans2: "5. अपना उत्तर बदलने के लिए, चयन को रीसेट करने के लिए 'Clear Response' बटन पर क्लिक करें।",
-      disclaimer: "मैंने सभी निर्देशों को पढ़ और समझ लिया है। मुझे आवंटित सभी कंप्यूटर हार्डवेयर उचित कार्यशील स्थिति में हैं। मैं सहमत हूं कि किसी भी नकल या टैब स्विचिंग के मामले में, परीक्षा स्वतः सबमिट हो जाएगी।",
+      gen1: "1. सर्वर घड़ी के अनुसार उलटी गिनती का समय स्क्रीन के ऊपरी दाएं कोने पर प्रदर्शित होगा।",
+      gen2: "2. स्क्रीन के दाईं ओर प्रश्न पैलेट रंग प्रतीकों का उपयोग करके प्रत्येक प्रश्न की स्थिति दर्शाएगा।",
+      gen3: "3. प्रश्न क्षेत्र को बड़ा करने के लिए आप '>' तीर पर क्लिक करके पैलेट छुपा सकते हैं।",
+      gen4: "4. परीक्षा के दौरान पेज रीफ्रेश या टैब स्विच न करें। ऐसा करने पर परीक्षा स्वतः सबमिट हो सकती है।",
+      answering: "प्रश्न पर जाना और उत्तर देना:",
+      ans1: "5. उत्तर देने के लिए विकल्प चुनें और 'Save & Next' पर क्लिक करें।",
+      ans2: "6. चयन बदलने के लिए 'Clear Response' पर क्लिक करके रीसेट करें।",
+      ans3: "7. समीक्षा के लिए चिन्हित करने हेतु 'Mark for Review & Next' पर क्लिक करें।",
+      rpscTitle: "विशेष निर्देश (RPSC RAS अनिवार्य प्रयास नियम):",
+      rpsc1: "8. मुख्य समय समाप्त होने के बाद अनुत्तरित प्रश्नों के लिए 10 मिनट का अतिरिक्त समय मिलेगा, जिसमें विकल्प (E) 'प्रश्न अनुत्तरित छोड़ें' चुनना अनिवार्य है।",
+      rpsc2: "9. अनुत्तरित प्रश्नों पर विकल्प (E) न चुनने पर प्रति प्रश्न -0.44 अंक का दंड लागू होगा।",
+      disclaimer: "मैंने सभी निर्देशों को पढ़ और समझ लिया है। मुझे आवंटित सभी कंप्यूटर हार्डवेयर उचित कार्यशील स्थिति में हैं। मैं सहमत हूं कि किसी भी नकल या टैब स्विचिंग के मामले में परीक्षा स्वतः सबमिट हो जाएगी।",
       btn: "मैं तैयार हूँ (I am ready to begin)"
     }
   };
@@ -2413,26 +2513,24 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
       {/* Header bar */}
-      <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between shadow-sm">
-        <h2 className="font-extrabold text-sm tracking-wide flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-blue-600 animate-pulse" /> Instructions Panel
+      <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between shadow-sm sticky top-0 z-20">
+        <h2 className="font-extrabold text-sm tracking-wide flex items-center gap-2 text-blue-600 dark:text-blue-400">
+          <ShieldCheck className="h-5 w-5 text-blue-600 animate-pulse" /> {examSession.testTitle || 'Mock Exam Instructions Panel'}
         </h2>
         
         <div className="flex items-center gap-4">
-          {/* Lang Switcher */}
           <div className="flex items-center gap-1.5 text-xs">
             <span className="text-slate-500 font-bold">View In:</span>
             <select
               value={lang}
               onChange={(e) => handleLangChange(e.target.value as 'en' | 'hi')}
-              className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 outline-none text-xs text-slate-800 dark:text-white cursor-pointer font-bold"
+              className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 outline-none text-xs text-slate-800 dark:text-white cursor-pointer font-bold"
             >
               <option value="en">English</option>
               <option value="hi">हिंदी (Hindi)</option>
             </select>
           </div>
           
-          {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
             className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-700"
@@ -2444,36 +2542,127 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
       </header>
 
       {/* Main Instructions Area */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-6 md:p-8 flex flex-col justify-between">
+      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 md:p-8 flex flex-col justify-between">
         
-        <div className="space-y-6">
-          <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
-            <h1 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider">{examName}</h1>
-            <div className="flex gap-4 mt-2 text-xs text-slate-500 font-bold">
-              <span>Duration: {durationMinutes} Mins</span>
-              <span>•</span>
-              <span>Questions: {questionsCount} Qs</span>
-              <span>•</span>
-              <span>Marks: {maxMarks} Marks</span>
+        <div className="space-y-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 shadow-md">
+          
+          {/* Header Metadata Grid */}
+          <div>
+            <h1 className="text-base sm:text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider mb-3">
+              {examSession.testTitle}
+            </h1>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Duration</span>
+                <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{durationMins} Mins</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Total Questions</span>
+                <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{totalQs} Qs</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Maximum Marks</span>
+                <span className="text-sm font-extrabold text-blue-600 dark:text-blue-400">{totalMarks} Marks</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Total Sections</span>
+                <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">{examSession.sections.length} Sections</span>
+              </div>
             </div>
           </div>
 
-          {/* Core instructions scroll box */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 h-[340px] overflow-y-auto space-y-4 text-xs leading-relaxed shadow-inner">
-            <h3 className="font-extrabold text-sm text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800 pb-1.5">{t.title}</h3>
+          {/* Sectional Breakdown Table */}
+          <div className="space-y-2">
+            <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Exam Structure & Section Breakdown
+            </h3>
+            <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th className="p-3">Section Name</th>
+                    <th className="p-3 text-center">Questions</th>
+                    <th className="p-3 text-center">Positive Mark</th>
+                    <th className="p-3 text-center">Negative Mark</th>
+                    <th className="p-3 text-right">Total Section Marks</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+                  {examSession.sections.map((sec) => {
+                    const secQs = examSession.questions.filter(q => q.sectionId === sec.id).length;
+                    const secMarks = secQs * (sec.positiveMark || 2);
+                    return (
+                      <tr key={sec.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/50 font-medium">
+                        <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{sec.name}</td>
+                        <td className="p-3 text-center font-mono">{secQs}</td>
+                        <td className="p-3 text-center font-bold text-emerald-600">+{sec.positiveMark ?? 2}</td>
+                        <td className="p-3 text-center font-bold text-red-500">−{sec.negativeMark ?? 0.5}</td>
+                        <td className="p-3 text-right font-extrabold text-blue-600">{secMarks}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Question Palette Color Legend */}
+          <div className="space-y-2">
+            <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Question Palette Status Legend
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px] font-semibold">
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                <span className="w-5 h-5 rounded bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-[10px]">1</span>
+                <span>Not Visited</span>
+              </div>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                <span className="w-5 h-5 rounded bg-red-500 text-white flex items-center justify-center font-bold text-[10px]">2</span>
+                <span>Not Answered</span>
+              </div>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                <span className="w-5 h-5 rounded bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px]">3</span>
+                <span>Answered</span>
+              </div>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                <span className="w-5 h-5 rounded bg-purple-600 text-white flex items-center justify-center font-bold text-[10px]">4</span>
+                <span>Marked Review</span>
+              </div>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 col-span-2 sm:col-span-1">
+                <span className="w-5 h-5 rounded bg-purple-600 text-white flex items-center justify-center font-bold text-[10px] relative">
+                  5<span className="w-1.5 h-1.5 bg-emerald-400 rounded-full absolute -top-0.5 -right-0.5" />
+                </span>
+                <span>Answered & Review</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Instructions Box */}
+          <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 text-xs leading-relaxed">
+            <h3 className="font-extrabold text-sm text-blue-600 dark:text-blue-400 border-b border-slate-200 dark:border-slate-800 pb-1.5">{t.title}</h3>
             
-            <p className="font-bold text-slate-700 dark:text-slate-300">{t.general}</p>
+            <p className="font-bold text-slate-800 dark:text-slate-200">{t.general}</p>
             <p className="pl-2">{t.gen1}</p>
             <p className="pl-2">{t.gen2}</p>
             <p className="pl-2">{t.gen3}</p>
+            <p className="pl-2">{t.gen4}</p>
 
-            <p className="font-bold text-slate-700 dark:text-slate-300 mt-4">{t.answering}</p>
+            <p className="font-bold text-slate-800 dark:text-slate-200 mt-4">{t.answering}</p>
             <p className="pl-2">{t.ans1}</p>
             <p className="pl-2">{t.ans2}</p>
+            <p className="pl-2">{t.ans3}</p>
+
+            {isRpscRas && (
+              <>
+                <p className="font-extrabold text-red-600 dark:text-red-400 mt-4">{t.rpscTitle}</p>
+                <p className="pl-2 text-red-700 dark:text-red-300 font-semibold">{t.rpsc1}</p>
+                <p className="pl-2 text-red-700 dark:text-red-300 font-semibold">{t.rpsc2}</p>
+              </>
+            )}
           </div>
 
           {/* Choose Default Test Language */}
-          <div className="bg-blue-50/50 dark:bg-slate-900/45 border border-blue-100 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="bg-blue-50/60 dark:bg-slate-950/60 border border-blue-100 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div>
               <p className="font-bold text-slate-800 dark:text-white">
                 {lang === 'hi' ? 'अपनी डिफ़ॉल्ट परीक्षा भाषा चुनें' : 'Choose your default exam language'}
@@ -2485,48 +2674,48 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
             <select
               value={lang}
               onChange={(e) => handleLangChange(e.target.value as 'en' | 'hi')}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 font-bold text-xs text-slate-800 dark:text-white cursor-pointer focus:outline-none"
+              className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 font-bold text-xs text-slate-800 dark:text-white cursor-pointer focus:outline-none"
             >
               <option value="en">English</option>
               <option value="hi">हिंदी (Hindi)</option>
             </select>
           </div>
-        </div>
 
-        {/* Disclaimer panel and button */}
-        <div className="mt-8 border-t border-slate-200 dark:border-slate-800 pt-6">
-          <label className="flex items-start gap-3 cursor-pointer select-none text-xs text-slate-600 dark:text-slate-400 leading-normal mb-6">
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-            />
-            <span>{t.disclaimer}</span>
-          </label>
+          {/* Disclaimer panel and button */}
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
+            <label className="flex items-start gap-3 cursor-pointer select-none text-xs text-slate-600 dark:text-slate-400 leading-normal mb-6">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              />
+              <span>{t.disclaimer}</span>
+            </label>
 
-          <div className="flex justify-between items-center">
-            <Link 
-              href="/mock-tests" 
-              className="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all active:scale-95"
-            >
-              Cancel
-            </Link>
+            <div className="flex justify-between items-center">
+              <Link 
+                href="/mock-tests" 
+                className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all active:scale-95"
+              >
+                Cancel
+              </Link>
 
-            <button
-              onClick={() => onStart(lang)}
-              disabled={!agreed}
-              className={`font-bold px-8 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all active:scale-95 shadow-md ${
-                agreed 
-                  ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-950/20 cursor-pointer' 
-                  : 'bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-600 shadow-none cursor-not-allowed'
-              }`}
-            >
-              {t.btn}
-            </button>
+              <button
+                onClick={() => onStart(lang)}
+                disabled={!agreed}
+                className={`font-bold px-8 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all active:scale-95 shadow-md ${
+                  agreed 
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-950/20 cursor-pointer' 
+                    : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 shadow-none cursor-not-allowed'
+                }`}
+              >
+                {t.btn}
+              </button>
+            </div>
           </div>
-        </div>
 
+        </div>
       </main>
     </div>
   );

@@ -210,7 +210,7 @@ function extractNoticeContent(pageHtml: string): string | null {
     const lower = tableContent.toLowerCase();
 
     // Whitelist criteria:
-    const isUsefulLinks = lower.includes('useful important link') || lower.includes('important link') || lower.includes('direct link') || lower.includes('apply online') || lower.includes('download notification') || lower.includes('official website');
+    const isUsefulLinks = lower.includes('useful important link') || lower.includes('important link') || lower.includes('useful link') || lower.includes('important links') || lower.includes('useful links') || lower.includes('official links') || lower.includes('direct link') || lower.includes('apply online') || lower.includes('download notification') || lower.includes('official website');
     const isImportantDates = lower.includes('important date') || lower.includes('application begin') || lower.includes('last date for apply');
     const isApplicationFee = lower.includes('application fee') || lower.includes('exam fee') || lower.includes('general / obc');
     const isAgeLimit = lower.includes('age limit') || lower.includes('minimum age') || lower.includes('maximum age');
@@ -236,11 +236,23 @@ function extractNoticeContent(pageHtml: string): string | null {
       // Strip social media & promo rows inside tables (e.g. WhatsApp/Telegram rows inside Useful Links table)
       cleanTable = cleanTable.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:Watch\s*Video|Hindi\s*Video|Short\s*Notification\s*\(?[\w\s]*Video|Join\s*Free\s*Information|Information\s*Channel|Official\s*Whatsapp|Whats-App|WhatsApp|Telegram|Instagram|Face\s*Book|You\s*Tube|Reels)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, '');
       
+      // Strip standalone branding rows (e.g. www..com, .Com, Rojgar Result)
+      cleanTable = cleanTable.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:www\s*\.\s*\.\s*com|\.Com|rojgarresult\.com|Rojgar\s*Result®?)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, (match) => {
+        const text = match.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
+        if (/^(?:www\s*\.\s*\.\s*com|\.Com|Website|\.Com\s*Website|Website\s*\.Com|Rojgar\s*Result®?|rojgarresult\.com)$/i.test(text) || text.length < 15) {
+          return '';
+        }
+        return match;
+      });
+
       // Remove purely branding <a> tags where anchor text is "Rojgar Result" or "rojgarresult.com"
-      cleanTable = cleanTable.replace(/<a[^>]*>\s*(?:Rojgar\s*Result®?|rojgarresult\.com|\.Com)\s*<\/a>/gi, '');
+      cleanTable = cleanTable.replace(/<a[^>]*>\s*(?:Rojgar\s*Result®?|rojgarresult\.com|\.Com|www\s*\.\s*\.\s*com)\s*<\/a>/gi, '');
 
       // Remove branding text strictly inside text nodes (between > and <) without corrupting href URLs
-      cleanTable = cleanTable.replace(/>([^<]*)(?:Rojgar\s*Result®?|rojgarresult\.com)([^<]*)</gi, '>$1$2<');
+      cleanTable = cleanTable.replace(/>([^<]*)(?:Rojgar\s*Result®?|rojgarresult\.com|www\s*\.\s*\.\s*com|\.Com)([^<]*)</gi, '>$1$2<');
+
+      // Remove empty table rows
+      cleanTable = cleanTable.replace(/<tr[^>]*>\s*(?:<td[^>]*>\s*(?:<[^>]*>\s*)*<\/td>\s*)*<\/tr>/gi, '');
 
       // Ensure all <a> tags open in new tab
       cleanTable = cleanTable.replace(/<a\s+(?!.*?target=)/gi, '<a target="_blank" rel="noopener noreferrer" ');

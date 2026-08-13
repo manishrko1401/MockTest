@@ -51,7 +51,7 @@ export default function ExamSolutionAnalysisPage() {
   const [reportingError, setReportingError] = useState('');
   const [reportingSuccess, setReportingSuccess] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-  const [customQs, setCustomQs] = useState<any[] | null>(null);
+  const [customQs, setCustomQs] = useState<any>(null);
   const [loadingCustomQs, setLoadingCustomQs] = useState(true);
   const [activeMobileTab, setActiveMobileTab] = useState<'analysis' | 'solutions'>('analysis');
   const [viewMode, setViewMode] = useState<'analysis' | 'solution'>('analysis');
@@ -214,7 +214,17 @@ export default function ExamSolutionAnalysisPage() {
         });
         const data = await res.json();
         if (data.success && data.questions) {
-          setCustomQs(data.questions);
+          setCustomQs({
+            questions: data.questions,
+            positiveMarks: data.positiveMarks,
+            negativeMarks: data.negativeMarks,
+            durationMinutes: data.durationMinutes,
+            questionsCount: data.questionsCount,
+            maxMarks: data.maxMarks,
+            hasSectionalTiming: data.hasSectionalTiming,
+            sectionalTimings: data.sectionalTimings,
+            sections: data.sections,
+          });
         }
       } catch (err) {
         console.error("Error fetching custom questions:", err);
@@ -375,9 +385,31 @@ export default function ExamSolutionAnalysisPage() {
   });
 
   const sectionalAnalysis = (() => {
-    // Resolve admin-configured marks for this test from the catalog
-    let catalogPositiveMark = testId.includes('rrb') || testId.includes('railway') ? 1 : 2;
-    let catalogNegativeMark = testId.includes('rrb') || testId.includes('railway') ? 0.33 : 0.5;
+    // Resolve admin-configured marks for this test from the catalog or custom metadata
+    let catalogPositiveMark = 2;
+    let catalogNegativeMark = 0.5;
+
+    const lowerId = (testId || '').toLowerCase();
+    if (lowerId.includes('ctet')) {
+      catalogPositiveMark = 1;
+      catalogNegativeMark = 0;
+    } else if (lowerId.includes('rpsc') || lowerId.includes('ras')) {
+      catalogPositiveMark = 1.33;
+      catalogNegativeMark = 0.44;
+    } else if (lowerId.includes('rrb') || lowerId.includes('railway')) {
+      catalogPositiveMark = 1;
+      catalogNegativeMark = 0.33;
+    }
+
+    if (customQs && typeof customQs === 'object' && !Array.isArray(customQs)) {
+      if (customQs.positiveMarks !== undefined && customQs.positiveMarks !== null) {
+        catalogPositiveMark = Number(customQs.positiveMarks);
+      }
+      if (customQs.negativeMarks !== undefined && customQs.negativeMarks !== null) {
+        catalogNegativeMark = Number(customQs.negativeMarks);
+      }
+    }
+
     for (const cat of (examCatalog || [])) {
       for (const sub of (cat.subCategories || [])) {
         const directTest = (sub.tests || []).find((t: any) => t.id === testId);
@@ -1029,10 +1061,10 @@ export default function ExamSolutionAnalysisPage() {
                 <span className="text-[#0747A6] text-xs">Question Type: Multiple Choice Question</span>
                 <div className="flex gap-2">
                   <span className="text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded">
-                    Marks: +{currentSection.positiveMark}
+                    Marks: +{activeQuestion?.positiveMark ?? currentSection?.positiveMark ?? 2}
                   </span>
                   <span className="text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
-                    Negative: -{currentSection.negativeMark}
+                    Negative: -{activeQuestion?.negativeMark ?? currentSection?.negativeMark ?? 0}
                   </span>
                 </div>
               </div>
