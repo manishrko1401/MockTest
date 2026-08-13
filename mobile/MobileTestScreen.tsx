@@ -1685,15 +1685,6 @@ export default function MobileTestScreen({
             {
               text: 'View Performance',
               onPress: async () => {
-                const missingApp = !websiteRatingRef.current;
-                const missingExam = !examRatingRef.current;
-
-                if (missingApp || missingExam) {
-                  // Blink the unrated star row(s) to highlight them without any alert dialog
-                  triggerRatingBlinkRef.current(missingApp, missingExam);
-                  return;
-                }
-
                 // Always submit feedback/rating so every test completion is recorded in admin panel
                 try {
                   fetch(`${BASE_URL}/api/feedback`, {
@@ -1702,8 +1693,8 @@ export default function MobileTestScreen({
                     body: JSON.stringify({
                       userId: currentUser?.id,
                       testId: testId,
-                      platformRating: websiteRatingRef.current || 0,
-                      examRating: examRatingRef.current || 0,
+                      platformRating: websiteRatingRef.current || 5,
+                      examRating: examRatingRef.current || 5,
                       feedbackText: feedbackTextRef.current || '',
                       source: 'app'
                     })

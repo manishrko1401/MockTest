@@ -1075,12 +1075,6 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               {/* Submit & View Score & Analysis Button */}
               <button
                 onClick={async () => {
-                  if (websiteRating === 0 || examRating === 0) {
-                    setIsBlinkingStars(true);
-                    setTimeout(() => setIsBlinkingStars(false), 900);
-                    return;
-                  }
-
                   try {
                     await fetch('/api/feedback', {
                       method: 'POST',
@@ -1088,9 +1082,9 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                       body: JSON.stringify({
                         userId: currentUser?.id,
                         testId: testId,
-                        platformRating: websiteRating,
-                        examRating: examRating,
-                        feedbackText: feedbackText,
+                        platformRating: websiteRating || 5,
+                        examRating: examRating || 5,
+                        feedbackText: feedbackText || '',
                         source: 'web'
                       })
                     });
