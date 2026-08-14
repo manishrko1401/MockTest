@@ -43,6 +43,7 @@ import { EXPLANATIONS } from '../lib/examUtils';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 import HomeSupportWidget from '../components/HomeSupportWidget';
+import HangingTriColorBalloons from '../components/HangingTriColorBalloons';
 
 import { processQuestionHtml, decodeHtml } from '../lib/mathUtils';
 import MathJaxText from '../lib/MathJaxText';
@@ -1117,11 +1118,16 @@ export default function PracticeSeriesPage() {
         </div>
 
         {/* Center: Happy 80th Independence Day Celebration Greeting */}
-        <div className="hidden lg:flex items-center gap-2 bg-gradient-to-r from-orange-500/15 via-white/20 to-emerald-500/15 dark:from-orange-500/25 dark:via-slate-900/40 dark:to-emerald-500/25 border border-orange-500/30 dark:border-orange-500/40 px-4 py-1.5 rounded-full shadow-xs">
+        <div className="relative hidden lg:flex items-center gap-2 bg-gradient-to-r from-orange-500/15 via-white/20 to-emerald-500/15 dark:from-orange-500/25 dark:via-slate-900/40 dark:to-emerald-500/25 border border-orange-500/30 dark:border-orange-500/40 px-4 py-1.5 rounded-full shadow-xs">
           <span className="text-sm animate-flag-sway leading-none">🇮🇳</span>
           <span className="text-xs font-black text-slate-900 dark:text-amber-300 tracking-wide uppercase flex items-center gap-1.5">
             Happy 80th Independence Day! 🇮🇳
           </span>
+
+          {/* Hanging Indian Tri-Color Balloons in the center just below the tile (Big with Cascading Ribbons) */}
+          <div className="absolute top-[85%] left-1/2 -translate-x-1/2 z-30 pointer-events-none drop-shadow-xl">
+            <HangingTriColorBalloons size="lg" variant="center" />
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

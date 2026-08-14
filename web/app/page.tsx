@@ -10,6 +10,8 @@ import { TRANSLATIONS } from './translations';
 import { getLocalizedName } from './lib/examUtils';
 import { useIsMobile } from './useIsMobile';
 import VocabSection from './components/VocabSection';
+import HangingTriColorBalloons from './components/HangingTriColorBalloons';
+import WavingIndianFlag from './components/WavingIndianFlag';
 
 const EXAMS_BY_CATEGORY: Record<string, { id: string; name: string }[]> = {
   ssc: [
@@ -495,8 +497,14 @@ const formatSubCategoryName = (name: string) => {
 
         {/* Live Notices & Announcements Marquee */}
         {noticesList && noticesList.length > 0 && (
-          <div className="bg-blue-600/90 dark:bg-blue-950/80 text-white text-[10px] py-2 px-4 flex items-center gap-2 border-b border-blue-500/20 z-20 shrink-0 font-bold">
-            <span className="bg-red-500 text-[8px] text-white px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0">
+          <div className="relative bg-blue-600/90 dark:bg-blue-950/80 text-white text-[10px] py-2 px-3 flex items-center gap-2 border-b border-blue-500/20 z-20 shrink-0 font-bold overflow-visible shadow-xs">
+            {/* Hanging Indian Tricolor Balloons (Dangling Downwards from the Live Updates Bar) */}
+            <div className="absolute top-[60%] left-2 z-30 pointer-events-none drop-shadow-md">
+              <HangingTriColorBalloons size="sm" variant="left" />
+            </div>
+
+            <span className="bg-red-500 text-[8px] text-white px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0 ml-7 flex items-center gap-1 shadow-xs border border-red-400/30">
+              <span className="animate-flag-sway text-[9px]">🇮🇳</span>
               {language === 'hi' ? 'लाइव अपडेट' : 'Live Updates'}
             </span>
             {React.createElement(
@@ -518,6 +526,11 @@ const formatSubCategoryName = (name: string) => {
                 </span>
               ))
             )}
+
+            {/* Right Hanging Balloons on Mobile (Dangling Downwards) */}
+            <div className="absolute top-[60%] right-2 z-30 pointer-events-none drop-shadow-md">
+              <HangingTriColorBalloons size="sm" variant="right" />
+            </div>
           </div>
         )}
 
@@ -728,6 +741,14 @@ const formatSubCategoryName = (name: string) => {
           {/* 2. CENTERED HERO TITLE SECTION */}
           <section className="text-center pt-2 pb-2 space-y-3 relative z-10 flex flex-col items-center justify-center">
             
+            {/* India's Waving Flag Just Above the Independence Day Offer Tile */}
+            <div className="flex items-center justify-center gap-2 -mb-1 animate-pulse-glow">
+              <WavingIndianFlag size="sm" showPole={true} />
+              <span className="text-[10px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400">
+                {language === 'hi' ? '🇮🇳 15 अगस्त स्वतंत्रता दिवस' : '🇮🇳 15th August Special'}
+              </span>
+            </div>
+
             {/* Completely Wide Independence Day Celebration Offer Banner at Top */}
             <div className="w-full bg-gradient-to-r from-orange-500/15 via-white/20 to-emerald-500/15 dark:from-orange-500/25 dark:via-slate-900/50 dark:to-emerald-500/25 border border-orange-500/40 dark:border-orange-500/50 rounded-2xl p-2.5 px-3 flex items-center justify-between gap-2 shadow-md relative overflow-hidden group">
               {/* Top Saffron-Green subtle bar */}
@@ -1296,8 +1317,14 @@ const formatSubCategoryName = (name: string) => {
 
       {/* Live Notices & Announcements Marquee */}
       {noticesList && noticesList.length > 0 && (
-        <div className="bg-blue-600/90 dark:bg-blue-950/80 text-white text-xs py-2 px-8 flex items-center gap-3 border-b border-blue-500/20 z-30 shrink-0 font-bold">
-          <span className="bg-red-500 text-[9px] text-white px-2 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0">
+        <div className="relative bg-blue-600/90 dark:bg-blue-950/80 text-white text-xs py-2 px-8 flex items-center gap-3 border-b border-blue-500/20 z-30 shrink-0 font-bold overflow-visible shadow-xs">
+          {/* Hanging Indian Tricolor Balloons (Dangling Downwards from the Live Updates Bar) - Left Cluster */}
+          <div className="absolute top-[60%] left-4 z-40 pointer-events-none drop-shadow-xl">
+            <HangingTriColorBalloons size="md" variant="left" />
+          </div>
+
+          <span className="bg-red-500 text-[9px] text-white px-2.5 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0 ml-14 flex items-center gap-1.5 shadow-xs border border-red-400/30">
+            <span className="animate-flag-sway text-xs">🇮🇳</span>
             {language === 'hi' ? 'लाइव अपडेट' : 'Live Updates'}
           </span>
           {React.createElement(
@@ -1319,6 +1346,11 @@ const formatSubCategoryName = (name: string) => {
               </span>
             ))
           )}
+
+          {/* Hanging Indian Tricolor Balloons (Dangling Downwards from the Live Updates Bar) - Right Cluster */}
+          <div className="absolute top-[60%] right-4 z-40 pointer-events-none drop-shadow-xl">
+            <HangingTriColorBalloons size="md" variant="right" />
+          </div>
         </div>
       )}
 
@@ -1351,6 +1383,21 @@ const formatSubCategoryName = (name: string) => {
 
         {/* Left Side: Compact Pitch Title Section + Promo Banner Above Badge */}
         <div className="lg:col-span-4 flex flex-col justify-center space-y-3.5 text-left">
+          {/* India's Waving Flag Just Above the Independence Day Offer Tile */}
+          <div className="flex items-center gap-3 pl-1 -mb-1">
+            <WavingIndianFlag size="md" showPole={true} />
+            <div className="flex flex-col">
+              <span className="text-[11px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                <span>जय हिन्द</span>
+                <span className="text-slate-400 dark:text-slate-600">•</span>
+                <span>15 August Special</span>
+              </span>
+              <span className="text-[9.5px] font-bold text-slate-500 dark:text-slate-400">
+                {language === 'hi' ? 'भारतीय स्वतंत्रता दिवस उत्सव' : 'Indian Independence Day Celebration'}
+              </span>
+            </div>
+          </div>
+
           {/* Compact Independence Day Promo Banner Above Badge */}
           <div className="w-full max-w-sm bg-gradient-to-r from-orange-500/15 via-white/20 to-emerald-500/15 dark:from-orange-500/25 dark:via-slate-900/50 dark:to-emerald-500/25 border border-orange-500/40 dark:border-orange-500/50 rounded-2xl p-2.5 px-3 flex items-center justify-between gap-2 shadow-md group relative overflow-hidden">
             {/* Top Saffron-Green subtle bar */}
