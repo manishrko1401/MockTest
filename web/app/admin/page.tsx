@@ -274,8 +274,14 @@ export default function AdminAnalytics() {
       fetchFeedbacks();
     } else if (activeTab === 'attempts') {
       fetchAttempts();
+    } else if (activeTab === 'users' || activeTab === 'reports' || activeTab === 'analytics') {
+      refreshUsersList();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    refreshUsersList();
+  }, []);
 
   // Poll support users list
   const fetchSupportUsers = async (showLoading = false) => {

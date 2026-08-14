@@ -898,12 +898,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       const [data, userData] = await Promise.all([bootstrapPromise, userPromise]);
 
       if (data.success) {
-        setUsersList([]);
         const freshNotices = sortNotices(data.noticesList || []);
         const freshCatalog = data.examCatalog || [];
         setNoticesList(freshNotices);
         setExamCatalog(freshCatalog);
-        setReportedQuestionsList([]);
         // 💾 Persist to localStorage so the NEXT page load is instant
         writeCache(CACHE_KEY_NOTICES, freshNotices);
         writeCache(CACHE_KEY_CATALOG, freshCatalog);
@@ -967,16 +965,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }
   };
 
-  const fetchAdminData = async () => {
-    // Only admins/staff need to download all users and reports
-    if (!currentUser || currentUser.role === 'STUDENT') return;
+  const fetchAdminData = async (adminId?: string) => {
+    const uid = adminId || currentUser?.id;
+    if (!uid) return;
+    if (currentUser && currentUser.role === 'STUDENT') return;
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'admin-data',
-          data: { userId: currentUser.id }
+          data: { userId: uid }
         })
       });
       const data = await res.json();
@@ -2382,7 +2381,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         deleteReportedQuestion,
         mergeUserSessions,
         refreshCatalog,
-        refreshUsersList: fetchUsersList,
+        refreshUsersList: fetchAdminData,
       }}
     >
       {children}
