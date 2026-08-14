@@ -18,7 +18,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Persistent Exam Catalog and Notices Cache to survive Next.js dev server hot-reloads
-// noticesLastFetched tracks freshness — if missing (old cache shape), we force a re-fetch
+// 5-minute TTL with instant invalidation on write actions
+const CATALOG_CACHE_TTL_MS = 5 * 60 * 1000;
+let schemaPatched = false;
+
 const catalogCache: { examCatalog: any; noticesList: any; noticesLastFetched: number | null } = 
   (global as any).catalogCache && (global as any).catalogCache.noticesLastFetched !== undefined
     ? (global as any).catalogCache
@@ -544,12 +547,12 @@ async function handleBootstrap() {
     });
   }
 
-  // Use memory cache if populated with actual items and notices cache is fresh (< 15 seconds)
-  const isNoticesCacheFresh = catalogCache.noticesLastFetched && (Date.now() - catalogCache.noticesLastFetched < 15000);
+  // Use memory cache if populated with actual items and notices cache is fresh (< 5 minutes)
+  const isNoticesCacheFresh = catalogCache.noticesLastFetched && (Date.now() - catalogCache.noticesLastFetched < CATALOG_CACHE_TTL_MS);
   if (catalogCache.examCatalog && catalogCache.examCatalog.length > 0 && catalogCache.noticesList && isNoticesCacheFresh) {
     return NextResponse.json(
       { success: true, usersList: [], noticesList: catalogCache.noticesList, examCatalog: catalogCache.examCatalog, reportedQuestionsList: [] },
-      { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' } }
+      { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
     );
   }
 
@@ -2805,40 +2808,42 @@ async function handleReportQuestion(data: any) {
 // Optimized Memory Assembly Compiler for Exam Catalog
 // ---------------------------------------------------------------------------
 async function getCompiledExamCatalog() {
-  // Safe runtime schema patch: ensure logoUrl, isPopular, isPracticeSeries, description, countText columns exist in categories table
-  try {
-    await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "logoUrl" text;');
-    await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "isPopular" boolean DEFAULT false;');
-    await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "isPracticeSeries" boolean DEFAULT false;');
-    await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "description" text DEFAULT \'\';');
-    await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "countText" text DEFAULT \'\';');
-    await prisma.$executeRawUnsafe('ALTER TABLE IF EXISTS public.vocabs ENABLE ROW LEVEL SECURITY;');
-    await prisma.$executeRawUnsafe('ALTER TABLE IF EXISTS public.practice_sessions ENABLE ROW LEVEL SECURITY;');
-    await prisma.$executeRawUnsafe(`
-      DO $$
-      BEGIN
-          IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'vocabs') THEN
-              IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'vocabs' AND policyname = 'Enable read access for all users') THEN
-                  CREATE POLICY "Enable read access for all users" ON public.vocabs FOR SELECT USING (true);
-              END IF;
-          END IF;
-          IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'practice_sessions') THEN
-              EXECUTE 'DROP POLICY IF EXISTS "Enable all access for practice_sessions" ON public.practice_sessions;';
-              IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'practice_sessions' AND policyname = 'Allow_Public_Read_practice_sessions') THEN
-                  CREATE POLICY "Allow_Public_Read_practice_sessions" ON public.practice_sessions FOR SELECT USING (true);
-              END IF;
-          END IF;
-      END $$;
+  // Safe runtime schema patch: run once on boot to avoid executing 8 DDL queries on every request
+  if (!schemaPatched) {
+    schemaPatched = true;
+    try {
+      await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "logoUrl" text;');
+      await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "isPopular" boolean DEFAULT false;');
+      await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "isPracticeSeries" boolean DEFAULT false;');
+      await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "description" text DEFAULT \'\';');
+      await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "countText" text DEFAULT \'\';');
+      await prisma.$executeRawUnsafe('ALTER TABLE IF EXISTS public.vocabs ENABLE ROW LEVEL SECURITY;');
+      await prisma.$executeRawUnsafe('ALTER TABLE IF EXISTS public.practice_sessions ENABLE ROW LEVEL SECURITY;');
+      await prisma.$executeRawUnsafe(`
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'vocabs') THEN
+                IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'vocabs' AND policyname = 'Enable read access for all users') THEN
+                    CREATE POLICY "Enable read access for all users" ON public.vocabs FOR SELECT USING (true);
+                END IF;
+            END IF;
+            IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'practice_sessions') THEN
+                EXECUTE 'DROP POLICY IF EXISTS "Enable all access for practice_sessions" ON public.practice_sessions;';
+                IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'practice_sessions' AND policyname = 'Allow_Public_Read_practice_sessions') THEN
+                    CREATE POLICY "Allow_Public_Read_practice_sessions" ON public.practice_sessions FOR SELECT USING (true);
+                END IF;
+            END IF;
+        END $$;
 
-      ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "nameHi" TEXT DEFAULT '';
-      ALTER TABLE "exams" ADD COLUMN IF NOT EXISTS "nameHi" TEXT DEFAULT '';
-      ALTER TABLE "test_series" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
-      ALTER TABLE "mock_tests" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
-      ALTER TABLE "notices" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
-    `);
-  } catch (err: any) {
-    console.error("Runtime database patch failed:", err);
-    // Don't throw — allow the query to proceed and fail naturally if column truly missing
+        ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "nameHi" TEXT DEFAULT '';
+        ALTER TABLE "exams" ADD COLUMN IF NOT EXISTS "nameHi" TEXT DEFAULT '';
+        ALTER TABLE "test_series" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
+        ALTER TABLE "mock_tests" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
+        ALTER TABLE "notices" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
+      `);
+    } catch (err: any) {
+      console.error("Runtime database patch failed:", err);
+    }
   }
 
   const categories = await prisma.category.findMany({ orderBy: { orderIndex: 'asc' } });
@@ -3691,11 +3696,12 @@ async function handleGetUserDetails(data: any) {
     return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
   }
 
-  // Fetch sessions WITH responses so Solution/Analysis dashboard gets correct time taken and statuses
+  // Fetch recent sessions WITH responses so Solution/Analysis dashboard gets correct time taken and statuses
   const u = await prisma.user.findUnique({
     where: { id: userId },
     include: {
       testSessions: {
+        take: 30,
         include: {
           mockTest: {
             select: {
@@ -3958,6 +3964,7 @@ async function handleGetAttempts() {
   try {
     if ((prisma as any).userTestSession) {
       const attempts = await (prisma as any).userTestSession.findMany({
+        take: 200,
         orderBy: { startedAt: 'desc' },
         include: {
           user: {
@@ -3974,14 +3981,6 @@ async function handleGetAttempts() {
               id: true,
               title: true,
               maxMarks: true,
-            },
-          },
-          responses: {
-            select: {
-              questionId: true,
-              selectedOptionIndex: true,
-              state: true,
-              elapsedSeconds: true,
             },
           },
         },
