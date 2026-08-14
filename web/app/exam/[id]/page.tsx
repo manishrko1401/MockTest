@@ -264,30 +264,11 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
     };
   }, []);
 
-  // Automatically pause exam and display pause popup when tab is switched, browser minimized, or window focus lost
+  const initializedRef = useRef(false);
+  const currentUserRef = useRef(currentUser);
   useEffect(() => {
-    if (state.isExamSubmitted) return;
-
-    const handleVisibilityChange = () => {
-      if (document.hidden || document.visibilityState === 'hidden') {
-        pauseExam();
-        setIsManuallyPaused(true);
-      }
-    };
-
-    const handleBlur = () => {
-      pauseExam();
-      setIsManuallyPaused(true);
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleBlur);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleBlur);
-    };
-  }, [state.isExamSubmitted, pauseExam]);
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
 
   const stateRef = useRef(state);
   useEffect(() => {
@@ -299,9 +280,67 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
     saveOngoingSessionRef.current = saveOngoingSession;
   }, [saveOngoingSession]);
 
-  // Initialize session on mount (checking for resume)
+  // Automatically pause exam, save state instantly, and display pause popup when tab is switched, browser minimized, or window focus lost
   useEffect(() => {
     if (state.isExamSubmitted) return;
+
+    const handlePauseAndSave = () => {
+      pauseExam();
+      setIsManuallyPaused(true);
+
+      const currentState = stateRef.current;
+      if (currentState.session && currentState.session.questions && currentState.session.questions.length > 0 && !currentState.isExamSubmitted) {
+        const localSnap = {
+          testId,
+          status: 'ONGOING',
+          timeRemaining: currentState.timeRemaining,
+          violations: currentState.violationsCount,
+          currentSectionIndex: currentState.currentSectionIndex,
+          currentQuestionIndex: currentState.currentQuestionIndex,
+          responses: currentState.responses,
+          savedAt: Date.now(),
+          updatedAt: new Date().toISOString(),
+          startedAt: new Date().toISOString(),
+        };
+        try {
+          localStorage.setItem(`ongoing_web_${testId}`, JSON.stringify(localSnap));
+        } catch {}
+
+        saveOngoingSessionRef.current(
+          testId,
+          currentState.session.testTitle,
+          currentState.timeRemaining,
+          currentState.violationsCount,
+          currentState.responses,
+          currentState.currentSectionIndex,
+          currentState.currentQuestionIndex
+        );
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden || document.visibilityState === 'hidden') {
+        handlePauseAndSave();
+      }
+    };
+
+    const handleBlur = () => {
+      handlePauseAndSave();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [state.isExamSubmitted, pauseExam, testId]);
+
+  // Initialize session on mount (checking for resume) — runs ONLY ONCE
+  useEffect(() => {
+    if (state.isExamSubmitted || initializedRef.current || state.session) return;
+    initializedRef.current = true;
 
     const initialize = async () => {
       let customQs = null;
@@ -359,7 +398,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       }
 
       // 1. Check server for an ongoing session first
-      const ongoingRecord = currentUser?.testSessions?.find(
+      const user = currentUserRef.current;
+      const ongoingRecord = user?.testSessions?.find(
         (s: any) => s.testId === testId && s.status === 'ONGOING'
       );
 
@@ -393,7 +433,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
     };
 
     initialize();
-  }, [initSession, testId, initialExamLanguage, authLanguage, examCatalog, currentUser, state.isExamSubmitted]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [testId, initialExamLanguage, authLanguage, state.isExamSubmitted]);
 
   // Save state to localStorage (instant, works offline) and server on unload/unmount
   useEffect(() => {

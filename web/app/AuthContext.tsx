@@ -999,6 +999,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     // appear on the website without requiring a full page reload.
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
+        // 🛡️ Do NOT trigger background session reload while student is taking an active exam
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/exam/') && !window.location.pathname.includes('/analysis')) {
+          return;
+        }
         const getCookieInner = (name: string) => {
           const value = `; ${document.cookie}`;
           const parts = value.split(`; ${name}=`);
