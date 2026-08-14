@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./AuthContext";
 import IndependenceDayDecorations from "./components/IndependenceDayDecorations";
+import DeploymentRecovery from "./components/DeploymentRecovery";
 import { cookies } from "next/headers";
 
 import Script from "next/script";
@@ -47,6 +48,7 @@ export default async function RootLayout({
         className="min-h-full flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200"
       >
         <AuthProvider initialUserProfile={userProfile}>
+          <DeploymentRecovery />
           <IndependenceDayDecorations />
           {children}
         </AuthProvider>

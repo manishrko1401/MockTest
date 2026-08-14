@@ -796,6 +796,20 @@ export default function AdminAnalytics() {
     return 0;
   };
 
+  const getExamSubCategoryName = (testId?: string): string | null => {
+    if (!testId || !examCatalog) return null;
+    for (const cat of examCatalog) {
+      for (const sub of (cat.subCategories || [])) {
+        for (const subSub of (sub.subSubCategories || [])) {
+          if ((subSub.tests || []).some((t: any) => t.id === testId)) {
+            return sub.name;
+          }
+        }
+      }
+    }
+    return null;
+  };
+
   const showToast = (message: string) => {
     setToastMessage(message);
     setTimeout(() => {
@@ -2878,7 +2892,17 @@ export default function AdminAnalytics() {
                               <div key={session.id} className="border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-4 text-xs">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-808 pb-3 mb-3">
                                   <div>
-                                    <p className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">{session.title}</p>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      {(() => {
+                                        const subCategoryName = getExamSubCategoryName(session.testId);
+                                        return subCategoryName ? (
+                                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900/40 w-fit" title={subCategoryName}>
+                                            📁 {subCategoryName}
+                                          </span>
+                                        ) : null;
+                                      })()}
+                                      <p className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">{session.title}</p>
+                                    </div>
                                     <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 font-semibold">
                                       <Calendar className="h-3 w-3" /> Attempted on {session.date}
                                     </p>
@@ -5777,12 +5801,14 @@ export default function AdminAnalytics() {
                           const userEmail = a.user?.email || '';
                           const userCode = a.user?.candidateCode || '';
                           const testTitle = a.mockTest?.title || '';
+                          const subCategoryName = a.mockTest?.testSeries?.exam?.name || getExamSubCategoryName(a.mockTestId) || '';
 
                           const userMatches = !attemptsSearch || 
                             userName.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
                             userEmail.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
                             userCode.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
-                            testTitle.toLowerCase().includes(attemptsSearch.toLowerCase());
+                            testTitle.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
+                            subCategoryName.toLowerCase().includes(attemptsSearch.toLowerCase());
                           
                           const platformMatches = attemptsPlatformFilter === 'all' || a.source === attemptsPlatformFilter;
                           const statusMatches = attemptsStatusFilter === 'all' || a.status === attemptsStatusFilter;
@@ -5818,10 +5844,24 @@ export default function AdminAnalytics() {
                               </div>
                             </td>
 
-                            {/* Mock Test */}
-                            <td className="py-4 px-4 max-w-[220px]">
-                              <p className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">{a.mockTest?.title || 'Unknown Test'}</p>
-                              <p className="text-[9px] text-slate-400 font-mono mt-0.5 truncate">{a.mockTestId}</p>
+                            {/* Mock Test Details */}
+                            <td className="py-4 px-4 max-w-[240px]">
+                              {(() => {
+                                const subCategoryName = a.mockTest?.testSeries?.exam?.name || getExamSubCategoryName(a.mockTestId);
+                                return (
+                                  <div className="flex flex-col gap-1">
+                                    {subCategoryName && (
+                                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900/40 w-fit max-w-full truncate" title={subCategoryName}>
+                                        📁 {subCategoryName}
+                                      </span>
+                                    )}
+                                    <p className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate" title={a.mockTest?.title || 'Unknown Test'}>
+                                      {a.mockTest?.title || 'Unknown Test'}
+                                    </p>
+                                    <p className="text-[9px] text-slate-400 font-mono truncate">{a.mockTestId}</p>
+                                  </div>
+                                );
+                              })()}
                             </td>
 
                             {/* Platform Source */}

@@ -3981,6 +3981,24 @@ async function handleGetAttempts() {
               id: true,
               title: true,
               maxMarks: true,
+              testSeries: {
+                select: {
+                  id: true,
+                  title: true,
+                  exam: {
+                    select: {
+                      id: true,
+                      name: true,
+                      category: {
+                        select: {
+                          id: true,
+                          name: true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             },
           },
         },
@@ -4004,11 +4022,21 @@ async function handleGetAttempts() {
         json_build_object(
           'id', mt.id,
           'title', mt.title,
-          'maxMarks', mt."maxMarks"
+          'maxMarks', mt."maxMarks",
+          'testSeries', json_build_object(
+            'id', ts.id,
+            'title', ts.title,
+            'exam', json_build_object(
+              'id', e.id,
+              'name', e.name
+            )
+          )
         ) as "mockTest"
       FROM user_test_sessions uts
       LEFT JOIN users u ON uts."userId" = u.id
       LEFT JOIN mock_tests mt ON uts."mockTestId" = mt.id
+      LEFT JOIN test_series ts ON mt."testSeriesId" = ts.id
+      LEFT JOIN exams e ON ts."examId" = e.id
       ORDER BY uts."startedAt" DESC
     `);
 
