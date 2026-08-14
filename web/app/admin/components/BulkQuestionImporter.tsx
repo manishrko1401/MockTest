@@ -275,9 +275,6 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
         showToast(`Successfully linked S3 URL to mock test! (${data.questionsCount || 0} questions)`);
         setS3UrlInput('');
         setS3QuestionsCount('');
-        if (typeof window !== 'undefined') {
-          setTimeout(() => window.location.reload(), 1000);
-        }
       } else {
         showToast('Error: ' + (data.error || 'Failed to link S3 URL to database.'));
       }

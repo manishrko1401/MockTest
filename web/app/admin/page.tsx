@@ -111,6 +111,7 @@ const formatTimeAgo = (dateStr?: string | null): string => {
 export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const tabInitializedRef = React.useRef(false);
   const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series'>('analytics');
 
   const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series') => {
@@ -315,26 +316,24 @@ export default function AdminAnalytics() {
     }
   };
 
-  // Poll user list every 4 seconds
+  // Fetch support users list on initial mount and when entering support tab (no automatic periodic polling)
   React.useEffect(() => {
-    fetchSupportUsers(true);
-    const interval = setInterval(() => {
-      fetchSupportUsers(false);
-    }, 4000);
-    return () => clearInterval(interval);
+    fetchSupportUsers(false);
   }, []);
 
-  // Poll messages every 3 seconds if a user is selected
+  React.useEffect(() => {
+    if (activeTab === 'support') {
+      fetchSupportUsers(true);
+    }
+  }, [activeTab]);
+
+  // Fetch support messages when a user conversation is selected
   React.useEffect(() => {
     if (!selectedSupportUserId) {
       setSupportMessages([]);
       return;
     }
     fetchSupportMessages(selectedSupportUserId, true);
-    const interval = setInterval(() => {
-      fetchSupportMessages(selectedSupportUserId, false);
-    }, 3000);
-    return () => clearInterval(interval);
   }, [selectedSupportUserId]);
 
   const handleSendAdminMessage = async (e: React.FormEvent) => {
@@ -640,9 +639,10 @@ export default function AdminAnalytics() {
     setEditAnnImageUrl(ann.imageUrl || '');
   };
   
-  // Set default tab based on user role
+  // Set default tab based on user role ONCE on initial mount/login (prevents page from jumping tabs on state updates)
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && !tabInitializedRef.current) {
+      tabInitializedRef.current = true;
       if (currentUser.role === 'TEST_CREATOR') {
         setActiveTab('upload');
       } else if (currentUser.role === 'SUPPORT_TEAM') {
@@ -653,7 +653,7 @@ export default function AdminAnalytics() {
         setActiveTab('analytics');
       }
     }
-  }, [currentUser]);
+  }, [currentUser?.role]);
 
   // Sync local edit states with updated usersList (ensures instant UI updates on save)
   // Note: we DON'T overwrite testSessions here since they are loaded lazily
@@ -4527,9 +4527,13 @@ export default function AdminAnalytics() {
                   <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                     <MessageSquare className="h-4.5 w-4.5 text-blue-500" /> Conversations ({supportUsers.length})
                   </h3>
-                  {supportUsersLoading && (
-                    <RefreshCw className="h-3.5 w-3.5 text-slate-400 animate-spin" />
-                  )}
+                  <button
+                    onClick={() => fetchSupportUsers(true)}
+                    title="Refresh conversations"
+                    className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${supportUsersLoading ? 'animate-spin' : ''}`} />
+                  </button>
                 </div>
 
                 <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
@@ -4663,9 +4667,19 @@ export default function AdminAnalytics() {
                             <h4 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">{selectedUser?.name || 'Loading user...'}</h4>
                             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">{selectedUser?.email}</p>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Active session</span>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => selectedSupportUserId && fetchSupportMessages(selectedSupportUserId, false)}
+                              title="Refresh messages"
+                              className="flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-[11px] font-semibold text-slate-600 dark:text-slate-300 transition-colors"
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                              <span>Refresh Chat</span>
+                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Active session</span>
+                            </div>
                           </div>
                         </div>
                       );

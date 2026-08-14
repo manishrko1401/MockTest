@@ -1083,7 +1083,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       setUsersList([]);
       setReportedQuestionsList([]);
     }
-  }, [currentUser]);
+  }, [currentUser?.id, currentUser?.role]);
 
   // Sync theme changes with DOM node class selectors
   useEffect(() => {

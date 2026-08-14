@@ -557,10 +557,23 @@ async function handleBootstrap() {
   // Admins will fetch this data separately using the 'admin-data' action.
   const usersList: any[] = [];
 
-  // Fetch Notices
+  // Fetch Notices (select only list metadata; exclude 2.2MB contentHtml from DB wire egress)
   const notices = await prisma.notice.findMany({
     orderBy: {
       createdAt: 'desc',
+    },
+    select: {
+      id: true,
+      title: true,
+      titleHi: true,
+      date: true,
+      publishDate: true,
+      type: true,
+      category: true,
+      url: true,
+      rawUrl: true,
+      lastDate: true,
+      imageUrl: true,
     },
   });
 
@@ -609,7 +622,22 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
   // If no previous sync timestamp, return full catalog (first-time sync)
   if (!since) {
     const examCatalog = await getCompiledExamCatalog();
-    const notices = await prisma.notice.findMany({ orderBy: { createdAt: 'desc' } });
+    const notices = await prisma.notice.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        titleHi: true,
+        date: true,
+        publishDate: true,
+        type: true,
+        category: true,
+        url: true,
+        rawUrl: true,
+        lastDate: true,
+        imageUrl: true,
+      },
+    });
 
     const noticesList = notices.map((n: any) => ({
       id: n.id,
@@ -676,6 +704,19 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
     }),
     prisma.notice.findMany({
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        titleHi: true,
+        date: true,
+        publishDate: true,
+        type: true,
+        category: true,
+        url: true,
+        rawUrl: true,
+        lastDate: true,
+        imageUrl: true,
+      },
     }),
   ]);
 
