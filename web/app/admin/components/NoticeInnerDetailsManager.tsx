@@ -57,6 +57,7 @@ export default function NoticeInnerDetailsManager({
   const [findText, setFindText] = useState<string>('');
   const [replaceText, setReplaceText] = useState<string>('');
   const [showFindReplace, setShowFindReplace] = useState<boolean>(false);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const editorSectionRef = useRef<HTMLDivElement>(null);
 
@@ -210,6 +211,29 @@ export default function NoticeInnerDetailsManager({
     }
   };
 
+  const handleSyncRojgar = async () => {
+    setIsSyncing(true);
+    showToast('Syncing live notifications from RojgarResult...');
+    try {
+      const res = await fetch('/api/cron/sync', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || 'Sync completed successfully!');
+        if (onRefreshNotices) {
+          onRefreshNotices();
+        } else {
+          setTimeout(() => window.location.reload(), 1200);
+        }
+      } else {
+        showToast('Sync Error: ' + (data.error || 'Failed to sync'));
+      }
+    } catch (e: any) {
+      showToast('Sync failed: ' + (e?.message || 'Network error'));
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
       
@@ -235,7 +259,17 @@ export default function NoticeInnerDetailsManager({
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              type="button"
+              onClick={handleSyncRojgar}
+              disabled={isSyncing}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/25 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              title="Sync latest live jobs, results and admit cards from RojgarResult"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Syncing...' : 'Sync RojgarResult'}</span>
+            </button>
             <span className="px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-xs font-black">
               {noticesList.length} Total Notifications
             </span>

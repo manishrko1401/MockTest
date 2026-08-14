@@ -69,6 +69,7 @@ import { ThemeColors } from '../theme';
 import { HtmlText } from '../HtmlText';
 import { getLocalizedName } from '../utils/localization';
 import NoticeDetailScreen from './NoticeDetailScreen';
+import AllTrackedJobsScreen from './AllTrackedJobsScreen';
 
 interface DashboardScreenProps {
   currentUser: any;
@@ -727,6 +728,26 @@ export default function DashboardScreen({
 
   // Profile tracked jobs filter state (all, applied, saved)
   const [profileJobFilter, setProfileJobFilter] = useState<'all' | 'applied' | 'saved'>('all');
+  const [jobToRemove, setJobToRemove] = useState<{ noticeId: string; title: string } | null>(null);
+  const [isRemovingJob, setIsRemovingJob] = useState<boolean>(false);
+  const [showAllTrackedJobs, setShowAllTrackedJobs] = useState<boolean>(false);
+
+  const handleConfirmRemoveJob = async () => {
+    if (!jobToRemove || !currentUser?.id || isRemovingJob) return;
+    setIsRemovingJob(true);
+    try {
+      const trackedList: any[] = currentUser?.trackedJobs || [];
+      const updatedList = trackedList.filter((j: any) => j.noticeId !== jobToRemove.noticeId);
+      await ApiClient.updateTrackedJobs(currentUser.id, updatedList);
+      if (onRefreshUser) await onRefreshUser(currentUser.id);
+      setJobToRemove(null);
+    } catch (err) {
+      console.error('Remove tracked job error:', err);
+      Alert.alert('Error', language === 'hi' ? 'जॉब हटाने में त्रुटि हुई।' : 'Failed to remove job from tracker.');
+    } finally {
+      setIsRemovingJob(false);
+    }
+  };
 
   // Live updates states (notices, results, answer keys, admit cards - last 5 days)
   const [recentNoticeIndex, setRecentNoticeIndex] = useState(0);
@@ -3022,10 +3043,10 @@ export default function DashboardScreen({
                 </TouchableOpacity>
               </View>
 
-              {/* Jobs Cards List */}
+              {/* Jobs Cards List - Show Latest 3 Jobs */}
               {filteredJobs.length > 0 ? (
                 <View style={{ gap: 10 }}>
-                  {filteredJobs.map((job: any) => {
+                  {filteredJobs.slice(0, 3).map((job: any) => {
                     const matchingNotice = notices.find(n => n.id === job.noticeId);
                     return (
                       <View
@@ -3098,12 +3119,8 @@ export default function DashboardScreen({
 
                           <TouchableOpacity
                             style={{ padding: 4 }}
-                            onPress={async () => {
-                              const updatedList = trackedList.filter((j: any) => j.noticeId !== job.noticeId);
-                              if (currentUser?.id) {
-                                await ApiClient.updateTrackedJobs(currentUser.id, updatedList);
-                                if (onRefreshUser) await onRefreshUser(currentUser.id);
-                              }
+                            onPress={() => {
+                              setJobToRemove({ noticeId: job.noticeId, title: job.title });
                             }}
                           >
                             <Text style={{ fontSize: 11, fontWeight: '800', color: '#EF4444' }}>
@@ -3114,6 +3131,32 @@ export default function DashboardScreen({
                       </View>
                     );
                   })}
+
+                  {/* Button to View All Tracked Jobs on New Screen */}
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      backgroundColor: isDark ? '#0F172A' : '#EFF6FF',
+                      borderColor: isDark ? '#2563EB' : '#BFDBFE',
+                      borderWidth: 1,
+                      borderRadius: 12,
+                      paddingVertical: 10,
+                      paddingHorizontal: 16,
+                      marginTop: 4,
+                    }}
+                    onPress={() => setShowAllTrackedJobs(true)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '900', color: isDark ? '#60A5FA' : '#2563EB' }}>
+                      {language === 'hi'
+                        ? `सभी ट्रैक किए गए जॉब्स देखें (${trackedList.length})`
+                        : `View All Tracked Jobs (${trackedList.length})`}
+                    </Text>
+                    <ChevronRight size={14} color={isDark ? '#60A5FA' : '#2563EB'} />
+                  </TouchableOpacity>
                 </View>
               ) : (
                 <View style={{ paddingVertical: 16, alignItems: 'center' }}>
@@ -3127,6 +3170,152 @@ export default function DashboardScreen({
             </View>
           );
         })()}
+
+        {/* CONFIRMATION POPUP MODAL FOR REMOVING TRACKED JOB (MATCHING WEBSITE EXACTLY) */}
+        <Modal
+          visible={!!jobToRemove}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => {
+            if (!isRemovingJob) setJobToRemove(null);
+          }}
+        >
+          <View style={{
+            flex: 1,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+          }}>
+            <View style={{
+              backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+              borderRadius: 24,
+              padding: 22,
+              width: '100%',
+              maxWidth: 380,
+              borderWidth: 1,
+              borderColor: isDark ? '#334155' : '#E2E8F0',
+              elevation: 20,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.25,
+              shadowRadius: 20,
+              gap: 16,
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+                <View style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 16,
+                  backgroundColor: isDark ? '#4C0519' : '#FFE4E6',
+                  borderWidth: 1,
+                  borderColor: isDark ? '#9F1239' : '#FECDD3',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                  <Trash2 size={22} color={isDark ? '#FB7185' : '#E11D48'} />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '900',
+                    color: isDark ? '#FFFFFF' : '#0F172A',
+                    marginBottom: 4,
+                  }}>
+                    {language === 'hi' ? 'ट्रैकर से जॉब हटाएं?' : 'Remove Job from Tracker?'}
+                  </Text>
+                  <Text style={{
+                    fontSize: 12,
+                    fontWeight: '500',
+                    color: isDark ? '#94A3B8' : '#64748B',
+                    lineHeight: 18,
+                  }}>
+                    {language === 'hi'
+                      ? `क्या आप वास्तव में '${jobToRemove?.title}' को अपने आवेदन और सेव किए गए जॉब ट्रैकर से हटाना चाहते हैं?`
+                      : `Are you sure you want to remove '${jobToRemove?.title}' from your saved & applied jobs tracker?`}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={{
+                backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
+                padding: 12,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: isDark ? '#334155' : '#E2E8F0',
+              }}>
+                <Text style={{
+                  fontSize: 11,
+                  fontWeight: '500',
+                  color: isDark ? '#94A3B8' : '#64748B',
+                  lineHeight: 16,
+                }}>
+                  {language === 'hi'
+                    ? 'यह क्रिया आपके प्रोफाइल से इस जॉब के स्टेटस, आवेदन तिथि और रोल नंबर को हटा देगी।'
+                    : 'This action will reset your tracked status, application date, and registration details for this notification.'}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
+                <TouchableOpacity
+                  disabled={isRemovingJob}
+                  onPress={() => setJobToRemove(null)}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 12,
+                    backgroundColor: isDark ? '#334155' : '#F1F5F9',
+                    borderWidth: 1,
+                    borderColor: isDark ? '#475569' : '#E2E8F0',
+                  }}
+                >
+                  <Text style={{
+                    fontSize: 12,
+                    fontWeight: '700',
+                    color: isDark ? '#E2E8F0' : '#475569',
+                  }}>
+                    {language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  disabled={isRemovingJob}
+                  onPress={handleConfirmRemoveJob}
+                  style={{
+                    paddingHorizontal: 18,
+                    paddingVertical: 10,
+                    borderRadius: 12,
+                    backgroundColor: '#E11D48',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    elevation: 2,
+                    shadowColor: '#E11D48',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                  }}
+                >
+                  {isRemovingJob ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Trash2 size={14} color="#FFFFFF" />
+                      <Text style={{
+                        fontSize: 12,
+                        fontWeight: '900',
+                        color: '#FFFFFF',
+                      }}>
+                        {language === 'hi' ? 'हाँ, हटाएं' : 'Yes, Remove Job'}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         {/* Referral Card */}
         <View style={[
@@ -3991,6 +4180,20 @@ export default function DashboardScreen({
             await onRefreshUser(currentUser.id);
           }
         }}
+      />
+    );
+  }
+
+  if (showAllTrackedJobs) {
+    return (
+      <AllTrackedJobsScreen
+        currentUser={currentUser}
+        notices={notices}
+        onBack={() => setShowAllTrackedJobs(false)}
+        onOpenNotice={(notice) => setSelectedNotice(notice)}
+        onRefreshUser={onRefreshUser}
+        isDark={isDark}
+        language={language}
       />
     );
   }

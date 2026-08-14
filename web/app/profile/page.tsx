@@ -349,6 +349,7 @@ export default function StudentProfilePage() {
               <div className="space-y-3">
                 {trackedJobs
                   .filter(j => jobFilter === 'all' ? true : (jobFilter === 'applied' ? j.isApplied : j.isSaved))
+                  .slice(0, 3)
                   .map((job: any) => (
                     <div 
                       key={job.noticeId}
@@ -412,6 +413,21 @@ export default function StudentProfilePage() {
                       </div>
                     </div>
                   ))}
+
+                {/* View All Tracked Jobs Link Button */}
+                <div className="pt-2 flex justify-center">
+                  <Link
+                    href="/profile/tracked-jobs"
+                    className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 active:scale-[0.99]"
+                  >
+                    <span>
+                      {language === 'hi'
+                        ? `सभी ट्रैक किए गए जॉब्स देखें (${trackedJobs.length})`
+                        : `View All Tracked & Saved Jobs (${trackedJobs.length})`}
+                    </span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </div>
               </div>
             ) : (
               <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
@@ -828,6 +844,7 @@ export default function StudentProfilePage() {
               <div className="space-y-3">
                 {trackedJobs
                   .filter(j => jobFilter === 'all' ? true : (jobFilter === 'applied' ? j.isApplied : j.isSaved))
+                  .slice(0, 3)
                   .map((job: any) => (
                     <div 
                       key={job.noticeId}
@@ -891,6 +908,21 @@ export default function StudentProfilePage() {
                       </div>
                     </div>
                   ))}
+
+                {/* View All Tracked Jobs Link Button (Mobile View) */}
+                <div className="pt-2 flex justify-center">
+                  <Link
+                    href="/profile/tracked-jobs"
+                    className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 active:scale-[0.99]"
+                  >
+                    <span>
+                      {language === 'hi'
+                        ? `सभी ट्रैक किए गए जॉब्स देखें (${trackedJobs.length})`
+                        : `View All Tracked & Saved Jobs (${trackedJobs.length})`}
+                    </span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </div>
               </div>
             ) : (
               <div className="text-center py-10 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">

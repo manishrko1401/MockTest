@@ -258,6 +258,17 @@ function sanitizeNoticeHtml(html: string): string {
   clean = clean.replace(/<p[^>]*>\s*(?:<[^>]*>\s*)*<\/p>/gi, '');
   clean = clean.replace(/<tr[^>]*>\s*(?:<td[^>]*>\s*(?:<[^>]*>\s*)*<\/td>\s*)*<\/tr>/gi, '');
 
+  // 6c. CLEAN EXCESSIVE INLINE FONT STYLING & BOLD BLOAT FROM SCRAPED HTML
+  clean = clean.replace(/font-family:\s*[^;'"]+;?/gi, '');
+  clean = clean.replace(/font-size:\s*[^;'"]+;?/gi, '');
+  clean = clean.replace(/line-height:\s*[^;'"]+;?/gi, '');
+  clean = clean.replace(/font-weight:\s*(?:bold|700|800|900);?/gi, '');
+  clean = clean.replace(/style="\s*"/gi, '');
+  clean = clean.replace(/style='\s*'/gi, '');
+
+  // Clean empty and redundant bold wrappers inside table cells
+  clean = clean.replace(/<td([^>]*)>\s*<(?:b|strong)>([\s\S]*?)<\/(?:b|strong)>\s*<\/td>/gi, '<td$1>$2</td>');
+
   // 7. Clean fixed inline width attributes from tables, th, td to prevent responsive overflow
   clean = clean.replace(/\s*width=["']?\d+(?:px|%)?["']?/gi, '');
 
@@ -630,25 +641,25 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
               {/* Content Details */}
               <div className="min-w-0 flex-1 space-y-2.5 sm:space-y-3">
                 <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap pr-10 sm:pr-0">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider border ${config.badgeBg}`}>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider border ${config.badgeBg}`}>
                     <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 animate-ping" />
                     {config.label}
                   </span>
 
-                  <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-800 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                  <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-slate-200 dark:border-slate-700">
                     <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500" />
                     Published: {notice.date}
                   </span>
 
                   {notice.lastDate && (
-                    <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-black text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-wider animate-pulse">
+                    <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-wider animate-pulse">
                       <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-rose-500" />
                       Last Date: {notice.lastDate}
                     </span>
                   )}
                 </div>
 
-                <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-snug sm:leading-tight tracking-tight break-words">
+                <h1 className="text-base sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white leading-snug sm:leading-tight tracking-tight break-words">
                   {notice.title}
                 </h1>
 
@@ -743,13 +754,13 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
             {/* QUICK ACCESS NAVIGATION BAR (RESULTNOTIFY PILL NAV WITH HORIZONTAL SCROLL) */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-2 sm:p-2.5 rounded-2xl shadow-sm overflow-x-auto no-scrollbar flex items-center gap-2 sticky top-16 sm:top-20 z-30 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 whitespace-nowrap scroll-smooth touch-pan-x w-full">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider px-2 sm:px-3 py-1 shrink-0 flex items-center gap-1">
+              <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider px-2 sm:px-3 py-1 shrink-0 flex items-center gap-1">
                 <Compass className="h-3.5 w-3.5 text-blue-500" /> Quick Access:
               </span>
 
               <button
                 onClick={() => scrollToSection('sec-overview')}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition shrink-0 cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 cursor-pointer ${
                   activeSection === 'overview'
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -760,7 +771,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
               <button
                 onClick={() => scrollToSection('sec-links')}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition shrink-0 cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 cursor-pointer ${
                   activeSection === 'links'
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -771,7 +782,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
               <button
                 onClick={() => scrollToSection('sec-full-content')}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition shrink-0 cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 cursor-pointer ${
                   activeSection === 'full-content'
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -789,12 +800,12 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     <Building2 className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="text-xs sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">Recruitment Overview</h2>
-                    <p className="text-[9.5px] sm:text-[11px] text-slate-400 font-semibold truncate">Key summary metrics at a glance</p>
+                    <h2 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight truncate">Recruitment Overview</h2>
+                    <p className="text-[9.5px] sm:text-[11px] text-slate-400 font-medium truncate">Key summary metrics at a glance</p>
                   </div>
                 </div>
 
-                <span className="text-[8.5px] sm:text-[10px] bg-green-50 text-green-700 dark:bg-green-950/60 dark:text-green-300 font-extrabold px-2 sm:px-3 py-1 rounded-full uppercase border border-green-200 dark:border-green-800 flex items-center gap-1 shrink-0">
+                <span className="text-[8.5px] sm:text-[10px] bg-green-50 text-green-700 dark:bg-green-950/60 dark:text-green-300 font-bold px-2 sm:px-3 py-1 rounded-full uppercase border border-green-200 dark:border-green-800 flex items-center gap-1 shrink-0">
                   <CheckCircle2 className="h-3 w-3" /> Official Verified
                 </span>
               </div>
@@ -802,23 +813,23 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
               {/* 4 Metrics Cards Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full">
                 <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
-                  <span className="text-[8px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Notice Category</span>
-                  <p className="text-[10.5px] sm:text-xs font-black text-slate-900 dark:text-white uppercase truncate">{notice.category?.replace('_', ' ')}</p>
+                  <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Notice Category</span>
+                  <p className="text-[10.5px] sm:text-xs font-semibold text-slate-800 dark:text-slate-100 uppercase truncate">{notice.category?.replace('_', ' ')}</p>
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
-                  <span className="text-[8px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Publish Date</span>
-                  <p className="text-[10.5px] sm:text-xs font-black text-slate-900 dark:text-white truncate">{notice.date}</p>
+                  <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Publish Date</span>
+                  <p className="text-[10.5px] sm:text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{notice.date}</p>
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
-                  <span className="text-[8px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Application Deadline</span>
-                  <p className="text-[10.5px] sm:text-xs font-black text-rose-600 dark:text-rose-400 truncate">{notice.lastDate || 'See Notification'}</p>
+                  <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Application Deadline</span>
+                  <p className="text-[10.5px] sm:text-xs font-semibold text-rose-600 dark:text-rose-400 truncate">{notice.lastDate || 'See Notification'}</p>
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
-                  <span className="text-[8px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">Portal Status</span>
-                  <p className="text-[10.5px] sm:text-xs font-black text-emerald-600 dark:text-emerald-400 truncate">Active Window</p>
+                  <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Portal Status</span>
+                  <p className="text-[10.5px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">Active Window</p>
                 </div>
               </div>
             </div>
@@ -831,11 +842,11 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-xs sm:text-base font-black tracking-wide text-slate-900 dark:text-white uppercase truncate">Some Useful Important Links</h2>
-                    <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-tight mt-0.5">Direct portal links arranged in official sequence</p>
+                    <h2 className="text-xs sm:text-base font-bold tracking-wide text-slate-900 dark:text-white uppercase truncate">Some Useful Important Links</h2>
+                    <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-0.5">Direct portal links arranged in official sequence</p>
                   </div>
                 </div>
-                <span className="bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[9px] sm:text-[10px] font-black px-2.5 sm:px-3 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800 hidden sm:inline-block shrink-0">
+                <span className="bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[9px] sm:text-[10px] font-bold px-2.5 sm:px-3 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800 hidden sm:inline-block shrink-0">
                   {parsedLinks.length > 0 ? `${parsedLinks.length} Direct Links` : 'Official Links'}
                 </span>
               </div>
@@ -868,10 +879,10 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                           {link.iconType === 'general' && <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug break-words">
+                          <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug break-words">
                             {link.label}
                           </h4>
-                          <p className="text-[9px] sm:text-[10.5px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5 truncate">
+                          <p className="text-[9px] sm:text-[10.5px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider mt-0.5 truncate">
                             {link.iconType === 'apply' ? 'Click to open application portal' :
                              link.iconType === 'download' ? 'Direct PDF document link' :
                              link.iconType === 'official' ? 'Official organization portal' :
@@ -883,7 +894,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                       </div>
 
                       <div className="flex items-center justify-end shrink-0">
-                        <span className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5 shadow-xs ${
+                        <span className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow-xs ${
                           link.iconType === 'apply' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20' :
                           link.iconType === 'download' ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20' :
                           link.iconType === 'official' ? 'bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white' :
@@ -964,11 +975,11 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     <Layers className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">Complete Recruitment Breakdown</h2>
-                    <p className="text-[11px] text-slate-400 font-semibold">Important dates, application fee, age limit, vacancies & eligibility details</p>
+                    <h2 className="text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight">Complete Recruitment Breakdown</h2>
+                    <p className="text-[11px] text-slate-400 font-medium">Important dates, application fee, age limit, vacancies & eligibility details</p>
                   </div>
                 </div>
-                <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 font-extrabold px-3 py-1 rounded-full uppercase">
+                <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 font-semibold px-3 py-1 rounded-full uppercase">
                   Official Details
                 </span>
               </div>

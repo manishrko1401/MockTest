@@ -448,6 +448,7 @@ export default function AdminAnalytics() {
   const [isUploadingNotice, setIsUploadingNotice] = useState(false);
   const [isUploadingCategoryLogo, setIsUploadingCategoryLogo] = useState(false);
   const [isUploadingAnnouncement, setIsUploadingAnnouncement] = useState(false);
+  const [isSyncingRojgar, setIsSyncingRojgar] = useState(false);
   const [testiSearch, setTestiSearch] = useState('');
 
   // User Management state from context
@@ -1332,6 +1333,27 @@ export default function AdminAnalytics() {
     setTestiGradient('from-blue-600 to-cyan-500');
     setTestiPhotoUrl('');
     showToast("Testimonial created successfully!");
+  };
+
+  const handleSyncRojgarNotices = async () => {
+    setIsSyncingRojgar(true);
+    showToast(language === 'hi' ? 'RojgarResult से लाइव सूचनाएं सिंक हो रही हैं...' : 'Syncing live notices from RojgarResult...');
+    try {
+      const res = await fetch('/api/cron/sync', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || `Sync completed! Added ${data.imported?.length || 0} new notices.`);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      } else {
+        showToast('Sync Error: ' + (data.error || 'Failed to sync'));
+      }
+    } catch (err: any) {
+      showToast('Failed to trigger sync: ' + (err?.message || 'Network error'));
+    } finally {
+      setIsSyncingRojgar(false);
+    }
   };
 
   const allowedAdminRoles = ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'];
@@ -2979,14 +3001,26 @@ export default function AdminAnalytics() {
             <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans animate-in fade-in duration-200">
               
               {/* Header */}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Live Notices & Updates Manager</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Publish and manage live notices, results, and admit cards visible on client home screens</p>
                 </div>
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
-                  {noticesList.length} total alert{noticesList.length !== 1 ? 's' : ''} active
-                </span>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleSyncRojgarNotices}
+                    disabled={isSyncingRojgar}
+                    className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                    title="Fetch and sync newly posted Jobs, Results, and Admit cards from RojgarResult"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${isSyncingRojgar ? 'animate-spin' : ''}`} />
+                    <span>{isSyncingRojgar ? (language === 'hi' ? 'सिंक हो रहा है...' : 'Syncing...') : (language === 'hi' ? 'RojgarResult सिंक करें' : 'Sync RojgarResult Now')}</span>
+                  </button>
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                    {noticesList.length} total alert{noticesList.length !== 1 ? 's' : ''} active
+                  </span>
+                </div>
               </div>
 
               {/* Info alert */}
