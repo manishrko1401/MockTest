@@ -151,7 +151,7 @@ interface AuthContextType {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   login: (email: string, password?: string) => Promise<{ success: boolean; user?: MockUser; error?: string }>;
-  signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string, honeypot?: string, turnstileToken?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (name: string, email: string, mobile: string) => void;
   updatePassword: (oldPass: string, newPass: string) => boolean;
@@ -1780,14 +1780,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }
   };
 
-  const signup = async (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string): Promise<{ success: boolean; error?: string }> => {
+  const signup = async (
+    name: string, 
+    email: string, 
+    mobile: string, 
+    password?: string, 
+    referralCodeInput?: string, 
+    honeypot?: string, 
+    turnstileToken?: string
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'signup',
-          data: { name, email, mobile, password, referralCodeInput }
+          data: { name, email, mobile, password, referralCodeInput, honeypot, turnstileToken }
         })
       });
       const data = await res.json();

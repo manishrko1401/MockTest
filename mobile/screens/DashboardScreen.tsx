@@ -59,7 +59,9 @@ import {
   LogIn,
   Star,
   Clock,
-  Play
+  Play,
+  FolderLock,
+  Cloud
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
@@ -95,6 +97,7 @@ interface DashboardScreenProps {
   language: 'en' | 'hi';
   onChangeLanguage: (lang: 'en' | 'hi') => void;
   unreadSupportCount?: number;
+  onOpenLocker?: () => void;
 }
 
 const LOCALIZATION = {
@@ -539,6 +542,7 @@ export default function DashboardScreen({
   onChangeLanguage,
   unreadSupportCount = 0,
   onRefreshCatalog,
+  onOpenLocker,
 }: DashboardScreenProps) {
 
   const insets = useSafeAreaInsets();
@@ -1154,6 +1158,46 @@ export default function DashboardScreen({
             );
           })()}
         </View>
+
+        {/* Section 1.5: Quick Document Locker Shortcut */}
+        {onOpenLocker && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={onOpenLocker}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: isDark ? '#152238' : '#EFF6FF',
+              borderRadius: 14,
+              paddingVertical: 10,
+              paddingHorizontal: 14,
+              borderWidth: 1,
+              borderColor: isDark ? '#1E3A8A' : '#BFDBFE',
+              marginBottom: 12,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+              <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: isDark ? '#1E3A8A' : '#DBEAFE', alignItems: 'center', justifyContent: 'center' }}>
+                <FolderLock size={18} color="#2563EB" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: isDark ? '#F1F5F9' : '#1E293B' }}>
+                    {language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}
+                  </Text>
+                  <View style={{ backgroundColor: '#2563EB', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
+                    <Text style={{ color: '#FFF', fontSize: 7.5, fontWeight: '900' }}>DRIVE</Text>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 10, color: isDark ? '#94A3B8' : '#64748B', marginTop: 1 }}>
+                  {language === 'hi' ? 'प्रवेश पत्र, फॉर्म व फोटो सुरक्षित रखें' : 'Save admit cards, photos & forms'}
+                </Text>
+              </View>
+            </View>
+            <ChevronRight size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+          </TouchableOpacity>
+        )}
 
         {/* Section 2: Live Updates slideshow (Last 5 Days notices) */}
         {(() => {
@@ -2967,6 +3011,48 @@ export default function DashboardScreen({
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* DOCUMENT LOCKER PROMOTION / ACCESS TILE */}
+        {onOpenLocker && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={onOpenLocker}
+            style={{
+              backgroundColor: isDark ? '#1E3A8A' : '#2563EB',
+              borderRadius: 16,
+              padding: 16,
+              shadowColor: '#2563EB',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+                <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
+                  <FolderLock size={24} color="#FFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ color: '#FFF', fontSize: 14, fontWeight: '900' }}>
+                      {language === 'hi' ? 'दस्तावेज़ लॉकर (Google Drive)' : 'Document Locker (Google Drive)'}
+                    </Text>
+                    <View style={{ backgroundColor: '#10B981', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 6 }}>
+                      <Text style={{ color: '#FFF', fontSize: 8, fontWeight: '900' }}>100% PRIVATE</Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11, marginTop: 2 }}>
+                    {language === 'hi'
+                      ? 'प्रवेश पत्र, फॉर्म, फोटो और हस्ताक्षर सुरक्षित रखें'
+                      : 'Store admit cards, application PDFs, photos & signs'}
+                  </Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#FFF" />
+            </View>
+          </TouchableOpacity>
+        )}
 
         {/* MY TRACKED JOBS SECTION (Saved & Applied) */}
         {(() => {

@@ -2459,6 +2459,13 @@ export default function PracticeSeriesPage() {
       {/* FOOTER */}
       <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-6 px-4 text-center text-xs text-slate-500">
         <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
+        <div className="mt-2 flex items-center justify-center gap-4 text-[11px] font-bold">
+          <Link href="/contact" className="hover:text-blue-600 dark:hover:text-blue-400 transition">Contact Us</Link>
+          <span className="text-slate-300 dark:text-slate-700">•</span>
+          <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition">Terms & Conditions</Link>
+          <span className="text-slate-300 dark:text-slate-700">•</span>
+          <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition">Privacy Policy</Link>
+        </div>
       </footer>
 
       {/* Floating Support & Suggestion Widgets (Hidden on mobile view as requested) */}

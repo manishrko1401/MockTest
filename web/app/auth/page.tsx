@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Lock, Mail, User, AlertCircle, CheckCircle2, ChevronLeft, ShieldCheck, Trophy, Phone, Gift, Sun, Moon, Eye, EyeOff } from 'lucide-react';
+import Script from 'next/script';
+import { Lock, Mail, User, AlertCircle, CheckCircle2, ChevronLeft, ShieldCheck, Trophy, Phone, Gift, Sun, Moon, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
-
+import { isDisposableEmail } from '../lib/botProtection';
 
 export default function AuthPage() {
   const { login, signup, theme, toggleTheme, language, setLanguage, usersList } = useAuth();
@@ -30,7 +31,15 @@ export default function AuthPage() {
   const [mobile, setMobile] = useState('');
   const [referralCodeInput, setReferralCodeInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   
+  // Anti-Bot States
+  const [honeypot, setHoneypot] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileLoaded, setTurnstileLoaded] = useState(false);
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetId = useRef<string | null>(null);
+
   // Feedback states
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -45,6 +54,47 @@ export default function AuthPage() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState<string | null>(null);
+
+  // Render or re-render Cloudflare Turnstile widget
+  useEffect(() => {
+    if (activeTab !== 'signup') return;
+    const siteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+
+    const initTurnstile = () => {
+      if (typeof window !== 'undefined' && (window as any).turnstile && turnstileContainerRef.current) {
+        try {
+          if (turnstileWidgetId.current) {
+            (window as any).turnstile.remove(turnstileWidgetId.current);
+            turnstileWidgetId.current = null;
+          }
+          turnstileContainerRef.current.innerHTML = '';
+          const widgetId = (window as any).turnstile.render(turnstileContainerRef.current, {
+            sitekey: siteKey,
+            theme: theme === 'dark' ? 'dark' : 'light',
+            callback: (token: string) => {
+              setTurnstileToken(token);
+              setErrorMsg(null);
+            },
+            'expired-callback': () => {
+              setTurnstileToken(null);
+            },
+            'error-callback': () => {
+              // Fallback dummy token for local development / testing without throwing error
+              if (siteKey === '1x00000000000000000000AA') {
+                setTurnstileToken('dummy-token-pass');
+              }
+            }
+          });
+          turnstileWidgetId.current = widgetId;
+        } catch (e) {
+          console.warn('Turnstile render warning:', e);
+        }
+      }
+    };
+
+    const timer = setTimeout(initTurnstile, 150);
+    return () => clearTimeout(timer);
+  }, [activeTab, theme, turnstileLoaded]);
 
 
 
@@ -144,13 +194,25 @@ export default function AuthPage() {
         setErrorMsg(language === 'hi' ? 'यह खाता ब्लॉक कर दिया गया है। कृपया व्यवस्थापक से संपर्क करें।' : 'This account has been blocked. Please contact the administrator.');
         return;
       }
-      const res = await login(email, password);
-      if (res.success) {
-        router.push('/');
-      } else {
-        setErrorMsg(res.error || t.authLoginFail || 'Invalid credentials. Please register or sign up.');
+      setLoading(true);
+      try {
+        const res = await login(email, password);
+        if (res.success) {
+          router.push('/');
+        } else {
+          setErrorMsg(res.error || t.authLoginFail || 'Invalid credentials. Please register or sign up.');
+        }
+      } finally {
+        setLoading(false);
       }
     } else {
+      // 1. Honeypot Anti-Bot Trap: Silently reject bots that filled hidden field
+      if (honeypot && honeypot.trim().length > 0) {
+        console.warn('Bot trap triggered');
+        setErrorMsg(language === 'hi' ? 'पंजीकरण पूरा नहीं हो सका।' : 'Registration could not be completed.');
+        return;
+      }
+
       if (!name.trim()) {
         setErrorMsg(language === 'hi' ? 'कृपया अपना पूरा नाम दर्ज करें।' : 'Please enter your full name.');
         return;
@@ -163,6 +225,13 @@ export default function AuthPage() {
         setErrorMsg(language === 'hi' ? 'ईमेल गलत है।' : 'Email is incorrect.');
         return;
       }
+
+      // 2. Client-side Disposable / Burner Email Validation
+      if (isDisposableEmail(email.trim())) {
+        setErrorMsg(t.authDisposableEmailError || (language === 'hi' ? 'अस्थायी या डिस्पोजेबल ईमेल की अनुमति नहीं है। कृपया मान्य ईमेल (उदा. Gmail, Yahoo, Outlook) का उपयोग करें।' : 'Temporary and disposable email addresses are not allowed. Please use a permanent email (e.g. Gmail, Yahoo, Outlook).'));
+        return;
+      }
+
       if (!mobile.trim()) {
         setErrorMsg(language === 'hi' ? 'कृपया अपना मोबाइल नंबर दर्ज करें।' : 'Please enter your mobile number.');
         return;
@@ -171,13 +240,26 @@ export default function AuthPage() {
         setErrorMsg(language === 'hi' ? 'कृपया एक वैध 10-अंकीय मोबाइल नंबर दर्ज करें।' : 'Please enter a valid 10-digit mobile number.');
         return;
       }
-      
-      const res = await signup(name, email.trim(), mobile.trim(), password, referralCodeInput.trim() || undefined);
-      if (res.success) {
-        localStorage.setItem('show_signup_congrats_popup', 'true');
-        router.push('/');
-      } else {
-        setErrorMsg(res.error || t.authSignupFail || 'Email address already registered. Please login.');
+
+      setLoading(true);
+      try {
+        const res = await signup(
+          name, 
+          email.trim(), 
+          mobile.trim(), 
+          password, 
+          referralCodeInput.trim() || undefined,
+          honeypot.trim() || undefined,
+          turnstileToken || undefined
+        );
+        if (res.success) {
+          localStorage.setItem('show_signup_congrats_popup', 'true');
+          router.push('/');
+        } else {
+          setErrorMsg(res.error || t.authSignupFail || 'Email address already registered. Please login.');
+        }
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -185,6 +267,13 @@ export default function AuthPage() {
   return (
     <div className="flex-1 flex flex-col justify-center bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 p-6 relative overflow-hidden transition-colors duration-200">
       
+      {/* Cloudflare Turnstile External Script */}
+      <Script 
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" 
+        strategy="afterInteractive"
+        onLoad={() => setTurnstileLoaded(true)}
+      />
+
       {/* Floating Header Actions */}
       <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
         {/* Language selector */}
@@ -272,13 +361,13 @@ export default function AuthPage() {
           {/* Error & Success Messages */}
           {errorMsg && (
             <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-red-650 dark:text-red-400 flex items-start gap-2.5 text-xs mb-5 animate-in fade-in duration-200">
-              <AlertCircle className="h-4 w-4 mt-0.5 text-red-600" />
+              <AlertCircle className="h-4 w-4 mt-0.5 text-red-600 shrink-0" />
               <span className="font-bold">{errorMsg}</span>
             </div>
           )}
           {successMsg && (
             <div className="p-3.5 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 flex items-start gap-2.5 text-xs mb-5 animate-in fade-in duration-200">
-              <CheckCircle2 className="h-4 w-4 mt-0.5 text-green-600" />
+              <CheckCircle2 className="h-4 w-4 mt-0.5 text-green-600 shrink-0" />
               <span className="font-bold">{successMsg}</span>
             </div>
           )}
@@ -286,6 +375,17 @@ export default function AuthPage() {
           {/* Input Fields Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             
+                {/* Honeypot Anti-Bot Field (Hidden from real humans, trapped bots fill it) */}
+                <div style={{ position: 'absolute', opacity: 0, zIndex: -1, width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
+                  <input
+                    type="text"
+                    name="website_url"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
             
                 {activeTab === 'signup' && (
                   <div>
@@ -317,7 +417,10 @@ export default function AuthPage() {
                       type="email"
                       required
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (errorMsg && errorMsg.includes('disposable')) setErrorMsg(null);
+                      }}
                       placeholder={t.authEmailPlaceholder || "name@example.com"}
                       suppressHydrationWarning
                       className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
@@ -408,13 +511,27 @@ export default function AuthPage() {
                   </div>
                 )}
 
+                {/* Cloudflare Turnstile Bot Protection Widget for Signup */}
+                {activeTab === 'signup' && (
+                  <div className="pt-2 flex flex-col items-center justify-center">
+                    <div ref={turnstileContainerRef} className="min-h-[65px] flex items-center justify-center" />
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1 font-medium">
+                      <ShieldCheck className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                      {language === 'hi' ? 'क्लाउडफ्लेयर द्वारा बॉट और स्पैम से सुरक्षित' : 'Protected against spam & automated bots by Cloudflare'}
+                    </p>
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-xs tracking-wider uppercase transition-all shadow-lg shadow-blue-900/25 active:scale-[0.98] mt-6 cursor-pointer"
+                  disabled={loading}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-xs tracking-wider uppercase transition-all shadow-lg shadow-blue-900/25 active:scale-[0.98] mt-6 cursor-pointer disabled:opacity-60"
                 >
-                  {activeTab === 'login' 
-                    ? (language === 'hi' ? 'खाते में साइन इन करें' : 'Sign In to Account') 
-                    : (language === 'hi' ? 'खाता पंजीकृत करें' : 'Register Account')}
+                  {loading 
+                    ? (language === 'hi' ? 'कृपया प्रतीक्षा करें...' : 'Please wait...')
+                    : (activeTab === 'login' 
+                        ? (language === 'hi' ? 'खाते में साइन इन करें' : 'Sign In to Account') 
+                        : (language === 'hi' ? 'खाता पंजीकृत करें' : 'Register Account'))}
                 </button>
 
 

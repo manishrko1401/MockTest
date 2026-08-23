@@ -540,6 +540,12 @@ const formatSubCategoryName = (name: string) => {
             <nav className="flex flex-col gap-4 text-sm font-bold text-slate-655 dark:text-slate-300">
               <Link href="/mock-tests" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navTestSeries}</Link>
               <Link href="/updates" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navUpdates}</Link>
+              <Link href="/locker" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2 flex items-center justify-between">
+                <span>{language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}</span>
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                  Drive Sync
+                </span>
+              </Link>
               {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
                 <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navAdmin}</Link>
               )}
@@ -988,37 +994,16 @@ const formatSubCategoryName = (name: string) => {
               </div>
             </div>
           </section>
-
-          {/* CBT Security Banner */}
-          <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 rounded-2xl shadow relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
-            <div className="relative z-10 flex flex-col gap-4">
-              <div>
-                <h3 className="font-black text-xs uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                  <Info className="h-4 w-4 text-blue-250" /> CBT Security
-                </h3>
-                <p className="text-[10px] text-blue-100 leading-relaxed font-semibold">
-                  Strict browser focus tracking to simulate real exam environments.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2.5 border-t border-white/10 pt-3">
-                <div className="flex gap-2 items-start text-[10px]">
-                  <CheckCircle className="h-3.5 w-3.5 text-blue-200 shrink-0 mt-0.5" />
-                  <span><strong>Anti-Cheat Shield</strong>: Losses of focus auto-submit sittings.</span>
-                </div>
-                <div className="flex gap-2 items-start text-[10px]">
-                  <CheckCircle className="h-3.5 w-3.5 text-blue-200 shrink-0 mt-0.5" />
-                  <span><strong>Bilingual sittings</strong>: English & Hindi switch seamlessly.</span>
-                </div>
-              </div>
-            </div>
-          </section>
         </main>
 
         {/* FOOTER */}
         <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-6 px-4 text-center text-[10px] text-slate-500 transition-colors duration-200">
           <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
           <div className="mt-2 flex items-center justify-center gap-3">
+            <Link href="/contact" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Contact Us</Link>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Terms & Conditions</Link>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
             <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Privacy Policy</Link>
           </div>
         </footer>
@@ -1254,6 +1239,12 @@ const formatSubCategoryName = (name: string) => {
           <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-505 dark:text-slate-400">
             <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
             <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navUpdates}</Link>
+            <Link href="/locker" className="hover:text-blue-600 dark:hover:text-white transition-colors flex items-center gap-1">
+              <span>{language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}</span>
+              <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                Drive
+              </span>
+            </Link>
             {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
               <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navAdmin}</Link>
             )}
@@ -1729,96 +1720,124 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
         </div>
-
-        {/* CBT Engine Security - Full Width Banner */}
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden glow-shadow-blue border border-blue-400/20">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
-          {/* Watermarked book background shape */}
-          <div className="absolute -left-10 -bottom-10 opacity-[0.08] pointer-events-none">
-            <svg className="w-40 h-40 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
-            </svg>
-          </div>
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-            <div className="md:col-span-1 border-b md:border-b-0 md:border-r border-white/10 pb-6 md:pb-0 md:pr-8">
-              <h3 className="font-black text-sm uppercase tracking-wider mb-3 flex items-center gap-2 text-white">
-                <Info className="h-4.5 w-4.5 text-blue-200" /> CBT Engine Security
-              </h3>
-              <p className="text-xs text-blue-100 leading-relaxed font-semibold">
-                Our simulated exam client enforces strict browser state tracking to align with live public service commission examinations.
-              </p>
-            </div>
-            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="flex gap-2.5 items-start">
-                <CheckCircle className="h-4.5 w-4.5 text-blue-200 shrink-0 mt-0.5" />
-                <span className="text-xs font-semibold"><strong>Anti-Cheat Shield</strong>: Automatic test submission triggers when client browser loses tab focus.</span>
-              </div>
-              <div className="flex gap-2.5 items-start">
-                <CheckCircle className="h-4.5 w-4.5 text-blue-200 shrink-0 mt-0.5" />
-                <span className="text-xs font-semibold"><strong>Bilingual CBT</strong>: Switch languages instantly inside mock sessions (English & Hindi formats).</span>
-              </div>
-              <div className="flex gap-2.5 items-start">
-                <CheckCircle className="h-4.5 w-4.5 text-blue-200 shrink-0 mt-0.5" />
-                <span className="text-xs font-semibold"><strong>Detailed Solutions</strong>: Get immediate correctness feedback, time tracking, and conceptual answers.</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* FAQ SECTION */}
-      <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900 space-y-12">
+      <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900 space-y-10">
         <div className="text-center max-w-xl mx-auto">
           <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
             {language === 'hi' ? 'सामान्यतः पूछे जाने वाले प्रश्न' : 'Frequently Asked Questions'}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">
-            {language === 'hi' ? 'हमारे प्लेटफ़ॉर्म के बारे में सामान्य प्रश्नों के उत्तर पाएं।' : 'Find quick answers about our testing client.'}
+            {language === 'hi' ? 'मॉक टेस्ट, डॉक्यूमेंट लॉकर और प्लेटफ़ॉर्म सुविधाओं के बारे में सभी जानकारी पाएं।' : 'Everything you need to know about mock tests, document locker, and portal features.'}
           </p>
         </div>
 
-        <div className="max-w-2xl mx-auto w-full">
-          {/* Dynamic FAQ Accordion */}
-          <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-8 rounded-3xl shadow-md space-y-6">
-            <div className="space-y-3">
-              {[
-                {
-                  q: language === 'hi' ? "मॉक टेस्ट सीबीटी परीक्षा में शामिल होने के लिए मैं पास कैसे प्राप्त करूं?" : "How do I unlock full access to CBT mock tests?",
-                  a: language === 'hi' ? "आप अपने प्रोफाइल डैशबोर्ड में जाकर 'पास प्रो' सिम्युलेट करके असीमित अभ्यास परीक्षाओं को तुरंत अनलॉक कर सकते हैं।" : "You can unlock all practice tests by upgrading your subscription to 'Pass Pro' inside the My Profile settings tab."
-                },
-                {
-                  q: language === 'hi' ? "क्या परीक्षा के दौरान टैब स्विच करने पर परीक्षा खुद सबमिट हो जाती है?" : "Does the portal auto-submit if I switch browser tabs?",
-                  a: language === 'hi' ? "हाँ, सीबीटी परीक्षा स्क्रीन की सुरक्षा बनाए रखने के लिए, यदि आप परीक्षा सत्र के दौरान टैब बदलते हैं या विंडो ब्लर करते हैं, तो आपकी परीक्षा तुरंत स्वतः सबमिट हो जाएगी।" : "Yes, to align with real competitive exams, our engine has an anti-cheat shield that automatically submits your paper if you switch browser tabs."
-                },
-                {
-                  q: language === 'hi' ? "क्या मैं दिए गए टेस्ट को दोबारा हल या रीअटेम्प्ट कर सकता हूँ?" : "Can I reattempt tests to improve my accuracy?",
-                  a: language === 'hi' ? "हाँ! आप किसी भी टेस्ट को 5 बार तक रीअटेम्प्ट कर सकते हैं। रीअटेम्प्ट करने से पिछले प्रयास सुरक्षित रहेंगे और नया स्कोर विश्लेषण सिंक होगा।" : "Yes! Every mock test supports up to 5 attempts. Reattempting will archive your previous metrics while letting you re-solve questions."
-                },
-                {
-                  q: language === 'hi' ? "क्या मॉक टेस्ट में हिंदी और अंग्रेजी दोनों भाषाओं में प्रश्न उपलब्ध हैं?" : "Are mock sittings available in both English and Hindi formats?",
-                  a: language === 'hi' ? "बिल्कुल। हमारी परीक्षा प्रणाली पूर्ण रूप से द्विभाषी है। आप सीबीटी सत्र के दौरान प्रश्न स्तर पर तुरंत भाषा बदल सकते हैं।" : "Absolutely. The exam terminal is fully bilingual. You can switch any question between English and Hindi translations instantly during the session."
-                }
-              ].map((faq, idx) => {
-                const isOpen = activeFaq === idx;
-                return (
-                  <div key={idx} className="border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
-                    <button
-                      onClick={() => setActiveFaq(isOpen ? null : idx)}
-                      className="w-full flex items-center justify-between text-left py-2 font-extrabold text-xs text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    >
-                      <span>{faq.q}</span>
-                      <span className="text-slate-400 text-sm ml-2">{isOpen ? "−" : "+"}</span>
-                    </button>
-                    {isOpen && (
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed pt-1.5 pb-2 font-medium animate-in fade-in slide-in-from-top-1 duration-200">
-                        {faq.a}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+        {/* 2-Column FAQ Layout (5 Questions in Each Column) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+          
+          {/* COLUMN 1 (Questions 1 - 5) */}
+          <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-6 sm:p-7 rounded-3xl shadow-xs space-y-3.5 h-fit">
+            {[
+              {
+                id: 0,
+                q: language === 'hi' ? "1. मॉक टेस्ट सीबीटी परीक्षा में शामिल होने के लिए मैं पास कैसे प्राप्त करूं?" : "1. How do I unlock full access to all mock tests?",
+                a: language === 'hi' ? "आप अपने प्रोफाइल डैशबोर्ड में जाकर 'पास प्रो' सिम्युलेट करके या पास एक्टिवेट करके सभी एसएससी, रेलवे, बैंकिंग और राज्य स्तरीय असीमित परीक्षाओं को तुरंत अनलॉक कर सकते हैं।" : "You can unlock all full-length mock tests and sectional exams by upgrading to 'Pass Pro' inside the My Profile dashboard."
+              },
+              {
+                id: 1,
+                q: language === 'hi' ? "2. डॉक्यूमेंट लॉकर क्या है और क्या मेरी गूगल ड्राइव सुरक्षित है?" : "2. What is Document Locker and is my Google Drive private?",
+                a: language === 'hi' ? "डॉक्यूमेंट लॉकर में आपके एडमिट कार्ड, फोटो और प्रमाणपत्र सीधे आपके व्यक्तिगत गूगल ड्राइव में सुरक्षित स्टोर होते हैं। हमारे सर्वर पर आपकी फाइलों का कोई स्टोरेज या अनधिकृत एक्सेस नहीं होता है।" : "Document Locker connects directly with your personal Google Drive to safely organize admit cards and documents. We do not store or access your private files on external servers."
+              },
+              {
+                id: 2,
+                q: language === 'hi' ? "3. प्रैक्टिस सीरीज क्या है और यह तैयारी में कैसे मदद करती है?" : "3. What is the Practice Series module and how does it work?",
+                a: language === 'hi' ? "प्रैक्टिस सीरीज सेक्शन-वार और टॉपिक-वार अभ्यास के लिए विशेष मॉड्यूल है, जहाँ आप रीजनिंग, गणित, जीके और अंग्रेजी के प्रश्नों का समयबद्ध अभ्यास करके अपनी गति और सटीकता बढ़ा सकते हैं।" : "Practice Series offers targeted, section-wise drills for Quantitative Aptitude, Reasoning, English, and General Awareness to sharpen your speed and accuracy."
+              },
+              {
+                id: 3,
+                q: language === 'hi' ? "4. क्या मॉक टेस्ट में हिंदी और अंग्रेजी दोनों भाषाओं में प्रश्न उपलब्ध हैं?" : "4. Are mock test sittings available in both English and Hindi?",
+                a: language === 'hi' ? "हाँ, हमारा परीक्षा पोर्टल पूर्णतः द्विभाषी है। आप सीबीटी टेस्ट देते समय किसी भी प्रश्न की भाषा (हिंदी या अंग्रेजी) तुरंत स्क्रीन पर 1-क्लिक में बदल सकते हैं।" : "Yes, the test terminal is fully bilingual. You can switch between English and Hindi for any question seamlessly during your live test session."
+              },
+              {
+                id: 4,
+                q: language === 'hi' ? "5. क्या मैं दिए गए टेस्ट को दोबारा हल (Reattempt) कर सकता हूँ?" : "5. Can I reattempt tests and review previous solutions?",
+                a: language === 'hi' ? "हाँ! प्रत्येक मॉक टेस्ट में 5 रीअटेम्प्ट की सुविधा मिलती है। आपके सभी पिछले प्रयासों का इतिहास और विस्तृत हल आपके विश्लेषण पृष्ठ पर सुरक्षित रहता है।" : "Yes! Every test supports up to 5 attempts. Your complete attempt history, scores, and detailed step-by-step solutions remain saved on your analysis dashboard."
+              }
+            ].map((faq) => {
+              const isOpen = activeFaq === faq.id;
+              return (
+                <div key={faq.id} className="border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 pb-3">
+                  <button
+                    onClick={() => setActiveFaq(isOpen ? null : faq.id)}
+                    className="w-full flex items-center justify-between text-left py-1.5 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer gap-2"
+                  >
+                    <span>{faq.q}</span>
+                    <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs shrink-0 font-mono">
+                      {isOpen ? "−" : "+"}
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed pt-2 pb-1 font-medium animate-in fade-in duration-200">
+                      {faq.a}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
+
+          {/* COLUMN 2 (Questions 6 - 10) */}
+          <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-6 sm:p-7 rounded-3xl shadow-xs space-y-3.5 h-fit">
+            {[
+              {
+                id: 5,
+                q: language === 'hi' ? "6. टेस्ट सबमिट करने के बाद क्या ऑल इंडिया रैंक और विश्लेषण मिलता है?" : "6. Do I get All India Rank (AIR) and detailed performance analytics?",
+                a: language === 'hi' ? "बिल्कुल! टेस्ट सबमिट होते ही आपको ऑल इंडिया रैंक, परसेंटाइल, विषय-वार सटीकता, समय प्रबंधन ग्राफ और टॉपर तुलना रिपोर्ट तुरंत मिलती है।" : "Instantly upon test submission, you receive comprehensive analytics including All India Rank, Percentile, Subject-wise Accuracy, Time Spent Graphs, and Topper comparisons."
+              },
+              {
+                id: 6,
+                q: language === 'hi' ? "7. नवीनतम परीक्षा नोटिफिकेशन, एडमिट कार्ड और आंसर-की कहाँ देखें?" : "7. Where can I find latest vacancy notifications, admit cards & results?",
+                a: language === 'hi' ? "हमारी वेबसाइट के 'Updates & Notices' सेक्शन में सभी सरकारी भर्तियों, एडमिट कार्ड रिलीज, परीक्षा तिथियों और आंसर-की के आधिकारिक पीडीएफ और सीधे लिंक्स उपलब्ध रहते हैं।" : "Visit the 'Updates & Notices' section to access real-time notifications for upcoming exam dates, admit card releases, syllabi, and official answer keys."
+              },
+              {
+                id: 7,
+                q: language === 'hi' ? "8. दैनिक शब्दावली (Daily Vocab) और अध्ययन सामग्री कैसे प्राप्त करें?" : "8. How do I access Daily Vocabulary and study resources?",
+                a: language === 'hi' ? "प्लेटफ़ॉर्म पर दैनिक अंग्रेजी वोकैब, हिंदी अर्थ, विलोम-पर्यायवाची और वाक्य प्रयोग उपलब्ध हैं, जो प्रतियोगी परीक्षाओं के अंग्रेजी सेक्शन की तैयारी को मजबूत बनाते हैं।" : "You can browse curated Daily Vocabulary cards complete with parts of speech, Hindi meanings, synonyms, antonyms, and practical usage examples."
+              },
+              {
+                id: 8,
+                q: language === 'hi' ? "9. सपोर्ट टीम से संपर्क कैसे करें या कम्युनिटी ग्रुप्स कैसे जॉइन करें?" : "9. How do I reach customer support or join community groups?",
+                a: language === 'hi' ? "'Contact Us' पेज पर जाकर आप सीधे एडमिन को संदेश भेज सकते हैं अथवा हमारे आधिकारिक टेलीग्राम, यूट्यूब, इंस्टाग्राम, व्हाट्सएप और रेडिट चैनलों से जुड़ सकते हैं।" : "Head over to the 'Contact Us' page to submit a direct inquiry to our desk or join our verified Telegram, WhatsApp, YouTube, Instagram, and Reddit channels."
+              },
+              {
+                id: 9,
+                q: language === 'hi' ? "10. क्या मैं मोबाइल फोन, टैबलेट और लैपटॉप/पीसी सभी पर टेस्ट दे सकता हूँ?" : "10. Can I take tests across mobile, tablet, and desktop devices?",
+                a: language === 'hi' ? "हाँ, हमारा वेब और मोबाइल ऐप दोनों पूर्णतः अनुकूलित हैं। आप किसी भी डिवाइस पर अपनी सुविधानुसार टेस्ट दे सकते हैं और आपका डेटा सभी डिवाइस पर सिंक रहता है।" : "Yes, our web portal and Android app are fully responsive and cross-synced. You can seamlessly practice on any smartphone, tablet, or desktop computer."
+              }
+            ].map((faq) => {
+              const isOpen = activeFaq === faq.id;
+              return (
+                <div key={faq.id} className="border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 pb-3">
+                  <button
+                    onClick={() => setActiveFaq(isOpen ? null : faq.id)}
+                    className="w-full flex items-center justify-between text-left py-1.5 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer gap-2"
+                  >
+                    <span>{faq.q}</span>
+                    <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs shrink-0 font-mono">
+                      {isOpen ? "−" : "+"}
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed pt-2 pb-1 font-medium animate-in fade-in duration-200">
+                      {faq.a}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
         </div>
       </section>
 
@@ -1832,6 +1851,10 @@ const formatSubCategoryName = (name: string) => {
         <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
         <p className="mt-1 text-[11px]">Developed to simulate real-world government selection computer based assessments.</p>
         <div className="mt-3 flex items-center justify-center gap-4">
+          <Link href="/contact" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Contact Us</Link>
+          <span className="text-slate-300 dark:text-slate-700">•</span>
+          <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Terms & Conditions</Link>
+          <span className="text-slate-300 dark:text-slate-700">•</span>
           <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Privacy Policy</Link>
         </div>
       </footer>

@@ -385,5 +385,49 @@ export const ApiClient = {
    * Delete a suggestion log
    */
   deleteSuggestion: (id: string) => postRequest('delete-suggestion', { id }),
+
+  /**
+   * Document Locker: Get all documents for user
+   */
+  lockerGetDocs: (userId: string) => postRequest('locker-get-docs', { userId }),
+
+  /**
+   * Document Locker: Save metadata of uploaded document
+   */
+  lockerSaveMeta: (payload: {
+    userId: string;
+    title: string;
+    docType: string;
+    examName?: string | null;
+    year?: number | null;
+    driveFileId: string;
+    driveFolderId?: string | null;
+    driveViewUrl?: string | null;
+    driveDownloadUrl?: string | null;
+    thumbnailUrl?: string | null;
+    mimeType: string;
+    fileSizeBytes: number;
+    tags?: any;
+  }) => postRequest('locker-save-meta', payload),
+
+  /**
+   * Document Locker: Delete document
+   */
+  lockerDeleteDoc: (docId: string, userId: string) => postRequest('locker-delete-doc', { docId, userId }),
+
+  /**
+   * Document Locker: Update Google Drive connection status
+   */
+  lockerUpdateDriveStatus: (payload: {
+    userId: string;
+    isConnected: boolean;
+    googleDriveEmail?: string | null;
+    googleDriveFolderId?: string | null;
+  }) => postRequest('locker-update-drive-status', payload),
+
+  /**
+   * Document Locker: Disconnect Google Drive
+   */
+  lockerDisconnectDrive: (userId: string) => postRequest('locker-disconnect-drive', { userId }),
 };
 

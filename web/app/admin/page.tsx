@@ -18,13 +18,15 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles, Inbox, Share2 } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
 import { DatabaseMonitor } from './components/DatabaseMonitor';
 import { VocabManager } from './components/VocabManager';
 import NoticeInnerDetailsManager from './components/NoticeInnerDetailsManager';
+import { InquiryManager } from './components/InquiryManager';
+import { ContactLinksManager } from './components/ContactLinksManager';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -112,13 +114,26 @@ export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const tabInitializedRef = React.useRef(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
   const [jsonInput, setJsonInput] = useState<string>('');
+  const [pendingInquiriesCount, setPendingInquiriesCount] = useState<number>(0);
+
+  const fetchInquiriesCount = async () => {
+    try {
+      const res = await fetch('/api/inquiries?status=PENDING');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.inquiries)) {
+        setPendingInquiriesCount(data.inquiries.length);
+      }
+    } catch (e) {
+      // Silently ignore
+    }
+  };
 
   // Support team states
   const [supportUsers, setSupportUsers] = useState<any[]>([]);
@@ -277,10 +292,12 @@ export default function AdminAnalytics() {
     } else if (activeTab === 'users' || activeTab === 'reports' || activeTab === 'analytics') {
       refreshUsersList();
     }
+    fetchInquiriesCount();
   }, [activeTab]);
 
   useEffect(() => {
     refreshUsersList();
+    fetchInquiriesCount();
   }, []);
 
   // Poll support users list
@@ -693,7 +710,7 @@ export default function AdminAnalytics() {
       return ['upload', 'categories', 'subcategories', 'subsubcategories', 'mocks'].includes(tab);
     }
     if (role === 'SUPPORT_TEAM') {
-      return ['support', 'suggestions'].includes(tab);
+      return ['support', 'suggestions', 'inquiries', 'feedback', 'contact_links'].includes(tab);
     }
     if (role === 'NOTICES_MANAGER') {
       return ['notices', 'notice_details', 'announcements', 'testimonials'].includes(tab);
@@ -1714,6 +1731,39 @@ export default function AdminAnalytics() {
                     {suggestionsList.filter(s => s.status === 'PENDING').length}
                   </span>
                 )}
+              </button>
+            )}
+            {hasTabAccess('inquiries') && (
+              <button
+                onClick={() => selectTab('inquiries')}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'inquiries'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Inbox className="h-4 w-4" />
+                  <span>Contact Inquiries</span>
+                </div>
+                {pendingInquiriesCount > 0 && (
+                  <span className="bg-red-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center animate-pulse">
+                    {pendingInquiriesCount}
+                  </span>
+                )}
+              </button>
+            )}
+            {hasTabAccess('contact_links') && (
+              <button
+                onClick={() => selectTab('contact_links')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'contact_links'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Share2 className="h-4 w-4" />
+                <span>Manage Contact Links</span>
               </button>
             )}
             {hasTabAccess('attempts') && (
@@ -6267,6 +6317,16 @@ export default function AdminAnalytics() {
                 })()}
               </div>
             </div>
+          )}
+
+          {/* TAB: CONTACT INQUIRIES */}
+          {activeTab === 'inquiries' && hasTabAccess('inquiries') && (
+            <InquiryManager showToast={showToast} />
+          )}
+
+          {/* TAB: MANAGE CONTACT & SOCIAL LINKS */}
+          {activeTab === 'contact_links' && hasTabAccess('contact_links') && (
+            <ContactLinksManager showToast={showToast} />
           )}
 
         </div>

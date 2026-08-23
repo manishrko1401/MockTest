@@ -23,12 +23,13 @@ import TestSeriesDetailScreen from './screens/TestSeriesDetailScreen';
 import MobileTestScreen from './MobileTestScreen';
 import AnalysisScreen from './screens/AnalysisScreen';
 import SupportChatScreen from './screens/SupportChatScreen';
+import LockerScreen from './screens/LockerScreen';
 import { Trophy } from 'lucide-react-native';
 import { ThemeColors } from './theme';
 import { requestNotificationPermissions, triggerLocalNotification, addNotificationResponseListener, checkAndAlertSavedJobsDeadlines } from './notifications';
 import { registerBackgroundFetchAsync } from './backgroundTask';
 
-type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis' | 'support_chat';
+type ViewMode = 'auth' | 'dashboard' | 'series_detail' | 'exam' | 'analysis' | 'support_chat' | 'locker';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -859,6 +860,7 @@ export default function App() {
               await AsyncStorage.setItem('app_language', lang);
             }}
             unreadSupportCount={unreadSupportCount}
+            onOpenLocker={() => setViewMode('locker')}
           />
         )}
 
@@ -944,6 +946,15 @@ export default function App() {
             currentUser={currentUser}
             onBack={() => setViewMode('dashboard')}
             isDark={isDark}
+          />
+        )}
+
+        {viewMode === 'locker' && currentUser && (
+          <LockerScreen
+            currentUser={currentUser}
+            onBack={() => setViewMode('dashboard')}
+            isDark={isDark}
+            language={language}
           />
         )}
       </View>

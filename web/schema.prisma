@@ -62,6 +62,10 @@ model User {
   lastSeen                DateTime?
   lastPlatform            String?            @default("web")
   trackedJobs             Json?
+  isLockerConnected       Boolean            @default(false)
+  googleDriveEmail        String?
+  googleDriveFolderId     String?
+  lockerDocuments         LockerDocument[]
 
   @@map("users")
 }
@@ -372,4 +376,85 @@ model PracticeSession {
 
   @@unique([userId, categoryId, sectionIndex])
   @@map("practice_sessions")
+}
+
+// 19. Document Locker Types
+enum LockerDocType {
+  PHOTO
+  SIGNATURE
+  ADMIT_CARD
+  APPLICATION_FORM
+  CERTIFICATE
+  ID_PROOF
+  OTHER
+}
+
+// 20. Document Locker (Metadata pointing to user's Google Drive)
+model LockerDocument {
+  id               String        @id @default(uuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title            String
+  docType          LockerDocType @default(OTHER)
+  examName         String?
+  year             Int?
+  
+  // Google Drive Metadata
+  driveFileId      String
+  driveFolderId    String?
+  driveViewUrl     String?
+  driveDownloadUrl String?
+  thumbnailUrl     String?
+  
+  mimeType         String
+  fileSizeBytes    Int           @default(0)
+  tags             Json?
+  
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([userId])
+  @@map("locker_documents")
+}
+
+// 21. Contact Inquiries from Contact Us page
+model ContactInquiry {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  phone       String?
+  subject     String   @default("general") // general, locker, tests, pass, feedback, other
+  message     String
+  status      String   @default("PENDING") // PENDING, REPLIED, RESOLVED, ARCHIVED
+  adminNotes  String?
+  ipAddress   String?
+  source      String   @default("web") // web, mobile
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("contact_inquiries")
+}
+
+// 22. Contact Links & Social Channels Configuration
+model ContactLink {
+  id              String   @id // 'email', 'telegram', 'youtube', 'instagram', 'x', 'reddit', 'whatsapp'
+  name            String
+  badgeText       String   @default("")
+  badgeBg         String   @default("")
+  badgeTextColor  String   @default("text-white")
+  iconType        String   @default("link")
+  handle          String   @default("")
+  url             String   @default("")
+  descriptionEn   String   @default("")
+  descriptionHi   String   @default("")
+  category        String   @default("primary") // primary, social, community
+  orderIndex      Int      @default(0)
+  isEnabled       Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("contact_links")
 }

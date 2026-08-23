@@ -11,7 +11,8 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  Modal
+  Modal,
+  Linking
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
@@ -474,6 +475,21 @@ export default function AuthScreen({ onLoginSuccess, onContinueAsGuest, isDark =
                   </Text>
                 </TouchableOpacity>
               )}
+
+              {/* Contact Us, Terms & Privacy Policy Links */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 16 }}>
+                <TouchableOpacity onPress={() => Linking.openURL('https://mock-test-three-indol.vercel.app/contact')}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#60A5FA' : '#2563EB' }}>Contact Us</Text>
+                </TouchableOpacity>
+                <Text style={{ fontSize: 11, color: isDark ? '#64748B' : '#94A3B8' }}>•</Text>
+                <TouchableOpacity onPress={() => Linking.openURL('https://mock-test-three-indol.vercel.app/terms')}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#60A5FA' : '#2563EB' }}>Terms & Conditions</Text>
+                </TouchableOpacity>
+                <Text style={{ fontSize: 11, color: isDark ? '#64748B' : '#94A3B8' }}>•</Text>
+                <TouchableOpacity onPress={() => Linking.openURL('https://mock-test-three-indol.vercel.app/privacy')}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#60A5FA' : '#2563EB' }}>Privacy Policy</Text>
+                </TouchableOpacity>
+              </View>
             </View>
         </View>
       </ScrollView>

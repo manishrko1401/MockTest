@@ -4,6 +4,13 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { 
+  isDisposableEmail, 
+  isHoneypotTriggered, 
+  checkRateLimit, 
+  getClientIp, 
+  verifyTurnstileToken 
+} from '../../lib/botProtection';
 
 // Persistent OTP Cache in global to survive Next.js dev server hot-reloads
 const otpCache = (global as any).otpCache || new Map<string, { code: string; expiresAt: number }>();
@@ -148,7 +155,9 @@ export async function POST(request: Request) {
       'update-profile', 'update-password', 'toggle-bookmark', 
       'add-attempt', 'save-ongoing-session', 'clear-ongoing-session',
       'get-support-messages', 'send-support-message', 'get-user-details',
-      'claim-pass-pro', 'update-tracked-jobs'
+      'claim-pass-pro', 'update-tracked-jobs',
+      'locker-get-docs', 'locker-save-meta', 'locker-delete-doc',
+      'locker-update-drive-status', 'locker-disconnect-drive'
     ];
 
     // Helper: Parse cookie manually
@@ -238,9 +247,9 @@ export async function POST(request: Request) {
       case 'refresh-catalog':
         return await handleRefreshCatalog();
       case 'signup':
-        return await handleSignup(data);
+        return await handleSignup(data, request);
       case 'login':
-        return await handleLogin(data);
+        return await handleLogin(data, request);
       case 'update-profile':
         return await handleUpdateProfile(data);
       case 'update-tracked-jobs':
@@ -347,6 +356,16 @@ export async function POST(request: Request) {
         return await handleSavePracticeAttempt(data);
       case 'get-practice-attempts':
         return await handleGetPracticeAttempts(data);
+      case 'locker-get-docs':
+        return await handleLockerGetDocs(data, requesterUserId);
+      case 'locker-save-meta':
+        return await handleLockerSaveMeta(data, requesterUserId);
+      case 'locker-delete-doc':
+        return await handleLockerDeleteDoc(data, requesterUserId);
+      case 'locker-update-drive-status':
+        return await handleLockerUpdateDriveStatus(data, requesterUserId);
+      case 'locker-disconnect-drive':
+        return await handleLockerDisconnectDrive(data, requesterUserId);
       case 'db-stats':
         return await handleDbStats();
       default:
@@ -798,9 +817,27 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
   });
 }
 
-async function handleSignup(data: any) {
-  const { name, email, mobile, password, referralCodeInput } = data;
+async function handleSignup(data: any, request?: Request) {
+  const { name, email, mobile, password, referralCodeInput, turnstileToken } = data;
 
+  // 1. Honeypot check: Automated bots fill hidden input fields
+  if (isHoneypotTriggered(data)) {
+    console.warn('[BOT_PROTECTION] Honeypot triggered during signup attempt. Silently rejecting bot.');
+    return NextResponse.json({ success: false, error: 'Registration could not be completed.' }, { status: 400 });
+  }
+
+  // 2. IP Rate Limiting: Restrict registration attempts per IP (max 5 signups per 30 minutes)
+  const clientIp = request ? getClientIp(request) : '127.0.0.1';
+  const signupRate = checkRateLimit(`signup_ip:${clientIp}`, 5, 30 * 60 * 1000);
+  if (!signupRate.allowed) {
+    console.warn(`[BOT_PROTECTION] Rate limit exceeded for signup from IP: ${clientIp}`);
+    return NextResponse.json({ 
+      success: false, 
+      error: `Too many registration attempts from this network. Please try again in ${signupRate.resetTimeMinutes} minutes.` 
+    }, { status: 429 });
+  }
+
+  // 3. Email & Phone validation
   if (!email || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
     return NextResponse.json({ success: false, error: 'Please provide a valid email address.' }, { status: 400 });
   }
@@ -809,6 +846,27 @@ async function handleSignup(data: any) {
   }
 
   const trimmedEmail = email.trim().toLowerCase();
+
+  // 4. Block Disposable / Burner / Temp Emails (e.g. tempmail, 10minutemail, mailinator, etc.)
+  if (isDisposableEmail(trimmedEmail)) {
+    console.warn(`[BOT_PROTECTION] Blocked disposable email signup attempt: ${trimmedEmail}`);
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Temporary and disposable email addresses are not allowed. Please use a valid email address (e.g. Gmail, Yahoo, Outlook).' 
+    }, { status: 400 });
+  }
+
+  // 5. Cloudflare Turnstile Verification (if provided on web)
+  if (turnstileToken !== undefined && turnstileToken !== null && typeof turnstileToken === 'string') {
+    const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp);
+    if (!turnstileResult.success) {
+      console.warn(`[BOT_PROTECTION] Cloudflare Turnstile verification failed for IP: ${clientIp}`);
+      return NextResponse.json({ 
+        success: false, 
+        error: turnstileResult.error || 'Security verification failed. Please complete the captcha check.' 
+      }, { status: 400 });
+    }
+  }
 
   // Check duplication
   const existing = await prisma.user.findUnique({
@@ -885,9 +943,19 @@ async function handleSignup(data: any) {
     },
   });
 }
-async function handleLogin(data: any) {
+async function handleLogin(data: any, request?: Request) {
   const { email, password } = data;
   const trimmedEmail = email.trim().toLowerCase();
+
+  // IP-level rate limiting on login: max 15 attempts per 10 minutes per IP
+  const clientIp = request ? getClientIp(request) : '127.0.0.1';
+  const loginIpRate = checkRateLimit(`login_ip:${clientIp}`, 15, 10 * 60 * 1000);
+  if (!loginIpRate.allowed) {
+    return NextResponse.json({
+      success: false,
+      error: `Too many login attempts from this network. Please try again in ${loginIpRate.resetTimeMinutes} minutes.`
+    }, { status: 429 });
+  }
 
   const now = Date.now();
   const attempt = loginAttempts.get(trimmedEmail);
@@ -3890,7 +3958,7 @@ async function handleRequestPasswordReset(data: { email: string }) {
   // Send the email
   try {
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || 'MockTest Hub Support <support@mocktest.com>',
+      from: process.env.SMTP_FROM || 'MockTest Support <mocktesthubsupport@gmail.com>',
       to: trimmedEmail,
       subject: 'MockTest Hub - Password Reset OTP',
       text: `Your OTP for password reset is: ${otpCode}. It is valid for 10 minutes.`,
@@ -4174,5 +4242,205 @@ async function handleDeleteSuggestion(data: any) {
     return NextResponse.json({ success: false, error: error.message || 'Failed to delete suggestion' }, { status: 500 });
   }
 }
+
+// -----------------------------------------------------------------------------
+// Document Locker Handlers (Google Drive Sync Metadata)
+// -----------------------------------------------------------------------------
+
+async function handleLockerGetDocs(data: any, requesterUserId: string | null) {
+  const userId = data?.userId || requesterUserId;
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        isLockerConnected: true,
+        googleDriveEmail: true,
+        googleDriveFolderId: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
+
+    const documents = await (prisma as any).lockerDocument.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return NextResponse.json({
+      success: true,
+      user,
+      documents: documents || [],
+    });
+  } catch (error: any) {
+    console.error('Error fetching locker documents:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to fetch locker documents' }, { status: 500 });
+  }
+}
+
+async function handleLockerSaveMeta(data: any, requesterUserId: string | null) {
+  const userId = data?.userId || requesterUserId;
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  const {
+    title,
+    docType,
+    examName,
+    year,
+    driveFileId,
+    driveFolderId,
+    driveViewUrl,
+    driveDownloadUrl,
+    thumbnailUrl,
+    mimeType,
+    fileSizeBytes,
+    tags,
+  } = data || {};
+
+  if (!title || !driveFileId) {
+    return NextResponse.json({ success: false, error: 'Title and Google Drive File ID are required' }, { status: 400 });
+  }
+
+  try {
+    const doc = await (prisma as any).lockerDocument.create({
+      data: {
+        userId,
+        title: title.trim(),
+        docType: docType || 'OTHER',
+        examName: examName ? examName.trim() : null,
+        year: year ? parseInt(year, 10) : null,
+        driveFileId,
+        driveFolderId: driveFolderId || null,
+        driveViewUrl: driveViewUrl || null,
+        driveDownloadUrl: driveDownloadUrl || null,
+        thumbnailUrl: thumbnailUrl || null,
+        mimeType: mimeType || 'application/octet-stream',
+        fileSizeBytes: fileSizeBytes ? parseInt(fileSizeBytes, 10) : 0,
+        tags: tags || null,
+      },
+    });
+
+    // Ensure isLockerConnected is set on user
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isLockerConnected: true,
+        ...(driveFolderId ? { googleDriveFolderId: driveFolderId } : {}),
+      },
+    });
+
+    return NextResponse.json({ success: true, document: doc });
+  } catch (error: any) {
+    console.error('Error saving locker document metadata:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to save document metadata' }, { status: 500 });
+  }
+}
+
+async function handleLockerDeleteDoc(data: any, requesterUserId: string | null) {
+  const { docId, userId: explicitUserId } = data || {};
+  const userId = explicitUserId || requesterUserId;
+
+  if (!docId) {
+    return NextResponse.json({ success: false, error: 'Document ID is required' }, { status: 400 });
+  }
+
+  try {
+    const existing = await (prisma as any).lockerDocument.findUnique({
+      where: { id: docId },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Document not found' }, { status: 404 });
+    }
+
+    if (userId && existing.userId !== userId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized to delete this document' }, { status: 403 });
+    }
+
+    await (prisma as any).lockerDocument.delete({
+      where: { id: docId },
+    });
+
+    return NextResponse.json({ success: true, deletedDocId: docId });
+  } catch (error: any) {
+    console.error('Error deleting locker document:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to delete locker document' }, { status: 500 });
+  }
+}
+
+async function handleLockerUpdateDriveStatus(data: any, requesterUserId: string | null) {
+  const userId = data?.userId || requesterUserId;
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  const { isConnected, googleDriveEmail, googleDriveFolderId } = data || {};
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isLockerConnected: isConnected !== undefined ? Boolean(isConnected) : true,
+        ...(googleDriveEmail !== undefined ? { googleDriveEmail } : {}),
+        ...(googleDriveFolderId !== undefined ? { googleDriveFolderId } : {}),
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        isLockerConnected: true,
+        googleDriveEmail: true,
+        googleDriveFolderId: true,
+      },
+    });
+
+    return NextResponse.json({ success: true, user: updatedUser });
+  } catch (error: any) {
+    console.error('Error updating locker drive status:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to update drive status' }, { status: 500 });
+  }
+}
+
+async function handleLockerDisconnectDrive(data: any, requesterUserId: string | null) {
+  const userId = data?.userId || requesterUserId;
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isLockerConnected: false,
+        googleDriveEmail: null,
+        googleDriveFolderId: null,
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        isLockerConnected: true,
+        googleDriveEmail: true,
+        googleDriveFolderId: true,
+      },
+    });
+
+    return NextResponse.json({ success: true, user: updatedUser });
+  } catch (error: any) {
+    console.error('Error disconnecting Google Drive:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to disconnect Google Drive' }, { status: 500 });
+  }
+}
+
 
 

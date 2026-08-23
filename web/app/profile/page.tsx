@@ -294,6 +294,33 @@ export default function StudentProfilePage() {
             </div>
           </section>
 
+          {/* DOCUMENT LOCKER BANNER SECTION */}
+          <section className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-3xl p-5 md:p-6 shadow-lg shadow-blue-600/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-white/20 rounded-md">
+                  Google Drive Locker
+                </span>
+                <span className="text-xs">🔒 100% Private</span>
+              </div>
+              <h3 className="text-base font-extrabold">
+                {language === 'hi' ? 'दस्तावेज़ लॉकर (Admit Cards, Photos, Signatures)' : 'Document Locker (Admit Cards & Forms)'}
+              </h3>
+              <p className="text-xs text-white/80 max-w-xl">
+                {language === 'hi'
+                  ? 'अपने सभी प्रवेश पत्र, परीक्षा फॉर्म, पासपोर्ट फोटो और हस्ताक्षर अपने निजी गूगल ड्राइव में सुरक्षित रखें।'
+                  : 'Save all your admit cards, confirmation forms, passport photos, and signatures directly into your personal Google Drive.'}
+              </p>
+            </div>
+            <Link
+              href="/locker"
+              className="px-5 py-2.5 bg-white text-blue-600 hover:bg-blue-50 font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 shrink-0"
+            >
+              <span>{language === 'hi' ? 'लॉकर खोलें' : 'Open Locker'}</span>
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </section>
+
           {/* SAVED & APPLIED JOBS TRACKER SECTION */}
           <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 md:p-6 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-3">
