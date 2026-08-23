@@ -1673,8 +1673,20 @@ export default function MockTestsCatalog() {
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200">
       
       {/* Navbar header */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-8 flex items-center justify-between relative">
-        <div className="flex items-center gap-6">
+      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 sm:px-8 flex items-center justify-between relative shadow-xs">
+        <div className="flex items-center gap-4 sm:gap-6">
+          {/* Back button on top left corner */}
+          <Link 
+            href="/" 
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-750 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-800 font-bold text-xs tracking-wide transition-all shadow-xs active:scale-95 shrink-0"
+            title={t.backToHome}
+          >
+            <ArrowLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <span>{t.backToHome}</span>
+          </Link>
+
+          <span className="h-6 w-[1px] bg-slate-200 dark:border-slate-800"></span>
+
           <Link href="/" className="flex items-center gap-3">
             <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
               <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
@@ -1907,15 +1919,25 @@ export default function MockTestsCatalog() {
             </div>
           ) : selectedCategory === null ? (
             <>
-              <div className="mb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
-                <div>
-                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-blue-500" />
-                    {language === 'hi' ? 'परीक्षा श्रेणियाँ' : 'Exam Categories'}
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक श्रेणी चुनें' : 'Select a category to explore mock tests'}
-                  </p>
+              <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/"
+                    className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-800 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 px-3 py-2 rounded-xl text-xs font-bold transition shadow-xs text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 shrink-0"
+                    title={language === 'hi' ? 'होम पर वापस जाएं' : 'Back to Home'}
+                  >
+                    <ArrowLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span>{language === 'hi' ? 'होम' : 'Back to Home'}</span>
+                  </Link>
+                  <div>
+                    <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-blue-500" />
+                      {language === 'hi' ? 'परीक्षा श्रेणियाँ' : 'Exam Categories'}
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक श्रेणी चुनें' : 'Select a category to explore mock tests'}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Categories Search Bar */}
