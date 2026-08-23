@@ -109,6 +109,71 @@ export async function requestGoogleDriveAccessToken(clientId?: string): Promise<
 }
 
 /**
+ * Sign In / Sign Up with Google (combines user profile with Drive access)
+ */
+export async function signInWithGoogle(clientId?: string): Promise<{
+  accessToken: string;
+  email: string;
+  name: string;
+  picture?: string;
+  googleId?: string;
+  expiresIn: number;
+}> {
+  await loadGisScript();
+
+  if (!window.google?.accounts?.oauth2) {
+    throw new Error('Google Identity Services failed to initialize');
+  }
+
+  const effectiveClientId = clientId || DEFAULT_GOOGLE_CLIENT_ID;
+
+  return new Promise((resolve, reject) => {
+    try {
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: effectiveClientId,
+        scope: 'email profile openid https://www.googleapis.com/auth/drive.file',
+        callback: async (tokenResponse: any) => {
+          if (tokenResponse.error) {
+            return reject(new Error(tokenResponse.error_description || tokenResponse.error));
+          }
+          if (!tokenResponse.access_token) {
+            return reject(new Error('Failed to acquire Google access token'));
+          }
+
+          try {
+            const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+            });
+            if (!userinfoRes.ok) {
+              return reject(new Error('Failed to retrieve Google profile information'));
+            }
+            const userInfo = await userinfoRes.json();
+            if (!userInfo.email) {
+              return reject(new Error('No email found associated with this Google account'));
+            }
+
+            resolve({
+              accessToken: tokenResponse.access_token,
+              email: userInfo.email,
+              name: userInfo.name || userInfo.given_name || 'Student',
+              picture: userInfo.picture,
+              googleId: userInfo.sub,
+              expiresIn: tokenResponse.expires_in || 3599,
+            });
+          } catch (err) {
+            reject(err);
+          }
+        },
+      });
+
+      client.requestAccessToken({ prompt: 'select_account' });
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+/**
  * Finds or creates the root "MockTest Hub Locker" folder in the user's Google Drive.
  */
 export async function getOrCreateLockerRootFolder(accessToken: string): Promise<string> {

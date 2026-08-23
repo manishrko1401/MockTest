@@ -140,6 +140,8 @@ export const TRANSLATIONS = {
     authEmailPlaceholder: "Enter your email...",
     authNamePlaceholder: "Enter your full name...",
     authMobilePlaceholder: "Enter your 10 digit mobile number...",
+    authGoogleBtn: "Continue with Google",
+    authOrDivider: "OR",
 
     // Exam Instructions / Sitting / Analysis
     instTitle: "Instructions Panel",
@@ -362,6 +364,8 @@ export const TRANSLATIONS = {
     authEmailPlaceholder: "अपना ईमेल दर्ज करें...",
     authNamePlaceholder: "अपना पूरा नाम दर्ज करें...",
     authMobilePlaceholder: "अपना 10 अंकों का मोबाइल नंबर दर्ज करें...",
+    authGoogleBtn: "Google के साथ जारी रखें",
+    authOrDivider: "या",
 
     // Exam Instructions / Sitting / Analysis
     instTitle: "निर्देश पैनल",

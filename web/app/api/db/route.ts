@@ -250,6 +250,8 @@ export async function POST(request: Request) {
         return await handleSignup(data, request);
       case 'login':
         return await handleLogin(data, request);
+      case 'google-auth':
+        return await handleGoogleAuth(data, request);
       case 'update-profile':
         return await handleUpdateProfile(data);
       case 'update-tracked-jobs':
@@ -1096,6 +1098,187 @@ async function handleLogin(data: any, request?: Request) {
   };
 
   return NextResponse.json({ success: true, user: mappedUser });
+}
+
+async function handleGoogleAuth(data: any, request?: Request) {
+  const { email, name, profilePhoto } = data;
+
+  if (!email || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    return NextResponse.json({ success: false, error: 'Valid Google email is required.' }, { status: 400 });
+  }
+
+  const trimmedEmail = email.trim().toLowerCase();
+
+  // Check if user already exists
+  let user = await prisma.user.findUnique({
+    where: { email: trimmedEmail },
+    include: {
+      testSessions: {
+        include: {
+          mockTest: {
+            select: {
+              title: true,
+              maxMarks: true,
+              durationMinutes: true,
+              positiveMarks: true,
+              negativeMarks: true,
+            }
+          },
+          responses: true,
+        },
+        orderBy: { startedAt: 'desc' },
+      },
+    },
+  });
+
+  if (user) {
+    if (user.isBlocked) {
+      return NextResponse.json({ success: false, error: 'This user account is blocked by the administrator.' }, { status: 403 });
+    }
+
+    const newSessionId = crypto.randomUUID();
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        currentSessionId: newSessionId,
+        ...(profilePhoto && !user.profilePhoto ? { profilePhoto } : {}),
+      },
+      include: {
+        testSessions: {
+          include: {
+            mockTest: {
+              select: {
+                title: true,
+                maxMarks: true,
+                durationMinutes: true,
+                positiveMarks: true,
+                negativeMarks: true,
+              }
+            },
+            responses: true,
+          },
+          orderBy: { startedAt: 'desc' },
+        },
+      },
+    });
+
+    const mappedUser = {
+      id: user.id,
+      currentSessionId: user.currentSessionId,
+      candidateCode: user.candidateCode,
+      name: user.fullName,
+      email: user.email,
+      mobile: user.mobile,
+      referralCode: user.referralCode,
+      referredBy: user.referredBy,
+      referralsCount: user.referralsCount,
+      role: user.role,
+      subscriptionTier: user.subscriptionTier,
+      subscriptionPurchasedAt: user.subscriptionPurchasedAt,
+      subscriptionExpiresAt: user.subscriptionExpiresAt,
+      registeredDate: formatDateTime(user.createdAt),
+      isBlocked: user.isBlocked,
+      password: user.passwordHash,
+      coins: user.coins,
+      referralCoinsCredited: user.referralCoinsCredited,
+      profilePhoto: user.profilePhoto,
+      bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],
+      trackedJobs: user.trackedJobs ? (user.trackedJobs as any) : [],
+      testSessions: (user.testSessions || []).map((session: any) => {
+        const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
+        (session.responses || []).forEach((r: any) => {
+          responsesRecord[r.questionId] = {
+            selectedOptionIndex: r.selectedOptionIndex,
+            elapsedSeconds: r.elapsedSeconds,
+            state: r.state,
+          };
+        });
+        return {
+          id: session.id,
+          testId: session.mockTestId,
+          title: session.mockTest?.title || 'Mock Test',
+          score: session.finalScore ?? 0,
+          maxScore: session.mockTest?.maxMarks ?? 200,
+          accuracy: session.accuracyPercentage ?? 0,
+          durationMinutes: session.mockTest?.durationMinutes || 60,
+          durationSeconds: session.timeSpentSeconds,
+          status: session.status,
+          violations: session.violationsCount,
+          date: session.startedAt.toISOString().split('T')[0],
+          startedAt: session.startedAt.toISOString(),
+          completedAt: session.completedAt ? session.completedAt.toISOString() : null,
+          createdAt: session.createdAt ? session.createdAt.toISOString() : session.startedAt.toISOString(),
+          updatedAt: (session.completedAt || session.startedAt || session.createdAt).toISOString(),
+          responses: responsesRecord,
+          timeRemaining: session.remainingSeconds,
+          currentSectionIndex: session.currentSectionIndex,
+          currentQuestionIndex: session.currentQuestionIndex,
+          testbookRank: session.testbookRank ?? null,
+          testbookPercentile: session.testbookPercentile ?? null,
+          positiveMarks: session.mockTest?.positiveMarks ?? null,
+          negativeMarks: session.mockTest?.negativeMarks ?? null,
+        };
+      }),
+    };
+
+    return NextResponse.json({ success: true, user: mappedUser });
+  }
+
+  // If user doesn't exist, create a new user account with Google
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let randStr = '';
+  for (let i = 0; i < 4; i++) {
+    randStr += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const referralCode = `MT-${randStr}`;
+  const newSessionId = crypto.randomUUID();
+
+  const newUser = await prisma.user.create({
+    data: {
+      candidateCode: 'HUB-' + Math.floor(1000 + Math.random() * 9000),
+      fullName: name?.trim() || 'Student',
+      email: trimmedEmail,
+      mobile: '',
+      passwordHash: 'google_oauth_' + crypto.randomUUID(),
+      referralCode,
+      referredBy: null,
+      referralsCount: 0,
+      role: 'STUDENT',
+      subscriptionTier: 'None',
+      subscriptionPurchasedAt: null,
+      subscriptionExpiresAt: null,
+      isBlocked: false,
+      currentSessionId: newSessionId,
+      profilePhoto: profilePhoto || null,
+    },
+  });
+
+  return NextResponse.json({
+    success: true,
+    user: {
+      id: newUser.id,
+      currentSessionId: newSessionId,
+      candidateCode: newUser.candidateCode,
+      name: newUser.fullName,
+      email: newUser.email,
+      mobile: newUser.mobile,
+      referralCode: newUser.referralCode,
+      referredBy: newUser.referredBy,
+      referralsCount: newUser.referralsCount,
+      role: newUser.role,
+      subscriptionTier: newUser.subscriptionTier,
+      subscriptionPurchasedAt: newUser.subscriptionPurchasedAt,
+      subscriptionExpiresAt: newUser.subscriptionExpiresAt,
+      registeredDate: formatDateTime(newUser.createdAt),
+      isBlocked: newUser.isBlocked,
+      coins: newUser.coins,
+      referralCoinsCredited: newUser.referralCoinsCredited,
+      profilePhoto: newUser.profilePhoto,
+      testSessions: [],
+      bookmarkedQuestions: [],
+      trackedJobs: [],
+    },
+  });
 }
 
 async function handleGetReferredFriends(data: any) {

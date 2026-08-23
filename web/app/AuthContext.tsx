@@ -152,6 +152,7 @@ interface AuthContextType {
   toggleTheme: () => void;
   login: (email: string, password?: string) => Promise<{ success: boolean; user?: MockUser; error?: string }>;
   signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string, honeypot?: string, turnstileToken?: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: (email: string, name: string, profilePhoto?: string) => Promise<{ success: boolean; user?: MockUser; error?: string }>;
   logout: () => void;
   updateProfile: (name: string, email: string, mobile: string) => void;
   updatePassword: (oldPass: string, newPass: string) => boolean;
@@ -1813,6 +1814,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }
   };
 
+  const loginWithGoogle = async (email: string, name: string, profilePhoto?: string): Promise<{ success: boolean; user?: MockUser; error?: string }> => {
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'google-auth',
+          data: { email, name, profilePhoto }
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        setCurrentUser(data.user);
+        syncUserCookieAndCache(data.user);
+        setUsersList(prev => {
+          const exists = prev.some(u => u.id === data.user.id);
+          return exists ? prev.map(u => u.id === data.user.id ? data.user : u) : [data.user, ...prev];
+        });
+        document.cookie = "tb_user_id=" + data.user.id + ";path=/;max-age=31536000";
+        return { success: true, user: data.user };
+      }
+      return { success: false, error: data.error || 'Google sign-in failed' };
+    } catch (e: any) {
+      console.error("Google login API error:", e);
+      return { success: false, error: e.message || 'Connection error' };
+    }
+  };
+
   const logout = () => {
     setCurrentUser(null);
     syncUserCookieAndCache(null);
@@ -2354,6 +2383,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         toggleTheme,
         login,
         signup,
+        loginWithGoogle,
         logout,
         updateProfile,
         updatePassword,
