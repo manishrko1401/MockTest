@@ -43,7 +43,6 @@ import { EXPLANATIONS } from '../lib/examUtils';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 import HomeSupportWidget from '../components/HomeSupportWidget';
-import HangingTriColorBalloons from '../components/HangingTriColorBalloons';
 
 import { processQuestionHtml, decodeHtml } from '../lib/mathUtils';
 import MathJaxText from '../lib/MathJaxText';
@@ -1117,19 +1116,6 @@ export default function PracticeSeriesPage() {
           </nav>
         </div>
 
-        {/* Center: Happy 80th Independence Day Celebration Greeting */}
-        <div className="relative hidden lg:flex items-center gap-2 bg-gradient-to-r from-orange-500/15 via-white/20 to-emerald-500/15 dark:from-orange-500/25 dark:via-slate-900/40 dark:to-emerald-500/25 border border-orange-500/30 dark:border-orange-500/40 px-4 py-1.5 rounded-full shadow-xs">
-          <span className="text-sm animate-flag-sway leading-none">🇮🇳</span>
-          <span className="text-xs font-black text-slate-900 dark:text-amber-300 tracking-wide uppercase flex items-center gap-1.5">
-            Happy 80th Independence Day! 🇮🇳
-          </span>
-
-          {/* Hanging Indian Tri-Color Balloons in the center just below the tile (Big with Cascading Ribbons) */}
-          <div className="absolute top-[85%] left-1/2 -translate-x-1/2 z-30 pointer-events-none drop-shadow-xl">
-            <HangingTriColorBalloons size="lg" variant="center" />
-          </div>
-        </div>
-
         <div className="flex items-center gap-2">
           {/* Question Palette Button on Mobile View (Extreme Right of top-most header during section tests) */}
           {selectedSectionIndex !== null && (
@@ -1489,19 +1475,11 @@ export default function PracticeSeriesPage() {
                 const isTeaching = cat.id.includes('teach');
                 const isUgcNet = cat.id.includes('ugc') || cat.id.includes('state');
 
-                const accentColor = 
-                  isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
-                  isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
-                  isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
-                  isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
-                  isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
-                  'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
-
                 return (
                   <button
                     key={cat.id}
                     onClick={() => handleCategorySelect(cat.id)}
-                    className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 sm:p-3.5 rounded-xl flex flex-col sm:flex-row justify-between gap-2 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer border-t-4 ${accentColor}`}
+                    className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 p-2.5 sm:p-3.5 rounded-xl flex flex-col sm:flex-row justify-between gap-2 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer"
                   >
                     {/* Left details */}
                     <div className="flex-1 flex flex-col justify-between min-w-0">
@@ -1639,10 +1617,10 @@ export default function PracticeSeriesPage() {
                         }}
                         className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md hover:scale-[1.02] active:scale-[0.98] ${
                           secStats.isCompleted
-                            ? 'bg-emerald-50/60 dark:bg-emerald-955/20 border-emerald-300 dark:border-emerald-800/80 border-t-4 border-t-emerald-500'
+                            ? 'bg-emerald-50/60 dark:bg-emerald-955/20 border-emerald-300 dark:border-emerald-800/80'
                             : secStats.attempted > 0
-                            ? 'bg-amber-50/60 dark:bg-amber-955/20 border-amber-300 dark:border-amber-800/80 border-t-4 border-t-amber-500'
-                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 border-t-4 border-t-blue-500'
+                            ? 'bg-amber-50/60 dark:bg-amber-955/20 border-amber-300 dark:border-amber-800/80'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
                         <div className="flex items-center justify-between w-full mb-2">

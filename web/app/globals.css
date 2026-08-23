@@ -302,117 +302,6 @@ mjx-container[jax="CHTML"] {
   }
 }
 
-/* 🇮🇳 Independence Day India - Theme & Animations */
-:root {
-  --saffron: #FF9933;
-  --white: #FFFFFF;
-  --green: #138808;
-  --navy: #000080;
-}
-
-@keyframes floatBalloon {
-  0% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(3deg);
-  }
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-}
-
-@keyframes flagSway {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(8deg);
-  }
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 1;
-    filter: drop-shadow(0 0 6px rgba(255, 153, 51, 0.6));
-  }
-}
-
-.animate-balloon-float {
-  animation: floatBalloon 4s ease-in-out infinite;
-}
-
-.animate-balloon-float-delayed {
-  animation: floatBalloon 4.5s ease-in-out infinite 1.5s;
-}
-
-.animate-flag-sway {
-  animation: flagSway 3s ease-in-out infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 2.5s ease-in-out infinite;
-}
-
-@keyframes hangSwayLeft {
-  0%, 100% {
-    transform: rotate(-3deg) translateY(0px);
-  }
-  50% {
-    transform: rotate(4deg) translateY(-2px);
-  }
-}
-
-@keyframes hangSwayRight {
-  0%, 100% {
-    transform: rotate(3deg) translateY(0px);
-  }
-  50% {
-    transform: rotate(-4deg) translateY(-2px);
-  }
-}
-
-@keyframes flagWaveRealistic {
-  0% {
-    transform: perspective(400px) rotateY(0deg) skewY(0deg);
-  }
-  25% {
-    transform: perspective(400px) rotateY(10deg) skewY(2deg) translateY(-1px);
-  }
-  50% {
-    transform: perspective(400px) rotateY(-8deg) skewY(-2deg) translateY(1px);
-  }
-  75% {
-    transform: perspective(400px) rotateY(6deg) skewY(1deg) translateY(-0.5px);
-  }
-  100% {
-    transform: perspective(400px) rotateY(0deg) skewY(0deg);
-  }
-}
-
-.animate-flag-wave {
-  animation: flagWaveRealistic 3.5s ease-in-out infinite;
-  transform-origin: left center;
-}
-
-.animate-balloon-sway-left {
-  animation: hangSwayLeft 3.5s ease-in-out infinite;
-}
-
-.animate-balloon-sway-right {
-  animation: hangSwayRight 4s ease-in-out infinite 0.5s;
-}
-
-.tricolor-gradient-bar {
-  background: linear-gradient(90deg, #FF9933 0%, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%, #138808 100%);
-}
-
-.tricolor-gradient-bg {
-  background: linear-gradient(135deg, rgba(255, 153, 51, 0.12) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(19, 136, 8, 0.12) 100%);
-}
 
 .dark .tricolor-gradient-bg {
   background: linear-gradient(135deg, rgba(255, 153, 51, 0.15) 0%, rgba(15, 23, 42, 0.6) 50%, rgba(19, 136, 8, 0.15) 100%);
@@ -772,4 +661,31 @@ mjx-container[jax="CHTML"] {
   border-color: rgba(245, 158, 11, 0.25) !important;
   color: #fde68a !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+
+/* 3D Button Depth & Interactive Hover Effects */
+.btn-3d {
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transform: translateY(0) scale(1);
+}
+.btn-3d:hover {
+  transform: translateY(-2.5px) scale(1.025) !important;
+  box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+.btn-3d:active {
+  transform: translateY(1px) scale(0.98) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.btn-3d-blue:hover {
+  box-shadow: 0 10px 22px -3px rgba(37, 99, 235, 0.4), 0 4px 6px -2px rgba(37, 99, 235, 0.2) !important;
+}
+
+.btn-3d-yellow:hover {
+  box-shadow: 0 10px 22px -3px rgba(217, 119, 6, 0.4), 0 4px 6px -2px rgba(217, 119, 6, 0.2) !important;
+}
+
+.btn-3d-slate:hover {
+  box-shadow: 0 8px 18px -3px rgba(100, 116, 139, 0.25), 0 3px 6px -2px rgba(100, 116, 139, 0.1) !important;
 }

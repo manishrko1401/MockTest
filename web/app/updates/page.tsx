@@ -557,7 +557,7 @@ export default function UpdatesCenterPage() {
         {categoryFilter && categoryMeta[categoryFilter] ? (
           <div className="space-y-6">
             {/* Category Page Banner Header */}
-            <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 shadow-sm ${categoryMeta[categoryFilter].topBorder} border-t-4 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6`}>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="flex items-start gap-4">
                 <div className={`p-3.5 rounded-2xl shrink-0 ${categoryMeta[categoryFilter].badgeBg}`}>
                   {React.createElement(categoryMeta[categoryFilter].icon, { className: "h-7 w-7" })}
@@ -581,7 +581,7 @@ export default function UpdatesCenterPage() {
               <div className="flex items-center gap-3 shrink-0">
                 <button
                   onClick={clearCategorySection}
-                  className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-3 rounded-2xl text-xs font-black transition shadow-xs cursor-pointer border border-slate-200 dark:border-slate-700"
+                  className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-3 rounded-2xl text-xs font-black transition-all duration-200 transform-gpu hover:-translate-y-0.5 hover:scale-[1.03] hover:shadow-md cursor-pointer border border-slate-200 dark:border-slate-700 active:translate-y-0.5 active:scale-95"
                 >
                   <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'सभी अनुभागों पर वापस जाएं' : 'Back to All Sections'}
                 </button>
@@ -691,7 +691,7 @@ export default function UpdatesCenterPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               
               {/* Column 1: Latest Notices (Blue Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-blue-600 relative overflow-hidden">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative overflow-hidden">
                 <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                     <Bell className="h-4 w-4" /> {t.liveNotices}
@@ -725,7 +725,7 @@ export default function UpdatesCenterPage() {
               </div>
 
               {/* Column 2: Results & Merits (Amber Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-amber-500 relative overflow-hidden">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative overflow-hidden">
                 <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                     <Trophy className="h-4 w-4" /> {t.resultsMerits}
@@ -759,7 +759,7 @@ export default function UpdatesCenterPage() {
               </div>
 
               {/* Column 3: Admit Cards (Emerald Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-emerald-600 relative overflow-hidden">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative overflow-hidden">
                 <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                     <FileText className="h-4 w-4" /> {t.admitCards}
@@ -793,7 +793,7 @@ export default function UpdatesCenterPage() {
               </div>
 
               {/* Column 4: Answer Keys (Purple Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] border-t-4 border-t-purple-600 relative overflow-hidden">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative overflow-hidden">
                 <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4" /> Answer Keys

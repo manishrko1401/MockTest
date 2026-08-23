@@ -10,8 +10,6 @@ import { TRANSLATIONS } from './translations';
 import { getLocalizedName } from './lib/examUtils';
 import { useIsMobile } from './useIsMobile';
 import VocabSection from './components/VocabSection';
-import HangingTriColorBalloons from './components/HangingTriColorBalloons';
-import WavingIndianFlag from './components/WavingIndianFlag';
 
 const EXAMS_BY_CATEGORY: Record<string, { id: string; name: string }[]> = {
   ssc: [
@@ -464,22 +462,19 @@ const formatSubCategoryName = (name: string) => {
           </Link>
 
           <div className="flex items-center gap-2">
-            {/* Login / Profile Header Action Button with Indian Flag Emblem */}
             {currentUser ? (
               <Link
                 href="/profile"
-                className="px-2.5 py-1.5 rounded-xl bg-orange-50 dark:bg-orange-950/60 border border-orange-300/80 dark:border-orange-800/60 text-slate-900 dark:text-slate-100 text-[11px] font-black flex items-center gap-1.5 active:scale-95 transition shadow-xs"
+                className="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 text-blue-700 dark:text-blue-300 text-[11px] font-black flex items-center gap-1.5 active:scale-95 transition shadow-2xs"
               >
-                <span className="text-xs animate-flag-sway leading-none">🇮🇳</span>
-                <UserCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                <UserCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                 <span>{language === 'hi' ? 'प्रोफाइल' : 'Profile'}</span>
               </Link>
             ) : (
               <Link
                 href="/auth"
-                className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-600 via-amber-500 to-emerald-600 text-white text-[11px] font-black flex items-center gap-1.5 active:scale-95 transition shadow-xs"
+                className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black flex items-center gap-1.5 active:scale-95 transition shadow-2xs"
               >
-                <span className="text-xs animate-flag-sway leading-none">🇮🇳</span>
                 <User className="h-3.5 w-3.5" />
                 <span>{t.logIn}</span>
               </Link>
@@ -497,14 +492,9 @@ const formatSubCategoryName = (name: string) => {
 
         {/* Live Notices & Announcements Marquee */}
         {noticesList && noticesList.length > 0 && (
-          <div className="relative bg-blue-600/90 dark:bg-blue-950/80 text-white text-[10px] py-2 px-3 flex items-center gap-2 border-b border-blue-500/20 z-20 shrink-0 font-bold overflow-visible shadow-xs">
-            {/* Hanging Indian Tricolor Balloons (Dangling Downwards from the Live Updates Bar) */}
-            <div className="absolute top-[60%] left-2 z-30 pointer-events-none drop-shadow-md">
-              <HangingTriColorBalloons size="sm" variant="left" />
-            </div>
-
-            <span className="bg-red-500 text-[8px] text-white px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0 ml-7 flex items-center gap-1 shadow-xs border border-red-400/30">
-              <span className="animate-flag-sway text-[9px]">🇮🇳</span>
+          <div className="relative bg-blue-600/90 dark:bg-blue-950/80 text-white text-[10px] py-2 px-3 flex items-center gap-2 border-b border-blue-500/20 z-20 shrink-0 font-bold overflow-hidden shadow-xs">
+            <span className="bg-red-500 text-[8px] text-white px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0 flex items-center gap-1 shadow-xs border border-red-400/30">
+              <Bell className="h-2.5 w-2.5" />
               {language === 'hi' ? 'लाइव अपडेट' : 'Live Updates'}
             </span>
             {React.createElement(
@@ -526,11 +516,6 @@ const formatSubCategoryName = (name: string) => {
                 </span>
               ))
             )}
-
-            {/* Right Hanging Balloons on Mobile (Dangling Downwards) */}
-            <div className="absolute top-[60%] right-2 z-30 pointer-events-none drop-shadow-md">
-              <HangingTriColorBalloons size="sm" variant="right" />
-            </div>
           </div>
         )}
 
@@ -746,43 +731,6 @@ const formatSubCategoryName = (name: string) => {
 
           {/* 2. CENTERED HERO TITLE SECTION */}
           <section className="text-center pt-2 pb-2 space-y-3 relative z-10 flex flex-col items-center justify-center">
-            
-            {/* India's Waving Flag Just Above the Independence Day Offer Tile */}
-            <div className="flex items-center justify-center gap-2 -mb-1 animate-pulse-glow">
-              <WavingIndianFlag size="sm" showPole={true} />
-              <span className="text-[10px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400">
-                {language === 'hi' ? '🇮🇳 15 अगस्त स्वतंत्रता दिवस' : '🇮🇳 15th August Special'}
-              </span>
-            </div>
-
-            {/* Completely Wide Independence Day Celebration Offer Banner at Top */}
-            <div className="w-full bg-gradient-to-r from-orange-500/15 via-white/20 to-emerald-500/15 dark:from-orange-500/25 dark:via-slate-900/50 dark:to-emerald-500/25 border border-orange-500/40 dark:border-orange-500/50 rounded-2xl p-2.5 px-3 flex items-center justify-between gap-2 shadow-md relative overflow-hidden group">
-              {/* Top Saffron-Green subtle bar */}
-              <div className="absolute top-0 left-0 right-0 h-0.5 tricolor-gradient-bar" />
-              <div className="flex items-center gap-2 z-10">
-                <div className="bg-gradient-to-tr from-orange-500 to-emerald-600 text-white p-1 rounded-md shrink-0 flex items-center justify-center shadow-xs">
-                  <span className="text-sm leading-none animate-flag-sway">🇮🇳</span>
-                </div>
-                <div className="text-left leading-tight">
-                  <p className="text-[10px] font-black text-slate-900 dark:text-amber-300 uppercase tracking-wide flex items-center gap-1">
-                    {language === 'hi' ? 'स्वतंत्रता दिवस ऑफर!' : 'Independence Day Offer!'} 🇮🇳
-                  </p>
-                  <p className="text-[9px] text-slate-700 dark:text-slate-350 font-bold">
-                    {language === 'hi' 
-                      ? 'रजिस्टर करें और पाएं Pass Pro Free!' 
-                      : 'Get 1-Year Pass Pro Free on Register!'}
-                  </p>
-                </div>
-              </div>
-              <Link
-                href={currentUser ? "/profile" : "/auth?tab=signup"}
-                className="bg-gradient-to-r from-orange-600 to-emerald-600 hover:from-orange-700 hover:to-emerald-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-sm flex items-center gap-1"
-              >
-                <span>🇮🇳</span>
-                <span>{language === 'hi' ? 'दावा करें' : 'Claim Now'}</span>
-              </Link>
-            </div>
-
             {/* For Students, By Students Badge Below Offer Banner */}
             <span className="inline-flex items-center gap-1 bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider shadow-xs">
               {t.heroBadge}
@@ -1294,11 +1242,9 @@ const formatSubCategoryName = (name: string) => {
           ) : (
             <div className="flex items-center gap-3">
               <Link href="/auth" className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold flex items-center gap-1">
-                <span>🇮🇳</span>
                 <span>{t.logIn}</span>
               </Link>
-              <Link href="/auth" className="bg-gradient-to-r from-orange-600 to-emerald-600 hover:from-orange-700 hover:to-emerald-700 text-white font-extrabold py-2 px-4 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5">
-                <span className="text-xs animate-flag-sway">🇮🇳</span>
+              <Link href="/auth" className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2 px-4 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5">
                 <span>{t.signUp}</span>
               </Link>
             </div>
@@ -1308,14 +1254,9 @@ const formatSubCategoryName = (name: string) => {
 
       {/* Live Notices & Announcements Marquee */}
       {noticesList && noticesList.length > 0 && (
-        <div className="relative bg-blue-600/90 dark:bg-blue-950/80 text-white text-xs py-2 px-8 flex items-center gap-3 border-b border-blue-500/20 z-30 shrink-0 font-bold overflow-visible shadow-xs">
-          {/* Hanging Indian Tricolor Balloons (Dangling Downwards from the Live Updates Bar) - Left Cluster */}
-          <div className="absolute top-[60%] left-4 z-40 pointer-events-none drop-shadow-xl">
-            <HangingTriColorBalloons size="md" variant="left" />
-          </div>
-
-          <span className="bg-red-500 text-[9px] text-white px-2.5 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0 ml-14 flex items-center gap-1.5 shadow-xs border border-red-400/30">
-            <span className="animate-flag-sway text-xs">🇮🇳</span>
+        <div className="relative bg-blue-600/90 dark:bg-blue-950/80 text-white text-xs py-2 px-8 flex items-center gap-3 border-b border-blue-500/20 z-30 shrink-0 font-bold overflow-hidden shadow-xs">
+          <span className="bg-red-500 text-[9px] text-white px-2.5 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0 flex items-center gap-1.5 shadow-xs border border-red-400/30">
+            <Bell className="h-3 w-3" />
             {language === 'hi' ? 'लाइव अपडेट' : 'Live Updates'}
           </span>
           {React.createElement(
@@ -1337,11 +1278,6 @@ const formatSubCategoryName = (name: string) => {
               </span>
             ))
           )}
-
-          {/* Hanging Indian Tricolor Balloons (Dangling Downwards from the Live Updates Bar) - Right Cluster */}
-          <div className="absolute top-[60%] right-4 z-40 pointer-events-none drop-shadow-xl">
-            <HangingTriColorBalloons size="md" variant="right" />
-          </div>
         </div>
       )}
 
@@ -1372,53 +1308,8 @@ const formatSubCategoryName = (name: string) => {
           </svg>
         </div>
 
-        {/* Left Side: Compact Pitch Title Section + Promo Banner Above Badge */}
+        {/* Left Side: Compact Pitch Title Section */}
         <div className="lg:col-span-4 flex flex-col justify-center space-y-3.5 text-left">
-          {/* India's Waving Flag Just Above the Independence Day Offer Tile */}
-          <div className="flex items-center gap-3 pl-1 -mb-1">
-            <WavingIndianFlag size="md" showPole={true} />
-            <div className="flex flex-col">
-              <span className="text-[11px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400 flex items-center gap-1">
-                <span>जय हिन्द</span>
-                <span className="text-slate-400 dark:text-slate-600">•</span>
-                <span>15 August Special</span>
-              </span>
-              <span className="text-[9.5px] font-bold text-slate-500 dark:text-slate-400">
-                {language === 'hi' ? 'भारतीय स्वतंत्रता दिवस उत्सव' : 'Indian Independence Day Celebration'}
-              </span>
-            </div>
-          </div>
-
-          {/* Compact Independence Day Promo Banner Above Badge */}
-          <div className="w-full max-w-sm bg-gradient-to-r from-orange-500/15 via-white/20 to-emerald-500/15 dark:from-orange-500/25 dark:via-slate-900/50 dark:to-emerald-500/25 border border-orange-500/40 dark:border-orange-500/50 rounded-2xl p-2.5 px-3 flex items-center justify-between gap-2 shadow-md group relative overflow-hidden">
-            {/* Top Saffron-Green subtle bar */}
-            <div className="absolute top-0 left-0 right-0 h-0.5 tricolor-gradient-bar" />
-            <div className="flex items-center gap-2 z-10">
-              <div className="bg-gradient-to-tr from-orange-500 to-emerald-600 text-white p-1 rounded-md shrink-0 flex items-center justify-center shadow-xs">
-                <span className="text-sm leading-none animate-flag-sway">🇮🇳</span>
-              </div>
-              <div className="text-left leading-tight">
-                <div className="flex items-center gap-1">
-                  <p className="text-[10px] font-black text-slate-900 dark:text-amber-300 uppercase tracking-wide flex items-center gap-1">
-                    {language === 'hi' ? 'स्वतंत्रता दिवस ऑफर!' : 'Independence Day Offer!'} 🇮🇳
-                  </p>
-                </div>
-                <p className="text-[9px] text-slate-700 dark:text-slate-300 font-bold">
-                  {language === 'hi' 
-                    ? 'रजिस्टर करें और पाएं 1-Year Pass Pro Free!' 
-                    : 'Get 1-Year Pass Pro Free on Register!'}
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/auth"
-              className="bg-gradient-to-r from-orange-600 to-emerald-600 hover:from-orange-700 hover:to-emerald-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider shrink-0 transition-transform active:scale-95 z-10 shadow-sm flex items-center gap-1"
-            >
-              <span>🇮🇳</span>
-              <span>{language === 'hi' ? 'दावा करें' : 'Claim'}</span>
-            </Link>
-          </div>
-
           <span className="inline-flex items-center gap-1.5 text-xs bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow-xs self-start">
             {t.heroBadge}
           </span>
@@ -1572,7 +1463,7 @@ const formatSubCategoryName = (name: string) => {
                   <Link
                     key={cat.id}
                     href={`/mock-tests?cat=${cat.id}`}
-                    className={`border hover:scale-[1.03] p-5 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full cursor-pointer relative overflow-hidden ${style.bg} ${shadowStyle}`}
+                    className={`border-2 p-5 rounded-2xl flex flex-col justify-between group transition-all duration-300 transform-gpu hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_16px_32px_-8px_rgba(0,0,0,0.14),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_16px_32px_-8px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] active:translate-y-0 active:scale-[0.99] text-left w-full cursor-pointer relative overflow-hidden ${style.bg} ${shadowStyle}`}
                   >
                     {/* Decorative background circle art (watermark) */}
                     <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-current opacity-[0.03] dark:opacity-[0.015] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
@@ -1624,7 +1515,7 @@ const formatSubCategoryName = (name: string) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Column 1: Live Notices & Announcements (Blue Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] border-t-4 border-t-blue-600 relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative overflow-hidden">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
               <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce shrink-0" />
               <span>{t.liveNotices}</span>
@@ -1656,7 +1547,7 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           {/* Column 2: Results & Merit Lists (Amber Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] border-t-4 border-t-amber-500 relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative overflow-hidden">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
               <Trophy className="h-4.5 w-4.5 text-amber-500 animate-pulse shrink-0" />
               <span>{t.resultsMerits}</span>
@@ -1688,7 +1579,7 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           {/* Column 3: Admit Cards & City Info (Emerald Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] border-t-4 border-t-emerald-600 relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative overflow-hidden">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
               <FileText className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
               <span>{t.admitCards}</span>
@@ -1843,11 +1734,6 @@ const formatSubCategoryName = (name: string) => {
 
       {/* FOOTER */}
       <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-10 px-6 md:px-12 mt-auto text-center text-xs text-slate-500 dark:text-slate-500 transition-colors duration-200">
-        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500/15 via-white/20 to-emerald-500/15 dark:from-orange-500/25 dark:via-slate-900/40 dark:to-emerald-500/25 border border-orange-500/30 dark:border-orange-500/40 px-4 py-1.5 rounded-full text-xs font-black text-slate-900 dark:text-white shadow-xs mb-3">
-          <span className="animate-flag-sway text-sm leading-none">🇮🇳</span>
-          <span>Made in India • Jai Hind!</span>
-          <span className="animate-flag-sway text-sm leading-none">🇮🇳</span>
-        </div>
         <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
         <p className="mt-1 text-[11px]">Developed to simulate real-world government selection computer based assessments.</p>
         <div className="mt-3 flex items-center justify-center gap-4">

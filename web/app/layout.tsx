@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./AuthContext";
-import IndependenceDayDecorations from "./components/IndependenceDayDecorations";
 import DeploymentRecovery from "./components/DeploymentRecovery";
 import { cookies } from "next/headers";
 
@@ -49,7 +48,6 @@ export default async function RootLayout({
       >
         <AuthProvider initialUserProfile={userProfile}>
           <DeploymentRecovery />
-          <IndependenceDayDecorations />
           {children}
         </AuthProvider>
       </body>

@@ -22,6 +22,7 @@ import {
   Timer,
   Bookmark,
   Trophy,
+  History as HistoryIcon,
   User,
   Clock,
   Check,
@@ -762,288 +763,314 @@ export default function ExamSolutionAnalysisPage() {
         </header>
       )}
 
-      {/* 2. STATS OVERVIEW CARDS */}
-      <section className={`max-w-6xl w-full mx-auto px-6 mt-8 ${viewMode === 'analysis' ? 'block' : 'hidden'}`}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+      {/* 2. MAIN ANALYSIS DASHBOARD (2-COLUMN LAYOUT WITH VERTICAL ATTEMPTS SIDEBAR ON LEFT) */}
+      <div className={`max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 ${viewMode === 'analysis' ? 'block' : 'hidden'}`}>
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
           
-          <div className="flex items-center gap-3 border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
-            <div className="bg-blue-500/10 p-2.5 rounded-xl text-blue-600 dark:text-blue-400">
-              <Award className="h-5 w-5" />
+          {/* LEFT SIDEBAR: Attempts & Previous Attempts (Vertical layout) */}
+          <aside className="w-full lg:w-80 shrink-0 space-y-4">
+            <div className="bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-sm sticky top-20">
+              <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                    <HistoryIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+                      {language === 'hi' ? 'प्रयास और इतिहास' : 'Attempts & History'}
+                    </h3>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                      {attempts.length} {attempts.length === 1 ? (language === 'hi' ? 'प्रयास' : 'Attempt') : (language === 'hi' ? 'प्रयास' : 'Attempts')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vertical Stack of Attempts */}
+              <div className="space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto p-1.5 -m-1.5">
+                {attempts.map((att, idx) => {
+                  const isSelected = selectedAttemptIdx === idx;
+                  const acc = typeof att.accuracy === 'number' ? att.accuracy : 0;
+                  const accColor = acc >= 75 ? 'text-green-600 dark:text-green-400' : (acc >= 50 ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400');
+                  
+                  return (
+                    <button
+                      key={att.id || idx}
+                      onClick={() => setSelectedAttemptIdx(idx)}
+                      className={`w-full p-3 sm:p-3.5 rounded-2xl text-left transition-all duration-200 transform-gpu hover:-translate-y-1 hover:shadow-md border-2 flex flex-col gap-2 cursor-pointer active:translate-y-0 ${
+                        isSelected
+                          ? 'bg-blue-50/90 dark:bg-blue-950/40 border-blue-500 dark:border-blue-500 shadow-sm hover:shadow-blue-500/20'
+                          : 'bg-slate-50 dark:bg-slate-950/40 border-slate-200/90 dark:border-slate-800/80 hover:border-blue-400/50 dark:hover:border-blue-500/40 hover:bg-white dark:hover:bg-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                          isSelected
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}>
+                          {getAttemptLabel(idx, attempts.length, language)}
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">
+                          {att.date || 'Recent'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-slate-200/50 dark:border-slate-800/60">
+                        <div>
+                          <span className="text-[8.5px] font-bold uppercase text-slate-400 dark:text-slate-500 block">
+                            {language === 'hi' ? 'अंक (Score)' : 'Score'}
+                          </span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
+                            {att.score} <span className="text-[10px] text-slate-400 font-normal">/ {att.maxScore}</span>
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[8.5px] font-bold uppercase text-slate-400 dark:text-slate-500 block">
+                            {language === 'hi' ? 'सटीकता' : 'Accuracy'}
+                          </span>
+                          <span className={`text-xs font-black ${accColor}`}>
+                            {att.accuracy}%
+                          </span>
+                        </div>
+                      </div>
+
+                      {isSelected && (
+                        <div className="flex items-center gap-1 text-[9px] font-bold text-blue-600 dark:text-blue-400 pt-0.5">
+                          <CheckCircle2 className="h-3 w-3" />
+                          <span>{language === 'hi' ? 'सक्रिय अवलोकन' : 'Currently Viewing'}</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisScore}</p>
-              <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">
-                {sessionRecord.score} <span className="text-xs text-slate-500 font-bold font-sans">/ {sessionRecord.maxScore}</span>
-              </h4>
-            </div>
-          </div>
+          </aside>
 
-          <div className="flex items-center gap-3 md:border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
-            <div className="bg-green-500/10 p-2.5 rounded-xl text-green-600 dark:text-green-400">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisAccuracy}</p>
-              <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{sessionRecord.accuracy}%</h4>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
-            <div className="bg-purple-500/10 p-2.5 rounded-xl text-purple-600 dark:text-purple-400">
-              <Timer className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisTimeTaken}</p>
-              <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{formatDuration(computedTimeTakenSeconds)}</h4>
-            </div>
-          </div>
-
-
-        </div>
-      </section>
-
-      {/* Solution Page Navigation Button placed right below Score Tile */}
-      {viewMode === 'analysis' && (
-        <div className="max-w-6xl w-full mx-auto px-6 mt-4">
-          <button
-            onClick={() => setViewMode('solution')}
-            className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-98 flex items-center justify-center gap-2 border border-blue-500/10 text-xs md:text-sm cursor-pointer"
-          >
-            <HelpCircle className="h-4.5 w-4.5" />
-            {language === 'hi' ? 'सविस्तार समाधान और व्याख्या देखें' : 'View Detailed Solutions & Explanation'}
-          </button>
-        </div>
-      )}
-
-
-      {/* Testbook Equivalent Benchmarking Card */}
-      {sessionRecord.testbookRank && sessionRecord.mockTest && (
-        <section className={`max-w-6xl w-full mx-auto px-6 mt-6 ${activeMobileTab === 'analysis' ? 'block' : 'hidden lg:block'}`}>
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900/30 dark:to-indigo-950/10 border border-blue-100 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              
-              <div className="flex items-center gap-4">
-                <div className="bg-blue-600 text-white p-3 rounded-2xl shadow-lg shadow-blue-500/20">
-                  <Award className="h-6 w-6" />
+          {/* RIGHT MAIN CONTENT: Metrics, Benchmark & Subject Breakdown */}
+          <main className="flex-1 min-w-0 space-y-6 w-full">
+            
+            {/* Stats Overview Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-white dark:bg-slate-900/60 border-2 border-slate-200/90 dark:border-slate-800 p-5 rounded-3xl shadow-sm">
+              <div className="flex items-center gap-3 border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
+                <div className="bg-blue-500/10 p-2.5 rounded-xl text-blue-600 dark:text-blue-400">
+                  <Award className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                    {lang === 'hi' ? 'टेस्टबुक समकक्ष रैंक' : 'Equivalent Testbook Rank'}
+                  <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisScore}</p>
+                  <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">
+                    {sessionRecord.score} <span className="text-xs text-slate-500 font-bold font-sans">/ {sessionRecord.maxScore}</span>
                   </h4>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {lang === 'hi' 
-                      ? 'टेस्टबुक के परीक्षणकर्ताओं के डेटा के आधार पर सांख्यिकीय अनुमान।' 
-                      : 'Statistical projection based on Testbook performance parameters.'}
-                  </p>
                 </div>
               </div>
 
-              <div className="flex gap-6 items-center flex-wrap">
-                <div className="bg-white dark:bg-slate-950 px-5 py-3 rounded-xl border border-slate-200/60 dark:border-slate-850 shadow-sm text-center min-w-[120px]">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{lang === 'hi' ? 'अनुमानित रैंक' : 'EST. RANK'}</span>
-                  <h3 className="text-lg font-black text-blue-600 dark:text-blue-400 mt-0.5">
-                    #{sessionRecord.testbookRank} <span className="text-[11px] text-slate-400 font-normal">/ {sessionRecord.mockTest.testbookTotalUsers}</span>
-                  </h3>
+              <div className="flex items-center gap-3 sm:border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
+                <div className="bg-green-500/10 p-2.5 rounded-xl text-green-600 dark:text-green-400">
+                  <CheckCircle2 className="h-5 w-5" />
                 </div>
-
-                <div className="bg-white dark:bg-slate-950 px-5 py-3 rounded-xl border border-slate-200/60 dark:border-slate-850 shadow-sm text-center min-w-[120px]">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{lang === 'hi' ? 'प्रतिशतक (Percentile)' : 'PERCENTILE'}</span>
-                  <h3 className="text-lg font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
-                    {sessionRecord.testbookPercentile}%
-                  </h3>
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisAccuracy}</p>
+                  <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{sessionRecord.accuracy}%</h4>
                 </div>
               </div>
 
+              <div className="flex items-center gap-3 col-span-2 sm:col-span-1 border-t sm:border-t-0 pt-3 sm:pt-0">
+                <div className="bg-purple-500/10 p-2.5 rounded-xl text-purple-600 dark:text-purple-400">
+                  <Timer className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisTimeTaken}</p>
+                  <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{formatDuration(computedTimeTakenSeconds)}</h4>
+                </div>
+              </div>
             </div>
 
-            {/* Benchmarking Scale */}
-            <div className="mt-6 border-t border-slate-200/60 dark:border-slate-800/80 pt-6">
-              <h5 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-widest mb-3">
-                {lang === 'hi' ? 'प्रदर्शन बेंचमार्किंग' : 'PERFORMANCE BENCHMARKING'}
-              </h5>
-              
-              <div className="relative pt-6 pb-2">
-                {/* Horizontal progress bar */}
-                <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full relative">
-                  {/* Fill range from average to topper */}
-                  <div 
-                    className="absolute h-full bg-gradient-to-r from-slate-300 to-slate-400 dark:from-slate-700 dark:to-slate-650 rounded-full"
-                    style={{
-                      left: `${Math.max(0, Math.min(100, (sessionRecord.mockTest.testbookAverageScore / sessionRecord.maxScore) * 100))}%`,
-                      right: `${Math.max(0, Math.min(100, 100 - (sessionRecord.mockTest.testbookTopperScore / sessionRecord.maxScore) * 100))}%`
-                    }}
-                  />
+            {/* Solution Navigation Banner Button */}
+            <button
+              onClick={() => setViewMode('solution')}
+              className="btn-3d btn-3d-blue w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold rounded-2xl shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 border border-blue-500/10 text-xs md:text-sm cursor-pointer"
+            >
+              <HelpCircle className="h-4.5 w-4.5" />
+              {language === 'hi' ? 'सविस्तार समाधान और व्याख्या देखें' : 'View Detailed Solutions & Explanation'}
+            </button>
 
-                  {/* Fill range for user score */}
-                  <div 
-                    className={`absolute h-full rounded-full ${isCutoffCleared ? 'bg-gradient-to-r from-blue-500 to-green-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-gradient-to-r from-blue-500 to-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]'}`}
-                    style={{
-                      left: 0,
-                      width: `${Math.min(100, Math.max(0, (sessionRecord.score / sessionRecord.maxScore) * 100))}%`
-                    }}
-                  />
-
-                  {/* Mark: Cutoff Score */}
-                  <div 
-                    className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
-                    style={{ left: `${(cutoffScore / sessionRecord.maxScore) * 100}%` }}
-                  >
-                    <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/50">
-                      {lang === 'hi' ? 'कटऑफ: ' : 'Cutoff: '} {cutoffScore}
-                    </span>
-                    <div className="w-[1.5px] h-6 bg-amber-500 mt-1"></div>
+            {/* Testbook Equivalent Benchmarking Card */}
+            {sessionRecord.testbookRank && sessionRecord.mockTest && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900/30 dark:to-indigo-950/10 border-2 border-blue-100 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-600 text-white p-3 rounded-2xl shadow-lg shadow-blue-500/20">
+                      <Award className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+                        {lang === 'hi' ? 'टेस्टबुक समकक्ष रैंक' : 'Equivalent Testbook Rank'}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {lang === 'hi' 
+                          ? 'टेस्टबुक के परीक्षणकर्ताओं के डेटा के आधार पर सांख्यिकीय अनुमान।' 
+                          : 'Statistical projection based on Testbook performance parameters.'}
+                      </p>
+                    </div>
                   </div>
+
+                  <div className="flex gap-6 items-center flex-wrap">
+                    <div className="bg-white dark:bg-slate-950 px-5 py-3 rounded-xl border border-slate-200/60 dark:border-slate-850 shadow-sm text-center min-w-[120px]">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{lang === 'hi' ? 'अनुमानित रैंक' : 'EST. RANK'}</span>
+                      <h3 className="text-lg font-black text-blue-600 dark:text-blue-400 mt-0.5">
+                        #{sessionRecord.testbookRank} <span className="text-[11px] text-slate-400 font-normal">/ {sessionRecord.mockTest.testbookTotalUsers}</span>
+                      </h3>
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-950 px-5 py-3 rounded-xl border border-slate-200/60 dark:border-slate-850 shadow-sm text-center min-w-[120px]">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{lang === 'hi' ? 'प्रतिशतक (Percentile)' : 'PERCENTILE'}</span>
+                      <h3 className="text-lg font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
+                        {sessionRecord.testbookPercentile}%
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Benchmarking Scale */}
+                <div className="mt-6 border-t border-slate-200/60 dark:border-slate-800/80 pt-6">
+                  <h5 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-widest mb-3">
+                    {lang === 'hi' ? 'प्रदर्शन बेंचमार्किंग' : 'PERFORMANCE BENCHMARKING'}
+                  </h5>
                   
-                  {/* Mark: Average Score */}
-                  <div 
-                    className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
-                    style={{ left: `${(sessionRecord.mockTest.testbookAverageScore / sessionRecord.maxScore) * 100}%` }}
-                  >
-                    <span className="text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                      {lang === 'hi' ? 'औसत: ' : 'Avg: '} {sessionRecord.mockTest.testbookAverageScore}
-                    </span>
-                    <div className="w-[1.5px] h-6 bg-slate-400 mt-1"></div>
-                  </div>
+                  <div className="relative pt-6 pb-2">
+                    <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full relative">
+                      <div 
+                        className="absolute h-full bg-gradient-to-r from-slate-300 to-slate-400 dark:from-slate-700 dark:to-slate-650 rounded-full"
+                        style={{
+                          left: `${Math.max(0, Math.min(100, (sessionRecord.mockTest.testbookAverageScore / sessionRecord.maxScore) * 100))}%`,
+                          right: `${Math.max(0, Math.min(100, 100 - (sessionRecord.mockTest.testbookTopperScore / sessionRecord.maxScore) * 100))}%`
+                        }}
+                      />
 
-                  {/* Mark: User Score */}
-                  <div 
-                    className="absolute top-[-30px] transform -translate-x-1/2 flex flex-col items-center z-10"
-                    style={{ left: `${(sessionRecord.score / sessionRecord.maxScore) * 100}%` }}
-                  >
-                    <span className="text-[9px] font-black text-white bg-blue-600 px-2 py-0.5 rounded-full shadow-md shadow-blue-500/20">
-                      {lang === 'hi' ? 'आपका स्कोर: ' : 'You: '} {sessionRecord.score}
-                    </span>
-                    <div className="w-2 h-2 rounded-full bg-blue-600 border border-white dark:border-slate-900 mt-0.5"></div>
-                    <div className="w-[1.5px] h-3.5 bg-blue-600"></div>
-                  </div>
+                      <div 
+                        className={`absolute h-full rounded-full ${isCutoffCleared ? 'bg-gradient-to-r from-blue-500 to-green-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-gradient-to-r from-blue-500 to-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]'}`}
+                        style={{
+                          left: 0,
+                          width: `${Math.min(100, Math.max(0, (sessionRecord.score / sessionRecord.maxScore) * 100))}%`
+                        }}
+                      />
 
-                  {/* Mark: Topper Score */}
-                  <div 
-                    className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
-                    style={{ left: `${(sessionRecord.mockTest.testbookTopperScore / sessionRecord.maxScore) * 100}%` }}
-                  >
-                    <span className="text-[9px] font-bold text-green-600 bg-green-50 dark:bg-green-950/40 px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/50">
-                      {lang === 'hi' ? 'टॉपर: ' : 'Topper: '} {sessionRecord.mockTest.testbookTopperScore}
-                    </span>
-                    <div className="w-[1.5px] h-6 bg-green-500 mt-1"></div>
-                  </div>
+                      {/* Mark: Cutoff Score */}
+                      <div 
+                        className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
+                        style={{ left: `${(cutoffScore / sessionRecord.maxScore) * 100}%` }}
+                      >
+                        <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/50">
+                          {lang === 'hi' ? 'कटऑफ: ' : 'Cutoff: '} {cutoffScore}
+                        </span>
+                        <div className="w-[1.5px] h-6 bg-amber-500 mt-1"></div>
+                      </div>
+                      
+                      {/* Mark: Average Score */}
+                      <div 
+                        className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
+                        style={{ left: `${(sessionRecord.mockTest.testbookAverageScore / sessionRecord.maxScore) * 100}%` }}
+                      >
+                        <span className="text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                          {lang === 'hi' ? 'औसत: ' : 'Avg: '} {sessionRecord.mockTest.testbookAverageScore}
+                        </span>
+                        <div className="w-[1.5px] h-6 bg-slate-400 mt-1"></div>
+                      </div>
 
+                      {/* Mark: User Score */}
+                      <div 
+                        className="absolute top-[-30px] transform -translate-x-1/2 flex flex-col items-center z-10"
+                        style={{ left: `${(sessionRecord.score / sessionRecord.maxScore) * 100}%` }}
+                      >
+                        <span className="text-[9px] font-black text-white bg-blue-600 px-2 py-0.5 rounded-full shadow-md shadow-blue-500/20">
+                          {lang === 'hi' ? 'आपका स्कोर: ' : 'You: '} {sessionRecord.score}
+                        </span>
+                        <div className="w-2 h-2 rounded-full bg-blue-600 border border-white dark:border-slate-900 mt-0.5"></div>
+                        <div className="w-[1.5px] h-3.5 bg-blue-600"></div>
+                      </div>
+
+                      {/* Mark: Topper Score */}
+                      <div 
+                        className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
+                        style={{ left: `${(sessionRecord.mockTest.testbookTopperScore / sessionRecord.maxScore) * 100}%` }}
+                      >
+                        <span className="text-[9px] font-bold text-green-600 bg-green-50 dark:bg-green-950/40 px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/50">
+                          {lang === 'hi' ? 'टॉपर: ' : 'Topper: '} {sessionRecord.mockTest.testbookTopperScore}
+                        </span>
+                        <div className="w-[1.5px] h-6 bg-green-500 mt-1"></div>
+                      </div>
+
+                    </div>
+                    
+                    <div className="flex justify-between mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider font-sans">
+                      <span>0 {lang === 'hi' ? 'अंक' : 'Marks'}</span>
+                      <span>{sessionRecord.maxScore} {lang === 'hi' ? 'अंक' : 'Marks'}</span>
+                    </div>
+                  </div>
                 </div>
-                
-                {/* Scale helper texts */}
-                <div className="flex justify-between mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider font-sans">
-                  <span>0 {lang === 'hi' ? 'अंक' : 'Marks'}</span>
-                  <span>{sessionRecord.maxScore} {lang === 'hi' ? 'अंक' : 'Marks'}</span>
-                </div>
-              </div>
-            </div>
 
-          </div>
-        </section>
-      )}
-
-      {/* Attempt Selector and Comparison Dashboard */}
-      {attempts.length >= 1 && (
-        <section className={`max-w-6xl w-full mx-auto px-6 mt-6 ${viewMode === 'analysis' ? 'block' : 'hidden'}`}>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex-1">
-              <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{t.analysisAttemptSelector}</h5>
-              <div className="flex flex-wrap gap-2">
-                {attempts.map((att, idx) => (
-                  <button
-                    key={att.id}
-                    onClick={() => setSelectedAttemptIdx(idx)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition active:scale-95 border ${
-                      selectedAttemptIdx === idx
-                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20'
-                        : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-350 border-slate-200 dark:border-slate-800'
-                    }`}
-                  >
-                    {getAttemptLabel(idx, attempts.length, language)} ({att.date})
-                  </button>
-                ))}
               </div>
-            </div>
-            
-            <div className="border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-800 pt-4 md:pt-0 md:pl-6 flex-1">
-              <h5 className="font-extrabold text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{t.analysisCompareAttempts}</h5>
-              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                {attempts.map((att, idx) => {
-                  const isCurrent = selectedAttemptIdx === idx;
+            )}
+
+            {/* Subject-wise Breakdown Section */}
+            <div className="bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
+              <h4 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center gap-2">
+                <Award className="h-4.5 w-4.5 text-blue-500" /> {lang === 'hi' ? 'विषयवार प्रदर्शन विश्लेषण' : 'Subject-wise Performance Breakdown'}
+              </h4>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">
+                {sectionalAnalysis.map((sec) => {
+                  const maxSecScore = sec.total * sec.positiveMark;
+                  const scorePercent = maxSecScore > 0 ? Math.min(100, Math.max(0, (sec.score / maxSecScore) * 100)) : 0;
+                  const secAccuracy = sec.attempted > 0 ? (sec.correct / sec.attempted) * 100 : 0;
+                  const accuracyColor = secAccuracy >= 75 ? 'text-green-600 dark:text-green-400' : (secAccuracy >= 50 ? 'text-blue-600 dark:text-blue-400' : 'text-red-650 dark:text-red-400');
+                  const barColor = secAccuracy >= 75 ? 'bg-green-500' : (secAccuracy >= 50 ? 'bg-blue-500' : 'bg-red-500');
+
                   return (
-                    <div key={att.id} className={`flex items-center justify-between text-xs p-2.5 rounded-xl font-bold border transition-colors ${isCurrent ? 'bg-blue-50/50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/80' : 'bg-slate-50 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400 border-slate-100 dark:border-slate-850'}`}>
-                      <span>{getAttemptLabel(idx, attempts.length, language)} {isCurrent && (language === 'hi' ? '(अवलोकन)' : '(Viewing)')}</span>
-                      <div className="flex items-center gap-4">
-                        <span>{language === 'hi' ? 'अंक:' : 'Score:'} <strong className="text-slate-850 dark:text-slate-200">{att.score}/{att.maxScore}</strong></span>
-                        <span>{language === 'hi' ? 'सटीकता:' : 'Accuracy:'} <strong className="text-slate-850 dark:text-slate-200">{att.accuracy}%</strong></span>
+                    <div key={sec.name} className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-850 p-4.5 rounded-2xl flex flex-col justify-between hover:shadow-md transition-all duration-200 relative overflow-hidden group">
+                      <div className="absolute -top-6 -right-6 w-12 h-12 rounded-full bg-slate-500/5 pointer-events-none group-hover:scale-110 transition-transform duration-300" />
+                      
+                      <div>
+                        <h5 className="font-extrabold text-xs text-slate-850 dark:text-slate-200 truncate">{sec.name}</h5>
+                        <div className="flex justify-between items-center mt-3">
+                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{lang === 'hi' ? 'स्कोर' : 'SCORE'}</span>
+                          <span className="text-xs font-black text-blue-600 dark:text-blue-400">{sec.score.toFixed(2)} / {maxSecScore.toFixed(0)}</span>
+                        </div>
+
+                        <div className="w-full bg-slate-200 dark:bg-slate-855 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                          <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${scorePercent}%` }} />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3.5 border-t border-slate-200/60 dark:border-slate-800/80 space-y-2">
+                        <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                          <span>{lang === 'hi' ? 'सटीकता' : 'Accuracy'}:</span>
+                          <span className={`font-black ${accuracyColor}`}>{secAccuracy.toFixed(0)}%</span>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                          <span>{lang === 'hi' ? 'सही / गलत' : 'Correct / Wrong'}:</span>
+                          <span className="font-mono text-[10px] font-extrabold"><strong className="text-green-600 dark:text-green-400">{sec.correct}</strong> / <strong className="text-red-500">{sec.incorrect}</strong></span>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                          <span>{lang === 'hi' ? 'छोड़े गए' : 'Unattempted'}:</span>
+                          <span className="font-extrabold text-slate-500 dark:text-slate-400">{sec.unattempted}</span>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                          <span>{lang === 'hi' ? 'मार्किंग' : 'Marking'}:</span>
+                          <span className="font-extrabold"><strong className="text-green-600">+{sec.positiveMark}</strong> / <strong className="text-red-500">−{sec.negativeMark}</strong></span>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
             </div>
-          </div>
-        </section>
-      )}
 
-      {/* Subject-wise Breakdown Section */}
-      <section className={`max-w-6xl w-full mx-auto px-6 mt-6 animate-in fade-in duration-300 ${viewMode === 'analysis' ? 'block' : 'hidden'}`}>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
-          <h4 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center gap-2">
-            <Award className="h-4.5 w-4.5 text-blue-500" /> {lang === 'hi' ? 'विषयवार प्रदर्शन विश्लेषण' : 'Subject-wise Performance Breakdown'}
-          </h4>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
-            {sectionalAnalysis.map((sec) => {
-              // maxSecScore = total questions × positiveMark (actual max marks, not question count)
-              const maxSecScore = sec.total * sec.positiveMark;
-              const scorePercent = maxSecScore > 0 ? Math.min(100, Math.max(0, (sec.score / maxSecScore) * 100)) : 0;
-              const secAccuracy = sec.attempted > 0 ? (sec.correct / sec.attempted) * 100 : 0;
-              const accuracyColor = secAccuracy >= 75 ? 'text-green-600 dark:text-green-400' : (secAccuracy >= 50 ? 'text-blue-600 dark:text-blue-400' : 'text-red-650 dark:text-red-400');
-              const barColor = secAccuracy >= 75 ? 'bg-green-500' : (secAccuracy >= 50 ? 'bg-blue-500' : 'bg-red-500');
-
-              return (
-                <div key={sec.name} className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-850 p-4.5 rounded-2xl flex flex-col justify-between hover:shadow-md transition-all duration-200 relative overflow-hidden group">
-                  <div className="absolute -top-6 -right-6 w-12 h-12 rounded-full bg-slate-500/5 pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-                  
-                  <div>
-                    <h5 className="font-extrabold text-xs text-slate-850 dark:text-slate-200 truncate">{sec.name}</h5>
-                    <div className="flex justify-between items-center mt-3">
-                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{lang === 'hi' ? 'स्कोर' : 'SCORE'}</span>
-                      <span className="text-xs font-black text-blue-600 dark:text-blue-400">{sec.score.toFixed(2)} / {maxSecScore.toFixed(0)}</span>
-                    </div>
-
-                    {/* Progress bar */}
-                    <div className="w-full bg-slate-200 dark:bg-slate-855 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${scorePercent}%` }} />
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-3.5 border-t border-slate-200/60 dark:border-slate-800/80 space-y-2">
-                    <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                      <span>{lang === 'hi' ? 'सटीकता' : 'Accuracy'}:</span>
-                      <span className={`font-black ${accuracyColor}`}>{secAccuracy.toFixed(0)}%</span>
-                    </div>
-                    <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                      <span>{lang === 'hi' ? 'सही / गलत' : 'Correct / Wrong'}:</span>
-                      <span className="font-mono text-[10px] font-extrabold"><strong className="text-green-600 dark:text-green-400">{sec.correct}</strong> / <strong className="text-red-500">{sec.incorrect}</strong></span>
-                    </div>
-                    <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                      <span>{lang === 'hi' ? 'छोड़े गए' : 'Unattempted'}:</span>
-                      <span className="font-extrabold text-slate-500 dark:text-slate-400">{sec.unattempted}</span>
-                    </div>
-                    <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                      <span>{lang === 'hi' ? 'मार्किंग' : 'Marking'}:</span>
-                      <span className="font-extrabold"><strong className="text-green-600">+{sec.positiveMark}</strong> / <strong className="text-red-500">−{sec.negativeMark}</strong></span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          </main>
         </div>
-      </section>
-
+      </div>
+      
       <section className={isSolutionView
         ? "flex flex-col lg:flex-row flex-1 overflow-hidden bg-[#F1F5F9] w-full h-full pb-16 flex"
         : `max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start pb-24 ${viewMode === 'solution' ? 'flex' : 'hidden'}`

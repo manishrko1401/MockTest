@@ -4,12 +4,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth, TestCategory, TestSubCategory, MockTestItem } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu, TrendingUp, Coins, MapPin, Sparkles, Trophy, Star, Clock, UploadCloud, FolderOpen, Zap, History } from 'lucide-react';
+import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu, TrendingUp, Coins, MapPin, Sparkles, Trophy, Star, Clock, UploadCloud, FolderOpen, Zap, History, Layers, LayoutGrid } from 'lucide-react';
 import { generateExamSession, EXPLANATIONS, getLocalizedName } from '../lib/examUtils';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 import HomeSupportWidget from '../components/HomeSupportWidget';
-import HangingTriColorBalloons from '../components/HangingTriColorBalloons';
 
 import { processQuestionHtml, decodeHtml } from '../lib/mathUtils';
 import { formatTestMarkingScheme } from '../lib/markingUtils';
@@ -183,10 +182,10 @@ export default function MockTestsCatalog() {
   const { currentUser, claimPassPro, theme, toggleTheme, toggleBookmark, clearOngoingSession, language, setLanguage, examCatalog } = useAuth();
   const router = useRouter();
   const t = TRANSLATIONS[language];
-  
   const [mounted, setMounted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [examSearchQuery, setExamSearchQuery] = useState('');
+  const [sidebarSearch, setSidebarSearch] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -194,8 +193,22 @@ export default function MockTestsCatalog() {
 
   // Filter out Practice Series categories so they ONLY appear on the Practice Series page
   const testSeriesCatalog = React.useMemo(() => {
-    return [...(examCatalog || [])].sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+    return (examCatalog || []).filter(cat => cat.id !== 'practice_series' && !cat.id.startsWith('ps_')).sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   }, [examCatalog]);
+
+  const filteredSidebarCatalog = React.useMemo(() => {
+    const q = sidebarSearch.toLowerCase().trim();
+    if (!q) return testSeriesCatalog;
+    return testSeriesCatalog.filter(cat => {
+      const nameEn = (cat.name || '').toLowerCase();
+      const nameHi = (cat.nameHi || '').toLowerCase();
+      const hasSub = (cat.subCategories || []).some((sub: any) => 
+        (sub.name || '').toLowerCase().includes(q) || 
+        (sub.nameHi || '').toLowerCase().includes(q)
+      );
+      return nameEn.includes(q) || nameHi.includes(q) || hasSub;
+    });
+  }, [testSeriesCatalog, sidebarSearch]);
 
   // Compute last 5 recent tests attempted or ongoing by the user
   const recentTests = React.useMemo(() => {
@@ -745,7 +758,7 @@ export default function MockTestsCatalog() {
         {/* MOBILE HEADER */}
         <header className="h-14 border-b border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
           <div className="flex items-center gap-2.5 min-w-0">
-            <Link href="/" className="flex items-center gap-1 text-slate-700 dark:text-white font-bold text-xs shrink-0">
+            <Link href="/" className="btn-3d btn-3d-slate flex items-center gap-1.5 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 shadow-sm shrink-0 cursor-pointer">
               <ArrowLeft className="h-4 w-4" /> {t.navHome}
             </Link>
 
@@ -780,7 +793,7 @@ export default function MockTestsCatalog() {
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-              className="px-1.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold outline-none"
+              className="px-1.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900  text-[10px] font-bold outline-none"
             >
               <option value="en">EN</option>
               <option value="hi">हिं</option>
@@ -789,7 +802,7 @@ export default function MockTestsCatalog() {
             {/* Theme switcher */}
             <button 
               onClick={toggleTheme}
-              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800"
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 "
             >
               {theme === 'light' ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
             </button>
@@ -809,8 +822,49 @@ export default function MockTestsCatalog() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.searchMocksPlaceholder}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm"
+                className="w-full bg-white dark:bg-slate-950  rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm"
               />
+            </div>
+          )}
+
+          {/* Mobile Quick Category Selector Pills */}
+          {selectedSubCategory === null && !showBookmarks && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
+              <button
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setSelectedSubCategory(null);
+                  setActiveSubSubId(null);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                  selectedCategory === null
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 '
+                }`}
+              >
+                <Layers className="h-3 w-3" />
+                <span>{language === 'hi' ? 'सभी श्रेणियां' : 'All'}</span>
+              </button>
+              {examCatalog.map(cat => {
+                const isSelected = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      setSelectedSubCategory(null);
+                      setActiveSubSubId(null);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                      isSelected
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 '
+                    }`}
+                  >
+                    <span>{getLocalizedName(cat, language)}</span>
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -874,7 +928,7 @@ export default function MockTestsCatalog() {
                     return (
                       <div
                         key={bm.questionId}
-                        className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs"
+                        className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900  text-xs"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-[8px] bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 font-extrabold px-1.5 py-0.5 rounded uppercase truncate max-w-[60%]">
@@ -966,7 +1020,7 @@ export default function MockTestsCatalog() {
                           </div>
                         </div>
 
-                        <span className="text-[10px] font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-800">
+                        <span className="text-[10px] font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full ">
                           {recentTests.length} / 5 {language === 'hi' ? 'टेस्ट' : 'Tests'}
                         </span>
                       </div>
@@ -979,7 +1033,7 @@ export default function MockTestsCatalog() {
                             <div 
                               key={session.id || test.id}
                               onClick={() => handleOpenRecentCategory(catId, subCatId, subSubId)}
-                              className="bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between border-l-4 border-l-blue-500 hover:border-l-blue-600 min-h-[95px] min-w-[210px] w-[210px] shrink-0 cursor-pointer"
+                              className="bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-md transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:border-blue-400/50 dark:hover:border-blue-500/40 flex flex-col justify-between min-h-[95px] min-w-[210px] w-[210px] shrink-0 cursor-pointer active:scale-98"
                             >
                               <div>
                                 <div className="flex items-center justify-between gap-1 mb-1">
@@ -1057,19 +1111,11 @@ export default function MockTestsCatalog() {
                       const isTeaching = cat.id === 'teaching';
                       const isUgcNet = cat.id === 'ugc_net';
 
-                      const accentColor = 
-                        isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
-                        isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
-                        isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
-                        isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
-                        isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
-                        'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
-
                       return (
                         <button
                           key={cat.id}
                           onClick={() => handleCategorySelect(cat.id)}
-                          className={`w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer border-t-4 ${accentColor}`}
+                          className="w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.6)] hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer active:scale-95"
                         >
                           {/* Logo/Icon Container */}
                           <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-3 bg-white transition duration-300">
@@ -1107,7 +1153,7 @@ export default function MockTestsCatalog() {
                   <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-200/80 dark:border-slate-800">
                     <button
                       onClick={handleCategoryBack}
-                      className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[11px] uppercase tracking-wider cursor-pointer shrink-0 active:scale-95 transition-transform"
+                      className="btn-3d btn-3d-slate flex items-center gap-1.5 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-blue-600 dark:text-blue-400 font-black text-[11px] px-3.5 py-1.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-sm shrink-0"
                     >
                       <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'परीक्षा श्रेणियां' : 'Back to Categories'}
                     </button>
@@ -1151,11 +1197,8 @@ export default function MockTestsCatalog() {
                           <button
                             key={subCat.id}
                             onClick={() => handleSubCategorySelect(subCat.id)}
-                            className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer group hover:border-blue-500/30"
+                            className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.6)] hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer group active:scale-95"
                           >
-                            {/* Accent Gradient Border at top */}
-                            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${themeInfo.gradient}`} />
-                            
                             {/* Radial Glow on Hover */}
                             <div 
                               className="absolute -right-16 -top-16 w-32 h-32 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
@@ -1224,7 +1267,7 @@ export default function MockTestsCatalog() {
                                 handleSubCategoryBack();
                               }
                             }}
-                            className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[11px] uppercase tracking-wider cursor-pointer shrink-0 active:scale-95 transition-transform"
+                            className="btn-3d btn-3d-slate flex items-center gap-1.5 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-blue-600 dark:text-blue-400 font-black text-[11px] px-3.5 py-1.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-sm shrink-0"
                           >
                             <ArrowLeft className="h-4 w-4" />
                             {activeSubSubId !== null
@@ -1272,25 +1315,11 @@ export default function MockTestsCatalog() {
                                   ? (language === 'hi' ? `1 ${t.mocksCount}` : `1 Mock Test`)
                                   : (language === 'hi' ? `${count} ${t.mocksCount}` : `${count} Mock Tests`);
 
-                                const isSsc = selectedCategory === 'ssc' || group.id.includes('ssc');
-                                const isRailways = selectedCategory === 'railways' || group.id.includes('railway');
-                                const isBanking = selectedCategory === 'banking' || group.id.includes('bank');
-                                const isTeaching = selectedCategory === 'teaching' || group.id.includes('teach');
-                                const isUgcNet = selectedCategory === 'ugc_net' || group.id.includes('ugc') || group.id.includes('state');
-
-                                const accentColor = 
-                                  isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
-                                  isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
-                                  isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
-                                  isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
-                                  isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
-                                  'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
-
                                 return (
                                   <button
                                     key={group.id}
                                     onClick={() => setActiveSubSubId(group.id)}
-                                    className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer border-t-4 ${accentColor}`}
+                                    className="bg-white dark:bg-slate-950  hover:border-slate-300 dark:hover:border-slate-700 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer"
                                   >
                                     {/* Left details */}
                                     <div className="flex-1 flex flex-col justify-between min-w-0">
@@ -1350,7 +1379,7 @@ export default function MockTestsCatalog() {
                               const activeGroup = groups.find(g => g.id === activeSubSubId);
                               if (!activeGroup || activeGroup.tests.length === 0) {
                                 return (
-                                  <div className="text-center py-8 px-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
+                                  <div className="text-center py-8 px-4 bg-white dark:bg-slate-950  rounded-2xl space-y-2">
                                     <Clock className="h-6 w-6 text-blue-500 mx-auto animate-pulse" />
                                     <h4 className="text-xs font-black text-slate-800 dark:text-white">
                                       {language === 'hi' ? 'कोई मॉक टेस्ट नहीं मिला' : 'No Mock Tests Found'}
@@ -1378,16 +1407,16 @@ export default function MockTestsCatalog() {
 
                                     const cardStyle = completed
                                       ? isCleared
-                                        ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-250/60 dark:border-emerald-900/40 border-l-4 border-l-emerald-500'
-                                        : 'bg-rose-50/60 dark:bg-rose-950/20 border border-rose-250/60 dark:border-rose-900/40 border-l-4 border-l-red-500'
+                                        ? 'bg-emerald-50/60 dark:bg-emerald-950/20 '
+                                        : 'bg-rose-50/60 dark:bg-rose-950/20 '
                                       : ongoing
-                                      ? 'bg-sky-50/30 dark:bg-sky-955/10 border border-sky-200/60 dark:border-sky-900/40 border-l-4 border-l-sky-500'
-                                      : 'bg-white dark:bg-slate-900/45 border border-slate-200 dark:border-slate-800 border-l-4 border-l-blue-500';
+                                      ? 'bg-sky-50/30 dark:bg-sky-955/10 '
+                                      : 'bg-white dark:bg-slate-900/45 ';
 
                                     return (
                                       <div
                                         key={test.id}
-                                        className={`p-4.5 rounded-2xl shadow-sm border flex flex-col justify-between items-start gap-4 w-full ${cardStyle}`}
+                                        className={`p-4.5 rounded-2xl shadow-sm flex flex-col justify-between items-start gap-4 w-full ${cardStyle}`}
                                       >
                                         <div className="space-y-1.5 flex-1 w-full text-left">
                                            <div className="flex items-center justify-between gap-1.5 w-full">
@@ -1452,13 +1481,13 @@ export default function MockTestsCatalog() {
                                             <>
                                               <button
                                                 onClick={() => handleStartExam(test)}
-                                                className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer"
+                                                className="btn-3d btn-3d-yellow flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer"
                                               >
                                                 Resume Test
                                               </button>
                                               <button
                                                 onClick={() => handleReattemptExam(test)}
-                                                className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer shrink-0"
+                                                className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] cursor-pointer shrink-0"
                                               >
                                                 Reset
                                               </button>
@@ -1467,13 +1496,13 @@ export default function MockTestsCatalog() {
                                             <>
                                               <Link
                                                 href={`/exam/${test.id}/analysis`}
-                                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm block"
+                                                className="btn-3d btn-3d-blue flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm block"
                                               >
                                                 View Analysis
                                               </Link>
                                               <button
                                                 onClick={() => handleReattemptExam(test)}
-                                                className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer shrink-0"
+                                                className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] cursor-pointer shrink-0"
                                               >
                                                 Reattempt
                                               </button>
@@ -1481,7 +1510,7 @@ export default function MockTestsCatalog() {
                                           ) : (
                                             <button
                                               onClick={() => handleStartExam(test)}
-                                              className={`flex-1 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer ${
+                                              className={`btn-3d btn-3d-blue flex-1 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer ${
                                                 hasPass 
                                                   ? 'bg-[#1C3D5A] hover:bg-slate-800' 
                                                   : 'bg-yellow-600 hover:bg-yellow-700'
@@ -1518,16 +1547,16 @@ export default function MockTestsCatalog() {
 
                               const cardStyle = completed
                                 ? isCleared
-                                  ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-250/60 dark:border-emerald-900/40 border-l-4 border-l-emerald-500'
-                                  : 'bg-rose-50/60 dark:bg-rose-950/20 border border-rose-250/60 dark:border-rose-900/40 border-l-4 border-l-red-500'
+                                  ? 'bg-emerald-50/60 dark:bg-emerald-950/20 '
+                                  : 'bg-rose-50/60 dark:bg-rose-950/20 '
                                 : ongoing
-                                ? 'bg-sky-50/30 dark:bg-sky-950/10 border border-sky-200/60 dark:border-sky-900/40 border-l-4 border-l-sky-500'
-                                : 'bg-white dark:bg-slate-900/45 border border-slate-200 dark:border-slate-800 border-l-4 border-l-blue-500';
+                                ? 'bg-sky-50/30 dark:bg-sky-950/10 '
+                                : 'bg-white dark:bg-slate-900/45 ';
 
                               return (
                                 <div
                                   key={test.id}
-                                  className={`p-4.5 rounded-2xl shadow-sm border flex flex-col justify-between items-start gap-4 w-full ${cardStyle}`}
+                                  className={`p-4.5 rounded-2xl shadow-sm flex flex-col justify-between items-start gap-4 w-full ${cardStyle}`}
                                 >
                                   <div className="space-y-1.5 flex-1 w-full text-left">
                                     <div className="flex flex-wrap items-center gap-1.5">
@@ -1580,13 +1609,13 @@ export default function MockTestsCatalog() {
                                       <>
                                         <button
                                           onClick={() => handleStartExam(test)}
-                                          className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer"
+                                          className="btn-3d btn-3d-yellow flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer"
                                         >
                                           Resume Test
                                         </button>
                                         <button
                                           onClick={() => handleReattemptExam(test)}
-                                          className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                          className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px]  cursor-pointer"
                                         >
                                           Reset
                                         </button>
@@ -1595,13 +1624,13 @@ export default function MockTestsCatalog() {
                                       <>
                                         <Link
                                           href={`/exam/${test.id}/analysis`}
-                                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm block"
+                                          className="btn-3d btn-3d-blue flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm block"
                                         >
                                           View Analysis
                                         </Link>
                                         <button
                                           onClick={() => handleReattemptExam(test)}
-                                          className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                          className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px]  cursor-pointer"
                                         >
                                           Reattempt
                                         </button>
@@ -1678,7 +1707,7 @@ export default function MockTestsCatalog() {
           {/* Back button on top left corner */}
           <Link 
             href="/" 
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-750 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-800 font-bold text-xs tracking-wide transition-all shadow-xs active:scale-95 shrink-0"
+            className="btn-3d btn-3d-slate flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide shadow-sm shrink-0 cursor-pointer"
             title={t.backToHome}
           >
             <ArrowLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -1696,23 +1725,6 @@ export default function MockTestsCatalog() {
               <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
             </div>
           </Link>
-          <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
-          <Link href="/" className="flex items-center gap-2 text-slate-650 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors">
-            <ArrowLeft className="h-4 w-4" /> {t.backToHome}
-          </Link>
-        </div>
-
-        {/* Center: Happy 80th Independence Day Celebration Greeting */}
-        <div className="relative hidden lg:flex items-center gap-2 bg-gradient-to-r from-orange-500/15 via-white/20 to-emerald-500/15 dark:from-orange-500/25 dark:via-slate-900/40 dark:to-emerald-500/25 border border-orange-500/30 dark:border-orange-500/40 px-4 py-1.5 rounded-full shadow-xs">
-          <span className="text-sm animate-flag-sway leading-none">🇮🇳</span>
-          <span className="text-xs font-black text-slate-900 dark:text-amber-300 tracking-wide uppercase flex items-center gap-1.5">
-            Happy 80th Independence Day! 🇮🇳
-          </span>
-
-          {/* Hanging Indian Tri-Color Balloons in the center just below the tile (Big with Cascading Ribbons) */}
-          <div className="absolute top-[85%] left-1/2 -translate-x-1/2 z-30 pointer-events-none drop-shadow-xl">
-            <HangingTriColorBalloons size="lg" variant="center" />
-          </div>
         </div>
 
         <div className="flex items-center gap-3 max-w-md w-full justify-end">
@@ -1720,7 +1732,7 @@ export default function MockTestsCatalog() {
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+            className="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350  text-xs font-bold focus:outline-none cursor-pointer"
           >
             <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
             <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
@@ -1748,7 +1760,7 @@ export default function MockTestsCatalog() {
           {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center "
             title={theme === 'light' ? t.themeDark : t.themeLight}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -1759,7 +1771,105 @@ export default function MockTestsCatalog() {
       {/* Main split-pane content */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
         
+        {/* Left Side: Exam Categories Navigation Sidebar */}
+        <aside className="w-full lg:w-64 xl:w-72 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 z-20">
+          <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xs z-10">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
+              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+                {language === 'hi' ? 'परीक्षा श्रेणियां' : 'Exam Categories'}
+              </h3>
+            </div>
+            <span className="text-[10px] font-extrabold bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-900">
+              {filteredSidebarCatalog.length}
+            </span>
+          </div>
 
+          {/* Search bar in place of All Categories button at the top */}
+          <div className="p-2.5 pb-1.5 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30">
+            <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                <Search className="h-3.5 w-3.5" />
+              </div>
+              <input
+                type="text"
+                value={sidebarSearch}
+                onChange={(e) => setSidebarSearch(e.target.value)}
+                placeholder={language === 'hi' ? 'श्रेणी खोजें...' : 'Search categories...'}
+                className="w-full bg-white dark:bg-slate-900  rounded-xl pl-8.5 pr-8 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold shadow-2xs placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              />
+              {sidebarSearch && (
+                <button
+                  onClick={() => setSidebarSearch('')}
+                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none text-[11px] font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="p-2.5 space-y-1 flex-1 overflow-y-auto">
+            {filteredSidebarCatalog.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
+                {language === 'hi' ? 'कोई श्रेणी नहीं मिली' : 'No categories found'}
+              </div>
+            ) : (
+              filteredSidebarCatalog.map(cat => {
+                const isSelected = selectedCategory === cat.id && !showBookmarks;
+                const isSsc = cat.id === 'ssc';
+                const isRailways = cat.id === 'railways';
+                const isBanking = cat.id === 'banking';
+                const isTeaching = cat.id === 'teaching';
+                const isUgcNet = cat.id === 'ugc_net';
+
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      setSelectedSubCategory(null);
+                      setActiveSubSubId(null);
+                      setShowBookmarks(false);
+                    }}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 transform-gpu hover:-translate-y-0.5 hover:scale-[1.015] hover:shadow-md dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4),0_0_10px_rgba(59,130,246,0.1)] text-xs font-bold cursor-pointer active:translate-y-0 active:scale-98 group ${
+                      isSelected
+                        ? 'bg-blue-50 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-800/80 text-blue-700 dark:text-blue-300 shadow-xs'
+                        : 'hover:bg-white dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 border border-transparent hover:border-slate-200 dark:hover:border-slate-700/80'
+                    }`}
+                  >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-900  overflow-hidden shrink-0 shadow-2xs transition-transform duration-200 group-hover:scale-105">
+                      {cat.logoUrl ? (
+                        <img src={cat.logoUrl} alt={cat.name} className="w-full h-full object-contain p-1" />
+                      ) : (
+                        <div className="text-blue-600 dark:text-blue-400">
+                          {isSsc && <Award className="h-4 w-4 text-orange-500" />}
+                          {isRailways && <TrendingUp className="h-4 w-4 text-indigo-500" />}
+                          {isBanking && <Coins className="h-4 w-4 text-emerald-500" />}
+                          {isTeaching && <BookOpen className="h-4 w-4 text-amber-500" />}
+                          {isUgcNet && <GraduationCap className="h-4 w-4 text-sky-500" />}
+                          {!isSsc && !isRailways && !isBanking && !isTeaching && !isUgcNet && <Sparkles className="h-4 w-4 text-pink-500" />}
+                        </div>
+                      )}
+                    </div>
+                    <div className="truncate">
+                      <p className={`text-xs leading-tight truncate ${isSelected ? 'font-extrabold text-blue-900 dark:text-blue-200' : 'text-slate-800 dark:text-slate-200 font-semibold'}`}>
+                        {getLocalizedName(cat, language)}
+                      </p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                        {cat.subCategories?.length || 0} {language === 'hi' ? 'परीक्षाएं' : 'Exams'}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className={`h-3.5 w-3.5 shrink-0 transition-transform ${
+                    isSelected ? 'text-blue-600 dark:text-blue-400 translate-x-0.5' : 'text-slate-400 opacity-40'
+                  }`} />
+                </button>
+              );
+            }))}
+          </div>
+        </aside>
 
         {/* Right Side Content (Tests list/details) */}
         <main className="flex-1 p-5 overflow-y-auto edu-grid-pattern relative">
@@ -1776,13 +1886,13 @@ export default function MockTestsCatalog() {
 
               {/* Bookmarked List */}
               {(!currentUser || !currentUser.bookmarkedQuestions || currentUser.bookmarkedQuestions.length === 0) ? (
-                <div className="text-center py-16 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+                <div className="text-center py-16 bg-white dark:bg-slate-950  rounded-2xl shadow-sm">
                   <Bookmark className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                   <p className="text-slate-600 dark:text-slate-400 text-sm font-bold">{t.noBookmarks}</p>
                   <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{t.noBookmarksDesc}</p>
                 </div>
               ) : bookmarkQsLoading ? (
-                <div className="text-center py-16 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col items-center gap-3">
+                <div className="text-center py-16 bg-white dark:bg-slate-950  rounded-2xl shadow-sm flex flex-col items-center gap-3">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
                   <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Loading bookmarked questions...</p>
                 </div>
@@ -1817,7 +1927,7 @@ export default function MockTestsCatalog() {
                     const isExpanded = !!expandedBookmarks[bm.questionId];
 
                     return (
-                      <div key={bm.questionId} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm transition-all">
+                      <div key={bm.questionId} className="bg-white dark:bg-slate-950  rounded-xl p-5 shadow-sm transition-all">
                         <div 
                           className="flex items-center justify-between cursor-pointer select-none"
                           onClick={() => toggleExpandBookmark(bm.questionId)}
@@ -1852,7 +1962,7 @@ export default function MockTestsCatalog() {
                         {isExpanded && (
                           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800/60 space-y-4">
                             {/* Question Text */}
-                            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 border border-slate-200 dark:border-slate-800 rounded text-xs leading-relaxed text-slate-800 dark:text-slate-200">
+                            <div className="bg-slate-50 dark:bg-slate-900/60 p-4  rounded text-xs leading-relaxed text-slate-800 dark:text-slate-200">
                               <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">Question (English):</p>
                               <div className="font-normal mb-3 markup-content" dangerouslySetInnerHTML={{ __html: processQuestionHtml(questionTextEn) }} />
                               {questionTextHi && questionTextHi !== questionTextEn && (<>
@@ -1920,24 +2030,14 @@ export default function MockTestsCatalog() {
           ) : selectedCategory === null ? (
             <>
               <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
-                <div className="flex items-center gap-3">
-                  <Link
-                    href="/"
-                    className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-800 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 px-3 py-2 rounded-xl text-xs font-bold transition shadow-xs text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 shrink-0"
-                    title={language === 'hi' ? 'होम पर वापस जाएं' : 'Back to Home'}
-                  >
-                    <ArrowLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <span>{language === 'hi' ? 'होम' : 'Back to Home'}</span>
-                  </Link>
-                  <div>
-                    <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-blue-500" />
-                      {language === 'hi' ? 'परीक्षा श्रेणियाँ' : 'Exam Categories'}
-                    </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक श्रेणी चुनें' : 'Select a category to explore mock tests'}
-                    </p>
-                  </div>
+                <div>
+                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-blue-500" />
+                    {language === 'hi' ? 'परीक्षा श्रेणियाँ' : 'Exam Categories'}
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक श्रेणी चुनें' : 'Select a category to explore mock tests'}
+                  </p>
                 </div>
 
                 {/* Categories Search Bar */}
@@ -1950,7 +2050,7 @@ export default function MockTestsCatalog() {
                     value={examSearchQuery}
                     onChange={(e) => setExamSearchQuery(e.target.value)}
                     placeholder={language === 'hi' ? 'परीक्षा खोजें (उदा. SSC CGL)...' : 'Search exams (e.g. SSC CGL)...'}
-                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold shadow-sm"
+                    className="w-full bg-white dark:bg-slate-950  rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold shadow-sm"
                   />
                   {examSearchQuery && (
                     <button
@@ -1965,7 +2065,7 @@ export default function MockTestsCatalog() {
 
               {/* YOUR RECENT TESTS — Desktop (below heading, above tiles) */}
               {recentTests.length > 0 && (
-                <div className="mb-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-4 shadow-xs space-y-2.5">
+                <div className="mb-6 bg-white dark:bg-slate-950 /80 rounded-2xl p-4 shadow-xs space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="bg-blue-50 dark:bg-blue-950/60 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
@@ -1981,7 +2081,7 @@ export default function MockTestsCatalog() {
                       </div>
                     </div>
 
-                    <span className="text-[10px] font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-800">
+                    <span className="text-[10px] font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full ">
                       {recentTests.length} / 5 {language === 'hi' ? 'टेस्ट' : 'Tests'}
                     </span>
                   </div>
@@ -1994,7 +2094,7 @@ export default function MockTestsCatalog() {
                         <div 
                           key={session.id || test.id}
                           onClick={() => handleOpenRecentCategory(catId, subCatId, subSubId)}
-                          className="bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between border-l-4 border-l-blue-500 hover:border-l-blue-600 min-h-[88px] cursor-pointer"
+                          className="bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-[0_10px_20px_-4px_rgba(0,0,0,0.1),0_2px_6px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_10px_20px_-4px_rgba(0,0,0,0.5),0_0_12px_rgba(59,130,246,0.12)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.02] hover:border-blue-400/50 dark:hover:border-blue-500/40 flex flex-col justify-between min-h-[88px] cursor-pointer active:translate-y-0 active:scale-[0.99] group"
                         >
                           <div>
                             <div className="flex items-center justify-between gap-1 mb-1">
@@ -2055,21 +2155,13 @@ export default function MockTestsCatalog() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {getFilteredCatalogForSearch.map(cat => {
                   const isSsc = cat.id === 'ssc';
                   const isRailways = cat.id === 'railways';
                   const isBanking = cat.id === 'banking';
                   const isTeaching = cat.id === 'teaching';
                   const isUgcNet = cat.id === 'ugc_net';
-
-                  const accentColor = 
-                    isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
-                    isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
-                    isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
-                    isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
-                    isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
-                    'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
 
                   return (
                     <button
@@ -2078,13 +2170,13 @@ export default function MockTestsCatalog() {
                         setSelectedCategory(cat.id);
                         setSelectedSubCategory(null);
                       }}
-                      className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer border-t-4 ${accentColor}`}
+                      className="bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-2xl flex flex-row justify-between gap-2.5 group text-left w-full cursor-pointer transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] hover:border-blue-500/40 dark:hover:border-blue-400/40 active:translate-y-0 active:scale-[0.99] relative"
                     >
                       {/* Left details */}
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                           {/* Logo/Icon Container */}
-                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition duration-300">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-2 bg-white dark:bg-slate-900 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
                             {cat.logoUrl ? (
                               <img
                                 src={cat.logoUrl}
@@ -2141,7 +2233,7 @@ export default function MockTestsCatalog() {
               <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
                 <button
                   onClick={() => setSelectedCategory(null)}
-                  className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 shrink-0"
+                  className="btn-3d btn-3d-slate flex items-center gap-2 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 hover:border-blue-500/60 dark:hover:border-blue-400/60 px-4 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer shadow-sm shrink-0"
                 >
                   <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'श्रेणियों पर वापस जाएं' : 'Back to Categories'}
                 </button>
@@ -2157,7 +2249,7 @@ export default function MockTestsCatalog() {
                       value={examSearchQuery}
                       onChange={(e) => setExamSearchQuery(e.target.value)}
                       placeholder={language === 'hi' ? 'इस श्रेणी में खोजें...' : 'Search in this category...'}
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 py-2 text-xs text-slate-855 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold shadow-sm"
+                      className="w-full bg-white dark:bg-slate-950  rounded-xl pl-10 pr-10 py-2 text-xs text-slate-855 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold shadow-sm"
                     />
                     {examSearchQuery && (
                       <button
@@ -2202,7 +2294,7 @@ export default function MockTestsCatalog() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                   {getFilteredSubCategories.map(subCat => {
                   const count = subCat.tests.length;
                   const countStr = count === 1 
@@ -2215,14 +2307,6 @@ export default function MockTestsCatalog() {
                   const isTeaching = selectedCategory === 'teaching' || subCat.id.includes('teach');
                   const isUgcNet = selectedCategory === 'ugc_net' || subCat.id.includes('ugc') || subCat.id.includes('state');
 
-                  const accentColor = 
-                    isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
-                    isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
-                    isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
-                    isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
-                    isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
-                    'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
-
                   const subSubList = (subCat.subSubCategories && subCat.subSubCategories.length > 0)
                     ? subCat.subSubCategories.map((ssc: any) => ssc.title || ssc.name)
                     : (subCat.tests || []).map((t: any) => t.title);
@@ -2231,13 +2315,13 @@ export default function MockTestsCatalog() {
                     <button
                       key={subCat.id}
                       onClick={() => setSelectedSubCategory(subCat.id)}
-                      className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer border-t-4 ${accentColor}`}
+                      className="bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-2xl flex flex-row justify-between gap-2.5 group text-left w-full cursor-pointer transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] hover:border-blue-500/40 dark:hover:border-blue-400/40 active:translate-y-0 active:scale-[0.99] relative"
                     >
                       {/* Left details */}
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                           {/* Icon Container */}
-                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition duration-300">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-2 bg-white dark:bg-slate-900 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
                             {getSubCatIcon(subCat.name, subCat.logoUrl || currentCategoryObj?.logoUrl)}
                           </div>
 
@@ -2313,7 +2397,7 @@ export default function MockTestsCatalog() {
                             setSelectedSubCategory(null);
                           }
                         }}
-                        className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 shrink-0"
+                        className="btn-3d btn-3d-slate flex items-center gap-2 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 hover:border-blue-500/60 dark:hover:border-blue-400/60 px-4 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer shadow-sm shrink-0"
                       >
                         <ArrowLeft className="h-4 w-4" />
                         {activeSubSubId !== null
@@ -2372,7 +2456,7 @@ export default function MockTestsCatalog() {
                             {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक टेस्ट सीरीज चुनें:' : 'Select a test series to start practicing:'}
                           </p>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                           {groups.map(group => {
                             const count = group.tests.length;
                             const countStr = count === 1 
@@ -2385,25 +2469,17 @@ export default function MockTestsCatalog() {
                             const isTeaching = selectedCategory === 'teaching' || group.id.includes('teach');
                             const isUgcNet = selectedCategory === 'ugc_net' || group.id.includes('ugc') || group.id.includes('state');
 
-                            const accentColor = 
-                              isSsc ? 'border-t-orange-500 hover:border-orange-400 hover:bg-orange-50/10 dark:hover:bg-orange-950/5' :
-                              isRailways ? 'border-t-indigo-500 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/5' :
-                              isBanking ? 'border-t-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/10 dark:hover:bg-emerald-950/5' :
-                              isTeaching ? 'border-t-amber-500 hover:border-amber-400 hover:bg-amber-50/10 dark:hover:bg-amber-950/5' :
-                              isUgcNet ? 'border-t-sky-500 hover:border-sky-400 hover:bg-sky-50/10 dark:hover:bg-sky-950/5' :
-                              'border-t-pink-500 hover:border-pink-400 hover:bg-pink-50/10 dark:hover:bg-pink-950/5';
-
                             return (
                               <button
                                 key={group.id}
                                 onClick={() => setActiveSubSubId(group.id)}
-                                className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer border-t-4 ${accentColor}`}
+                                className="bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-2xl flex flex-row justify-between gap-2.5 group text-left w-full cursor-pointer transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] hover:border-blue-500/40 dark:hover:border-blue-400/40 active:translate-y-0 active:scale-[0.99] relative"
                               >
                                 {/* Left details */}
                                 <div className="flex-1 flex flex-col justify-between min-w-0">
                                   <div>
                                     {/* Icon Container */}
-                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition duration-300">
+                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-2 bg-white dark:bg-slate-900 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
                                       {getSubCatIcon(group.name, currentCategoryObj?.logoUrl)}
                                     </div>
 
@@ -2479,7 +2555,7 @@ export default function MockTestsCatalog() {
                           const activeGroup = groups.find(g => g.id === activeSubSubId);
                           if (!activeGroup || activeGroup.tests.length === 0) {
                             return (
-                              <div className="text-center py-10 sm:py-12 px-4 sm:px-6 bg-gradient-to-b from-slate-50/80 to-white dark:from-slate-950 dark:to-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3 max-w-xl mx-auto my-2">
+                              <div className="text-center py-10 sm:py-12 px-4 sm:px-6 bg-gradient-to-b from-slate-50/80 to-white dark:from-slate-950 dark:to-slate-900/60  rounded-2xl space-y-3 max-w-xl mx-auto my-2">
                                 <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-sm">
                                   <Clock className="h-6 w-6 animate-pulse" />
                                 </div>
@@ -2510,9 +2586,9 @@ export default function MockTestsCatalog() {
 
                                 const cardColorStyle = completed
                                   ? isCleared
-                                    ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-250/60 dark:border-emerald-900/40 border-l-4 border-l-emerald-500'
-                                    : 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-250/60 dark:border-rose-900/40 border-l-4 border-l-red-500'
-                                  : 'bg-white/75 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 border-l-4 border-l-blue-500';
+                                    ? 'bg-emerald-50/60 dark:bg-emerald-950/20'
+                                    : 'bg-rose-50/60 dark:bg-rose-950/20'
+                                  : 'bg-white/75 dark:bg-slate-900/40 ';
 
                                 const cardGlow = completed
                                   ? isCleared
@@ -2579,13 +2655,13 @@ export default function MockTestsCatalog() {
                                         <>
                                           <button
                                             onClick={() => handleStartExam(test)}
-                                            className="flex-1 sm:w-32 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm cursor-pointer"
+                                            className="btn-3d btn-3d-yellow flex-1 sm:w-32 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm cursor-pointer"
                                           >
                                             Resume Test
                                           </button>
                                           <button
                                             onClick={() => handleReattemptExam(test)}
-                                            className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                            className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
                                           >
                                             Reset
                                           </button>
@@ -2594,13 +2670,13 @@ export default function MockTestsCatalog() {
                                         <>
                                           <Link
                                             href={`/exam/${test.id}/analysis`}
-                                            className="flex-1 sm:w-32 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm block"
+                                            className="btn-3d btn-3d-blue flex-1 sm:w-32 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm block"
                                           >
                                             View Analysis
                                           </Link>
                                           <button
                                             onClick={() => handleReattemptExam(test)}
-                                            className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                            className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
                                           >
                                             {t.reattempt}
                                           </button>
@@ -2608,7 +2684,7 @@ export default function MockTestsCatalog() {
                                       ) : (
                                         <button
                                           onClick={() => handleStartExam(test)}
-                                          className={`w-full sm:w-44 text-white font-bold py-2.5 rounded-lg text-[10px] text-center shadow-sm cursor-pointer ${
+                                          className={`btn-3d btn-3d-blue w-full sm:w-44 text-white font-bold py-2.5 rounded-lg text-[10px] text-center shadow-sm cursor-pointer ${
                                             hasPass 
                                               ? 'bg-[#1C3D5A] hover:bg-slate-800' 
                                               : 'bg-yellow-600 hover:bg-yellow-700'
@@ -2645,9 +2721,9 @@ export default function MockTestsCatalog() {
 
                           const cardColorStyle = completed
                             ? isCleared
-                              ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-250/60 dark:border-emerald-900/40 border-l-4 border-l-emerald-500'
-                              : 'bg-rose-50/60 dark:bg-rose-950/20 border border-rose-250/60 dark:border-rose-900/40 border-l-4 border-l-red-500'
-                            : 'bg-white/75 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 border-l-4 border-l-blue-500';
+                              ? 'bg-emerald-50/60 dark:bg-emerald-950/20 '
+                              : 'bg-rose-50/60 dark:bg-rose-950/20 '
+                            : 'bg-white/75 dark:bg-slate-900/40 ';
 
                           const cardGlow = completed
                             ? isCleared
@@ -2714,13 +2790,13 @@ export default function MockTestsCatalog() {
                                   <>
                                     <button
                                       onClick={() => handleStartExam(test)}
-                                      className="flex-1 sm:w-32 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm cursor-pointer"
+                                      className="btn-3d btn-3d-yellow flex-1 sm:w-32 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm cursor-pointer"
                                     >
                                       Resume Test
                                     </button>
                                     <button
                                       onClick={() => handleReattemptExam(test)}
-                                      className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                      className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
                                     >
                                       Reset
                                     </button>
@@ -2729,13 +2805,13 @@ export default function MockTestsCatalog() {
                                   <>
                                     <Link
                                       href={`/exam/${test.id}/analysis`}
-                                      className="flex-1 sm:w-32 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm block"
+                                      className="btn-3d btn-3d-blue flex-1 sm:w-32 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm block"
                                     >
                                       View Analysis
                                     </Link>
                                     <button
                                       onClick={() => handleReattemptExam(test)}
-                                      className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                      className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
                                     >
                                       {t.reattempt}
                                     </button>
@@ -2743,7 +2819,7 @@ export default function MockTestsCatalog() {
                                 ) : (
                                   <button
                                     onClick={() => handleStartExam(test)}
-                                    className={`w-full sm:w-44 text-white font-bold py-2.5 rounded-lg text-[10px] text-center shadow-sm cursor-pointer ${
+                                    className={`btn-3d btn-3d-blue w-full sm:w-44 text-white font-bold py-2.5 rounded-lg text-[10px] text-center shadow-sm cursor-pointer ${
                                       hasPass 
                                         ? 'bg-[#1C3D5A] hover:bg-slate-800' 
                                         : 'bg-yellow-600 hover:bg-yellow-700'
@@ -2769,7 +2845,7 @@ export default function MockTestsCatalog() {
       {/* Subscription Upgrade Overlay Dialog */}
       {upgradePopupOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-200 text-slate-800 dark:text-white">
+          <div className="bg-white dark:bg-slate-900  rounded-xl p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-200 text-slate-800 dark:text-white">
             <div className="flex items-center gap-3 text-yellow-600 dark:text-yellow-500 mb-4">
               <ShieldAlert className="h-6 w-6" />
               <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white">Unlock Gated Mock Test</h4>
