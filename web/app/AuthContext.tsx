@@ -117,6 +117,11 @@ export interface MockUser {
   lastSeen?: string | null;
   lastPlatform?: string | null;
   trackedJobs?: TrackedJob[];
+  lockerPin?: string | null;
+  lockerPinSetAt?: string | null;
+  isLockerConnected?: boolean;
+  googleDriveEmail?: string | null;
+  googleDriveFolderId?: string | null;
 }
 
 export interface TrackedJob {
@@ -129,6 +134,14 @@ export interface TrackedJob {
   isApplied?: boolean;
   appliedDate?: string;
   applicationNo?: string;
+  password?: string;
+  rollNumber?: string;
+  examDate?: string;
+  examCenter?: string;
+  shiftTime?: string;
+  officialPortalUrl?: string;
+  driveFolderId?: string;
+  driveFolderLink?: string;
   notes?: string;
   updatedAt: string;
 }
@@ -1843,6 +1856,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
   };
 
   const logout = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        Object.keys(sessionStorage).forEach((key) => {
+          if (key.startsWith('locker_unlocked_')) {
+            sessionStorage.removeItem(key);
+          }
+        });
+      } catch (e) {
+        console.error('Error clearing locker session keys on logout:', e);
+      }
+    }
     setCurrentUser(null);
     syncUserCookieAndCache(null);
     document.cookie = "tb_user_id=;path=/;max-age=0";

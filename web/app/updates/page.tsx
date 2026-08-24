@@ -143,17 +143,24 @@ export default function UpdatesCenterPage() {
     };
 
     const hoverBorderColors = {
-      blue: 'hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50/40 dark:hover:bg-blue-950/40',
-      amber: 'hover:border-amber-400 dark:hover:border-amber-600 hover:bg-amber-50/40 dark:hover:bg-amber-950/40',
-      emerald: 'hover:border-emerald-400 dark:hover:border-emerald-600 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/40',
-      purple: 'hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-50/40 dark:hover:bg-purple-950/40',
+      blue: 'hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/50',
+      amber: 'hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/50',
+      emerald: 'hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/50',
+      purple: 'hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-950/50',
+    };
+
+    const hoverShadowColors = {
+      blue: 'hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.35),0_0_16px_rgba(59,130,246,0.18)]',
+      amber: 'hover:shadow-[0_12px_24px_-6px_rgba(245,158,11,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(245,158,11,0.35),0_0_16px_rgba(245,158,11,0.18)]',
+      emerald: 'hover:shadow-[0_12px_24px_-6px_rgba(16,185,129,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(16,185,129,0.35),0_0_16px_rgba(16,185,129,0.18)]',
+      purple: 'hover:shadow-[0_12px_24px_-6px_rgba(168,85,247,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(168,85,247,0.35),0_0_16px_rgba(168,85,247,0.18)]',
     };
 
     return (
       <div
         key={notice.id}
         onClick={() => router.push(`/updates/${notice.id}`)}
-        className={`group w-full bg-slate-50/90 dark:bg-slate-950/70 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/90 dark:border-slate-800 ${hoverBorderColors[themeColor]} rounded-2xl p-4 shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col gap-2`}
+        className={`group w-full bg-slate-50/90 dark:bg-slate-950/70 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/90 dark:border-slate-800 ${hoverBorderColors[themeColor]} ${hoverShadowColors[themeColor]} rounded-2xl p-4 shadow-2xs transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer flex flex-col gap-2 relative`}
       >
         {/* Top Badges & Date */}
         <div className="flex items-center justify-between gap-2 w-full">
@@ -162,7 +169,7 @@ export default function UpdatesCenterPage() {
               {notice.type}
             </span>
             {isNewlyPublished(notice.publishDate) && (
-              <span className="bg-rose-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider animate-pulse shadow-2xs">
+              <span className="bg-rose-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow-2xs">
                 {t.newBadge}
               </span>
             )}
@@ -189,7 +196,7 @@ export default function UpdatesCenterPage() {
   // Section meta information for Category Dedicated Page
   const categoryMeta = {
     notice: {
-      title: language === 'hi' ? 'सभी लाइव सूचनाएं और नौकरियां' : 'All Latest Notices & Job Alerts',
+      title: language === 'hi' ? 'सभी लाइव सूचनाएं' : 'All Live Notices',
       desc: language === 'hi' ? 'सक्रिय सरकारी भर्ती विज्ञापन और ऑनलाइन आवेदन पत्र' : 'Browse all active government job recruitment releases & online application forms',
       icon: Bell,
       color: 'blue',
@@ -467,7 +474,6 @@ export default function UpdatesCenterPage() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600 dark:text-slate-400">
-            <Link href="/" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navHome}</Link>
             <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
             <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors font-black text-blue-600">{t.navUpdates}</Link>
             {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
@@ -522,74 +528,75 @@ export default function UpdatesCenterPage() {
       {/* BODY CONTENT */}
       <main className="py-8 px-4 sm:px-6 md:px-10 max-w-7xl w-full mx-auto flex-1 flex flex-col relative z-10 space-y-6">
 
-        {/* TOP FULL-WIDTH STRETCH SEARCH BAR (DESKTOP) */}
-        <div className="w-full">
-          <div className="relative flex items-center w-full bg-white dark:bg-slate-900 border-2 border-blue-500/25 dark:border-slate-800 focus-within:border-blue-600 dark:focus-within:border-blue-500 rounded-2xl md:rounded-3xl p-2.5 sm:p-3.5 shadow-md shadow-blue-500/5 transition-all duration-200 group">
-            <div className="pl-2 sm:pl-3 pr-2 text-slate-400 dark:text-slate-500 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors shrink-0">
-              <Search className="h-5 w-5 sm:h-6 sm:w-6" />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={
-                language === 'hi'
-                  ? 'सभी नौकरियों, रिजल्ट, एडमिट कार्ड और आंसर की में खोजें...'
-                  : 'Search across all Jobs, Results, Admit Cards & Answer Keys...'
-              }
-              className="w-full bg-transparent text-sm sm:text-base font-extrabold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none px-2 tracking-wide"
-            />
-            {searchQuery && (
-              <div className="flex items-center gap-2 pr-1 shrink-0">
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition cursor-pointer active:scale-95"
-                  title="Clear Search"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        
         {/* IF CATEGORY FILTER IS ACTIVE -> DEDICATED SECTION PAGE FOR THAT PARTICULAR SECTION */}
         {categoryFilter && categoryMeta[categoryFilter] ? (
-          <div className="space-y-6">
-            {/* Category Page Banner Header */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="flex items-start gap-4">
-                <div className={`p-3.5 rounded-2xl shrink-0 ${categoryMeta[categoryFilter].badgeBg}`}>
-                  {React.createElement(categoryMeta[categoryFilter].icon, { className: "h-7 w-7" })}
+          <div className="space-y-4">
+            {/* Category Page Compact Title Header (Above Search Bar) */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-2xs flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`p-2.5 rounded-xl shrink-0 ${categoryMeta[categoryFilter].badgeBg}`}>
+                  {React.createElement(categoryMeta[categoryFilter].icon, { className: "h-5 w-5" })}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full border ${categoryMeta[categoryFilter].badgeBg}`}>
+                    <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">
+                      {categoryMeta[categoryFilter].title}
+                    </h2>
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${categoryMeta[categoryFilter].badgeBg}`}>
                       {categoryFilter.replace('_', ' ')}
                     </span>
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mt-2 uppercase tracking-tight">
-                    {categoryMeta[categoryFilter].title}
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
                     {categoryMeta[categoryFilter].desc}
                   </p>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  onClick={clearCategorySection}
-                  className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-3 rounded-2xl text-xs font-black transition-all duration-200 transform-gpu hover:-translate-y-0.5 hover:scale-[1.03] hover:shadow-md cursor-pointer border border-slate-200 dark:border-slate-700 active:translate-y-0.5 active:scale-95"
-                >
-                  <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'सभी अनुभागों पर वापस जाएं' : 'Back to All Sections'}
-                </button>
+              {/* Back to All Sections Button */}
+              <button
+                onClick={clearCategorySection}
+                className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-slate-700 shrink-0 active:scale-95"
+                title={language === 'hi' ? 'सभी अनुभागों पर वापस जाएं' : 'Back to All Sections'}
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{language === 'hi' ? 'सभी अनुभाग' : 'All Sections'}</span>
+                <span className="sm:hidden">{language === 'hi' ? 'वापस' : 'Back'}</span>
+              </button>
+            </div>
+
+            {/* Search Bar Under Category Header */}
+            <div className="w-full">
+              <div className="relative flex items-center w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus-within:border-blue-600 dark:focus-within:border-blue-500 rounded-2xl p-2.5 sm:p-3 shadow-2xs transition-all group">
+                <div className="pl-2 sm:pl-3 pr-2 text-slate-400 dark:text-slate-500 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors shrink-0">
+                  <Search className="h-4.5 w-4.5" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={
+                    language === 'hi'
+                      ? `इस अनुभाग (${categoryMeta[categoryFilter].title}) में खोजें...`
+                      : `Search in ${categoryMeta[categoryFilter].title}...`
+                  }
+                  className="w-full bg-transparent text-xs sm:text-sm font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none px-2"
+                />
+                {searchQuery && (
+                  <div className="flex items-center gap-2 pr-1 shrink-0">
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition cursor-pointer active:scale-95"
+                      title="Clear Search"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Category Items List Format (Single Column Vertical List) */}
-            <div className="flex flex-col gap-3.5 w-full">
+            <div className="flex flex-col gap-3.5 w-full p-2.5 -m-2.5">
               {displayNotices
                 .filter(n => n.category === categoryFilter)
                 .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
@@ -606,16 +613,46 @@ export default function UpdatesCenterPage() {
         ) : (
           /* STANDARD ALL-SECTIONS VIEW */
           <>
+            {/* TOP FULL-WIDTH STRETCH SEARCH BAR (DESKTOP) */}
+            <div className="w-full">
+              <div className="relative flex items-center w-full bg-white dark:bg-slate-900 border-2 border-blue-500/25 dark:border-slate-800 focus-within:border-blue-600 dark:focus-within:border-blue-500 rounded-2xl md:rounded-3xl p-2.5 sm:p-3.5 shadow-md shadow-blue-500/5 transition-all duration-200 group">
+                <div className="pl-2 sm:pl-3 pr-2 text-slate-400 dark:text-slate-500 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors shrink-0">
+                  <Search className="h-5 w-5 sm:h-6 sm:w-6" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={
+                    language === 'hi'
+                      ? 'सभी नौकरियों, रिजल्ट, एडमिट कार्ड और आंसर की में खोजें...'
+                      : 'Search across all Jobs, Results, Admit Cards & Answer Keys...'
+                  }
+                  className="w-full bg-transparent text-sm sm:text-base font-extrabold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none px-2 tracking-wide"
+                />
+                {searchQuery && (
+                  <div className="flex items-center gap-2 pr-1 shrink-0">
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition cursor-pointer active:scale-95"
+                      title="Clear Search"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
             {/* TOP QUICK FEATURE CARDS (RESULTNOTIFY TOP QUICK BAR) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
               {/* Quick Card 1: Latest Notices */}
               <div 
                 onClick={() => openCategorySection('notice')}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-blue-300 dark:hover:border-blue-700 transition cursor-pointer"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-[0_10px_20px_-4px_rgba(59,130,246,0.15)] dark:hover:shadow-[0_10px_20px_-4px_rgba(59,130,246,0.3)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/50 dark:border-blue-800/50 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/50 dark:border-blue-800/50 shrink-0 transition-transform duration-300 group-hover:scale-110">
                     <Bell className="h-5 w-5" />
                   </div>
                   <div>
@@ -631,10 +668,10 @@ export default function UpdatesCenterPage() {
               {/* Quick Card 2: Results & Merits */}
               <div 
                 onClick={() => openCategorySection('result')}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-amber-300 dark:hover:border-amber-700 transition cursor-pointer"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-amber-400 dark:hover:border-amber-600 hover:shadow-[0_10px_20px_-4px_rgba(245,158,11,0.15)] dark:hover:shadow-[0_10px_20px_-4px_rgba(245,158,11,0.3)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-200/50 dark:border-amber-800/50 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-200/50 dark:border-amber-800/50 shrink-0 transition-transform duration-300 group-hover:scale-110">
                     <Trophy className="h-5 w-5" />
                   </div>
                   <div>
@@ -650,10 +687,10 @@ export default function UpdatesCenterPage() {
               {/* Quick Card 3: Admit Cards */}
               <div 
                 onClick={() => openCategorySection('admit_card')}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-emerald-300 dark:hover:border-emerald-700 transition cursor-pointer"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-[0_10px_20px_-4px_rgba(16,185,129,0.15)] dark:hover:shadow-[0_10px_20px_-4px_rgba(16,185,129,0.3)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/50 dark:border-emerald-800/50 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/50 dark:border-emerald-800/50 shrink-0 transition-transform duration-300 group-hover:scale-110">
                     <FileText className="h-5 w-5" />
                   </div>
                   <div>
@@ -669,10 +706,10 @@ export default function UpdatesCenterPage() {
               {/* Quick Card 4: Answer Keys */}
               <div 
                 onClick={() => openCategorySection('answer_key')}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-purple-300 dark:hover:border-purple-700 transition cursor-pointer"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-purple-400 dark:hover:border-purple-600 hover:shadow-[0_10px_20px_-4px_rgba(168,85,247,0.15)] dark:hover:shadow-[0_10px_20px_-4px_rgba(168,85,247,0.3)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/50 dark:border-purple-800/50 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/50 dark:border-purple-800/50 shrink-0 transition-transform duration-300 group-hover:scale-110">
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
@@ -691,14 +728,14 @@ export default function UpdatesCenterPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               
               {/* Column 1: Latest Notices (Blue Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative overflow-hidden">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative">
                 <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                     <Bell className="h-4 w-4" /> {t.liveNotices}
                   </span>
                 </div>
                 {/* List Starts Directly */}
-                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
+                <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
                   {displayNotices.filter(n => n.category === 'notice').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'notice')
@@ -725,14 +762,14 @@ export default function UpdatesCenterPage() {
               </div>
 
               {/* Column 2: Results & Merits (Amber Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative overflow-hidden">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative">
                 <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                     <Trophy className="h-4 w-4" /> {t.resultsMerits}
                   </span>
                 </div>
                 {/* List Starts Directly */}
-                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
+                <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
                   {displayNotices.filter(n => n.category === 'result').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'result')
@@ -759,14 +796,14 @@ export default function UpdatesCenterPage() {
               </div>
 
               {/* Column 3: Admit Cards (Emerald Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative overflow-hidden">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative">
                 <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                     <FileText className="h-4 w-4" /> {t.admitCards}
                   </span>
                 </div>
                 {/* List Starts Directly */}
-                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
+                <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
                   {displayNotices.filter(n => n.category === 'admit_card').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'admit_card')
@@ -793,14 +830,14 @@ export default function UpdatesCenterPage() {
               </div>
 
               {/* Column 4: Answer Keys (Purple Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative overflow-hidden">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative">
                 <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4" /> Answer Keys
                   </span>
                 </div>
                 {/* List Starts Directly */}
-                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
+                <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
                   {displayNotices.filter(n => n.category === 'answer_key').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'answer_key')

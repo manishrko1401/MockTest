@@ -148,7 +148,8 @@ export async function POST(request: Request) {
       'add-subcategory', 'edit-subcategory', 'delete-subcategory',
       'add-subsubcategory', 'edit-subsubcategory', 'delete-subsubcategory',
       'add-mocktest', 'edit-mocktest-title', 'delete-mocktest', 'save-section-rules',
-      'save-custom-questions', 'bulk-import-questions', 'save-profile-admin', 'db-stats'
+      'save-custom-questions', 'bulk-import-questions', 'save-profile-admin', 'db-stats',
+      'admin-get-locker-stats', 'admin-delete-locker-doc', 'admin-disconnect-user-locker'
     ];
 
     const userOwnedActions = [
@@ -157,7 +158,9 @@ export async function POST(request: Request) {
       'get-support-messages', 'send-support-message', 'get-user-details',
       'claim-pass-pro', 'update-tracked-jobs',
       'locker-get-docs', 'locker-save-meta', 'locker-delete-doc',
-      'locker-update-drive-status', 'locker-disconnect-drive'
+      'locker-update-drive-status', 'locker-disconnect-drive',
+      'locker-set-pin', 'locker-verify-pin', 'locker-change-pin', 'locker-reset-pin-with-password',
+      'locker-send-reset-otp', 'locker-verify-otp-and-reset-pin'
     ];
 
     // Helper: Parse cookie manually
@@ -368,6 +371,24 @@ export async function POST(request: Request) {
         return await handleLockerUpdateDriveStatus(data, requesterUserId);
       case 'locker-disconnect-drive':
         return await handleLockerDisconnectDrive(data, requesterUserId);
+      case 'locker-set-pin':
+        return await handleLockerSetPin(data, requesterUserId);
+      case 'locker-verify-pin':
+        return await handleLockerVerifyPin(data, requesterUserId);
+      case 'locker-change-pin':
+        return await handleLockerChangePin(data, requesterUserId);
+      case 'locker-reset-pin-with-password':
+        return await handleLockerResetPinWithPassword(data, requesterUserId);
+      case 'locker-send-reset-otp':
+        return await handleLockerSendResetOtp(data, requesterUserId);
+      case 'locker-verify-otp-and-reset-pin':
+        return await handleLockerVerifyOtpAndResetPin(data, requesterUserId);
+      case 'admin-get-locker-stats':
+        return await handleAdminGetLockerStats();
+      case 'admin-delete-locker-doc':
+        return await handleAdminDeleteLockerDoc(data);
+      case 'admin-disconnect-user-locker':
+        return await handleAdminDisconnectUserLocker(data);
       case 'db-stats':
         return await handleDbStats();
       default:
@@ -1060,6 +1081,11 @@ async function handleLogin(data: any, request?: Request) {
     referralCoinsCredited: user.referralCoinsCredited,
     bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],
     trackedJobs: user.trackedJobs ? (user.trackedJobs as any) : [],
+    lockerPin: user.lockerPin,
+    lockerPinSetAt: user.lockerPinSetAt ? user.lockerPinSetAt.toISOString() : null,
+    isLockerConnected: !!user.isLockerConnected,
+    googleDriveEmail: user.googleDriveEmail,
+    googleDriveFolderId: user.googleDriveFolderId,
     testSessions: user.testSessions.map((session: any) => {
       const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
       session.responses.forEach((r: any) => {
@@ -1184,6 +1210,11 @@ async function handleGoogleAuth(data: any, request?: Request) {
       profilePhoto: user.profilePhoto,
       bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],
       trackedJobs: user.trackedJobs ? (user.trackedJobs as any) : [],
+      lockerPin: user.lockerPin,
+      lockerPinSetAt: user.lockerPinSetAt ? user.lockerPinSetAt.toISOString() : null,
+      isLockerConnected: !!user.isLockerConnected,
+      googleDriveEmail: user.googleDriveEmail,
+      googleDriveFolderId: user.googleDriveFolderId,
       testSessions: (user.testSessions || []).map((session: any) => {
         const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
         (session.responses || []).forEach((r: any) => {
@@ -4446,6 +4477,8 @@ async function handleLockerGetDocs(data: any, requesterUserId: string | null) {
         isLockerConnected: true,
         googleDriveEmail: true,
         googleDriveFolderId: true,
+        lockerPin: true,
+        lockerPinSetAt: true,
       },
     });
 
@@ -4624,6 +4657,582 @@ async function handleLockerDisconnectDrive(data: any, requesterUserId: string | 
     return NextResponse.json({ success: false, error: error.message || 'Failed to disconnect Google Drive' }, { status: 500 });
   }
 }
+
+async function handleLockerSetPin(data: any, requesterUserId: string | null) {
+  const userId = data?.userId || requesterUserId;
+  const pin = (data?.pin || '').toString().trim();
+
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  if (!/^\d{4}$/.test(pin)) {
+    return NextResponse.json({ success: false, error: 'PIN must be exactly 4 digits (0-9).' }, { status: 400 });
+  }
+
+  try {
+    try {
+      const updatedUser = await (prisma.user as any).update({
+        where: { id: userId },
+        data: {
+          lockerPin: pin,
+          lockerPinSetAt: new Date(),
+        },
+        select: {
+          id: true,
+          lockerPin: true,
+          lockerPinSetAt: true,
+        },
+      });
+
+      return NextResponse.json({ success: true, message: 'Locker PIN set successfully', user: updatedUser });
+    } catch (prismaErr: any) {
+      // Fallback in case in-memory Prisma client has stale schema cache
+      const now = new Date();
+      await prisma.$executeRaw`UPDATE "users" SET "lockerPin" = ${pin}, "lockerPinSetAt" = ${now} WHERE "id" = ${userId}`;
+      return NextResponse.json({
+        success: true,
+        message: 'Locker PIN set successfully',
+        user: { id: userId, lockerPin: pin, lockerPinSetAt: now },
+      });
+    }
+  } catch (error: any) {
+    console.error('Error setting locker PIN:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to set locker PIN' }, { status: 500 });
+  }
+}
+
+async function handleLockerVerifyPin(data: any, requesterUserId: string | null) {
+  const userId = data?.userId || requesterUserId;
+  const pin = (data?.pin || '').toString().trim();
+
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  try {
+    let userLockerPin: string | null = null;
+    try {
+      const user = await (prisma.user as any).findUnique({
+        where: { id: userId },
+        select: { id: true, lockerPin: true },
+      });
+      userLockerPin = user?.lockerPin || null;
+    } catch {
+      const rawRows: any[] = await prisma.$queryRaw`SELECT "lockerPin" FROM "users" WHERE "id" = ${userId} LIMIT 1`;
+      userLockerPin = rawRows[0]?.lockerPin || null;
+    }
+
+    if (!userLockerPin) {
+      return NextResponse.json({ success: false, error: 'No PIN is set for this account.' }, { status: 404 });
+    }
+
+    const isMatch = userLockerPin === pin;
+    return NextResponse.json({ success: true, isCorrect: isMatch });
+  } catch (error: any) {
+    console.error('Error verifying locker PIN:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to verify PIN' }, { status: 500 });
+  }
+}
+
+async function handleLockerChangePin(data: any, requesterUserId: string | null) {
+  const userId = data?.userId || requesterUserId;
+  const oldPin = (data?.oldPin || '').toString().trim();
+  const newPin = (data?.newPin || '').toString().trim();
+
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+  if (!/^\d{4}$/.test(oldPin)) {
+    return NextResponse.json({ success: false, error: 'Current PIN must be exactly 4 digits.' }, { status: 400 });
+  }
+  if (!/^\d{4}$/.test(newPin)) {
+    return NextResponse.json({ success: false, error: 'New PIN must be exactly 4 digits.' }, { status: 400 });
+  }
+
+  try {
+    let userLockerPin: string | null = null;
+    try {
+      const user = await (prisma.user as any).findUnique({
+        where: { id: userId },
+        select: { id: true, lockerPin: true },
+      });
+      userLockerPin = user?.lockerPin || null;
+    } catch {
+      const rawRows: any[] = await prisma.$queryRaw`SELECT "lockerPin" FROM "users" WHERE "id" = ${userId} LIMIT 1`;
+      userLockerPin = rawRows[0]?.lockerPin || null;
+    }
+
+    if (!userLockerPin) {
+      return NextResponse.json({ success: false, error: 'No PIN is set for this account.' }, { status: 404 });
+    }
+
+    if (userLockerPin !== oldPin) {
+      return NextResponse.json({ success: false, error: 'Current PIN is incorrect. Please verify and try again.' }, { status: 400 });
+    }
+
+    const now = new Date();
+    try {
+      const updatedUser = await (prisma.user as any).update({
+        where: { id: userId },
+        data: {
+          lockerPin: newPin,
+          lockerPinSetAt: now,
+        },
+        select: {
+          id: true,
+          lockerPin: true,
+          lockerPinSetAt: true,
+        },
+      });
+      return NextResponse.json({ success: true, message: 'Security PIN updated successfully', user: updatedUser });
+    } catch {
+      await prisma.$executeRaw`UPDATE "users" SET "lockerPin" = ${newPin}, "lockerPinSetAt" = ${now} WHERE "id" = ${userId}`;
+      return NextResponse.json({
+        success: true,
+        message: 'Security PIN updated successfully',
+        user: { id: userId, lockerPin: newPin, lockerPinSetAt: now },
+      });
+    }
+  } catch (error: any) {
+    console.error('Error changing locker PIN:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to change locker PIN' }, { status: 500 });
+  }
+}
+
+async function handleLockerResetPinWithPassword(data: any, requesterUserId: string | null) {
+  const userId = data?.userId || requesterUserId;
+  const accountPassword = (data?.accountPassword || '').toString();
+  const newPin = (data?.newPin || '').toString().trim();
+
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  if (!accountPassword) {
+    return NextResponse.json({ success: false, error: 'Account password is required for verification.' }, { status: 400 });
+  }
+
+  if (!/^\d{4}$/.test(newPin)) {
+    return NextResponse.json({ success: false, error: 'New PIN must be exactly 4 digits (0-9).' }, { status: 400 });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, passwordHash: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'User not found.' }, { status: 404 });
+    }
+
+    if (user.passwordHash !== accountPassword) {
+      return NextResponse.json({ success: false, error: 'Incorrect account password. Verification failed.' }, { status: 401 });
+    }
+
+    try {
+      const updatedUser = await (prisma.user as any).update({
+        where: { id: userId },
+        data: {
+          lockerPin: newPin,
+          lockerPinSetAt: new Date(),
+        },
+        select: {
+          id: true,
+          lockerPin: true,
+          lockerPinSetAt: true,
+        },
+      });
+
+      return NextResponse.json({ success: true, message: 'Locker PIN reset successfully', user: updatedUser });
+    } catch {
+      const now = new Date();
+      await prisma.$executeRaw`UPDATE "users" SET "lockerPin" = ${newPin}, "lockerPinSetAt" = ${now} WHERE "id" = ${userId}`;
+      return NextResponse.json({
+        success: true,
+        message: 'Locker PIN reset successfully',
+        user: { id: userId, lockerPin: newPin, lockerPinSetAt: now },
+      });
+    }
+  } catch (error: any) {
+    console.error('Error resetting locker PIN with password:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to reset PIN' }, { status: 500 });
+  }
+}
+
+async function handleLockerSendResetOtp(data: any, requesterUserId: string | null) {
+  const userId = data?.userId || requesterUserId;
+
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        googleDriveEmail: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'User not found.' }, { status: 404 });
+    }
+
+    // Target email: prefer Google Drive email if connected; fallback to account email
+    const targetEmail = (user.googleDriveEmail || user.email || '').trim().toLowerCase();
+    if (!targetEmail) {
+      return NextResponse.json({ success: false, error: 'No valid email address found for sending OTP.' }, { status: 400 });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Save to user record in DB
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        otpCode: otp,
+        otpExpiresAt: expiresAt,
+      },
+    });
+
+    // Send email via nodemailer
+    const mailOptions = {
+      from: process.env.SMTP_FROM || `"MockTest Hub Security" <${process.env.SMTP_USER || 'support@mocktesthub.com'}>`,
+      to: targetEmail,
+      subject: `🔐 ${otp} is your Document Locker PIN Reset OTP - MockTest Hub`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; width: 48px; height: 48px; background-color: #8b5cf6; border-radius: 12px; line-height: 48px; color: #ffffff; font-size: 24px;">🔒</div>
+            <h2 style="color: #0f172a; margin: 12px 0 4px 0; font-size: 20px;">Document Locker PIN Reset</h2>
+            <p style="color: #64748b; font-size: 13px; margin: 0;">MockTest Hub Exam Vault & Google Drive Security</p>
+          </div>
+          
+          <p style="color: #334155; font-size: 14px; line-height: 1.5;">Hello <strong>${user.fullName || 'Student'}</strong>,</p>
+          <p style="color: #334155; font-size: 14px; line-height: 1.5;">
+            You requested to reset your 4-digit Security PIN for your Document Locker connected to <strong>${user.googleDriveEmail || user.email}</strong>.
+          </p>
+
+          <div style="background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 18px; text-align: center; margin: 24px 0;">
+            <span style="display: block; font-size: 12px; color: #64748b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Your 6-Digit Reset OTP</span>
+            <span style="font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #7c3aed; font-family: monospace;">${otp}</span>
+            <span style="display: block; font-size: 11px; color: #94a3b8; margin-top: 6px;">Valid for 10 minutes only</span>
+          </div>
+
+          <p style="color: #64748b; font-size: 12px; line-height: 1.5;">
+            If you did not request this OTP, please ignore this email. Your Document Locker files and credentials remain completely secure.
+          </p>
+          
+          <div style="border-top: 1px solid #e2e8f0; margin-top: 24px; padding-top: 16px; text-align: center; color: #94a3b8; font-size: 11px;">
+            © ${new Date().getFullYear()} MockTest Hub. All rights reserved.
+          </div>
+        </div>
+      `,
+    };
+
+    try {
+      if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+        await transporter.sendMail(mailOptions);
+      } else {
+        console.log(`[DEV OTP NOTIFICATION] Locker Reset OTP for ${targetEmail}: ${otp}`);
+      }
+    } catch (mailErr: any) {
+      console.warn('Mail send failed, logged in console for testing:', mailErr?.message);
+    }
+
+    // Mask target email for secure display (e.g. ma*****@gmail.com)
+    const [localPart, domain] = targetEmail.split('@');
+    const maskedLocal = localPart.length > 2 
+      ? localPart.slice(0, 2) + '*'.repeat(Math.max(3, localPart.length - 2)) 
+      : localPart + '***';
+    const maskedEmail = `${maskedLocal}@${domain || 'gmail.com'}`;
+
+    return NextResponse.json({
+      success: true,
+      maskedEmail,
+      isGoogleDriveEmail: !!user.googleDriveEmail,
+      message: `OTP sent successfully to ${maskedEmail}`,
+    });
+  } catch (error: any) {
+    console.error('Error sending locker reset OTP:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to send OTP' }, { status: 500 });
+  }
+}
+
+async function handleLockerVerifyOtpAndResetPin(data: any, requesterUserId: string | null) {
+  const userId = data?.userId || requesterUserId;
+  const otp = (data?.otp || '').toString().trim();
+  const newPin = (data?.newPin || '').toString().trim();
+
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  if (!otp || !/^\d{6}$/.test(otp)) {
+    return NextResponse.json({ success: false, error: 'Please enter a valid 6-digit OTP code.' }, { status: 400 });
+  }
+
+  if (!newPin || !/^\d{4}$/.test(newPin)) {
+    return NextResponse.json({ success: false, error: 'New PIN must be exactly 4 digits (0-9).' }, { status: 400 });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        otpCode: true,
+        otpExpiresAt: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'User not found.' }, { status: 404 });
+    }
+
+    if (!user.otpCode) {
+      return NextResponse.json({ success: false, error: 'No active OTP found. Please request a new OTP.' }, { status: 400 });
+    }
+
+    if (user.otpCode !== otp) {
+      return NextResponse.json({ success: false, error: 'Incorrect OTP. Please check your email and try again.' }, { status: 401 });
+    }
+
+    if (user.otpExpiresAt && new Date() > new Date(user.otpExpiresAt)) {
+      return NextResponse.json({ success: false, error: 'OTP has expired. Please request a new OTP.' }, { status: 400 });
+    }
+
+    // OTP Verified! Update user PIN and clear OTP
+    try {
+      const updatedUser = await (prisma.user as any).update({
+        where: { id: userId },
+        data: {
+          lockerPin: newPin,
+          lockerPinSetAt: new Date(),
+          otpCode: null,
+          otpExpiresAt: null,
+        },
+        select: {
+          id: true,
+          lockerPin: true,
+          lockerPinSetAt: true,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'PIN reset successfully! Your new 4-digit PIN is now active.',
+        user: updatedUser,
+      });
+    } catch {
+      const now = new Date();
+      await prisma.$executeRaw`UPDATE "users" SET "lockerPin" = ${newPin}, "lockerPinSetAt" = ${now}, "otpCode" = NULL, "otpExpiresAt" = NULL WHERE "id" = ${userId}`;
+      return NextResponse.json({
+        success: true,
+        message: 'PIN reset successfully! Your new 4-digit PIN is now active.',
+        user: { id: userId, lockerPin: newPin, lockerPinSetAt: now },
+      });
+    }
+  } catch (error: any) {
+    console.error('Error verifying OTP and resetting PIN:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to reset PIN' }, { status: 500 });
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Admin Document Locker Overview & Diagnostics Handlers
+// -----------------------------------------------------------------------------
+
+async function handleAdminGetLockerStats() {
+  try {
+    // 1. Fetch total user count
+    const totalUsersCount = await prisma.user.count();
+
+    // 2. Fetch users with locker fields and documents
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        profilePhoto: true,
+        role: true,
+        candidateCode: true,
+        mobile: true,
+        isBlocked: true,
+        subscriptionTier: true,
+        createdAt: true,
+        lastSeen: true,
+        lastPlatform: true,
+        isLockerConnected: true,
+        googleDriveEmail: true,
+        googleDriveFolderId: true,
+        lockerPin: true,
+        lockerPinSetAt: true,
+        lockerDocuments: {
+          select: {
+            id: true,
+            title: true,
+            docType: true,
+            examName: true,
+            year: true,
+            driveFileId: true,
+            driveFolderId: true,
+            driveViewUrl: true,
+            driveDownloadUrl: true,
+            thumbnailUrl: true,
+            mimeType: true,
+            fileSizeBytes: true,
+            tags: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // 3. Compute aggregate analytics
+    let connectedUsersCount = 0;
+    let pinSetUsersCount = 0;
+    let totalDocsCount = 0;
+    let totalStorageBytes = 0;
+
+    const docTypeCounts: Record<string, number> = {
+      PHOTO: 0,
+      SIGNATURE: 0,
+      ADMIT_CARD: 0,
+      APPLICATION_FORM: 0,
+      CERTIFICATE: 0,
+      ID_PROOF: 0,
+      OTHER: 0,
+    };
+
+    const examCounts: Record<string, number> = {};
+    const recentUploads: any[] = [];
+
+    const enrichedUsers = users.map((u) => {
+      const hasDriveConnected = Boolean(u.isLockerConnected || u.googleDriveEmail);
+      const hasPin = Boolean(u.lockerPin);
+      const userDocs = u.lockerDocuments || [];
+      const userDocsCount = userDocs.length;
+      const userStorageBytes = userDocs.reduce((acc, d) => acc + (d.fileSizeBytes || 0), 0);
+
+      if (hasDriveConnected) connectedUsersCount++;
+      if (hasPin) pinSetUsersCount++;
+      totalDocsCount += userDocsCount;
+      totalStorageBytes += userStorageBytes;
+
+      const userTypeBreakdown: Record<string, number> = {};
+
+      userDocs.forEach((d) => {
+        const type = d.docType || 'OTHER';
+        docTypeCounts[type] = (docTypeCounts[type] || 0) + 1;
+        userTypeBreakdown[type] = (userTypeBreakdown[type] || 0) + 1;
+
+        if (d.examName && d.examName.trim()) {
+          const ex = d.examName.trim();
+          examCounts[ex] = (examCounts[ex] || 0) + 1;
+        }
+
+        recentUploads.push({
+          ...d,
+          userName: u.fullName || 'Candidate',
+          userEmail: u.email,
+          userId: u.id,
+          candidateCode: u.candidateCode,
+          googleDriveEmail: u.googleDriveEmail || u.email,
+        });
+      });
+
+      const { lockerPin, ...safeUser } = u;
+
+      return {
+        ...safeUser,
+        hasDriveConnected,
+        hasPinSet: hasPin,
+        docsCount: userDocsCount,
+        totalSizeBytes: userStorageBytes,
+        docTypeSummary: userTypeBreakdown,
+        lastUploadAt: userDocs[0]?.createdAt || null,
+      };
+    });
+
+    // Sort recent uploads by createdAt desc and take top 50
+    recentUploads.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const topRecentUploads = recentUploads.slice(0, 50);
+
+    // Top exams formatted
+    const topExams = Object.entries(examCounts)
+      .map(([examName, count]) => ({ examName, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    const stats = {
+      totalUsersCount,
+      connectedUsersCount,
+      adoptionRate: totalUsersCount > 0 ? ((connectedUsersCount / totalUsersCount) * 100).toFixed(1) : '0.0',
+      pinSetUsersCount,
+      totalDocsCount,
+      totalStorageBytes,
+      totalStorageMB: (totalStorageBytes / (1024 * 1024)).toFixed(2),
+      docTypeCounts,
+      topExams,
+      recentUploads: topRecentUploads,
+      users: enrichedUsers,
+    };
+
+    return NextResponse.json({ success: true, stats });
+  } catch (error: any) {
+    console.error('Error fetching admin locker stats:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to fetch locker statistics' }, { status: 500 });
+  }
+}
+
+async function handleAdminDeleteLockerDoc(data: any) {
+  const { docId } = data || {};
+  if (!docId) {
+    return NextResponse.json({ success: false, error: 'Document ID is required' }, { status: 400 });
+  }
+  try {
+    await (prisma as any).lockerDocument.delete({
+      where: { id: docId },
+    });
+    return NextResponse.json({ success: true, deletedDocId: docId });
+  } catch (error: any) {
+    console.error('Error deleting locker document by admin:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to delete document' }, { status: 500 });
+  }
+}
+
+async function handleAdminDisconnectUserLocker(data: any) {
+  const { userId } = data || {};
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isLockerConnected: false,
+        googleDriveEmail: null,
+        googleDriveFolderId: null,
+      },
+    });
+    return NextResponse.json({ success: true, user: updatedUser });
+  } catch (error: any) {
+    console.error('Error disconnecting user locker by admin:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to disconnect user locker' }, { status: 500 });
+  }
+}
+
 
 
 

@@ -47,7 +47,10 @@ export function loadGisScript(): Promise<void> {
 /**
  * Requests an OAuth 2.0 Access Token from the user for Google Drive.
  */
-export async function requestGoogleDriveAccessToken(clientId?: string): Promise<{
+export async function requestGoogleDriveAccessToken(
+  clientId?: string,
+  expectedEmail?: string
+): Promise<{
   accessToken: string;
   email?: string;
   expiresIn: number;
@@ -71,6 +74,7 @@ export async function requestGoogleDriveAccessToken(clientId?: string): Promise<
       const client = window.google.accounts.oauth2.initTokenClient({
         client_id: effectiveClientId,
         scope: GOOGLE_DRIVE_SCOPE,
+        hint: expectedEmail || undefined,
         callback: async (tokenResponse: any) => {
           if (tokenResponse.error) {
             return reject(new Error(tokenResponse.error_description || tokenResponse.error));
@@ -79,7 +83,7 @@ export async function requestGoogleDriveAccessToken(clientId?: string): Promise<
             return reject(new Error('Failed to acquire access token'));
           }
 
-          // Optionally fetch user email via userinfo endpoint
+          // Fetch user email via Google userinfo endpoint to verify identity
           let userEmail = '';
           try {
             const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -90,18 +94,32 @@ export async function requestGoogleDriveAccessToken(clientId?: string): Promise<
               userEmail = userInfo.email || '';
             }
           } catch (e) {
-            // Non-critical, ignore
+            console.warn('Could not fetch Google userinfo:', e);
+          }
+
+          // Enforce strict email match if expectedEmail is specified
+          if (expectedEmail && userEmail) {
+            const cleanExpected = expectedEmail.trim().toLowerCase();
+            const cleanConnected = userEmail.trim().toLowerCase();
+
+            if (cleanExpected !== cleanConnected) {
+              return reject(
+                new Error(
+                  `Account Mismatch: Please sign in with your registered account (${expectedEmail}). Connecting with a different Google account (${userEmail}) is not permitted.`
+                )
+              );
+            }
           }
 
           resolve({
             accessToken: tokenResponse.access_token,
-            email: userEmail,
+            email: userEmail || expectedEmail,
             expiresIn: tokenResponse.expires_in || 3599,
           });
         },
       });
 
-      client.requestAccessToken({ prompt: 'consent' });
+      client.requestAccessToken({ prompt: 'consent', hint: expectedEmail || undefined });
     } catch (err) {
       reject(err);
     }
@@ -259,6 +277,69 @@ export async function getOrCreateLockerSubFolder(
 }
 
 /**
+ * Finds or creates a dedicated folder for an applied exam inside the root locker folder.
+ * Returns both folderId and the webViewLink to open directly in Google Drive.
+ */
+export async function getOrCreateExamFolder(
+  accessToken: string,
+  rootFolderId: string,
+  examName: string
+): Promise<{ folderId: string; folderWebViewLink: string }> {
+  // Sanitize folder name by trimming and removing slashes
+  const sanitizedName = examName.trim().replace(/[/\\?%*:|"<>]/g, '-');
+  const folderName = sanitizedName || 'General Exam Documents';
+
+  const query = encodeURIComponent(
+    `'${rootFolderId}' in parents and name = '${folderName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`
+  );
+  const searchRes = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,webViewLink)`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+
+  if (searchRes.ok) {
+    const data = await searchRes.json();
+    if (data.files && data.files.length > 0) {
+      const f = data.files[0];
+      return {
+        folderId: f.id,
+        folderWebViewLink: f.webViewLink || `https://drive.google.com/drive/folders/${f.id}`,
+      };
+    }
+  }
+
+  const createRes = await fetch(
+    'https://www.googleapis.com/drive/v3/files?fields=id,name,webViewLink',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: folderName,
+        mimeType: 'application/vnd.google-apps.folder',
+        description: `MockTest Hub Exam Documents & Admit Cards for ${folderName}`,
+        parents: [rootFolderId],
+      }),
+    }
+  );
+
+  if (!createRes.ok) {
+    const errorJson = await createRes.json();
+    throw new Error(errorJson.error?.message || `Failed to create exam folder: ${folderName}`);
+  }
+
+  const created = await createRes.json();
+  return {
+    folderId: created.id,
+    folderWebViewLink: created.webViewLink || `https://drive.google.com/drive/folders/${created.id}`,
+  };
+}
+
+/**
  * Uploads a file (Blob / File) directly to Google Drive via multipart REST API.
  */
 export async function uploadFileToGoogleDrive(
@@ -272,6 +353,7 @@ export async function uploadFileToGoogleDrive(
   mimeType: string;
   size: number;
   webViewLink?: string;
+  webContentLink?: string;
   thumbnailLink?: string;
 }> {
   const metadata: any = {
@@ -291,7 +373,7 @@ export async function uploadFileToGoogleDrive(
   form.append('file', file);
 
   const response = await fetch(
-    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,size,webViewLink,thumbnailLink',
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,size,webViewLink,webContentLink,thumbnailLink',
     {
       method: 'POST',
       headers: {
@@ -313,6 +395,7 @@ export async function uploadFileToGoogleDrive(
     mimeType: result.mimeType,
     size: parseInt(result.size || '0', 10),
     webViewLink: result.webViewLink || `https://drive.google.com/file/d/${result.id}/view`,
+    webContentLink: result.webContentLink || `https://drive.google.com/uc?export=download&id=${result.id}`,
     thumbnailLink: result.thumbnailLink || null,
   };
 }

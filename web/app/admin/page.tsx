@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles, Inbox, Share2 } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles, Inbox, Share2, FolderLock, Cloud } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
@@ -27,6 +27,7 @@ import { VocabManager } from './components/VocabManager';
 import NoticeInnerDetailsManager from './components/NoticeInnerDetailsManager';
 import { InquiryManager } from './components/InquiryManager';
 import { ContactLinksManager } from './components/ContactLinksManager';
+import { DocumentLockerManager } from './components/DocumentLockerManager';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -114,9 +115,9 @@ export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const tabInitializedRef = React.useRef(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'locker' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'locker' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -710,7 +711,7 @@ export default function AdminAnalytics() {
       return ['upload', 'categories', 'subcategories', 'subsubcategories', 'mocks'].includes(tab);
     }
     if (role === 'SUPPORT_TEAM') {
-      return ['support', 'suggestions', 'inquiries', 'feedback', 'contact_links'].includes(tab);
+      return ['support', 'suggestions', 'inquiries', 'feedback', 'contact_links', 'locker'].includes(tab);
     }
     if (role === 'NOTICES_MANAGER') {
       return ['notices', 'notice_details', 'announcements', 'testimonials'].includes(tab);
@@ -1550,6 +1551,24 @@ export default function AdminAnalytics() {
                 User Management
               </button>
             )}
+            {hasTabAccess('locker') && (
+              <button
+                onClick={() => selectTab('locker')}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'locker'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <FolderLock className="h-4 w-4 text-purple-400" />
+                  <span>Document Locker</span>
+                </div>
+                <span className="bg-purple-500/20 text-purple-600 dark:text-purple-300 text-[9px] font-black rounded-full h-4 px-1.5 flex items-center justify-center">
+                  Drive
+                </span>
+              </button>
+            )}
             {hasTabAccess('notices') && (
               <button
                 onClick={() => selectTab('notices')}
@@ -1823,6 +1842,8 @@ export default function AdminAnalytics() {
                 ? (language === 'hi' ? 'αñÑαÑïαñò αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñ¬αÑìαñ░αñ╡αñ┐αñ╖αÑìαñƒαñ┐ αñƒαñ░αÑìαñ«αñ┐αñ¿αñ▓' : 'Bulk Question Ingestion Terminal')
                 : activeTab === 'users'
                 ? (language === 'hi' ? 'αñëαñ¬αñ»αÑïαñùαñòαñ░αÑìαññαñ╛ αñ¬αÑìαñ░αñ¼αñéαñºαñ¿ αñöαñ░ αñ¬αñ╣αÑüαñüαñÜ αñ¿αñ┐αñ»αñéαññαÑìαñ░αñú' : 'User Management & Access Control')
+                : activeTab === 'locker'
+                ? (language === 'hi' ? 'दस्तावेज़ लॉकर और गूगल ड्राइव विश्लेषिकी' : 'Document Locker & Google Drive Intelligence')
                 : activeTab === 'notices'
                 ? (language === 'hi' ? 'लाइव अपडेट और नोटिस प्रबंधक' : 'Live Updates & Notices Manager')
                 : activeTab === 'notice_details'
@@ -6327,6 +6348,11 @@ export default function AdminAnalytics() {
           {/* TAB: MANAGE CONTACT & SOCIAL LINKS */}
           {activeTab === 'contact_links' && hasTabAccess('contact_links') && (
             <ContactLinksManager showToast={showToast} />
+          )}
+
+          {/* TAB: DOCUMENT LOCKER & GOOGLE DRIVE ANALYTICS */}
+          {activeTab === 'locker' && hasTabAccess('locker') && (
+            <DocumentLockerManager showToast={showToast} />
           )}
 
         </div>

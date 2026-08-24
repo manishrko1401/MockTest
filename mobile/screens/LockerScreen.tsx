@@ -41,6 +41,10 @@ import {
   FileCheck,
   Camera,
   Share2,
+  Lock,
+  KeyRound,
+  Mail,
+  Send,
 } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -199,6 +203,231 @@ export default function LockerScreen({
     }
   };
 
+  // PIN & Security State
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [userLockerPin, setUserLockerPin] = useState<string | null>(currentUser?.lockerPin || null);
+  const [enteredPin, setEnteredPin] = useState('');
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [isPinVerifying, setIsPinVerifying] = useState(false);
+
+  // First-Time Setup State
+  const [setupStep, setSetupStep] = useState<'CREATE' | 'CONFIRM'>('CREATE');
+  const [newPinInput, setNewPinInput] = useState('');
+  const [confirmPinInput, setConfirmPinInput] = useState('');
+  const [isSavingPin, setIsSavingPin] = useState(false);
+
+  // Forgot PIN Modal State
+  const [isForgotPinModalOpen, setIsForgotPinModalOpen] = useState(false);
+  const [forgotOtpStep, setForgotOtpStep] = useState<'SEND_OTP' | 'VERIFY_OTP'>('SEND_OTP');
+  const [maskedTargetEmail, setMaskedTargetEmail] = useState('');
+  const [forgotOtpInput, setForgotOtpInput] = useState('');
+  const [forgotNewPinInput, setForgotNewPinInput] = useState('');
+  const [forgotConfirmPinInput, setForgotConfirmPinInput] = useState('');
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Change PIN Modal State
+  const [isChangePinModalOpen, setIsChangePinModalOpen] = useState(false);
+  const [changeOldPinInput, setChangeOldPinInput] = useState('');
+  const [changeNewPinInput, setChangeNewPinInput] = useState('');
+  const [changeConfirmPinInput, setChangeConfirmPinInput] = useState('');
+  const [changeError, setChangeError] = useState<string | null>(null);
+  const [changeLoading, setChangeLoading] = useState(false);
+
+  // Resend OTP Cooldown
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  // 5-Minute Inactivity Auto-Lock on Mobile
+  useEffect(() => {
+    if (!isUnlocked) return;
+    const timer = setTimeout(() => {
+      handleLockVault();
+    }, 5 * 60 * 1000); // 5 minutes in ms
+
+    return () => clearTimeout(timer);
+  }, [isUnlocked]);
+
+  const verifyEnteredPin = async (pin: string) => {
+    if (!currentUser?.id) return;
+    setIsPinVerifying(true);
+    try {
+      const res = await ApiClient.lockerVerifyPin({ userId: currentUser.id, pin });
+      if (res.success && res.isCorrect) {
+        setIsUnlocked(true);
+        setEnteredPin('');
+        setPinError(null);
+      } else {
+        setPinError(language === 'hi' ? 'गलत पिन! कृपया पुनः प्रयास करें।' : 'Incorrect PIN. Please try again.');
+        setTimeout(() => {
+          setEnteredPin('');
+        }, 600);
+      }
+    } catch (err: any) {
+      setPinError(err.message || 'Error verifying PIN.');
+      setTimeout(() => setEnteredPin(''), 600);
+    } finally {
+      setIsPinVerifying(false);
+    }
+  };
+
+  const handleLockVault = () => {
+    setIsUnlocked(false);
+    setEnteredPin('');
+    setPinError(null);
+  };
+
+  const handleFirstTimePinNext = () => {
+    if (!/^\d{4}$/.test(newPinInput)) {
+      setPinError(language === 'hi' ? 'पिन 4 अंकों का होना चाहिए।' : 'PIN must be exactly 4 numeric digits.');
+      return;
+    }
+    setPinError(null);
+    setSetupStep('CONFIRM');
+  };
+
+  const handleFirstTimePinConfirm = async () => {
+    if (newPinInput !== confirmPinInput) {
+      setPinError(language === 'hi' ? 'पिन मेल नहीं खाता!' : 'PINs do not match. Please re-enter.');
+      return;
+    }
+    if (!currentUser?.id) return;
+    setIsSavingPin(true);
+    try {
+      const res = await ApiClient.lockerSetPin({ userId: currentUser.id, pin: newPinInput });
+      if (res.success) {
+        setUserLockerPin(newPinInput);
+        setIsUnlocked(true);
+        setNewPinInput('');
+        setConfirmPinInput('');
+        Alert.alert(
+          language === 'hi' ? 'सफल' : 'Success',
+          language === 'hi' ? 'सिक्योरिटी पिन सफलतापूर्वक सेट हो गया!' : 'Security PIN set successfully!'
+        );
+      } else {
+        setPinError(res.error || 'Failed to set PIN.');
+      }
+    } catch (err: any) {
+      setPinError(err.message || 'Connection error setting PIN.');
+    } finally {
+      setIsSavingPin(false);
+    }
+  };
+
+  const handleSendResetOtp = async () => {
+    if (!currentUser?.id) return;
+    setForgotLoading(true);
+    setForgotError(null);
+    try {
+      const res = await ApiClient.lockerSendResetOtp(currentUser.id);
+      if (res.success) {
+        setMaskedTargetEmail(res.maskedEmail || 'your connected email');
+        setForgotOtpStep('VERIFY_OTP');
+        setResendCooldown(60);
+      } else {
+        setForgotError(res.error || 'Failed to send OTP.');
+      }
+    } catch (err: any) {
+      setForgotError(err.message || 'Error sending OTP.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleVerifyOtpAndResetPin = async () => {
+    setForgotError(null);
+    if (!/^\d{6}$/.test(forgotOtpInput.trim())) {
+      setForgotError(language === 'hi' ? 'कृपया 6-अंकों का OTP दर्ज करें।' : 'Please enter the 6-digit OTP sent to your email.');
+      return;
+    }
+    if (!/^\d{4}$/.test(forgotNewPinInput.trim())) {
+      setForgotError(language === 'hi' ? 'नया पिन 4 अंकों का होना चाहिए।' : 'New PIN must be exactly 4 digits.');
+      return;
+    }
+    if (forgotNewPinInput.trim() !== forgotConfirmPinInput.trim()) {
+      setForgotError(language === 'hi' ? 'नया पिन और पुष्टि पिन मेल नहीं खाते।' : 'New PIN and Confirm PIN do not match.');
+      return;
+    }
+    if (!currentUser?.id) return;
+
+    setForgotLoading(true);
+    try {
+      const res = await ApiClient.lockerVerifyOtpAndResetPin({
+        userId: currentUser.id,
+        otp: forgotOtpInput.trim(),
+        newPin: forgotNewPinInput.trim(),
+      });
+      if (res.success) {
+        setUserLockerPin(forgotNewPinInput.trim());
+        setIsUnlocked(true);
+        setIsForgotPinModalOpen(false);
+        setForgotOtpInput('');
+        setForgotNewPinInput('');
+        setForgotConfirmPinInput('');
+        setForgotOtpStep('SEND_OTP');
+        Alert.alert(
+          language === 'hi' ? 'सफल' : 'Success',
+          language === 'hi' ? 'पिन रीसेट हो गया! लॉकर खुल गया है।' : 'PIN reset successfully! Vault unlocked.'
+        );
+      } else {
+        setForgotError(res.error || 'OTP verification failed.');
+      }
+    } catch (err: any) {
+      setForgotError(err.message || 'Error verifying OTP.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleChangePinSubmit = async () => {
+    setChangeError(null);
+    if (!/^\d{4}$/.test(changeOldPinInput.trim())) {
+      setChangeError(language === 'hi' ? 'वर्तमान पिन 4 अंकों का होना चाहिए।' : 'Current PIN must be exactly 4 numeric digits.');
+      return;
+    }
+    if (!/^\d{4}$/.test(changeNewPinInput.trim())) {
+      setChangeError(language === 'hi' ? 'नया पिन 4 अंकों का होना चाहिए।' : 'New PIN must be exactly 4 numeric digits.');
+      return;
+    }
+    if (changeNewPinInput.trim() !== changeConfirmPinInput.trim()) {
+      setChangeError(language === 'hi' ? 'नया पिन और पुष्टि पिन मेल नहीं खाते।' : 'New PIN and Confirm PIN do not match.');
+      return;
+    }
+    if (!currentUser?.id) return;
+
+    setChangeLoading(true);
+    try {
+      const res = await ApiClient.lockerChangePin({
+        userId: currentUser.id,
+        oldPin: changeOldPinInput.trim(),
+        newPin: changeNewPinInput.trim(),
+      });
+      if (res.success) {
+        setUserLockerPin(changeNewPinInput.trim());
+        setIsChangePinModalOpen(false);
+        setChangeOldPinInput('');
+        setChangeNewPinInput('');
+        setChangeConfirmPinInput('');
+        Alert.alert(
+          language === 'hi' ? 'सफल' : 'Success',
+          language === 'hi' ? 'सिक्योरिटी पिन अपडेट हो गया!' : 'Security PIN updated successfully!'
+        );
+      } else {
+        setChangeError(res.error || 'Failed to update PIN.');
+      }
+    } catch (err: any) {
+      setChangeError(err.message || 'Error updating PIN.');
+    } finally {
+      setChangeLoading(false);
+    }
+  };
+
   // Load Saved Session & Backend Documents
   const loadLockerData = async () => {
     if (!currentUser?.id) return;
@@ -218,6 +447,9 @@ export default function LockerScreen({
         setIsDriveConnected(!!res.user?.isLockerConnected);
         if (res.user?.googleDriveEmail) setDriveEmail(res.user.googleDriveEmail);
         if (res.user?.googleDriveFolderId) setRootFolderId(res.user.googleDriveFolderId);
+        if (res.user?.lockerPin !== undefined) {
+          setUserLockerPin(res.user.lockerPin || null);
+        }
       }
     } catch (err) {
       console.warn('[Locker] Load error:', err);
@@ -502,6 +734,369 @@ export default function LockerScreen({
   const textMuted = isDark ? '#94A3B8' : '#64748B';
   const borderColor = isDark ? '#2D3A5F' : '#E2E8F0';
 
+  // =========================================================================
+  // VIEW 0: LOADING STATE
+  // =========================================================================
+  if (loading && !isUnlocked) {
+    return (
+      <View style={[styles.container, { backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }]}>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={{ marginTop: 12, color: textMuted }}>
+          {language === 'hi' ? 'दस्तावेज़ लॉकर लोड हो रहा है...' : 'Accessing Document Locker...'}
+        </Text>
+      </View>
+    );
+  }
+
+  // =========================================================================
+  // VIEW 1: FIRST-TIME 4-DIGIT PIN SETUP SCREEN
+  // =========================================================================
+  if (!userLockerPin && !isUnlocked) {
+    return (
+      <View style={[styles.container, { backgroundColor: bg }]}>
+        <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: borderColor }]}>
+          <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <ArrowLeft size={22} color={textColor} />
+          </TouchableOpacity>
+          <View style={{ flex: 1, marginLeft: 8 }}>
+            <Text style={[styles.headerTitle, { color: textColor }]}>
+              {language === 'hi' ? 'सुरक्षा पिन सेटअप' : 'Security PIN Setup'}
+            </Text>
+          </View>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.pinContainer} showsVerticalScrollIndicator={false}>
+          <View style={[styles.pinCard, { backgroundColor: cardBg, borderColor }]}>
+            <View style={styles.lockIconCircle}>
+              <FolderLock size={32} color="#7C3AED" />
+            </View>
+
+            <Text style={[styles.pinTitle, { color: textColor }]}>
+              {language === 'hi' ? 'लॉकर पिन बनाएं' : 'Create Locker PIN'}
+            </Text>
+            <Text style={[styles.pinSub, { color: textMuted }]}>
+              {language === 'hi'
+                ? 'अपने प्रवेश पत्र, आवेदन पासवर्ड और निजी Google Drive फ़ाइलों को सुरक्षित रखने के लिए 4-अंकों का पिन बनाएं।'
+                : 'Protect your Admit Cards, Registration Passwords, and Personal Google Drive Folders with a 4-digit Security PIN.'}
+            </Text>
+
+            {pinError ? (
+              <View style={styles.pinErrorBox}>
+                <AlertCircle size={14} color="#EF4444" />
+                <Text style={styles.pinErrorText}>{pinError}</Text>
+              </View>
+            ) : null}
+
+            {setupStep === 'CREATE' ? (
+              <View style={{ width: '100%', marginTop: 20 }}>
+                <Text style={[styles.pinInputLabel, { color: textMuted }]}>
+                  {language === 'hi' ? '4-अंकों का नया पिन दर्ज करें' : 'ENTER 4-DIGIT PIN'}
+                </Text>
+                <TextInput
+                  style={[styles.pinInput, { color: textColor, borderColor, backgroundColor: isDark ? '#152238' : '#F8FAFC' }]}
+                  keyboardType="numeric"
+                  maxLength={4}
+                  secureTextEntry
+                  value={newPinInput}
+                  onChangeText={(val) => setNewPinInput(val.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="••••"
+                  placeholderTextColor={textMuted}
+                  autoFocus
+                />
+                <TouchableOpacity
+                  onPress={handleFirstTimePinNext}
+                  disabled={newPinInput.length !== 4}
+                  style={[styles.pinActionBtn, { opacity: newPinInput.length === 4 ? 1 : 0.5 }]}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.pinActionBtnText}>{language === 'hi' ? 'आगे बढ़ें' : 'Next Step'}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={{ width: '100%', marginTop: 20 }}>
+                <Text style={[styles.pinInputLabel, { color: textMuted }]}>
+                  {language === 'hi' ? 'पुष्टि करने के लिए दोबारा पिन दर्ज करें' : 'CONFIRM YOUR 4-DIGIT PIN'}
+                </Text>
+                <TextInput
+                  style={[styles.pinInput, { color: textColor, borderColor, backgroundColor: isDark ? '#152238' : '#F8FAFC' }]}
+                  keyboardType="numeric"
+                  maxLength={4}
+                  secureTextEntry
+                  value={confirmPinInput}
+                  onChangeText={(val) => setConfirmPinInput(val.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="••••"
+                  placeholderTextColor={textMuted}
+                  autoFocus
+                />
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSetupStep('CREATE');
+                      setConfirmPinInput('');
+                      setPinError(null);
+                    }}
+                    style={[styles.pinBackStepBtn, { borderColor }]}
+                  >
+                    <Text style={[styles.pinBackStepText, { color: textColor }]}>{language === 'hi' ? 'वापस' : 'Back'}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleFirstTimePinConfirm}
+                    disabled={confirmPinInput.length !== 4 || isSavingPin}
+                    style={[styles.pinActionBtn, { flex: 1, marginTop: 0, opacity: confirmPinInput.length === 4 ? 1 : 0.5 }]}
+                    activeOpacity={0.8}
+                  >
+                    {isSavingPin ? (
+                      <ActivityIndicator size="small" color="#FFF" />
+                    ) : (
+                      <Text style={styles.pinActionBtnText}>{language === 'hi' ? 'सहेजें और खोलें' : 'Save & Unlock'}</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // =========================================================================
+  // VIEW 2: LOCKER LOCKED SCREEN (KEYPAD & PIN ENTRY)
+  // =========================================================================
+  if (!isUnlocked) {
+    return (
+      <View style={[styles.container, { backgroundColor: bg }]}>
+        <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: borderColor }]}>
+          <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <ArrowLeft size={22} color={textColor} />
+          </TouchableOpacity>
+          <View style={{ flex: 1, marginLeft: 8 }}>
+            <Text style={[styles.headerTitle, { color: textColor }]}>
+              {language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}
+            </Text>
+            <Text style={[styles.headerSub, { color: textMuted }]}>
+              {language === 'hi' ? 'सुरक्षित लॉक' : 'Protected Vault'}
+            </Text>
+          </View>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.lockedContainer} showsVerticalScrollIndicator={false}>
+          <View style={[styles.lockedCard, { backgroundColor: cardBg, borderColor }]}>
+            <View style={styles.lockedIconBox}>
+              <Lock size={28} color="#7C3AED" />
+            </View>
+
+            <Text style={[styles.lockedTitle, { color: textColor }]}>
+              {language === 'hi' ? 'दस्तावेज़ लॉकर लॉक है' : 'Document Locker Locked'}
+            </Text>
+            <View style={{ width: '100%', marginTop: 20 }}>
+              <Text style={[styles.pinInputLabel, { color: textMuted }]}>
+                {language === 'hi' ? '4-अंकों का सिक्योरिटी पिन दर्ज करें' : 'ENTER 4-DIGIT PIN'}
+              </Text>
+              <TextInput
+                style={[styles.pinInput, { color: textColor, borderColor, backgroundColor: isDark ? '#152238' : '#F8FAFC' }]}
+                keyboardType="numeric"
+                maxLength={4}
+                secureTextEntry
+                value={enteredPin}
+                onChangeText={(val) => {
+                  const cleaned = val.replace(/\D/g, '').slice(0, 4);
+                  setEnteredPin(cleaned);
+                  setPinError(null);
+                  if (cleaned.length === 4) {
+                    verifyEnteredPin(cleaned);
+                  }
+                }}
+                placeholder="••••"
+                placeholderTextColor={textMuted}
+                autoFocus
+              />
+
+              {pinError ? (
+                <View style={[styles.pinErrorBox, { marginTop: 12 }]}>
+                  <AlertCircle size={14} color="#EF4444" />
+                  <Text style={styles.pinErrorText}>{pinError}</Text>
+                </View>
+              ) : isPinVerifying ? (
+                <Text style={[styles.pinVerifyingText, { color: '#7C3AED', marginTop: 10, textAlign: 'center' }]}>
+                  {language === 'hi' ? 'सत्यापित हो रहा है...' : 'Verifying PIN...'}
+                </Text>
+              ) : null}
+
+              <TouchableOpacity
+                onPress={() => verifyEnteredPin(enteredPin)}
+                disabled={enteredPin.length !== 4 || isPinVerifying}
+                style={[styles.pinActionBtn, { marginTop: 16, opacity: enteredPin.length === 4 && !isPinVerifying ? 1 : 0.5 }]}
+                activeOpacity={0.8}
+              >
+                {isPinVerifying ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Text style={styles.pinActionBtnText}>
+                    {language === 'hi' ? 'वॉल्ट खोलें' : 'Unlock Vault'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.lockedFooter, { borderTopColor: borderColor }]}>
+              <TouchableOpacity
+                onPress={() => {
+                  setForgotError(null);
+                  setForgotOtpInput('');
+                  setForgotNewPinInput('');
+                  setForgotConfirmPinInput('');
+                  setForgotOtpStep('SEND_OTP');
+                  setIsForgotPinModalOpen(true);
+                }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.forgotPinText}>{language === 'hi' ? 'पिन भूल गए?' : 'Forgot PIN?'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* FORGOT PIN MODAL */}
+        {isForgotPinModalOpen && (
+          <Modal visible={isForgotPinModalOpen} transparent animationType="fade">
+            <View style={styles.modalOverlay}>
+              <View style={[styles.modalBox, { backgroundColor: cardBg, maxWidth: 360 }]}>
+                <View style={styles.modalHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={styles.smallIconCircle}>
+                      <Mail size={16} color="#7C3AED" />
+                    </View>
+                    <Text style={[styles.modalTitle, { color: textColor }]}>
+                      {language === 'hi' ? 'Gmail OTP से रीसेट करें' : 'Reset PIN via Gmail OTP'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setIsForgotPinModalOpen(false)}>
+                    <X size={20} color={textMuted} />
+                  </TouchableOpacity>
+                </View>
+
+                {forgotError ? (
+                  <View style={styles.pinErrorBox}>
+                    <AlertCircle size={14} color="#EF4444" />
+                    <Text style={styles.pinErrorText}>{forgotError}</Text>
+                  </View>
+                ) : null}
+
+                {forgotOtpStep === 'SEND_OTP' ? (
+                  <View style={{ paddingVertical: 12, alignItems: 'center' }}>
+                    <View style={[styles.cloudIconBox, { backgroundColor: '#EFF6FF', marginBottom: 12 }]}>
+                      <Send size={24} color="#2563EB" />
+                    </View>
+                    <Text style={[styles.statusTitle, { color: textColor, textAlign: 'center' }]}>
+                      {language === 'hi' ? 'सत्यापन कोड भेजें' : 'Send Verification Code'}
+                    </Text>
+                    <Text style={[styles.statusDesc, { color: textMuted, textAlign: 'center', marginTop: 6 }]}>
+                      {language === 'hi'
+                        ? 'आपके पंजीकृत खाते पर 6-अंकों का OTP भेजा जाएगा।'
+                        : 'A 6-digit verification code will be sent to your connected email.'}
+                    </Text>
+
+                    <TouchableOpacity
+                      onPress={handleSendResetOtp}
+                      disabled={forgotLoading}
+                      style={[styles.pinActionBtn, { width: '100%', marginTop: 20 }]}
+                      activeOpacity={0.8}
+                    >
+                      {forgotLoading ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                      ) : (
+                        <Text style={styles.pinActionBtnText}>
+                          {language === 'hi' ? 'Gmail पर OTP भेजें' : 'Send OTP to Gmail'}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <ScrollView showsVerticalScrollIndicator={false} style={{ marginTop: 8 }}>
+                    <View style={styles.otpSuccessBanner}>
+                      <CheckCircle2 size={16} color="#10B981" />
+                      <Text style={styles.otpSuccessText}>
+                        OTP sent to {maskedTargetEmail || 'your email'}
+                      </Text>
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: textMuted, marginTop: 12 }]}>
+                      ENTER 6-DIGIT OTP *
+                    </Text>
+                    <TextInput
+                      style={[styles.modalInput, { color: textColor, borderColor, backgroundColor: isDark ? '#152238' : '#F8FAFC' }]}
+                      keyboardType="numeric"
+                      maxLength={6}
+                      value={forgotOtpInput}
+                      onChangeText={(v) => setForgotOtpInput(v.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="123456"
+                      placeholderTextColor={textMuted}
+                    />
+
+                    <Text style={[styles.inputLabel, { color: textMuted, marginTop: 12 }]}>
+                      NEW 4-DIGIT PIN *
+                    </Text>
+                    <TextInput
+                      style={[styles.modalInput, { color: textColor, borderColor, backgroundColor: isDark ? '#152238' : '#F8FAFC' }]}
+                      keyboardType="numeric"
+                      maxLength={4}
+                      secureTextEntry
+                      value={forgotNewPinInput}
+                      onChangeText={(v) => setForgotNewPinInput(v.replace(/\D/g, '').slice(0, 4))}
+                      placeholder="••••"
+                      placeholderTextColor={textMuted}
+                    />
+
+                    <Text style={[styles.inputLabel, { color: textMuted, marginTop: 12 }]}>
+                      CONFIRM NEW PIN *
+                    </Text>
+                    <TextInput
+                      style={[styles.modalInput, { color: textColor, borderColor, backgroundColor: isDark ? '#152238' : '#F8FAFC' }]}
+                      keyboardType="numeric"
+                      maxLength={4}
+                      secureTextEntry
+                      value={forgotConfirmPinInput}
+                      onChangeText={(v) => setForgotConfirmPinInput(v.replace(/\D/g, '').slice(0, 4))}
+                      placeholder="••••"
+                      placeholderTextColor={textMuted}
+                    />
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+                      <TouchableOpacity
+                        onPress={handleSendResetOtp}
+                        disabled={resendCooldown > 0 || forgotLoading}
+                      >
+                        <Text style={[styles.resendOtpText, { opacity: resendCooldown > 0 ? 0.5 : 1 }]}>
+                          {resendCooldown > 0 ? `Resend (${resendCooldown}s)` : 'Resend OTP'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={handleVerifyOtpAndResetPin}
+                        disabled={forgotLoading || forgotOtpInput.length !== 6 || forgotNewPinInput.length !== 4}
+                        style={[styles.submitBtn, { opacity: forgotOtpInput.length === 6 && forgotNewPinInput.length === 4 ? 1 : 0.5 }]}
+                      >
+                        {forgotLoading ? (
+                          <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                          <Text style={styles.submitBtnText}>{language === 'hi' ? 'रीसेट करें' : 'Set PIN & Unlock'}</Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </ScrollView>
+                )}
+              </View>
+            </View>
+          </Modal>
+        )}
+      </View>
+    );
+  }
+
+  // =========================================================================
+  // VIEW 3: UNLOCKED DASHBOARD
+  // =========================================================================
   return (
     <View style={[styles.container, { backgroundColor: bg }]}>
       {/* Header */}
@@ -522,14 +1117,39 @@ export default function LockerScreen({
             {language === 'hi' ? 'निजी एवं 100% सुरक्षित' : 'Private & Secure Exam Storage'}
           </Text>
         </View>
-        <TouchableOpacity
-          onPress={() => setIsUploadModalOpen(true)}
-          style={styles.addBtn}
-          activeOpacity={0.8}
-        >
-          <Plus size={16} color="#FFF" />
-          <Text style={styles.addBtnText}>{language === 'hi' ? 'जोड़ें' : 'Upload'}</Text>
-        </TouchableOpacity>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <TouchableOpacity
+            onPress={() => {
+              setChangeError(null);
+              setChangeOldPinInput('');
+              setChangeNewPinInput('');
+              setChangeConfirmPinInput('');
+              setIsChangePinModalOpen(true);
+            }}
+            style={[styles.iconHeaderBtn, { backgroundColor: isDark ? '#152238' : '#F1F5F9' }]}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <KeyRound size={16} color="#7C3AED" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleLockVault}
+            style={[styles.iconHeaderBtn, { backgroundColor: isDark ? '#152238' : '#F1F5F9' }]}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <Lock size={16} color="#EF4444" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setIsUploadModalOpen(true)}
+            style={styles.addBtn}
+            activeOpacity={0.8}
+          >
+            <Plus size={16} color="#FFF" />
+            <Text style={styles.addBtnText}>{language === 'hi' ? 'जोड़ें' : 'Upload'}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -586,7 +1206,7 @@ export default function LockerScreen({
         <View style={[styles.searchBar, { backgroundColor: cardBg, borderColor }]}>
           <Search size={16} color={textMuted} />
           <TextInput
-            placeholder={language === 'hi' ? 'परीक्षा नाम या शीर्षक से खोजें...' : 'Search by exam (SSC, CTET) or title...'}
+            placeholder={language === 'hi' ? 'परीक्षा नाम या शीर्षक से खोजें...' : 'Search by exam or title...'}
             placeholderTextColor={textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -599,7 +1219,7 @@ export default function LockerScreen({
           )}
         </View>
 
-        {/* Category Horizontal Filter Pills */}
+        {/* Category Filter Pills */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsRow}>
           {CATEGORIES.map((cat) => {
             const isActive = activeCategory === cat.id;
@@ -765,7 +1385,6 @@ export default function LockerScreen({
               </View>
 
               <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 450 }}>
-                {/* Pick Options Row */}
                 <Text style={[styles.inputLabel, { color: textMuted }]}>SELECT SOURCE *</Text>
                 <View style={styles.sourceButtonsRow}>
                   <TouchableOpacity onPress={handlePickDocument} style={styles.sourceBtn}>
@@ -793,7 +1412,6 @@ export default function LockerScreen({
                   </View>
                 )}
 
-                {/* Title */}
                 <Text style={[styles.inputLabel, { color: textMuted, marginTop: 12 }]}>DOCUMENT TITLE *</Text>
                 <TextInput
                   placeholder="e.g. SSC CGL 2026 Admit Card"
@@ -803,7 +1421,6 @@ export default function LockerScreen({
                   style={[styles.modalInput, { color: textColor, borderColor }]}
                 />
 
-                {/* Doc Type Selector */}
                 <Text style={[styles.inputLabel, { color: textMuted, marginTop: 12 }]}>CATEGORY *</Text>
                 <View style={styles.categoryPickerRow}>
                   {['ADMIT_CARD', 'APPLICATION_FORM', 'PHOTO', 'SIGNATURE', 'CERTIFICATE', 'ID_PROOF'].map((t) => (
@@ -829,7 +1446,6 @@ export default function LockerScreen({
                   ))}
                 </View>
 
-                {/* Exam Name & Year */}
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.inputLabel, { color: textMuted }]}>EXAM NAME</Text>
@@ -872,7 +1488,7 @@ export default function LockerScreen({
                   disabled={uploading}
                   style={styles.cancelBtn}
                 >
-                  <Text style={[styles.cancelBtnText, { color: textMuted }]}>Cancel</Text>
+                  <Text style={[styles.cancelBtnText, { color: textMuted }]}>{language === 'hi' ? 'रद्द करें' : 'Cancel'}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -883,7 +1499,90 @@ export default function LockerScreen({
                   {uploading ? (
                     <ActivityIndicator size="small" color="#FFF" />
                   ) : (
-                    <Text style={styles.submitBtnText}>Save to Drive</Text>
+                    <Text style={styles.submitBtnText}>{language === 'hi' ? 'ड्राइव में सहेजें' : 'Save to Drive'}</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* Change PIN Modal */}
+      {isChangePinModalOpen && (
+        <Modal visible={isChangePinModalOpen} transparent animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalBox, { backgroundColor: cardBg, maxWidth: 360 }]}>
+              <View style={styles.modalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={styles.smallIconCircle}>
+                    <KeyRound size={16} color="#7C3AED" />
+                  </View>
+                  <Text style={[styles.modalTitle, { color: textColor }]}>
+                    {language === 'hi' ? 'सिक्योरिटी पिन बदलें' : 'Change Security PIN'}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setIsChangePinModalOpen(false)}>
+                  <X size={20} color={textMuted} />
+                </TouchableOpacity>
+              </View>
+
+              {changeError ? (
+                <View style={styles.pinErrorBox}>
+                  <AlertCircle size={14} color="#EF4444" />
+                  <Text style={styles.pinErrorText}>{changeError}</Text>
+                </View>
+              ) : null}
+
+              <Text style={[styles.inputLabel, { color: textMuted, marginTop: 10 }]}>CURRENT 4-DIGIT PIN *</Text>
+              <TextInput
+                style={[styles.modalInput, { color: textColor, borderColor, backgroundColor: isDark ? '#152238' : '#F8FAFC' }]}
+                keyboardType="numeric"
+                maxLength={4}
+                secureTextEntry
+                value={changeOldPinInput}
+                onChangeText={(v) => setChangeOldPinInput(v.replace(/\D/g, '').slice(0, 4))}
+                placeholder="••••"
+                placeholderTextColor={textMuted}
+              />
+
+              <Text style={[styles.inputLabel, { color: textMuted, marginTop: 10 }]}>NEW 4-DIGIT PIN *</Text>
+              <TextInput
+                style={[styles.modalInput, { color: textColor, borderColor, backgroundColor: isDark ? '#152238' : '#F8FAFC' }]}
+                keyboardType="numeric"
+                maxLength={4}
+                secureTextEntry
+                value={changeNewPinInput}
+                onChangeText={(v) => setChangeNewPinInput(v.replace(/\D/g, '').slice(0, 4))}
+                placeholder="••••"
+                placeholderTextColor={textMuted}
+              />
+
+              <Text style={[styles.inputLabel, { color: textMuted, marginTop: 10 }]}>CONFIRM NEW PIN *</Text>
+              <TextInput
+                style={[styles.modalInput, { color: textColor, borderColor, backgroundColor: isDark ? '#152238' : '#F8FAFC' }]}
+                keyboardType="numeric"
+                maxLength={4}
+                secureTextEntry
+                value={changeConfirmPinInput}
+                onChangeText={(v) => setChangeConfirmPinInput(v.replace(/\D/g, '').slice(0, 4))}
+                placeholder="••••"
+                placeholderTextColor={textMuted}
+              />
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity onPress={() => setIsChangePinModalOpen(false)} style={styles.cancelBtn}>
+                  <Text style={[styles.cancelBtnText, { color: textMuted }]}>{language === 'hi' ? 'रद्द करें' : 'Cancel'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleChangePinSubmit}
+                  disabled={changeLoading || changeNewPinInput.length !== 4 || changeOldPinInput.length !== 4}
+                  style={[styles.submitBtn, { opacity: changeNewPinInput.length === 4 && changeOldPinInput.length === 4 ? 1 : 0.5 }]}
+                >
+                  {changeLoading ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Text style={styles.submitBtnText}>{language === 'hi' ? 'पिन अपडेट करें' : 'Update PIN'}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -898,7 +1597,7 @@ export default function LockerScreen({
           <View style={styles.modalOverlay}>
             <View style={[styles.modalBox, { backgroundColor: cardBg, maxHeight: '80%' }]}>
               <View style={styles.modalHeader}>
-                <Text style={[styles.modalTitle, { color: textColor }]} numberOfLines={1}>
+                <Text style={[styles.modalTitle, { color: textColor }]}>
                   {previewDoc.title}
                 </Text>
                 <TouchableOpacity onPress={() => setPreviewDoc(null)}>
@@ -1013,6 +1712,13 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 11,
     fontWeight: 'bold',
+  },
+  iconHeaderBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scrollContent: {
     padding: 16,
@@ -1303,6 +2009,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
   },
+  smallIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   inputLabel: {
     fontSize: 9,
     fontWeight: '900',
@@ -1473,6 +2187,227 @@ const styles = StyleSheet.create({
   confirmDeleteText: {
     color: '#FFF',
     fontSize: 12,
+    fontWeight: 'bold',
+  },
+
+  // PIN Styles
+  pinContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  pinCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  lockIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  pinTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  pinSub: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 10,
+  },
+  pinErrorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginTop: 12,
+    width: '100%',
+  },
+  pinErrorText: {
+    color: '#EF4444',
+    fontSize: 11,
+    fontWeight: '600',
+    flex: 1,
+  },
+  pinInputLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  pinInput: {
+    width: '100%',
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1,
+    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: 8,
+  },
+  pinActionBtn: {
+    backgroundColor: '#7C3AED',
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  pinActionBtnText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  pinBackStepBtn: {
+    height: 48,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pinBackStepText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+
+  // Locked Screen Styles
+  lockedContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  lockedCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  lockedIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  lockedTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  lockedSub: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginVertical: 20,
+  },
+  pinDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+  },
+  pinErrInline: {
+    color: '#EF4444',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  pinVerifyingText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  keypadGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    width: 250,
+    gap: 12,
+    marginTop: 8,
+  },
+  keypadBtn: {
+    width: 68,
+    height: 56,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  keypadDigit: {
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  keypadControlText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  lockedFooter: {
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: 16,
+    marginTop: 18,
+    borderTopWidth: 1,
+  },
+  forgotPinText: {
+    color: '#7C3AED',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  otpSuccessBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    padding: 10,
+    borderRadius: 10,
+  },
+  otpSuccessText: {
+    fontSize: 11,
+    color: '#059669',
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  resendOtpText: {
+    color: '#7C3AED',
+    fontSize: 11,
     fontWeight: 'bold',
   },
 });

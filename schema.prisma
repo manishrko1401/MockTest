@@ -65,6 +65,8 @@ model User {
   isLockerConnected       Boolean            @default(false)
   googleDriveEmail        String?
   googleDriveFolderId     String?
+  lockerPin               String?
+  lockerPinSetAt          DateTime?
   lockerDocuments         LockerDocument[]
 
   @@map("users")

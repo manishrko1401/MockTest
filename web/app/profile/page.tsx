@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, ChevronDown, ChevronUp, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon, Globe, ArrowLeft, ShieldCheck, Menu, X, Eye, EyeOff, Coins, Trophy, Bookmark, BookmarkCheck, ArrowUpRight, Trash2 } from 'lucide-react';
+import { User, Lock, Calendar, AlertCircle, CheckCircle2, ChevronRight, ChevronDown, ChevronUp, LayoutDashboard, LogOut, KeyRound, Gift, Phone, Sun, Moon, Globe, ArrowLeft, ShieldCheck, Menu, X, Eye, EyeOff, Coins, Trophy, Bookmark, BookmarkCheck, ArrowUpRight, Trash2, FolderLock, FolderOpen, Copy, Check, Briefcase, Sparkles } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 
@@ -16,9 +16,19 @@ export default function StudentProfilePage() {
   // Tracked Jobs State (Saved & Applied)
   const [trackedJobs, setTrackedJobs] = useState<any[]>([]);
   const [jobFilter, setJobFilter] = useState<'all' | 'applied' | 'saved'>('all');
+  const [visiblePasswords, setVisiblePasswords] = useState<{ [key: string]: boolean }>({});
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Confirmation Modal State for Job Removal
   const [jobToRemove, setJobToRemove] = useState<{ noticeId: string; title: string } | null>(null);
+
+  const copyToClipboard = (text: string, key: string) => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2500);
+    }
+  };
 
   useEffect(() => {
     if (!currentUser) return;
@@ -338,6 +348,7 @@ export default function StudentProfilePage() {
               
               <div className="flex items-center gap-1.5 flex-wrap self-start sm:self-auto">
                 <button
+                  type="button"
                   onClick={() => setJobFilter('all')}
                   className={`px-3 py-1 rounded-xl text-xs font-extrabold transition cursor-pointer ${
                     jobFilter === 'all'
@@ -348,6 +359,7 @@ export default function StudentProfilePage() {
                   {language === 'hi' ? 'सभी' : 'All'} ({trackedJobs.length})
                 </button>
                 <button
+                  type="button"
                   onClick={() => setJobFilter('applied')}
                   className={`px-3 py-1 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1 ${
                     jobFilter === 'applied'
@@ -359,6 +371,7 @@ export default function StudentProfilePage() {
                   {language === 'hi' ? 'आवेदन किया गया' : 'Applied'} ({trackedJobs.filter(j => j.isApplied).length})
                 </button>
                 <button
+                  type="button"
                   onClick={() => setJobFilter('saved')}
                   className={`px-3 py-1 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1 ${
                     jobFilter === 'saved'
@@ -380,9 +393,10 @@ export default function StudentProfilePage() {
                   .map((job: any) => (
                     <div 
                       key={job.noticeId}
-                      className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-955 border border-slate-200/80 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 group hover:border-blue-300 dark:hover:border-blue-700 transition"
+                      className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-955 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between gap-2.5 group hover:border-blue-300 dark:hover:border-blue-700 transition"
                     >
-                      <div className="space-y-1.5 min-w-0">
+                      {/* Top Badges & Locker Link */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
                         <div className="flex items-center gap-2 flex-wrap">
                           {job.isApplied && (
                             <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[9px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
@@ -396,47 +410,56 @@ export default function StudentProfilePage() {
                           )}
                           {job.appliedDate && (
                             <span className="text-[10px] text-slate-500 font-bold bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-800">
-                              📅 Applied Date: {job.appliedDate}
-                            </span>
-                          )}
-                          {job.applicationNo && (
-                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-extrabold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-900">
-                              Reg / Roll No: {job.applicationNo}
+                              📅 Applied: {job.appliedDate}
                             </span>
                           )}
                         </div>
 
-                        <h4 className="font-bold text-xs sm:text-sm text-slate-850 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
+                        {job.isApplied && (
+                          <Link
+                            href={`/locker?exam=${encodeURIComponent(job.title)}`}
+                            className="px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 text-[11px] font-bold transition flex items-center gap-1 shrink-0"
+                          >
+                            <FolderLock className="h-3 w-3" />
+                            <span>Locker</span>
+                          </Link>
+                        )}
+                      </div>
+
+                      {/* Exam Title & Details Action on Same Horizontal Line */}
+                      <div className="flex items-center justify-between gap-3 min-w-0">
+                        <h4 className="font-bold text-xs sm:text-sm text-slate-850 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug flex-1 min-w-0">
                           {job.title}
                         </h4>
 
-                        <div className="flex items-center gap-3 text-[10px] text-slate-400 font-semibold flex-wrap">
-                          {job.date && <span>Notice Date: {job.date}</span>}
-                          {job.lastDate && (
-                            <span className="text-rose-600 font-bold uppercase tracking-wider">
-                              Deadline: {job.lastDate}
-                            </span>
-                          )}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Link
+                            href={`/updates/${job.noticeId}`}
+                            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
+                          >
+                            <span>Details</span>
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </Link>
+                          
+                          <button
+                            type="button"
+                            onClick={() => setJobToRemove({ noticeId: job.noticeId, title: job.title })}
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                            title="Remove from Tracker"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-200/60 dark:border-slate-800">
-                        <Link
-                          href={`/updates/${job.noticeId}`}
-                          className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
-                        >
-                          <span>View Details</span>
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </Link>
-                        
-                        <button
-                          type="button"
-                          onClick={() => setJobToRemove({ noticeId: job.noticeId, title: job.title })}
-                          className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                          title="Remove from Tracker"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
+                      {/* Dates Footer */}
+                      <div className="flex items-center gap-3 text-[10px] text-slate-400 font-semibold flex-wrap pt-0.5 border-t border-slate-100 dark:border-slate-800/60">
+                        {job.date && <span>Notice Date: {job.date}</span>}
+                        {job.lastDate && (
+                          <span className="text-rose-600 font-bold uppercase tracking-wider">
+                            Deadline: {job.lastDate}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -875,9 +898,10 @@ export default function StudentProfilePage() {
                   .map((job: any) => (
                     <div 
                       key={job.noticeId}
-                      className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-955 border border-slate-200/80 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 group hover:border-blue-300 dark:hover:border-blue-700 transition"
+                      className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-955 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between gap-2.5 group hover:border-blue-300 dark:hover:border-blue-700 transition"
                     >
-                      <div className="space-y-1.5 min-w-0">
+                      {/* Top Badges & Locker Link */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
                         <div className="flex items-center gap-2 flex-wrap">
                           {job.isApplied && (
                             <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[9px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
@@ -891,47 +915,56 @@ export default function StudentProfilePage() {
                           )}
                           {job.appliedDate && (
                             <span className="text-[10px] text-slate-500 font-bold bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-800">
-                              📅 Applied Date: {job.appliedDate}
-                            </span>
-                          )}
-                          {job.applicationNo && (
-                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-extrabold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-900">
-                              Reg / Roll No: {job.applicationNo}
+                              📅 Applied: {job.appliedDate}
                             </span>
                           )}
                         </div>
 
-                        <h4 className="font-bold text-xs sm:text-sm text-slate-850 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
+                        {job.isApplied && (
+                          <Link
+                            href={`/locker?exam=${encodeURIComponent(job.title)}`}
+                            className="px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 text-[11px] font-bold transition flex items-center gap-1 shrink-0"
+                          >
+                            <FolderLock className="h-3 w-3" />
+                            <span>Document Locker</span>
+                          </Link>
+                        )}
+                      </div>
+
+                      {/* Exam Title & Details Action on Same Horizontal Line */}
+                      <div className="flex items-center justify-between gap-3 min-w-0">
+                        <h4 className="font-bold text-xs sm:text-sm text-slate-850 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug flex-1 min-w-0">
                           {job.title}
                         </h4>
 
-                        <div className="flex items-center gap-3 text-[10px] text-slate-400 font-semibold flex-wrap">
-                          {job.date && <span>Notice Date: {job.date}</span>}
-                          {job.lastDate && (
-                            <span className="text-rose-600 font-bold uppercase tracking-wider">
-                              Deadline: {job.lastDate}
-                            </span>
-                          )}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Link
+                            href={`/updates/${job.noticeId}`}
+                            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
+                          >
+                            <span>Details</span>
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </Link>
+                          
+                          <button
+                            type="button"
+                            onClick={() => setJobToRemove({ noticeId: job.noticeId, title: job.title })}
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                            title="Remove from Tracker"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-200/60 dark:border-slate-800">
-                        <Link
-                          href={`/updates/${job.noticeId}`}
-                          className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
-                        >
-                          <span>View Details</span>
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </Link>
-                        
-                        <button
-                          type="button"
-                          onClick={() => setJobToRemove({ noticeId: job.noticeId, title: job.title })}
-                          className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                          title="Remove from Tracker"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
+                      {/* Dates Footer */}
+                      <div className="flex items-center gap-3 text-[10px] text-slate-400 font-semibold flex-wrap pt-0.5 border-t border-slate-100 dark:border-slate-800/60">
+                        {job.date && <span>Notice Date: {job.date}</span>}
+                        {job.lastDate && (
+                          <span className="text-rose-600 font-bold uppercase tracking-wider">
+                            Deadline: {job.lastDate}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}

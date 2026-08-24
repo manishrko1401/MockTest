@@ -43,7 +43,7 @@ export const TRANSLATIONS = {
     // Updates Page
     updatesTitle: "Live Updates & Examination Alerts",
     updatesDesc: "Browse newly declared results, print call letters, and check announcements across active SSC, Railways, and Teaching mock series.",
-    liveNotices: "Live Notices & Announcements",
+    liveNotices: "Live Notices",
     admitCards: "Admit Cards & City Info",
     resultsMerits: "Results & Merit Lists",
     newBadge: "NEW",
@@ -221,7 +221,28 @@ export const TRANSLATIONS = {
     referralStep1: "Account Registered",
     referralStep2: "First Test Attempt",
     referralStatusPending: "Waiting for test attempt...",
-    referralStatusCompleted: "Completed! Coins Credited"
+    referralStatusCompleted: "Completed! Coins Credited",
+
+    // Document Locker & Exam Vault
+    lockerTitle: "Document Locker & Exam Vault",
+    lockerDesc: "Securely store your exam credentials, admit cards, application forms, and sync them directly to your Google Drive.",
+    appliedExamsVault: "Applied Exams Vault",
+    appliedExamsVaultDesc: "All your applied exams with quick access to registration credentials and Google Drive folders.",
+    examCredentials: "Exam Credentials",
+    regNumber: "Registration / Application No",
+    portalPassword: "Login Password / DOB",
+    rollNumber: "Roll Number",
+    examDate: "Exam Date",
+    examCenter: "Exam Center / City",
+    shiftTime: "Shift / Timing",
+    openLocker: "Open Locker",
+    openInDrive: "Open in Google Drive",
+    editCredentials: "Edit Credentials",
+    uploadExamDoc: "Upload Exam Document",
+    noAppliedExams: "No applied exams yet",
+    noAppliedExamsDesc: "Mark exams as 'Applied' from Live Notices or add them here to store registration details & documents.",
+    addAppliedExam: "Add Applied Exam",
+    copySuccess: "Copied to clipboard!"
   },
   hi: {
     // Header & Navigation
@@ -267,7 +288,7 @@ export const TRANSLATIONS = {
     // Updates Page
     updatesTitle: "लाइव अपडेट और परीक्षा अलर्ट",
     updatesDesc: "सक्रिय एसएससी, रेलवे और शिक्षण मॉक सीरीज के नवनिर्धारित परिणामों को ब्राउज़ करें, कॉल लेटर डाउनलोड करें और घोषणाओं की जांच करें।",
-    liveNotices: "लाइव सूचनाएं और घोषणाएं",
+    liveNotices: "लाइव सूचनाएं",
     admitCards: "एडमिट कार्ड और शहर की जानकारी",
     resultsMerits: "परिणाम & मेरिट सूचियां",
     newBadge: "नया",
@@ -445,6 +466,27 @@ export const TRANSLATIONS = {
     referralStep1: "खाता पंजीकृत",
     referralStep2: "पहला टेस्ट प्रयास",
     referralStatusPending: "टेस्ट प्रयास की प्रतीक्षा...",
-    referralStatusCompleted: "पूर्ण! कॉइन्स क्रेडिट कर दिए गए"
+    referralStatusCompleted: "पूर्ण! कॉइन्स क्रेडिट कर दिए गए",
+
+    // Document Locker & Exam Vault
+    lockerTitle: "दस्तावेज़ लॉकर और परीक्षा वॉल्ट",
+    lockerDesc: "अपनी परीक्षा क्रेडेंशियल्स, प्रवेश पत्र, आवेदन पत्र सुरक्षित रूप से संग्रहीत करें और उन्हें सीधे अपने Google ड्राइव में सिंक करें।",
+    appliedExamsVault: "आवेदन की गई परीक्षाएँ वॉल्ट",
+    appliedExamsVaultDesc: "आपकी सभी आवेदन की गई परीक्षाएँ, पंजीकरण क्रेडेंशियल्स और Google ड्राइव फ़ोल्डर तक त्वरित पहुँच।",
+    examCredentials: "परीक्षा क्रेडेंशियल्स",
+    regNumber: "पंजीकरण / आवेदन संख्या",
+    portalPassword: "लॉगिन पासवर्ड / जन्म तिथि",
+    rollNumber: "रोल नंबर",
+    examDate: "परीक्षा तिथि",
+    examCenter: "परीक्षा केंद्र / शहर",
+    shiftTime: "शिफ्ट / समय",
+    openLocker: "लॉकर खोलें",
+    openInDrive: "Google ड्राइव में खोलें",
+    editCredentials: "क्रेडेंशियल्स संपादित करें",
+    uploadExamDoc: "परीक्षा दस्तावेज़ अपलोड करें",
+    noAppliedExams: "अभी तक कोई आवेदन की गई परीक्षा नहीं है",
+    noAppliedExamsDesc: "पंजीकरण विवरण और दस्तावेज़ संग्रहीत करने के लिए लाइव नोटिस से परीक्षाओं को 'Applied' चिह्नित करें या यहाँ जोड़ें।",
+    addAppliedExam: "आवेदन की गई परीक्षा जोड़ें",
+    copySuccess: "क्लिपबोर्ड पर कॉपी किया गया!"
   }
 };

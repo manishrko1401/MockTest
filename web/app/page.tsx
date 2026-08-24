@@ -10,6 +10,7 @@ import { TRANSLATIONS } from './translations';
 import { getLocalizedName } from './lib/examUtils';
 import { useIsMobile } from './useIsMobile';
 import VocabSection from './components/VocabSection';
+import BackgroundArts from './components/BackgroundArts';
 
 const EXAMS_BY_CATEGORY: Record<string, { id: string; name: string }[]> = {
   ssc: [
@@ -291,17 +292,24 @@ const formatSubCategoryName = (name: string) => {
     };
 
     const hoverBorderColors = {
-      blue: 'hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50/40 dark:hover:bg-blue-950/40',
-      amber: 'hover:border-amber-400 dark:hover:border-amber-600 hover:bg-amber-50/40 dark:hover:bg-amber-950/40',
-      emerald: 'hover:border-emerald-400 dark:hover:border-emerald-600 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/40',
-      purple: 'hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-50/40 dark:hover:bg-purple-950/40',
+      blue: 'hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/50',
+      amber: 'hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/50',
+      emerald: 'hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/50',
+      purple: 'hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-950/50',
+    };
+
+    const hoverShadowColors = {
+      blue: 'hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.35),0_0_16px_rgba(59,130,246,0.18)]',
+      amber: 'hover:shadow-[0_12px_24px_-6px_rgba(245,158,11,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(245,158,11,0.35),0_0_16px_rgba(245,158,11,0.18)]',
+      emerald: 'hover:shadow-[0_12px_24px_-6px_rgba(16,185,129,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(16,185,129,0.35),0_0_16px_rgba(16,185,129,0.18)]',
+      purple: 'hover:shadow-[0_12px_24px_-6px_rgba(168,85,247,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(168,85,247,0.35),0_0_16px_rgba(168,85,247,0.18)]',
     };
 
     return (
       <div
         key={notice.id}
         onClick={() => router.push(`/updates/${notice.id}`)}
-        className={`group w-full bg-slate-50/90 dark:bg-slate-950/70 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/90 dark:border-slate-800 ${hoverBorderColors[themeColor]} rounded-2xl p-4 shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col gap-2`}
+        className={`group w-full bg-slate-50/90 dark:bg-slate-950/70 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/90 dark:border-slate-800 ${hoverBorderColors[themeColor]} ${hoverShadowColors[themeColor]} rounded-2xl p-4 shadow-2xs transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer flex flex-col gap-2 relative`}
       >
         {/* Top Badges & Date */}
         <div className="flex items-center justify-between gap-2 w-full">
@@ -310,7 +318,7 @@ const formatSubCategoryName = (name: string) => {
               {notice.type}
             </span>
             {isNewlyPublished(notice.publishDate) && (
-              <span className="bg-rose-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider animate-pulse shadow-2xs">
+              <span className="bg-rose-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow-2xs">
                 {t.newBadge}
               </span>
             )}
@@ -446,7 +454,8 @@ const formatSubCategoryName = (name: string) => {
     return (
       <>
         <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
-        {/* Mobile Orbs */}
+        {/* Mobile Background Arts & Orbs */}
+        <BackgroundArts isMobile={true} />
         <div className="absolute top-10 -left-20 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute top-[50%] -right-20 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -731,6 +740,15 @@ const formatSubCategoryName = (name: string) => {
 
           {/* 2. CENTERED HERO TITLE SECTION */}
           <section className="text-center pt-2 pb-2 space-y-3 relative z-10 flex flex-col items-center justify-center">
+            {/* Festive Illustration above badge */}
+            <div className="w-full flex items-center justify-center -mb-1 animate-in fade-in zoom-in-95 duration-300">
+              <img
+                src="/festive-hero.png"
+                alt="Festive Celebration"
+                className="w-auto h-auto max-h-[140px] sm:max-h-[160px] object-contain drop-shadow-md pointer-events-none select-none"
+              />
+            </div>
+
             {/* For Students, By Students Badge Below Offer Banner */}
             <span className="inline-flex items-center gap-1 bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider shadow-xs">
               {t.heroBadge}
@@ -910,7 +928,7 @@ const formatSubCategoryName = (name: string) => {
                                 {notice.type}
                               </span>
                               {isNewlyPublished(notice.publishDate) && (
-                                <span className="animate-pulse bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
+                                <span className="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
                                   {t.newBadge}
                                 </span>
                               )}
@@ -1165,6 +1183,9 @@ const formatSubCategoryName = (name: string) => {
   return (
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200">
       
+      {/* Background Decorative Arts & Designs (Books, Students, Rockets, Circles, Triangles) */}
+      <BackgroundArts isMobile={false} />
+
       {/* Decorative Orbs */}
       <div className="absolute top-10 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -1310,6 +1331,15 @@ const formatSubCategoryName = (name: string) => {
 
         {/* Left Side: Compact Pitch Title Section */}
         <div className="lg:col-span-4 flex flex-col justify-center space-y-3.5 text-left">
+          {/* Festive Illustration above badge */}
+          <div className="w-full flex items-center justify-start pb-1 animate-in fade-in zoom-in-95 duration-300">
+            <img
+              src="/festive-hero.png"
+              alt="Festive Celebration"
+              className="w-auto h-auto max-h-[175px] xl:max-h-[195px] object-contain drop-shadow-md hover:scale-105 transition-transform duration-300 pointer-events-none select-none"
+            />
+          </div>
+
           <span className="inline-flex items-center gap-1.5 text-xs bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow-xs self-start">
             {t.heroBadge}
           </span>
@@ -1515,13 +1545,13 @@ const formatSubCategoryName = (name: string) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Column 1: Live Notices & Announcements (Blue Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
               <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce shrink-0" />
               <span>{t.liveNotices}</span>
             </h3>
 
-            <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
+            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
               {noticesList.filter(n => n.category === 'notice').length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === 'notice')
@@ -1547,13 +1577,13 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           {/* Column 2: Results & Merit Lists (Amber Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
               <Trophy className="h-4.5 w-4.5 text-amber-500 animate-pulse shrink-0" />
               <span>{t.resultsMerits}</span>
             </h3>
 
-            <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
+            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
               {noticesList.filter(n => n.category === 'result').length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === 'result')
@@ -1579,13 +1609,13 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           {/* Column 3: Admit Cards & City Info (Emerald Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
               <FileText className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
               <span>{t.admitCards}</span>
             </h3>
 
-            <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar pr-0.5 pt-1">
+            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
               {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === 'admit_card')

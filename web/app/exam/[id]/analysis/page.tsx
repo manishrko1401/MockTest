@@ -630,7 +630,6 @@ export default function ExamSolutionAnalysisPage() {
       setActiveQuestionIdx(firstQIdx);
     }
   };
-
   if (!mounted) return null;
 
   return (
@@ -642,15 +641,25 @@ export default function ExamSolutionAnalysisPage() {
       {/* 1. NAVIGATION BAR */}
       {isSolutionView ? (
         <header className="flex h-[72px] items-center justify-between bg-white border-b border-slate-300 px-4 text-slate-800 shrink-0 select-none">
-          {/* Left Part: Mocktest Hub Logo & small sub-title */}
-          <div className="flex flex-col items-start justify-center min-w-0">
-            <div className="flex items-center gap-1.5">
-              <Trophy className="h-5 w-5 text-blue-600 shrink-0" />
-              <span className="font-black text-xs tracking-wider text-slate-900 uppercase leading-none">Mock Test Hub</span>
+          {/* Left Part: Back to Test Series + Mocktest Hub Logo & small sub-title */}
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={handleBackToTestSeries}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold text-xs tracking-wide transition cursor-pointer active:scale-95 shrink-0 shadow-2xs"
+              title={language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">{language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series'}</span>
+            </button>
+            <div className="flex flex-col items-start justify-center min-w-0">
+              <div className="flex items-center gap-1.5">
+                <Trophy className="h-5 w-5 text-blue-600 shrink-0" />
+                <span className="font-black text-xs tracking-wider text-slate-900 uppercase leading-none">Mock Test Hub</span>
+              </div>
+              <span className="text-[9px] text-slate-500 font-bold mt-1 truncate max-w-[150px]">
+                {examSession.testTitle}
+              </span>
             </div>
-            <span className="text-[9px] text-slate-500 font-bold mt-1 truncate max-w-[150px]">
-              {examSession.testTitle}
-            </span>
           </div>
 
           {/* Center: Test Name + Zoom Buttons + Hub ID */}
@@ -709,30 +718,37 @@ export default function ExamSolutionAnalysisPage() {
           </div>
         </header>
       ) : (
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 backdrop-blur-md px-4 md:px-12 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-          <div className="flex items-center gap-3 md:gap-6 min-w-0">
-            <Link href="/" className="flex items-center gap-2 md:gap-3 shrink-0">
-              <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
-                <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{language === 'hi' ? 'मॉक टेस्ट हब' : 'MOCK TEST HUB'}</h1>
-                <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase leading-none mt-0.5">{language === 'hi' ? 'परीक्षा की तैयारी' : 'EXAM PREPARATION'}</p>
-              </div>
-            </Link>
-            <span className="hidden md:inline h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
+        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 backdrop-blur-md px-3 sm:px-6 md:px-12 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+          <div className="flex items-center gap-2.5 sm:gap-4 md:gap-5 min-w-0">
+            {/* Back to Test Series Button in the far left corner before logo */}
             <button
               onClick={handleBackToTestSeries}
-              className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-colors cursor-pointer bg-transparent border-none p-0 outline-none shrink-0"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/60 border border-slate-200 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800 text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs"
               title={language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}
             >
-              <ArrowLeft className="h-4 w-4" /> 
-              <span className="hidden md:inline">{language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}</span>
-              <span className="inline md:hidden">{language === 'hi' ? 'वापस' : 'Back'}</span>
+              <ArrowLeft className="h-4 w-4 text-slate-600 dark:text-slate-300 shrink-0" /> 
+              <span className="hidden sm:inline">{language === 'hi' ? 'टेस्ट सीरीज' : 'Back to Test Series'}</span>
+              <span className="inline sm:hidden">{language === 'hi' ? 'वापस' : 'Back'}</span>
             </button>
+
+            <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
+
+            {/* Mock Test Hub Logo */}
+            <Link href="/" className="flex items-center gap-2 md:gap-3 shrink-0 group">
+              <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 sm:p-2 rounded-full shadow-sm flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 border border-blue-200/50 dark:border-slate-700 shrink-0 group-hover:scale-105 transition-transform">
+                <Trophy className="h-4 w-4 sm:h-5.5 sm:w-5.5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="hidden md:block">
+                <h1 className="font-extrabold text-xs sm:text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{language === 'hi' ? 'मॉक टेस्ट हब' : 'MOCK TEST HUB'}</h1>
+                <p className="text-[8px] sm:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase leading-none mt-0.5">{language === 'hi' ? 'परीक्षा की तैयारी' : 'EXAM PREPARATION'}</p>
+              </div>
+            </Link>
+
             <span className="hidden md:inline h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
+
+            {/* Test Title & Subtitle */}
             <div className="flex flex-col min-w-0">
-              <span className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white leading-tight truncate">{examSession.testTitle}</span>
+              <span className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white leading-tight truncate max-w-[180px] sm:max-w-[280px] md:max-w-md">{examSession.testTitle}</span>
               <span className="hidden md:inline text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{language === 'hi' ? 'समाधान और विश्लेषण डैशबोर्ड' : 'Solution & Analysis Dashboard'}</span>
             </div>
           </div>

@@ -429,5 +429,35 @@ export const ApiClient = {
    * Document Locker: Disconnect Google Drive
    */
   lockerDisconnectDrive: (userId: string) => postRequest('locker-disconnect-drive', { userId }),
+
+  /**
+   * Document Locker: Set initial 4-digit PIN
+   */
+  lockerSetPin: (payload: { userId: string; pin: string }) =>
+    postRequest('locker-set-pin', payload),
+
+  /**
+   * Document Locker: Verify 4-digit PIN
+   */
+  lockerVerifyPin: (payload: { userId: string; pin: string }) =>
+    postRequest('locker-verify-pin', payload),
+
+  /**
+   * Document Locker: Change 4-digit PIN
+   */
+  lockerChangePin: (payload: { userId: string; oldPin: string; newPin: string }) =>
+    postRequest('locker-change-pin', payload),
+
+  /**
+   * Document Locker: Send 6-digit Reset OTP to Gmail
+   */
+  lockerSendResetOtp: (userId: string) =>
+    postRequest('locker-send-reset-otp', { userId }),
+
+  /**
+   * Document Locker: Verify 6-digit OTP and reset PIN
+   */
+  lockerVerifyOtpAndResetPin: (payload: { userId: string; otp: string; newPin: string }) =>
+    postRequest('locker-verify-otp-and-reset-pin', payload),
 };
 

@@ -9,7 +9,7 @@ import {
   ShieldCheck, Sun, Moon, Calendar, Clock, Share2, Check, Sparkles, 
   Download, BookOpen, AlertCircle, Building2, User, UserCheck, CheckCircle2,
   Bookmark, BookmarkCheck, Layers, Compass, HelpCircle, ArrowUpRight, ArrowRight, ListChecks,
-  LayoutDashboard
+  LayoutDashboard, FolderLock, KeyRound, Eye, EyeOff, Copy, Edit3, FolderOpen, Plus
 } from 'lucide-react';
 import { TRANSLATIONS } from '../../translations';
 import { useIsMobile } from '../../useIsMobile';
@@ -297,6 +297,11 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   const [isTrackedApplied, setIsTrackedApplied] = React.useState(false);
   const [appliedDate, setAppliedDate] = React.useState('');
   const [applicationNo, setApplicationNo] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [rollNumber, setRollNumber] = React.useState('');
+  const [examDate, setExamDate] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [copiedKey, setCopiedKey] = React.useState<string | null>(null);
   const [saveToast, setSaveToast] = React.useState<string | null>(null);
 
   const [fetchedNotice, setFetchedNotice] = React.useState<any>(null);
@@ -356,6 +361,9 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         setIsTrackedApplied(!!item.isApplied);
         setAppliedDate(item.appliedDate || '');
         setApplicationNo(item.applicationNo || '');
+        setPassword(item.password || '');
+        setRollNumber(item.rollNumber || '');
+        setExamDate(item.examDate || '');
       } else {
         setIsTrackedSaved(false);
         setIsTrackedApplied(false);
@@ -365,7 +373,15 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
     }
   }, [noticeId, currentUser]);
 
-  const saveToTrackedJobs = (newSaved: boolean, newApplied: boolean, dateStr?: string, appNoStr?: string) => {
+  const saveToTrackedJobs = (
+    newSaved: boolean,
+    newApplied: boolean,
+    dateStr?: string,
+    appNoStr?: string,
+    passStr?: string,
+    rollStr?: string,
+    examDateStr?: string
+  ) => {
     if (!notice || !currentUser) return;
     try {
       let list = currentUser.trackedJobs || [];
@@ -381,6 +397,9 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         isApplied: newApplied,
         appliedDate: dateStr !== undefined ? dateStr : (newApplied ? (appliedDate || new Date().toISOString().split('T')[0]) : ''),
         applicationNo: appNoStr !== undefined ? appNoStr : applicationNo,
+        password: passStr !== undefined ? passStr : password,
+        rollNumber: rollStr !== undefined ? rollStr : rollNumber,
+        examDate: examDateStr !== undefined ? examDateStr : examDate,
         updatedAt: new Date().toISOString()
       };
 
@@ -396,6 +415,18 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
       updateTrackedJobs(updatedList);
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const copyToClipboard = (text: string, key: string) => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setSaveToast(language === 'hi' ? 'क्लिपबोर्ड पर कॉपी किया गया!' : 'Copied to clipboard!');
+      setTimeout(() => {
+        setCopiedKey(null);
+        setSaveToast(null);
+      }, 2500);
     }
   };
 
@@ -425,13 +456,24 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
       setAppliedDate(today);
     }
     saveToTrackedJobs(isTrackedSaved, nextApplied, nextApplied ? (appliedDate || today) : '');
-    setSaveToast(nextApplied ? 'Marked as Applied in your Profile!' : 'Application status reset.');
+    setSaveToast(nextApplied ? 'Marked as Applied! Added to Exam Locker.' : 'Application status reset.');
     setTimeout(() => setSaveToast(null), 3000);
   };
 
-  const handleApplicationNoChange = (val: string) => {
-    setApplicationNo(val);
-    saveToTrackedJobs(isTrackedSaved, isTrackedApplied, appliedDate, val);
+  const handleCredentialsUpdate = (field: 'appNo' | 'pass' | 'roll' | 'examDate', val: string) => {
+    if (field === 'appNo') {
+      setApplicationNo(val);
+      saveToTrackedJobs(isTrackedSaved, isTrackedApplied, appliedDate, val, password, rollNumber, examDate);
+    } else if (field === 'pass') {
+      setPassword(val);
+      saveToTrackedJobs(isTrackedSaved, isTrackedApplied, appliedDate, applicationNo, val, rollNumber, examDate);
+    } else if (field === 'roll') {
+      setRollNumber(val);
+      saveToTrackedJobs(isTrackedSaved, isTrackedApplied, appliedDate, applicationNo, password, val, examDate);
+    } else if (field === 'examDate') {
+      setExamDate(val);
+      saveToTrackedJobs(isTrackedSaved, isTrackedApplied, appliedDate, applicationNo, password, rollNumber, val);
+    }
   };
 
   const handleShare = () => {
@@ -571,7 +613,6 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
           {/* Navigation Links (Desktop) */}
           {!isMobile && (
             <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600 dark:text-slate-400">
-              <Link href="/" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navHome}</Link>
               <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
               <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors font-black text-blue-600">{t.navUpdates}</Link>
               {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
@@ -670,7 +711,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                       href={notice.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex bg-blue-600 hover:bg-blue-700 text-white font-black text-xs px-5 py-2.5 rounded-xl shadow-md shadow-blue-600/20 transition items-center gap-2 active:scale-95 cursor-pointer"
+                      className="inline-flex bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs tracking-wide px-5 py-2.5 rounded-xl shadow-md shadow-blue-600/20 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:shadow-blue-600/30 items-center gap-2 active:translate-y-0 active:scale-95 cursor-pointer"
                     >
                       <Sparkles className="h-4 w-4 text-yellow-300" /> Direct Apply / Download <ArrowUpRight className="h-4 w-4" />
                     </a>
@@ -689,7 +730,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 <button
                   type="button"
                   onClick={handleToggleSave}
-                  className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl border text-xs font-extrabold flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 shadow-2xs ${
+                  className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl border text-xs font-medium tracking-wide flex items-center justify-center gap-2 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-md cursor-pointer active:translate-y-0 active:scale-95 shadow-2xs ${
                     isTrackedSaved
                       ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20'
                       : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
@@ -703,7 +744,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 <button
                   type="button"
                   onClick={handleToggleApplied}
-                  className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl border text-xs font-extrabold flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 shadow-2xs ${
+                  className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl border text-xs font-medium tracking-wide flex items-center justify-center gap-2 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-md cursor-pointer active:translate-y-0 active:scale-95 shadow-2xs ${
                     isTrackedApplied
                       ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
                       : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
@@ -719,7 +760,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-2xs"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium tracking-wide transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-md flex items-center justify-center gap-2 cursor-pointer active:translate-y-0 active:scale-95 shadow-2xs"
                   title="Share Notice Link"
                 >
                   {copied ? <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <Share2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
@@ -734,7 +775,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     href={notice.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xs px-4 py-3 rounded-2xl shadow-md shadow-blue-600/20 transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs tracking-wide px-4 py-3 rounded-2xl shadow-md shadow-blue-600/20 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:shadow-blue-600/30 flex items-center justify-center gap-2 active:translate-y-0 active:scale-95 cursor-pointer"
                   >
                     <Sparkles className="h-4 w-4 text-yellow-300" /> Direct Apply / Download <ArrowUpRight className="h-4 w-4" />
                   </a>
@@ -744,6 +785,148 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
             </div>
 
           </div>
+
+          {/* APPLIED EXAM CREDENTIALS & DOCUMENT LOCKER VAULT CARD */}
+          {isTrackedApplied && (
+            <div className="mt-5 pt-4 border-t border-slate-200/80 dark:border-slate-800 space-y-3 bg-purple-50/50 dark:bg-purple-950/20 p-4 sm:p-5 rounded-2xl border border-purple-200/80 dark:border-purple-900/40">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
+                  <div>
+                    <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-wider">
+                      {language === 'hi' ? 'परीक्षा क्रेडेंशियल्स और गूगल ड्राइव लॉकर' : 'Exam Credentials & Google Drive Locker'}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {language === 'hi'
+                        ? 'अपने आवेदन फॉर्म, पासवर्ड और रोल नंबर को सुरक्षित रखें और Google Drive में ऑटो-सिंक करें।'
+                        : 'Save credentials and sync Admit Card / Application Form directly to your Google Drive.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Link
+                    href={`/locker?exam=${encodeURIComponent(notice.title)}`}
+                    className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium tracking-wide transition-all duration-300 transform-gpu hover:-translate-y-0.5 hover:scale-105 hover:shadow-md hover:shadow-purple-600/20 flex items-center gap-1.5 shadow-sm shadow-purple-600/20 active:translate-y-0 active:scale-95"
+                  >
+                    <FolderLock className="w-3.5 h-3.5" />
+                    <span>Open in Locker</span>
+                  </Link>
+
+                  <Link
+                    href={`/locker?exam=${encodeURIComponent(notice.title)}&action=upload`}
+                    className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-50 text-xs font-medium tracking-wide transition-all duration-300 transform-gpu hover:-translate-y-0.5 hover:scale-105 hover:shadow-md flex items-center gap-1.5 active:translate-y-0 active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Upload to Drive</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Quick Input Fields for Credentials */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 pt-1 text-xs">
+                {/* Registration / Application ID */}
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                    Registration No / App ID
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      placeholder="e.g. 2501009845"
+                      value={applicationNo}
+                      onChange={(e) => handleCredentialsUpdate('appNo', e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white pr-7"
+                    />
+                    {applicationNo && (
+                      <button
+                        onClick={() => copyToClipboard(applicationNo, 'appNo')}
+                        className="absolute right-2 text-slate-400 hover:text-purple-600 p-0.5 cursor-pointer"
+                        title="Copy Registration Number"
+                      >
+                        {copiedKey === 'appNo' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Portal Password / DOB */}
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                    Password / DOB
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="e.g. Pass@123"
+                      value={password}
+                      onChange={(e) => handleCredentialsUpdate('pass', e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white pr-12"
+                    />
+                    <div className="absolute right-2 flex items-center gap-1 text-slate-400">
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="hover:text-purple-600 p-0.5 cursor-pointer"
+                        title={showPassword ? 'Hide Password' : 'Show Password'}
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                      {password && (
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(password, 'pass')}
+                          className="hover:text-purple-600 p-0.5 cursor-pointer"
+                          title="Copy Password"
+                        >
+                          {copiedKey === 'pass' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Roll Number */}
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                    Roll Number (After Admit Card)
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      placeholder="e.g. 2201019940"
+                      value={rollNumber}
+                      onChange={(e) => handleCredentialsUpdate('roll', e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white pr-7"
+                    />
+                    {rollNumber && (
+                      <button
+                        onClick={() => copyToClipboard(rollNumber, 'roll')}
+                        className="absolute right-2 text-slate-400 hover:text-purple-600 p-0.5 cursor-pointer"
+                        title="Copy Roll Number"
+                      >
+                        {copiedKey === 'roll' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Exam Date */}
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                    Exam Date
+                  </label>
+                  <input
+                    type="date"
+                    value={examDate}
+                    onChange={(e) => handleCredentialsUpdate('examDate', e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
         </section>
 
         {/* TWO-COLUMN LAYOUT (LEFT CONTENT + RIGHT SIDEBAR DOCK) */}
@@ -760,7 +943,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
               <button
                 onClick={() => scrollToSection('sec-overview')}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-wide transition shrink-0 cursor-pointer ${
                   activeSection === 'overview'
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -771,7 +954,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
               <button
                 onClick={() => scrollToSection('sec-links')}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-wide transition shrink-0 cursor-pointer ${
                   activeSection === 'links'
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -782,7 +965,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
               <button
                 onClick={() => scrollToSection('sec-full-content')}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-wide transition shrink-0 cursor-pointer ${
                   activeSection === 'full-content'
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -810,24 +993,24 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 </span>
               </div>
 
-              {/* 4 Metrics Cards Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full">
-                <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
+              {/* 4 Metrics Cards Grid with 3D Hover */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5 w-full">
+                <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
                   <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Notice Category</span>
                   <p className="text-[10.5px] sm:text-xs font-semibold text-slate-800 dark:text-slate-100 uppercase truncate">{notice.category?.replace('_', ' ')}</p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
+                <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
                   <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Publish Date</span>
                   <p className="text-[10.5px] sm:text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{notice.date}</p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
+                <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
                   <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Application Deadline</span>
                   <p className="text-[10.5px] sm:text-xs font-semibold text-rose-600 dark:text-rose-400 truncate">{notice.lastDate || 'See Notification'}</p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-950/50 p-2 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-0.5 min-w-0 flex flex-col justify-center">
+                <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
                   <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Portal Status</span>
                   <p className="text-[10.5px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">Active Window</p>
                 </div>
@@ -851,16 +1034,16 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 </span>
               </div>
 
-              {/* Vertical Stack List Format */}
+              {/* Vertical Stack List Format with 3D Hover */}
               {parsedLinks.length > 0 ? (
-                <div className="flex flex-col gap-2.5 sm:gap-3 w-full">
+                <div className="flex flex-col gap-3 sm:gap-3.5 w-full p-1.5 -m-1.5">
                   {parsedLinks.map((link, i) => (
                     <a
                       key={i}
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group bg-slate-50 dark:bg-slate-955 hover:bg-blue-50/80 dark:hover:bg-blue-950/40 border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs hover:shadow-md active:scale-[0.99] cursor-pointer w-full min-w-0"
+                      className="group bg-slate-50 dark:bg-slate-955 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.012] hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.16),0_4px_12px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.3),0_0_16px_rgba(59,130,246,0.15)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs active:translate-y-0 active:scale-[0.99] cursor-pointer w-full min-w-0 relative z-0 hover:z-10"
                     >
                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
                         <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition shrink-0 ${
@@ -894,7 +1077,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                       </div>
 
                       <div className="flex items-center justify-end shrink-0">
-                        <span className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1.5 shadow-xs ${
+                        <span className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-medium tracking-wide transition flex items-center gap-1.5 shadow-xs ${
                           link.iconType === 'apply' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20' :
                           link.iconType === 'download' ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20' :
                           link.iconType === 'official' ? 'bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white' :
@@ -933,7 +1116,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                         </div>
                       </div>
                       <div className="flex items-center justify-end shrink-0">
-                        <span className="bg-white text-blue-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider shrink-0 flex items-center gap-1.5 shadow-xs">
+                        <span className="bg-white text-blue-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-medium tracking-wide uppercase shrink-0 flex items-center gap-1.5 shadow-xs">
                           Apply Now <ArrowUpRight className="h-3.5 w-3.5" />
                         </span>
                       </div>
@@ -952,12 +1135,12 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                           <Download className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-snug">Official Notification Source & Circular</h4>
-                          <p className="text-[9px] sm:text-[10.5px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5">View Source Circular PDF</p>
+                          <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white leading-snug">Official Notification Source & Circular</h4>
+                          <p className="text-[9px] sm:text-[10.5px] text-slate-400 font-medium tracking-wide uppercase block mt-0.5">View Source Circular PDF</p>
                         </div>
                       </div>
                       <div className="flex items-center justify-end shrink-0">
-                        <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider shrink-0 flex items-center gap-1.5">
+                        <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-medium tracking-wide uppercase shrink-0 flex items-center gap-1.5">
                           View <ChevronRight className="h-3.5 w-3.5" />
                         </span>
                       </div>
@@ -1000,7 +1183,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                       href={notice.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl text-xs shadow-lg shadow-blue-600/25"
+                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-xl text-xs tracking-wide shadow-lg shadow-blue-600/25"
                     >
                       Open Official Link <ExternalLink className="h-4 w-4" />
                     </a>
@@ -1028,7 +1211,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     href={notice.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs py-3.5 px-4 rounded-2xl shadow-lg shadow-blue-600/25 transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium text-xs tracking-wide py-3.5 px-4 rounded-2xl shadow-lg shadow-blue-600/25 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-600/35 flex items-center justify-center gap-2 active:translate-y-0 active:scale-98 cursor-pointer"
                   >
                     <Sparkles className="h-4 w-4 text-yellow-300 animate-pulse" /> Apply / Download Now <ArrowUpRight className="h-4 w-4" />
                   </a>
@@ -1065,7 +1248,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
               <div className="pt-2">
                 <button
                   onClick={handleShare}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-xs tracking-wide py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
                   {copied ? <Check className="h-4 w-4 text-green-500" /> : <Share2 className="h-4 w-4" />}
                   <span>{copied ? 'Link Copied to Clipboard!' : 'Share Announcement Link'}</span>
@@ -1101,16 +1284,16 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 </div>
               </div>
 
-              {/* Actions List */}
+              {/* Actions List with 3D Hover */}
               <div className="space-y-2.5">
                 
                 {/* 1. Bookmark / Save Job Toggle */}
                 <button
                   onClick={handleToggleSave}
-                  className={`w-full py-3 px-4 rounded-2xl border text-xs font-bold flex items-center justify-between transition cursor-pointer active:scale-98 ${
+                  className={`w-full py-3 px-4 rounded-2xl border text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.015] hover:shadow-md cursor-pointer active:translate-y-0 active:scale-98 ${
                     isTrackedSaved
                       ? 'bg-blue-50 dark:bg-blue-950/80 border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 shadow-2xs'
-                      : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-955 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'
+                      : 'bg-slate-50 hover:bg-white dark:bg-slate-955 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -1123,10 +1306,10 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 {/* 2. Mark as Applied Toggle */}
                 <button
                   onClick={handleToggleApplied}
-                  className={`w-full py-3 px-4 rounded-2xl border text-xs font-bold flex items-center justify-between transition cursor-pointer active:scale-98 ${
+                  className={`w-full py-3 px-4 rounded-2xl border text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.015] hover:shadow-md cursor-pointer active:translate-y-0 active:scale-98 ${
                     isTrackedApplied
                       ? 'bg-emerald-50 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 shadow-2xs'
-                      : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-955 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'
+                      : 'bg-slate-50 hover:bg-white dark:bg-slate-955 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -1139,23 +1322,23 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 {/* Expandable Application Details when Marked as Applied */}
                 {isTrackedApplied && (
                   <div className="p-3.5 bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/50 rounded-2xl space-y-2.5 animate-in fade-in duration-200">
-                    <div className="flex items-center justify-between text-[11px] font-extrabold text-emerald-800 dark:text-emerald-300">
+                    <div className="flex items-center justify-between text-[11px] font-medium tracking-wide text-emerald-800 dark:text-emerald-300">
                       <span className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5" /> Applied Date: {appliedDate || new Date().toISOString().split('T')[0]}
                       </span>
-                      <span className="bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 px-2 py-0.5 rounded-md text-[9px] font-black uppercase">Active</span>
+                      <span className="bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase">Active</span>
                     </div>
                     
                     <div>
-                      <label className="block text-[9.5px] font-extrabold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider mb-1">
+                      <label className="block text-[9.5px] font-medium tracking-wide text-emerald-800 dark:text-emerald-400 uppercase mb-1">
                         Registration / Roll No. (Optional)
                       </label>
                       <input
                         type="text"
                         value={applicationNo}
-                        onChange={(e) => handleApplicationNoChange(e.target.value)}
+                        onChange={(e) => handleCredentialsUpdate('appNo', e.target.value)}
                         placeholder="e.g. REG-2026-88492"
-                        className="w-full bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder-slate-400 font-semibold"
+                        className="w-full bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder-slate-400 font-medium tracking-wide"
                       />
                     </div>
                   </div>
@@ -1167,7 +1350,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     setSaveToast('Reminders synced to your profile!');
                     setTimeout(() => setSaveToast(null), 3000);
                   }}
-                  className="w-full py-3 px-4 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-955 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-between transition cursor-pointer active:scale-98"
+                  className="w-full py-3 px-4 rounded-2xl bg-slate-50 hover:bg-white dark:bg-slate-955 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.015] hover:shadow-md cursor-pointer active:translate-y-0 active:scale-98"
                 >
                   <div className="flex items-center gap-2.5">
                     <Bell className="h-4 w-4 text-slate-400" />
@@ -1179,7 +1362,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 {/* 4. View My Saved & Applied Jobs Button */}
                 <Link
                   href="/profile"
-                  className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black flex items-center justify-between transition cursor-pointer active:scale-98 shadow-md shadow-blue-600/20"
+                  className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-600/30 cursor-pointer active:translate-y-0 active:scale-98 shadow-md shadow-blue-600/20"
                 >
                   <div className="flex items-center gap-2.5">
                     <BookmarkCheck className="h-4 w-4 text-yellow-300" />
@@ -1197,7 +1380,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                   </p>
                   <Link
                     href="/auth"
-                    className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-md shadow-blue-600/20 active:scale-98"
+                    className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium tracking-wide flex items-center justify-center gap-2 transition cursor-pointer shadow-md shadow-blue-600/20 active:scale-98"
                   >
                     <User className="h-4 w-4" />
                     <span>Log In to Save & Track</span>

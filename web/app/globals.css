@@ -205,6 +205,22 @@ mjx-container[jax="CHTML"] {
   50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
 }
 
+@keyframes float-reverse {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(12px) rotate(-3deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { transform: scale(1); opacity: 0.2; }
+  50% { transform: scale(1.08); opacity: 0.35; }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
@@ -212,6 +228,18 @@ mjx-container[jax="CHTML"] {
 .animate-float-delayed {
   animation: float 8s ease-in-out infinite;
   animation-delay: 2.5s;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 7s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 28s linear infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 4s ease-in-out infinite;
 }
 
 .animate-blink {
