@@ -70,15 +70,15 @@ export default function LiveUpdatesBar({ notices, language, isMobile = false }: 
   if (isMobile) {
     return (
       <div 
-        className="relative bg-blue-600/95 dark:bg-blue-950/90 text-white text-[11px] py-2 px-2.5 sm:px-3.5 flex items-center gap-2 border-b border-blue-500/20 z-20 shrink-0 font-bold overflow-hidden shadow-xs select-none"
+        className="relative bg-blue-600/95 dark:bg-blue-950/90 text-white text-[10.5px] py-1.5 px-2.5 sm:px-3.5 flex items-center gap-2 border-b border-blue-500/20 z-20 shrink-0 font-bold overflow-hidden shadow-2xs select-none"
         onMouseEnter={() => { isPausedRef.current = true; }}
         onMouseLeave={() => { isPausedRef.current = false; }}
         onTouchStart={() => { isPausedRef.current = true; }}
         onTouchEnd={() => { isPausedRef.current = false; }}
       >
-        <span className="bg-red-500 text-[8.5px] font-black text-white px-2 py-0.5 rounded-md uppercase tracking-wider animate-pulse shrink-0 flex items-center gap-1 shadow-xs border border-red-400/30 select-none pointer-events-none">
+        <span className="bg-red-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0 flex items-center gap-1 shadow-xs border border-red-400/30 select-none pointer-events-none">
           <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping"></span>
-          {language === 'hi' ? 'लाइव अपडेट' : 'Live Updates'}
+          {language === 'hi' ? 'लाइव' : 'Live'}
         </span>
         <div className="flex-1 overflow-hidden relative">
           <div 
@@ -101,14 +101,14 @@ export default function LiveUpdatesBar({ notices, language, isMobile = false }: 
 
   return (
     <div 
-      className="relative bg-blue-600/95 dark:bg-blue-950/90 text-white text-xs py-2 px-4 sm:px-6 lg:px-8 flex items-center gap-3 border-b border-blue-500/20 z-30 shrink-0 font-bold overflow-hidden shadow-xs select-none"
+      className="relative bg-blue-600/95 dark:bg-blue-950/90 text-white text-xs py-1.5 px-4 sm:px-6 lg:px-8 flex items-center gap-3 border-b border-blue-500/20 z-30 shrink-0 font-bold overflow-hidden shadow-2xs select-none"
       onMouseEnter={() => { isPausedRef.current = true; }}
       onMouseLeave={() => { isPausedRef.current = false; }}
       onTouchStart={() => { isPausedRef.current = true; }}
       onTouchEnd={() => { isPausedRef.current = false; }}
     >
-      <span className="bg-red-500 text-[9.5px] font-black text-white px-2.5 py-1 rounded-md uppercase tracking-wider animate-pulse shrink-0 flex items-center gap-1.5 shadow-xs border border-red-400/30 select-none pointer-events-none">
-        <span className="h-2 w-2 rounded-full bg-white animate-ping"></span>
+      <span className="bg-red-500 text-[8.5px] font-black text-white px-2 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0 flex items-center gap-1 shadow-xs border border-red-400/30 select-none pointer-events-none">
+        <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping"></span>
         {language === 'hi' ? 'लाइव अपडेट' : 'Live Updates'}
       </span>
       <div className="flex-1 overflow-hidden relative">

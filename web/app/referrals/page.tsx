@@ -69,7 +69,7 @@ export default function ReferralsTrackerPage() {
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 pb-16 transition-colors duration-200">
       
       {/* Header bar */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 sm:px-8 flex items-center justify-between shadow-sm sticky top-0 z-30">
+      <header className="h-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors duration-200">
         <Link href="/profile" className="flex items-center gap-2 text-slate-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs sm:text-sm tracking-wide transition-colors">
           <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? "प्रोफ़ाइल पर वापस जाएं" : "Back to Profile"}
         </Link>

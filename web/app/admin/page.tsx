@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles, Inbox, Share2, FolderLock, Cloud } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, CheckCheck, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles, Inbox, Share2, FolderLock, Cloud } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
@@ -351,13 +351,18 @@ export default function AdminAnalytics() {
     }
   }, [activeTab]);
 
-  // Fetch support messages when a user conversation is selected
+  // Fetch support messages when a user conversation is selected and periodically poll
   React.useEffect(() => {
     if (!selectedSupportUserId) {
       setSupportMessages([]);
       return;
     }
     fetchSupportMessages(selectedSupportUserId, true);
+    const interval = setInterval(() => {
+      fetchSupportMessages(selectedSupportUserId, false);
+      fetchSupportUsers(false);
+    }, 4000);
+    return () => clearInterval(interval);
   }, [selectedSupportUserId]);
 
   const handleSendAdminMessage = async (e: React.FormEvent) => {
@@ -4881,10 +4886,21 @@ export default function AdminAnalytics() {
                                           Edit
                                         </button>
                                       )}
-                                      <div className={`text-[8px] font-bold flex-1 text-right ${
-                                        isStudent ? 'text-slate-400 dark:text-slate-505' : 'text-blue-200'
+                                      <div className={`text-[8px] font-bold flex items-center justify-end gap-1.5 ${
+                                        isStudent ? 'text-slate-400 dark:text-slate-500' : 'text-blue-200'
                                       }`}>
-                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        {!isStudent && (
+                                          <span
+                                            className={`inline-flex items-center gap-0.5 ml-1 ${
+                                              msg.isRead ? 'text-sky-300 font-black' : 'text-blue-200/60 font-medium'
+                                            }`}
+                                            title={msg.isRead ? 'Seen by Student' : 'Delivered'}
+                                          >
+                                            <CheckCheck className={`h-3 w-3 ${msg.isRead ? 'text-sky-300 stroke-[2.5]' : 'text-blue-200/60 stroke-[1.8]'}`} />
+                                            <span className="text-[7.5px] uppercase tracking-wider">{msg.isRead ? 'Seen' : 'Delivered'}</span>
+                                          </span>
+                                        )}
                                       </div>
                                     </div>
                                   </>

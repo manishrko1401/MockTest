@@ -1,8 +1,7 @@
 "use client";
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../AuthContext';
-import { ShieldCheck, X, MessageSquare, Send, Lightbulb, HelpCircle, Loader2 } from 'lucide-react';
+import { ShieldCheck, X, MessageSquare, Send, Lightbulb, HelpCircle, Loader2, CheckCheck } from 'lucide-react';
 
 interface HomeSupportWidgetProps {
   variant?: 'normal' | 'expandable';
@@ -85,7 +84,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'get-support-messages',
-          data: { userId: currentUser.id, markAsRead }
+          data: { userId: currentUser.id, markAsRead, readerRole: 'STUDENT' }
         })
       });
       const data = await res.json();
@@ -325,13 +324,24 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                         </p>
                       )}
                       <p className="whitespace-pre-wrap break-words">{msg.message}</p>
-                      <p
-                        className={`text-[9px] mt-1 text-right font-mono ${
-                          isUser ? 'text-blue-100' : 'text-slate-400'
+                      <div
+                        className={`flex items-center gap-1 mt-1 text-[8.5px] font-bold ${
+                          isUser ? 'justify-end text-blue-100' : 'justify-start text-slate-400'
                         }`}
                       >
-                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                        <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        {isUser && (
+                          <span
+                            className={`inline-flex items-center gap-0.5 ml-1 ${
+                              msg.isRead ? 'text-sky-300 font-extrabold' : 'text-blue-200/60 font-medium'
+                            }`}
+                            title={msg.isRead ? 'Seen by Support Team' : 'Delivered'}
+                          >
+                            <CheckCheck className={`h-3 w-3 ${msg.isRead ? 'text-sky-300 stroke-[2.5]' : 'text-blue-200/60 stroke-[1.8]'}`} />
+                            <span className="text-[7.5px] uppercase">{msg.isRead ? 'Seen' : 'Delivered'}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -363,23 +373,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
       {/* FLOAT VARIANT WRAPPERS */}
       {variant === 'normal' ? (
         <div className="flex flex-col items-end gap-3">
-          {/* FLOATING BUTTON 1: SUGGESTION BOX (JUST ABOVE CHAT) */}
-          <button
-            onClick={() => {
-              setChatOpen(false);
-              setSuggestionModalOpen(true);
-            }}
-            className="relative group flex items-center gap-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-full shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
-          >
-            <div className="relative flex items-center justify-center">
-              <Lightbulb className="h-4.5 w-4.5 text-amber-100 animate-pulse" />
-            </div>
-            <span className="font-extrabold text-[10px] tracking-wider uppercase hidden sm:inline-block">
-              {language === 'hi' ? 'सुझाव पेटिका' : 'Suggestion Box'}
-            </span>
-          </button>
-
-          {/* FLOATING BUTTON 2: MOCKTEST HUB TEAM SUPPORT CHAT */}
+          {/* FLOATING BUTTON: MOCKTEST HUB TEAM SUPPORT CHAT */}
           <button
             onClick={() => {
               setSuggestionModalOpen(false);
@@ -402,21 +396,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
         </div>
       ) : (
         <div className="flex flex-col items-end gap-3.5">
-          {/* FLOATING BUTTON 1: SUGGESTION BOX (COMPACT HOVER EXPANDABLE) */}
-          <button
-            onClick={() => {
-              setChatOpen(false);
-              setSuggestionModalOpen(true);
-            }}
-            className="group flex items-center bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white h-12 w-12 hover:w-44 rounded-full shadow-xl transition-all duration-300 cursor-pointer border border-white/20 px-3.5 overflow-hidden gap-3"
-          >
-            <Lightbulb className="h-5 w-5 shrink-0 text-amber-100 animate-pulse" />
-            <span className="font-extrabold text-[10px] tracking-wider uppercase whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              {language === 'hi' ? 'सुझाव पेटिका' : 'Suggestion Box'}
-            </span>
-          </button>
-
-          {/* FLOATING BUTTON 2: MOCKTEST HUB TEAM SUPPORT CHAT (COMPACT HOVER EXPANDABLE) */}
+          {/* FLOATING BUTTON: MOCKTEST HUB TEAM SUPPORT CHAT (COMPACT HOVER EXPANDABLE) */}
           <button
             onClick={() => {
               setSuggestionModalOpen(false);

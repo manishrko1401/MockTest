@@ -1466,8 +1466,8 @@ export default function PracticeSeriesPage() {
               </div>
             </div>
 
-            {/* Category Cards Grid — 2 Tiles per Row on Mobile View */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+            {/* Category Cards Grid — 3 Tiles per Row on screens > 1080px */}
+            <div className="exam-category-grid">
               {filteredCatalog.map((cat) => {
                 const isSsc = cat.id.includes('ssc');
                 const isRailways = cat.id.includes('railway');

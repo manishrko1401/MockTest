@@ -3814,10 +3814,10 @@ async function handleGetSupportMessages(data: any) {
   if (markAsRead) {
     if (readerRole === 'ADMIN') {
       await prisma.supportMessage.updateMany({
-        where: { userId, sender: 'STUDENT', isRead: false },
+        where: { userId, sender: { in: ['STUDENT', 'USER'] }, isRead: false },
         data: { isRead: true }
       });
-    } else if (readerRole === 'STUDENT') {
+    } else {
       await prisma.supportMessage.updateMany({
         where: { userId, sender: 'ADMIN', isRead: false },
         data: { isRead: true }
@@ -3835,9 +3835,9 @@ async function handleGetSupportMessages(data: any) {
     messages: messages.map(msg => ({
       id: msg.id,
       userId: msg.userId,
-      sender: msg.sender,
+      sender: msg.sender === 'ADMIN' ? 'ADMIN' : 'STUDENT',
       message: msg.message,
-      isRead: msg.isRead,
+      isRead: Boolean(msg.isRead),
       createdAt: msg.createdAt.toISOString()
     }))
   });
@@ -3845,14 +3845,16 @@ async function handleGetSupportMessages(data: any) {
 
 async function handleSendSupportMessage(data: any) {
   const { userId, sender, message } = data;
-  if (!userId || !sender || !message) {
-    return NextResponse.json({ success: false, error: 'Required fields: userId, sender, message' }, { status: 400 });
+  if (!userId || !message) {
+    return NextResponse.json({ success: false, error: 'Required fields: userId, message' }, { status: 400 });
   }
+
+  const actualSender = (sender === 'ADMIN' ? 'ADMIN' : 'STUDENT');
 
   const msg = await prisma.supportMessage.create({
     data: {
       userId,
-      sender,
+      sender: actualSender,
       message,
       isRead: false
     }

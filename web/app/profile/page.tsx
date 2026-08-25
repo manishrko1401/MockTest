@@ -152,28 +152,35 @@ export default function StudentProfilePage() {
     return (
       <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none pb-8 transition-colors duration-200">
         
-        {/* MOBILE HEADER */}
-        <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Link href="/" className="flex items-center gap-1 text-slate-705 dark:text-white hover:text-blue-600 font-bold text-xs shrink-0">
-              <ArrowLeft className="h-4 w-4" /> {t.navHome}
+        {/* MOBILE HEADER - Increased Height */}
+        <header className="h-16 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm transition-colors duration-200">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-center gap-1 text-xs font-bold shrink-0 cursor-pointer active:scale-95 transition"
+              title={language === 'hi' ? 'होम' : 'Home'}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="text-[11px] font-bold">{language === 'hi' ? 'होम' : 'Home'}</span>
             </Link>
 
-            {/* Mocktest Hub Logo */}
-            <div className="flex items-center gap-1.5 pl-2.5 border-l border-slate-200 dark:border-slate-800 shrink-0">
-              <Trophy className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span className="font-black text-[10px] tracking-wider text-slate-900 dark:text-white uppercase leading-none">
-                Mocktest Hub
-              </span>
-            </div>
+            <Link href="/" className="flex items-center gap-2 shrink-0">
+              <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 rounded-full shadow-sm flex items-center justify-center h-8 w-8 border border-blue-200/50 dark:border-slate-700 shrink-0">
+                <Trophy className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <h1 className="font-extrabold text-xs leading-none text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
+                <p className="text-[8px] text-blue-600 dark:text-blue-400 font-bold tracking-wider uppercase mt-0.5 leading-none truncate">{t.logoSub}</p>
+              </div>
+            </Link>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Language Selector */}
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-              className="px-1.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-905 border border-slate-202 dark:border-slate-800 text-[10px] font-bold outline-none cursor-pointer"
+              className="px-1.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold outline-none cursor-pointer text-slate-700 dark:text-slate-200"
             >
               <option value="en">EN</option>
               <option value="hi">हिं</option>
@@ -182,17 +189,17 @@ export default function StudentProfilePage() {
             {/* Theme Toggler */}
             <button
               onClick={toggleTheme}
-              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-202 dark:border-slate-800"
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 cursor-pointer"
             >
               {theme === 'light' ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
             </button>
 
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 border border-red-200/80 dark:border-red-900/40 text-red-600 dark:text-red-400 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold cursor-pointer active:scale-95 transition"
+              className="flex items-center gap-1 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 border border-red-200/80 dark:border-red-900/40 text-red-600 dark:text-red-400 px-2 py-1.5 rounded-xl text-[10.5px] font-extrabold cursor-pointer active:scale-95 transition"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span>{language === 'hi' ? 'साइन आउट' : 'Sign Out'}</span>
+              <span>{language === 'hi' ? 'लॉगआउट' : 'Logout'}</span>
             </button>
           </div>
         </header>
@@ -686,13 +693,13 @@ export default function StudentProfilePage() {
       <div className="absolute top-10 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      {/* Dynamic Header */}
-      <header className="h-16 sticky top-0 z-40 px-6 md:px-12 flex items-center justify-between shadow-sm glass-header transition-all duration-350">
+      {/* Dynamic Header - Restored Original Layout with Increased Height */}
+      <header className="h-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors duration-200">
         <Link href="/" className="flex items-center gap-2 text-slate-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 font-bold text-sm tracking-wide transition-colors">
           <ChevronRight className="h-4 w-4 rotate-180" /> {t.backToHome}
         </Link>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           {['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
             <Link href="/admin" className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors px-3 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-white">
               <LayoutDashboard className="h-3.5 w-3.5 text-blue-500" /> {t.navAdmin}
@@ -703,10 +710,10 @@ export default function StudentProfilePage() {
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
           >
-            <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
-            <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
           </select>
 
           {/* Theme switcher */}

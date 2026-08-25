@@ -581,7 +581,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
       <div className="absolute top-[45%] right-0 w-[500px] h-[500px] bg-purple-500/10 dark:bg-purple-500/5 rounded-full blur-[140px] pointer-events-none" />
 
       {/* HEADER SECTION (EXACT MATCH WITH NOTIFICATION PAGE) */}
-      <header className="h-16 sticky top-0 z-40 px-3 sm:px-6 md:px-12 flex items-center justify-between shadow-sm bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-900">
+      <header className="h-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors duration-200">
         <div className="flex items-center gap-2 sm:gap-4 md:gap-6 min-w-0">
           {/* Back Button BEFORE Logo */}
           <button

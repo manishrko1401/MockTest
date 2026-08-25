@@ -33,6 +33,33 @@ body {
 }
 
 /* Rich content formatting styles for Testbook compatibility */
+
+/* ===== POPULAR EXAM MARQUEE ANIMATION ===== */
+@keyframes exam-marquee-scroll {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+.exam-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: exam-marquee-scroll 50s linear infinite;
+}
+
+.exam-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Hide scrollbars everywhere needed */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+/* ===== END MARQUEE ===== */
+
 .markup-content p {
   margin-bottom: 0.5rem;
 }
@@ -244,6 +271,25 @@ mjx-container[jax="CHTML"] {
 
 .animate-blink {
   animation: blink 1.5s ease-in-out infinite;
+}
+
+/* Exam Category 3-Column Responsive Grid (> 1080px) */
+.exam-category-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .exam-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1080px) {
+  .exam-category-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
 }
 
 /* Continuous Seamless Live Ticker Animations */

@@ -173,40 +173,41 @@ export default function TrackedJobsPage() {
       <div className="absolute top-1/2 right-10 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[140px] pointer-events-none" />
 
       {/* HEADER NAVBAR */}
-      <header className="h-16 sticky top-0 z-40 px-3 sm:px-6 md:px-12 flex items-center justify-between shadow-sm bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-2 sm:gap-4 md:gap-6 min-w-0">
+      <header className="h-16 sm:h-20 sticky top-0 z-40 px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           {/* Back Button */}
           <button
             onClick={() => router.push('/profile')}
-            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-700 dark:text-slate-200 shrink-0 cursor-pointer active:scale-95"
+            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold transition text-slate-700 dark:text-slate-200 shrink-0 cursor-pointer active:scale-95"
             title={language === 'hi' ? 'प्रोफाइल पर वापस' : 'Back to Profile'}
           >
             <ArrowLeft className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-            <span className="hidden xs:inline">{language === 'hi' ? 'प्रोफाइल' : 'Profile'}</span>
+            <span className="hidden sm:inline">{language === 'hi' ? 'प्रोफाइल' : 'Profile'}</span>
           </button>
 
-          <div className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white uppercase tracking-tight truncate">
-              {language === 'hi' ? 'ट्रैक किए गए जॉब्स और परीक्षा वॉल्ट' : 'Tracked Jobs & Exam Vault'}
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <Briefcase className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span className="font-extrabold text-xs sm:text-sm md:text-base text-slate-900 dark:text-white uppercase tracking-tight truncate">
+              {language === 'hi' ? 'ट्रैक किए गए जॉब्स' : 'Tracked Jobs & Exam Vault'}
             </span>
           </div>
         </div>
 
         {/* Right Action Icons */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           <Link
             href="/locker"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/80 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 rounded-xl text-xs font-bold transition cursor-pointer"
+            className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/80 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 rounded-xl text-xs font-bold transition cursor-pointer"
+            title="Document Locker"
           >
-            <FolderLock className="w-3.5 h-3.5" />
+            <FolderLock className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             <span className="hidden sm:inline">Document Locker</span>
           </Link>
 
           {/* Language Selector */}
           <button
             onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-800 transition-all cursor-pointer"
+            className="px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-800 transition-all cursor-pointer"
             title="Switch Language"
           >
             {language === 'en' ? 'हिन्दी' : 'English'}
@@ -215,29 +216,29 @@ export default function TrackedJobsPage() {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
             title={theme === 'light' ? t.themeDark : t.themeLight}
           >
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4 text-amber-400" />}
           </button>
         </div>
       </header>
 
       {/* MAIN CONTAINER */}
-      <main className="max-w-6xl mx-auto px-3 sm:px-6 md:px-8 py-6 space-y-6 relative z-10">
+      <main className="max-w-6xl mx-auto px-3 sm:px-6 md:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 relative z-10">
 
         {/* HERO BANNER CARD */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-              <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 shrink-0 text-blue-600 dark:text-blue-400">
-                <Briefcase className="h-6 w-6 sm:h-7 sm:w-7" />
+        <section className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 shadow-sm space-y-3.5 sm:space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5 sm:gap-4">
+            <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+              <div className="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 shrink-0 text-blue-600 dark:text-blue-400">
+                <Briefcase className="h-5 w-5 sm:h-7 sm:w-7" />
               </div>
-              <div className="space-y-0.5">
-                <h1 className="text-base sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              <div className="space-y-1 min-w-0">
+                <h1 className="text-sm xs:text-base sm:text-lg md:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight leading-snug">
                   {language === 'hi' ? '💼 मेरे सभी ट्रैक किए गए जॉब्स और परीक्षा वॉल्ट' : '💼 My Saved & Applied Jobs Tracker'}
                 </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
                   {language === 'hi'
                     ? 'पंजीकरण संख्या, पासवर्ड, एडमिट कार्ड और Google ड्राइव फ़ोल्डर एक ही स्थान पर प्रबंधित करें।'
                     : 'Manage application statuses, passwords, roll numbers, admit cards, and Google Drive folders in one place.'}
@@ -245,66 +246,66 @@ export default function TrackedJobsPage() {
               </div>
             </div>
 
-            {/* Top Right Corner Buttons */}
-            <div className="flex items-center gap-2.5 flex-wrap self-start sm:self-center shrink-0">
+            {/* Top Right Corner Action Buttons */}
+            <div className="flex items-center gap-2 sm:gap-2.5 w-full md:w-auto shrink-0 pt-0.5 md:pt-0">
               <Link
                 href="/locker"
-                className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium tracking-wide text-xs rounded-xl shadow-md shadow-purple-600/20 transition-all duration-200 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-600/30 active:translate-y-0 active:scale-[0.99] cursor-pointer"
+                className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md shadow-purple-600/20 transition active:scale-95 cursor-pointer whitespace-nowrap"
               >
                 <FolderLock className="h-3.5 w-3.5" />
-                <span>{language === 'hi' ? 'दस्तावेज़ लॉकर खोलें' : 'Open Document Locker'}</span>
+                <span>{language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Open Document Locker'}</span>
               </Link>
               <Link
                 href="/updates"
-                className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-medium tracking-wide text-xs rounded-xl transition-all duration-200 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md hover:shadow-blue-500/15 active:translate-y-0 active:scale-[0.99] cursor-pointer shadow-2xs"
+                className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-bold text-xs rounded-xl transition active:scale-95 cursor-pointer whitespace-nowrap"
               >
                 <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                <span>{language === 'hi' ? 'लाइव सूचनाएं देखें' : 'Browse Live Notices'}</span>
-                <ArrowUpRight className="h-3.5 w-3.5 text-blue-500" />
+                <span>{language === 'hi' ? 'लाइव सूचनाएं' : 'Browse Live Notices'}</span>
+                <ArrowUpRight className="h-3.5 w-3.5 text-blue-500 hidden xs:inline" />
               </Link>
             </div>
           </div>
 
-          {/* Quick Metric Counter Badges with 3D Hover */}
-          <div className="grid grid-cols-3 gap-2.5 sm:gap-4 pt-2 border-t border-slate-100 dark:border-slate-800 p-1.5 -m-1.5">
-            <div className="bg-slate-50 dark:bg-slate-955 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 relative z-0 hover:z-10">
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Tracked</span>
-                <span className="text-base font-black text-slate-900 dark:text-white">{trackedJobs.length}</span>
+          {/* Quick Metric Counter Badges */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="bg-slate-50 dark:bg-slate-955 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 flex items-center justify-between min-w-0">
+              <div className="min-w-0">
+                <span className="text-[8.5px] xs:text-[9.5px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Total Tracked</span>
+                <span className="text-sm xs:text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight">{trackedJobs.length}</span>
               </div>
-              <BookmarkCheck className="h-5 w-5 text-slate-400" />
+              <BookmarkCheck className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400 shrink-0 ml-1" />
             </div>
 
-            <div className="bg-emerald-50/60 dark:bg-emerald-955 p-3 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/50 flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 relative z-0 hover:z-10">
-              <div>
-                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">Applied</span>
-                <span className="text-base font-black text-emerald-800 dark:text-emerald-300">{appliedCount}</span>
+            <div className="bg-emerald-50/60 dark:bg-emerald-955 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-emerald-200/80 dark:border-emerald-900/50 flex items-center justify-between min-w-0">
+              <div className="min-w-0">
+                <span className="text-[8.5px] xs:text-[9.5px] sm:text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block truncate">Applied</span>
+                <span className="text-sm xs:text-base sm:text-lg font-black text-emerald-800 dark:text-emerald-300 leading-tight">{appliedCount}</span>
               </div>
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 shrink-0 ml-1" />
             </div>
 
-            <div className="bg-blue-50/60 dark:bg-blue-955 p-3 rounded-2xl border border-blue-200/80 dark:border-blue-900/50 flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 relative z-0 hover:z-10">
-              <div>
-                <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider block">Saved</span>
-                <span className="text-base font-black text-blue-800 dark:text-blue-300">{savedCount}</span>
+            <div className="bg-blue-50/60 dark:bg-blue-955 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-blue-200/80 dark:border-blue-900/50 flex items-center justify-between min-w-0">
+              <div className="min-w-0">
+                <span className="text-[8.5px] xs:text-[9.5px] sm:text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider block truncate">Saved</span>
+                <span className="text-sm xs:text-base sm:text-lg font-black text-blue-800 dark:text-blue-300 leading-tight">{savedCount}</span>
               </div>
-              <Bookmark className="h-5 w-5 text-blue-600" />
+              <Bookmark className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 shrink-0 ml-1" />
             </div>
           </div>
         </section>
 
         {/* SEARCH AND FILTER BAR */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm space-y-2.5 sm:space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
             {/* Search Input */}
-            <div className="relative flex-1">
+            <div className="relative flex-1 min-w-0">
               <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={language === 'hi' ? 'जॉब शीर्षक, रजिस्ट्रेशन या रोल नंबर खोजें...' : 'Search by job title, reg ID, or roll number...'}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-9 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium placeholder-slate-400"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-9 py-2 sm:py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium placeholder-slate-400"
               />
               {searchQuery && (
                 <button
@@ -318,11 +319,11 @@ export default function TrackedJobsPage() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-0.5 sm:pb-0">
               <button
                 type="button"
                 onClick={() => setJobFilter('all')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 transform-gpu hover:-translate-y-0.5 hover:shadow-xs active:scale-95 cursor-pointer ${
+                className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold tracking-wide transition active:scale-95 cursor-pointer whitespace-nowrap ${
                   jobFilter === 'all'
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -334,27 +335,27 @@ export default function TrackedJobsPage() {
               <button
                 type="button"
                 onClick={() => setJobFilter('applied')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 transform-gpu hover:-translate-y-0.5 hover:shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold tracking-wide transition active:scale-95 cursor-pointer flex items-center gap-1 sm:gap-1.5 whitespace-nowrap ${
                   jobFilter === 'applied'
                     ? 'bg-emerald-600 text-white shadow-sm'
                     : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100'
                 }`}
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>{language === 'hi' ? 'आवेदन किया गया' : 'Applied'} ({appliedCount})</span>
+                <span>{language === 'hi' ? 'आवेदन' : 'Applied'} ({appliedCount})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setJobFilter('saved')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 transform-gpu hover:-translate-y-0.5 hover:shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold tracking-wide transition active:scale-95 cursor-pointer flex items-center gap-1 sm:gap-1.5 whitespace-nowrap ${
                   jobFilter === 'saved'
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100'
                 }`}
               >
                 <Bookmark className="h-3.5 w-3.5" />
-                <span>{language === 'hi' ? 'सेव किया गया' : 'Saved'} ({savedCount})</span>
+                <span>{language === 'hi' ? 'सहेजा गया' : 'Saved'} ({savedCount})</span>
               </button>
             </div>
           </div>

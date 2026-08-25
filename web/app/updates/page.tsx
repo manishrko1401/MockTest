@@ -233,8 +233,8 @@ export default function UpdatesCenterPage() {
     return (
       <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
         
-        {/* Mobile Header */}
-        <header className="h-14 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-3 flex items-center justify-between shadow-sm">
+        {/* Mobile Header - Increased Height */}
+        <header className="h-16 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2">
             {/* Back Button BEFORE Logo */}
             <button
@@ -444,8 +444,8 @@ export default function UpdatesCenterPage() {
       <div className="absolute top-10 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      {/* HEADER SECTION */}
-      <header className="h-16 sticky top-0 z-40 px-6 md:px-12 flex items-center justify-between shadow-sm bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-900">
+      {/* HEADER SECTION - Restored Original Layout with Increased Height */}
+      <header className="h-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors duration-200">
         <div className="flex items-center gap-4 md:gap-6">
           {/* Back Button BEFORE Logo */}
           <button
@@ -508,7 +508,7 @@ export default function UpdatesCenterPage() {
                 </div>
                 <span>{t.dashboard} ({currentUser.name.split(' ')[0]})</span>
               </Link>
-              <button onClick={logout} className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold">
+              <button onClick={logout} className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold cursor-pointer">
                 {t.signOut}
               </button>
             </div>

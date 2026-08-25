@@ -827,47 +827,6 @@ export default function MockTestsCatalog() {
             </div>
           )}
 
-          {/* Mobile Quick Category Selector Pills */}
-          {selectedSubCategory === null && !showBookmarks && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
-              <button
-                onClick={() => {
-                  setSelectedCategory(null);
-                  setSelectedSubCategory(null);
-                  setActiveSubSubId(null);
-                }}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
-                  selectedCategory === null
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 '
-                }`}
-              >
-                <Layers className="h-3 w-3" />
-                <span>{language === 'hi' ? 'सभी श्रेणियां' : 'All'}</span>
-              </button>
-              {examCatalog.map(cat => {
-                const isSelected = selectedCategory === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => {
-                      setSelectedCategory(cat.id);
-                      setSelectedSubCategory(null);
-                      setActiveSubSubId(null);
-                    }}
-                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
-                      isSelected
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 '
-                    }`}
-                  >
-                    <span>{getLocalizedName(cat, language)}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
           {/* RENDER BOOKMARKS OVERLAY VIEW */}
           {showBookmarks ? (
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-4 rounded-2xl shadow-sm space-y-4">
@@ -1702,7 +1661,7 @@ export default function MockTestsCatalog() {
     <div className="h-screen max-h-screen w-full flex flex-col bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden">
       
       {/* Navbar header */}
-      <header className="h-16 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 sm:px-6 lg:px-8 flex items-center justify-between relative shadow-xs z-30">
+      <header className="h-20 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 sm:px-6 lg:px-8 flex items-center justify-between relative shadow-xs z-30">
         <div className="flex items-center gap-2.5 sm:gap-4 lg:gap-6 min-w-0">
           {/* Back button on top left corner */}
           <Link 
@@ -2156,7 +2115,7 @@ export default function MockTestsCatalog() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+              <div className="exam-category-grid">
                 {getFilteredCatalogForSearch.map(cat => {
                   const isSsc = cat.id === 'ssc';
                   const isRailways = cat.id === 'railways';
@@ -2295,7 +2254,7 @@ export default function MockTestsCatalog() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                <div className="exam-category-grid">
                   {getFilteredSubCategories.map(subCat => {
                   const count = subCat.tests.length;
                   const countStr = count === 1 
@@ -2457,7 +2416,7 @@ export default function MockTestsCatalog() {
                             {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक टेस्ट सीरीज चुनें:' : 'Select a test series to start practicing:'}
                           </p>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                        <div className="exam-category-grid">
                           {groups.map(group => {
                             const count = group.tests.length;
                             const countStr = count === 1 

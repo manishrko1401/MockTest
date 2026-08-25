@@ -5,13 +5,24 @@ import { useAuth } from './AuthContext';
 import Link from 'next/link';
 import HomeSupportWidget from './components/HomeSupportWidget';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, GraduationCap, ChevronRight, ChevronLeft, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target, ArrowRight } from 'lucide-react';
+import { ShieldCheck, GraduationCap, ChevronRight, ChevronLeft, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target, ArrowRight, BookmarkCheck, Lock } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
 import { getLocalizedName } from './lib/examUtils';
 import { useIsMobile } from './useIsMobile';
 import VocabSection from './components/VocabSection';
 import BackgroundArts from './components/BackgroundArts';
 import LiveUpdatesBar from './components/LiveUpdatesBar';
+import LeftSideMenu from './components/LeftSideMenu';
+import HomeLeftSidebar from './components/HomeLeftSidebar';
+import HomeHeroBannerCarousel from './components/HomeHeroBannerCarousel';
+import HomeShortcutsSection from './components/HomeShortcutsSection';
+import HomeChatSection from './components/HomeChatSection';
+import HomeSuggestionSection from './components/HomeSuggestionSection';
+import HomeContactSection from './components/HomeContactSection';
+import HomeTermsSection from './components/HomeTermsSection';
+import HomePrivacySection from './components/HomePrivacySection';
+import HomeReferralsSection from './components/HomeReferralsSection';
+import PopularExamsMarquee from './components/PopularExamsMarquee';
 
 const EXAMS_BY_CATEGORY: Record<string, { id: string; name: string }[]> = {
   ssc: [
@@ -196,6 +207,7 @@ export default function HomeLandingPage() {
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  const [rightView, setRightView] = useState<'home' | 'chat' | 'suggestion' | 'contact' | 'terms' | 'privacy' | 'referrals'>('home');
 
 const formatSubCategoryName = (name: string) => {
   let cleanName = name
@@ -218,22 +230,20 @@ const formatSubCategoryName = (name: string) => {
   }, [examCatalog]);
 
   const displayCategories = React.useMemo(() => {
-    const adminCatalog = examCatalog || [];
-    // Show popular categories added by admin (isPopular === true)
+    // If admin has custom catalog items, use them; otherwise use rich default CATEGORIES
+    const adminCatalog = examCatalog && examCatalog.length > 0 ? examCatalog : CATEGORIES;
     const popularOnly = adminCatalog.filter((c: any) => c.isPopular === true);
     const targetCatalog = popularOnly.length > 0 ? popularOnly : adminCatalog;
 
-    return [...targetCatalog]
-      .sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
-      .map(c => ({
-        id: c.id,
-        name: c.name,
-        nameHi: c.nameHi,
-        desc: c.description || '',
-        count: c.countText || (c.subCategories?.length ? `${c.subCategories.length} Exams` : '0 Exams'),
-        logoUrl: c.logoUrl || null,
-        subCategories: [...(c.subCategories || [])].sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
-      }));
+    return targetCatalog.map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      nameHi: c.nameHi || undefined,
+      desc: c.desc || c.description || '',
+      count: c.count || c.countText || (c.subCategories?.length ? `${c.subCategories.length}+ Tests` : '40+ Tests'),
+      logoUrl: c.logoUrl || null,
+      subCategories: c.subCategories || (EXAMS_BY_CATEGORY[c.id] ? EXAMS_BY_CATEGORY[c.id].map(e => ({ id: e.id, name: formatSubCategoryName(e.name) })) : [])
+    }));
   }, [examCatalog]);
 
   const handleClaimPassPro = async () => {
@@ -394,6 +404,7 @@ const formatSubCategoryName = (name: string) => {
 
   const { isMobile, isMounted } = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [mobileUpdateTab, setMobileUpdateTab] = useState<'notice' | 'result' | 'admit_card'>('notice');
 
   // Screen back navigation screen-by-screen logic for mobile view
@@ -472,28 +483,11 @@ const formatSubCategoryName = (name: string) => {
           </Link>
 
           <div className="flex items-center gap-2">
-            {currentUser ? (
-              <Link
-                href="/profile"
-                className="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 text-blue-700 dark:text-blue-300 text-[11px] font-black flex items-center gap-1.5 active:scale-95 transition shadow-2xs"
-              >
-                <UserCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                <span>{language === 'hi' ? 'प्रोफाइल' : 'Profile'}</span>
-              </Link>
-            ) : (
-              <Link
-                href="/auth"
-                className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black flex items-center gap-1.5 active:scale-95 transition shadow-2xs"
-              >
-                <User className="h-3.5 w-3.5" />
-                <span>{t.logIn}</span>
-              </Link>
-            )}
-
-            {/* Hamburger Button */}
+            {/* Hamburger / Navigation Menu Button */}
             <button
               onClick={() => handleToggleMenu(!mobileMenuOpen)}
-              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-350 border border-slate-200 dark:border-slate-800 active:scale-95 cursor-pointer"
+              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-350 border border-slate-200 dark:border-slate-800 active:scale-95 cursor-pointer"
+              aria-label="Open Navigation Menu"
             >
               {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
             </button>
@@ -503,27 +497,69 @@ const formatSubCategoryName = (name: string) => {
         {/* Live Notices & Announcements Marquee */}
         <LiveUpdatesBar notices={noticesList} language={language} isMobile={true} />
 
-        {/* MOBILE SLIDE-DOWN DRAWER MENU */}
+        {/* MOBILE SLIDE-DOWN DRAWER MENU (Previous / Original Design) */}
         {mobileMenuOpen && (
-          <div className="fixed inset-x-0 top-14 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-205 dark:border-slate-900 z-30 shadow-lg p-6 flex flex-col gap-6 animate-in slide-in-from-top-4 duration-200">
-            <nav className="flex flex-col gap-4 text-sm font-bold text-slate-655 dark:text-slate-300">
-              <Link href="/mock-tests" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navTestSeries}</Link>
-              <Link href="/updates" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navUpdates}</Link>
-              <Link href="/locker" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">
+          <div className="fixed inset-x-0 top-14 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-900 z-50 shadow-2xl p-5 sm:p-6 flex flex-col gap-5 animate-in slide-in-from-top-4 duration-200">
+            <nav className="flex flex-col gap-3 text-sm font-bold text-slate-700 dark:text-slate-200">
+              <Link
+                href="/"
+                onClick={() => handleToggleMenu(false)}
+                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between font-black text-blue-600 dark:text-blue-400"
+              >
+                <span>{t.navHome}</span>
+                <ChevronRight className="h-4 w-4 text-blue-600" />
+              </Link>
+              <Link
+                href="/mock-tests"
+                onClick={() => handleToggleMenu(false)}
+                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
+              >
+                <span>{t.navTestSeries}</span>
+                <ChevronRight className="h-4 w-4 text-slate-400" />
+              </Link>
+              <Link
+                href="/updates"
+                onClick={() => handleToggleMenu(false)}
+                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
+              >
+                <span>{t.navUpdates}</span>
+                <ChevronRight className="h-4 w-4 text-slate-400" />
+              </Link>
+              <Link
+                href="/locker"
+                onClick={() => handleToggleMenu(false)}
+                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
+              >
                 <span>{language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}</span>
+                <ChevronRight className="h-4 w-4 text-slate-400" />
+              </Link>
+              <Link
+                href="/profile/tracked-jobs"
+                onClick={() => handleToggleMenu(false)}
+                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
+              >
+                <span>{language === 'hi' ? 'ट्रैक की गई परीक्षाएं' : 'Applied & Saved Exams'}</span>
+                <ChevronRight className="h-4 w-4 text-slate-400" />
               </Link>
               {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
-                <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navAdmin}</Link>
+                <Link
+                  href="/admin"
+                  onClick={() => handleToggleMenu(false)}
+                  className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
+                >
+                  <span>{t.navAdmin}</span>
+                  <ChevronRight className="h-4 w-4 text-slate-400" />
+                </Link>
               )}
             </nav>
 
-            <div className="flex flex-col gap-4 border-t border-slate-100 dark:border-slate-900 pt-4">
+            <div className="flex flex-col gap-3 pt-2 border-t border-slate-100 dark:border-slate-900">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-505">{t.langSelect}:</span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Language / भाषा</span>
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold"
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-xs font-bold border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 cursor-pointer"
                 >
                   <option value="en">English</option>
                   <option value="hi">हिन्दी</option>
@@ -531,51 +567,45 @@ const formatSubCategoryName = (name: string) => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500">Theme:</span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Theme / डार्क मोड</span>
                 <button
                   onClick={toggleTheme}
-                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold flex items-center gap-1.5"
+                  className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
                 >
-                  {theme === 'light' ? <><Moon className="h-3.5 w-3.5" /> Dark</> : <><Sun className="h-3.5 w-3.5" /> Light</>}
+                  {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4 text-amber-400" />}
                 </button>
               </div>
-            </div>
 
-            <div className="border-t border-slate-100 dark:border-slate-900 pt-4 flex flex-col gap-2">
               {currentUser ? (
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
-                      {currentUser.name[0]}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{currentUser.name}</p>
-                      <p className="text-[9px] text-slate-400 font-bold uppercase">{currentUser.candidateCode?.replace('CGL', 'HUB-id')}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full py-2.5 rounded-xl border border-red-200 text-red-650 dark:border-red-900/40 dark:text-red-400 font-bold text-xs hover:bg-red-50 text-center flex items-center justify-center gap-1"
+                <div className="flex flex-col gap-2 mt-2">
+                  <Link
+                    href="/profile"
+                    onClick={() => handleToggleMenu(false)}
+                    className="w-full py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-extrabold text-xs text-center border border-blue-200 dark:border-blue-900/40 flex items-center justify-center gap-1.5 shadow-xs"
                   >
-                    <LogOut className="h-3.5 w-3.5" /> {t.signOut}
+                    <UserCheck className="h-4 w-4" />
+                    <span>{currentUser.name} ({t.dashboard})</span>
+                  </Link>
+                  <button
+                    onClick={() => { logout(); handleToggleMenu(false); }}
+                    className="w-full py-2 text-xs font-bold text-red-600 dark:text-red-400 hover:underline text-center cursor-pointer"
+                  >
+                    {t.signOut}
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2.5 mt-2">
                   <Link
                     href="/auth"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-705 dark:text-slate-300 font-bold text-xs text-center"
+                    onClick={() => handleToggleMenu(false)}
+                    className="py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-bold text-xs text-center text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
                   >
                     {t.logIn}
                   </Link>
                   <Link
                     href="/auth"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs text-center shadow"
+                    onClick={() => handleToggleMenu(false)}
+                    className="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs text-center shadow-md shadow-blue-500/20"
                   >
                     {t.signUp}
                   </Link>
@@ -602,157 +632,88 @@ const formatSubCategoryName = (name: string) => {
             </svg>
           </div>
 
-          {/* 1. ANNOUNCEMENT BANNER PANEL (Fits Banner 100% Perfectly, Touch Swipeable & Auto Rotating) */}
-          <section
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            className="w-full border border-blue-200/80 dark:border-blue-900/50 rounded-2xl flex flex-col justify-between bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-md relative overflow-hidden transition-all duration-300 touch-pan-y"
-          >
-            {activeAnnouncements.length > 1 && (
-              <>
-                <div className="absolute top-2.5 right-2.5 z-30 flex gap-1 items-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
-                  {activeAnnouncements.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setAnnouncementIndex(idx)}
-                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                        announcementIndex === idx ? 'bg-blue-600 dark:bg-blue-400 w-4' : 'bg-slate-300 dark:bg-white/40 w-1.5'
-                      }`}
-                    />
-                  ))}
-                </div>
+          {/* 1. FULL WIDTH HERO BANNER CAROUSEL (Expanded Horizontal Width on Mobile) */}
+          <div className="-mx-3 sm:mx-0 w-[calc(100%+1.5rem)] sm:w-full pt-0.5 pb-1 px-0 sm:px-0">
+            <HomeHeroBannerCarousel onOpenPassClaim={() => setShowCongratsPopup(true)} />
+          </div>
 
-                {/* Left & Right Tap Buttons for Mobile Swipe Navigation */}
-                <button
-                  onClick={() => setAnnouncementIndex((prev) => (prev - 1 + activeAnnouncements.length) % activeAnnouncements.length)}
-                  className="absolute left-1.5 top-1/2 -translate-y-1/2 z-30 p-1 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full text-slate-700 hover:text-slate-900 dark:text-white/80 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition active:scale-90 shadow-md"
-                  aria-label="Previous Banner"
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  onClick={() => setAnnouncementIndex((prev) => (prev + 1) % activeAnnouncements.length)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 z-30 p-1 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full text-slate-700 hover:text-slate-900 dark:text-white/80 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition active:scale-90 shadow-md"
-                  aria-label="Next Banner"
-                >
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-              </>
-            )}
-
-            {activeAnnouncements.length === 0 ? (
-              <div className="w-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-slate-500 dark:text-slate-400">
-                <Bell className="h-6 w-6 text-slate-400 dark:text-slate-500 mb-1" />
-                <p className="text-[11px] font-semibold">
-                  {language === 'hi' ? 'वर्तमान में कोई सक्रिय घोषणाएं नहीं हैं।' : 'No active announcements at the moment.'}
+          {/* 2. 4 PRIMARY ACTION BUTTONS (Same design as desktop) */}
+          <div className="w-full grid grid-cols-2 gap-2.5 my-1">
+            {/* 1. TEST SERIES */}
+            <Link
+              href="/mock-tests"
+              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-orange-500/50 shadow-xs hover:shadow-md transition-all duration-200"
+            >
+              <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-500 dark:text-orange-400 flex items-center justify-center shrink-0 shadow-2xs">
+                <Award className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-tight">
+                  {language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series'}
+                </h4>
+                <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
+                  {language === 'hi' ? '1,500+ सीबीटी टेस्ट्स' : '1,500+ CBT Mocks'}
                 </p>
               </div>
-            ) : (
-              (() => {
-                const ann = activeAnnouncements[announcementIndex] || activeAnnouncements[0];
-                return (
-                  <div className="w-full flex flex-col justify-between animate-in fade-in duration-200 bg-white dark:bg-slate-900">
-                    {/* Banner Image Container - Fits 100% Perfectly Without Cropping Any Part */}
-                    <div className="w-full relative flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-1 overflow-hidden min-h-[140px]">
-                      {ann.imageUrl && ann.imageUrl.trim() ? (
-                        <img
-                          src={ann.imageUrl.trim().replace(/^http:\/\//i, 'https://')}
-                          alt={ann.title}
-                          className="w-full h-auto max-h-[260px] object-contain rounded-xl block mx-auto"
-                        />
-                      ) : (
-                        <div className="w-full h-36 rounded-xl bg-gradient-to-br from-blue-50 via-indigo-50/50 to-slate-100 dark:from-blue-950/60 dark:via-indigo-950/60 dark:to-slate-900 flex flex-col items-center justify-center p-4 text-center space-y-1">
-                          <Bell className="h-7 w-7 text-blue-600 dark:text-blue-400 animate-bounce" />
-                          <h3 className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-2">{ann.title}</h3>
-                        </div>
-                      )}
-                    </div>
+            </Link>
 
-                    {/* Small Announcement Info Footer at Bottom (Does NOT Block Banner) */}
-                    <div className="shrink-0 w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-2 px-3 flex items-center justify-between gap-2 z-20">
-                      <div className="flex-1 min-w-0 space-y-0.5 text-left">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="bg-blue-600 text-white font-black text-[8px] px-1.5 py-0.5 rounded border border-blue-400/30 uppercase tracking-wider">
-                            {ann.type || 'ANNOUNCEMENT'}
-                          </span>
-                          <span className="text-[8.5px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-0.5">
-                            <Calendar className="h-2.5 w-2.5 text-blue-600 dark:text-blue-400" /> {ann.date}
-                          </span>
-                          {ann.lastDate && (
-                            <span className="text-[8px] font-black text-red-600 dark:text-red-400 flex items-center gap-0.5 bg-red-50 dark:bg-red-950/70 border border-red-200 dark:border-red-800/40 px-1.5 py-0.5 rounded">
-                              <span className="h-1 w-1 rounded-full bg-red-500 animate-ping inline-block" />
-                              {language === 'hi' ? 'अंतिम: ' : 'Last: '}{ann.lastDate}
-                            </span>
-                          )}
-                        </div>
+            {/* 2. NOTICES & ANNOUNCEMENTS */}
+            <Link
+              href="/updates"
+              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-blue-500/50 shadow-xs hover:shadow-md transition-all duration-200"
+            >
+              <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs">
+                <Bell className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-tight">
+                  {language === 'hi' ? 'सूचनाएं एवं अलर्ट' : 'Notices & Alerts'}
+                </h4>
+                <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
+                  {language === 'hi' ? 'एडमिट कार्ड व परिणाम' : 'Admit Cards & Results'}
+                </p>
+              </div>
+            </Link>
 
-                        <h4 className="font-extrabold text-[9.5px] text-slate-900 dark:text-white leading-tight line-clamp-1">
-                          {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
-                        </h4>
-                      </div>
+            {/* 3. DOCUMENT LOCKER */}
+            <Link
+              href="/locker"
+              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/50 shadow-xs hover:shadow-md transition-all duration-200"
+            >
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
+                <Lock className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400 leading-tight">
+                  {language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}
+                </h4>
+                <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
+                  {language === 'hi' ? 'सुरक्षित प्रमाणपत्र वॉल्ट' : 'Secure Vault'}
+                </p>
+              </div>
+            </Link>
 
-                      {ann.url ? (
-                        <a
-                          href={ann.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-0.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[8.5px] px-2.5 py-1 rounded-md transition active:scale-95 shrink-0 cursor-pointer shadow-sm"
-                        >
-                          <span>{language === 'hi' ? 'विवरण' : 'Details'}</span>
-                          <ChevronRight className="h-2.5 w-2.5" />
-                        </a>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })()
-            )}
-          </section>
-
-          {/* 2. CENTERED HERO TITLE SECTION */}
-          <section className="text-center pt-2 pb-2 space-y-3 relative z-10 flex flex-col items-center justify-center">
-            {/* Festive Illustration above badge */}
-            <div className="w-full flex items-center justify-center -mb-1 animate-in fade-in zoom-in-95 duration-300">
-              <img
-                src="/festive-hero.png"
-                alt="Festive Celebration"
-                className="w-auto h-auto max-h-[140px] sm:max-h-[160px] object-contain drop-shadow-md pointer-events-none select-none"
-              />
-            </div>
-
-            {/* For Students, By Students Badge Below Offer Banner */}
-            <span className="inline-flex items-center gap-1 bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider shadow-xs">
-              {t.heroBadge}
-            </span>
-
-            {/* Centered Hero Title */}
-            <h1 className="text-base sm:text-lg font-black leading-tight text-slate-900 dark:text-white tracking-tight max-w-xs mx-auto">
-              {t.heroTitlePrefix}{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400">
-                {t.heroTitleSuffix}
-              </span>
-            </h1>
-
-            <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed font-semibold max-w-xs mx-auto">
-              {t.heroDesc}
-            </p>
-
-            {/* Test Series Primary Action Button */}
-            <div className="pt-1">
-              <Link
-                href="/mock-tests"
-                className="w-full max-w-[180px] bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2 px-4 rounded-xl text-xs transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
-              >
-                <BookOpen className="h-4 w-4" />
-                <span>{language === 'hi' ? 'टेस्ट सीरीज देखें' : 'Explore Test Series'}</span>
-              </Link>
-            </div>
-
-          </section>
+            {/* 4. APPLIED & SAVED EXAMS */}
+            <Link
+              href="/profile/tracked-jobs"
+              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-purple-500/50 shadow-xs hover:shadow-md transition-all duration-200"
+            >
+              <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-2xs">
+                <BookmarkCheck className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-tight">
+                  {language === 'hi' ? 'आवेदन व ट्रैकिंग' : 'Applied & Saved'}
+                </h4>
+                <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
+                  {language === 'hi' ? 'ट्रैक की गई परीक्षाएं' : 'Tracked Exams'}
+                </p>
+              </div>
+            </Link>
+          </div>
 
           {/* POPULAR CATEGORIES */}
-          <section className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-900 relative z-10">
+          <section className="space-y-6 pt-2 border-t border-slate-200 dark:border-slate-900 relative z-10">
             <div className="text-center max-w-sm mx-auto">
               <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.popularTitle}</h2>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">{t.popularDesc}</p>
@@ -1048,104 +1009,6 @@ const formatSubCategoryName = (name: string) => {
           </div>
         )}
       </div>
-      {showCongratsPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 overflow-hidden">
-            {/* Background design accents */}
-            <div className="absolute -top-10 -right-10 w-36 h-36 bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-2xl pointer-events-none"></div>
-            <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-2xl pointer-events-none"></div>
-
-            {/* Close cross */}
-            <button
-              onClick={() => {
-                setShowCongratsPopup(false);
-                sessionStorage.setItem('dismissed_congrats_popup', 'true');
-              }}
-              className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-55 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-350 transition"
-            >
-              <X className="h-4 w-4" />
-            </button>
-
-            {/* Header Icon */}
-            <div className="mx-auto w-16 h-16 bg-blue-50 dark:bg-blue-950/60 rounded-2xl flex items-center justify-center border border-blue-100 dark:border-blue-900/40 mb-6 shadow-inner relative">
-              <Gift className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-bounce" />
-              <Sparkles className="h-4 w-4 text-yellow-500 dark:text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
-            </div>
-
-            {/* Content */}
-            <div className="text-center space-y-2">
-              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                {language === 'hi' ? 'बधाई हो! 🎉' : 'Congratulations! 🎉'}
-              </h2>
-              <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
-                {language === 'hi' ? 'मॉक टेस्ट हब टीम से उपहार' : 'Gift from Mock Test Hub Team'}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 px-2 pt-2 leading-relaxed">
-                {language === 'hi'
-                  ? 'आपके खाते में 1 वर्ष का मॉक टेस्ट पास प्रो (Premium Plan) सक्रिय कर दिया गया है! अब आप सभी प्रीमियम परीक्षाओं का उपयोग कर सकते हैं।'
-                  : 'A 1-Year Mock Test Pass Pro subscription has been credited to your account! Explore all features and premium tests immediately.'}
-              </p>
-            </div>
-
-            {/* Unlocked Benefits list */}
-            <div className="mt-6 p-4 bg-slate-55 dark:bg-slate-955/60 border border-slate-150 dark:border-slate-850 rounded-2xl space-y-3.5">
-              <div className="flex items-start gap-3">
-                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">🔓</div>
-                <div>
-                  <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
-                    {language === 'hi' ? 'असीमित मॉक टेस्ट्स' : 'Unlimited Premium Tests'}
-                  </h4>
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
-                    {language === 'hi' ? 'सभी एसएससी, बैंकिंग, रेलवे और राज्य स्तरीय प्रीमियम टेस्ट अनलॉक हैं।' : 'Access all SSC, Banking, Railways & State level exams without restriction.'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">📝</div>
-                <div>
-                  <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
-                    {language === 'hi' ? 'कस्टम टेस्ट क्रिएटर' : 'Custom Paper Creator'}
-                  </h4>
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
-                    {language === 'hi' ? 'अपने कमजोर विषयों के अनुसार स्वयं के प्रश्न-पत्र तैयार करें।' : 'Build customizable exam papers focused on your weak subjects.'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">📊</div>
-                <div>
-                  <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
-                    {language === 'hi' ? 'पूर्ण स्पीड और गति विश्लेषक' : 'Advanced Speed Analytics'}
-                  </h4>
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
-                    {language === 'hi' ? 'अपने डैशबोर्ड पर सेक्शनल टाइम, स्पीड और तुलनात्मक परिणाम देखें।' : 'Track sectional timing averages and topper comparative speed details.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Action button */}
-            <div className="mt-6">
-              <button
-                onClick={handleClaimPassPro}
-                disabled={claiming}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold py-3.5 rounded-2xl text-xs transition active:scale-95 cursor-pointer shadow-lg shadow-blue-500/20 uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {claiming ? (
-                  <span>{language === 'hi' ? 'प्रोसेसिंग...' : 'Processing...'}</span>
-                ) : (
-                  <>
-                    <Gift className="h-4.5 w-4.5 animate-pulse" />
-                    <span>{language === 'hi' ? '1 वर्ष का पास प्रो दावा करें (Claim Now) 🎁' : 'Claim 1 Year Pass Pro 🎁'}</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {/* Floating Support Team Overlay Widget on Mobile Home Screen */}
       <HomeSupportWidget />
     </>
@@ -1153,18 +1016,19 @@ const formatSubCategoryName = (name: string) => {
 }
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200">
+    <div className="h-screen max-h-screen h-[100dvh] w-full flex flex-col bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden relative">
       
-      {/* Background Decorative Arts & Designs (Books, Students, Rockets, Circles, Triangles) */}
-      <BackgroundArts isMobile={false} />
-
-      {/* Decorative Orbs */}
-      <div className="absolute top-10 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      {/* Background Decorative Arts & Designs (Strictly bounded within viewport) */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <BackgroundArts isMobile={false} />
+        {/* Decorative Orbs */}
+        <div className="absolute top-10 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      </div>
 
       {/* HEADER SECTION */}
-      <header className="hidden md:flex h-16 sticky top-0 z-40 px-4 sm:px-6 lg:px-10 items-center justify-between shadow-sm glass-header transition-all duration-350">
-        <div className="flex items-center gap-4 lg:gap-8 min-w-0">
+      <header className="hidden md:flex h-20 shrink-0 sticky top-0 z-40 px-4 sm:px-6 lg:px-8 items-center justify-between shadow-sm glass-header transition-all duration-350 bg-white/95 dark:bg-slate-950/95 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-3 lg:gap-6 min-w-0">
           {/* Original MockTest Hub Header Logo */}
           <Link href="/" className="flex items-center gap-2.5 lg:gap-3 shrink-0">
             <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 lg:p-2 rounded-full shadow-sm flex items-center justify-center h-9 w-9 lg:h-10 lg:w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
@@ -1242,236 +1106,141 @@ const formatSubCategoryName = (name: string) => {
         </div>
       </header>
 
-      {/* Live Notices & Announcements Marquee */}
-      <LiveUpdatesBar notices={noticesList} language={language} isMobile={false} />
-
-      {/* HERO SECTION - Starts immediately below Live Updates Bar */}
-      <section className="pt-2 pb-4 sm:pt-3 sm:pb-6 min-[1080px]:pt-5 min-[1080px]:pb-10 px-3 sm:px-4 md:px-6 min-[1080px]:px-8 max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 min-[1080px]:gap-8 items-stretch relative z-10 edu-grid-pattern">
+      {/* Main split-pane content: Left Side Menu Section (identical to category page) + Right Main Content */}
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden relative">
         
-        {/* Floating Book Art */}
-        <div className="absolute top-10 left-6 opacity-20 dark:opacity-[0.12] animate-float pointer-events-none hidden xl:block">
-          <svg className="w-14 h-14 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
-            <path d="M6 6h10M6 10h10M6 14h10" />
-          </svg>
-        </div>
+        {/* Left Side: Exam Category-Style Sidebar Menu */}
+        <HomeLeftSidebar
+          onOpenPassClaim={() => setShowCongratsPopup(true)}
+          activeView={rightView}
+          onSelectView={setRightView}
+        />
 
-        {/* Floating Graduation Cap Art */}
-        <div className="absolute bottom-10 left-[45%] opacity-20 dark:opacity-[0.12] animate-float-delayed pointer-events-none hidden xl:block">
-          <svg className="w-16 h-16 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-            <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-          </svg>
-        </div>
-
-        {/* Floating Ruler / Triangle Art */}
-        <div className="absolute top-10 right-20 opacity-20 dark:opacity-[0.12] animate-float pointer-events-none hidden xl:block">
-          <svg className="w-12 h-12 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M22 22 2 2v20Z" />
-            <path d="M18 18H6V6" />
-          </svg>
-        </div>
-
-        {/* Left Side: Compact Pitch Title Section */}
-        <div className="md:col-span-5 min-[1080px]:col-span-4 flex flex-col justify-center space-y-1.5 sm:space-y-2 min-[1080px]:space-y-3.5 text-left">
-          {/* Festive Illustration above badge */}
-          <div className="w-full flex items-center justify-start pb-0.5 min-[1080px]:pb-1 animate-in fade-in zoom-in-95 duration-300">
-            <img
-              src="/festive-hero.png"
-              alt="Festive Celebration"
-              className="w-auto h-auto max-h-[60px] sm:max-h-[75px] md:max-h-[90px] min-[1080px]:max-h-[175px] xl:max-h-[195px] object-contain drop-shadow-md hover:scale-105 transition-transform duration-300 pointer-events-none select-none"
-            />
-          </div>
-
-          <span className="inline-flex items-center gap-1.5 text-[9.5px] sm:text-[10px] min-[1080px]:text-xs bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-2.5 py-0.5 min-[1080px]:px-3 min-[1080px]:py-1 rounded-full uppercase tracking-wider shadow-xs self-start">
-            {t.heroBadge}
-          </span>
+        {/* Right Side: Home Page Content Container */}
+        <main className="flex-1 min-w-0 px-3 md:px-6 pb-0 pt-0 overflow-y-auto overflow-x-hidden edu-grid-pattern relative h-full min-h-0 no-scrollbar flex flex-col space-y-3">
           
-          <h1 className="text-base sm:text-lg md:text-xl min-[1080px]:text-3xl font-black leading-tight min-[1080px]:leading-snug tracking-tight text-slate-900 dark:text-white">
-            {t.heroTitlePrefix}<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400">{t.heroTitleSuffix}</span>
-          </h1>
-          
-          <p className="text-slate-600 dark:text-slate-400 text-[11px] sm:text-[11.5px] md:text-xs min-[1080px]:text-sm leading-relaxed max-w-[290px] sm:max-w-xs md:max-w-sm font-semibold line-clamp-4">
-            {t.heroDesc}
-          </p>
-
-          <div className="pt-0.5 min-[1080px]:pt-1">
-            <Link
-              href="/mock-tests"
-              className="inline-flex items-center gap-1.5 min-[1080px]:gap-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-3 py-1.5 min-[1080px]:px-4 min-[1080px]:py-2.5 rounded-xl text-xs shadow-md transition active:scale-95"
-            >
-              <BookOpen className="h-3.5 w-3.5 min-[1080px]:h-4 min-[1080px]:w-4" />
-              <span>{language === 'hi' ? 'टेस्ट सीरीज देखें' : 'Explore Test Series'}</span>
-              <ChevronRight className="h-3 w-3 min-[1080px]:h-3.5 min-[1080px]:w-3.5" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Right Side: Wider Full-Height Banner Announcement Panel */}
-        <div className="md:col-span-7 min-[1080px]:col-span-8 border border-blue-200/80 dark:border-blue-900/50 rounded-2xl min-[1080px]:rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[300px] sm:min-h-[340px] md:min-h-[380px] min-[1080px]:min-h-[460px] bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xl hover:shadow-2xl transition-all duration-300 group">
-          {activeAnnouncements.length > 1 && (
-            <>
-              <div className="absolute top-3.5 right-3.5 z-30 flex gap-1.5 items-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-md">
-                {activeAnnouncements.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setAnnouncementIndex(idx)}
-                    className={`h-2 rounded-full transition-all cursor-pointer ${
-                      announcementIndex === idx ? 'bg-blue-600 dark:bg-blue-400 w-5' : 'bg-slate-300 dark:bg-white/40 hover:bg-slate-400 dark:hover:bg-white/70 w-2'
-                    }`}
-                  />
-                ))}
-              </div>
-
-              {/* Small Left & Right Navigation Arrows */}
-              <button
-                onClick={() => setAnnouncementIndex((prev) => (prev - 1 + activeAnnouncements.length) % activeAnnouncements.length)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-30 p-2 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full text-slate-700 hover:text-slate-900 dark:text-white/80 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition active:scale-95 shadow-lg group-hover:opacity-100 opacity-80 cursor-pointer"
-                aria-label="Previous Announcement"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setAnnouncementIndex((prev) => (prev + 1) % activeAnnouncements.length)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-30 p-2 bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full text-slate-700 hover:text-slate-900 dark:text-white/80 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition active:scale-95 shadow-lg group-hover:opacity-100 opacity-80 cursor-pointer"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </>
-          )}
-
-          {activeAnnouncements.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-500 dark:text-slate-400 space-y-2">
-              <Bell className="h-10 w-10 text-slate-400 dark:text-slate-600" />
-              <p className="text-sm font-semibold">
-                {language === 'hi' ? 'वर्तमान में कोई सक्रिय घोषणाएं नहीं हैं।' : 'No active announcements at the moment.'}
-              </p>
+          {rightView === 'chat' ? (
+            <div className="w-full h-full py-2 sm:py-3">
+              <HomeChatSection onBack={() => setRightView('home')} />
+            </div>
+          ) : rightView === 'suggestion' ? (
+            <div className="w-full h-full py-2 sm:py-3">
+              <HomeSuggestionSection onBack={() => setRightView('home')} />
+            </div>
+          ) : rightView === 'contact' ? (
+            <div className="w-full h-full py-2 sm:py-3">
+              <HomeContactSection onBack={() => setRightView('home')} />
+            </div>
+          ) : rightView === 'terms' ? (
+            <div className="w-full h-full py-2 sm:py-3">
+              <HomeTermsSection onBack={() => setRightView('home')} />
+            </div>
+          ) : rightView === 'privacy' ? (
+            <div className="w-full h-full py-2 sm:py-3">
+              <HomePrivacySection onBack={() => setRightView('home')} />
+            </div>
+          ) : rightView === 'referrals' ? (
+            <div className="w-full h-full py-2 sm:py-3">
+              <HomeReferralsSection onBack={() => setRightView('home')} />
             </div>
           ) : (
-            (() => {
-              const ann = activeAnnouncements[announcementIndex] || activeAnnouncements[0];
-              return (
-                <div className="flex-1 flex flex-col justify-between h-full w-full animate-in fade-in duration-300 bg-white dark:bg-slate-900">
-                  {/* Top Banner Image Container - Fits Entire Image Completely Without Cropping */}
-                  <div className="flex-1 w-full relative min-h-[300px] md:min-h-[340px] flex items-center justify-center bg-slate-50 dark:bg-slate-900 overflow-hidden p-2">
-                    {ann.imageUrl && ann.imageUrl.trim() ? (
-                      <img
-                        src={ann.imageUrl.trim().replace(/^http:\/\//i, 'https://')}
-                        alt={ann.title}
-                        className="w-full h-full object-contain max-h-[340px] md:max-h-[380px] rounded-xl group-hover:scale-[1.01] transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full min-h-[280px] rounded-xl bg-gradient-to-br from-blue-50 via-indigo-50/50 to-slate-100 dark:from-blue-950/60 dark:via-indigo-950/60 dark:to-slate-900 flex flex-col items-center justify-center p-6 text-center space-y-2">
-                        <Bell className="h-12 w-12 text-blue-600 dark:text-blue-400 animate-bounce" />
-                        <h3 className="font-black text-lg md:text-xl text-slate-900 dark:text-white max-w-md">{ann.title}</h3>
-                      </div>
-                    )}
-                  </div>
+            <>
+              {/* Live Notices & Announcements Marquee */}
+              <div className="-mx-3 md:-mx-6 -mt-0 mb-3 sm:mb-4">
+                <LiveUpdatesBar notices={noticesList} language={language} isMobile={false} />
+              </div>
 
-                  {/* Bottom Compact Announcement Info Footer (Does NOT block the banner) */}
-                  <div className="shrink-0 w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-2 px-3.5 md:px-5 flex items-center justify-between gap-2.5 z-20">
-                    <div className="flex-1 min-w-0 space-y-0.5 text-left">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="bg-blue-600 text-white font-black text-[8px] md:text-[9px] px-2 py-0.5 rounded border border-blue-400/30 uppercase tracking-wider">
-                          {ann.type || 'ANNOUNCEMENT'}
-                        </span>
-                        <span className="text-[9px] md:text-[10.5px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
-                          <Calendar className="h-3 w-3 text-blue-600 dark:text-blue-400" /> {ann.date}
-                        </span>
-                        {ann.lastDate && (
-                          <span className="text-[8.5px] md:text-[10px] font-black text-red-600 dark:text-red-400 flex items-center gap-1 bg-red-50 dark:bg-red-950/70 border border-red-200 dark:border-red-800/40 px-1.5 py-0.5 rounded">
-                            <span className="h-1 w-1 rounded-full bg-red-500 animate-ping inline-block" />
-                            {language === 'hi' ? 'अंतिम तिथि: ' : 'Last Date: '}{ann.lastDate}
-                          </span>
-                        )}
-                      </div>
+              {/* FULL WIDTH 3D HERO BANNER CAROUSEL (Covers entire right content area) */}
+              <div className="w-full pt-1 sm:pt-2 pb-1.5 sm:pb-2">
+                <HomeHeroBannerCarousel onOpenPassClaim={() => setShowCongratsPopup(true)} />
+              </div>
 
-                      <h4 className="font-extrabold text-[11px] md:text-xs text-slate-900 dark:text-white leading-tight line-clamp-1">
-                        {language === 'hi' && ann.titleHi ? ann.titleHi : ann.title}
-                      </h4>
-                    </div>
+          {/* 4 PRIMARY ACTION BUTTONS (Just below Banner Section - Full Text Display) */}
+          <div className="w-full grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-2.5 lg:gap-3.5 my-1.5">
+            {/* 1. TEST SERIES */}
+            <Link
+              href="/mock-tests"
+              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-orange-500/50 shadow-xs hover:shadow-md transition-all duration-200 transform-gpu hover:-translate-y-0.5"
+            >
+              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-xl bg-orange-500/10 text-orange-500 dark:text-orange-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                <Award className="h-4 w-4 sm:h-4.5 sm:w-4.5 xl:h-5.5 xl:w-5.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-extrabold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors leading-tight line-clamp-1">
+                  {language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series'}
+                </h4>
+                <p className="text-[9px] sm:text-[9.5px] xl:text-[10.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
+                  {language === 'hi' ? '1,500+ सीबीटी टेस्ट्स' : '1,500+ CBT Mocks'}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-slate-400 opacity-40 group-hover:opacity-100 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all shrink-0 hidden 2xl:block" />
+            </Link>
 
-                    <Link
-                      href={`/updates/${ann.id}`}
-                      className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[10px] md:text-[11px] px-3 py-1.5 rounded-lg transition shadow-md hover:shadow-blue-500/25 active:scale-95 shrink-0 cursor-pointer"
-                    >
-                      <span>{language === 'hi' ? 'विवरण देखें' : 'View Details'}</span>
-                      <ChevronRight className="h-3 w-3" />
-                    </Link>
-                  </div>
-                </div>
-              );
-            })()
-          )}
-        </div>
-      </section>
+            {/* 2. NOTICE AND ANNOUNCEMENTS */}
+            <Link
+              href="/updates"
+              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500/50 shadow-xs hover:shadow-md transition-all duration-200 transform-gpu hover:-translate-y-0.5"
+            >
+              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5 xl:h-5.5 xl:w-5.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-extrabold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight line-clamp-1">
+                  {language === 'hi' ? 'सूचनाएं एवं अपडेट्स' : 'Notices & Announcements'}
+                </h4>
+                <p className="text-[9px] sm:text-[9.5px] xl:text-[10.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
+                  {language === 'hi' ? 'एडमिट कार्ड व परिणाम' : 'Admit Cards & Results'}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-slate-400 opacity-40 group-hover:opacity-100 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all shrink-0 hidden 2xl:block" />
+            </Link>
 
-      {/* CATEGORIES SECTION */}
-      <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900">
-        <div className="text-center max-w-xl mx-auto mb-12">
-          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.popularTitle}</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">{t.popularDesc}</p>
-        </div>
+            {/* 3. DOCUMENT LOCKER */}
+            <Link
+              href="/locker"
+              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/50 shadow-xs hover:shadow-md transition-all duration-200 transform-gpu hover:-translate-y-0.5"
+            >
+              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                <Lock className="h-4 w-4 sm:h-4.5 sm:w-4.5 xl:h-5.5 xl:w-5.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-extrabold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight line-clamp-1">
+                  {language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}
+                </h4>
+                <p className="text-[9px] sm:text-[9.5px] xl:text-[10.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
+                  {language === 'hi' ? 'सुरक्षित प्रमाणपत्र वॉल्ट' : 'Secure Certificate Vault'}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-slate-400 opacity-40 group-hover:opacity-100 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all shrink-0 hidden 2xl:block" />
+            </Link>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
-          {displayCategories.map(cat => {
-            const style = getWebCategoryStyle(cat.id);
-            const IconComponent = 
-              cat.id.includes('ssc') ? Award :
-              cat.id.includes('railways') ? TrendingUp :
-              cat.id.includes('banking') ? Coins :
-              cat.id.includes('teaching') ? BookOpen :
-              cat.id.includes('ugc_net') ? GraduationCap :
-              cat.id.includes('upsc') ? ShieldCheck :
-              cat.id.includes('defence') ? ShieldCheck :
-              cat.id.includes('engg') || cat.id.includes('engineering') ? GraduationCap : MapPin;
-            const shadowStyle = 
-              cat.id.includes('ssc') ? 'glow-shadow-amber' :
-              cat.id.includes('railways') ? 'glow-shadow-blue' :
-              cat.id.includes('banking') ? 'glow-shadow-green' :
-              cat.id.includes('teaching') ? 'glow-shadow-amber' :
-              cat.id.includes('ugc_net') ? 'glow-shadow-blue' : 'glow-shadow-purple';
+            {/* 4. APPLIED & SAVED EXAMS */}
+            <Link
+              href="/profile/tracked-jobs"
+              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-purple-500/50 shadow-xs hover:shadow-md transition-all duration-200 transform-gpu hover:-translate-y-0.5"
+            >
+              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-xl bg-purple-500/10 text-purple-500 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                <BookmarkCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5 xl:h-5.5 xl:w-5.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-extrabold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors leading-tight line-clamp-1">
+                  {language === 'hi' ? 'आवेदन व सेव परीक्षाएं' : 'Applied & Saved Exams'}
+                </h4>
+                <p className="text-[9px] sm:text-[9.5px] xl:text-[10.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
+                  {language === 'hi' ? 'ट्रैक किए गए सभी फॉर्म' : 'View Tracked & Saved Exams'}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-slate-400 opacity-40 group-hover:opacity-100 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all shrink-0 hidden 2xl:block" />
+            </Link>
+          </div>
 
-                return (
-                  <Link
-                    key={cat.id}
-                    href={`/mock-tests?cat=${cat.id}`}
-                    className={`border-2 p-5 rounded-2xl flex flex-col justify-between group transition-all duration-300 transform-gpu hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_16px_32px_-8px_rgba(0,0,0,0.14),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_16px_32px_-8px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] active:translate-y-0 active:scale-[0.99] text-left w-full cursor-pointer relative overflow-hidden ${style.bg} ${shadowStyle}`}
-                  >
-                    {/* Decorative background circle art (watermark) */}
-                    <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-current opacity-[0.03] dark:opacity-[0.015] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
-                    <div className="absolute -bottom-8 -left-8 w-16 h-16 rounded-full bg-current opacity-[0.02] dark:opacity-[0.01] pointer-events-none group-hover:scale-125 transition-transform duration-300" />
-                    <div>
-                      <div className="flex items-center justify-between mb-3.5">
-                        {cat.logoUrl ? (
-                          <div className="w-11 h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-                            <img
-                              src={cat.logoUrl}
-                              alt={`${cat.name} logo`}
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                        ) : (
-                          <div className={`p-2.5 rounded-xl ${style.iconBg}`}>
-                            <IconComponent className="h-5 w-5 animate-pulse" />
-                          </div>
-                        )}
-                        <span className={`text-[10px] font-black tracking-wider group-hover:underline ${style.accentText}`}>
-                          {cat.count}
-                        </span>
-                      </div>
-                      <h4 className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white mb-1.5">{getLocalizedName(cat, language)}</h4>
-                      <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 leading-normal font-semibold">{cat.desc}</p>
-                    </div>
-
-                    <div className={`flex items-center gap-1.5 font-bold text-[9px] md:text-[10px] uppercase tracking-wider mt-5 pt-3 border-t w-full ${style.btnAccent}`}>
-                      {t.exploreTests} <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
-                    </div>
-                  </Link>
-                );
-              })}
-        </div>
-      </section>
+      {/* POPULAR EXAM CATEGORIES MARQUEE SECTION */}
+      <PopularExamsMarquee
+        categories={displayCategories}
+        language={language}
+        title={t.popularTitle}
+        exploreText={t.exploreTests}
+      />
 
       {/* DESKTOP VOCABULARY BOOSTER SECTION - HIDDEN AS REQUESTED */}
       {/* <section className="py-12 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900">
@@ -1816,18 +1585,38 @@ const formatSubCategoryName = (name: string) => {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-10 px-6 md:px-12 mt-auto text-center text-xs text-slate-500 dark:text-slate-500 transition-colors duration-200">
+      {/* FOOTER (Full width anchor at the bottom of scroll container) */}
+      <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 py-8 px-6 md:px-12 mt-8 -mx-3 md:-mx-6 text-center text-xs text-slate-500 dark:text-slate-400 shrink-0">
         <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
         <p className="mt-1 text-[11px]">Developed to simulate real-world government selection computer based assessments.</p>
         <div className="mt-3 flex items-center justify-center gap-4">
-          <Link href="/contact" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Contact Us</Link>
+          <button
+            onClick={() => setRightView('contact')}
+            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+          >
+            Contact Us
+          </button>
           <span className="text-slate-300 dark:text-slate-700">•</span>
-          <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Terms & Conditions</Link>
+          <button
+            onClick={() => setRightView('terms')}
+            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+          >
+            Terms & Conditions
+          </button>
           <span className="text-slate-300 dark:text-slate-700">•</span>
-          <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Privacy Policy</Link>
+          <button
+            onClick={() => setRightView('privacy')}
+            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+          >
+            Privacy Policy
+          </button>
         </div>
       </footer>
+            </>
+          )}
+
+        </main>
+      </div>
 
 
 
