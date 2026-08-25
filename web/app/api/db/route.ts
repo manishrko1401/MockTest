@@ -2201,6 +2201,7 @@ async function handleAddMockTest(data: any) {
     requiredTier,
     hasSectionalTiming,
     sectionalTimings,
+    lockSectionOnSubmit,
     testbookTotalUsers,
     testbookTopperScore,
     testbookAverageScore,
@@ -2242,6 +2243,7 @@ async function handleAddMockTest(data: any) {
       passingCutoff: 0.0,
       hasSectionalTiming: hasSectionalTiming ?? false,
       sectionalTimings: sectionalTimings ?? undefined,
+      lockSectionOnSubmit: lockSectionOnSubmit !== undefined ? Boolean(lockSectionOnSubmit) : false,
       testbookTotalUsers: testbookTotalUsers !== undefined ? Number(testbookTotalUsers) : 0,
       testbookTopperScore: testbookTopperScore !== undefined ? Number(testbookTopperScore) : 0.0,
       testbookAverageScore: testbookAverageScore !== undefined ? Number(testbookAverageScore) : 0.0,
@@ -2439,6 +2441,7 @@ async function handleEditMockTestTitle(data: any) {
     requiredTierName,
     hasSectionalTiming,
     sectionalTimings,
+    lockSectionOnSubmit,
   } = data;
 
   const tierToUse = requiredTierName !== undefined ? requiredTierName : requiredTier;
@@ -2460,6 +2463,7 @@ async function handleEditMockTestTitle(data: any) {
       requiredTierName: tierToUse !== undefined ? tierToUse : undefined,
       hasSectionalTiming: hasSectionalTiming !== undefined ? Boolean(hasSectionalTiming) : undefined,
       sectionalTimings: sectionalTimings !== undefined ? sectionalTimings : undefined,
+      lockSectionOnSubmit: lockSectionOnSubmit !== undefined ? Boolean(lockSectionOnSubmit) : undefined,
     },
   });
 
@@ -2815,6 +2819,7 @@ async function handleSaveCustomQuestions(rawPayload: any) {
           ...(payload.negativeMarks !== undefined ? { negativeMarks: Number(payload.negativeMarks) } : {}),
           ...(payload.hasSectionalTiming !== undefined ? { hasSectionalTiming: Boolean(payload.hasSectionalTiming) } : {}),
           ...(payload.sectionalTimings !== undefined ? { sectionalTimings: payload.sectionalTimings } : {}),
+          ...(payload.lockSectionOnSubmit !== undefined ? { lockSectionOnSubmit: Boolean(payload.lockSectionOnSubmit) } : {}),
         }
       });
     } else {
@@ -2879,6 +2884,7 @@ async function handleSaveCustomQuestions(rawPayload: any) {
           negativeMarks: payload.negativeMarks !== undefined ? Number(payload.negativeMarks) : 0.5,
           hasSectionalTiming: payload.hasSectionalTiming !== undefined ? Boolean(payload.hasSectionalTiming) : false,
           sectionalTimings: payload.sectionalTimings !== undefined ? payload.sectionalTimings : undefined,
+          lockSectionOnSubmit: payload.lockSectionOnSubmit !== undefined ? Boolean(payload.lockSectionOnSubmit) : false,
           requiredTierName: 'None',
           customQuestions: questionsDataToStore,
         }
@@ -3047,6 +3053,7 @@ async function handleGetCustomQuestions(rawPayload: any) {
     maxMarks: mockTest?.maxMarks ?? null,
     hasSectionalTiming: mockTest?.hasSectionalTiming ?? null,
     sectionalTimings: mockTest?.sectionalTimings ?? null,
+    lockSectionOnSubmit: mockTest?.lockSectionOnSubmit ?? null,
     sections: mockTest?.sections ?? [],
   });
 }
@@ -3121,6 +3128,7 @@ async function getCompiledExamCatalog() {
         ALTER TABLE "exams" ADD COLUMN IF NOT EXISTS "nameHi" TEXT DEFAULT '';
         ALTER TABLE "test_series" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
         ALTER TABLE "mock_tests" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
+        ALTER TABLE "mock_tests" ADD COLUMN IF NOT EXISTS "lockSectionOnSubmit" BOOLEAN DEFAULT FALSE;
         ALTER TABLE "notices" ADD COLUMN IF NOT EXISTS "titleHi" TEXT DEFAULT '';
       `);
     } catch (err: any) {
@@ -3144,6 +3152,7 @@ async function getCompiledExamCatalog() {
       "requiredTierName", 
       "hasSectionalTiming", 
       "sectionalTimings", 
+      COALESCE("lockSectionOnSubmit", false) as "lockSectionOnSubmit",
       "orderIndex", 
       "positiveMarks", 
       "negativeMarks", 
@@ -3184,6 +3193,7 @@ async function getCompiledExamCatalog() {
       customQuestionsCount,
       hasSectionalTiming: t.hasSectionalTiming ?? false,
       sectionalTimings: t.sectionalTimings ?? null,
+      lockSectionOnSubmit: t.lockSectionOnSubmit ?? false,
       testbookTotalUsers: t.testbookTotalUsers ?? 0,
       testbookTopperScore: t.testbookTopperScore ?? 0.0,
       testbookAverageScore: t.testbookAverageScore ?? 0.0,

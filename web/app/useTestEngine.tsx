@@ -55,6 +55,7 @@ export interface ActiveSession {
   sections: Section[];
   questions: Question[];
   hasSectionalTiming?: boolean; // When true, lock users per section with per-section countdown
+  lockSectionOnSubmit?: boolean; // When true, total test duration applies, and submitting a section advances and locks previous sections
 }
 
 /**
@@ -80,6 +81,7 @@ export interface EngineState {
   currentSectionIndex: number;
   currentQuestionIndex: number; // Index within the current section
   responses: Record<string, QuestionResponse>; // key: questionId
+  submittedSectionIndices?: number[];
   timeRemaining: number;
   isTimerRunning: boolean;
   language: 'en' | 'hi';
@@ -103,7 +105,7 @@ export interface EngineState {
 }
 
 type EngineAction =
-  | { type: 'INIT_SESSION'; payload: { session: ActiveSession; maxViolations?: number; defaultLanguage?: 'en' | 'hi'; isRpscRasMode?: boolean; resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number } } }
+  | { type: 'INIT_SESSION'; payload: { session: ActiveSession; maxViolations?: number; defaultLanguage?: 'en' | 'hi'; isRpscRasMode?: boolean; resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number; submittedSectionIndices?: number[] } } }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'hi' }
   | { type: 'TICK_TIMER' }
   | { type: 'SELECT_OPTION'; payload: { optionIndex: number | null } }
@@ -159,6 +161,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       let initialViolationsCount = 0;
       let initialSectionIndex = 0;
       let initialQuestionIndex = 0;
+      let initialSubmittedSections: number[] = resumeData?.submittedSectionIndices ? [...resumeData.submittedSectionIndices] : [];
 
       if (resumeData) {
         initialResponses = { ...resumeData.responses };
@@ -166,6 +169,11 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         initialViolationsCount = resumeData.violationsCount;
         if (resumeData.currentSectionIndex !== undefined) {
           initialSectionIndex = resumeData.currentSectionIndex;
+          if (initialSubmittedSections.length === 0 && initialSectionIndex > 0) {
+            for (let i = 0; i < initialSectionIndex; i++) {
+              initialSubmittedSections.push(i);
+            }
+          }
         }
         if (resumeData.currentQuestionIndex !== undefined) {
           initialQuestionIndex = resumeData.currentQuestionIndex;
@@ -201,6 +209,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         currentSectionIndex: initialSectionIndex,
         currentQuestionIndex: initialQuestionIndex,
         responses: initialResponses,
+        submittedSectionIndices: initialSubmittedSections,
         timeRemaining: initialTimeRemaining,
         isTimerRunning: true,
         language: defaultLanguage,
@@ -346,8 +355,8 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       let nextSectionIndex = state.currentSectionIndex;
 
       if (nextQuestionIndex >= activeSectionQuestions.length) {
-        // Move to next section if available
-        if (!session.hasSectionalTiming && nextSectionIndex + 1 < session.sections.length) {
+        // Move to next section if available (only when neither sectional timing nor lock-on-submit is active)
+        if (!session.hasSectionalTiming && !session.lockSectionOnSubmit && nextSectionIndex + 1 < session.sections.length) {
           nextSectionIndex += 1;
           nextQuestionIndex = 0;
         } else {
@@ -440,7 +449,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       let nextSectionIndex = state.currentSectionIndex;
 
       if (nextQuestionIndex >= activeSectionQuestions.length) {
-        if (!session.hasSectionalTiming && nextSectionIndex + 1 < session.sections.length) {
+        if (!session.hasSectionalTiming && !session.lockSectionOnSubmit && nextSectionIndex + 1 < session.sections.length) {
           nextSectionIndex += 1;
           nextQuestionIndex = 0;
         } else {
@@ -479,6 +488,11 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
       // Block cross-section navigation if sectional timing is active
       if (session.hasSectionalTiming && sectionIndex !== state.currentSectionIndex) {
+        return state;
+      }
+
+      // Block cross-section navigation to locked/submitted sections if lockSectionOnSubmit is active
+      if (session.lockSectionOnSubmit && (sectionIndex !== state.currentSectionIndex || (state.submittedSectionIndices || []).includes(sectionIndex))) {
         return state;
       }
 
@@ -532,8 +546,8 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
     case 'SWITCH_SECTION': {
       const { sectionIndex } = action.payload;
-      // Block section switching if sectional timing is active
-      if (session.hasSectionalTiming) return state;
+      // Block section switching if sectional timing or lock on submit is active
+      if (session.hasSectionalTiming || session.lockSectionOnSubmit) return state;
       return engineReducer(state, {
         type: 'JUMP_TO_QUESTION',
         payload: { sectionIndex, questionIndex: 0 },
@@ -543,6 +557,8 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
     case 'SUBMIT_SECTION': {
       if (state.isExamSubmitted) return state;
       const nextSectionIndex = state.currentSectionIndex + 1;
+      const updatedSubmitted = Array.from(new Set([...(state.submittedSectionIndices || []), state.currentSectionIndex]));
+
       if (session && nextSectionIndex < session.sections.length) {
         const nextSection = session.sections[nextSectionIndex];
         const nextSectionDuration = session.hasSectionalTiming && nextSection.durationSeconds
@@ -562,10 +578,11 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
           currentQuestionIndex: 0,
           timeRemaining: nextSectionDuration,
           responses: updatedResponses,
+          submittedSectionIndices: updatedSubmitted,
           isTimerRunning: true,
         };
       } else {
-        return engineReducer(state, { type: 'SUBMIT_EXAM' });
+        return engineReducer({ ...state, submittedSectionIndices: updatedSubmitted }, { type: 'SUBMIT_EXAM' });
       }
     }
 

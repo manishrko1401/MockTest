@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusCircle, ArrowDown, ArrowUp, Edit, Trash2, X, Search, FileText, Clock, Plus, RotateCcw, Zap } from 'lucide-react';
+import { PlusCircle, ArrowDown, ArrowUp, Edit, Trash2, X, Search, FileText, Clock, Plus, RotateCcw, Zap, Lock, CheckCircle2 } from 'lucide-react';
 import { formatTestMarkingScheme } from '../../lib/markingUtils';
 
 const DEFAULT_SECTIONAL_TIMING_PRESETS = [
@@ -157,6 +157,9 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
   const [newPresetInput, setNewPresetInput] = useState('');
   const [showAddPresetForm, setShowAddPresetForm] = useState(false);
 
+  // New mock test lock section on submit state
+  const [newMockLockSectionOnSubmit, setNewMockLockSectionOnSubmit] = useState<boolean>(false);
+
   // Additional state for editing mock tests
   const [editingMockDuration, setEditingMockDuration] = useState<number>(60);
   const [editingMockQsCount, setEditingMockQsCount] = useState<number>(100);
@@ -164,6 +167,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
   const [editingMockRequiredTier, setEditingMockRequiredTier] = useState<'None' | 'Testbook Pass' | 'Testbook Pass Pro'>('None');
   const [editingMockHasSectionalTiming, setEditingMockHasSectionalTiming] = useState<boolean>(false);
   const [editingMockSectionalTimingsStr, setEditingMockSectionalTimingsStr] = useState<string>('');
+  const [editingMockLockSectionOnSubmit, setEditingMockLockSectionOnSubmit] = useState<boolean>(false);
 
   const handleAddCustomPreset = (valStr?: string) => {
     const targetStr = (valStr || newPresetInput).trim();
@@ -306,6 +310,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     requiredTier: newMockRequiredTier,
                     hasSectionalTiming: newMockHasSectionalTiming,
                     sectionalTimings: newMockHasSectionalTiming ? sectionalTimings : undefined,
+                    lockSectionOnSubmit: newMockLockSectionOnSubmit,
                     testbookTotalUsers: Number(newMockTestbookTotalUsers),
                     testbookTopperScore: Number(newMockTestbookTopperScore),
                     testbookAverageScore: Number(newMockTestbookAverageScore),
@@ -320,6 +325,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                 setNewMockSubSubCategoryParent('');
                 setNewMockHasSectionalTiming(false);
                 setNewMockSectionalTimingsStr('');
+                setNewMockLockSectionOnSubmit(false);
                 setNewMockTestbookTotalUsers(0);
                 setNewMockTestbookTopperScore(0.0);
                 setNewMockTestbookAverageScore(0.0);
@@ -641,6 +647,32 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Section Lock on Submit (Single Total Test Time with Non-Revisitable Sections) */}
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2 font-sans">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newMockLockSectionOnSubmit}
+                    onChange={(e) => setNewMockLockSectionOnSubmit(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 accent-amber-600 cursor-pointer rounded"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                        Lock Section on Submit
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        Total Test Duration · Sequential Non-revisitable Sections
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-normal">
+                      The mock test runs on the total overall test duration. When a student completes and submits a section, it advances them to the next section and <strong>permanently locks previously submitted sections</strong> so they cannot go back.
+                    </p>
+                  </div>
+                </label>
+              </div>
               
 
 
@@ -837,6 +869,11 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                           Default Qs
                         </span>
                       )}
+                      {test.lockSectionOnSubmit && (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-amber-50 dark:bg-amber-955/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5" /> Section Lock
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -894,6 +931,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                           setEditingMockMaxMarks(test.maxMarks ?? 200);
                           setEditingMockRequiredTier((test.requiredTierName || test.requiredTier || 'None') as any);
                           setEditingMockHasSectionalTiming(!!test.hasSectionalTiming);
+                          setEditingMockLockSectionOnSubmit(!!test.lockSectionOnSubmit);
 
                           let initialTimingsStr = '';
                           if (Array.isArray(test.sectionalTimings)) {
@@ -1052,6 +1090,32 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                       )}
                     </div>
 
+                    {/* Lock Section on Submit in Edit Panel */}
+                    <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
+                      <label className="flex items-start gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editingMockLockSectionOnSubmit}
+                          onChange={(e) => setEditingMockLockSectionOnSubmit(e.target.checked)}
+                          className="w-4 h-4 mt-0.5 accent-amber-600 cursor-pointer rounded"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                              <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                              Lock Section on Submit
+                            </span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-955/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                              Total Test Duration · Sequential Non-revisitable Sections
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-normal">
+                            The test uses the total test duration. When a student submits a section, they advance to the next section and cannot return to submitted sections.
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
                     {/* Benchmark Stats */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
@@ -1102,6 +1166,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                               isPremium: editingMockRequiredTier !== 'None',
                               hasSectionalTiming: editingMockHasSectionalTiming,
                               sectionalTimings: editingMockHasSectionalTiming ? sectionalTimings : undefined,
+                              lockSectionOnSubmit: editingMockLockSectionOnSubmit,
                             });
                             setEditingMockTestId(null);
                             showToast('Mock test updated successfully!');

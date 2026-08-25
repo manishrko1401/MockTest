@@ -258,6 +258,7 @@ export default function MobileTestScreen({
   const [loadingText, setLoadingText] = useState('Syncing sitting session...');
   const [totalDuration, setTotalDuration] = useState(3600);
   const [hasSectionalTiming, setHasSectionalTiming] = useState(false);
+  const [lockSectionOnSubmit, setLockSectionOnSubmit] = useState(false);
   const [questions, setQuestions] = useState<MobileQuestion[]>([]);
   const [sections, setSections] = useState<MobileSection[]>([]);
   const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
@@ -413,6 +414,7 @@ export default function MobileTestScreen({
   const questionsRef = useRef<MobileQuestion[]>([]);
   const totalDurationRef = useRef<number>(3600);
   const hasSectionalTimingRef = useRef<boolean>(false);
+  const lockSectionOnSubmitRef = useRef<boolean>(false);
   const currentSectionIdxRef = useRef<number>(0);
 
   // Live refs for AppState handler (avoids stale closure — always reflects latest state)
@@ -538,6 +540,8 @@ export default function MobileTestScreen({
     sectionsRef.current = secs;
     totalDurationRef.current = durationSeconds;
     hasSectionalTimingRef.current = catalogTest?.hasSectionalTiming ?? false;
+    lockSectionOnSubmitRef.current = catalogTest?.lockSectionOnSubmit ?? false;
+    setLockSectionOnSubmit(catalogTest?.lockSectionOnSubmit ?? false);
 
     // Pre-warm expo-image disk cache for all question/option images
     const allHtmlStrings = list.flatMap(q => [
@@ -1410,7 +1414,7 @@ export default function MobileTestScreen({
       nextQIdx = currentQuestionIdx + 1;
       isProgrammaticScrollRef.current = true;
       setCurrentQuestionIdx(nextQIdx);
-    } else if (!hasSectionalTiming && currentSectionIdx < sections.length - 1) {
+    } else if (!hasSectionalTiming && !lockSectionOnSubmit && currentSectionIdx < sections.length - 1) {
       nextSecIdx = currentSectionIdx + 1;
       nextQIdx = 0;
       isProgrammaticScrollRef.current = true;
@@ -1421,8 +1425,8 @@ export default function MobileTestScreen({
   };
 
   const handleJumpToQuestion = (secIdx: number, qIdx: number) => {
-    // Block cross-section navigation in sectional timing mode
-    if (hasSectionalTiming && secIdx !== currentSectionIdx) return;
+    // Block cross-section navigation in sectional timing or lockSectionOnSubmit mode
+    if ((hasSectionalTiming || lockSectionOnSubmit) && secIdx !== currentSectionIdx) return;
     const targetSection = sections[secIdx];
     const targetQs = questions
       .filter((q) => q.sectionId === targetSection.id)
@@ -2591,7 +2595,7 @@ export default function MobileTestScreen({
       >
         {sections.map((sec, idx) => {
           const isActiveSec = currentSectionIdx === idx;
-          const isLocked = hasSectionalTiming && !isActiveSec;
+          const isLocked = (hasSectionalTiming || lockSectionOnSubmit) && !isActiveSec;
           return (
             <TouchableOpacity
               key={sec.id}
@@ -2742,7 +2746,7 @@ export default function MobileTestScreen({
             {/* Section part buttons */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.partScrollRow} contentContainerStyle={{ paddingHorizontal: rs(12), gap: rs(8) }}>
               {sections.map((sec, idx) => {
-                const isLocked = hasSectionalTiming && idx !== currentSectionIdx;
+                const isLocked = (hasSectionalTiming || lockSectionOnSubmit) && idx !== currentSectionIdx;
                 return (
                   <TouchableOpacity
                     key={sec.id}
@@ -2842,8 +2846,8 @@ export default function MobileTestScreen({
               </View>
             </ScrollView>
 
-            {/* Submit section button ONLY if test has sectional timing enabled */}
-            {hasSectionalTiming && sections && sections.length > 1 && (
+            {/* Submit section button if test has sectional timing or lockSectionOnSubmit enabled */}
+            {(hasSectionalTiming || lockSectionOnSubmit) && sections && sections.length > 1 && (
               <TouchableOpacity
                 style={[styles.paletteSubmitBtn, { backgroundColor: '#059669', marginBottom: 10 }]}
                 onPress={() => {

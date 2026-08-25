@@ -364,6 +364,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
             maxMarks: data.maxMarks,
             hasSectionalTiming: data.hasSectionalTiming,
             sectionalTimings: data.sectionalTimings,
+            lockSectionOnSubmit: data.lockSectionOnSubmit,
             sections: data.sections,
           };
         }
@@ -568,7 +569,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
     let markedAndAnswered = 0;
 
     session.questions.forEach((q) => {
-      if (session.hasSectionalTiming && q.sectionId !== currentSection.id) return;
+      if ((session.hasSectionalTiming || session.lockSectionOnSubmit) && q.sectionId !== currentSection.id) return;
       const resp = responses[q.id];
       if (resp) {
         if (resp.state === 1) notVisited++;
@@ -793,13 +794,14 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
             <div className="flex items-center gap-1.5 flex-wrap shrink-0">
               {session.sections.map((sec, idx) => {
                 const isActive = idx === currentSectionIndex;
-                const isLocked = session.hasSectionalTiming && !isActive;
+                const isLocked = (session.hasSectionalTiming || session.lockSectionOnSubmit) && !isActive;
                 let partLabel = `PART-${String.fromCharCode(65 + idx)}`; // PART-A, PART-B, etc.
                 return (
                   <button
                     key={sec.id}
                     onClick={() => !isLocked && switchSection(idx)}
                     disabled={isLocked}
+                    title={isLocked ? 'Section locked — complete current section first' : undefined}
                     className={`text-[10px] font-bold px-2 py-0.5 rounded shrink-0 whitespace-nowrap transition-all border ${
                       isActive
                         ? 'bg-[#008001] text-white border-[#008001]'
@@ -808,6 +810,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                         : 'bg-[#2E66CC] text-white border-[#2E66CC] hover:bg-[#1a4da6] cursor-pointer'
                     }`}
                   >
+                    {isLocked && <span className="mr-1">🔒</span>}
                     {partLabel}
                   </button>
                 );
@@ -1184,7 +1187,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
           <div className="flex h-10 border-b border-slate-200 bg-[#E9ECF2] overflow-x-auto shrink-0 scrollbar-none">
             {session.sections.map((sec, idx) => {
               const isActive = idx === currentSectionIndex;
-              const isLocked = session.hasSectionalTiming && !isActive;
+              const isLocked = (session.hasSectionalTiming || session.lockSectionOnSubmit) && !isActive;
               return (
                 <button
                   key={sec.id}
@@ -1552,7 +1555,27 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   })()}
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 mt-6">
+                <div className="pt-4 border-t border-slate-100 mt-6 flex flex-col gap-2">
+                  {session && (session.hasSectionalTiming || session.lockSectionOnSubmit) && session.sections && session.sections.length > 1 && (
+                    <button
+                      onClick={() => {
+                        setMobilePaletteOpen(false);
+                        pauseExam();
+                        const isLastSection = currentSectionIndex + 1 >= session.sections.length;
+                        if (isLastSection) {
+                          setShowSubmitConfirm(true);
+                        } else {
+                          setShowSectionSubmitConfirm(true);
+                        }
+                      }}
+                      className="w-full text-white font-bold py-2.5 rounded-xl shadow text-xs uppercase cursor-pointer active:scale-95 transition-all bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      {currentSectionIndex + 1 < session.sections.length
+                        ? (language === 'hi' ? 'सेक्शन सबमिट करें' : 'Submit Section')
+                        : (language === 'hi' ? 'अंतिम सेक्शन सबमिट करें' : 'Submit Final Section')}
+                    </button>
+                  )}
+
                   {(() => {
                     const isSsc = (testId.includes('ssc') || testId.toLowerCase().includes('ssc')) && !isMobile;
                     return (
@@ -1595,7 +1618,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     <div className="flex flex-1 overflow-x-auto scrollbar-none h-full">
                       {session.sections.map((sec, idx) => {
                         const isActive = idx === currentSectionIndex;
-                        const isLocked = session.hasSectionalTiming && !isActive;
+                        const isLocked = (session.hasSectionalTiming || session.lockSectionOnSubmit) && !isActive;
                         return (
                           <button
                             key={sec.id}
@@ -1625,7 +1648,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   <div className="flex flex-1 overflow-x-auto scrollbar-none h-full">
                     {session.sections.map((sec, idx) => {
                       const isActive = idx === currentSectionIndex;
-                      const isLocked = session.hasSectionalTiming && !isActive;
+                      const isLocked = (session.hasSectionalTiming || session.lockSectionOnSubmit) && !isActive;
                       return (
                         <button
                           key={sec.id}
@@ -2127,7 +2150,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
                 {/* Submit Block Section */}
                 <div className={`p-2.5 min-[1080px]:p-4 border-t border-slate-200 flex flex-col gap-2 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
-                  {session && session.hasSectionalTiming && session.sections && session.sections.length > 1 && (
+                  {session && (session.hasSectionalTiming || session.lockSectionOnSubmit) && session.sections && session.sections.length > 1 && (
                     <button
                       onClick={() => {
                         pauseExam();
@@ -2213,6 +2236,17 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                 </span>
               </div>
             </div>
+
+            {session?.lockSectionOnSubmit && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl mb-4 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                <span className="text-sm shrink-0">⚠️</span>
+                <span>
+                  {language === 'hi'
+                    ? 'चेतावनी: इस सेक्शन को सबमिट करने के बाद आप इस सेक्शन में वापस नहीं आ सकेंगे। यह स्थायी रूप से लॉक हो जाएगा।'
+                    : 'Warning: Once submitted, this section will be permanently locked and you will not be able to return to it.'}
+                </span>
+              </div>
+            )}
 
             <p className="text-slate-600 dark:text-slate-350 text-[11px] leading-relaxed mb-6 font-medium">
               {language === 'hi'

@@ -173,6 +173,7 @@ model MockTest {
   customQuestions     Json?
   hasSectionalTiming  Boolean            @default(false)
   sectionalTimings    Json?
+  lockSectionOnSubmit Boolean            @default(false)
   orderIndex          Int                @default(0)
   positiveMarks       Float              @default(2.0)
   negativeMarks       Float              @default(0.5)

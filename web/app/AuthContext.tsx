@@ -13,6 +13,7 @@ export interface MockTestItem {
   requiredTier: 'None' | 'Testbook Pass' | 'Testbook Pass Pro';
   hasSectionalTiming?: boolean;
   sectionalTimings?: number[]; // minutes per section, e.g. [20, 20, 20]
+  lockSectionOnSubmit?: boolean;
   testbookTotalUsers?: number;
   testbookTopperScore?: number;
   testbookAverageScore?: number;
@@ -1556,7 +1557,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           id: newId,
           ...test,
           hasSectionalTiming: test.hasSectionalTiming ?? false,
-          sectionalTimings: test.sectionalTimings ?? null
+          sectionalTimings: test.sectionalTimings ?? null,
+          lockSectionOnSubmit: test.lockSectionOnSubmit ?? false
         }
       })
     }).catch(err => console.error("Add mocktest error:", err));
@@ -1611,6 +1613,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       testbookCutoffScore?: number;
       positiveMarks?: number;
       negativeMarks?: number;
+      durationMinutes?: number;
+      questionsCount?: number;
+      maxMarks?: number;
+      requiredTier?: 'None' | 'Testbook Pass' | 'Testbook Pass Pro';
+      requiredTierName?: string;
+      isPremium?: boolean;
+      hasSectionalTiming?: boolean;
+      sectionalTimings?: number[];
+      lockSectionOnSubmit?: boolean;
     }
   ) => {
     const updated = examCatalog.map(c => {

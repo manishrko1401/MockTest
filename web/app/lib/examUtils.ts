@@ -42,6 +42,7 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
   let catalogTest: MockTestItem | null = null;
   let hasSectionalTiming = false;
   let sectionalTimingsMins: number[] = [];
+  let lockSectionOnSubmit = false;
   let foundCategoryName = '';
   let foundSubcategoryName = '';
 
@@ -78,6 +79,7 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
     duration = catalogTest.durationMinutes * 60;
     hasSectionalTiming = catalogTest.hasSectionalTiming ?? false;
     sectionalTimingsMins = (catalogTest.sectionalTimings as number[] | undefined) ?? [];
+    lockSectionOnSubmit = catalogTest.lockSectionOnSubmit ?? false;
   }
 
   let sections: Section[] = [
@@ -96,6 +98,9 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
     }
     if (customQs.hasSectionalTiming !== undefined && customQs.hasSectionalTiming !== null) {
       hasSectionalTiming = Boolean(customQs.hasSectionalTiming);
+    }
+    if (customQs.lockSectionOnSubmit !== undefined && customQs.lockSectionOnSubmit !== null) {
+      lockSectionOnSubmit = Boolean(customQs.lockSectionOnSubmit);
     }
     if (customQs.sectionalTimings) {
       if (Array.isArray(customQs.sectionalTimings)) {
@@ -287,6 +292,7 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
     sections,
     questions,
     hasSectionalTiming,
+    lockSectionOnSubmit,
   };
 };
 
