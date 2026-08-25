@@ -1088,7 +1088,7 @@ export default function ExamSolutionAnalysisPage() {
       </div>
       
       <section className={isSolutionView
-        ? "flex flex-col lg:flex-row flex-1 overflow-hidden bg-[#F1F5F9] w-full h-full pb-16 flex"
+        ? "flex flex-row flex-1 overflow-hidden bg-[#F1F5F9] w-full h-full pb-16 flex"
         : `max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start pb-24 ${viewMode === 'solution' ? 'flex' : 'hidden'}`
       }>
         
@@ -1342,7 +1342,7 @@ export default function ExamSolutionAnalysisPage() {
 
           {/* RIGHT WORKSPACE SIDEBAR: QUESTION PALETTE */}
           <aside className={isSolutionView
-            ? "hidden lg:flex w-full lg:w-72 bg-[#F1F5F9] p-3 flex-col shrink-0 h-full overflow-y-auto border-l border-slate-300"
+            ? "hidden md:flex w-52 sm:w-56 md:w-60 min-[1080px]:w-80 bg-[#F1F5F9] p-2 min-[1080px]:p-3 flex-col shrink-0 h-full overflow-y-auto max-[1079px]:no-scrollbar border-l border-slate-300"
             : "hidden lg:block w-full lg:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm lg:sticky lg:top-24 lg:self-start"
           }>
           {isSolutionView ? (
@@ -1358,8 +1358,8 @@ export default function ExamSolutionAnalysisPage() {
               </div>
 
               {/* Palette Grid for All Sections */}
-              <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm flex flex-col flex-1 overflow-hidden min-h-0">
-                <div className="flex-1 overflow-y-auto space-y-4 pr-1 mb-3">
+              <div className="bg-white border border-slate-200 rounded-lg p-2 min-[1080px]:p-3 shadow-sm flex flex-col flex-1 overflow-hidden min-h-0">
+                <div className="flex-1 overflow-y-auto max-[1079px]:no-scrollbar space-y-4 pr-1 mb-3">
                   {examSession.sections.map((sec) => {
                     const secQuestions = questions.filter(q => q.sectionId === sec.id);
                     if (secQuestions.length === 0) return null;

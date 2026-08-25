@@ -1702,37 +1702,38 @@ export default function MockTestsCatalog() {
     <div className="h-screen max-h-screen w-full flex flex-col bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden">
       
       {/* Navbar header */}
-      <header className="h-16 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 sm:px-8 flex items-center justify-between relative shadow-xs z-30">
-        <div className="flex items-center gap-4 sm:gap-6">
+      <header className="h-16 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 sm:px-6 lg:px-8 flex items-center justify-between relative shadow-xs z-30">
+        <div className="flex items-center gap-2.5 sm:gap-4 lg:gap-6 min-w-0">
           {/* Back button on top left corner */}
           <Link 
             href="/" 
-            className="btn-3d btn-3d-slate flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide shadow-sm shrink-0 cursor-pointer"
+            className="btn-3d btn-3d-slate flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide shadow-sm shrink-0 cursor-pointer"
             title={t.backToHome}
           >
             <ArrowLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span>{t.backToHome}</span>
+            <span className="hidden sm:inline">{t.backToHome}</span>
+            <span className="sm:hidden">{t.navHome}</span>
           </Link>
 
-          <span className="h-6 w-[1px] bg-slate-200 dark:border-slate-800"></span>
+          <span className="h-6 w-[1px] bg-slate-200 dark:border-slate-800 shrink-0"></span>
 
-          <Link href="/" className="flex items-center gap-3">
-            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
-              <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
+          <Link href="/" className="flex items-center gap-2.5 lg:gap-3 min-w-0">
+            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 lg:p-2 rounded-full shadow-sm flex items-center justify-center h-8.5 w-8.5 lg:h-10 lg:w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
+              <Trophy className="h-4.5 w-4.5 lg:h-5.5 lg:w-5.5 text-blue-600 dark:text-blue-400" />
             </div>
-            <div>
-              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
-              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
+            <div className="min-w-0">
+              <h1 className="font-extrabold text-xs lg:text-sm leading-tight text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
+              <p className="text-[8px] lg:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase truncate">{t.logoSub}</p>
             </div>
           </Link>
         </div>
 
-        <div className="flex items-center gap-3 max-w-md w-full justify-end">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Language selector */}
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350  text-xs font-bold focus:outline-none cursor-pointer"
+            className="px-2 py-1.5 lg:px-2.5 lg:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 text-xs font-bold focus:outline-none cursor-pointer"
           >
             <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
             <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
@@ -1741,7 +1742,7 @@ export default function MockTestsCatalog() {
           {/* Bookmarked Questions Button */}
           <button
             onClick={() => setShowBookmarks(!showBookmarks)}
-            className={`p-2 rounded-xl flex items-center justify-center gap-1.5 border px-3 py-2 text-xs font-bold transition-all active:scale-95 cursor-pointer select-none h-8.5 ${
+            className={`p-2 rounded-xl flex items-center justify-center gap-1.5 border px-2.5 sm:px-3 py-1.5 lg:py-2 text-xs font-bold transition-all active:scale-95 cursor-pointer select-none h-8.5 ${
               showBookmarks 
                 ? 'bg-yellow-500 border-yellow-500 text-white shadow-md shadow-yellow-500/20'
                 : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
@@ -1749,7 +1750,7 @@ export default function MockTestsCatalog() {
             title={t.bookmarks}
           >
             <Bookmark className={`h-3.5 w-3.5 ${showBookmarks ? 'fill-white' : ''}`} />
-            <span className="hidden sm:inline">{t.bookmarks}</span>
+            <span className="hidden md:inline">{t.bookmarks}</span>
             {currentUser?.bookmarkedQuestions?.length ? (
               <span className="bg-red-500 text-white rounded-full text-[9px] px-1.5 py-0.5">
                 {currentUser.bookmarkedQuestions.length}
@@ -1760,7 +1761,7 @@ export default function MockTestsCatalog() {
           {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center "
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
             title={theme === 'light' ? t.themeDark : t.themeLight}
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -1769,10 +1770,10 @@ export default function MockTestsCatalog() {
       </header>
 
       {/* Main split-pane content */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         
         {/* Left Side: Exam Categories Navigation Sidebar */}
-        <aside className="w-full lg:w-64 xl:w-72 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 z-20 h-full min-h-0 overflow-hidden">
+        <aside className="w-full md:w-56 lg:w-64 xl:w-72 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 z-20 h-full min-h-0 overflow-hidden">
           <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xs z-10">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
@@ -1872,7 +1873,7 @@ export default function MockTestsCatalog() {
         </aside>
 
         {/* Right Side Content (Tests list/details) */}
-        <main className="flex-1 p-5 overflow-y-auto edu-grid-pattern relative h-full min-h-0 no-scrollbar">
+        <main className="flex-1 min-w-0 p-3 sm:p-4 md:p-5 overflow-y-auto edu-grid-pattern relative h-full min-h-0 no-scrollbar">
           {showBookmarks ? (
             <div>
               {/* Bookmarked Questions Header */}
@@ -2049,13 +2050,13 @@ export default function MockTestsCatalog() {
                     type="text"
                     value={examSearchQuery}
                     onChange={(e) => setExamSearchQuery(e.target.value)}
-                    placeholder={language === 'hi' ? 'परीक्षा खोजें (उदा. SSC CGL)...' : 'Search exams (e.g. SSC CGL)...'}
-                    className="w-full bg-white dark:bg-slate-950  rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold shadow-sm"
+                    placeholder={language === 'hi' ? 'परीक्षाएं खोजें...' : 'Search exams, categories...'}
+                    className="w-full bg-white dark:bg-slate-950  rounded-xl pl-9.5 pr-8 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold shadow-2xs placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                   {examSearchQuery && (
                     <button
                       onClick={() => setExamSearchQuery('')}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none text-[11px] font-bold"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none text-xs font-bold cursor-pointer"
                     >
                       ✕
                     </button>
@@ -2063,13 +2064,13 @@ export default function MockTestsCatalog() {
                 </div>
               </div>
 
-              {/* YOUR RECENT TESTS — Desktop (below heading, above tiles) */}
-              {recentTests.length > 0 && (
-                <div className="mb-6 bg-white dark:bg-slate-950 /80 rounded-2xl p-4 shadow-xs space-y-2.5">
+              {/* NEW SECTION: YOUR RECENT TESTS */}
+              {recentTests.length > 0 && !examSearchQuery && (
+                <div className="mb-6 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="bg-blue-50 dark:bg-blue-950/60 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
-                        <History className="h-3.5 w-3.5" />
+                        <History className="h-4 w-4" />
                       </div>
                       <div>
                         <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
@@ -2086,15 +2087,15 @@ export default function MockTestsCatalog() {
                     </span>
                   </div>
 
-                  {/* Single Horizontal Row of 5 Compact Tiles */}
-                  <div className="grid grid-cols-5 gap-2.5 p-1.5 -m-1.5">
+                  {/* Single Row with Horizontal Scroll on <1080px, 5 Columns Grid without scrollbar on >=1080px */}
+                  <div className="flex min-[1080px]:grid min-[1080px]:grid-cols-5 overflow-x-auto min-[1080px]:overflow-visible max-[1079px]:custom-horizontal-scroll min-[1080px]:no-scrollbar pb-2 min-[1080px]:pb-0 gap-2.5 p-1.5 -m-1.5">
                     {recentTests.map(({ test, session, catId, subCatId, subSubId }) => {
                       const isOngoing = session.status === 'ONGOING' || session.status === 'PAUSED';
                       return (
                         <div 
                           key={session.id || test.id}
                           onClick={() => handleOpenRecentCategory(catId, subCatId, subSubId)}
-                          className="bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.6),0_0_16px_rgba(59,130,246,0.15)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.02] hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col justify-between min-h-[88px] cursor-pointer active:translate-y-0 active:scale-[0.99] relative z-0 hover:z-10 group"
+                          className="min-w-[175px] sm:min-w-[190px] min-[1080px]:min-w-0 flex-1 shrink-0 min-[1080px]:shrink bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.6),0_0_16px_rgba(59,130,246,0.15)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.02] hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col justify-between min-h-[88px] cursor-pointer active:translate-y-0 active:scale-[0.99] relative z-0 hover:z-10 group"
                         >
                           <div>
                             <div className="flex items-center justify-between gap-1 mb-1">
@@ -2155,7 +2156,7 @@ export default function MockTestsCatalog() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
                 {getFilteredCatalogForSearch.map(cat => {
                   const isSsc = cat.id === 'ssc';
                   const isRailways = cat.id === 'railways';
@@ -2294,7 +2295,7 @@ export default function MockTestsCatalog() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
                   {getFilteredSubCategories.map(subCat => {
                   const count = subCat.tests.length;
                   const countStr = count === 1 
@@ -2456,7 +2457,7 @@ export default function MockTestsCatalog() {
                             {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक टेस्ट सीरीज चुनें:' : 'Select a test series to start practicing:'}
                           </p>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
                           {groups.map(group => {
                             const count = group.tests.length;
                             const countStr = count === 1 

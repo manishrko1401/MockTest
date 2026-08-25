@@ -246,6 +246,39 @@ mjx-container[jax="CHTML"] {
   animation: blink 1.5s ease-in-out infinite;
 }
 
+/* Continuous Seamless Live Ticker Animations */
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  display: flex;
+  width: max-content;
+  animation: ticker 720s linear infinite;
+  will-change: transform;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
+.animate-ticker-fast {
+  display: flex;
+  width: max-content;
+  animation: ticker 600s linear infinite;
+  will-change: transform;
+}
+
+.animate-ticker-fast:hover {
+  animation-play-state: paused;
+}
+
+
 /* Notebook / Blueprint Education Grid Pattern */
 .edu-grid-pattern {
   background-size: 30px 30px;

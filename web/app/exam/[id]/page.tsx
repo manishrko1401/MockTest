@@ -1054,12 +1054,12 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               );
             })()}
 
-            {/* Bottom Row: Ratings + Action Button (Horizontal Split) */}
-            <div className="pt-4 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-5">
-              {/* Feedback Rating Block */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 text-left w-full md:w-auto">
+            {/* Bottom Row: Ratings + Action Button (Horizontal Split on >= 1080px, Stacked on < 1080px) */}
+            <div className="pt-4 border-t border-slate-200 flex flex-col min-[1080px]:flex-row items-center justify-between gap-4 min-[1080px]:gap-5">
+              {/* Feedback Rating Block - Stacked on < 1080px, Side-by-side on >= 1080px */}
+              <div className="flex flex-col min-[1080px]:flex-row items-stretch min-[1080px]:items-center gap-3 min-[1080px]:gap-4 text-left w-full min-[1080px]:w-auto">
                 {/* Rate Website */}
-                <div className={`flex items-center gap-3 px-3 py-1.5 rounded-xl border transition-all ${
+                <div className={`flex items-center justify-between min-[1080px]:justify-start gap-3 px-3 py-2 min-[1080px]:py-1.5 rounded-xl border transition-all w-full min-[1080px]:w-auto ${
                   isBlinkingStars && websiteRating === 0 
                     ? 'border-amber-500 bg-amber-50/80 dark:bg-amber-950/40 ring-2 ring-amber-400 animate-pulse' 
                     : websiteRating > 0
@@ -1091,8 +1091,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   </div>
                 </div>
 
-                {/* Rate Exam */}
-                <div className={`flex items-center gap-3 px-3 py-1.5 rounded-xl border transition-all ${
+                {/* Rate Exam - Shows just below Rate Website on < 1080px */}
+                <div className={`flex items-center justify-between min-[1080px]:justify-start gap-3 px-3 py-2 min-[1080px]:py-1.5 rounded-xl border transition-all w-full min-[1080px]:w-auto ${
                   isBlinkingStars && examRating === 0 
                     ? 'border-amber-500 bg-amber-50/80 dark:bg-amber-950/40 ring-2 ring-amber-400 animate-pulse' 
                     : examRating > 0
@@ -1171,7 +1171,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   } catch (e) {}
                   router.push(`/exam/${testId}/analysis`);
                 }}
-                className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm px-8 py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer active:scale-95 whitespace-nowrap uppercase tracking-wider"
+                className="w-full min-[1080px]:w-auto bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm px-8 py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer active:scale-95 whitespace-nowrap uppercase tracking-wider"
               >
                 {language === 'hi' ? 'स्कोर और विश्लेषण देखें' : 'View Score & Analysis'}
               </button>
@@ -1577,10 +1577,10 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
         </div>
       ) : (
-        <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
+        <div className="flex flex-row flex-1 overflow-hidden h-full min-h-0">
           
-          {/* LEFT PANEL (75% WIDTH) - SUBJECTS TABS, QUESTION BLOCK & ACTIONS */}
-          <main className="flex w-full lg:w-[75%] flex-col border-b lg:border-b-0 lg:border-r border-slate-200 bg-white lg:h-full">
+          {/* LEFT PANEL - SUBJECTS TABS, QUESTION BLOCK & ACTIONS */}
+          <main className="flex flex-1 min-w-0 flex-col border-r border-slate-200 bg-white h-full overflow-hidden">
             
             {/* Subject Tabs Switcher */}
             {(() => {
@@ -1891,24 +1891,24 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                 return null; // SSC: actions are in the sub-header bar, no bottom footer panel
               }
               return (
-                <footer className="flex flex-col sm:flex-row sm:h-14 items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 sm:py-0 shrink-0 bg-white">
-                  <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-start">
+                <footer className="flex flex-row h-12 sm:h-14 items-center justify-between gap-2 border-t border-slate-200 px-3 sm:px-4 py-0 shrink-0 bg-white">
+                  <div className="flex gap-2">
                     <button
                       onClick={markForReviewAndNext}
-                      className="font-bold px-3 sm:px-4 py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs flex-1 sm:flex-none cursor-pointer active:scale-95 bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC]"
+                      className="font-bold px-2.5 sm:px-4 py-2 sm:py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs cursor-pointer active:scale-95 bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC] whitespace-nowrap"
                     >
                       Mark for Review & Next
                     </button>
                     <button
                       onClick={clearResponse}
-                      className="font-bold px-3 sm:px-4 py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs flex-1 sm:flex-none cursor-pointer active:scale-95 bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC]"
+                      className="font-bold px-2.5 sm:px-4 py-2 sm:py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs cursor-pointer active:scale-95 bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC] whitespace-nowrap"
                     >
                       Clear Response
                     </button>
                   </div>
                   <button
                     onClick={saveAndNext}
-                    className="font-bold px-6 py-2.5 rounded shadow transition text-[10px] sm:text-xs w-full sm:w-auto cursor-pointer active:scale-95 bg-[#0D88B9] hover:bg-[#0A739C] text-white"
+                    className="font-bold px-4 sm:px-6 py-2 sm:py-2.5 rounded shadow transition text-[10px] sm:text-xs cursor-pointer active:scale-95 bg-[#0D88B9] hover:bg-[#0A739C] text-white whitespace-nowrap"
                   >
                     Save & Next
                   </button>
@@ -1917,127 +1917,127 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
             })()}
           </main>
 
-          {/* RIGHT PANEL (25% WIDTH) - CANDIDATE IDENTITY & QUESTION PALETTE GRID */}
+          {/* RIGHT PANEL (QUESTION PALETTE SIDEBAR - PERSISTENT ON RIGHT) */}
           {(() => {
             const isSsc = (testId.includes('ssc') || testId.toLowerCase().includes('ssc')) && !isMobile;
             return (
-              <aside className={`flex w-full lg:w-[25%] flex-col border-t lg:border-t-0 lg:border-l border-slate-200 lg:overflow-y-auto overflow-y-visible ${
+              <aside className={`flex w-52 sm:w-56 md:w-60 min-[1080px]:w-80 min-[1080px]:xl:w-[25%] shrink-0 flex-col border-l border-slate-200 overflow-y-auto max-[1079px]:no-scrollbar h-full ${
                 !isSsc ? 'bg-[#EBF5FA]' : 'bg-[#F3F4F6]'
               }`}>
                 
                 {/* Profile Avatar Card */}
-                <div className={`flex items-center gap-3 p-4 border-b border-slate-200 ${
+                <div className={`flex items-center gap-2 p-2.5 min-[1080px]:gap-3 min-[1080px]:p-4 border-b border-slate-200 ${
                   !isSsc ? 'bg-[#EBF5FA]' : 'bg-white'
                 }`}>
-                  <div className={`relative h-12 w-12 flex items-center justify-center text-slate-400 ${
+                  <div className={`relative h-9 w-9 min-[1080px]:h-12 min-[1080px]:w-12 shrink-0 flex items-center justify-center text-slate-400 ${
                     !isSsc ? 'rounded-full bg-[#0D88B9] text-white' : 'rounded bg-slate-200 border border-slate-300'
                   }`}>
-                    <User className="h-6 w-6" />
+                    <User className="h-5 w-5 min-[1080px]:h-6 min-[1080px]:w-6" />
                   </div>
-                  <div className="flex-1 overflow-hidden">
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Candidate Code: {currentUser?.candidateCode || 'GUEST'}</p>
-                    <p className="font-bold text-slate-900 truncate">{currentUser?.name || 'Guest User'}</p>
+                  <div className="flex-1 overflow-hidden min-w-0">
+                    <p className="text-[9px] min-[1080px]:text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">Candidate: {currentUser?.candidateCode || 'GUEST'}</p>
+                    <p className="font-bold text-xs min-[1080px]:text-sm text-slate-900 truncate">{currentUser?.name || 'Guest User'}</p>
                   </div>
                 </div>
 
                 {/* Legend Panel of States (Custom Designs/Shapes matching TCS iON or Testbook) */}
                 {!isSsc ? (
-                  <div className="p-3 bg-white border-b border-slate-200 grid grid-cols-2 gap-x-2 gap-y-2 text-[10px] font-bold text-slate-700">
-                    <div className="flex items-center gap-2">
-                      <div className="h-5 w-5 bg-[#2E7D32] text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-xs">
+                  <div className="p-2 min-[1080px]:p-3 bg-white border-b border-slate-200 grid grid-cols-2 gap-x-1.5 gap-y-1.5 text-[9px] min-[1080px]:text-[10px] font-bold text-slate-700">
+                    <div className="flex items-center gap-1.5 min-[1080px]:gap-2">
+                      <div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#2E7D32] text-white rounded-full flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] shadow-xs shrink-0">
                         {counts.answered}
                       </div>
-                      <span>Answered</span>
+                      <span className="truncate">Answered</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <div className="h-5 w-5 bg-[#8E24AA] text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-xs">
+                    <div className="flex items-center gap-1.5 min-[1080px]:gap-2">
+                      <div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#8E24AA] text-white rounded-full flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] shadow-xs shrink-0">
                         {counts.marked}
                       </div>
-                      <span>Marked</span>
+                      <span className="truncate">Marked</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <div className="h-5 w-5 bg-[#D32F2F] text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-xs">
+                    <div className="flex items-center gap-1.5 min-[1080px]:gap-2">
+                      <div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#D32F2F] text-white rounded-full flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] shadow-xs shrink-0">
                         {counts.notAnswered}
                       </div>
-                      <span>Not Answered</span>
+                      <span className="truncate">Not Answered</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <div className="h-5 w-5 bg-white border border-slate-400 text-slate-800 flex items-center justify-center font-bold text-[9px] shadow-xs rounded">
+                    <div className="flex items-center gap-1.5 min-[1080px]:gap-2">
+                      <div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-white border border-slate-400 text-slate-800 flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] shadow-xs rounded shrink-0">
                         {counts.notVisited}
                       </div>
-                      <span>Not Visited</span>
+                      <span className="truncate">Not Visited</span>
                     </div>
 
-                    <div className="flex items-center gap-2 col-span-2">
-                      <div className="relative h-5 w-5 bg-[#8E24AA] text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-xs">
+                    <div className="flex items-center gap-1.5 min-[1080px]:gap-2 col-span-2">
+                      <div className="relative h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#8E24AA] text-white rounded-full flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] shadow-xs shrink-0">
                         {counts.markedAndAnswered}
                         <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white">
                           <Check className="h-1.5 w-1.5" />
                         </span>
                       </div>
-                      <span>Marked & Answered</span>
+                      <span className="truncate">Marked & Answered</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 bg-white border-b border-slate-200 grid grid-cols-2 gap-x-2 gap-y-1.5 text-[10px]">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-5 w-5 items-center justify-center bg-gray-200 border border-gray-400 text-xs font-bold text-slate-800">
+                  <div className="p-2 min-[1080px]:p-3 bg-white border-b border-slate-200 grid grid-cols-2 gap-x-1.5 gap-y-1.5 text-[9px] min-[1080px]:text-[10px]">
+                    <div className="flex items-center gap-1.5 min-[1080px]:gap-2">
+                      <div className="flex h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 items-center justify-center bg-gray-200 border border-gray-400 text-[9px] min-[1080px]:text-xs font-bold text-slate-800 shrink-0">
                         {counts.notVisited}
                       </div>
-                      <span>Not Visited</span>
+                      <span className="truncate">Not Visited</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-5 w-5 items-center justify-center bg-[#C62828] text-white text-xs font-bold rounded-t-md">
+                    <div className="flex items-center gap-1.5 min-[1080px]:gap-2">
+                      <div className="flex h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 items-center justify-center bg-[#C62828] text-white text-[9px] min-[1080px]:text-xs font-bold rounded-t-md shrink-0">
                         {counts.notAnswered}
                       </div>
-                      <span>Not Answered</span>
+                      <span className="truncate">Not Answered</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-5 w-5 items-center justify-center bg-[#2E7D32] text-white text-xs font-bold rounded-b-md">
+                    <div className="flex items-center gap-1.5 min-[1080px]:gap-2">
+                      <div className="flex h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 items-center justify-center bg-[#2E7D32] text-white text-[9px] min-[1080px]:text-xs font-bold rounded-b-md shrink-0">
                         {counts.answered}
                       </div>
-                      <span>Answered</span>
+                      <span className="truncate">Answered</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-5 w-5 items-center justify-center bg-[#4527A0] text-white text-xs font-bold rounded-full">
+                    <div className="flex items-center gap-1.5 min-[1080px]:gap-2">
+                      <div className="flex h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 items-center justify-center bg-[#4527A0] text-white text-[9px] min-[1080px]:text-xs font-bold rounded-full shrink-0">
                         {counts.marked}
                       </div>
-                      <span>Marked for Review</span>
+                      <span className="truncate">Marked</span>
                     </div>
 
-                    <div className="flex items-center gap-2 col-span-2">
-                      <div className="relative flex h-5 w-5 items-center justify-center bg-[#4527A0] text-white text-xs font-bold rounded-full">
+                    <div className="flex items-center gap-1.5 min-[1080px]:gap-2 col-span-2">
+                      <div className="relative flex h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 items-center justify-center bg-[#4527A0] text-white text-[9px] min-[1080px]:text-xs font-bold rounded-full shrink-0">
                         {counts.markedAndAnswered}
                         <span className="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-0.5 border border-white">
                           <Check className="h-2 w-2" />
                         </span>
                       </div>
-                      <span>Answered & Marked for Review</span>
+                      <span className="truncate">Answered & Marked</span>
                     </div>
                   </div>
                 )}
 
                 {/* Active Palette Section Grid */}
-                <div className={`flex-1 p-3 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-white'}`}>
+                <div className={`flex-1 p-2 min-[1080px]:p-3 overflow-y-auto max-[1079px]:no-scrollbar ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-white'}`}>
                   {/* Section Name Header - matches screenshot style */}
                   {isSsc && (
-                    <div className="mb-3 pb-2 border-b border-slate-200">
-                      <h4 className="font-bold text-slate-800 text-[11px]">{currentSection.name}</h4>
+                    <div className="mb-2 pb-1.5 border-b border-slate-200">
+                      <h4 className="font-bold text-slate-800 text-[10px] min-[1080px]:text-[11px] truncate">{currentSection.name}</h4>
                     </div>
                   )}
                   {!isSsc && (
-                    <h4 className="font-bold text-[#0F2942] uppercase text-[10px] tracking-wide mb-3">
+                    <h4 className="font-bold text-[#0F2942] uppercase text-[9px] min-[1080px]:text-[10px] tracking-wide mb-2 truncate">
                       Question Palette - {currentSection.name}
                     </h4>
                   )}
                   
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-5 gap-1.5 min-[1080px]:gap-2">
                     {currentSectionQuestions.map((q, idx) => {
                       const resp = responses[q.id];
                       const stateCode = resp?.state ?? 1;
@@ -2078,7 +2078,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                         <button
                           key={q.id}
                           onClick={() => jumpToQuestion(currentSectionIndex, idx)}
-                          className={`flex h-8 w-8 items-center justify-center border font-bold text-xs shadow-sm hover:opacity-90 active:scale-95 transition-all ${styleClass} ${
+                          className={`flex h-7 w-7 min-[1080px]:h-8 min-[1080px]:w-8 items-center justify-center border font-bold text-[10px] min-[1080px]:text-xs shadow-xs hover:opacity-90 active:scale-95 transition-all ${styleClass} ${
                             isActive ? 'ring-2 ring-blue-500 ring-offset-1 z-10' : ''
                           }`}
                         >
@@ -2096,29 +2096,29 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
                 {/* Legend Table — SSC style matches screenshot */}
                 {isSsc && (
-                  <div className="px-3 pb-2 bg-white border-t border-slate-200">
-                    <table className="w-full text-[10px] mt-2">
+                  <div className="px-2 pb-2 min-[1080px]:px-3 bg-white border-t border-slate-200">
+                    <table className="w-full text-[9px] min-[1080px]:text-[10px] mt-2">
                       <tbody>
                         <tr className="border-b border-slate-100">
-                          <td className="py-1 pr-2"><div className="h-5 w-5 bg-[#C8D3E0] border border-[#94a3b8] text-slate-800 flex items-center justify-center font-bold text-[9px]">{counts.notVisited}</div></td>
-                          <td className="py-1 text-slate-700">Not Visited</td>
-                          <td className="py-1 pr-2 pl-3"><div className="h-5 w-5 bg-[#C62828] text-white flex items-center justify-center font-bold text-[9px] rounded-t-md">{counts.notAnswered}</div></td>
-                          <td className="py-1 text-slate-700">Not Answered</td>
+                          <td className="py-1 pr-1"><div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#C8D3E0] border border-[#94a3b8] text-slate-800 flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px]">{counts.notVisited}</div></td>
+                          <td className="py-1 text-slate-700 truncate">Not Visited</td>
+                          <td className="py-1 pr-1 pl-2"><div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#C62828] text-white flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] rounded-t-md">{counts.notAnswered}</div></td>
+                          <td className="py-1 text-slate-700 truncate">Not Answered</td>
                         </tr>
                         <tr className="border-b border-slate-100">
-                          <td className="py-1 pr-2"><div className="h-5 w-5 bg-[#2E7D32] text-white flex items-center justify-center font-bold text-[9px] rounded-b-md">{counts.answered}</div></td>
-                          <td className="py-1 text-slate-700">Answered</td>
-                          <td className="py-1 pr-2 pl-3"><div className="h-5 w-5 bg-[#4527A0] text-white flex items-center justify-center font-bold text-[9px] rounded-full">{counts.marked}</div></td>
-                          <td className="py-1 text-slate-700">Marked for Review</td>
+                          <td className="py-1 pr-1"><div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#2E7D32] text-white flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] rounded-b-md">{counts.answered}</div></td>
+                          <td className="py-1 text-slate-700 truncate">Answered</td>
+                          <td className="py-1 pr-1 pl-2"><div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#4527A0] text-white flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] rounded-full">{counts.marked}</div></td>
+                          <td className="py-1 text-slate-700 truncate">Marked for Review</td>
                         </tr>
                         <tr>
-                          <td className="py-1 pr-2">
-                            <div className="relative h-5 w-5 bg-[#4527A0] text-white flex items-center justify-center font-bold text-[9px] rounded-full">
+                          <td className="py-1 pr-1">
+                            <div className="relative h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#4527A0] text-white flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] rounded-full">
                               {counts.markedAndAnswered}
                               <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white"><Check className="h-1.5 w-1.5" /></span>
                             </div>
                           </td>
-                          <td className="py-1 text-slate-700 col-span-3" colSpan={3}>Answered &amp; Marked for Review</td>
+                          <td className="py-1 text-slate-700 col-span-3 text-[8.5px] min-[1080px]:text-[10px]" colSpan={3}>Answered &amp; Marked</td>
                         </tr>
                       </tbody>
                     </table>
@@ -2126,7 +2126,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                 )}
 
                 {/* Submit Block Section */}
-                <div className={`p-4 border-t border-slate-200 flex flex-col gap-2.5 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
+                <div className={`p-2.5 min-[1080px]:p-4 border-t border-slate-200 flex flex-col gap-2 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
                   {session && session.hasSectionalTiming && session.sections && session.sections.length > 1 && (
                     <button
                       onClick={() => {

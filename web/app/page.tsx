@@ -11,6 +11,7 @@ import { getLocalizedName } from './lib/examUtils';
 import { useIsMobile } from './useIsMobile';
 import VocabSection from './components/VocabSection';
 import BackgroundArts from './components/BackgroundArts';
+import LiveUpdatesBar from './components/LiveUpdatesBar';
 
 const EXAMS_BY_CATEGORY: Record<string, { id: string; name: string }[]> = {
   ssc: [
@@ -500,33 +501,7 @@ const formatSubCategoryName = (name: string) => {
         </header>
 
         {/* Live Notices & Announcements Marquee */}
-        {noticesList && noticesList.length > 0 && (
-          <div className="relative bg-blue-600/90 dark:bg-blue-950/80 text-white text-[10px] py-2 px-3 flex items-center gap-2 border-b border-blue-500/20 z-20 shrink-0 font-bold overflow-hidden shadow-xs">
-            <span className="bg-red-500 text-[8px] text-white px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0 flex items-center gap-1 shadow-xs border border-red-400/30">
-              <Bell className="h-2.5 w-2.5" />
-              {language === 'hi' ? 'लाइव अपडेट' : 'Live Updates'}
-            </span>
-            {React.createElement(
-              'marquee',
-              {
-                behavior: 'scroll',
-                direction: 'left',
-                scrollamount: '3.5',
-                className: 'cursor-pointer flex-1',
-                onMouseOver: (e: any) => e.currentTarget.stop(),
-                onMouseOut: (e: any) => e.currentTarget.start(),
-              },
-              noticesList.map((notice) => (
-                <span key={notice.id} className="mx-4 hover:underline">
-                  <Link href={`/updates/${notice.id}`}>
-                    {(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title} ({notice.date})
-                  </Link>
-                  <span className="ml-4 text-blue-300">|</span>
-                </span>
-              ))
-            )}
-          </div>
-        )}
+        <LiveUpdatesBar notices={noticesList} language={language} isMobile={true} />
 
         {/* MOBILE SLIDE-DOWN DRAWER MENU */}
         {mobileMenuOpen && (
@@ -534,11 +509,8 @@ const formatSubCategoryName = (name: string) => {
             <nav className="flex flex-col gap-4 text-sm font-bold text-slate-655 dark:text-slate-300">
               <Link href="/mock-tests" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navTestSeries}</Link>
               <Link href="/updates" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navUpdates}</Link>
-              <Link href="/locker" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2 flex items-center justify-between">
+              <Link href="/locker" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">
                 <span>{language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}</span>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
-                  Drive Sync
-                </span>
               </Link>
               {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
                 <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navAdmin}</Link>
@@ -1191,42 +1163,39 @@ const formatSubCategoryName = (name: string) => {
       <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* HEADER SECTION */}
-      <header className="hidden md:flex h-16 sticky top-0 z-40 px-6 md:px-12 items-center justify-between shadow-sm glass-header transition-all duration-350">
-        <div className="flex items-center gap-8">
+      <header className="hidden md:flex h-16 sticky top-0 z-40 px-4 sm:px-6 lg:px-10 items-center justify-between shadow-sm glass-header transition-all duration-350">
+        <div className="flex items-center gap-4 lg:gap-8 min-w-0">
           {/* Original MockTest Hub Header Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
-              <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
+          <Link href="/" className="flex items-center gap-2.5 lg:gap-3 shrink-0">
+            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 lg:p-2 rounded-full shadow-sm flex items-center justify-center h-9 w-9 lg:h-10 lg:w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
+              <Trophy className="h-5 w-5 lg:h-5.5 lg:w-5.5 text-blue-600 dark:text-blue-400" />
             </div>
-            <div>
-              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
-              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
+            <div className="shrink-0">
+              <h1 className="font-extrabold text-xs lg:text-sm leading-tight text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
+              <p className="text-[8px] lg:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase truncate">{t.logoSub}</p>
             </div>
           </Link>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-505 dark:text-slate-400">
-            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
-            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navUpdates}</Link>
-            <Link href="/locker" className="hover:text-blue-600 dark:hover:text-white transition-colors flex items-center gap-1">
+          <nav className="flex items-center gap-3 lg:gap-6 text-xs font-bold text-slate-505 dark:text-slate-400 shrink-0">
+            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">{t.navTestSeries}</Link>
+            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">{t.navUpdates}</Link>
+            <Link href="/locker" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
               <span>{language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}</span>
-              <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
-                Drive
-              </span>
             </Link>
             {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
-              <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navAdmin}</Link>
+              <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">{t.navAdmin}</Link>
             )}
           </nav>
         </div>
 
         {/* Auth Buttons / Profile Panel / Language Selector */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Language selector */}
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-355 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+            className="px-2 py-1.5 lg:px-2.5 lg:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-355 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
           >
             <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
             <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
@@ -1242,10 +1211,10 @@ const formatSubCategoryName = (name: string) => {
           </button>
 
           {currentUser ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link 
                 href="/profile" 
-                className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 border border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700 transition px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs text-slate-800 dark:text-slate-200"
+                className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700 transition px-3 py-1.5 rounded-xl text-xs font-bold shadow-xs text-slate-800 dark:text-slate-200 whitespace-nowrap"
               >
                 {/* Small Mock Test Hub Logo Emblem */}
                 <div className="bg-blue-600/10 dark:bg-blue-950 p-1 rounded-md flex items-center justify-center shrink-0 border border-blue-200/50 dark:border-blue-900/40">
@@ -1255,17 +1224,17 @@ const formatSubCategoryName = (name: string) => {
               </Link>
               <button
                 onClick={logout}
-                className="hidden sm:block text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold cursor-pointer"
+                className="hidden lg:block text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold cursor-pointer"
               >
                 {t.signOut}
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
-              <Link href="/auth" className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold flex items-center gap-1">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Link href="/auth" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition text-xs font-bold flex items-center gap-1 px-2 py-1">
                 <span>{t.logIn}</span>
               </Link>
-              <Link href="/auth" className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2 px-4 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5">
+              <Link href="/auth" className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2 px-3 sm:px-4 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 whitespace-nowrap">
                 <span>{t.signUp}</span>
               </Link>
             </div>
@@ -1274,36 +1243,10 @@ const formatSubCategoryName = (name: string) => {
       </header>
 
       {/* Live Notices & Announcements Marquee */}
-      {noticesList && noticesList.length > 0 && (
-        <div className="relative bg-blue-600/90 dark:bg-blue-950/80 text-white text-xs py-2 px-8 flex items-center gap-3 border-b border-blue-500/20 z-30 shrink-0 font-bold overflow-hidden shadow-xs">
-          <span className="bg-red-500 text-[9px] text-white px-2.5 py-0.5 rounded uppercase tracking-wider animate-pulse shrink-0 flex items-center gap-1.5 shadow-xs border border-red-400/30">
-            <Bell className="h-3 w-3" />
-            {language === 'hi' ? 'लाइव अपडेट' : 'Live Updates'}
-          </span>
-          {React.createElement(
-            'marquee',
-            {
-              behavior: 'scroll',
-              direction: 'left',
-              scrollamount: '4',
-              className: 'cursor-pointer flex-1',
-              onMouseOver: (e: any) => e.currentTarget.stop(),
-              onMouseOut: (e: any) => e.currentTarget.start(),
-            },
-            noticesList.map((notice) => (
-              <span key={notice.id} className="mx-6 hover:underline">
-                <Link href={`/updates/${notice.id}`}>
-                  {(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title} ({notice.date})
-                </Link>
-                <span className="ml-6 text-blue-300">|</span>
-              </span>
-            ))
-          )}
-        </div>
-      )}
+      <LiveUpdatesBar notices={noticesList} language={language} isMobile={false} />
 
       {/* HERO SECTION - Starts immediately below Live Updates Bar */}
-      <section className="pt-4 pb-8 md:pt-5 md:pb-10 px-4 md:px-8 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch relative z-10 edu-grid-pattern">
+      <section className="pt-2 pb-4 sm:pt-3 sm:pb-6 min-[1080px]:pt-5 min-[1080px]:pb-10 px-3 sm:px-4 md:px-6 min-[1080px]:px-8 max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 min-[1080px]:gap-8 items-stretch relative z-10 edu-grid-pattern">
         
         {/* Floating Book Art */}
         <div className="absolute top-10 left-6 opacity-20 dark:opacity-[0.12] animate-float pointer-events-none hidden xl:block">
@@ -1330,42 +1273,42 @@ const formatSubCategoryName = (name: string) => {
         </div>
 
         {/* Left Side: Compact Pitch Title Section */}
-        <div className="lg:col-span-4 flex flex-col justify-center space-y-3.5 text-left">
+        <div className="md:col-span-5 min-[1080px]:col-span-4 flex flex-col justify-center space-y-1.5 sm:space-y-2 min-[1080px]:space-y-3.5 text-left">
           {/* Festive Illustration above badge */}
-          <div className="w-full flex items-center justify-start pb-1 animate-in fade-in zoom-in-95 duration-300">
+          <div className="w-full flex items-center justify-start pb-0.5 min-[1080px]:pb-1 animate-in fade-in zoom-in-95 duration-300">
             <img
               src="/festive-hero.png"
               alt="Festive Celebration"
-              className="w-auto h-auto max-h-[175px] xl:max-h-[195px] object-contain drop-shadow-md hover:scale-105 transition-transform duration-300 pointer-events-none select-none"
+              className="w-auto h-auto max-h-[60px] sm:max-h-[75px] md:max-h-[90px] min-[1080px]:max-h-[175px] xl:max-h-[195px] object-contain drop-shadow-md hover:scale-105 transition-transform duration-300 pointer-events-none select-none"
             />
           </div>
 
-          <span className="inline-flex items-center gap-1.5 text-xs bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow-xs self-start">
+          <span className="inline-flex items-center gap-1.5 text-[9.5px] sm:text-[10px] min-[1080px]:text-xs bg-blue-100 border border-blue-300 dark:bg-blue-950 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-extrabold px-2.5 py-0.5 min-[1080px]:px-3 min-[1080px]:py-1 rounded-full uppercase tracking-wider shadow-xs self-start">
             {t.heroBadge}
           </span>
           
-          <h1 className="text-xl md:text-3xl font-black leading-snug tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-base sm:text-lg md:text-xl min-[1080px]:text-3xl font-black leading-tight min-[1080px]:leading-snug tracking-tight text-slate-900 dark:text-white">
             {t.heroTitlePrefix}<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400">{t.heroTitleSuffix}</span>
           </h1>
           
-          <p className="text-slate-600 dark:text-slate-400 text-xs md:text-sm leading-relaxed max-w-sm font-semibold">
+          <p className="text-slate-600 dark:text-slate-400 text-[11px] sm:text-[11.5px] md:text-xs min-[1080px]:text-sm leading-relaxed max-w-[290px] sm:max-w-xs md:max-w-sm font-semibold line-clamp-4">
             {t.heroDesc}
           </p>
 
-          <div className="pt-1">
+          <div className="pt-0.5 min-[1080px]:pt-1">
             <Link
               href="/mock-tests"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95"
+              className="inline-flex items-center gap-1.5 min-[1080px]:gap-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-3 py-1.5 min-[1080px]:px-4 min-[1080px]:py-2.5 rounded-xl text-xs shadow-md transition active:scale-95"
             >
-              <BookOpen className="h-4 w-4" />
+              <BookOpen className="h-3.5 w-3.5 min-[1080px]:h-4 min-[1080px]:w-4" />
               <span>{language === 'hi' ? 'टेस्ट सीरीज देखें' : 'Explore Test Series'}</span>
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-3 w-3 min-[1080px]:h-3.5 min-[1080px]:w-3.5" />
             </Link>
           </div>
         </div>
 
         {/* Right Side: Wider Full-Height Banner Announcement Panel */}
-        <div className="lg:col-span-8 border border-blue-200/80 dark:border-blue-900/50 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[420px] md:min-h-[460px] bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xl hover:shadow-2xl transition-all duration-300 group">
+        <div className="md:col-span-7 min-[1080px]:col-span-8 border border-blue-200/80 dark:border-blue-900/50 rounded-2xl min-[1080px]:rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[300px] sm:min-h-[340px] md:min-h-[380px] min-[1080px]:min-h-[460px] bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xl hover:shadow-2xl transition-all duration-300 group">
           {activeAnnouncements.length > 1 && (
             <>
               <div className="absolute top-3.5 right-3.5 z-30 flex gap-1.5 items-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-md">
@@ -1542,7 +1485,118 @@ const formatSubCategoryName = (name: string) => {
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">{t.liveUpdatesDesc}</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* MOBILE & TABLET TABBED UPDATES VIEW (< 1080px) */}
+        <div className="block min-[1080px]:hidden max-w-2xl mx-auto space-y-4">
+          {/* TAB SELECTION BAR */}
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <button
+              onClick={() => setMobileUpdateTab('notice')}
+              className={`flex-1 py-2 text-center rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                mobileUpdateTab === 'notice' 
+                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <Bell className="h-3.5 w-3.5" />
+              <span>{t.liveNotices}</span>
+            </button>
+            <button
+              onClick={() => setMobileUpdateTab('result')}
+              className={`flex-1 py-2 text-center rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                mobileUpdateTab === 'result' 
+                  ? 'bg-white dark:bg-slate-800 text-yellow-600 dark:text-yellow-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <Trophy className="h-3.5 w-3.5" />
+              <span>{t.resultsMerits}</span>
+            </button>
+            <button
+              onClick={() => setMobileUpdateTab('admit_card')}
+              className={`flex-1 py-2 text-center rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                mobileUpdateTab === 'admit_card' 
+                  ? 'bg-white dark:bg-slate-800 text-green-600 dark:text-green-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span>{t.admitCards}</span>
+            </button>
+          </div>
+
+          {/* RENDER ACTIVE TAB */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-3xl shadow-sm min-h-[300px] flex flex-col justify-between">
+            <div>
+              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                {mobileUpdateTab === 'notice' && <><Bell className="h-4 w-4 text-blue-600 animate-bounce" /> <span>{t.liveNotices}</span></>}
+                {mobileUpdateTab === 'result' && <><Trophy className="h-4 w-4 text-yellow-500 animate-pulse" /> <span>{t.resultsMerits}</span></>}
+                {mobileUpdateTab === 'admit_card' && <><FileText className="h-4 w-4 text-green-550" /> <span>{t.admitCards}</span></>}
+              </h3>
+              
+              <div className="space-y-3">
+                {noticesList.filter(n => n.category === mobileUpdateTab).length > 0 ? (
+                  [...noticesList]
+                    .filter(n => n.category === mobileUpdateTab)
+                    .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                    .slice(0, 6)
+                    .map(notice => {
+                    const noticeStyle = 
+                      notice.category === 'notice' ? 'bg-blue-50/40 dark:bg-blue-950/10 border-blue-100 dark:border-blue-900/30 border-l-4 border-l-blue-500' :
+                      notice.category === 'result' ? 'bg-emerald-50/40 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/30 border-l-4 border-l-emerald-500' :
+                      notice.category === 'admit_card' ? 'bg-amber-50/40 dark:bg-amber-950/10 border-amber-100 dark:border-amber-900/30 border-l-4 border-l-amber-500' :
+                      'bg-purple-50/40 dark:bg-purple-950/10 border-purple-100 dark:border-purple-900/30 border-l-4 border-l-purple-500';
+
+                    return (
+                      <Link
+                        key={notice.id}
+                        href={`/updates/${notice.id}`}
+                        className={`p-3 sm:p-3.5 rounded-xl border flex flex-col gap-1 shadow-xs transition-all duration-200 hover:scale-[1.01] active:scale-98 cursor-pointer block ${noticeStyle}`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-[8px] sm:text-[9px] font-black px-2 py-0.5 rounded tracking-wide ${
+                              mobileUpdateTab === 'notice' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400' :
+                              mobileUpdateTab === 'result' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-400' :
+                              'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
+                            }`}>
+                              {notice.type}
+                            </span>
+                            {isNewlyPublished(notice.publishDate) && (
+                              <span className="bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase">
+                                {t.newBadge}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[8px] sm:text-[9px] text-slate-400 font-semibold">{notice.date}</span>
+                        </div>
+                        <h5 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1">
+                          <span>{(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title}</span>
+                          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        </h5>
+                        <p className="text-[9px] sm:text-[10px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
+                          {t.lastDate} {notice.lastDate || (language === 'hi' ? 'उपलब्ध नहीं' : 'N/A')}
+                        </p>
+                      </Link>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-12 text-slate-400 text-xs">
+                    {t.noAlerts || 'No active alerts in this section.'}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <Link href={`/updates?category=${mobileUpdateTab}`} className="text-[10px] uppercase font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                {language === 'hi' ? 'सभी अपडेट देखें' : 'View All Alerts'} <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* DESKTOP 3-COLUMN UPDATES VIEW (>= 1080px) */}
+        <div className="hidden min-[1080px]:grid min-[1080px]:grid-cols-3 gap-8">
           
           {/* Column 1: Live Notices & Announcements (Blue Theme) */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative">
