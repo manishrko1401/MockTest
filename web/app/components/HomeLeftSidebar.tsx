@@ -246,30 +246,7 @@ export default function HomeLeftSidebar({
           </div>
         )}
 
-        {/* 2. PASS PRO CLAIM BANNER */}
-        {!isPassPro && (
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-3 text-white shadow-sm shadow-blue-500/20 relative overflow-hidden group">
-            <div className="flex items-start justify-between gap-1.5">
-              <div className="space-y-0.5">
-                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 bg-amber-400/20 text-amber-300 rounded border border-amber-400/30 inline-flex items-center gap-1">
-                  <Crown className="h-2.5 w-2.5 text-amber-300" />
-                  <span>1-Year Free Gift</span>
-                </span>
-                <h5 className="font-extrabold text-[11px] leading-snug text-white">
-                  {isHindi ? '1 वर्ष का पास प्रो दावा करें' : 'Claim 1-Year Pass Pro'}
-                </h5>
-              </div>
-              <Gift className="h-4 w-4 text-amber-300 animate-bounce shrink-0" />
-            </div>
-            <button
-              onClick={onOpenPassClaim}
-              className="mt-2.5 w-full py-1.5 bg-white hover:bg-amber-300 text-blue-900 font-extrabold text-[10px] rounded-lg shadow-2xs transition active:scale-95 uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer"
-            >
-              <Sparkles className="h-3 w-3 text-amber-500" />
-              <span>{isHindi ? 'दावा करें 🎁' : 'Claim Now 🎁'}</span>
-            </button>
-          </div>
-        )}
+
 
         {/* 3. PRIMARY SHORTCUTS SECTION */}
         <div className="space-y-1">

@@ -304,7 +304,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col justify-center bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 p-6 relative overflow-hidden transition-colors duration-200">
+    <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 p-4 sm:p-6 pt-12 sm:pt-16 pb-20 sm:pb-24 relative overflow-x-hidden transition-colors duration-200 flex flex-col items-center">
       
       {/* Cloudflare Turnstile External Script */}
       <Script 
@@ -313,13 +313,13 @@ export default function AuthPage() {
         onLoad={() => setTurnstileLoaded(true)}
       />
 
-      {/* Floating Header Actions */}
-      <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+      {/* Floating Header Actions (Fixed top-right so it never overlaps or jumps) */}
+      <div className="fixed top-3 right-3 sm:top-5 sm:right-6 z-30 flex items-center gap-2 sm:gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-1 sm:p-1.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
         {/* Language selector */}
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-          className="px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer shadow-sm"
+          className="px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer shadow-xs"
         >
           <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
           <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
@@ -329,7 +329,7 @@ export default function AuthPage() {
         <button 
           onClick={toggleTheme}
           type="button"
-          className="p-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800 shadow-sm"
+          className="p-1.5 sm:p-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800 shadow-xs"
           title={theme === 'light' ? t.themeDark : t.themeLight}
         >
           {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -340,41 +340,54 @@ export default function AuthPage() {
       <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="max-w-md w-full mx-auto relative z-10">
+      <div className={`w-full mx-auto relative z-10 transition-all duration-300 ${activeTab === 'signup' ? 'max-w-2xl' : 'max-w-md'}`}>
         
-        {/* Back Link */}
-        <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors mb-6 font-bold">
-          <ChevronLeft className="h-4 w-4" /> {t.backToHome}
-        </Link>
+        {/* Top Header / Back & Brand Logo */}
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/" className="flex items-center gap-2 group cursor-pointer">
+            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 rounded-xl shadow-xs flex items-center justify-center h-8 w-8 border border-blue-200/50 dark:border-slate-700 shrink-0 group-hover:scale-105 transition-transform">
+              <Trophy className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="text-left">
+              <span className="font-black text-xs leading-none text-slate-900 dark:text-white tracking-wider block">
+                MockTest <span className="text-blue-600 dark:text-blue-400">Hub</span>
+              </span>
+              <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold tracking-widest uppercase block mt-0.5">
+                {language === 'hi' ? 'परीक्षा की तैयारी' : 'Exam Preparation'}
+              </span>
+            </div>
+          </Link>
+
+          <Link href="/" className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors font-bold">
+            <ChevronLeft className="h-4 w-4" /> {t.backToHome}
+          </Link>
+        </div>
 
         {/* Auth Card Container */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl dark:shadow-2xl p-8 overflow-hidden backdrop-blur-md bg-opacity-80 dark:bg-opacity-80">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-xl dark:shadow-2xl p-5 sm:p-8 backdrop-blur-md bg-opacity-90 dark:bg-opacity-90 transition-all duration-300">
           
-          {/* Logo & Header */}
-          <div className="flex flex-col items-center justify-center text-center mb-8">
-            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2.5 rounded-full border border-blue-200/50 dark:border-slate-700 shadow-sm flex items-center justify-center h-14 w-14 shrink-0 mb-3">
-              <Trophy className="h-7 w-7 text-blue-600 dark:text-blue-400" />
+          {/* Main Card Logo & Header */}
+          <Link href="/" className="group flex flex-col items-center justify-center text-center mb-6 block cursor-pointer">
+            <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2.5 sm:p-3 rounded-2xl shadow-md shadow-blue-500/20 flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 shrink-0 mb-2.5 group-hover:scale-105 transition-transform">
+              <Trophy className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
             </div>
             
-            <h1 className="font-black text-2xl tracking-tight leading-none">
+            <h1 className="font-black text-xl sm:text-2xl tracking-tight leading-none">
               <span className="text-slate-900 dark:text-white">MockTest</span>
               <span className="text-blue-600 dark:text-blue-400 ml-1">Hub</span>
             </h1>
             
-            <p className="text-[9px] text-slate-505 dark:text-slate-400 font-bold tracking-widest uppercase mt-1.5 mb-4">
-              {language === 'hi' ? 'परीक्षा की तैयारी' : 'Exam Preparation'}
+            <p className="text-[9.5px] sm:text-[10px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase mt-1.5">
+              {language === 'hi' ? 'परीक्षा की तैयारी पोर्टल' : 'Exam Preparation Portal'}
             </p>
-
-            <h2 className="font-extrabold text-xs tracking-wider text-slate-900 dark:text-white mt-1 uppercase">{language === 'hi' ? 'मॉक टेस्ट खाता' : 'MOCK TEST ACCOUNT'}</h2>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-widest uppercase mt-0.5">{language === 'hi' ? 'सिंगल साइन-ऑन एक्सेस' : 'Single Sign-On Access'}</p>
-          </div>
+          </Link>
 
           {/* Form Tabs */}
-          <div className="flex bg-slate-100 dark:bg-slate-950 rounded-lg p-1 border border-slate-200 dark:border-slate-800 mb-6">
+          <div className="flex bg-slate-100 dark:bg-slate-950 rounded-xl p-1 border border-slate-200 dark:border-slate-800 mb-5">
             <button
               onClick={() => { setActiveTab('login'); setErrorMsg(null); setSuccessMsg(null); }}
               type="button"
-              className="flex-1 text-center py-2.5 rounded-md text-xs font-bold transition-all cursor-pointer"
+              className="flex-1 text-center py-2 sm:py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
               style={{
                 backgroundColor: activeTab === 'login' ? '#2563eb' : 'transparent',
                 color: activeTab === 'login' ? '#ffffff' : undefined
@@ -385,7 +398,7 @@ export default function AuthPage() {
             <button
               onClick={() => { setActiveTab('signup'); setErrorMsg(null); setSuccessMsg(null); }}
               type="button"
-              className="flex-1 text-center py-2.5 rounded-md text-xs font-bold transition-all cursor-pointer"
+              className="flex-1 text-center py-2 sm:py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
               style={{
                 backgroundColor: activeTab === 'signup' ? '#2563eb' : 'transparent',
                 color: activeTab === 'signup' ? '#ffffff' : undefined
@@ -400,7 +413,7 @@ export default function AuthPage() {
             type="button"
             onClick={handleGoogleAuth}
             disabled={googleLoading || loading}
-            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-[0.98] cursor-pointer disabled:opacity-60 mb-5"
+            className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-xs shadow-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-60 mb-5"
           >
             {googleLoading ? (
               <div className="h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -438,57 +451,81 @@ export default function AuthPage() {
 
           {/* Error & Success Messages */}
           {errorMsg && (
-            <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-red-650 dark:text-red-400 flex items-start gap-2.5 text-xs mb-5 animate-in fade-in duration-200">
+            <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl text-red-650 dark:text-red-400 flex items-start gap-2.5 text-xs mb-5 animate-in fade-in duration-200">
               <AlertCircle className="h-4 w-4 mt-0.5 text-red-600 shrink-0" />
               <span className="font-bold">{errorMsg}</span>
             </div>
           )}
           {successMsg && (
-            <div className="p-3.5 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 flex items-start gap-2.5 text-xs mb-5 animate-in fade-in duration-200">
+            <div className="p-3.5 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400 flex items-start gap-2.5 text-xs mb-5 animate-in fade-in duration-200">
               <CheckCircle2 className="h-4 w-4 mt-0.5 text-green-600 shrink-0" />
               <span className="font-bold">{successMsg}</span>
             </div>
           )}
 
-          {/* Input Fields Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Input Fields Form (1-Column for Login, 2-Column Grid for Signup) */}
+          <form onSubmit={handleSubmit}>
             
-                {/* Honeypot Anti-Bot Field (Hidden from real humans, trapped bots fill it) */}
-                <div style={{ position: 'absolute', opacity: 0, zIndex: -1, width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
-                  <input
-                    type="text"
-                    name="website_url"
-                    value={honeypot}
-                    onChange={(e) => setHoneypot(e.target.value)}
-                    tabIndex={-1}
-                    autoComplete="off"
-                  />
-                </div>
-            
-                {activeTab === 'signup' && (
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authName}</label>
-                    <div className="relative" suppressHydrationWarning>
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                        <User className="h-4 w-4" />
-                      </div>
-                      <input
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder={t.authNamePlaceholder}
-                        suppressHydrationWarning
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
-                      />
-                    </div>
-                  </div>
-                )}
+            {/* Honeypot Anti-Bot Field (Hidden from real humans, trapped bots fill it) */}
+            <div style={{ position: 'absolute', opacity: 0, zIndex: -1, width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
+              <input
+                type="text"
+                name="website_url"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
 
+            {activeTab === 'signup' ? (
+              /* ================= 2-COLUMN SIGNUP FORM ================= */
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+                
+                {/* 1. Full Name */}
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authEmail}</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">{t.authName}</label>
                   <div className="relative" suppressHydrationWarning>
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                      <User className="h-4 w-4" />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={t.authNamePlaceholder}
+                      suppressHydrationWarning
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all font-semibold"
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Mobile Number */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">{t.authMobile}</label>
+                  <div className="relative" suppressHydrationWarning>
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                      <Phone className="h-4 w-4" />
+                    </div>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
+                      placeholder={t.authMobilePlaceholder || "10-digit number"}
+                      suppressHydrationWarning
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all font-semibold"
+                    />
+                  </div>
+                </div>
+
+                {/* 3. Email Address */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">{t.authEmail}</label>
+                  <div className="relative" suppressHydrationWarning>
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                       <Mail className="h-4 w-4" />
                     </div>
                     <input
@@ -501,55 +538,16 @@ export default function AuthPage() {
                       }}
                       placeholder={t.authEmailPlaceholder || "name@example.com"}
                       suppressHydrationWarning
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all font-semibold"
                     />
                   </div>
                 </div>
 
-                {activeTab === 'signup' && (
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authMobile}</label>
-                    <div className="relative" suppressHydrationWarning>
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                        <Phone className="h-4 w-4" />
-                      </div>
-                      <input
-                        type="tel"
-                        required
-                        maxLength={10}
-                        value={mobile}
-                        onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
-                        placeholder={t.authMobilePlaceholder || "10-digit number"}
-                        suppressHydrationWarning
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'signup' && (
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authRefOptional}</label>
-                    <div className="relative" suppressHydrationWarning>
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                        <Gift className="h-4 w-4" />
-                      </div>
-                      <input
-                        type="text"
-                        value={referralCodeInput}
-                        onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
-                        placeholder="e.g. TB-RAHUL-1029"
-                        suppressHydrationWarning
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
-                      />
-                    </div>
-                  </div>
-                )}
-
+                {/* 4. Password */}
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t.authPassword}</label>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">{t.authPassword}</label>
                   <div className="relative" suppressHydrationWarning>
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                       <Lock className="h-4 w-4" />
                     </div>
                     <input
@@ -559,65 +557,147 @@ export default function AuthPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder={t.authPassPlaceholder || "••••••••"}
                       suppressHydrationWarning
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 dark:focus:ring-blue-500 transition-all font-semibold"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-9 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all font-semibold"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-550 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
 
-                {activeTab === 'login' && (
-                  <div className="flex justify-end pt-1">
+                {/* 5. Referral Code (Optional) */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">{t.authRefOptional}</label>
+                  <div className="relative" suppressHydrationWarning>
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                      <Gift className="h-4 w-4" />
+                    </div>
+                    <input
+                      type="text"
+                      value={referralCodeInput}
+                      onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                      placeholder="e.g. TB-RAHUL-1029"
+                      suppressHydrationWarning
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all font-semibold"
+                    />
+                  </div>
+                </div>
+
+                {/* 6. Cloudflare Turnstile Bot Protection Widget for Signup */}
+                <div className="col-span-1 md:col-span-2 pt-1 flex flex-col items-center justify-center">
+                  <div ref={turnstileContainerRef} className="min-h-[65px] flex items-center justify-center" />
+                  <p className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1 font-medium">
+                    <ShieldCheck className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                    {language === 'hi' ? 'क्लाउडफ्लेयर द्वारा बॉट और स्पैम से सुरक्षित' : 'Protected against spam & automated bots by Cloudflare'}
+                  </p>
+                </div>
+
+                {/* 7. Full-Width Register Button */}
+                <div className="col-span-1 md:col-span-2 pt-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs tracking-wider uppercase transition-all shadow-lg shadow-blue-900/25 active:scale-[0.98] cursor-pointer disabled:opacity-60"
+                  >
+                    {loading 
+                      ? (language === 'hi' ? 'कृपया प्रतीक्षा करें...' : 'Please wait...')
+                      : (language === 'hi' ? 'खाता पंजीकृत करें' : 'Register Account')}
+                  </button>
+                </div>
+
+              </div>
+            ) : (
+              /* ================= 1-COLUMN LOGIN FORM ================= */
+              <div className="space-y-4">
+                {/* 1. Email Address */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">{t.authEmail}</label>
+                  <div className="relative" suppressHydrationWarning>
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (errorMsg && errorMsg.includes('disposable')) setErrorMsg(null);
+                      }}
+                      placeholder={t.authEmailPlaceholder || "name@example.com"}
+                      suppressHydrationWarning
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all font-semibold"
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Password */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">{t.authPassword}</label>
+                  <div className="relative" suppressHydrationWarning>
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                      <Lock className="h-4 w-4" />
+                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={t.authPassPlaceholder || "••••••••"}
+                      suppressHydrationWarning
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-9 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all font-semibold"
+                    />
                     <button
                       type="button"
-                      onClick={() => {
-                        setResetEmail(email); // prepopulate if they already typed email
-                        setResetStep(1);
-                        setShowResetModal(true);
-                        setResetError(null);
-                        setResetSuccess(null);
-                      }}
-                      className="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold hover:underline uppercase tracking-wide cursor-pointer"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
                     >
-                      {language === 'hi' ? 'पासवर्ड भूल गए?' : 'Forgot Password?'}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                )}
+                </div>
 
-                {/* Cloudflare Turnstile Bot Protection Widget for Signup */}
-                {activeTab === 'signup' && (
-                  <div className="pt-2 flex flex-col items-center justify-center">
-                    <div ref={turnstileContainerRef} className="min-h-[65px] flex items-center justify-center" />
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1 font-medium">
-                      <ShieldCheck className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                      {language === 'hi' ? 'क्लाउडफ्लेयर द्वारा बॉट और स्पैम से सुरक्षित' : 'Protected against spam & automated bots by Cloudflare'}
-                    </p>
-                  </div>
-                )}
+                {/* Forgot Password */}
+                <div className="flex justify-end pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetEmail(email);
+                      setResetStep(1);
+                      setShowResetModal(true);
+                      setResetError(null);
+                      setResetSuccess(null);
+                    }}
+                    className="text-[10.5px] text-blue-600 dark:text-blue-400 font-extrabold hover:underline uppercase tracking-wide cursor-pointer"
+                  >
+                    {language === 'hi' ? 'पासवर्ड भूल गए?' : 'Forgot Password?'}
+                  </button>
+                </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-xs tracking-wider uppercase transition-all shadow-lg shadow-blue-900/25 active:scale-[0.98] mt-6 cursor-pointer disabled:opacity-60"
-                >
-                  {loading 
-                    ? (language === 'hi' ? 'कृपया प्रतीक्षा करें...' : 'Please wait...')
-                    : (activeTab === 'login' 
-                        ? (language === 'hi' ? 'खाते में साइन इन करें' : 'Sign In to Account') 
-                        : (language === 'hi' ? 'खाता पंजीकृत करें' : 'Register Account'))}
-                </button>
-
+                {/* Submit Login Button */}
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs tracking-wider uppercase transition-all shadow-lg shadow-blue-900/25 active:scale-[0.98] cursor-pointer disabled:opacity-60"
+                  >
+                    {loading 
+                      ? (language === 'hi' ? 'कृपया प्रतीक्षा करें...' : 'Please wait...')
+                      : (language === 'hi' ? 'खाते में साइन इन करें' : 'Sign In to Account')}
+                  </button>
+                </div>
+              </div>
+            )}
 
           </form>
 
           {/* Quick instructions */}
           {activeTab === 'signup' && (
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 text-center border-t border-slate-200 dark:border-slate-800/80 pt-4 mt-6">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 text-center border-t border-slate-200 dark:border-slate-800/80 pt-4 mt-5">
               <p>{language === 'hi' ? 'पूर्ण मॉक टेस्ट इतिहास ट्रैकिंग के साथ एक नया सत्र प्रोफ़ाइल बनाने के लिए साइन अप करें।' : 'Sign up to create a new session profile with full mock test history tracking.'}</p>
             </div>
           )}
@@ -628,7 +708,7 @@ export default function AuthPage() {
 
             {/* Password Reset Modal Overlay */}
       {showResetModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative text-slate-800 dark:text-white">
             
             <button

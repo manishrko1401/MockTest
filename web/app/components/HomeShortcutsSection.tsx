@@ -10,7 +10,6 @@ import {
   Bell,
   Lock,
   User,
-  Crown,
   Menu,
   Share2,
   ChevronRight,
@@ -93,21 +92,6 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
       iconBg: 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400',
     },
     {
-      id: 'pass',
-      title: isHindi ? 'पास प्रो (Pass Pro)' : 'Pass Pro Access',
-      subtitle: isPassPro ? (isHindi ? 'सक्रिय 👑' : 'Active 👑') : (isHindi ? '1 वर्ष का मुफ़्त पास' : '1-Year Free Gift'),
-      href: currentUser ? '/profile' : '#',
-      onClick: isPassPro ? undefined : (e: React.MouseEvent) => {
-        e.preventDefault();
-        if (onOpenPassClaim) onOpenPassClaim();
-      },
-      icon: Crown,
-      badge: isPassPro ? 'UNLOCKED' : 'FREE GIFT',
-      bgClass: 'bg-amber-50/80 hover:bg-amber-100/90 dark:bg-amber-950/30 dark:hover:bg-amber-900/40',
-      borderClass: 'border-amber-200/80 dark:border-amber-900/50 hover:border-amber-400',
-      iconBg: 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400',
-    },
-    {
       id: 'practice',
       title: isHindi ? 'प्रैक्टिस सीरीज़' : 'Practice Series',
       subtitle: isHindi ? 'विषयवार व कस्टम टेस्ट' : 'Topic-wise & Drills',
@@ -161,7 +145,7 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
         </div>
 
         {/* Shortcuts Horizontal Scroll / Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-2.5">
           {shortcuts.map((item) => {
             const Icon = item.icon;
             const content = (

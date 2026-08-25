@@ -212,43 +212,7 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
             </div>
           )}
 
-          {/* PASS PRO BANNER / CLAIM POPUP TRIGGER */}
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-3.5 text-white shadow-md shadow-indigo-500/20 relative overflow-hidden group">
-            <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full blur-xl group-hover:scale-125 transition-transform" />
-            <div className="flex items-start justify-between gap-2 relative z-10">
-              <div className="space-y-1">
-                <div className="inline-flex items-center gap-1 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">
-                  <Crown className="h-3 w-3 text-amber-300" />
-                  <span>{isHindi ? '1 वर्ष का पास प्रो' : '1-Year Pass Pro'}</span>
-                </div>
-                <h4 className="font-extrabold text-xs sm:text-sm leading-tight text-white">
-                  {isHindi ? 'सभी प्रीमियम मॉक टेस्ट अनलॉक करें' : 'Unlock All CBT Mock Test Series'}
-                </h4>
-                <p className="text-[10px] text-blue-100/90 leading-tight">
-                  {isHindi ? 'एसएससी, रेलवे, बैंकिंग और राज्य परीक्षाएं' : 'Access SSC, Banking, Railways & State Exams'}
-                </p>
-              </div>
-              <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md shrink-0">
-                <Gift className="h-5 w-5 text-amber-300 animate-bounce" />
-              </div>
-            </div>
 
-            <div className="mt-3 pt-2.5 border-t border-white/20 flex items-center justify-between relative z-10">
-              <span className="text-[9px] font-bold text-amber-200">
-                {isPassPro ? (isHindi ? '✓ सक्रिय प्लान' : '✓ Active Plan') : (isHindi ? '100% मुफ़्त उपहार' : '100% Free Offer')}
-              </span>
-              <button
-                onClick={() => {
-                  onClose();
-                  if (onOpenPassClaim) onOpenPassClaim();
-                }}
-                className="px-3 py-1 bg-white hover:bg-amber-300 text-blue-900 font-extrabold text-[10px] rounded-lg shadow-sm transition active:scale-95 uppercase tracking-wider flex items-center gap-1 cursor-pointer"
-              >
-                <Sparkles className="h-3 w-3 text-amber-500" />
-                <span>{isPassPro ? (isHindi ? 'देखें' : 'View Pass') : (isHindi ? 'दावा करें 🎁' : 'Claim 🎁')}</span>
-              </button>
-            </div>
-          </div>
 
           {/* MAIN NAVIGATION SHORTCUTS */}
           <div className="space-y-1">
