@@ -208,25 +208,27 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       setLoading(true);
       const count = Math.min(200, Math.max(1, Number(testCount) || 1));
 
-      for (let i = 1; i <= count; i++) {
-        const titleToUse = count === 1 ? testForm.title.trim() : `${testForm.title.trim()} ${i}`;
-        const titleHiToUse = testForm.titleHi.trim()
-          ? (count === 1 ? testForm.titleHi.trim() : `${testForm.titleHi.trim()} ${i}`)
-          : '';
+      const payload = {
+        ...testForm,
+        passageText: testForm.passageText ? testForm.passageText.trim() : '',
+        backspaceRule: testForm.enableBackspace ? 'ALLOWED' : 'DISABLED'
+      };
 
-        const payload: any = {
-          ...testForm,
-          title: titleToUse,
-          titleHi: titleHiToUse,
-          passageText: testForm.passageText ? testForm.passageText.trim() : '',
-          backspaceRule: testForm.enableBackspace ? 'ALLOWED' : 'DISABLED'
-        };
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: adminHeaders,
+        body: JSON.stringify({
+          action: 'create-bulk-typing-tests',
+          data: {
+            template: payload,
+            count
+          }
+        })
+      });
 
-        await fetch('/api/db', {
-          method: 'POST',
-          headers: adminHeaders,
-          body: JSON.stringify({ action: 'create-typing-test', data: payload })
-        });
+      const resData = await res.json();
+      if (!resData.success) {
+        throw new Error(resData.error || 'Failed to create typing tests');
       }
 
       showToast(count === 1 ? 'Typing test created successfully!' : `Successfully created ${count} typing tests!`);

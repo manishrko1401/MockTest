@@ -272,6 +272,32 @@
       "createdAt": "2026-08-27T19:56:07.585Z",
       "updatedAt": "2026-08-27T19:56:07.585Z",
       "allowRetype": false
+    },
+    {
+      "id": "test-1788081313647",
+      "title": "SSC CGL DEST Test",
+      "titleHi": "",
+      "categoryId": "cat-ssc-cgl",
+      "passageId": "",
+      "passageText": "",
+      "demoPassageText": "This is a demo typing test passage designed to check your keyboard responsiveness and warm up your fingers. Please ensure all letter keys, space bar, backspace, and punctuation marks like comma, period, and hyphens are functioning smoothly before you start the main examination.",
+      "demoDurationMinutes": 1,
+      "breakDurationMinutes": 1,
+      "mainDurationMinutes": 15,
+      "qualifyingWpm": 35,
+      "maxErrorPercentage": 5,
+      "backspaceRule": "ALLOWED",
+      "enableBackspace": true,
+      "allowRetype": false,
+      "highlightAllowed": false,
+      "language": "en",
+      "difficulty": "Medium",
+      "instructions": "Standard typing exam simulation. Complete Demo, Break, and Main test.",
+      "orderIndex": 5,
+      "isActive": true,
+      "totalAttempts": 0,
+      "createdAt": "2026-08-30T09:15:13.647Z",
+      "updatedAt": "2026-08-30T09:15:13.647Z"
     }
   ],
   "attempts": [

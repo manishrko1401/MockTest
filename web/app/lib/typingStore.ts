@@ -537,6 +537,60 @@ export function saveTypingTest(test: Partial<TypingTest>): TypingTest {
   return newTest;
 }
 
+export function saveBulkTypingTests(
+  template: Partial<TypingTest>,
+  count: number
+): TypingTest[] {
+  const db = loadData();
+  const createdTests: TypingTest[] = [];
+  const safeCount = Math.min(200, Math.max(1, count));
+  const baseTitle = (template.title || 'New Typing Test').trim();
+  const baseTitleHi = (template.titleHi || '').trim();
+  const now = Date.now();
+
+  let maxOrder = db.tests.reduce((max, t) => Math.max(max, t.orderIndex || 0), 0);
+
+  for (let i = 1; i <= safeCount; i++) {
+    const titleToUse = safeCount === 1 ? baseTitle : `${baseTitle} ${i}`;
+    const titleHiToUse = baseTitleHi ? (safeCount === 1 ? baseTitleHi : `${baseTitleHi} ${i}`) : '';
+    const id = `test-${now}-${i}-${Math.random().toString(36).substring(2, 7)}`;
+    maxOrder++;
+
+    const newTest: TypingTest = {
+      id,
+      title: titleToUse,
+      titleHi: titleHiToUse,
+      categoryId: template.categoryId || db.categories[0]?.id || 'cat-ssc-cgl',
+      passageId: template.passageId || '',
+      passageText: template.passageText || '',
+      demoPassageText: template.demoPassageText || DEFAULT_DEMO_TEXT,
+      demoDurationMinutes: template.demoDurationMinutes !== undefined ? Number(template.demoDurationMinutes) : 1,
+      breakDurationMinutes: template.breakDurationMinutes !== undefined ? Number(template.breakDurationMinutes) : 1,
+      mainDurationMinutes: template.mainDurationMinutes !== undefined ? Number(template.mainDurationMinutes) : 10,
+      qualifyingWpm: template.qualifyingWpm !== undefined ? Number(template.qualifyingWpm) : 35,
+      maxErrorPercentage: template.maxErrorPercentage !== undefined ? Number(template.maxErrorPercentage) : 5.0,
+      backspaceRule: template.enableBackspace === false ? 'DISABLED' : (template.backspaceRule || 'ALLOWED'),
+      enableBackspace: template.enableBackspace !== undefined ? template.enableBackspace : (template.backspaceRule !== 'DISABLED'),
+      allowRetype: template.allowRetype !== undefined ? Boolean(template.allowRetype) : false,
+      highlightAllowed: template.highlightAllowed !== undefined ? template.highlightAllowed : false,
+      language: template.language || 'en',
+      difficulty: template.difficulty || 'Medium',
+      instructions: (template.instructions || 'Standard typing exam simulation. Complete Demo, Break, and Main test.').trim(),
+      orderIndex: maxOrder,
+      isActive: template.isActive !== undefined ? template.isActive : true,
+      totalAttempts: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    db.tests.push(newTest);
+    createdTests.push(newTest);
+  }
+
+  saveData(db);
+  return createdTests;
+}
+
 export function deleteTypingTest(id: string): boolean {
   const db = loadData();
   const initialLen = db.tests.length;

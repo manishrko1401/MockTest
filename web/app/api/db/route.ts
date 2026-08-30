@@ -21,6 +21,7 @@ import {
   getTypingTests,
   getTypingTestById,
   saveTypingTest,
+  saveBulkTypingTests,
   deleteTypingTest,
   saveTypingAttempt,
   getUserTypingAttempts,
@@ -167,7 +168,7 @@ export async function POST(request: Request) {
       'admin-get-locker-stats', 'admin-delete-locker-doc', 'admin-disconnect-user-locker',
       'create-typing-category', 'edit-typing-category', 'delete-typing-category',
       'create-typing-passage', 'edit-typing-passage', 'delete-typing-passage',
-      'create-typing-test', 'edit-typing-test', 'delete-typing-test'
+      'create-typing-test', 'create-bulk-typing-tests', 'edit-typing-test', 'delete-typing-test'
     ];
 
     const userOwnedActions = [
@@ -451,6 +452,11 @@ export async function POST(request: Request) {
       case 'create-typing-test':
       case 'edit-typing-test':
         return NextResponse.json({ success: true, test: saveTypingTest(data || body?.test || body) });
+      case 'create-bulk-typing-tests':
+        return NextResponse.json({
+          success: true,
+          tests: saveBulkTypingTests(data?.template || data, data?.count || body?.count || 1)
+        });
       case 'delete-typing-test':
         return NextResponse.json({ success: true, deleted: deleteTypingTest(data?.id || body?.id) });
 
