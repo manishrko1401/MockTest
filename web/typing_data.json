@@ -1,9 +1,9 @@
-{
+﻿{
   "categories": [
     {
       "id": "cat-ssc-cgl",
       "name": "SSC CGL (Tier-2 DEST)",
-      "nameHi": "एसएससी सीजीएल (टियर-2 डेस्ट)",
+      "nameHi": "αñÅαñ╕αñÅαñ╕αñ╕αÑÇ αñ╕αÑÇαñ£αÑÇαñÅαñ▓ (αñƒαñ┐αñ»αñ░-2 αñíαÑçαñ╕αÑìαñƒ)",
       "description": "Data Entry Speed Test (DEST) for SSC CGL Posts. 2000 key depressions / 15 minutes (approx 27-30 WPM).",
       "icon": "Keyboard",
       "logoUrl": "https://image.pngaaa.com/279/10279-middle.png",
@@ -15,7 +15,7 @@
     {
       "id": "cat-ssc-chsl",
       "name": "SSC CHSL (DEO / LDC)",
-      "nameHi": "एसएससी सीएचएसएल (डीईओ / एलडीसी)",
+      "nameHi": "αñÅαñ╕αñÅαñ╕αñ╕αÑÇ αñ╕αÑÇαñÅαñÜαñÅαñ╕αñÅαñ▓ (αñíαÑÇαñêαñô / αñÅαñ▓αñíαÑÇαñ╕αÑÇ)",
       "description": "Skill Test for Lower Division Clerk (LDC) & Data Entry Operator (DEO). Standard 35 WPM English / 30 WPM Hindi.",
       "icon": "Award",
       "logoUrl": "https://image.pngaaa.com/279/10279-middle.png",
@@ -27,7 +27,7 @@
     {
       "id": "cat-rrb-ntpc",
       "name": "RRB NTPC Typing Skill Test",
-      "nameHi": "आरआरबी एनटीपीसी टाइपिंग टेस्ट",
+      "nameHi": "αñåαñ░αñåαñ░αñ¼αÑÇ αñÅαñ¿αñƒαÑÇαñ¬αÑÇαñ╕αÑÇ αñƒαñ╛αñçαñ¬αñ┐αñéαñù αñƒαÑçαñ╕αÑìαñƒ",
       "description": "Typing Skill Test for Senior Clerk cum Typist, Accounts Clerk. 30 WPM English / 25 WPM Hindi in 10 minutes.",
       "icon": "Train",
       "logoUrl": "https://cdn.qmaths.in/logo/rrb/rrb-logo.png",
@@ -39,7 +39,7 @@
     {
       "id": "cat-court-clerk",
       "name": "High Court & Judicial Clerk",
-      "nameHi": "हाई कोर्ट एवं न्यायालय लिपिक",
+      "nameHi": "αñ╣αñ╛αñê αñòαÑïαñ░αÑìαñƒ αñÅαñ╡αñé αñ¿αÑìαñ»αñ╛αñ»αñ╛αñ▓αñ» αñ▓αñ┐αñ¬αñ┐αñò",
       "description": "Typing test for District & High Court Junior Assistants, Clerks and Stenographers with legal terminology.",
       "icon": "Scale",
       "orderIndex": 4,
@@ -51,7 +51,7 @@
     {
       "id": "cat-general-speed",
       "name": "General Speed & Accuracy Practice",
-      "nameHi": "सामान्य गति एवं शुद्धता अभ्यास",
+      "nameHi": "αñ╕αñ╛αñ«αñ╛αñ¿αÑìαñ» αñùαññαñ┐ αñÅαñ╡αñé αñ╢αÑüαñªαÑìαñºαññαñ╛ αñàαñ¡αÑìαñ»αñ╛αñ╕",
       "description": "Editorial passages, current affairs, and comprehensive typing exercises to build top speed.",
       "icon": "Zap",
       "orderIndex": 5,
@@ -62,9 +62,9 @@
     },
     {
       "id": "cat-hindi-typing",
-      "name": "हिंदी टाइपिंग परीक्षा (Hindi Typing)",
-      "nameHi": "हिंदी टाइपिंग परीक्षा",
-      "description": "विशेष हिंदी टाइपिंग अभ्यास (मंगल फॉन्ट / इनस्क्रिप्ट / रेमिंगटन गेल कीबोर्ड लेआउट).",
+      "name": "αñ╣αñ┐αñéαñªαÑÇ αñƒαñ╛αñçαñ¬αñ┐αñéαñù αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ (Hindi Typing)",
+      "nameHi": "αñ╣αñ┐αñéαñªαÑÇ αñƒαñ╛αñçαñ¬αñ┐αñéαñù αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛",
+      "description": "αñ╡αñ┐αñ╢αÑçαñ╖ αñ╣αñ┐αñéαñªαÑÇ αñƒαñ╛αñçαñ¬αñ┐αñéαñù αñàαñ¡αÑìαñ»αñ╛αñ╕ (αñ«αñéαñùαñ▓ αñ½αÑëαñ¿αÑìαñƒ / αñçαñ¿αñ╕αÑìαñòαÑìαñ░αñ┐αñ¬αÑìαñƒ / αñ░αÑçαñ«αñ┐αñéαñùαñƒαñ¿ αñùαÑçαñ▓ αñòαÑÇαñ¼αÑïαñ░αÑìαñí αñ▓αÑçαñåαñëαñƒ).",
       "icon": "Languages",
       "orderIndex": 6,
       "isActive": true,
@@ -77,7 +77,7 @@
     {
       "id": "pas-1",
       "title": "Digital Governance and Public Service Delivery in Modern India",
-      "titleHi": "डिजिटल गवर्नेंस और लोक सेवा वितरण",
+      "titleHi": "αñíαñ┐αñ£αñ┐αñƒαñ▓ αñùαñ╡αñ░αÑìαñ¿αÑçαñéαñ╕ αñöαñ░ αñ▓αÑïαñò αñ╕αÑçαñ╡αñ╛ αñ╡αñ┐αññαñ░αñú",
       "text": "Digital technology has revolutionized public service delivery across India over the past decade. Through unified portals and mobile applications, citizens can now access essential government documents, certificates, and welfare schemes without waiting in long queues. The integration of direct benefit transfers with bank accounts has minimized leakages, ensuring that financial assistance reaches intended beneficiaries swiftly and securely. Moreover, automated systems reduce bureaucratic delays and promote transparency in public administration. As broadband connectivity expands to remote rural communities, digital literacy becomes a cornerstone for inclusive socio-economic progress and nationwide empowerment.",
       "categoryId": "cat-ssc-cgl",
       "language": "en",
@@ -96,7 +96,7 @@
     {
       "id": "pas-2",
       "title": "Renewable Energy Transition and Sustainable Development",
-      "titleHi": "नवीकरणीय ऊर्जा परिवर्तन और सतत विकास",
+      "titleHi": "αñ¿αñ╡αÑÇαñòαñ░αñúαÑÇαñ» αñèαñ░αÑìαñ£αñ╛ αñ¬αñ░αñ┐αñ╡αñ░αÑìαññαñ¿ αñöαñ░ αñ╕αññαññ αñ╡αñ┐αñòαñ╛αñ╕",
       "text": "The transition toward sustainable energy sources represents one of the most critical endeavors of the twenty-first century. Solar and wind power installations have grown exponentially, providing affordable and clean electricity to millions of households and industrial units. By reducing dependency on imported fossil fuels, nations can enhance energy security while simultaneously curbing greenhouse gas emissions. Research in battery storage and smart grid infrastructure further stabilizes energy distribution during peak consumption hours. Continued collaboration between public policymakers, engineering innovators, and private investors will accelerate the adoption of environmentally conscious technologies worldwide.",
       "categoryId": "cat-ssc-chsl",
       "language": "en",
@@ -115,7 +115,7 @@
     {
       "id": "pas-3",
       "title": "Constitutional Principles and the Rule of Law in Judicial Systems",
-      "titleHi": "संवैधानिक सिद्धांत एवं विधि का शासन",
+      "titleHi": "αñ╕αñéαñ╡αÑêαñºαñ╛αñ¿αñ┐αñò αñ╕αñ┐αñªαÑìαñºαñ╛αñéαññ αñÅαñ╡αñé αñ╡αñ┐αñºαñ┐ αñòαñ╛ αñ╢αñ╛αñ╕αñ¿",
       "text": "The Constitution of India establishes a democratic republic grounded in the fundamental tenets of justice, liberty, equality, and fraternity. The independent judiciary functions as the custodian of the Constitution, ensuring that executive actions and legislative enactments remain consistent with constitutional mandates. Through judicial review and writ jurisdiction, superior courts protect the fundamental rights of citizens against arbitrary state action. A robust and accessible legal system is indispensable for upholding public confidence and guaranteeing equal protection of the laws to all individuals regardless of their social or economic background.",
       "categoryId": "cat-court-clerk",
       "language": "en",
@@ -134,7 +134,7 @@
     {
       "id": "pas-4",
       "title": "Indian Railways Infrastructure and Modernization Programs",
-      "titleHi": "भारतीय रेल अवसंरचना एवं आधुनिकीकरण कार्यक्रम",
+      "titleHi": "αñ¡αñ╛αñ░αññαÑÇαñ» αñ░αÑçαñ▓ αñàαñ╡αñ╕αñéαñ░αñÜαñ¿αñ╛ αñÅαñ╡αñé αñåαñºαÑüαñ¿αñ┐αñòαÑÇαñòαñ░αñú αñòαñ╛αñ░αÑìαñ»αñòαÑìαñ░αñ«",
       "text": "Indian Railways constitutes the lifeline of the country's transport network, facilitating the daily transit of millions of passengers and crucial freight cargo. Recent modernization initiatives focus on high-speed train sets, automated signaling networks, track electrification, and redevelopment of major railway stations with world-class passenger amenities. Dedicated freight corridors have substantially reduced transportation turnaround times for essential commodities, bolstering manufacturing competitiveness. Technological upgrades such as automatic train protection systems demonstrate a sustained commitment to passenger safety, operational efficiency, and sustainable economic growth.",
       "categoryId": "cat-rrb-ntpc",
       "language": "en",
@@ -152,9 +152,9 @@
     },
     {
       "id": "pas-5",
-      "title": "हिंदी गद्यांश: राष्ट्र निर्माण में शिक्षा और युवा शक्ति की भूमिका",
-      "titleHi": "राष्ट्र निर्माण में शिक्षा और युवा शक्ति की भूमिका",
-      "text": "किसी भी राष्ट्र के सर्वांगीण विकास और समृद्धि में शिक्षा की भूमिका सर्वोपरि होती है। युवा शक्ति देश की अमूल्य पूंजी है जो नई सोच और ऊर्जा के साथ सकारात्मक परिवर्तन ला सकती है। गुणवत्तापूर्ण शिक्षा से विद्यार्थियों में तार्किक क्षमता, नैतिक मूल्य और राष्ट्र सेवा की भावना विकसित होती है। डिजिटल युग में ज्ञान और कौशल का समन्वय युवाओं को आत्मनिर्भर बनाकर देश को नई ऊंचाइयों पर ले जाने में सक्षम बनाता है।",
+      "title": "αñ╣αñ┐αñéαñªαÑÇ αñùαñªαÑìαñ»αñ╛αñéαñ╢: αñ░αñ╛αñ╖αÑìαñƒαÑìαñ░ αñ¿αñ┐αñ░αÑìαñ«αñ╛αñú αñ«αÑçαñé αñ╢αñ┐αñòαÑìαñ╖αñ╛ αñöαñ░ αñ»αÑüαñ╡αñ╛ αñ╢αñòαÑìαññαñ┐ αñòαÑÇ αñ¡αÑéαñ«αñ┐αñòαñ╛",
+      "titleHi": "αñ░αñ╛αñ╖αÑìαñƒαÑìαñ░ αñ¿αñ┐αñ░αÑìαñ«αñ╛αñú αñ«αÑçαñé αñ╢αñ┐αñòαÑìαñ╖αñ╛ αñöαñ░ αñ»αÑüαñ╡αñ╛ αñ╢αñòαÑìαññαñ┐ αñòαÑÇ αñ¡αÑéαñ«αñ┐αñòαñ╛",
+      "text": "αñòαñ┐αñ╕αÑÇ αñ¡αÑÇ αñ░αñ╛αñ╖αÑìαñƒαÑìαñ░ αñòαÑç αñ╕αñ░αÑìαñ╡αñ╛αñéαñùαÑÇαñú αñ╡αñ┐αñòαñ╛αñ╕ αñöαñ░ αñ╕αñ«αÑâαñªαÑìαñºαñ┐ αñ«αÑçαñé αñ╢αñ┐αñòαÑìαñ╖αñ╛ αñòαÑÇ αñ¡αÑéαñ«αñ┐αñòαñ╛ αñ╕αñ░αÑìαñ╡αÑïαñ¬αñ░αñ┐ αñ╣αÑïαññαÑÇ αñ╣αÑêαÑñ αñ»αÑüαñ╡αñ╛ αñ╢αñòαÑìαññαñ┐ αñªαÑçαñ╢ αñòαÑÇ αñàαñ«αÑéαñ▓αÑìαñ» αñ¬αÑéαñéαñ£αÑÇ αñ╣αÑê αñ£αÑï αñ¿αñê αñ╕αÑïαñÜ αñöαñ░ αñèαñ░αÑìαñ£αñ╛ αñòαÑç αñ╕αñ╛αñÑ αñ╕αñòαñ╛αñ░αñ╛αññαÑìαñ«αñò αñ¬αñ░αñ┐αñ╡αñ░αÑìαññαñ¿ αñ▓αñ╛ αñ╕αñòαññαÑÇ αñ╣αÑêαÑñ αñùαÑüαñúαñ╡αññαÑìαññαñ╛αñ¬αÑéαñ░αÑìαñú αñ╢αñ┐αñòαÑìαñ╖αñ╛ αñ╕αÑç αñ╡αñ┐αñªαÑìαñ»αñ╛αñ░αÑìαñÑαñ┐αñ»αÑïαñé αñ«αÑçαñé αññαñ╛αñ░αÑìαñòαñ┐αñò αñòαÑìαñ╖αñ«αññαñ╛, αñ¿αÑêαññαñ┐αñò αñ«αÑéαñ▓αÑìαñ» αñöαñ░ αñ░αñ╛αñ╖αÑìαñƒαÑìαñ░ αñ╕αÑçαñ╡αñ╛ αñòαÑÇ αñ¡αñ╛αñ╡αñ¿αñ╛ αñ╡αñ┐αñòαñ╕αñ┐αññ αñ╣αÑïαññαÑÇ αñ╣αÑêαÑñ αñíαñ┐αñ£αñ┐αñƒαñ▓ αñ»αÑüαñù αñ«αÑçαñé αñ£αÑìαñ₧αñ╛αñ¿ αñöαñ░ αñòαÑîαñ╢αñ▓ αñòαñ╛ αñ╕αñ«αñ¿αÑìαñ╡αñ» αñ»αÑüαñ╡αñ╛αñôαñé αñòαÑï αñåαññαÑìαñ«αñ¿αñ┐αñ░αÑìαñ¡αñ░ αñ¼αñ¿αñ╛αñòαñ░ αñªαÑçαñ╢ αñòαÑï αñ¿αñê αñèαñéαñÜαñ╛αñçαñ»αÑïαñé αñ¬αñ░ αñ▓αÑç αñ£αñ╛αñ¿αÑç αñ«αÑçαñé αñ╕αñòαÑìαñ╖αñ« αñ¼αñ¿αñ╛αññαñ╛ αñ╣αÑêαÑñ",
       "categoryId": "cat-hindi-typing",
       "language": "hi",
       "difficulty": "Medium",
@@ -174,7 +174,7 @@
     {
       "id": "test-ssc-chsl-1",
       "title": "SSC CHSL Typing Speed Test 01 - Energy & Environment",
-      "titleHi": "एसएससी सीएचएसएल टाइपिंग टेस्ट 01",
+      "titleHi": "αñÅαñ╕αñÅαñ╕αñ╕αÑÇ αñ╕αÑÇαñÅαñÜαñÅαñ╕αñÅαñ▓ αñƒαñ╛αñçαñ¬αñ┐αñéαñù αñƒαÑçαñ╕αÑìαñƒ 01",
       "categoryId": "cat-ssc-chsl",
       "passageId": "pas-2",
       "passageText": "Honey bees are a fascinating and important species that play a crucial role in our ecosystem. These small creatures may seem insignificant but they are responsible for the pollination of a significant portion of the worlds food crops. In addition honey bees produce honey which has been utilized and cherished by humans for centuries. Understanding the importance of honey bees and ensuring their survival is essential for the health of our planet and our own well being. One of the most significant contributions honey bees make to our ecosystem is their role as pollinators. When bees collect nectar from flowers they inadvertently transfer pollen from the male reproductive organs of one flower to the female reproductive organs of another. This process known as cross pollination is essential for the reproduction of many plant species. In fact it is estimated that honey bees are responsible for pollinating around 70% of the worlds food crops including fruits vegetables nuts and seeds.\nPollination by honey bees ensures the production of high quality fruits and vegetables with improved yields. The diverse diet of these bees makes them effective pollinators as they visit multiple flowers in a single trip. As a result they transfer more pollen increasing the chances of successful fertilization and fruit development. Without honey bees many plant species would struggle to reproduce leading to declines in crop yields and potentially threatening our food security. Beyond their direct contribution to agriculture honey bees also play a vital role in maintaining ecosystem stability. Through pollination bees contribute to the maintenance of biodiversity by facilitating the reproduction of countless plant species. This in turn supports a diverse array of wildlife that relies on these plants for food and shelter. Honey bees also contribute to the development and maintenance of habitats.\nThese plants in turn contribute to the creation of habitats for other species. Without honey bees the interconnectedness of ecosystems would be disrupted leading to imbalances and potentially causing the decline of the overall biodiversity of a region. In addition to their vital role in pollination honey bees produce honey and this has both economic and cultural significance. Honey has been prized for centuries for its sweetness nutritional value and medicinal properties. Cultures around the world have incorporated honey into their traditional cuisines religious rituals and medical practices. Furthermore the honey industry has a substantial economic impact. Honey production creates job opportunities and contributes to local economies globally. The honey trade is a billion dollar industry and many communities rely on beekeeping for their livelihoods. The importance of honey bees for honey production not only benefits individuals and communities directly involved in beekeeping but also the wider economy.\nUnfortunately honey bees are currently facing numerous threats that endanger their survival. One of the significant challenges they face is the loss of habitat and forage due to deforestation urbanization and intensive agricultural practices. Pesticide use is another serious threat as many pesticides are toxic to bees and can lead to colony collapse disorder a phenomenon resulting in the mass death of bee colonies. Climate change is also impacting honey bee populations as it alters the timing and availability of flowering plants that bees rely on for food. This disruption in the synchronization between bees and their food sources can lead to a shortage of resources and increased mortality rates.\nHoney bees are a fascinating and important species that play a crucial role in our ecosystem. These small creatures may seem insignificant but they are responsible for the pollination of a significant portion of the worlds food crops. In addition honey bees produce honey which has been utilized and cherished by humans for centuries. Understanding the importance of honey bees and ensuring their survival is essential for the health of our planet and our own well being. One of the most significant contributions honey bees make to our ecosystem is their role as pollinators. When bees collect nectar from flowers they inadvertently transfer pollen from the male reproductive organs of one flower to the female reproductive organs of another. This process known as cross pollination is essential for the reproduction of many plant species. In fact it is estimated that honey bees are responsible for pollinating around 70% of the worlds food crops including fruits vegetables nuts and seeds.\nPollination by honey bees ensures the production of high quality fruits and vegetables with improved yields. The diverse diet of these bees makes them effective pollinators as they visit multiple flowers in a single trip. As a result they transfer more pollen increasing the chances of successful fertilization and fruit development. Without honey bees many plant species would struggle to reproduce leading to declines in crop yields and potentially threatening our food security. Beyond their direct contribution to agriculture honey bees also play a vital role in maintaining ecosystem stability. Through pollination bees contribute to the maintenance of biodiversity by facilitating the reproduction of countless plant species. This in turn supports a diverse array of wildlife that relies on these plants for food and shelter. Honey bees also contribute to the development and maintenance of habitats.\nThese plants in turn contribute to the creation of habitats for other species. Without honey bees the interconnectedness of ecosystems would be disrupted leading to imbalances and potentially causing the decline of the overall biodiversity of a region. In addition to their vital role in pollination honey bees produce honey and this has both economic and cultural significance. Honey has been prized for centuries for its sweetness nutritional value and medicinal properties. Cultures around the world have incorporated honey into their traditional cuisines religious rituals and medical practices. Furthermore the honey industry has a substantial economic impact. Honey production creates job opportunities and contributes to local economies globally. The honey trade is a billion dollar industry and many communities rely on beekeeping for their livelihoods. The importance of honey bees for honey production not only benefits individuals and communities directly involved in beekeeping but also the wider economy.\nUnfortunately honey bees are currently facing numerous threats that endanger their survival. One of the significant challenges they face is the loss of habitat and forage due to deforestation urbanization and intensive agricultural practices. Pesticide use is another serious threat as many pesticides are toxic to bees and can lead to colony collapse disorder a phenomenon resulting in the mass death of bee colonies. Climate change is also impacting honey bee populations as it alters the timing and availability of flowering plants that bees rely on for food. This disruption in the synchronization between bees and their food sources can lead to a shortage of resources and increased mortality rates.",
@@ -200,7 +200,7 @@
     {
       "id": "test-rrb-ntpc-1",
       "title": "RRB NTPC Typing Skill Test 01 - Railways Modernization",
-      "titleHi": "आरआरबी एनटीपीसी टाइपिंग टेस्ट 01",
+      "titleHi": "αñåαñ░αñåαñ░αñ¼αÑÇ αñÅαñ¿αñƒαÑÇαñ¬αÑÇαñ╕αÑÇ αñƒαñ╛αñçαñ¬αñ┐αñéαñù αñƒαÑçαñ╕αÑìαñƒ 01",
       "categoryId": "cat-rrb-ntpc",
       "passageId": "pas-4",
       "passageText": "Indian Railways constitutes the lifeline of the country's transport network, facilitating the daily transit of millions of passengers and crucial freight cargo. Recent modernization initiatives focus on high-speed train sets, automated signaling networks, track electrification, and redevelopment of major railway stations with world-class passenger amenities. Dedicated freight corridors have substantially reduced transportation turnaround times for essential commodities, bolstering manufacturing competitiveness. Technological upgrades such as automatic train protection systems demonstrate a sustained commitment to passenger safety, operational efficiency, and sustainable economic growth.",
@@ -226,7 +226,7 @@
     {
       "id": "test-court-1",
       "title": "High Court Legal Typing Test 01 - Judicial Reforms",
-      "titleHi": "हाई कोर्ट लीगल टाइपिंग टेस्ट 01",
+      "titleHi": "αñ╣αñ╛αñê αñòαÑïαñ░αÑìαñƒ αñ▓αÑÇαñùαñ▓ αñƒαñ╛αñçαñ¬αñ┐αñéαñù αñƒαÑçαñ╕αÑìαñƒ 01",
       "categoryId": "cat-court-clerk",
       "passageId": "pas-3",
       "passageText": "The Constitution of India establishes a democratic republic grounded in the fundamental tenets of justice, liberty, equality, and fraternity. The independent judiciary functions as the custodian of the Constitution, ensuring that executive actions and legislative enactments remain consistent with constitutional mandates. Through judicial review and writ jurisdiction, superior courts protect the fundamental rights of citizens against arbitrary state action. A robust and accessible legal system is indispensable for upholding public confidence and guaranteeing equal protection of the laws to all individuals regardless of their social or economic background.",
@@ -250,12 +250,12 @@
     },
     {
       "id": "test-hindi-1",
-      "title": "हिंदी टाइपिंग टेस्ट 01 - मंगल फॉन्ट (Hindi Typing Test 01)",
-      "titleHi": "हिंदी टाइपिंग टेस्ट 01",
+      "title": "αñ╣αñ┐αñéαñªαÑÇ αñƒαñ╛αñçαñ¬αñ┐αñéαñù αñƒαÑçαñ╕αÑìαñƒ 01 - αñ«αñéαñùαñ▓ αñ½αÑëαñ¿αÑìαñƒ (Hindi Typing Test 01)",
+      "titleHi": "αñ╣αñ┐αñéαñªαÑÇ αñƒαñ╛αñçαñ¬αñ┐αñéαñù αñƒαÑçαñ╕αÑìαñƒ 01",
       "categoryId": "cat-hindi-typing",
       "passageId": "pas-5",
-      "passageText": "किसी भी राष्ट्र के सर्वांगीण विकास और समृद्धि में शिक्षा की भूमिका सर्वोपरि होती है। युवा शक्ति देश की अमूल्य पूंजी है जो नई सोच और ऊर्जा के साथ सकारात्मक परिवर्तन ला सकती है। गुणवत्तापूर्ण शिक्षा से विद्यार्थियों में तार्किक क्षमता, नैतिक मूल्य और राष्ट्र सेवा की भावना विकसित होती है। डिजिटल युग में ज्ञान और कौशल का समन्वय युवाओं को आत्मनिर्भर बनाकर देश को नई ऊंचाइयों पर ले जाने में सक्षम बनाता है।",
-      "demoPassageText": "यह हिंदी टाइपिंग के लिए डेमो गद्यांश है। कृपया अपने कीबोर्ड की सभी कुंजियों की जांच कर लें।",
+      "passageText": "αñòαñ┐αñ╕αÑÇ αñ¡αÑÇ αñ░αñ╛αñ╖αÑìαñƒαÑìαñ░ αñòαÑç αñ╕αñ░αÑìαñ╡αñ╛αñéαñùαÑÇαñú αñ╡αñ┐αñòαñ╛αñ╕ αñöαñ░ αñ╕αñ«αÑâαñªαÑìαñºαñ┐ αñ«αÑçαñé αñ╢αñ┐αñòαÑìαñ╖αñ╛ αñòαÑÇ αñ¡αÑéαñ«αñ┐αñòαñ╛ αñ╕αñ░αÑìαñ╡αÑïαñ¬αñ░αñ┐ αñ╣αÑïαññαÑÇ αñ╣αÑêαÑñ αñ»αÑüαñ╡αñ╛ αñ╢αñòαÑìαññαñ┐ αñªαÑçαñ╢ αñòαÑÇ αñàαñ«αÑéαñ▓αÑìαñ» αñ¬αÑéαñéαñ£αÑÇ αñ╣αÑê αñ£αÑï αñ¿αñê αñ╕αÑïαñÜ αñöαñ░ αñèαñ░αÑìαñ£αñ╛ αñòαÑç αñ╕αñ╛αñÑ αñ╕αñòαñ╛αñ░αñ╛αññαÑìαñ«αñò αñ¬αñ░αñ┐αñ╡αñ░αÑìαññαñ¿ αñ▓αñ╛ αñ╕αñòαññαÑÇ αñ╣αÑêαÑñ αñùαÑüαñúαñ╡αññαÑìαññαñ╛αñ¬αÑéαñ░αÑìαñú αñ╢αñ┐αñòαÑìαñ╖αñ╛ αñ╕αÑç αñ╡αñ┐αñªαÑìαñ»αñ╛αñ░αÑìαñÑαñ┐αñ»αÑïαñé αñ«αÑçαñé αññαñ╛αñ░αÑìαñòαñ┐αñò αñòαÑìαñ╖αñ«αññαñ╛, αñ¿αÑêαññαñ┐αñò αñ«αÑéαñ▓αÑìαñ» αñöαñ░ αñ░αñ╛αñ╖αÑìαñƒαÑìαñ░ αñ╕αÑçαñ╡αñ╛ αñòαÑÇ αñ¡αñ╛αñ╡αñ¿αñ╛ αñ╡αñ┐αñòαñ╕αñ┐αññ αñ╣αÑïαññαÑÇ αñ╣αÑêαÑñ αñíαñ┐αñ£αñ┐αñƒαñ▓ αñ»αÑüαñù αñ«αÑçαñé αñ£αÑìαñ₧αñ╛αñ¿ αñöαñ░ αñòαÑîαñ╢αñ▓ αñòαñ╛ αñ╕αñ«αñ¿αÑìαñ╡αñ» αñ»αÑüαñ╡αñ╛αñôαñé αñòαÑï αñåαññαÑìαñ«αñ¿αñ┐αñ░αÑìαñ¡αñ░ αñ¼αñ¿αñ╛αñòαñ░ αñªαÑçαñ╢ αñòαÑï αñ¿αñê αñèαñéαñÜαñ╛αñçαñ»αÑïαñé αñ¬αñ░ αñ▓αÑç αñ£αñ╛αñ¿αÑç αñ«αÑçαñé αñ╕αñòαÑìαñ╖αñ« αñ¼αñ¿αñ╛αññαñ╛ αñ╣αÑêαÑñ",
+      "demoPassageText": "αñ»αñ╣ αñ╣αñ┐αñéαñªαÑÇ αñƒαñ╛αñçαñ¬αñ┐αñéαñù αñòαÑç αñ▓αñ┐αñÅ αñíαÑçαñ«αÑï αñùαñªαÑìαñ»αñ╛αñéαñ╢ αñ╣αÑêαÑñ αñòαÑâαñ¬αñ»αñ╛ αñàαñ¬αñ¿αÑç αñòαÑÇαñ¼αÑïαñ░αÑìαñí αñòαÑÇ αñ╕αñ¡αÑÇ αñòαÑüαñéαñ£αñ┐αñ»αÑïαñé αñòαÑÇ αñ£αñ╛αñéαñÜ αñòαñ░ αñ▓αÑçαñéαÑñ",
       "demoDurationMinutes": 1,
       "breakDurationMinutes": 1,
       "mainDurationMinutes": 10,
@@ -265,7 +265,7 @@
       "highlightAllowed": false,
       "language": "hi",
       "difficulty": "Medium",
-      "instructions": "हिंदी टाइपिंग परीक्षा (मंगल फॉन्ट / इनस्क्रिप्ट लेआउट). 30 शब्द प्रति मिनट की गति आवश्यक है।",
+      "instructions": "αñ╣αñ┐αñéαñªαÑÇ αñƒαñ╛αñçαñ¬αñ┐αñéαñù αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ (αñ«αñéαñùαñ▓ αñ½αÑëαñ¿αÑìαñƒ / αñçαñ¿αñ╕αÑìαñòαÑìαñ░αñ┐αñ¬αÑìαñƒ αñ▓αÑçαñåαñëαñƒ). 30 αñ╢αñ¼αÑìαñª αñ¬αÑìαñ░αññαñ┐ αñ«αñ┐αñ¿αñƒ αñòαÑÇ αñùαññαñ┐ αñåαñ╡αñ╢αÑìαñ»αñò αñ╣αÑêαÑñ",
       "orderIndex": 6,
       "isActive": true,
       "totalAttempts": 810,
@@ -16414,14 +16414,14 @@
           "originalWord": "small",
           "typedWord": "amall",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"small\" → \"amall\""
+          "reason": "Wrong word: \"small\" ΓåÆ \"amall\""
         },
         {
           "index": 25,
           "originalWord": "responsible",
           "typedWord": "esponsible",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"responsible\" → \"esponsible\""
+          "reason": "Wrong word: \"responsible\" ΓåÆ \"esponsible\""
         },
         {
           "index": 38,
@@ -23935,14 +23935,14 @@
           "originalWord": "These",
           "typedWord": "Yhese",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"These\" → \"Yhese\""
+          "reason": "Wrong word: \"These\" ΓåÆ \"Yhese\""
         },
         {
           "index": 32,
           "originalWord": "portion",
           "typedWord": "prortion",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"portion\" → \"prortion\""
+          "reason": "Wrong word: \"portion\" ΓåÆ \"prortion\""
         },
         {
           "index": 38,
@@ -39229,35 +39229,35 @@
           "originalWord": "fascinating",
           "typedWord": "facinating",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"fascinating\" → \"facinating\""
+          "reason": "Wrong word: \"fascinating\" ΓåÆ \"facinating\""
         },
         {
           "index": 6,
           "originalWord": "important",
           "typedWord": "imprtant",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"important\" → \"imprtant\""
+          "reason": "Wrong word: \"important\" ΓåÆ \"imprtant\""
         },
         {
           "index": 21,
           "originalWord": "insignificant",
           "typedWord": "insignigicant",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"insignificant\" → \"insignigicant\""
+          "reason": "Wrong word: \"insignificant\" ΓåÆ \"insignigicant\""
         },
         {
           "index": 32,
           "originalWord": "portion",
           "typedWord": "protion",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"portion\" → \"protion\""
+          "reason": "Wrong word: \"portion\" ΓåÆ \"protion\""
         },
         {
           "index": 39,
           "originalWord": "addition",
           "typedWord": "ddition",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"addition\" → \"ddition\""
+          "reason": "Wrong word: \"addition\" ΓåÆ \"ddition\""
         },
         {
           "index": 54,
@@ -62212,7 +62212,7 @@
           "originalWord": "significant",
           "typedWord": "sifinificant",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"significant\" → \"sifinificant\""
+          "reason": "Wrong word: \"significant\" ΓåÆ \"sifinificant\""
         },
         {
           "index": 48,
@@ -62226,21 +62226,21 @@
           "originalWord": "cherished",
           "typedWord": "d",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"cherished\" → \"d\""
+          "reason": "Wrong word: \"cherished\" ΓåÆ \"d\""
         },
         {
           "index": 54,
           "originalWord": "Understanding",
           "typedWord": "Understand",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"Understanding\" → \"Understand\""
+          "reason": "Wrong word: \"Understanding\" ΓåÆ \"Understand\""
         },
         {
           "index": 56,
           "originalWord": "importance",
           "typedWord": "important",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"importance\" → \"important\""
+          "reason": "Wrong word: \"importance\" ΓåÆ \"important\""
         },
         {
           "index": 58,
@@ -62324,7 +62324,7 @@
           "originalWord": "of",
           "typedWord": "heaalth",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"of\" → \"heaalth\""
+          "reason": "Wrong word: \"of\" ΓåÆ \"heaalth\""
         },
         {
           "index": 80,
@@ -66041,21 +66041,21 @@
           "originalWord": "contributions",
           "typedWord": "contribution",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"contributions\" → \"contribution\""
+          "reason": "Wrong word: \"contributions\" ΓåÆ \"contribution\""
         },
         {
           "index": 646,
           "originalWord": "pollinators.",
           "typedWord": "pollinatores.",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"pollinators.\" → \"pollinatores.\""
+          "reason": "Wrong word: \"pollinators.\" ΓåÆ \"pollinatores.\""
         },
         {
           "index": 647,
           "originalWord": "When",
           "typedWord": "when",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"When\" → \"when\""
+          "reason": "Capitalization: \"When\" ΓåÆ \"when\""
         },
         {
           "index": 648,
@@ -69299,7 +69299,7 @@
           "originalWord": "that",
           "typedWord": "tht",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"that\" → \"tht\""
+          "reason": "Wrong word: \"that\" ΓåÆ \"tht\""
         },
         {
           "index": 18,
@@ -69355,7 +69355,7 @@
           "originalWord": "of",
           "typedWord": "at",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"of\" → \"at\""
+          "reason": "Wrong word: \"of\" ΓåÆ \"at\""
         },
         {
           "index": 35,
@@ -70433,7 +70433,7 @@
           "originalWord": "in",
           "typedWord": "t",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"in\" → \"t\""
+          "reason": "Wrong word: \"in\" ΓåÆ \"t\""
         },
         {
           "index": 192,
@@ -73184,7 +73184,7 @@
           "originalWord": "significant",
           "typedWord": "siginigicant",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"significant\" → \"siginigicant\""
+          "reason": "Wrong word: \"significant\" ΓåÆ \"siginigicant\""
         },
         {
           "index": 594,
@@ -76806,21 +76806,21 @@
           "originalWord": "crucial",
           "typedWord": "cruial",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"crucial\" → \"cruial\""
+          "reason": "Wrong word: \"crucial\" ΓåÆ \"cruial\""
         },
         {
           "index": 23,
           "originalWord": "they",
           "typedWord": "thy",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"they\" → \"thy\""
+          "reason": "Wrong word: \"they\" ΓåÆ \"thy\""
         },
         {
           "index": 28,
           "originalWord": "pollination",
           "typedWord": "polination",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"pollination\" → \"polination\""
+          "reason": "Wrong word: \"pollination\" ΓåÆ \"polination\""
         },
         {
           "index": 30,
@@ -76834,7 +76834,7 @@
           "originalWord": "significant",
           "typedWord": "seignificant",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"significant\" → \"seignificant\""
+          "reason": "Wrong word: \"significant\" ΓåÆ \"seignificant\""
         },
         {
           "index": 35,
@@ -84348,42 +84348,42 @@
           "originalWord": "insignificant",
           "typedWord": "insignigicant",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"insignificant\" → \"insignigicant\""
+          "reason": "Wrong word: \"insignificant\" ΓåÆ \"insignigicant\""
         },
         {
           "index": 28,
           "originalWord": "pollination",
           "typedWord": "pollnation",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"pollination\" → \"pollnation\""
+          "reason": "Wrong word: \"pollination\" ΓåÆ \"pollnation\""
         },
         {
           "index": 32,
           "originalWord": "portion",
           "typedWord": "protion",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"portion\" → \"protion\""
+          "reason": "Wrong word: \"portion\" ΓåÆ \"protion\""
         },
         {
           "index": 38,
           "originalWord": "In",
           "typedWord": "in",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"In\" → \"in\""
+          "reason": "Capitalization: \"In\" ΓåÆ \"in\""
         },
         {
           "index": 40,
           "originalWord": "honey",
           "typedWord": "honeu",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"honey\" → \"honeu\""
+          "reason": "Wrong word: \"honey\" ΓåÆ \"honeu\""
         },
         {
           "index": 43,
           "originalWord": "honey",
           "typedWord": "hone",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"honey\" → \"hone\""
+          "reason": "Wrong word: \"honey\" ΓåÆ \"hone\""
         },
         {
           "index": 49,
@@ -115737,14 +115737,14 @@
           "originalWord": "constitutes",
           "typedWord": "constitues",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"constitutes\" → \"constitues\""
+          "reason": "Wrong word: \"constitutes\" ΓåÆ \"constitues\""
         },
         {
           "index": 10,
           "originalWord": "facilitating",
           "typedWord": "facilitaing",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"facilitating\" → \"facilitaing\""
+          "reason": "Wrong word: \"facilitating\" ΓåÆ \"facilitaing\""
         },
         {
           "index": 13,
@@ -115765,105 +115765,105 @@
           "originalWord": "millions",
           "typedWord": "transitming",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"millions\" → \"transitming\""
+          "reason": "Wrong word: \"millions\" ΓåÆ \"transitming\""
         },
         {
           "index": 16,
           "originalWord": "of",
           "typedWord": "the",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"of\" → \"the\""
+          "reason": "Wrong word: \"of\" ΓåÆ \"the\""
         },
         {
           "index": 19,
           "originalWord": "crucial",
           "typedWord": "curcial",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"crucial\" → \"curcial\""
+          "reason": "Wrong word: \"crucial\" ΓåÆ \"curcial\""
         },
         {
           "index": 24,
           "originalWord": "initiatives",
           "typedWord": "initatives",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"initiatives\" → \"initatives\""
+          "reason": "Wrong word: \"initiatives\" ΓåÆ \"initatives\""
         },
         {
           "index": 30,
           "originalWord": "automated",
           "typedWord": "auomated",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"automated\" → \"auomated\""
+          "reason": "Wrong word: \"automated\" ΓåÆ \"auomated\""
         },
         {
           "index": 34,
           "originalWord": "electrification,",
           "typedWord": "eletrification,",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"electrification,\" → \"eletrification,\""
+          "reason": "Wrong word: \"electrification,\" ΓåÆ \"eletrification,\""
         },
         {
           "index": 39,
           "originalWord": "railway",
           "typedWord": "railways",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"railway\" → \"railways\""
+          "reason": "Wrong word: \"railway\" ΓåÆ \"railways\""
         },
         {
           "index": 42,
           "originalWord": "world-class",
           "typedWord": "worl-class",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"world-class\" → \"worl-class\""
+          "reason": "Wrong word: \"world-class\" ΓåÆ \"worl-class\""
         },
         {
           "index": 43,
           "originalWord": "passenger",
           "typedWord": "passengeer",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"passenger\" → \"passengeer\""
+          "reason": "Wrong word: \"passenger\" ΓåÆ \"passengeer\""
         },
         {
           "index": 55,
           "originalWord": "essential",
           "typedWord": "essential.",
           "type": "HALF_MISTAKE",
-          "reason": "Punctuation: \"essential\" → \"essential.\""
+          "reason": "Punctuation: \"essential\" ΓåÆ \"essential.\""
         },
         {
           "index": 59,
           "originalWord": "competitiveness.",
           "typedWord": "completitiveness.",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"competitiveness.\" → \"completitiveness.\""
+          "reason": "Wrong word: \"competitiveness.\" ΓåÆ \"completitiveness.\""
         },
         {
           "index": 69,
           "originalWord": "a",
           "typedWord": "s",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"a\" → \"s\""
+          "reason": "Wrong word: \"a\" ΓåÆ \"s\""
         },
         {
           "index": 73,
           "originalWord": "passenger",
           "typedWord": "passanger",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"passenger\" → \"passanger\""
+          "reason": "Wrong word: \"passenger\" ΓåÆ \"passanger\""
         },
         {
           "index": 74,
           "originalWord": "safety,",
           "typedWord": "saftey,",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"safety,\" → \"saftey,\""
+          "reason": "Wrong word: \"safety,\" ΓåÆ \"saftey,\""
         },
         {
           "index": 81,
           "originalWord": "Indian",
           "typedWord": "Inidian",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"Indian\" → \"Inidian\""
+          "reason": "Wrong word: \"Indian\" ΓåÆ \"Inidian\""
         },
         {
           "index": 83,
@@ -115877,7 +115877,7 @@
           "originalWord": "lifeline",
           "typedWord": "line",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"lifeline\" → \"line\""
+          "reason": "Wrong word: \"lifeline\" ΓåÆ \"line\""
         },
         {
           "index": 93,
@@ -115919,7 +115919,7 @@
           "originalWord": "freight",
           "typedWord": "feright",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"freight\" → \"feright\""
+          "reason": "Wrong word: \"freight\" ΓåÆ \"feright\""
         }
       ],
       "completedAt": "2026-08-29T06:02:12.815Z",
@@ -115955,56 +115955,56 @@
           "originalWord": "Digital",
           "typedWord": "digital",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"Digital\" → \"digital\""
+          "reason": "Capitalization: \"Digital\" ΓåÆ \"digital\""
         },
         {
           "index": 1,
           "originalWord": "technology",
           "typedWord": "Technology",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"technology\" → \"Technology\""
+          "reason": "Capitalization: \"technology\" ΓåÆ \"Technology\""
         },
         {
           "index": 2,
           "originalWord": "has",
           "typedWord": "Has",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"has\" → \"Has\""
+          "reason": "Capitalization: \"has\" ΓåÆ \"Has\""
         },
         {
           "index": 3,
           "originalWord": "revolutionized",
           "typedWord": "Revolutionzed",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"revolutionized\" → \"Revolutionzed\""
+          "reason": "Wrong word: \"revolutionized\" ΓåÆ \"Revolutionzed\""
         },
         {
           "index": 4,
           "originalWord": "public",
           "typedWord": "Public",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"public\" → \"Public\""
+          "reason": "Capitalization: \"public\" ΓåÆ \"Public\""
         },
         {
           "index": 5,
           "originalWord": "service",
           "typedWord": "Service",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"service\" → \"Service\""
+          "reason": "Capitalization: \"service\" ΓåÆ \"Service\""
         },
         {
           "index": 6,
           "originalWord": "delivery",
           "typedWord": "Delivery",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"delivery\" → \"Delivery\""
+          "reason": "Capitalization: \"delivery\" ΓåÆ \"Delivery\""
         },
         {
           "index": 7,
           "originalWord": "across",
           "typedWord": "accross",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"across\" → \"accross\""
+          "reason": "Wrong word: \"across\" ΓåÆ \"accross\""
         },
         {
           "index": 9,
@@ -116039,21 +116039,21 @@
           "originalWord": "Through",
           "typedWord": "un",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"Through\" → \"un\""
+          "reason": "Wrong word: \"Through\" ΓåÆ \"un\""
         },
         {
           "index": 14,
           "originalWord": "unified",
           "typedWord": "ified",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"unified\" → \"ified\""
+          "reason": "Wrong word: \"unified\" ΓåÆ \"ified\""
         },
         {
           "index": 16,
           "originalWord": "and",
           "typedWord": "And",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"and\" → \"And\""
+          "reason": "Capitalization: \"and\" ΓåÆ \"And\""
         },
         {
           "index": 21,
@@ -116074,21 +116074,21 @@
           "originalWord": "mobile",
           "typedWord": ",!",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"mobile\" → \",!\""
+          "reason": "Wrong word: \"mobile\" ΓåÆ \",!\""
         },
         {
           "index": 18,
           "originalWord": "applications,",
           "typedWord": "'",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"applications,\" → \"'\""
+          "reason": "Wrong word: \"applications,\" ΓåÆ \"'\""
         },
         {
           "index": 28,
           "originalWord": "welfare",
           "typedWord": "welfasre",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"welfare\" → \"welfasre\""
+          "reason": "Wrong word: \"welfare\" ΓåÆ \"welfasre\""
         },
         {
           "index": 35,
@@ -116200,14 +116200,14 @@
           "originalWord": "assistance",
           "typedWord": "Reas",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"assistance\" → \"Reas\""
+          "reason": "Wrong word: \"assistance\" ΓåÆ \"Reas\""
         },
         {
           "index": 69,
           "originalWord": "As",
           "typedWord": "as",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"As\" → \"as\""
+          "reason": "Capitalization: \"As\" ΓåÆ \"as\""
         },
         {
           "index": 80,
@@ -116488,7 +116488,7 @@
           "originalWord": "Railways",
           "typedWord": "railways",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"Railways\" → \"railways\""
+          "reason": "Capitalization: \"Railways\" ΓåÆ \"railways\""
         },
         {
           "index": 4,
@@ -116502,7 +116502,7 @@
           "originalWord": "of",
           "typedWord": "Lifelineof",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"of\" → \"Lifelineof\""
+          "reason": "Wrong word: \"of\" ΓåÆ \"Lifelineof\""
         },
         {
           "index": 8,
@@ -116516,42 +116516,42 @@
           "originalWord": "network,",
           "typedWord": "work,",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"network,\" → \"work,\""
+          "reason": "Wrong word: \"network,\" ΓåÆ \"work,\""
         },
         {
           "index": 15,
           "originalWord": "millions",
           "typedWord": "millins",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"millions\" → \"millins\""
+          "reason": "Wrong word: \"millions\" ΓåÆ \"millins\""
         },
         {
           "index": 17,
           "originalWord": "passengers",
           "typedWord": "passanger",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"passengers\" → \"passanger\""
+          "reason": "Wrong word: \"passengers\" ΓåÆ \"passanger\""
         },
         {
           "index": 19,
           "originalWord": "crucial",
           "typedWord": "Crucial",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"crucial\" → \"Crucial\""
+          "reason": "Capitalization: \"crucial\" ΓåÆ \"Crucial\""
         },
         {
           "index": 22,
           "originalWord": "Recent",
           "typedWord": "recent",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"Recent\" → \"recent\""
+          "reason": "Capitalization: \"Recent\" ΓåÆ \"recent\""
         },
         {
           "index": 23,
           "originalWord": "modernization",
           "typedWord": "moernization",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"modernization\" → \"moernization\""
+          "reason": "Wrong word: \"modernization\" ΓåÆ \"moernization\""
         },
         {
           "index": 27,
@@ -116565,7 +116565,7 @@
           "originalWord": "high-speed",
           "typedWord": "speed",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"high-speed\" → \"speed\""
+          "reason": "Wrong word: \"high-speed\" ΓåÆ \"speed\""
         },
         {
           "index": 39,
@@ -117547,63 +117547,63 @@
           "originalWord": "technology",
           "typedWord": "Technology",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"technology\" → \"Technology\""
+          "reason": "Capitalization: \"technology\" ΓåÆ \"Technology\""
         },
         {
           "index": 6,
           "originalWord": "delivery",
           "typedWord": "deliery",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"delivery\" → \"deliery\""
+          "reason": "Wrong word: \"delivery\" ΓåÆ \"deliery\""
         },
         {
           "index": 8,
           "originalWord": "India",
           "typedWord": "india",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"India\" → \"india\""
+          "reason": "Capitalization: \"India\" ΓåÆ \"india\""
         },
         {
           "index": 12,
           "originalWord": "decade.",
           "typedWord": "decasde.",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"decade.\" → \"decasde.\""
+          "reason": "Wrong word: \"decade.\" ΓåÆ \"decasde.\""
         },
         {
           "index": 22,
           "originalWord": "access",
           "typedWord": "acces",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"access\" → \"acces\""
+          "reason": "Wrong word: \"access\" ΓåÆ \"acces\""
         },
         {
           "index": 24,
           "originalWord": "government",
           "typedWord": "governemtnt",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"government\" → \"governemtnt\""
+          "reason": "Wrong word: \"government\" ΓåÆ \"governemtnt\""
         },
         {
           "index": 26,
           "originalWord": "certificates,",
           "typedWord": "certificates",
           "type": "HALF_MISTAKE",
-          "reason": "Punctuation: \"certificates,\" → \"certificates\""
+          "reason": "Punctuation: \"certificates,\" ΓåÆ \"certificates\""
         },
         {
           "index": 31,
           "originalWord": "waiting",
           "typedWord": "Waiting",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"waiting\" → \"Waiting\""
+          "reason": "Capitalization: \"waiting\" ΓåÆ \"Waiting\""
         },
         {
           "index": 32,
           "originalWord": "in",
           "typedWord": "In",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"in\" → \"In\""
+          "reason": "Capitalization: \"in\" ΓåÆ \"In\""
         },
         {
           "index": 40,
@@ -117617,7 +117617,7 @@
           "originalWord": "transfers",
           "typedWord": "ransfer",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"transfers\" → \"ransfer\""
+          "reason": "Wrong word: \"transfers\" ΓåÆ \"ransfer\""
         },
         {
           "index": 45,
@@ -117715,21 +117715,21 @@
           "originalWord": "automated",
           "typedWord": "minimezed",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"automated\" → \"minimezed\""
+          "reason": "Wrong word: \"automated\" ΓåÆ \"minimezed\""
         },
         {
           "index": 61,
           "originalWord": "bureaucratic",
           "typedWord": "Bureaucatic",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"bureaucratic\" → \"Bureaucatic\""
+          "reason": "Wrong word: \"bureaucratic\" ΓåÆ \"Bureaucatic\""
         },
         {
           "index": 62,
           "originalWord": "delays",
           "typedWord": "Delays",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"delays\" → \"Delays\""
+          "reason": "Capitalization: \"delays\" ΓåÆ \"Delays\""
         },
         {
           "index": 53,
@@ -117743,14 +117743,14 @@
           "originalWord": "transparency",
           "typedWord": "parency",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"transparency\" → \"parency\""
+          "reason": "Wrong word: \"transparency\" ΓåÆ \"parency\""
         },
         {
           "index": 66,
           "originalWord": "in",
           "typedWord": "In",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"in\" → \"In\""
+          "reason": "Capitalization: \"in\" ΓåÆ \"In\""
         },
         {
           "index": 57,
@@ -117771,21 +117771,21 @@
           "originalWord": "administration.",
           "typedWord": "tion.",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"administration.\" → \"tion.\""
+          "reason": "Wrong word: \"administration.\" ΓåÆ \"tion.\""
         },
         {
           "index": 69,
           "originalWord": "As",
           "typedWord": "as",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"As\" → \"as\""
+          "reason": "Capitalization: \"As\" ΓåÆ \"as\""
         },
         {
           "index": 72,
           "originalWord": "expands",
           "typedWord": "expand",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"expands\" → \"expand\""
+          "reason": "Wrong word: \"expands\" ΓåÆ \"expand\""
         },
         {
           "index": 78,
@@ -117799,7 +117799,7 @@
           "originalWord": "nationwide",
           "typedWord": "wide",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"nationwide\" → \"wide\""
+          "reason": "Wrong word: \"nationwide\" ΓåÆ \"wide\""
         }
       ],
       "completedAt": "2026-08-28T15:27:41.501Z",
@@ -117835,14 +117835,14 @@
           "originalWord": "Through",
           "typedWord": "Throght",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"Through\" → \"Throght\""
+          "reason": "Wrong word: \"Through\" ΓåÆ \"Throght\""
         },
         {
           "index": 15,
           "originalWord": "portals",
           "typedWord": "protals",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"portals\" → \"protals\""
+          "reason": "Wrong word: \"portals\" ΓåÆ \"protals\""
         },
         {
           "index": 39,
@@ -117863,70 +117863,70 @@
           "originalWord": "that",
           "typedWord": "Thet",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"that\" → \"Thet\""
+          "reason": "Wrong word: \"that\" ΓåÆ \"Thet\""
         },
         {
           "index": 49,
           "originalWord": "financial",
           "typedWord": "Financial",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"financial\" → \"Financial\""
+          "reason": "Capitalization: \"financial\" ΓåÆ \"Financial\""
         },
         {
           "index": 52,
           "originalWord": "intended",
           "typedWord": "intened",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"intended\" → \"intened\""
+          "reason": "Wrong word: \"intended\" ΓåÆ \"intened\""
         },
         {
           "index": 53,
           "originalWord": "beneficiaries",
           "typedWord": "beneficaries",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"beneficiaries\" → \"beneficaries\""
+          "reason": "Wrong word: \"beneficiaries\" ΓåÆ \"beneficaries\""
         },
         {
           "index": 57,
           "originalWord": "Moreover,",
           "typedWord": "moreover,",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"Moreover,\" → \"moreover,\""
+          "reason": "Capitalization: \"Moreover,\" ΓåÆ \"moreover,\""
         },
         {
           "index": 59,
           "originalWord": "systems",
           "typedWord": "sytems",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"systems\" → \"sytems\""
+          "reason": "Wrong word: \"systems\" ΓåÆ \"sytems\""
         },
         {
           "index": 61,
           "originalWord": "bureaucratic",
           "typedWord": "Bureaucratic",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"bureaucratic\" → \"Bureaucratic\""
+          "reason": "Capitalization: \"bureaucratic\" ΓåÆ \"Bureaucratic\""
         },
         {
           "index": 64,
           "originalWord": "promote",
           "typedWord": "Promote",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"promote\" → \"Promote\""
+          "reason": "Capitalization: \"promote\" ΓåÆ \"Promote\""
         },
         {
           "index": 65,
           "originalWord": "transparency",
           "typedWord": "transpaRency",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"transparency\" → \"transpaRency\""
+          "reason": "Capitalization: \"transparency\" ΓåÆ \"transpaRency\""
         },
         {
           "index": 68,
           "originalWord": "administration.",
           "typedWord": "administration..",
           "type": "HALF_MISTAKE",
-          "reason": "Punctuation: \"administration.\" → \"administration..\""
+          "reason": "Punctuation: \"administration.\" ΓåÆ \"administration..\""
         },
         {
           "index": 70,
@@ -117940,14 +117940,14 @@
           "originalWord": "broadband",
           "typedWord": "band",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"broadband\" → \"band\""
+          "reason": "Wrong word: \"broadband\" ΓåÆ \"band\""
         },
         {
           "index": 76,
           "originalWord": "communities,",
           "typedWord": "communties,",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"communities,\" → \"communties,\""
+          "reason": "Wrong word: \"communities,\" ΓåÆ \"communties,\""
         }
       ],
       "completedAt": "2026-08-28T14:49:34.717Z",
@@ -118032,28 +118032,28 @@
           "originalWord": "transport",
           "typedWord": "railway",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"transport\" → \"railway\""
+          "reason": "Wrong word: \"transport\" ΓåÆ \"railway\""
         },
         {
           "index": 9,
           "originalWord": "network,",
           "typedWord": "!",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"network,\" → \"!\""
+          "reason": "Wrong word: \"network,\" ΓåÆ \"!\""
         },
         {
           "index": 10,
           "originalWord": "facilitating",
           "typedWord": "consti",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"facilitating\" → \"consti\""
+          "reason": "Wrong word: \"facilitating\" ΓåÆ \"consti\""
         },
         {
           "index": 11,
           "originalWord": "the",
           "typedWord": "The",
           "type": "HALF_MISTAKE",
-          "reason": "Capitalization: \"the\" → \"The\""
+          "reason": "Capitalization: \"the\" ΓåÆ \"The\""
         },
         {
           "index": 12,
@@ -118214,21 +118214,21 @@
           "originalWord": "electrification,",
           "typedWord": "so",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"electrification,\" → \"so\""
+          "reason": "Wrong word: \"electrification,\" ΓåÆ \"so\""
         },
         {
           "index": 35,
           "originalWord": "and",
           "typedWord": "life",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"and\" → \"life\""
+          "reason": "Wrong word: \"and\" ΓåÆ \"life\""
         },
         {
           "index": 36,
           "originalWord": "redevelopment",
           "typedWord": "line",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"redevelopment\" → \"line\""
+          "reason": "Wrong word: \"redevelopment\" ΓåÆ \"line\""
         },
         {
           "index": 38,
@@ -118522,14 +118522,14 @@
           "originalWord": "economic",
           "typedWord": "t",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"economic\" → \"t\""
+          "reason": "Wrong word: \"economic\" ΓåÆ \"t\""
         },
         {
           "index": 80,
           "originalWord": "growth.",
           "typedWord": "he",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"growth.\" → \"he\""
+          "reason": "Wrong word: \"growth.\" ΓåÆ \"he\""
         }
       ],
       "completedAt": "2026-08-28T06:16:03.327Z",
@@ -119771,21 +119771,21 @@
           "originalWord": "Indian",
           "typedWord": "Inidan",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"Indian\" → \"Inidan\""
+          "reason": "Wrong word: \"Indian\" ΓåÆ \"Inidan\""
         },
         {
           "index": 1,
           "originalWord": "Railways",
           "typedWord": "Railywat",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"Railways\" → \"Railywat\""
+          "reason": "Wrong word: \"Railways\" ΓåÆ \"Railywat\""
         },
         {
           "index": 15,
           "originalWord": "millions",
           "typedWord": "milions",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"millions\" → \"milions\""
+          "reason": "Wrong word: \"millions\" ΓåÆ \"milions\""
         },
         {
           "index": 26,
@@ -119890,14 +119890,14 @@
           "originalWord": "transportation",
           "typedWord": "station",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"transportation\" → \"station\""
+          "reason": "Wrong word: \"transportation\" ΓåÆ \"station\""
         },
         {
           "index": 58,
           "originalWord": "manufacturing",
           "typedWord": "manfacturing",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"manufacturing\" → \"manfacturing\""
+          "reason": "Wrong word: \"manufacturing\" ΓåÆ \"manfacturing\""
         },
         {
           "index": 60,
@@ -119911,35 +119911,35 @@
           "originalWord": "systems",
           "typedWord": "system",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"systems\" → \"system\""
+          "reason": "Wrong word: \"systems\" ΓåÆ \"system\""
         },
         {
           "index": 68,
           "originalWord": "demonstrate",
           "typedWord": "semonstrate",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"demonstrate\" → \"semonstrate\""
+          "reason": "Wrong word: \"demonstrate\" ΓåÆ \"semonstrate\""
         },
         {
           "index": 73,
           "originalWord": "passenger",
           "typedWord": "passager",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"passenger\" → \"passager\""
+          "reason": "Wrong word: \"passenger\" ΓåÆ \"passager\""
         },
         {
           "index": 74,
           "originalWord": "safety,",
           "typedWord": "saf",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"safety,\" → \"saf\""
+          "reason": "Wrong word: \"safety,\" ΓåÆ \"saf\""
         },
         {
           "index": 76,
           "originalWord": "efficiency,",
           "typedWord": "efficency",
           "type": "FULL_MISTAKE",
-          "reason": "Wrong word: \"efficiency,\" → \"efficency\""
+          "reason": "Wrong word: \"efficiency,\" ΓåÆ \"efficency\""
         }
       ],
       "completedAt": "2026-08-28T05:47:57.311Z",

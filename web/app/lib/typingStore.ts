@@ -334,17 +334,20 @@ function loadData(): TypingDatabase {
   try {
     const filePath = getDataFilePath();
     if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, 'utf-8');
-      const data = JSON.parse(raw);
-      return {
-        categories: Array.isArray(data.categories) ? data.categories : DEFAULT_CATEGORIES,
-        passages: Array.isArray(data.passages) ? data.passages : DEFAULT_PASSAGES,
-        tests: Array.isArray(data.tests) ? data.tests : DEFAULT_TESTS,
-        attempts: Array.isArray(data.attempts) ? data.attempts : []
-      };
+      const raw = fs.readFileSync(filePath, 'utf-8').trim();
+      if (raw.length > 0) {
+        const data = JSON.parse(raw);
+        return {
+          categories: Array.isArray(data.categories) ? data.categories : DEFAULT_CATEGORIES,
+          passages: Array.isArray(data.passages) ? data.passages : DEFAULT_PASSAGES,
+          tests: Array.isArray(data.tests) ? data.tests : DEFAULT_TESTS,
+          attempts: Array.isArray(data.attempts) ? data.attempts : []
+        };
+      }
+      console.warn('typing_data.json is empty — recovering from defaults');
     }
   } catch (err) {
-    console.error('Error loading typing data file:', err);
+    console.error('Error loading typing data file (recovering):', err);
   }
   const initial: TypingDatabase = {
     categories: DEFAULT_CATEGORIES,
@@ -360,16 +363,28 @@ function saveData(data: TypingDatabase): void {
   try {
     const filePath = getDataFilePath();
     const jsonStr = JSON.stringify(data, null, 2);
-    fs.writeFileSync(filePath, jsonStr, 'utf-8');
+
+    // Atomic write: write to a temp file then rename to avoid partial/empty file corruption
+    const tmpPath = filePath + '.tmp';
+    fs.writeFileSync(tmpPath, jsonStr, 'utf-8');
+    fs.renameSync(tmpPath, filePath);
 
     // Sync to alternative location if both folders exist
     const webPath = path.join(process.cwd(), 'web', 'typing_data.json');
     const rootPath = path.join(process.cwd(), 'typing_data.json');
     if (filePath !== webPath && fs.existsSync(path.dirname(webPath))) {
-      try { fs.writeFileSync(webPath, jsonStr, 'utf-8'); } catch {}
+      try {
+        const tmpWeb = webPath + '.tmp';
+        fs.writeFileSync(tmpWeb, jsonStr, 'utf-8');
+        fs.renameSync(tmpWeb, webPath);
+      } catch {}
     }
     if (filePath !== rootPath && fs.existsSync(rootPath)) {
-      try { fs.writeFileSync(rootPath, jsonStr, 'utf-8'); } catch {}
+      try {
+        const tmpRoot = rootPath + '.tmp';
+        fs.writeFileSync(tmpRoot, jsonStr, 'utf-8');
+        fs.renameSync(tmpRoot, rootPath);
+      } catch {}
     }
   } catch (err) {
     console.error('Error saving typing data file:', err);
