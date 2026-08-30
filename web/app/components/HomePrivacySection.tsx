@@ -150,7 +150,7 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
 
         {/* PRIVACY CLAUSES */}
         <div className="space-y-4">
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Database className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
               <span>{curr.sec1Title}</span>
@@ -160,7 +160,7 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-amber-500 shrink-0" />
               <span>{curr.sec4Title}</span>
@@ -170,7 +170,7 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Bell className="h-4 w-4 text-indigo-500 shrink-0" />
               <span>{curr.sec5Title}</span>
@@ -180,7 +180,7 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Gift className="h-4 w-4 text-pink-500 shrink-0" />
               <span>{curr.sec6Title}</span>
@@ -190,7 +190,7 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
               <span>{curr.sec7Title}</span>
@@ -200,7 +200,7 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
             <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Lock className="h-4 w-4 text-blue-600 shrink-0" />
               <span>{curr.sec8Title}</span>

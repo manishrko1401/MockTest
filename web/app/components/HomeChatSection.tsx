@@ -291,7 +291,7 @@ export default function HomeChatSection({ onBack }: HomeChatSectionProps) {
                         className={`p-3.5 rounded-2xl text-xs leading-relaxed font-medium shadow-2xs ${
                           isMe
                             ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none'
-                            : 'bg-white dark:bg-slate-800 text-slate-850 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 rounded-tl-none'
+                            : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 rounded-tl-none'
                         }`}
                       >
                         <p className="whitespace-pre-wrap break-words">{msg.message}</p>

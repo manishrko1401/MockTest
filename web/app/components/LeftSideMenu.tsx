@@ -29,7 +29,9 @@ import {
   FileText,
   UserCheck,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  Keyboard,
+  BookmarkCheck
 } from 'lucide-react';
 
 interface LeftSideMenuProps {
@@ -242,22 +244,28 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
               <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform shrink-0" />
             </Link>
 
-            {/* 2. PRACTICE SERIES */}
+
+            {/* 2.5 TYPING SPEED TEST SIMULATOR */}
             <Link
-              href="/practice-series"
+              href="/typing-test"
               onClick={onClose}
               className="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
-                  <Zap className="h-4.5 w-4.5" />
+                <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                  <Keyboard className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {isHindi ? 'प्रैक्टिस सीरीज़' : 'Practice Series'}
-                  </h4>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {isHindi ? 'टाइपिंग टेस्ट व टर्मिनल' : 'Typing Test & Terminal'}
+                    </h4>
+                    <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-blue-600 text-white">
+                      DEST
+                    </span>
+                  </div>
                   <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                    {isHindi ? 'विषयवार व कस्टम टेस्ट' : 'Topic-wise & Custom Tests'}
+                    {isHindi ? 'एसएससी, रेलवे व कोर्ट टाइपिंग' : 'SSC, RRB & Court DEST Exam'}
                   </p>
                 </div>
               </div>
@@ -302,6 +310,28 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
                   </h4>
                   <p className="text-[10px] text-slate-400 dark:text-slate-500">
                     {isHindi ? 'प्रमाणपत्र व एडमिट कार्ड वॉल्ट' : 'Secure Certificate Vault'}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform shrink-0" />
+            </Link>
+
+            {/* 4.5 APPLIED & SAVED EXAMS */}
+            <Link
+              href="/profile/tracked-jobs"
+              onClick={onClose}
+              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                  <BookmarkCheck className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {isHindi ? 'आवेदन व सेव परीक्षाएं' : 'Applied & Saved Exams'}
+                  </h4>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                    {isHindi ? 'ट्रैक किए गए फॉर्म व परीक्षाएं' : 'Tracked & Saved Exams'}
                   </p>
                 </div>
               </div>

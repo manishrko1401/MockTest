@@ -89,7 +89,7 @@ function renderFormattedExplanation(rawExp: any, lang: 'en' | 'hi', qId?: string
   if (isDiagrammatic) {
     return (
       <div className="bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 sm:p-4 overflow-x-auto my-1 shadow-xs">
-        <pre className="font-mono text-xs sm:text-sm text-slate-850 dark:text-slate-100 leading-snug whitespace-pre">
+        <pre className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-100 leading-snug whitespace-pre">
           {decoded}
         </pre>
       </div>
@@ -206,9 +206,9 @@ const getCategoryTheme = (catId: string | null) => {
     return {
       color: 'orange',
       bg: 'bg-orange-50/50 dark:bg-orange-950/15',
-      border: 'border-orange-150 dark:border-orange-900/30',
+      border: 'border-orange-100 dark:border-orange-900/30',
       hoverBorder: 'hover:border-orange-400 dark:hover:border-orange-600',
-      iconBg: 'bg-orange-500/10 text-orange-650 dark:text-orange-400',
+      iconBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
       badgeBg: 'bg-orange-50 dark:bg-orange-950/45 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-900/30',
       gradient: 'from-orange-500 to-amber-500',
       accentGlow: 'rgba(249,115,22,0.12)'
@@ -218,9 +218,9 @@ const getCategoryTheme = (catId: string | null) => {
     return {
       color: 'indigo',
       bg: 'bg-indigo-50/50 dark:bg-indigo-950/15',
-      border: 'border-indigo-150 dark:border-indigo-900/30',
+      border: 'border-indigo-100 dark:border-indigo-900/30',
       hoverBorder: 'hover:border-indigo-400 dark:hover:border-indigo-600',
-      iconBg: 'bg-indigo-500/10 text-indigo-650 dark:text-indigo-400',
+      iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
       badgeBg: 'bg-indigo-50 dark:bg-indigo-950/45 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/30',
       gradient: 'from-indigo-500 to-blue-550',
       accentGlow: 'rgba(99,102,241,0.12)'
@@ -230,9 +230,9 @@ const getCategoryTheme = (catId: string | null) => {
     return {
       color: 'emerald',
       bg: 'bg-emerald-50/50 dark:bg-emerald-950/15',
-      border: 'border-emerald-150 dark:border-emerald-900/30',
+      border: 'border-emerald-100 dark:border-emerald-900/30',
       hoverBorder: 'hover:border-emerald-400 dark:hover:border-emerald-600',
-      iconBg: 'bg-emerald-500/10 text-emerald-650 dark:text-emerald-400',
+      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
       badgeBg: 'bg-emerald-50 dark:bg-emerald-950/45 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30',
       gradient: 'from-emerald-500 to-teal-500',
       accentGlow: 'rgba(16,185,129,0.12)'
@@ -242,9 +242,9 @@ const getCategoryTheme = (catId: string | null) => {
     return {
       color: 'amber',
       bg: 'bg-amber-50/50 dark:bg-amber-950/15',
-      border: 'border-amber-150 dark:border-amber-900/30',
+      border: 'border-amber-100 dark:border-amber-900/30',
       hoverBorder: 'hover:border-amber-400 dark:hover:border-amber-600',
-      iconBg: 'bg-amber-500/10 text-amber-650 dark:text-amber-400',
+      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
       badgeBg: 'bg-amber-50 dark:bg-amber-950/45 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/30',
       gradient: 'from-amber-500 to-orange-500',
       accentGlow: 'rgba(245,158,11,0.12)'
@@ -253,9 +253,9 @@ const getCategoryTheme = (catId: string | null) => {
   return {
     color: 'pink',
     bg: 'bg-pink-50/50 dark:bg-pink-950/15',
-    border: 'border-pink-150 dark:border-pink-900/30',
+    border: 'border-pink-100 dark:border-pink-900/30',
     hoverBorder: 'hover:border-pink-400 dark:hover:border-pink-600',
-    iconBg: 'bg-pink-500/10 text-pink-650 dark:text-pink-400',
+    iconBg: 'bg-pink-500/10 text-pink-600 dark:text-pink-400',
     badgeBg: 'bg-pink-50 dark:bg-pink-950/45 text-pink-700 dark:text-pink-400 border-pink-100 dark:border-pink-900/30',
     gradient: 'from-pink-500 to-rose-500',
     accentGlow: 'rgba(236,72,153,0.12)'
@@ -1058,7 +1058,7 @@ export default function PracticeSeriesPage() {
 
   if (!isMounted) {
     return (
-      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 items-center justify-center">
+      <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 items-center justify-center">
         <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -1067,10 +1067,10 @@ export default function PracticeSeriesPage() {
   const activeQ = domainQuestions[currentQIndex];
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200">
+    <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200">
       
       {/* HEADER NAVBAR */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 md:px-12 flex items-center justify-between shadow-xs">
+      <header className="h-18 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 md:px-12 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-8 min-w-0">
           {/* Desktop Logo */}
           <Link href="/" className="hidden md:flex items-center gap-3">
@@ -1213,7 +1213,7 @@ export default function PracticeSeriesPage() {
                 </div>
 
                 {/* Mobile Question Badge */}
-                <span className="sm:hidden text-[10px] font-extrabold bg-amber-50 text-amber-600 dark:bg-amber-955/40 dark:text-amber-400 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/40 shrink-0">
+                <span className="sm:hidden text-[10px] font-extrabold bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/40 shrink-0">
                   {Object.keys(starredQuestionsMap).length} Qs
                 </span>
               </div>
@@ -1245,7 +1245,7 @@ export default function PracticeSeriesPage() {
                 )}
 
                 {/* Desktop Question Badge */}
-                <span className="text-xs font-extrabold bg-amber-50 text-amber-600 dark:bg-amber-955/40 dark:text-amber-400 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-900/40">
+                <span className="text-xs font-extrabold bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-900/40">
                   {Object.keys(starredQuestionsMap).length} Starred Questions
                 </span>
               </div>
@@ -1342,7 +1342,7 @@ export default function PracticeSeriesPage() {
                                       e.stopPropagation();
                                       handleToggleStar(q, item.categoryId, item.categoryName);
                                     }}
-                                    className="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-955/30 transition cursor-pointer"
+                                    className="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition cursor-pointer"
                                     title="Remove Starred Question"
                                   >
                                     <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
@@ -1553,7 +1553,7 @@ export default function PracticeSeriesPage() {
                       value={sectionSearchQuery}
                       onChange={(e) => setSectionSearchQuery(e.target.value)}
                       placeholder="Search Section #..."
-                      className="pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-955 text-xs font-semibold focus:outline-none focus:border-blue-500 w-36 sm:w-44"
+                      className="pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:outline-none focus:border-blue-500 w-36 sm:w-44"
                     />
                   </div>
                 </div>
@@ -1617,14 +1617,14 @@ export default function PracticeSeriesPage() {
                         }}
                         className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md hover:scale-[1.02] active:scale-[0.98] ${
                           secStats.isCompleted
-                            ? 'bg-emerald-50/60 dark:bg-emerald-955/20 border-emerald-300 dark:border-emerald-800/80'
+                            ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/80'
                             : secStats.attempted > 0
-                            ? 'bg-amber-50/60 dark:bg-amber-955/20 border-amber-300 dark:border-amber-800/80'
+                            ? 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/80'
                             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
                         <div className="flex items-center justify-between w-full mb-2">
-                          <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-955/50 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-900/40">
+                          <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-900/40">
                             Section {secIdx + 1}
                           </span>
                           <ChevronRight className="h-4 w-4 text-slate-400" />
@@ -1655,7 +1655,7 @@ export default function PracticeSeriesPage() {
                                   setIsReviewMode(true);
                                   setCurrentQIndex(0);
                                 }}
-                                className="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white dark:bg-blue-955/50 dark:hover:bg-blue-600 text-blue-700 dark:text-blue-300 text-[9px] font-extrabold transition cursor-pointer flex items-center gap-1 border border-blue-200 dark:border-blue-800/80 shrink-0 shadow-xs"
+                                className="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white dark:bg-blue-950/50 dark:hover:bg-blue-600 text-blue-700 dark:text-blue-300 text-[9px] font-extrabold transition cursor-pointer flex items-center gap-1 border border-blue-200 dark:border-blue-800/80 shrink-0 shadow-xs"
                                 title="View Solution & Explanations"
                               >
                                 <BookOpen className="h-2.5 w-2.5" />
@@ -1729,7 +1729,7 @@ export default function PracticeSeriesPage() {
                             setIsReviewMode(false);
                             setCurrentQIndex(0);
                           }}
-                          className="bg-blue-50 dark:bg-blue-955/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-black text-[10.5px] sm:text-xs px-1.5 sm:px-2 py-1 rounded-lg focus:outline-none cursor-pointer shrink-0"
+                          className="bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-black text-[10.5px] sm:text-xs px-1.5 sm:px-2 py-1 rounded-lg focus:outline-none cursor-pointer shrink-0"
                         >
                           {Array.from({ length: totalSections }).map((_, idx) => {
                             const startQ = idx * QUESTIONS_PER_SECTION + 1;
@@ -1766,7 +1766,7 @@ export default function PracticeSeriesPage() {
                         </div>
 
                         {/* Q Number Badge in Center */}
-                        <span className="text-[10px] sm:text-[11px] font-extrabold bg-blue-50 text-blue-600 dark:bg-blue-955 dark:text-blue-400 px-2 py-0.5 sm:py-1 rounded-lg border border-blue-200 dark:border-blue-900/40 shrink-0 whitespace-nowrap">
+                        <span className="text-[10px] sm:text-[11px] font-extrabold bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 px-2 py-0.5 sm:py-1 rounded-lg border border-blue-200 dark:border-blue-900/40 shrink-0 whitespace-nowrap">
                           Q {currentQIndex + 1}/{currentSectionQuestions.length}
                         </span>
                       </div>
@@ -1807,7 +1807,7 @@ export default function PracticeSeriesPage() {
                                   onClick={() => handleToggleStar(activeQ)}
                                   className={`p-1.5 rounded-lg border transition cursor-pointer flex items-center gap-1.5 text-xs font-extrabold ${
                                     isStarred(activeQ)
-                                      ? 'bg-amber-50 dark:bg-amber-955/40 border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 shadow-xs'
+                                      ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 shadow-xs'
                                       : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 hover:text-amber-500'
                                   }`}
                                   title={isStarred(activeQ) ? 'Unstar Question' : 'Star Question'}
@@ -1853,23 +1853,23 @@ export default function PracticeSeriesPage() {
                                 const isSelected = selectedOptIdx === oIdx;
                                 const isCorrect = oIdx === correctOptIdx;
 
-                                let optionStyle = "bg-slate-50 dark:bg-slate-955 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-500/50";
+                                let optionStyle = "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-500/50";
 
                                 if (isReviewMode) {
                                   if (hasSelected) {
                                     if (isCorrect) {
-                                      optionStyle = "bg-emerald-50 dark:bg-emerald-955/40 border-emerald-400 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 shadow-xs";
+                                      optionStyle = "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 shadow-xs";
                                     } else if (isSelected && !isCorrect) {
-                                      optionStyle = "bg-rose-50 dark:bg-rose-955/40 border-rose-400 dark:border-rose-700 text-rose-900 dark:text-rose-200 shadow-xs";
+                                      optionStyle = "bg-rose-50 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-900 dark:text-rose-200 shadow-xs";
                                     } else {
-                                      optionStyle = "bg-slate-50 dark:bg-slate-955 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 opacity-60";
+                                      optionStyle = "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 opacity-60";
                                     }
                                   } else if (isCorrect) {
-                                    optionStyle = "bg-emerald-50 dark:bg-emerald-955/40 border-emerald-400 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 shadow-xs";
+                                    optionStyle = "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 shadow-xs";
                                   }
                                 } else {
                                   if (isSelected) {
-                                    optionStyle = "bg-blue-50 dark:bg-blue-955/60 border-blue-500 dark:border-blue-500 text-blue-900 dark:text-blue-100 shadow-xs font-bold";
+                                    optionStyle = "bg-blue-50 dark:bg-blue-950/60 border-blue-500 dark:border-blue-500 text-blue-900 dark:text-blue-100 shadow-xs font-bold";
                                   }
                                 }
 
@@ -1948,7 +1948,7 @@ export default function PracticeSeriesPage() {
                                   });
                                 }}
                                 disabled={selectedOptionMap[globalQIndex] === undefined || isReviewMode}
-                                className="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-955/40 border border-amber-200 dark:border-amber-800/80 hover:bg-amber-100 text-amber-700 dark:text-amber-300 font-bold text-xs transition disabled:opacity-40 cursor-pointer flex items-center gap-1"
+                                className="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 hover:bg-amber-100 text-amber-700 dark:text-amber-300 font-bold text-xs transition disabled:opacity-40 cursor-pointer flex items-center gap-1"
                                 title="Clear selected response"
                               >
                                 <RotateCcw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
@@ -1974,7 +1974,7 @@ export default function PracticeSeriesPage() {
 
                       {/* RIGHT COLUMN: COMPACT CBT QUESTION PALETTE (Hidden on mobile view as requested) */}
                       <div className="hidden lg:block w-72 shrink-0 space-y-4">
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs space-y-3.5 sticky top-20">
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs space-y-3.5 sticky top-18">
                           {/* Candidate Avatar & Status */}
                           <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                             <div className="w-9 h-9 rounded-xl bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center shadow-xs uppercase shrink-0">
@@ -2001,7 +2001,7 @@ export default function PracticeSeriesPage() {
 
                             return (
                               <div className="grid grid-cols-2 gap-1.5 text-[9px] font-extrabold">
-                                <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-955/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40">
+                                <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40">
                                   <span className="w-4.5 h-4.5 rounded-md bg-emerald-600 text-white flex items-center justify-center text-[9px]">{secAttempted}</span>
                                   <span>Attempted</span>
                                 </div>
@@ -2114,7 +2114,7 @@ export default function PracticeSeriesPage() {
 
                             return (
                               <div className="grid grid-cols-2 gap-2 text-[10px] font-extrabold">
-                                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-emerald-50 dark:bg-emerald-955/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40">
+                                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40">
                                   <span className="w-4.5 h-4.5 rounded-md bg-emerald-600 text-white flex items-center justify-center text-[9px]">{secAttempted}</span>
                                   <span>Attempted</span>
                                 </div>
@@ -2211,7 +2211,7 @@ export default function PracticeSeriesPage() {
               
               {/* Header Icon & Title */}
               <div className="text-center space-y-1 sm:space-y-1.5">
-                <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-blue-50 dark:bg-blue-955/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400 shadow-xs">
+                <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400 shadow-xs">
                   <Trophy className="h-5 w-5 sm:h-7 sm:w-7 text-amber-500 animate-bounce" />
                 </div>
                 <h3 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white">
@@ -2225,7 +2225,7 @@ export default function PracticeSeriesPage() {
               {/* Stats Grid: Correct & Wrong Answers */}
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {/* Correct Answers */}
-                <div className="bg-emerald-50/80 dark:bg-emerald-955/40 border border-emerald-200 dark:border-emerald-900/60 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl space-y-0.5 text-center shadow-xs">
+                <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl space-y-0.5 text-center shadow-xs">
                   <div className="flex items-center justify-center gap-1 text-emerald-700 dark:text-emerald-400 font-extrabold text-[10px] sm:text-xs uppercase tracking-wider">
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     <span>{viewerLang === 'hi' ? 'सही उत्तर' : 'Correct'}</span>
@@ -2236,7 +2236,7 @@ export default function PracticeSeriesPage() {
                 </div>
 
                 {/* Wrong Answers */}
-                <div className="bg-rose-50/80 dark:bg-rose-955/40 border border-rose-200 dark:border-rose-900/60 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl space-y-0.5 text-center shadow-xs">
+                <div className="bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl space-y-0.5 text-center shadow-xs">
                   <div className="flex items-center justify-center gap-1 text-rose-700 dark:text-rose-400 font-extrabold text-[10px] sm:text-xs uppercase tracking-wider">
                     <XCircle className="h-3.5 w-3.5" />
                     <span>{viewerLang === 'hi' ? 'गलत उत्तर' : 'Wrong'}</span>
@@ -2257,7 +2257,7 @@ export default function PracticeSeriesPage() {
                 </div>
 
                 {/* Accuracy */}
-                <div className="bg-blue-50/80 dark:bg-blue-955/40 border border-blue-200 dark:border-blue-900/60 p-2 sm:p-3 rounded-xl sm:rounded-2xl space-y-0.5 text-center">
+                <div className="bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 p-2 sm:p-3 rounded-xl sm:rounded-2xl space-y-0.5 text-center">
                   <span className="text-[9px] sm:text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">
                     {viewerLang === 'hi' ? 'सटीकता' : 'Accuracy'}
                   </span>

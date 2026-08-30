@@ -172,7 +172,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
   // Auth Guard
   if (currentUser?.role !== 'ADMIN') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 p-6 text-center">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-200/90 dark:bg-slate-900 p-6 text-center">
         <ShieldAlert className="h-16 w-16 text-red-500 mb-4 animate-bounce" />
         <h1 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">Access Denied</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-6">
@@ -190,7 +190,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-200/90 dark:bg-slate-900 p-6">
         <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Loading user dossier...</p>
       </div>
@@ -199,7 +199,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
 
   if (error || !user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 p-6 text-center">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-200/90 dark:bg-slate-900 p-6 text-center">
         <ShieldAlert className="h-16 w-16 text-amber-500 mb-4" />
         <h1 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">User Dossier Error</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-6">
@@ -216,7 +216,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-200/90 dark:bg-slate-900 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Top bar */}
         <div className="flex items-center justify-between">

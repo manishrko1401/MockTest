@@ -257,24 +257,24 @@ export default function ContactUsPage() {
   ];
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200">
+    <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200">
       
       {/* HEADER NAVBAR */}
-      <header className="h-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors duration-200">
+      <header className="h-18 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors duration-200">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full flex items-center justify-center h-9 w-9 border border-blue-200/50 dark:border-slate-700">
-              <Award className="h-5 w-5 text-blue-600 dark:text-blue-450" />
+              <Award className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <h1 className="font-extrabold text-xs md:text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
-              <p className="text-[8px] text-blue-600 dark:text-blue-450 font-bold tracking-widest uppercase">{t.logoSub}</p>
+              <p className="text-[8px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
             </div>
           </Link>
           <span className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 hidden sm:inline"></span>
           <Link 
             href="/" 
-            className="hidden sm:flex items-center gap-1.5 text-slate-600 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs transition-colors"
+            className="hidden sm:flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs transition-colors"
           >
             <ArrowLeft className="h-4 w-4" /> {t.backToHome}
           </Link>
@@ -285,7 +285,7 @@ export default function ContactUsPage() {
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-[10px] sm:text-xs font-bold focus:outline-none cursor-pointer"
+            className="px-2 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-[10px] sm:text-xs font-bold focus:outline-none cursor-pointer"
           >
             <option value="en">English</option>
             <option value="hi">हिन्दी</option>
@@ -294,7 +294,7 @@ export default function ContactUsPage() {
           {/* Theme Switcher */}
           <button 
             onClick={toggleTheme}
-            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 transition border border-slate-200 dark:border-slate-800 flex items-center justify-center cursor-pointer"
+            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition border border-slate-200 dark:border-slate-800 flex items-center justify-center cursor-pointer"
             title="Toggle Dark/Light Mode"
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -306,7 +306,7 @@ export default function ContactUsPage() {
       <div className="p-4 sm:hidden bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
         <Link 
           href="/" 
-          className="flex items-center gap-1.5 text-slate-600 dark:text-slate-350 font-bold text-xs"
+          className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-bold text-xs"
         >
           <ArrowLeft className="h-4 w-4" /> {t.backToHome}
         </Link>

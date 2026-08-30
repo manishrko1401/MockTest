@@ -527,10 +527,10 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
   if (!state.session || !isMounted) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-100 font-sans">
+      <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-slate-950 font-sans">
         <div className="text-center">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-gray-700 font-medium">Initializing Exam Terminal...</p>
+          <p className="mt-4 text-gray-700 dark:text-slate-300 font-medium">Initializing Exam Terminal...</p>
         </div>
       </div>
     );
@@ -609,14 +609,14 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
   const { attempted: attemptedCount, remaining: remainingCount, marked: markedCount } = getPauseStats();
 
   return (
-    <div className="flex h-screen flex-col bg-gray-100 font-sans select-none text-xs leading-normal text-slate-800">
+    <div className="flex h-screen flex-col bg-gray-100 dark:bg-slate-950 font-sans select-none text-xs leading-normal text-slate-800 dark:text-slate-200">
       
       {/* 1. TOP HEADER BANNER */}
       {(() => {
         const isSsc = (testId.includes('ssc') || testId.toLowerCase().includes('ssc')) && !isMobile;
         if (!isSsc) {
           return (
-            <header className="flex h-14 items-center justify-between bg-white border-b border-slate-200 px-3 sm:px-4 text-slate-800 shrink-0">
+            <header className="flex h-14 items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-200 px-3 sm:px-4 text-slate-800 shrink-0">
               {/* Left: Logo & Test Title */}
               <div className="flex items-center gap-3 min-w-0">
                 <div className="flex items-center gap-2 shrink-0">
@@ -624,19 +624,19 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     <Trophy className="h-4.5 w-4.5 text-blue-600 animate-pulse" />
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="font-black text-[11px] sm:text-[12px] text-slate-900 tracking-wider leading-none uppercase">Mock Test Hub</span>
+                    <span className="font-black text-[11px] sm:text-[12px] text-slate-900 dark:text-white tracking-wider leading-none uppercase">Mock Test Hub</span>
                     <span className="text-[7px] text-blue-600 font-extrabold tracking-wider uppercase mt-0.5 leading-none">India's #1 Prep Terminal</span>
                   </div>
                 </div>
                 <span className="text-slate-300 hidden xs:inline">|</span>
-                <span className="font-bold text-xs sm:text-sm text-slate-700 truncate max-w-[120px] sm:max-w-xs md:max-w-none">
+                <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-300 truncate max-w-[120px] sm:max-w-xs md:max-w-none">
                   {session.testTitle}
                 </span>
               </div>
 
               {/* Middle: Section Time countdown */}
               {state.isExtraTimeMode ? (
-                <div className="flex items-center gap-1.5 text-xs font-bold bg-red-50 border border-red-300 px-2 sm:px-3 py-1 rounded animate-pulse">
+                <div className="flex items-center gap-1.5 text-xs font-bold bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800 px-2 sm:px-3 py-1 rounded animate-pulse">
                   <span className="text-red-600 uppercase tracking-wide text-[9px] sm:text-[10px] font-extrabold">⚠️ EXTRA TIME</span>
                   {(() => {
                     const timeStr = formatTime(state.extraTimeRemaining);
@@ -653,7 +653,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   })()}
                 </div>
               ) : (
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-650 bg-slate-50 border border-slate-200 px-2 sm:px-3 py-1 rounded">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 sm:px-3 py-1 rounded">
                 <span className="text-slate-500 uppercase tracking-wide text-[9px] sm:text-[10px] hidden xs:inline">Section Time</span>
                 {(() => {
                   const timeStr = formatTime(timeRemaining);
@@ -686,7 +686,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                       }
                     } catch (e) {}
                   }}
-                  className="border border-[#0D88B9] text-[#0D88B9] bg-white hover:bg-[#E3F2FD] px-2.5 py-1.5 rounded font-extrabold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider hidden sm:inline-block"
+                  className="border border-[#0D88B9] text-[#0D88B9] bg-white dark:bg-slate-900 hover:bg-[#E3F2FD] px-2.5 py-1.5 rounded font-extrabold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider hidden sm:inline-block"
                 >
                   {isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
                 </button>
@@ -697,7 +697,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     pauseExam();
                     setIsManuallyPaused(true);
                   }}
-                  className="border border-[#0D88B9] text-[#0D88B9] bg-white hover:bg-[#E3F2FD] px-2.5 py-1.5 rounded font-extrabold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider"
+                  className="border border-[#0D88B9] text-[#0D88B9] bg-white dark:bg-slate-900 hover:bg-[#E3F2FD] px-2.5 py-1.5 rounded font-extrabold transition active:scale-95 cursor-pointer text-[9px] sm:text-[10px] uppercase tracking-wider"
                 >
                   Pause
                 </button>
@@ -706,12 +706,12 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
           );
         }
         return (
-          <header className="flex h-[72px] items-center justify-between bg-white border-b border-slate-300 px-4 text-slate-800 shrink-0 select-none">
+          <header className="flex h-[72px] items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-300 px-4 text-slate-800 shrink-0 select-none">
             {/* Left Part: Mocktest Hub Logo & small sub-title */}
             <div className="flex flex-col items-start justify-center min-w-0">
               <div className="flex items-center gap-1.5">
                 <Trophy className="h-5 w-5 text-blue-600 shrink-0" />
-                <span className="font-black text-xs tracking-wider text-slate-900 uppercase leading-none">Mock Test Hub</span>
+                <span className="font-black text-xs tracking-wider text-slate-900 dark:text-white uppercase leading-none">Mock Test Hub</span>
               </div>
               <span className="text-[9px] text-slate-500 font-bold mt-1 truncate max-w-[150px]">
                 {session.testTitle}
@@ -720,7 +720,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
             {/* Center: Test Name + Zoom Buttons + Hub ID */}
             <div className="flex-1 flex flex-col items-center justify-center px-2 min-w-0">
-              <span className="font-extrabold text-[11px] sm:text-[12px] text-slate-900 text-center leading-snug line-clamp-2 w-full">
+              <span className="font-extrabold text-[11px] sm:text-[12px] text-slate-900 dark:text-white text-center leading-snug line-clamp-2 w-full">
                 {session.testTitle}
               </span>
               <div className="flex items-center gap-3 mt-1 flex-wrap justify-center">
@@ -764,18 +764,18 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               <button
                 type="button"
                 onClick={() => { try { if (!document.fullscreenElement) { const p = document.documentElement.requestFullscreen(); if (p && typeof p.catch === 'function') p.catch(() => {}); } else { const p = document.exitFullscreen(); if (p && typeof p.catch === 'function') p.catch(() => {}); } } catch(e) {} }}
-                className="p-1 rounded text-slate-500 hover:bg-slate-100 transition cursor-pointer hidden sm:block"
+                className="p-1 rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer hidden sm:block"
                 title={isFullscreen ? 'Exit Full Screen' : 'Enter Full Screen'}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
               </button>
-              <div className="hidden sm:flex items-center gap-2 border-l border-slate-200 pl-3">
+              <div className="hidden sm:flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 pl-3">
                 <div className="flex flex-col items-center">
-                  <div className="h-10 w-9 bg-slate-100 border border-slate-300 rounded flex items-center justify-center text-slate-400"><User className="h-5 w-5" /></div>
+                  <div className="h-10 w-9 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded flex items-center justify-center text-slate-400 dark:text-slate-500"><User className="h-5 w-5" /></div>
                   <span className="text-[7px] text-slate-400 leading-tight text-center">Registration<br/>Photo</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <div className="h-10 w-9 bg-slate-100 border border-slate-300 rounded flex items-center justify-center text-slate-400"><User className="h-5 w-5" /></div>
+                  <div className="h-10 w-9 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded flex items-center justify-center text-slate-400 dark:text-slate-500"><User className="h-5 w-5" /></div>
                   <span className="text-[7px] text-slate-400 leading-tight text-center">Captured<br/>Photo</span>
                 </div>
               </div>
@@ -789,7 +789,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
         const isSsc = (testId.toLowerCase().includes('ssc') || session?.testTitle?.toLowerCase().includes('ssc') || session?.testId?.toLowerCase().includes('ssc')) && !isMobile;
         if (!isSsc) return null;
         return (
-          <div className="flex items-center justify-between bg-white border-b border-slate-300 px-3 py-1.5 shrink-0 select-none gap-2 flex-wrap min-h-[40px]">
+          <div className="flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-300 dark:border-slate-700 px-3 py-1.5 shrink-0 select-none gap-2 flex-wrap min-h-[40px]">
             {/* Left: Section name boxes styled like ssc design.html */}
             <div className="flex items-center gap-1.5 flex-wrap shrink-0">
               {session.sections.map((sec, idx) => {
@@ -825,7 +825,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                 onClick={() => currentQuestionIndex > 0 && jumpToQuestion(currentSectionIndex, currentQuestionIndex - 1)}
                 className={`font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded text-xs sm:text-sm transition-all whitespace-nowrap ${
                   currentQuestionIndex === 0
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                    ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-300 dark:border-slate-600'
                     : 'bg-[#2E66CC] hover:bg-[#1a4da6] text-white cursor-pointer active:scale-95 border border-[#2E66CC]'
                 }`}
               >
@@ -860,31 +860,31 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       {/* PAUSE SCREEN BLUR OVERLAY */}
       {isManuallyPaused && !isExamSubmitted && !showSubmitConfirm && !showSectionSubmitConfirm && state.session && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
-          <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 md:p-8 text-center text-slate-800">
+          <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl p-6 md:p-8 text-center text-slate-800 dark:text-slate-100">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 text-yellow-600 mb-4 animate-pulse">
               <Clock className="h-6 w-6" />
             </div>
-            <h2 className="text-lg font-black text-slate-900 mb-2 uppercase tracking-wide">Exam Paused</h2>
+            <h2 className="text-lg font-black text-slate-900 dark:text-white mb-2 uppercase tracking-wide">Exam Paused</h2>
             <p className="text-slate-500 text-xs mb-6 font-semibold">Your exam timer and questions are hidden. Review your progress summary below to resume.</p>
 
-            <div className="grid grid-cols-2 gap-4 text-left border-y border-slate-200 py-4 mb-6 font-semibold">
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+            <div className="grid grid-cols-2 gap-4 text-left border-y border-slate-200 dark:border-slate-700 py-4 mb-6 font-semibold">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
                 <p className="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Total Questions:</p>
-                <p className="text-sm font-extrabold text-slate-800">{session.questions.length}</p>
+                <p className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{session.questions.length}</p>
               </div>
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
                 <p className="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Time Left:</p>
                 <p className="text-sm font-extrabold text-yellow-600 font-mono tracking-wider">{formatTime(timeRemaining)}</p>
               </div>
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
                 <p className="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Attempted Qs:</p>
                 <p className="text-sm font-extrabold text-green-600">{attemptedCount}</p>
               </div>
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
                 <p className="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Remaining Qs:</p>
                 <p className="text-sm font-extrabold text-red-500">{remainingCount}</p>
               </div>
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 col-span-2">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 col-span-2">
                 <p className="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Marked for Review Qs:</p>
                 <p className="text-sm font-extrabold text-indigo-600">{markedCount}</p>
               </div>
@@ -907,18 +907,18 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       {/* GATING / SUBMITTED SCREEN OVERLAY */}
       {isExamSubmitted ? (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-5xl w-full shadow-2xl animate-in zoom-in-95 duration-200 text-slate-800 my-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 sm:p-8 max-w-5xl w-full shadow-2xl animate-in zoom-in-95 duration-200 text-slate-800 dark:text-slate-100 my-auto">
             {/* Header Banner */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-5 border-b border-slate-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-700">
               <div className="flex items-center gap-4 text-center sm:text-left">
                 <div className="h-12 w-12 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center shrink-0 shadow-sm">
                   <Check className="h-6 w-6 stroke-[3]" />
                 </div>
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                     {language === 'hi' ? 'परीक्षा सफलतापूर्वक सबमिट की गई!' : 'Test Submitted Successfully!'}
                   </h2>
-                  <p className="text-slate-500 text-xs font-semibold mt-0.5">
+                  <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold mt-0.5">
                     {language === 'hi'
                       ? 'आपकी परीक्षा उत्तर पुस्तिका सफलतापूर्वक दर्ज कर ली गई है। नीचे सभी अनुभागों का विवरण देखें।'
                       : 'Your answer sheet has been recorded. Review your section-wise question response breakdown below.'}
@@ -926,7 +926,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 bg-green-50 px-3.5 py-1.5 rounded-full border border-green-200 text-xs font-extrabold text-green-700 shrink-0 shadow-sm">
+              <div className="flex items-center gap-2 bg-green-50 dark:bg-green-950/30 px-3.5 py-1.5 rounded-full border border-green-200 dark:border-green-800 text-xs font-extrabold text-green-700 dark:text-green-400 shrink-0 shadow-sm">
                 <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
                 <span>{language === 'hi' ? 'सबमिटेड' : 'SUBMITTED'}</span>
               </div>
@@ -980,35 +980,35 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                 <div className="py-5 flex flex-col gap-5">
                   {/* Top Overview Cards (Horizontal Row - 5 Status Categories) */}
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-center">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Questions</p>
-                      <p className="text-xl font-black text-slate-800 mt-0.5">{totalQuestionsAll}</p>
+                    <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-center">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Questions</p>
+                      <p className="text-xl font-black text-slate-800 dark:text-slate-100 mt-0.5">{totalQuestionsAll}</p>
                     </div>
-                    <div className="bg-green-50/70 border border-green-200 rounded-2xl p-3 text-center">
+                    <div className="bg-green-50/70 dark:bg-green-950/20 border border-green-200 dark:border-green-900/50 rounded-2xl p-3 text-center">
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-green-700">Answered</p>
                       <p className="text-xl font-black text-green-700 mt-0.5">{totalAnsweredAll}</p>
                     </div>
-                    <div className="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3 text-center">
+                    <div className="bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/50 rounded-2xl p-3 text-center">
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700">Answered &amp; Marked</p>
                       <p className="text-xl font-black text-indigo-700 mt-0.5">{totalAnsweredAndMarkedAll}</p>
                     </div>
-                    <div className="bg-purple-50/70 border border-purple-200 rounded-2xl p-3 text-center">
+                    <div className="bg-purple-50/70 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/50 rounded-2xl p-3 text-center">
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700">Marked For Review</p>
                       <p className="text-xl font-black text-purple-700 mt-0.5">{totalMarkedAll}</p>
                     </div>
-                    <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-3 text-center">
+                    <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-3 text-center">
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Not Attempted</p>
                       <p className="text-xl font-black text-amber-700 mt-0.5">{totalNotAttemptedAll}</p>
                     </div>
                   </div>
 
                   {/* Section Wise Breakdown Table */}
-                  <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
-                    <div className="bg-slate-100/80 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
-                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                  <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm bg-white dark:bg-slate-900">
+                    <div className="bg-slate-100/80 dark:bg-slate-800/80 px-4 py-2.5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                      <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                         {language === 'hi' ? 'अनुभाग-वार उत्तर विवरण' : 'Section-Wise Response Summary'}
                       </h4>
-                      <span className="text-[10px] font-bold text-slate-500">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
                         {sectionStats.length} {language === 'hi' ? 'अनुभाग' : 'Sections'}
                       </span>
                     </div>
@@ -1016,7 +1016,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead>
-                          <tr className="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                          <tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-extrabold border-b border-slate-200 dark:border-slate-700 uppercase text-[10px] tracking-wider">
                             <th className="py-2.5 px-4">Section Name</th>
                             <th className="py-2.5 px-3 text-center">Total Qs</th>
                             <th className="py-2.5 px-3 text-center">Answered</th>
@@ -1025,29 +1025,29 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                             <th className="py-2.5 px-3 text-center">Not Attempted</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-700 dark:text-slate-300">
                           {sectionStats.map((sec) => (
-                            <tr key={sec.sectionId} className="hover:bg-slate-50/80 transition-colors">
-                              <td className="py-2.5 px-4 font-bold text-slate-900 flex items-center gap-2">
-                                <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-black shrink-0">{sec.partLabel}</span>
+                            <tr key={sec.sectionId} className="hover:bg-slate-50/80 dark:hover:bg-slate-800 transition-colors">
+                              <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-[10px] px-2 py-0.5 rounded font-black shrink-0">{sec.partLabel}</span>
                                 <span className="truncate">{sec.sectionName}</span>
                               </td>
-                              <td className="py-2.5 px-3 text-center font-bold text-slate-800">{sec.total}</td>
-                              <td className="py-2.5 px-3 text-center font-extrabold text-green-600 bg-green-50/30">{sec.answered}</td>
-                              <td className="py-2.5 px-3 text-center font-extrabold text-indigo-600 bg-indigo-50/30">{sec.answeredAndMarked}</td>
-                              <td className="py-2.5 px-3 text-center font-extrabold text-purple-600 bg-purple-50/30">{sec.markedForReview}</td>
-                              <td className="py-2.5 px-3 text-center font-extrabold text-amber-600 bg-amber-50/30">{sec.notAttempted}</td>
+                              <td className="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-100">{sec.total}</td>
+                              <td className="py-2.5 px-3 text-center font-extrabold text-green-600 dark:text-green-400 bg-green-50/30 dark:bg-green-900/10">{sec.answered}</td>
+                              <td className="py-2.5 px-3 text-center font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-50/30 dark:bg-indigo-900/10">{sec.answeredAndMarked}</td>
+                              <td className="py-2.5 px-3 text-center font-extrabold text-purple-600 dark:text-purple-400 bg-purple-50/30 dark:bg-purple-900/10">{sec.markedForReview}</td>
+                              <td className="py-2.5 px-3 text-center font-extrabold text-amber-600 dark:text-amber-400 bg-amber-50/30 dark:bg-amber-900/10">{sec.notAttempted}</td>
                             </tr>
                           ))}
                         </tbody>
                         <tfoot>
-                          <tr className="bg-slate-100/90 font-black text-slate-900 border-t-2 border-slate-300 text-xs">
+                          <tr className="bg-slate-100/90 dark:bg-slate-800/90 font-black text-slate-900 dark:text-white border-t-2 border-slate-300 dark:border-slate-600 text-xs">
                             <td className="py-2.5 px-4 uppercase tracking-wider">Total Summary</td>
                             <td className="py-2.5 px-3 text-center">{totalQuestionsAll}</td>
-                            <td className="py-2.5 px-3 text-center text-green-700">{totalAnsweredAll}</td>
-                            <td className="py-2.5 px-3 text-center text-indigo-700">{totalAnsweredAndMarkedAll}</td>
-                            <td className="py-2.5 px-3 text-center text-purple-700">{totalMarkedAll}</td>
-                            <td className="py-2.5 px-3 text-center text-amber-700">{totalNotAttemptedAll}</td>
+                            <td className="py-2.5 px-3 text-center text-green-700 dark:text-green-400">{totalAnsweredAll}</td>
+                            <td className="py-2.5 px-3 text-center text-indigo-700 dark:text-indigo-400">{totalAnsweredAndMarkedAll}</td>
+                            <td className="py-2.5 px-3 text-center text-purple-700 dark:text-purple-400">{totalMarkedAll}</td>
+                            <td className="py-2.5 px-3 text-center text-amber-700 dark:text-amber-400">{totalNotAttemptedAll}</td>
                           </tr>
                         </tfoot>
                       </table>
@@ -1058,7 +1058,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
             })()}
 
             {/* Bottom Row: Ratings + Action Button (Horizontal Split on >= 1080px, Stacked on < 1080px) */}
-            <div className="pt-4 border-t border-slate-200 flex flex-col min-[1080px]:flex-row items-center justify-between gap-4 min-[1080px]:gap-5">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-700 flex flex-col min-[1080px]:flex-row items-center justify-between gap-4 min-[1080px]:gap-5">
               {/* Feedback Rating Block - Stacked on < 1080px, Side-by-side on >= 1080px */}
               <div className="flex flex-col min-[1080px]:flex-row items-stretch min-[1080px]:items-center gap-3 min-[1080px]:gap-4 text-left w-full min-[1080px]:w-auto">
                 {/* Rate Website */}
@@ -1066,8 +1066,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   isBlinkingStars && websiteRating === 0 
                     ? 'border-amber-500 bg-amber-50/80 dark:bg-amber-950/40 ring-2 ring-amber-400 animate-pulse' 
                     : websiteRating > 0
-                      ? 'border-emerald-300 bg-emerald-50/40 dark:bg-emerald-950/20 text-slate-700'
-                      : 'border-slate-200 bg-slate-50/60 text-slate-700'
+                      ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-950/20 text-slate-700 dark:text-slate-300'
+                      : 'border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}>
                   <span className="text-xs sm:text-sm font-black whitespace-nowrap">
                     {language === 'hi' ? 'वेबसाइट अनुभव:' : 'Rate Website:'} <span className="text-red-500">*</span>
@@ -1086,7 +1086,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                               ? 'fill-amber-400 text-amber-400 drop-shadow-sm' 
                               : isBlinkingStars && websiteRating === 0
                                 ? 'fill-amber-300 text-amber-400 animate-bounce'
-                                : 'text-slate-300 hover:text-amber-300'
+                                : 'text-slate-300 dark:text-slate-600 hover:text-amber-300'
                           }`}
                         />
                       </button>
@@ -1099,8 +1099,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   isBlinkingStars && examRating === 0 
                     ? 'border-amber-500 bg-amber-50/80 dark:bg-amber-950/40 ring-2 ring-amber-400 animate-pulse' 
                     : examRating > 0
-                      ? 'border-emerald-300 bg-emerald-50/40 dark:bg-emerald-950/20 text-slate-700'
-                      : 'border-slate-200 bg-slate-50/60 text-slate-700'
+                      ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-950/20 text-slate-700 dark:text-slate-300'
+                      : 'border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}>
                   <span className="text-xs sm:text-sm font-black whitespace-nowrap">
                     {language === 'hi' ? 'परीक्षा अनुभव:' : 'Exam Experience:'} <span className="text-red-500">*</span>
@@ -1119,7 +1119,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                               ? 'fill-amber-400 text-amber-400 drop-shadow-sm' 
                               : isBlinkingStars && examRating === 0
                                 ? 'fill-amber-300 text-amber-400 animate-bounce'
-                                : 'text-slate-300 hover:text-amber-300'
+                                : 'text-slate-300 dark:text-slate-600 hover:text-amber-300'
                           }`}
                         />
                       </button>
@@ -1182,9 +1182,9 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
           </div>
         </div>
       ) : isMounted && isMobile ? (
-        <div className="flex flex-col flex-1 overflow-y-auto relative bg-white pb-20">
+        <div className="flex flex-col flex-1 overflow-y-auto relative bg-white dark:bg-slate-900 pb-20">
           {/* 2. SUBJECTS TABS SWITCHER FOR MOBILE */}
-          <div className="flex h-10 border-b border-slate-200 bg-[#E9ECF2] overflow-x-auto shrink-0 scrollbar-none">
+          <div className="flex h-10 border-b border-slate-200 dark:border-slate-700 bg-[#E9ECF2] dark:bg-slate-800 overflow-x-auto shrink-0 scrollbar-none">
             {session.sections.map((sec, idx) => {
               const isActive = idx === currentSectionIndex;
               const isLocked = (session.hasSectionalTiming || session.lockSectionOnSubmit) && !isActive;
@@ -1194,12 +1194,12 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   onClick={() => !isLocked && switchSection(idx)}
                   disabled={isLocked}
                   title={isLocked ? 'Section locked — complete current section first' : undefined}
-                  className={`flex items-center px-4 font-bold border-r border-slate-200 whitespace-nowrap text-[11px] transition-colors shrink-0 ${
+                  className={`flex items-center px-4 font-bold border-r border-slate-200 dark:border-slate-700 whitespace-nowrap text-[11px] transition-colors shrink-0 ${
                     isActive
-                      ? 'bg-white text-blue-800 border-t-2 border-t-orange-500 font-extrabold'
+                      ? 'bg-white dark:bg-slate-900 text-blue-800 dark:text-blue-400 border-t-2 border-t-orange-500 font-extrabold'
                       : isLocked
-                      ? 'text-slate-400 bg-[#E9ECF2] cursor-not-allowed opacity-50'
-                      : 'text-slate-600 hover:bg-[#DEE3EC] cursor-pointer'
+                      ? 'text-slate-400 dark:text-slate-500 bg-[#E9ECF2] dark:bg-slate-800 cursor-not-allowed opacity-50'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-[#DEE3EC] dark:hover:bg-slate-700 cursor-pointer'
                   }`}
                 >
                   {isLocked && <span className="mr-1 text-[9px]">🔒</span>}
@@ -1214,13 +1214,13 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
             const activePos = currentQuestion?.positiveMark !== undefined && currentQuestion?.positiveMark !== null ? Number(currentQuestion.positiveMark) : Number(currentSection?.positiveMark ?? 2);
             const activeNeg = currentQuestion?.negativeMark !== undefined && currentQuestion?.negativeMark !== null ? Number(currentQuestion.negativeMark) : Number(currentSection?.negativeMark ?? 0.5);
             return (
-              <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2 text-[10px] font-bold shrink-0">
-                <span className="text-[#0747A6]">Question Type: MCQ</span>
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-[10px] font-bold shrink-0">
+                <span className="text-[#0747A6] dark:text-blue-400">Question Type: MCQ</span>
                 <div className="flex gap-2">
-                  <span className="text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded text-[9px]">
+                  <span className="text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded text-[9px]">
                     +{activePos}
                   </span>
-                  <span className="text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded text-[9px]">
+                  <span className="text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-1.5 py-0.5 rounded text-[9px]">
                     -{activeNeg}
                   </span>
                 </div>
@@ -1229,25 +1229,25 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
           })()}
 
           {/* 4. ACTIVE QUESTION TEXT & OPTIONS AREA */}
-          <div className="flex-1 overflow-y-auto p-4 bg-white pb-20">
+          <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-slate-900 pb-20">
             {currentQuestion ? (
               (() => {
                 const questionLang = questionLanguages[currentQuestion.id] || language;
                 return (
                   <div>
                     {/* Question Header Row */}
-                    <div className="mb-3 pb-2 border-b border-slate-100 flex items-center justify-between gap-2">
+                    <div className="mb-3 pb-2 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <div className="flex flex-col">
                           <div className="flex items-center gap-1.5">
-                            <h3 className="text-xs font-bold text-slate-800">
+                            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
                               Q No. {currentQuestionIndex + 1}
                             </h3>
-                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                               +{currentQuestion?.positiveMark ?? currentSection?.positiveMark ?? 2} | -{currentQuestion?.negativeMark ?? currentSection?.negativeMark ?? 0.5}
                             </span>
                           </div>
-                          <span className="text-[8px] text-slate-400 font-mono">
+                          <span className="text-[8px] text-slate-400 dark:text-slate-500 font-mono">
                             ID: {currentQuestion.id}
                           </span>
                         </div>
@@ -1257,22 +1257,22 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                             const nextLang = questionLang === 'en' ? 'hi' : 'en';
                             setQuestionLanguages(prev => ({ ...prev, [currentQuestion.id]: nextLang }));
                           }}
-                          className="flex items-center gap-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded border border-blue-200 text-[9px] transition shadow-xs cursor-pointer"
+                          className="flex items-center gap-0.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 text-[9px] transition shadow-xs cursor-pointer"
                         >
-                          <Globe className="h-2.5 w-2.5 text-blue-500" />
+                          <Globe className="h-2.5 w-2.5 text-blue-500 dark:text-blue-400" />
                           {questionLang === 'en' ? 'हिन्दी' : 'English'}
                         </button>
                       </div>
 
-                      <div className="flex items-center gap-1.5 font-mono text-[9px] bg-slate-100 border border-slate-200 text-slate-600 px-2 py-0.5 rounded">
-                        <Clock className="h-2.5 w-2.5 text-slate-505" />
+                      <div className="flex items-center gap-1.5 font-mono text-[9px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded">
+                        <Clock className="h-2.5 w-2.5 text-slate-500 dark:text-slate-400" />
                         <span>{Math.floor((activeResponse?.elapsedSeconds || 0) / 60)}:
                         {String((activeResponse?.elapsedSeconds || 0) % 60).padStart(2, '0')}</span>
                       </div>
                     </div>
 
                     {/* Question Text */}
-                    <div className="mb-4 text-slate-900 leading-relaxed font-normal bg-slate-50 p-3.5 border border-slate-200 rounded" style={{ fontSize: `${questionFontSize}px` }}>
+                    <div className="mb-4 text-slate-900 dark:text-slate-100 leading-relaxed font-normal bg-slate-50 dark:bg-slate-800/50 p-3.5 border border-slate-200 dark:border-slate-700 rounded" style={{ fontSize: `${questionFontSize}px` }}>
                       <MathJaxText
                         component="div"
                         className="markup-content font-sans"
@@ -1283,14 +1283,14 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
                       {/* Optional Math */}
                       {(questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex) && (
-                        <div className="mt-2 p-1.5 bg-yellow-55 text-yellow-900 border border-yellow-200 rounded font-mono text-[10px]">
+                        <div className="mt-2 p-1.5 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-900 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800 rounded font-mono text-[10px]">
                           Latex: {questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex}
                         </div>
                       )}
 
                       {/* Optional Question Image */}
                       {(questionLang === 'en' ? currentQuestion.content.en.imageUrl : currentQuestion.content.hi.imageUrl) && (
-                        <div className="mt-2.5 flex justify-center bg-white p-1.5 border border-slate-200 rounded-md">
+                        <div className="mt-2.5 flex justify-center bg-white dark:bg-slate-950 p-1.5 border border-slate-200 dark:border-slate-700 rounded-md">
                           <img
                             src={questionLang === 'en' ? currentQuestion.content.en.imageUrl : currentQuestion.content.hi.imageUrl}
                             alt="Question Visual"
@@ -1302,9 +1302,9 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
                     {/* Extra Time Mode Banner (Mobile) */}
                     {state.isExtraTimeMode && (
-                      <div className="mb-3 p-2.5 bg-amber-50 border border-amber-300 rounded-lg text-amber-800 text-[10px] font-bold">
+                      <div className="mb-3 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-lg text-amber-800 dark:text-amber-200 text-[10px] font-bold">
                         <span className="text-amber-600">⚠️</span> Extra Time — Mark all unattempted questions. Select Option (E) to leave question unattempted.
-                        {state.isRpscRasMode && <span className="block mt-1 text-red-600 font-extrabold text-[9px]">Unattempted questions after extra time will get -0.44 negative marking.</span>}
+                        {state.isRpscRasMode && <span className="block mt-1 text-red-600 dark:text-red-400 font-extrabold text-[9px]">Unattempted questions after extra time will get -0.44 negative marking.</span>}
                       </div>
                     )}
 
@@ -1346,16 +1346,16 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                   }}
                                   className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition text-[11px] ${
                                     isBlockedInExtraTime
-                                      ? 'bg-slate-100 border-slate-200 text-slate-400 opacity-50 cursor-not-allowed'
+                                      ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 opacity-50 cursor-not-allowed'
                                       : isReadOnlyInExtraTime
-                                      ? `${isTempChosen ? 'bg-blue-50 border-blue-400 font-bold text-blue-900 shadow-sm' : 'bg-white border-slate-200 text-slate-800'} cursor-default`
+                                      ? `${isTempChosen ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-400 dark:border-blue-700 font-bold text-blue-900 dark:text-blue-100 shadow-sm' : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'} cursor-default`
                                       : isOption5 && inExtraTime && isQuestionUnattempted
-                                      ? `${isTempChosen ? 'bg-amber-100 border-amber-500 font-bold text-amber-900 shadow-sm ring-2 ring-amber-400' : 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'} cursor-pointer`
-                                      : `cursor-pointer hover:bg-slate-50 ${isTempChosen ? 'bg-blue-50 border-blue-400 font-bold text-blue-900 shadow-sm' : 'bg-white border-slate-200 text-slate-800'}`
+                                      ? `${isTempChosen ? 'bg-amber-100 dark:bg-amber-900/50 border-amber-500 font-bold text-amber-900 dark:text-amber-100 shadow-sm ring-2 ring-amber-400' : 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 hover:bg-amber-100'} cursor-pointer`
+                                      : `cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 ${isTempChosen ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-400 dark:border-blue-700 font-bold text-blue-900 dark:text-blue-100 shadow-sm' : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'}`
                                   }`}
                                 >
                                   {isBlockedInExtraTime ? (
-                                    <span className="h-3.5 w-3.5 flex items-center justify-center text-slate-400">
+                                    <span className="h-3.5 w-3.5 flex items-center justify-center text-slate-400 dark:text-slate-600">
                                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                     </span>
                                   ) : (
@@ -1364,11 +1364,11 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                       name={`question-${currentQuestion.id}`}
                                       checked={isTempChosen}
                                       readOnly
-                                      className={`h-3.5 w-3.5 ${isOption5 ? 'border-amber-400 text-amber-600 focus:ring-amber-500' : 'border-slate-350 text-blue-600 focus:ring-blue-500'}`}
+                                      className={`h-3.5 w-3.5 ${isOption5 ? 'border-amber-400 text-amber-600' : 'border-slate-300 dark:border-slate-600 text-blue-600'} focus:ring-0`}
                                     />
                                   )}
                                   <MathJaxText
-                                    className={`flex-1 font-sans ${isOption5 ? 'font-bold text-amber-900' : ''}`}
+                                    className={`flex-1 font-sans ${isOption5 ? 'font-bold text-amber-900 dark:text-amber-200' : ''}`}
                                     content={processQuestionHtml(optLabel)}
                                   />
                                 </label>
@@ -1382,7 +1382,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                 );
               })()
             ) : (
-              <div className="text-center py-10 text-gray-500 text-xs">No questions loaded.</div>
+              <div className="text-center py-10 text-gray-500 dark:text-slate-400 text-xs">No questions loaded.</div>
             )}
           </div>
 
@@ -1392,32 +1392,32 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
             if (isSsc) {
               // SSC mobile footer: only palette button + clear (actions are in sub-header)
               return (
-                <footer className="fixed bottom-0 inset-x-0 border-t z-20 px-3 py-2 flex items-center gap-2 shadow-inner bg-[#E9ECF2] border-slate-300">
+                <footer className="fixed bottom-0 inset-x-0 border-t z-20 px-3 py-2 flex items-center gap-2 shadow-inner bg-[#E9ECF2] dark:bg-slate-800 border-slate-300 dark:border-slate-700">
                   <button
                     onClick={() => setMobilePaletteOpen(true)}
-                    className="bg-white border border-slate-300 text-slate-700 font-black p-2 rounded shadow-sm hover:bg-slate-50 text-[10px] w-12 flex flex-col items-center justify-center shrink-0 cursor-pointer"
+                    className="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-black p-2 rounded shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 text-[10px] w-12 flex flex-col items-center justify-center shrink-0 cursor-pointer"
                     title="Show Palette"
                   >
-                    <Menu className="h-3.5 w-3.5 text-slate-600" />
+                    <Menu className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
                     <span className="text-[7px] uppercase mt-0.5 font-bold">Palette</span>
                   </button>
-                  <button onClick={clearResponse} className="font-bold px-3 py-2.5 rounded shadow-sm transition text-[10px] bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer active:scale-95 flex-1 text-center">Clear Response</button>
+                  <button onClick={clearResponse} className="font-bold px-3 py-2.5 rounded shadow-sm transition text-[10px] bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer active:scale-95 flex-1 text-center">Clear Response</button>
                 </footer>
               );
             }
             return (
-              <footer className="fixed bottom-0 inset-x-0 border-t z-20 px-3 py-2 flex items-center justify-between gap-2 shadow-inner bg-white border-slate-200">
+              <footer className="fixed bottom-0 inset-x-0 border-t z-20 px-3 py-2 flex items-center justify-between gap-2 shadow-inner bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                 <button
                   onClick={() => setMobilePaletteOpen(true)}
-                  className="bg-white border border-slate-300 text-slate-700 font-black p-2 rounded shadow-sm hover:bg-slate-50 text-[10px] w-12 flex flex-col items-center justify-center shrink-0 cursor-pointer"
+                  className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-black p-2 rounded shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 text-[10px] w-12 flex flex-col items-center justify-center shrink-0 cursor-pointer"
                   title="Show Palette"
                 >
-                  <Menu className="h-3.5 w-3.5 text-slate-600" />
+                  <Menu className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
                   <span className="text-[7px] uppercase mt-0.5 font-bold">Palette</span>
                 </button>
                 <div className="flex gap-2 flex-1">
-                  <button onClick={markForReviewAndNext} className="font-bold px-2 py-2.5 rounded shadow-sm transition text-[10px] flex-1 text-center cursor-pointer active:scale-95 bg-[#B3E5FC]/60 text-[#006064] border border-[#B3E5FC]">Review & Next</button>
-                  <button onClick={clearResponse} className="font-bold px-2 py-2.5 rounded shadow-sm transition text-[10px] flex-1 text-center cursor-pointer active:scale-95 bg-[#B3E5FC]/60 text-[#006064] border border-[#B3E5FC]">Clear</button>
+                  <button onClick={markForReviewAndNext} className="font-bold px-2 py-2.5 rounded shadow-sm transition text-[10px] flex-1 text-center cursor-pointer active:scale-95 bg-[#B3E5FC]/60 dark:bg-slate-800 text-[#006064] dark:text-blue-300 border border-[#B3E5FC] dark:border-slate-700">Review & Next</button>
+                  <button onClick={clearResponse} className="font-bold px-2 py-2.5 rounded shadow-sm transition text-[10px] flex-1 text-center cursor-pointer active:scale-95 bg-[#B3E5FC]/60 dark:bg-slate-800 text-[#006064] dark:text-blue-300 border border-[#B3E5FC] dark:border-slate-700">Clear</button>
                 </div>
                 <button onClick={saveAndNext} className="font-bold px-4 py-2.5 rounded shadow transition text-[10px] shrink-0 cursor-pointer active:scale-95 bg-[#0D88B9] hover:bg-[#0A739C] text-white">Save & Next</button>
               </footer>
@@ -1434,15 +1434,15 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               />
 
               {/* Drawer Layout */}
-              <div className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 dark:border-slate-800 z-40 rounded-t-3xl shadow-2xl p-5 max-h-[85vh] overflow-y-auto flex flex-col justify-between animate-in slide-in-from-bottom duration-250">
+              <div className="fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-40 rounded-t-3xl shadow-2xl p-5 max-h-[85vh] overflow-y-auto flex flex-col justify-between animate-in slide-in-from-bottom duration-250">
                 <div>
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-                    <h4 className="font-extrabold text-[11px] text-[#0F2942] uppercase tracking-wider">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+                    <h4 className="font-extrabold text-[11px] text-[#0F2942] dark:text-slate-200 uppercase tracking-wider">
                       Question Palette - {currentSection.name}
                     </h4>
                     <button
                       onClick={() => setMobilePaletteOpen(false)}
-                      className="p-1 rounded bg-slate-105 text-slate-550 cursor-pointer"
+                      className="p-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-pointer"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -1454,7 +1454,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     return (
                       <>
                         <div className={`grid grid-cols-2 gap-2 text-[9px] mb-4 p-2.5 rounded-lg border font-semibold ${
-                          !isSsc ? 'bg-[#EBF5FA] border-[#B3E5FC] text-slate-705' : 'bg-slate-50 border-slate-100'
+                          !isSsc ? 'bg-[#EBF5FA] dark:bg-slate-800 border-[#B3E5FC] dark:border-slate-700 text-slate-700 dark:text-slate-300' : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700'
                         }`}>
                           <div className="flex items-center gap-1.5">
                             <div className={`h-4.5 w-4.5 font-bold flex items-center justify-center text-[9px] shadow-xs ${
@@ -1484,8 +1484,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                           </div>
 
                           <div className="flex items-center gap-1.5">
-                            <div className={`h-4.5 w-4.5 text-slate-800 font-bold flex items-center justify-center text-[9px] shadow-xs ${
-                              !isSsc ? 'bg-white border border-slate-400 rounded' : 'bg-gray-200 border border-gray-400'
+                            <div className={`h-4.5 w-4.5 text-slate-800 dark:text-slate-200 font-bold flex items-center justify-center text-[9px] shadow-xs ${
+                              !isSsc ? 'bg-white dark:bg-slate-950 border border-slate-400 dark:border-slate-600 rounded text-slate-700 dark:text-slate-300' : 'bg-gray-200 border border-gray-400'
                             }`}>
                               {counts.notVisited}
                             </div>
@@ -1504,8 +1504,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                             switch (stateCode) {
                               case 1: // Not Visited
                                 styleClass = !isSsc 
-                                  ? "bg-white border-slate-300 text-slate-800 rounded" 
-                                  : "bg-gray-200 border-gray-400 text-slate-800";
+                                  ? "bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded" 
+                                  : "bg-gray-200 dark:bg-slate-700 border-gray-400 dark:border-slate-600 text-slate-800 dark:text-slate-200";
                                 break;
                               case 2: // Not Answered
                                 styleClass = !isSsc 
@@ -1542,7 +1542,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                               >
                                 {idx + 1}
                                 {stateCode === 5 && (
-                                  <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white">
+                                  <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white dark:border-slate-900">
                                     <Check className="h-1.5 w-1.5" />
                                   </span>
                                 )}
@@ -1555,7 +1555,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   })()}
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 mt-6 flex flex-col gap-2">
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-6 flex flex-col gap-2">
                   {session && (session.hasSectionalTiming || session.lockSectionOnSubmit) && session.sections && session.sections.length > 1 && (
                     <button
                       onClick={() => {
@@ -1603,7 +1603,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
         <div className="flex flex-row flex-1 overflow-hidden h-full min-h-0">
           
           {/* LEFT PANEL - SUBJECTS TABS, QUESTION BLOCK & ACTIONS */}
-          <main className="flex flex-1 min-w-0 flex-col border-r border-slate-200 bg-white h-full overflow-hidden">
+          <main className="flex flex-1 min-w-0 flex-col border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 h-full overflow-hidden">
             
             {/* Subject Tabs Switcher */}
             {(() => {
@@ -1611,7 +1611,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               if (isSsc) return null;
               if (!isSsc) {
                 return (
-                  <div className="flex h-10 border-b border-slate-200 bg-[#F8FAFC] items-center shrink-0">
+                  <div className="flex h-10 border-b border-slate-200 dark:border-slate-700 bg-[#F8FAFC] dark:bg-slate-800 items-center shrink-0">
                     <span className="px-4 text-[10px] font-black uppercase text-slate-400 tracking-wider border-r border-slate-200 h-full flex items-center shrink-0">
                       SECTIONS
                     </span>
@@ -1625,12 +1625,12 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                             onClick={() => !isLocked && switchSection(idx)}
                             disabled={isLocked}
                             title={isLocked ? 'Section locked — complete current section first' : undefined}
-                            className={`flex items-center px-5 font-bold border-r border-slate-200 transition-colors h-full text-xs ${
+                            className={`flex items-center px-5 font-bold border-r border-slate-200 dark:border-slate-700 transition-colors h-full text-xs ${
                               isActive
                                 ? 'bg-[#1B6E88] text-white font-extrabold'
                                 : isLocked
-                                ? 'text-slate-300 bg-[#F8FAFC] cursor-not-allowed opacity-50'
-                                : 'text-slate-650 hover:bg-slate-100 bg-[#F8FAFC] cursor-pointer'
+                                ? 'text-slate-300 dark:text-slate-500 bg-[#F8FAFC] dark:bg-slate-900 cursor-not-allowed opacity-50'
+                                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 bg-[#F8FAFC] dark:bg-slate-900 cursor-pointer'
                             }`}
                           >
                             {isLocked && <span className="mr-1 text-[9px]">🔒</span>}
@@ -1644,7 +1644,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               }
 
               return (
-                <div className="flex h-10 border-b border-slate-200 bg-[#E9ECF2] shrink-0 items-center">
+                <div className="flex h-10 border-b border-slate-200 dark:border-slate-700 bg-[#E9ECF2] dark:bg-slate-800 shrink-0 items-center">
                   <div className="flex flex-1 overflow-x-auto scrollbar-none h-full">
                     {session.sections.map((sec, idx) => {
                       const isActive = idx === currentSectionIndex;
@@ -1655,12 +1655,12 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                           onClick={() => !isLocked && switchSection(idx)}
                           disabled={isLocked}
                           title={isLocked ? 'Section locked — complete current section first' : undefined}
-                          className={`flex items-center px-4 h-full font-bold border-r border-slate-200 transition-colors whitespace-nowrap text-[11px] ${
+                          className={`flex items-center px-4 h-full font-bold border-r border-slate-200 dark:border-slate-700 transition-colors whitespace-nowrap text-[11px] ${
                             isActive
                               ? 'bg-[#008000] text-white font-extrabold border-none'
                               : isLocked
-                              ? 'text-slate-400 bg-[#E9ECF2] cursor-not-allowed opacity-50'
-                              : 'text-slate-700 hover:bg-[#DEE3EC] bg-white cursor-pointer'
+                              ? 'text-slate-400 dark:text-slate-500 bg-[#E9ECF2] dark:bg-slate-800 cursor-not-allowed opacity-50'
+                              : 'text-slate-700 dark:text-slate-300 hover:bg-[#DEE3EC] dark:hover:bg-slate-700 bg-white dark:bg-slate-900 cursor-pointer'
                           }`}
                         >
                           {isLocked && <span className="mr-1 text-[9px]">🔒</span>}
@@ -1670,7 +1670,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     })}
                   </div>
                   {/* Total Answered shown on right like screenshot */}
-                  <span className="px-3 text-[10px] font-semibold text-slate-600 whitespace-nowrap shrink-0 border-l border-slate-200">
+                  <span className="px-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap shrink-0 border-l border-slate-200 dark:border-slate-700">
                     Total Questions Answered: <span className="font-extrabold text-green-700">{counts.answered}</span>
                   </span>
                 </div>
@@ -1683,13 +1683,13 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               const activeNeg = currentQuestion?.negativeMark !== undefined && currentQuestion?.negativeMark !== null ? Number(currentQuestion.negativeMark) : Number(currentSection?.negativeMark ?? 0.5);
 
               return (
-                <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2 text-[11px] font-bold shrink-0">
-                  <span className="text-[#0747A6] text-xs">Question Type: Multiple Choice Question</span>
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-[11px] font-bold shrink-0">
+                  <span className="text-[#0747A6] dark:text-blue-400 text-xs">Question Type: Multiple Choice Question</span>
                   <div className="flex gap-2">
-                    <span className="text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded">
+                    <span className="text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded">
                       Marks: +{activePos}
                     </span>
-                    <span className="text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
+                    <span className="text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-2 py-0.5 rounded">
                       Negative: -{activeNeg}
                     </span>
                   </div>
@@ -1698,16 +1698,16 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
             })()}
 
             {/* Question Text & Math Rendering */}
-            <div className="flex-1 lg:overflow-y-auto overflow-y-visible p-6 bg-white">
+            <div className="flex-1 lg:overflow-y-auto overflow-y-visible p-6 bg-white dark:bg-slate-950">
               {currentQuestion ? (
                 (() => {
                   const questionLang = questionLanguages[currentQuestion.id] || language;
                   return (
                     <div>
                       {/* Question Index Title */}
-                      <div className="mb-4 pb-2 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                      <div className="mb-4 pb-2 border-b border-slate-100 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-bold text-slate-800">
+                          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
                             Question No. {currentQuestionIndex + 1}
                           </h3>
                         </div>
@@ -1729,14 +1729,14 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                 </div>
 
                                 {/* Clock Icon / Time Spent */}
-                                <div className="flex items-center gap-1 text-slate-600 font-mono bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
+                                <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-mono bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2 py-0.5 rounded-md">
                                   <Clock className="h-3.5 w-3.5 text-slate-400" />
                                   <span>Time: {Math.floor((activeResponse?.elapsedSeconds || 0) / 60)}:
                                   {String((activeResponse?.elapsedSeconds || 0) % 60).padStart(2, '0')}</span>
                                 </div>
 
                                 {/* View in Language Dropdown */}
-                                <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+                                <div className="flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-2">
                                   <span className="text-slate-400">View in:</span>
                                   <select
                                     value={questionLang}
@@ -1744,7 +1744,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                       const nextLang = e.target.value as 'en' | 'hi';
                                       setQuestionLanguages(prev => ({ ...prev, [currentQuestion.id]: nextLang }));
                                     }}
-                                    className="bg-white border border-slate-200 rounded px-1.5 py-0.5 text-[10px] font-bold text-slate-700 outline-none cursor-pointer"
+                                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:text-slate-300 outline-none cursor-pointer"
                                   >
                                     <option value="en">English</option>
                                     <option value="hi">Hindi</option>
@@ -1766,25 +1766,25 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
                           return (
                             <div className="flex items-center gap-3 text-[10px] sm:text-xs">
-                              <span className="text-slate-505 font-bold">Select Language</span>
+                              <span className="text-slate-500 font-bold">Select Language</span>
                               <select
                                 value={questionLang}
                                 onChange={(e) => {
                                   const nextLang = e.target.value as 'en' | 'hi';
                                   setQuestionLanguages(prev => ({ ...prev, [currentQuestion.id]: nextLang }));
                                 }}
-                                className="bg-white border border-slate-350 rounded px-2 py-1 text-[11px] font-bold text-slate-705 outline-none cursor-pointer focus:border-blue-500"
+                                className="bg-white dark:bg-slate-900 border border-slate-300 rounded px-2 py-1 text-[11px] font-bold text-slate-700 outline-none cursor-pointer focus:border-blue-500"
                               >
                                 <option value="en">English</option>
                                 <option value="hi">Hindi</option>
                               </select>
 
-                              <div className="flex items-center gap-1 bg-slate-105 border border-slate-200 text-slate-650 font-mono px-2 py-0.5 rounded-md">
+                              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-mono px-2 py-0.5 rounded-md">
                                 <Clock className="h-3.5 w-3.5 text-slate-400" />
                                 <span>Time Spent: {Math.floor((activeResponse?.elapsedSeconds || 0) / 60)}:
                                 {String((activeResponse?.elapsedSeconds || 0) % 60).padStart(2, '0')}</span>
                               </div>
-                              <div className="text-slate-400 hidden sm:inline">
+                              <div className="text-slate-400 dark:text-slate-600 hidden sm:inline">
                                 ID: {currentQuestion.id}
                               </div>
                             </div>
@@ -1793,7 +1793,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                       </div>
 
                       {/* Render Question Text Based on active Language */}
-                      <div className="mb-6 text-slate-900 leading-relaxed font-normal bg-slate-50 p-4 border border-slate-200 rounded" style={{ fontSize: `${questionFontSize}px` }}>
+                      <div className="mb-6 text-slate-900 dark:text-slate-100 leading-relaxed font-normal bg-slate-50 dark:bg-slate-800/50 p-4 border border-slate-200 dark:border-slate-700 rounded" style={{ fontSize: `${questionFontSize}px` }}>
                         <MathJaxText
                           component="div"
                           className="markup-content font-sans"
@@ -1804,14 +1804,14 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
                         {/* Optional Math Equation preview */}
                         {(questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex) && (
-                          <div className="mt-2 p-2 bg-yellow-50 text-yellow-900 border border-yellow-200 rounded font-mono text-xs">
+                          <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-900 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800 rounded font-mono text-xs">
                             LaTeX: {questionLang === 'en' ? currentQuestion.content.en.mathLatex : currentQuestion.content.hi.mathLatex}
                           </div>
                         )}
 
                         {/* Optional Question Image */}
                         {(questionLang === 'en' ? currentQuestion.content.en.imageUrl : currentQuestion.content.hi.imageUrl) && (
-                          <div className="mt-3 flex justify-center bg-white p-2 border border-slate-200 rounded-md">
+                          <div className="mt-3 flex justify-center bg-white dark:bg-slate-950 p-2 border border-slate-200 dark:border-slate-700 rounded-md">
                             <img
                               src={questionLang === 'en' ? currentQuestion.content.en.imageUrl : currentQuestion.content.hi.imageUrl}
                               alt="Question Visual"
@@ -1823,7 +1823,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
                       {/* Extra Time Mode Banner (Desktop) */}
                       {state.isExtraTimeMode && (
-                        <div className="mb-4 p-3 bg-amber-50 border border-amber-300 rounded-lg text-amber-800 text-xs font-bold">
+                        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-lg text-amber-800 dark:text-amber-200 text-xs font-bold">
                           <span className="text-amber-600">⚠️</span> Extra Time — Mark all unattempted questions. Select Option (E) to leave question unattempted.
                           {state.isRpscRasMode && <span className="block mt-1 text-red-600 font-extrabold text-[10px]">Unattempted questions after extra time will get -0.44 negative marking.</span>}
                         </div>
@@ -1867,12 +1867,12 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                     }}
                                     className={`flex items-center gap-3 p-3 rounded-lg border transition ${
                                       isBlockedInExtraTime
-                                        ? 'bg-slate-100 border-slate-200 text-slate-400 opacity-50 cursor-not-allowed'
+                                        ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 opacity-50 cursor-not-allowed'
                                         : isReadOnlyInExtraTime
-                                        ? `border-slate-200 ${isTempChosen ? 'bg-blue-50 border-blue-400 font-semibold' : 'bg-white'} cursor-default`
+                                        ? `border-slate-200 dark:border-slate-700 ${isTempChosen ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-400 dark:border-blue-700 font-semibold text-blue-900 dark:text-blue-100' : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200'} cursor-default`
                                         : isOption5 && inExtraTime && isQuestionUnattempted
-                                        ? `${isTempChosen ? 'bg-amber-100 border-amber-500 font-semibold text-amber-900 ring-2 ring-amber-400' : 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'} cursor-pointer`
-                                        : `cursor-pointer hover:bg-slate-50 border-slate-200 ${isTempChosen ? 'bg-blue-50 border-blue-400 font-semibold' : 'bg-white'}`
+                                        ? `${isTempChosen ? 'bg-amber-100 dark:bg-amber-900/50 border-amber-500 font-semibold text-amber-900 dark:text-amber-100 ring-2 ring-amber-400' : 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/30'} cursor-pointer`
+                                        : `cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 border-slate-200 dark:border-slate-700 ${isTempChosen ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-400 dark:border-blue-700 font-semibold text-blue-900 dark:text-blue-100' : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200'}`
                                     }`}
                                   >
                                     {isBlockedInExtraTime ? (
@@ -1889,7 +1889,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                       />
                                     )}
                                     <MathJaxText
-                                      className={`text-slate-800 text-xs flex-1 font-sans ${isOption5 ? 'font-bold text-amber-900' : ''}`}
+                                      className={`text-slate-800 dark:text-slate-200 text-xs flex-1 font-sans ${isOption5 ? 'font-bold text-amber-900 dark:text-amber-200' : ''}`}
                                       content={processQuestionHtml(optLabel)}
                                     />
                                   </label>
@@ -1903,7 +1903,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   );
                 })()
               ) : (
-                <div className="text-center py-10 text-gray-500">No questions loaded in this section.</div>
+                <div className="text-center py-10 text-gray-500 dark:text-slate-400">No questions loaded in this section.</div>
               )}
             </div>
 
@@ -1914,17 +1914,17 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                 return null; // SSC: actions are in the sub-header bar, no bottom footer panel
               }
               return (
-                <footer className="flex flex-row h-12 sm:h-14 items-center justify-between gap-2 border-t border-slate-200 px-3 sm:px-4 py-0 shrink-0 bg-white">
+                <footer className="flex flex-row h-12 sm:h-14 items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-0 shrink-0 bg-white dark:bg-slate-950">
                   <div className="flex gap-2">
                     <button
                       onClick={markForReviewAndNext}
-                      className="font-bold px-2.5 sm:px-4 py-2 sm:py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs cursor-pointer active:scale-95 bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC] whitespace-nowrap"
+                      className="font-bold px-2.5 sm:px-4 py-2 sm:py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs cursor-pointer active:scale-95 bg-[#B3E5FC]/60 dark:bg-blue-900/30 hover:bg-[#B3E5FC]/80 dark:hover:bg-blue-900/50 text-[#006064] dark:text-blue-300 border border-[#B3E5FC] dark:border-blue-800 whitespace-nowrap"
                     >
                       Mark for Review & Next
                     </button>
                     <button
                       onClick={clearResponse}
-                      className="font-bold px-2.5 sm:px-4 py-2 sm:py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs cursor-pointer active:scale-95 bg-[#B3E5FC]/60 hover:bg-[#B3E5FC]/80 text-[#006064] border border-[#B3E5FC] whitespace-nowrap"
+                      className="font-bold px-2.5 sm:px-4 py-2 sm:py-2.5 rounded shadow-sm transition text-[10px] sm:text-xs cursor-pointer active:scale-95 bg-[#B3E5FC]/60 dark:bg-blue-900/30 hover:bg-[#B3E5FC]/80 dark:hover:bg-blue-900/50 text-[#006064] dark:text-blue-300 border border-[#B3E5FC] dark:border-blue-800 whitespace-nowrap"
                     >
                       Clear Response
                     </button>
@@ -1944,28 +1944,28 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
           {(() => {
             const isSsc = (testId.includes('ssc') || testId.toLowerCase().includes('ssc')) && !isMobile;
             return (
-              <aside className={`flex w-52 sm:w-56 md:w-60 min-[1080px]:w-80 min-[1080px]:xl:w-[25%] shrink-0 flex-col border-l border-slate-200 overflow-y-auto max-[1079px]:no-scrollbar h-full ${
-                !isSsc ? 'bg-[#EBF5FA]' : 'bg-[#F3F4F6]'
+              <aside className={`flex w-52 sm:w-56 md:w-60 min-[1080px]:w-80 min-[1080px]:xl:w-[25%] shrink-0 flex-col border-l border-slate-200 dark:border-slate-700 overflow-y-auto max-[1079px]:no-scrollbar h-full ${
+                !isSsc ? 'bg-[#EBF5FA] dark:bg-slate-900' : 'bg-[#F3F4F6] dark:bg-slate-900'
               }`}>
                 
                 {/* Profile Avatar Card */}
-                <div className={`flex items-center gap-2 p-2.5 min-[1080px]:gap-3 min-[1080px]:p-4 border-b border-slate-200 ${
-                  !isSsc ? 'bg-[#EBF5FA]' : 'bg-white'
+                <div className={`flex items-center gap-2 p-2.5 min-[1080px]:gap-3 min-[1080px]:p-4 border-b border-slate-200 dark:border-slate-700 ${
+                  !isSsc ? 'bg-[#EBF5FA] dark:bg-slate-900' : 'bg-white dark:bg-slate-850 dark:bg-slate-800'
                 }`}>
                   <div className={`relative h-9 w-9 min-[1080px]:h-12 min-[1080px]:w-12 shrink-0 flex items-center justify-center text-slate-400 ${
-                    !isSsc ? 'rounded-full bg-[#0D88B9] text-white' : 'rounded bg-slate-200 border border-slate-300'
+                    !isSsc ? 'rounded-full bg-[#0D88B9] text-white' : 'rounded bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600'
                   }`}>
                     <User className="h-5 w-5 min-[1080px]:h-6 min-[1080px]:w-6" />
                   </div>
                   <div className="flex-1 overflow-hidden min-w-0">
-                    <p className="text-[9px] min-[1080px]:text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">Candidate: {currentUser?.candidateCode || 'GUEST'}</p>
-                    <p className="font-bold text-xs min-[1080px]:text-sm text-slate-900 truncate">{currentUser?.name || 'Guest User'}</p>
+                    <p className="text-[9px] min-[1080px]:text-[10px] text-gray-400 dark:text-slate-500 font-bold uppercase tracking-wider truncate">Candidate: {currentUser?.candidateCode || 'GUEST'}</p>
+                    <p className="font-bold text-xs min-[1080px]:text-sm text-slate-900 dark:text-slate-100 truncate">{currentUser?.name || 'Guest User'}</p>
                   </div>
                 </div>
 
                 {/* Legend Panel of States (Custom Designs/Shapes matching TCS iON or Testbook) */}
                 {!isSsc ? (
-                  <div className="p-2 min-[1080px]:p-3 bg-white border-b border-slate-200 grid grid-cols-2 gap-x-1.5 gap-y-1.5 text-[9px] min-[1080px]:text-[10px] font-bold text-slate-700">
+                  <div className="p-2 min-[1080px]:p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-x-1.5 gap-y-1.5 text-[9px] min-[1080px]:text-[10px] font-bold text-slate-700 dark:text-slate-300">
                     <div className="flex items-center gap-1.5 min-[1080px]:gap-2">
                       <div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#2E7D32] text-white rounded-full flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] shadow-xs shrink-0">
                         {counts.answered}
@@ -1988,7 +1988,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     </div>
 
                     <div className="flex items-center gap-1.5 min-[1080px]:gap-2">
-                      <div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-white border border-slate-400 text-slate-800 flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] shadow-xs rounded shrink-0">
+                      <div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-white dark:bg-slate-900 border border-slate-400 dark:border-slate-600 text-slate-800 dark:text-slate-300 flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] shadow-xs rounded shrink-0">
                         {counts.notVisited}
                       </div>
                       <span className="truncate">Not Visited</span>
@@ -1997,7 +1997,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     <div className="flex items-center gap-1.5 min-[1080px]:gap-2 col-span-2">
                       <div className="relative h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#8E24AA] text-white rounded-full flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] shadow-xs shrink-0">
                         {counts.markedAndAnswered}
-                        <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white">
+                        <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white dark:border-slate-900">
                           <Check className="h-1.5 w-1.5" />
                         </span>
                       </div>
@@ -2005,9 +2005,9 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     </div>
                   </div>
                 ) : (
-                  <div className="p-2 min-[1080px]:p-3 bg-white border-b border-slate-200 grid grid-cols-2 gap-x-1.5 gap-y-1.5 text-[9px] min-[1080px]:text-[10px]">
+                  <div className="p-2 min-[1080px]:p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-x-1.5 gap-y-1.5 text-[9px] min-[1080px]:text-[10px] text-slate-700 dark:text-slate-300">
                     <div className="flex items-center gap-1.5 min-[1080px]:gap-2">
-                      <div className="flex h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 items-center justify-center bg-gray-200 border border-gray-400 text-[9px] min-[1080px]:text-xs font-bold text-slate-800 shrink-0">
+                      <div className="flex h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 items-center justify-center bg-gray-200 dark:bg-slate-700 border border-gray-400 dark:border-slate-600 text-[9px] min-[1080px]:text-xs font-bold text-slate-800 dark:text-slate-200 shrink-0">
                         {counts.notVisited}
                       </div>
                       <span className="truncate">Not Visited</span>
@@ -2037,7 +2037,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     <div className="flex items-center gap-1.5 min-[1080px]:gap-2 col-span-2">
                       <div className="relative flex h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 items-center justify-center bg-[#4527A0] text-white text-[9px] min-[1080px]:text-xs font-bold rounded-full shrink-0">
                         {counts.markedAndAnswered}
-                        <span className="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-0.5 border border-white">
+                        <span className="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-0.5 border border-white dark:border-slate-900">
                           <Check className="h-2 w-2" />
                         </span>
                       </div>
@@ -2047,15 +2047,15 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                 )}
 
                 {/* Active Palette Section Grid */}
-                <div className={`flex-1 p-2 min-[1080px]:p-3 overflow-y-auto max-[1079px]:no-scrollbar ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-white'}`}>
+                <div className={`flex-1 p-2 min-[1080px]:p-3 overflow-y-auto max-[1079px]:no-scrollbar ${!isSsc ? 'bg-[#EBF5FA] dark:bg-slate-900' : 'bg-white dark:bg-slate-800'}`}>
                   {/* Section Name Header - matches screenshot style */}
                   {isSsc && (
-                    <div className="mb-2 pb-1.5 border-b border-slate-200">
-                      <h4 className="font-bold text-slate-800 text-[10px] min-[1080px]:text-[11px] truncate">{currentSection.name}</h4>
+                    <div className="mb-2 pb-1.5 border-b border-slate-200 dark:border-slate-700">
+                      <h4 className="font-bold text-slate-800 dark:text-slate-200 text-[10px] min-[1080px]:text-[11px] truncate">{currentSection.name}</h4>
                     </div>
                   )}
                   {!isSsc && (
-                    <h4 className="font-bold text-[#0F2942] uppercase text-[9px] min-[1080px]:text-[10px] tracking-wide mb-2 truncate">
+                    <h4 className="font-bold text-[#0F2942] dark:text-white uppercase text-[9px] min-[1080px]:text-[10px] tracking-wide mb-2 truncate">
                       Question Palette - {currentSection.name}
                     </h4>
                   )}
@@ -2072,8 +2072,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                       switch (stateCode) {
                         case 1: // Not Visited
                           styleClass = !isSsc 
-                            ? "bg-white border-slate-300 text-slate-800 rounded" 
-                            : "bg-[#C8D3E0] border-[#94a3b8] text-slate-800";
+                            ? "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded" 
+                            : "bg-[#C8D3E0] dark:bg-slate-700 border-[#94a3b8] dark:border-slate-600 text-slate-800 dark:text-slate-200";
                           break;
                         case 2: // Not Answered
                           styleClass = !isSsc 
@@ -2107,7 +2107,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                         >
                           {idx + 1}
                           {stateCode === 5 && (
-                            <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white">
+                            <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white dark:border-slate-900">
                               <Check className="h-1.5 w-1.5" />
                             </span>
                           )}
@@ -2119,29 +2119,29 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
                 {/* Legend Table — SSC style matches screenshot */}
                 {isSsc && (
-                  <div className="px-2 pb-2 min-[1080px]:px-3 bg-white border-t border-slate-200">
+                  <div className="px-2 pb-2 min-[1080px]:px-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700">
                     <table className="w-full text-[9px] min-[1080px]:text-[10px] mt-2">
                       <tbody>
-                        <tr className="border-b border-slate-100">
-                          <td className="py-1 pr-1"><div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#C8D3E0] border border-[#94a3b8] text-slate-800 flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px]">{counts.notVisited}</div></td>
-                          <td className="py-1 text-slate-700 truncate">Not Visited</td>
+                        <tr className="border-b border-slate-100 dark:border-slate-800">
+                          <td className="py-1 pr-1"><div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#C8D3E0] dark:bg-slate-700 border border-[#94a3b8] dark:border-slate-600 text-slate-800 flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px]">{counts.notVisited}</div></td>
+                          <td className="py-1 text-slate-700 dark:text-slate-300 truncate">Not Visited</td>
                           <td className="py-1 pr-1 pl-2"><div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#C62828] text-white flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] rounded-t-md">{counts.notAnswered}</div></td>
-                          <td className="py-1 text-slate-700 truncate">Not Answered</td>
+                          <td className="py-1 text-slate-700 dark:text-slate-300 truncate">Not Answered</td>
                         </tr>
-                        <tr className="border-b border-slate-100">
+                        <tr className="border-b border-slate-100 dark:border-slate-800">
                           <td className="py-1 pr-1"><div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#2E7D32] text-white flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] rounded-b-md">{counts.answered}</div></td>
-                          <td className="py-1 text-slate-700 truncate">Answered</td>
+                          <td className="py-1 text-slate-700 dark:text-slate-300 truncate">Answered</td>
                           <td className="py-1 pr-1 pl-2"><div className="h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#4527A0] text-white flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] rounded-full">{counts.marked}</div></td>
-                          <td className="py-1 text-slate-700 truncate">Marked for Review</td>
+                          <td className="py-1 text-slate-700 dark:text-slate-300 truncate">Marked for Review</td>
                         </tr>
                         <tr>
                           <td className="py-1 pr-1">
                             <div className="relative h-4.5 w-4.5 min-[1080px]:h-5 min-[1080px]:w-5 bg-[#4527A0] text-white flex items-center justify-center font-bold text-[8.5px] min-[1080px]:text-[9px] rounded-full">
                               {counts.markedAndAnswered}
-                              <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white"><Check className="h-1.5 w-1.5" /></span>
+                              <span className="absolute -bottom-0.5 -right-0.5 bg-green-500 text-white rounded-full p-0.5 border border-white dark:border-slate-900"><Check className="h-1.5 w-1.5" /></span>
                             </div>
                           </td>
-                          <td className="py-1 text-slate-700 col-span-3 text-[8.5px] min-[1080px]:text-[10px]" colSpan={3}>Answered &amp; Marked</td>
+                          <td className="py-1 text-slate-700 dark:text-slate-300 col-span-3 text-[8.5px] min-[1080px]:text-[10px]" colSpan={3}>Answered &amp; Marked</td>
                         </tr>
                       </tbody>
                     </table>
@@ -2149,7 +2149,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                 )}
 
                 {/* Submit Block Section */}
-                <div className={`p-2.5 min-[1080px]:p-4 border-t border-slate-200 flex flex-col gap-2 ${!isSsc ? 'bg-[#EBF5FA]' : 'bg-slate-50'}`}>
+                <div className={`p-2.5 min-[1080px]:p-4 border-t border-slate-200 dark:border-slate-700 flex flex-col gap-2 ${!isSsc ? 'bg-[#EBF5FA] dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-900'}`}>
                   {session && (session.hasSectionalTiming || session.lockSectionOnSubmit) && session.sections && session.sections.length > 1 && (
                     <button
                       onClick={() => {
@@ -2248,7 +2248,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               </div>
             )}
 
-            <p className="text-slate-600 dark:text-slate-350 text-[11px] leading-relaxed mb-6 font-medium">
+            <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed mb-6 font-medium">
               {language === 'hi'
                 ? 'क्या आप इस सेक्शन को सबमिट करके अगले सेक्शन को शुरू करना चाहते हैं?'
                 : 'Are you sure you want to submit this section and begin the next section now?'}
@@ -2289,7 +2289,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               </h4>
             </div>
             
-            <p className="text-slate-600 dark:text-slate-350 text-xs leading-relaxed mb-6 font-medium">
+            <p className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed mb-6 font-medium">
               {language === 'hi'
                 ? 'क्या आप सुनिश्चित हैं कि आप अपनी उत्तर पुस्तिका अभी समाप्त और सबमिट करना चाहते हैं?'
                 : 'Are you sure you want to finish and submit your exam sheet now?'}
@@ -2301,7 +2301,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   setShowSubmitConfirm(false);
                   resumeExam();
                 }}
-                className="bg-slate-100 dark:bg-slate-805 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 border border-slate-200 dark:border-slate-700"
+                className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 border border-slate-200 dark:border-slate-700"
               >
                 {language === 'hi' ? 'रद्द करें' : 'Cancel'}
               </button>
@@ -2333,21 +2333,21 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       {/* RPSC RAS Extra Time Rules Modal */}
       {state.isExtraTimeRulesShown && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white border border-amber-300 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-amber-300 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-center gap-3 mb-5">
               <div className="h-12 w-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 shadow-sm">
                 <AlertCircle className="h-6 w-6 stroke-[2.5]" />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-900 leading-tight">
+                <h3 className="text-base font-black text-slate-900 dark:text-white leading-tight">
                   {language === 'hi' ? 'ध्यान दें!' : 'Hey! You need to mark at least one option in this question!'}
                 </h3>
               </div>
             </div>
 
             {/* Rules Body */}
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 text-xs leading-relaxed text-slate-700">
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-5 text-xs leading-relaxed text-slate-700 dark:text-slate-200">
               <p className="mb-3 font-semibold">
                 {language === 'hi'
                   ? 'नवीनतम OMR नियमों के अनुसार नकल रोकने के लिए, एक अंतिम विकल्प "प्रश्न को अनुत्तरित छोड़ें" जोड़ा गया है जिसे चुनना अनिवार्य है यदि आप इस प्रश्न को छोड़ना चाहते हैं।'
@@ -2361,20 +2361,20 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
             </div>
 
             {/* Penalty Warning */}
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-5 text-[11px] font-bold text-red-700 flex items-start gap-2">
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl p-3 mb-5 text-[11px] font-bold text-red-700 dark:text-red-300 flex items-start gap-2">
               <span className="text-red-500 text-base leading-none mt-0.5">⚠️</span>
               <div>
                 <p>{language === 'hi'
                   ? 'आपको शेष अनुत्तरित प्रश्नों को चिह्नित करने के लिए 10 मिनट का अतिरिक्त समय मिलेगा।'
                   : 'You will get 10 minutes of extra time to mark the remaining unattempted questions.'}</p>
-                <p className="mt-1 text-red-800 font-extrabold">{language === 'hi'
+                <p className="mt-1 text-red-800 dark:text-red-300 font-extrabold">{language === 'hi'
                   ? 'अतिरिक्त समय के बाद भी अनुत्तरित प्रश्नों पर -0.44 नकारात्मक अंकन लागू होगा।'
                   : 'Unattempted questions after extra time will get -0.44 negative marking.'}</p>
               </div>
             </div>
 
             {/* Info Box */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-6 text-[10px] text-blue-800 font-semibold">
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-3 mb-6 text-[10px] text-blue-800 dark:text-blue-200 font-semibold">
               <p>📋 {language === 'hi'
                 ? 'अतिरिक्त समय में, अनुत्तरित प्रश्नों पर विकल्प A-D अवरुद्ध रहेंगे। केवल विकल्प (E) "प्रश्न को अनुत्तरित छोड़ें" उपलब्ध होगा।'
                 : 'During extra time, options A-D will be blocked for unattempted questions. Only Option (E) "Leave Question Unattempted" will be available.'}</p>

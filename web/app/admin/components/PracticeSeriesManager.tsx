@@ -838,7 +838,7 @@ export const PracticeSeriesManager: React.FC<PracticeSeriesManagerProps> = ({
 
                 <div className="flex flex-wrap items-center gap-3">
                   {/* View Mode Controls */}
-                  <div className="flex items-center bg-slate-100 dark:bg-slate-955 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
                     <button
                       type="button"
                       onClick={() => setPreviewLayoutMode('both')}

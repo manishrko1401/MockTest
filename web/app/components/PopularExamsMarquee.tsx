@@ -79,18 +79,18 @@ const DEFAULT_CATEGORIES: ExamCategoryItem[] = [
 ];
 
 const STYLE_MAP: Record<string, { badgeBg: string; iconBg: string; hoverBorder: string; glow: string; btnText: string; gradient: string; Icon: any }> = {
-  ssc:       { badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',   iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',   hoverBorder: 'hover:border-amber-500/50',   glow: 'hover:shadow-[0_12px_28px_-6px_rgba(245,158,11,0.25)]',   btnText: 'group-hover:text-amber-600',   gradient: 'from-amber-500/5',   Icon: Award        },
-  railways:  { badgeBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',       iconBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',       hoverBorder: 'hover:border-blue-500/50',    glow: 'hover:shadow-[0_12px_28px_-6px_rgba(59,130,246,0.25)]',   btnText: 'group-hover:text-blue-600',    gradient: 'from-blue-500/5',    Icon: TrendingUp   },
-  banking:   { badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', hoverBorder: 'hover:border-emerald-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(16,185,129,0.25)]', btnText: 'group-hover:text-emerald-600', gradient: 'from-emerald-500/5', Icon: Coins        },
-  teaching:  { badgeBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20', iconBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400', hoverBorder: 'hover:border-orange-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(249,115,22,0.25)]', btnText: 'group-hover:text-orange-600', gradient: 'from-orange-500/5', Icon: BookOpen     },
-  ugc_net:   { badgeBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',       iconBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',       hoverBorder: 'hover:border-cyan-500/50',    glow: 'hover:shadow-[0_12px_28px_-6px_rgba(6,182,212,0.25)]',    btnText: 'group-hover:text-cyan-600',    gradient: 'from-cyan-500/5',    Icon: GraduationCap },
-  upsc:      { badgeBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',       iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',       hoverBorder: 'hover:border-rose-500/50',    glow: 'hover:shadow-[0_12px_28px_-6px_rgba(244,63,94,0.25)]',    btnText: 'group-hover:text-rose-600',    gradient: 'from-rose-500/5',    Icon: ShieldCheck  },
-  defence:   { badgeBg: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',           iconBg: 'bg-red-500/10 text-red-600 dark:text-red-400',           hoverBorder: 'hover:border-red-500/50',     glow: 'hover:shadow-[0_12px_28px_-6px_rgba(239,68,68,0.25)]',    btnText: 'group-hover:text-red-600',     gradient: 'from-red-500/5',     Icon: ShieldCheck  },
-  state_exams:{ badgeBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20', iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400', hoverBorder: 'hover:border-indigo-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(99,102,241,0.25)]', btnText: 'group-hover:text-indigo-600', gradient: 'from-indigo-500/5', Icon: GraduationCap },
-  engineering:{ badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400', hoverBorder: 'hover:border-purple-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(168,85,247,0.25)]', btnText: 'group-hover:text-purple-600', gradient: 'from-purple-500/5', Icon: GraduationCap },
+  ssc:       { badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',   iconBg: 'bg-white border border-slate-200/80 shadow-xs text-amber-600',   hoverBorder: 'hover:border-amber-500/50',   glow: 'hover:shadow-[0_12px_28px_-6px_rgba(245,158,11,0.25)]',   btnText: 'group-hover:text-amber-600',   gradient: 'from-amber-500/5',   Icon: Award        },
+  railways:  { badgeBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',       iconBg: 'bg-white border border-slate-200/80 shadow-xs text-blue-600',       hoverBorder: 'hover:border-blue-500/50',    glow: 'hover:shadow-[0_12px_28px_-6px_rgba(59,130,246,0.25)]',   btnText: 'group-hover:text-blue-600',    gradient: 'from-blue-500/5',    Icon: TrendingUp   },
+  banking:   { badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-emerald-600', hoverBorder: 'hover:border-emerald-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(16,185,129,0.25)]', btnText: 'group-hover:text-emerald-600', gradient: 'from-emerald-500/5', Icon: Coins        },
+  teaching:  { badgeBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-orange-600', hoverBorder: 'hover:border-orange-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(249,115,22,0.25)]', btnText: 'group-hover:text-orange-600', gradient: 'from-orange-500/5', Icon: BookOpen     },
+  ugc_net:   { badgeBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',       iconBg: 'bg-white border border-slate-200/80 shadow-xs text-cyan-600',       hoverBorder: 'hover:border-cyan-500/50',    glow: 'hover:shadow-[0_12px_28px_-6px_rgba(6,182,212,0.25)]',    btnText: 'group-hover:text-cyan-600',    gradient: 'from-cyan-500/5',    Icon: GraduationCap },
+  upsc:      { badgeBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',       iconBg: 'bg-white border border-slate-200/80 shadow-xs text-rose-600',       hoverBorder: 'hover:border-rose-500/50',    glow: 'hover:shadow-[0_12px_28px_-6px_rgba(244,63,94,0.25)]',    btnText: 'group-hover:text-rose-600',    gradient: 'from-rose-500/5',    Icon: ShieldCheck  },
+  defence:   { badgeBg: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',           iconBg: 'bg-white border border-slate-200/80 shadow-xs text-red-600',           hoverBorder: 'hover:border-red-500/50',     glow: 'hover:shadow-[0_12px_28px_-6px_rgba(239,68,68,0.25)]',    btnText: 'group-hover:text-red-600',     gradient: 'from-red-500/5',     Icon: ShieldCheck  },
+  state_exams:{ badgeBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-indigo-600', hoverBorder: 'hover:border-indigo-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(99,102,241,0.25)]', btnText: 'group-hover:text-indigo-600', gradient: 'from-indigo-500/5', Icon: GraduationCap },
+  engineering:{ badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-purple-600', hoverBorder: 'hover:border-purple-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(168,85,247,0.25)]', btnText: 'group-hover:text-purple-600', gradient: 'from-purple-500/5', Icon: GraduationCap },
 };
 
-const DEFAULT_STYLE = { badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400', hoverBorder: 'hover:border-purple-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(168,85,247,0.25)]', btnText: 'group-hover:text-purple-600', gradient: 'from-purple-500/5', Icon: GraduationCap };
+const DEFAULT_STYLE = { badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-purple-600', hoverBorder: 'hover:border-purple-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(168,85,247,0.25)]', btnText: 'group-hover:text-purple-600', gradient: 'from-purple-500/5', Icon: GraduationCap };
 
 function getStyle(id: string) {
   const lower = id.toLowerCase();
@@ -122,9 +122,9 @@ export default function PopularExamsMarquee({ categories, language = 'en', title
   };
 
   return (
-    <section className="w-full py-10 md:py-14 relative z-10 border-t border-slate-200 dark:border-slate-800/80">
+    <section className="w-full py-8 md:py-12 relative z-10 border-t border-slate-200 dark:border-slate-800/80">
       {/* ── Header ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+      <div className="w-full px-4 sm:px-6 md:px-8 mb-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-center sm:text-left">
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -152,11 +152,11 @@ export default function PopularExamsMarquee({ categories, language = 'en', title
       {/* ── Marquee wrapper ── */}
       <div className="relative w-full overflow-hidden">
         {/* Edge fades */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-16 md:w-24 bg-gradient-to-r from-slate-50 dark:from-slate-950 to-transparent z-20" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-16 md:w-24 bg-gradient-to-l from-slate-50 dark:from-slate-950 to-transparent z-20" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 sm:w-12 md:w-16 bg-gradient-to-r from-slate-200/90 dark:from-slate-900 to-transparent z-20" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 sm:w-12 md:w-16 bg-gradient-to-l from-slate-200/90 dark:from-slate-900 to-transparent z-20" />
 
         {/* Animated track – uses global .exam-marquee-track class from globals.css */}
-        <div className="py-3 px-4">
+        <div className="py-3 px-0 w-full">
           <div className="exam-marquee-track gap-4 sm:gap-5">
             {items.map((cat, idx) => {
               const s = getStyle(cat.id);
@@ -185,7 +185,7 @@ export default function PopularExamsMarquee({ categories, language = 'en', title
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-3">
                       {cat.logoUrl ? (
-                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 p-1 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-200/80 p-1 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform shadow-xs">
                           <img src={cat.logoUrl} alt={name} className="w-full h-full object-contain" loading="lazy" />
                         </div>
                       ) : (

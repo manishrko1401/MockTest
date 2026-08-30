@@ -304,7 +304,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 p-4 sm:p-6 pt-12 sm:pt-16 pb-20 sm:pb-24 relative overflow-x-hidden transition-colors duration-200 flex flex-col items-center">
+    <div className="w-full min-h-screen bg-slate-200/90 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 p-4 sm:p-6 pt-12 sm:pt-16 pb-20 sm:pb-24 relative overflow-x-hidden transition-colors duration-200 flex flex-col items-center">
       
       {/* Cloudflare Turnstile External Script */}
       <Script 
@@ -319,7 +319,7 @@ export default function AuthPage() {
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-          className="px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer shadow-xs"
+          className="px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer shadow-xs"
         >
           <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
           <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
@@ -329,7 +329,7 @@ export default function AuthPage() {
         <button 
           onClick={toggleTheme}
           type="button"
-          className="p-1.5 sm:p-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800 shadow-xs"
+          className="p-1.5 sm:p-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800 shadow-xs"
           title={theme === 'light' ? t.themeDark : t.themeLight}
         >
           {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -413,7 +413,7 @@ export default function AuthPage() {
             type="button"
             onClick={handleGoogleAuth}
             disabled={googleLoading || loading}
-            className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-xs shadow-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-60 mb-5"
+            className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-xs shadow-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-60 mb-5"
           >
             {googleLoading ? (
               <div className="h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -451,7 +451,7 @@ export default function AuthPage() {
 
           {/* Error & Success Messages */}
           {errorMsg && (
-            <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl text-red-650 dark:text-red-400 flex items-start gap-2.5 text-xs mb-5 animate-in fade-in duration-200">
+            <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 flex items-start gap-2.5 text-xs mb-5 animate-in fade-in duration-200">
               <AlertCircle className="h-4 w-4 mt-0.5 text-red-600 shrink-0" />
               <span className="font-bold">{errorMsg}</span>
             </div>
@@ -713,7 +713,7 @@ export default function AuthPage() {
             
             <button
               onClick={() => setShowResetModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 text-sm font-bold bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full h-8 w-8 flex items-center justify-center cursor-pointer border border-slate-250 dark:border-slate-700"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full h-8 w-8 flex items-center justify-center cursor-pointer border border-slate-200 dark:border-slate-700"
             >
               ✕
             </button>
@@ -726,7 +726,7 @@ export default function AuthPage() {
             </div>
 
             {resetError && (
-              <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-red-650 dark:text-red-400 flex items-start gap-2 text-[10px] mb-4">
+              <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 flex items-start gap-2 text-[10px] mb-4">
                 <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                 <span className="font-bold">{resetError}</span>
               </div>
@@ -741,7 +741,7 @@ export default function AuthPage() {
 
             {resetStep === 1 ? (
               <form onSubmit={handleRequestReset} className="space-y-4">
-                <p className="text-[10px] text-slate-550 dark:text-slate-400 leading-relaxed font-semibold">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
                   {language === 'hi' 
                     ? 'अपना पंजीकृत ईमेल पता दर्ज करें। हम आपको पासवर्ड बदलने के लिए एक 6-अंकीय सत्यापन कोड (OTP) भेजेंगे।' 
                     : 'Enter your registered email address. We will send you a 6-digit verification code (OTP) to reset your password.'}
@@ -751,7 +751,7 @@ export default function AuthPage() {
                     {t.authEmail}
                   </label>
                   <div className="relative" suppressHydrationWarning>
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-555">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-600">
                       <Mail className="h-4 w-4" />
                     </div>
                     <input
@@ -761,7 +761,7 @@ export default function AuthPage() {
                       onChange={(e) => setResetEmail(e.target.value)}
                       placeholder={t.authEmailPlaceholder || "name@example.com"}
                       suppressHydrationWarning
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-500 transition-all font-semibold"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-all font-semibold"
                     />
                   </div>
                 </div>
@@ -785,7 +785,7 @@ export default function AuthPage() {
                 </p>
 
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase mb-2">
+                  <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
                     {language === 'hi' ? 'सत्यापन कोड (OTP)' : 'Verification Code (OTP)'}
                   </label>
                   <input
@@ -796,7 +796,7 @@ export default function AuthPage() {
                     onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, ''))}
                     placeholder="e.g. 583921"
                     suppressHydrationWarning
-                    className="w-full text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-500 transition-all"
+                    className="w-full text-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 text-sm font-bold tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 transition-all"
                   />
                 </div>
 
@@ -805,7 +805,7 @@ export default function AuthPage() {
                     {language === 'hi' ? 'नया पासवर्ड' : 'New Password'}
                   </label>
                   <div className="relative" suppressHydrationWarning>
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-550">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                       <Lock className="h-4 w-4" />
                     </div>
                     <input
@@ -815,12 +815,12 @@ export default function AuthPage() {
                       onChange={(e) => setResetNewPassword(e.target.value)}
                       placeholder="At least 4 characters"
                       suppressHydrationWarning
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-650 dark:focus:border-blue-555 transition-all font-semibold"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 dark:focus:border-blue-600 transition-all font-semibold"
                     />
                     <button
                       type="button"
                       onClick={() => setShowResetPassword(!showResetPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-550 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
                     >
                       {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>

@@ -542,11 +542,11 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Upload questions to any mock test using JSON paste or the interactive form builder</p>
         </div>
         {questionCount > 0 && (
-          <div className="flex items-center gap-3 bg-blue-50 dark:bg-blue-955/30 border border-blue-200 dark:border-blue-800 px-4 py-2 rounded-xl">
+          <div className="flex items-center gap-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-4 py-2 rounded-xl">
             <div className="h-8 w-8 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center">{questionCount}</div>
             <div>
               <p className="text-xs font-bold text-blue-700 dark:text-blue-400">{questionCount} Question{questionCount !== 1 ? 's' : ''} Ready</p>
-              <p className="text-[10px] text-blue-550 dark:text-blue-550">{[...new Set(formQuestionsList.map((q: any) => q.section).filter(Boolean))].length} section{[...new Set(formQuestionsList.map((q: any) => q.section).filter(Boolean))].length !== 1 ? 's' : ''}</p>
+              <p className="text-[10px] text-blue-500 dark:text-blue-500">{[...new Set(formQuestionsList.map((q: any) => q.section).filter(Boolean))].length} section{[...new Set(formQuestionsList.map((q: any) => q.section).filter(Boolean))].length !== 1 ? 's' : ''}</p>
             </div>
           </div>
         )}
@@ -558,7 +558,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
           <div className="h-7 w-7 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center shrink-0">1</div>
           <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wide">Select Target Mock Test</h3>
           {selectedTest && (
-            <span className="ml-auto text-xs font-bold text-green-650 dark:text-green-450 flex items-center gap-1">
+            <span className="ml-auto text-xs font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
               <CheckCircle2 className="h-3.5 w-3.5" /> Selected
             </span>
           )}
@@ -655,10 +655,10 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
         {selectedTest && (
           <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-bold">
             <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50 px-2.5 py-1 rounded-lg">{selectedTest.categoryName}</span>
-            <span className="text-slate-400 dark:text-slate-650 self-center">›</span>
+            <span className="text-slate-400 dark:text-slate-600 self-center">›</span>
             <span className="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg">{selectedTest.subCategoryName}</span>
-            <span className="text-slate-400 dark:text-slate-650 self-center">›</span>
-            <span className="bg-green-50 dark:bg-green-955/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/50 px-2.5 py-1 rounded-lg">{selectedTest.title}</span>
+            <span className="text-slate-400 dark:text-slate-600 self-center">›</span>
+            <span className="bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/50 px-2.5 py-1 rounded-lg">{selectedTest.title}</span>
           </div>
         )}
       </div>
@@ -676,7 +676,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
             className={`flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer border-2 ${
               importerMode === 's3_url'
                 ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-500/20'
-                : 'bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-purple-400 hover:text-purple-600'
+                : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-purple-400 hover:text-purple-600'
             }`}
           >
             <Globe className="h-4 w-4" />
@@ -688,7 +688,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
             className={`flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer border-2 ${
               importerMode === 'json'
                 ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20'
-                : 'bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-blue-400 hover:text-blue-600'
+                : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-blue-400 hover:text-blue-600'
             }`}
           >
             <Database className="h-4 w-4" />
@@ -700,7 +700,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
             className={`flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-bold transition-all cursor-pointer border-2 ${
               importerMode === 'form'
                 ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20'
-                : 'bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-blue-400 hover:text-blue-600'
+                : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-blue-400 hover:text-blue-600'
             }`}
           >
             <Edit className="h-4 w-4" />
@@ -745,7 +745,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
             <button
               type="button"
               onClick={handleClearFormQuestions}
-              className="ml-auto text-[11px] text-red-500 hover:text-red-650 font-bold flex items-center gap-1 cursor-pointer"
+              className="ml-auto text-[11px] text-red-500 hover:text-red-600 font-bold flex items-center gap-1 cursor-pointer"
             >
               <X className="h-3.5 w-3.5" /> Clear All ({formQuestionsList.length})
             </button>
@@ -755,12 +755,12 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
         <div className="p-6">
           {importerMode === 's3_url' ? (
             <div className="space-y-6">
-              <div className="p-4 bg-purple-50 dark:bg-purple-955/30 border border-purple-200 dark:border-purple-800/60 rounded-2xl">
+              <div className="p-4 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 rounded-2xl">
                 <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-extrabold text-xs">
                   <Globe className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
                   <span>Direct Tigris S3 / External S3 JSON Link Importer</span>
                 </div>
-                <p className="text-[11px] text-purple-650 dark:text-purple-350 mt-1.5 leading-relaxed">
+                <p className="text-[11px] text-purple-600 dark:text-purple-300 mt-1.5 leading-relaxed">
                   Upload your <code>.json</code> question paper directly to your Tigris S3 bucket (or any public S3 bucket), then paste the URL below. This completely bypasses Vercel & Next.js server payload limits for large test files!
                 </p>
               </div>
@@ -829,8 +829,8 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
               {uploadStatus && (
                 <div className={`p-4 rounded-xl flex items-start gap-3 border text-xs font-medium ${
                   uploadStatus.type === 'success'
-                    ? 'bg-green-50 dark:bg-green-955/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
-                    : 'bg-red-50 dark:bg-red-955/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
+                    ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
+                    : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
                 }`}>
                   {uploadStatus.type === 'success' ? <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" /> : <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />}
                   <span className="leading-relaxed">{uploadStatus.message}</span>
@@ -1057,7 +1057,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                 </div>
 
                 {/* Detailed Solution & Explanation Section */}
-                <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-955/20 border border-amber-200/80 dark:border-amber-900/50 space-y-3">
+                <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/50 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-extrabold text-xs uppercase tracking-wider">
                       <Sparkles className="h-4 w-4 text-amber-500" />
@@ -1079,7 +1079,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                         onChange={(e) => setFormExplanationEn(e.target.value)}
                         placeholder="Type detailed solution in English...\n\nExample:\nStep 1: Calculate total resistance R = R1 + R2 = 10 + 20 = 30 ohms.\nStep 2: Use Ohm's Law V = I * R => I = 120 / 30 = 4 Amperes."
                         rows={8}
-                        className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-3.5 text-xs text-slate-850 dark:text-slate-150 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 resize-y leading-relaxed font-medium min-h-[160px]"
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-3.5 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 resize-y leading-relaxed font-medium min-h-[160px]"
                       />
                     </div>
 
@@ -1095,7 +1095,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                         onChange={(e) => setFormExplanationHi(e.target.value)}
                         placeholder="हिंदी में विस्तृत व्याख्या और हल टाइप करें...\n\nउदाहरण:\nचरण 1: कुल प्रतिरोध R = 10 + 20 = 30 ओम।\nचरण 2: ओम का नियम V = I * R => I = 120 / 30 = 4 एम्पीयर।"
                         rows={8}
-                        className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-3.5 text-xs text-slate-850 dark:text-slate-150 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 resize-y leading-relaxed font-medium min-h-[160px]"
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-3.5 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 resize-y leading-relaxed font-medium min-h-[160px]"
                       />
                     </div>
                   </div>
@@ -1117,7 +1117,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                     <button
                       type="button"
                       onClick={resetFormForNewQuestion}
-                      className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 font-bold py-2.5 px-5 rounded-xl text-xs active:scale-95 transition-all cursor-pointer animate-fadeIn"
+                      className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold py-2.5 px-5 rounded-xl text-xs active:scale-95 transition-all cursor-pointer animate-fadeIn"
                     >
                       <X className="h-4 w-4" /> Cancel Edit
                     </button>
@@ -1173,7 +1173,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                             <span className="text-slate-400">•</span>
                             <span className="text-emerald-600 dark:text-emerald-400 font-bold">Correct: Option {String.fromCharCode(65 + (q.correctIndex ?? q.correctOption ?? 0))}</span>
                             <span className="text-slate-400">•</span>
-                            <span className={`font-extrabold px-2 py-0.5 rounded ${q.positiveMarks !== undefined || q.negativeMarks !== undefined ? 'bg-purple-50 text-purple-700 dark:bg-purple-955/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+                            <span className={`font-extrabold px-2 py-0.5 rounded ${q.positiveMarks !== undefined || q.negativeMarks !== undefined ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
                               🎯 Marks: {q.positiveMarks !== undefined ? `+${q.positiveMarks}` : '+2.0'} / {q.negativeMarks !== undefined ? `-${q.negativeMarks}` : '-0.5'} {q.positiveMarks !== undefined || q.negativeMarks !== undefined ? '(Custom)' : '(Inherited)'}
                             </span>
                           </div>
@@ -1321,7 +1321,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-slate-500 font-bold">Q{previewQuestionIndex + 1} of {parsedQuestions.length}</span>
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-955/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                       🎯 Marks: {activeQ.positiveMarks !== undefined ? `+${activeQ.positiveMarks}` : '+2.0'} / {activeQ.negativeMarks !== undefined ? `-${activeQ.negativeMarks}` : '-0.5'}
                     </span>
                     <button
@@ -1691,7 +1691,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                                   [secName]: { ...currentRule, positiveMarks: Number(e.target.value) }
                                 });
                               }}
-                              className="w-full bg-slate-955 border border-purple-700/60 rounded-lg px-2.5 py-1 text-xs text-emerald-400 font-bold focus:outline-none"
+                              className="w-full bg-slate-950 border border-purple-700/60 rounded-lg px-2.5 py-1 text-xs text-emerald-400 font-bold focus:outline-none"
                             />
                           </div>
                           <div className="sm:col-span-3">
@@ -1707,7 +1707,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                                   [secName]: { ...currentRule, negativeMarks: Number(e.target.value) }
                                 });
                               }}
-                              className="w-full bg-slate-955 border border-purple-700/60 rounded-lg px-2.5 py-1 text-xs text-red-400 font-bold focus:outline-none"
+                              className="w-full bg-slate-950 border border-purple-700/60 rounded-lg px-2.5 py-1 text-xs text-red-400 font-bold focus:outline-none"
                             />
                           </div>
                         </div>
@@ -1718,7 +1718,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
               )}
 
               {scoringStrategyMode === 'question' && (
-                <div className="p-4 bg-emerald-955/80 border border-emerald-800/80 rounded-xl space-y-4 font-sans">
+                <div className="p-4 bg-emerald-950/80 border border-emerald-800/80 rounded-xl space-y-4 font-sans">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-800/50 pb-3">
                     <div>
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300 block">
@@ -1770,7 +1770,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                   {/* High-Density Scrollable Questions Table */}
                   <div className="max-h-96 overflow-y-auto border border-emerald-800/60 rounded-xl bg-slate-900/95 font-sans shadow-inner">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-955 text-slate-300 uppercase text-[9px] font-black tracking-wider border-b border-emerald-800/60 sticky top-0 z-10">
+                      <thead className="bg-slate-950 text-slate-300 uppercase text-[9px] font-black tracking-wider border-b border-emerald-800/60 sticky top-0 z-10">
                         <tr>
                           <th className="py-2.5 px-3.5 w-16">Q #</th>
                           <th className="py-2.5 px-3">Question Text & Section</th>
@@ -1851,7 +1851,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
               </div>
 
               {/* Card 2: Calculated Max Marks */}
-              <div className="p-4 rounded-xl bg-purple-50/70 dark:bg-purple-955/20 border border-purple-200 dark:border-purple-800/60 space-y-1">
+              <div className="p-4 rounded-xl bg-purple-50/70 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/60 space-y-1">
                 <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-400 uppercase tracking-wider block">Calculated Max Marks</span>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-black text-purple-900 dark:text-purple-100">{testAnalysis.totalMaxMarks}</span>
@@ -1861,7 +1861,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
               </div>
 
               {/* Card 3: Total Test Duration */}
-              <div className="p-4 rounded-xl bg-blue-50/70 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-800/60 space-y-1">
+              <div className="p-4 rounded-xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/60 space-y-1">
                 <span className="text-[10px] font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider block">Total Test Time</span>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-black text-blue-900 dark:text-blue-100">{testAnalysis.totalTestDurationMinutes}</span>
@@ -1873,7 +1873,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
               </div>
 
               {/* Card 4: Detected Sections */}
-              <div className="p-4 rounded-xl bg-amber-50/70 dark:bg-amber-955/20 border border-amber-200 dark:border-amber-800/60 space-y-1">
+              <div className="p-4 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 space-y-1">
                 <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider block">Sections Count</span>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-black text-amber-900 dark:text-amber-100">{testAnalysis.sectionsCount}</span>
@@ -1891,7 +1891,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
                   Section-Wise Scoring & Timing Breakdown
                 </h4>
                 {testAnalysis.hasSectionalTimings && testAnalysis.sectionalTimingsList.length > 0 && (
-                  <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-955/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                  <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                     Sectional Durations: {testAnalysis.sectionalTimingsList.join(' min, ')} min
                   </span>
                 )}
@@ -1982,7 +1982,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
       {/* STEP 6 — Confirm & Save to Database */}
       <div className={`rounded-2xl border-2 p-6 transition-all ${
         parsedQuestions.length > 0
-          ? 'bg-green-50 dark:bg-green-955/20 border-green-200 dark:border-green-800'
+          ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
           : 'bg-slate-50 dark:bg-slate-900 border-dashed border-slate-200 dark:border-slate-800'
       }`}>
         <div className="flex items-center gap-3 mb-4">
@@ -1993,7 +1993,7 @@ export const BulkQuestionImporter: React.FC<BulkQuestionImporterProps> = ({
         </div>
         {parsedQuestions.length > 0 ? (
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="text-sm text-green-850 dark:text-green-300">
+            <div className="text-sm text-green-800 dark:text-green-300">
               <p className="font-bold">{parsedQuestions.length} question{parsedQuestions.length !== 1 ? 's' : ''} verified and ready to save</p>
               <p className="text-xs text-green-600 dark:text-green-500 mt-0.5">
                 Target: <strong>{selectedTest?.title || 'No test selected'}</strong>

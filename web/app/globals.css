@@ -4,12 +4,12 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
+  --background: #e2e8f0;
   --foreground: #0f172a;
 }
 
 .dark {
-  --background: #090d16;
+  --background: #0b0f19;
   --foreground: #f8fafc;
 }
 
@@ -23,6 +23,9 @@
   --color-yellow-650: #d4af37; /* Gold */
   --color-yellow-750: #b5942b; /* Darker Gold for hover */
   --color-yellow-450: #f1e0a3; /* Lighter Gold */
+
+  /* Spacing */
+  --spacing-18: 4.5rem;
 }
 
 body {
@@ -30,6 +33,26 @@ body {
   color: var(--foreground);
   font-family: 'Inter', 'Noto Sans Devanagari', 'Hind', system-ui, -apple-system, sans-serif;
   transition: background-color 0.2s ease, color 0.2s ease;
+  color-scheme: light;
+}
+
+/* Apply dark color-scheme to the root dark element so native controls render dark */
+.dark {
+  color-scheme: dark;
+}
+
+/* Dark mode: native select/option elements */
+.dark select {
+  color-scheme: dark;
+}
+.dark select option {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Dark mode: date input */
+.dark input[type="date"] {
+  color-scheme: dark;
 }
 
 /* Rich content formatting styles for Testbook compatibility */
@@ -795,4 +818,83 @@ mjx-container[jax="CHTML"] {
 
 .btn-3d-slate:hover {
   box-shadow: 0 8px 18px -3px rgba(100, 116, 139, 0.25), 0 3px 6px -2px rgba(100, 116, 139, 0.1) !important;
+}
+
+/* ===== DARK MODE: OVERRIDE SCRAPED HTML INLINE STYLES IN NOTICE-CUSTOM-BODY ===== */
+/* Government recruitment pages often have hardcoded white/light backgrounds and dark text */
+/* These overrides ensure readability in dark mode regardless of inline styles */
+
+.dark .notice-custom-body [style*="color"] {
+  color: #cbd5e1 !important;
+}
+
+.dark .notice-custom-body [style*="background-color"],
+.dark .notice-custom-body [style*="background"] {
+  background-color: transparent !important;
+}
+
+/* Table cell overrides for scraped inline colors */
+.dark .notice-custom-body td[style*="background"],
+.dark .notice-custom-body th[style*="background"] {
+  background-color: #1e293b !important;
+}
+
+/* Override table cells that may have hardcoded dark text on white background */
+.dark .notice-custom-body td,
+.dark .notice-custom-body th {
+  color: #cbd5e1 !important;
+}
+
+/* Override anchor tags that may have hardcoded color styles */
+.dark .notice-custom-body a[style*="color"] {
+  color: #93c5fd !important;
+}
+
+/* Force table wrapper dark mode background — used in dangerouslySetInnerHTML injected HTML */
+.dark .notice-table-wrapper {
+  background-color: #0f172a !important;
+}
+
+/* Override any hardcoded inline font-color attributes */
+.dark .notice-custom-body font[color],
+.dark .notice-custom-body span[style*="color"] {
+  color: #cbd5e1 !important;
+}
+
+/* Ensure bold/colored heading text in scraped tables is readable */
+.dark .notice-custom-body tr:first-child td[style*="color"],
+.dark .notice-custom-body tr:first-child th[style*="color"] {
+  color: #94a3b8 !important;
+}
+
+/* Table row that might have highlight-style backgrounds */
+.dark .notice-custom-body tr[style*="background"] {
+  background-color: rgba(30, 41, 59, 0.5) !important;
+}
+
+/* ===== END NOTICE-CUSTOM-BODY DARK MODE OVERRIDES ===== */
+
+/* ===== TCS-iON TYPING TEST TERMINAL SCROLLBAR ===== */
+.tcs-scrollbar {
+  scrollbar-width: auto;
+  scrollbar-color: #94a3b8 #e2e8f0;
+}
+.tcs-scrollbar::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+.tcs-scrollbar::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-left: 1px solid #cbd5e1;
+}
+.tcs-scrollbar::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+  border: 2px solid #e2e8f0;
+}
+.tcs-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+.tcs-scrollbar::-webkit-scrollbar-thumb:active {
+  background: #475569;
 }

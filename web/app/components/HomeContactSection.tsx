@@ -241,7 +241,7 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
         {/* PRIMARY CHANNELS GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {/* EMAIL SUPPORT CARD */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <div className="w-9 h-9 rounded-xl bg-red-500/10 text-red-600 flex items-center justify-center font-black">
@@ -269,7 +269,7 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
           </div>
 
           {/* TELEGRAM COMMUNITY CARD */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-black">
@@ -296,7 +296,7 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
         </div>
 
         {/* DIRECT QUERY SUBMISSION FORM */}
-        <div className="p-5 rounded-2xl sm:rounded-3xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-4">
+        <div className="p-5 rounded-2xl sm:rounded-3xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-4">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <MessageSquare className="h-4.5 w-4.5" />
@@ -403,7 +403,7 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
               return (
                 <div
                   key={idx}
-                  className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 overflow-hidden"
+                  className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 overflow-hidden"
                 >
                   <button
                     onClick={() => setActiveFaq(isOpen ? null : idx)}

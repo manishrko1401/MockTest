@@ -141,17 +141,39 @@ export default function App() {
 
   const refreshCatalog = async () => {
     try {
-      const syncRes = await ApiClient.catalogSync(null);
+      // EGRESS-OPT: Use lastSyncedAt for delta sync instead of null (full dump).
+      // null means "I've never synced — give me everything", which is expensive.
+      // Using the stored timestamp means only new/updated items are transferred.
+      const lastSyncedAt = await getLastSyncTimestamp();
+      const existing = await getCachedCatalog();
+      const hasEmptyCache = !existing || (existing.examCatalog || []).length === 0;
+      const syncRes = await ApiClient.catalogSync(hasEmptyCache ? null : lastSyncedAt);
       if (syncRes.success) {
-        const updatedCatalog = {
-          examCatalog: syncRes.examCatalog || [],
-          noticesList: syncRes.noticesList || [],
-          usersList: [],
-        };
-        setNotices(updatedCatalog.noticesList);
-        setExamCatalog(updatedCatalog.examCatalog);
-        await saveCatalogToCache(updatedCatalog);
-        await setLastSyncTimestamp(syncRes.syncedAt);
+        let updatedCatalog;
+        if (syncRes.isFullSync || !existing) {
+          updatedCatalog = {
+            examCatalog: syncRes.examCatalog || [],
+            noticesList: syncRes.noticesList || [],
+            usersList: [],
+          };
+        } else if (syncRes.hasNewData) {
+          updatedCatalog = mergeCatalogDelta(existing, {
+            newCategories: syncRes.newCategories || [],
+            newExams: syncRes.newExams || [],
+            newSeries: syncRes.newSeries || [],
+            newTests: syncRes.newTests || [],
+            newNotices: syncRes.noticesList || syncRes.newNotices || [],
+            updatedTestIds: syncRes.updatedTestIds || [],
+          });
+        } else {
+          updatedCatalog = existing;
+        }
+        if (updatedCatalog) {
+          setNotices(updatedCatalog.noticesList);
+          setExamCatalog(updatedCatalog.examCatalog);
+          await saveCatalogToCache(updatedCatalog);
+          await setLastSyncTimestamp(syncRes.syncedAt);
+        }
       }
     } catch (err) {
       console.warn('[Sync] Manual refreshCatalog failed:', err);
@@ -362,19 +384,49 @@ export default function App() {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async (nextAppState) => {
       if (nextAppState === 'active') {
-        console.log('[AppState] App came to foreground — triggering fresh catalog + session sync...');
+        console.log('[AppState] App came to foreground — triggering delta catalog + session sync...');
         try {
-          const syncRes = await ApiClient.catalogSync(null);
-          if (syncRes.success) {
-            const updatedCatalog = {
-              examCatalog: syncRes.examCatalog || [],
-              noticesList: syncRes.noticesList || [],
-              usersList: [],
-            };
-            setNotices(updatedCatalog.noticesList);
-            setExamCatalog(updatedCatalog.examCatalog);
-            await saveCatalogToCache(updatedCatalog);
-            await setLastSyncTimestamp(syncRes.syncedAt);
+          // EGRESS-OPT: Debounce foreground sync — skip if last sync was < 5 minutes ago.
+          // Previously: fired a FULL sync (catalogSync(null)) on EVERY app foreground event.
+          // Now: uses lastSyncedAt for delta, and skips entirely if synced recently.
+          // This saves egress when users frequently switch between apps (e.g., phone + MockTest).
+          const lastSyncedAt = await getLastSyncTimestamp();
+          const sinceMs = lastSyncedAt ? Date.now() - new Date(lastSyncedAt).getTime() : Infinity;
+          if (sinceMs < 5 * 60 * 1000) {
+            // Synced less than 5 minutes ago — skip catalog fetch, data is fresh enough
+            console.log('[AppState] Skipping foreground sync — last sync was', Math.round(sinceMs / 1000), 'seconds ago');
+          } else {
+            const existing = await getCachedCatalog();
+            const hasEmptyCache = !existing || (existing.examCatalog || []).length === 0;
+            // EGRESS-OPT: Use delta sync (lastSyncedAt) not full dump (null)
+            const syncRes = await ApiClient.catalogSync(hasEmptyCache ? null : lastSyncedAt);
+            if (syncRes.success) {
+              let updatedCatalog;
+              if (syncRes.isFullSync || !existing) {
+                updatedCatalog = {
+                  examCatalog: syncRes.examCatalog || [],
+                  noticesList: syncRes.noticesList || [],
+                  usersList: [],
+                };
+              } else if (syncRes.hasNewData) {
+                updatedCatalog = mergeCatalogDelta(existing, {
+                  newCategories: syncRes.newCategories || [],
+                  newExams: syncRes.newExams || [],
+                  newSeries: syncRes.newSeries || [],
+                  newTests: syncRes.newTests || [],
+                  newNotices: syncRes.noticesList || syncRes.newNotices || [],
+                  updatedTestIds: syncRes.updatedTestIds || [],
+                });
+              } else {
+                updatedCatalog = existing;
+              }
+              if (updatedCatalog) {
+                setNotices(updatedCatalog.noticesList);
+                setExamCatalog(updatedCatalog.examCatalog);
+                await saveCatalogToCache(updatedCatalog);
+                await setLastSyncTimestamp(syncRes.syncedAt);
+              }
+            }
           }
         } catch (err) {
           console.warn('[AppState] Foreground catalog sync failed:', err);
@@ -664,19 +716,39 @@ export default function App() {
       }
     }
     
-    // Refresh notices list and exam catalog using catalogSync (always fresh, bypasses server in-memory cache)
+    // EGRESS-OPT: Use delta sync (lastSyncedAt) instead of full dump (null).
+    // refreshUserData is called from the profile/admin screen — previously triggered a full catalog re-fetch.
     try {
-      const syncRes = await ApiClient.catalogSync(null);
+      const lastSyncedAt = await getLastSyncTimestamp();
+      const existing = await getCachedCatalog();
+      const hasEmptyCache = !existing || (existing.examCatalog || []).length === 0;
+      const syncRes = await ApiClient.catalogSync(hasEmptyCache ? null : lastSyncedAt);
       if (syncRes.success) {
-        setNotices(syncRes.noticesList || []);
-        setExamCatalog(syncRes.examCatalog || []);
-        const updatedCatalog = {
-          examCatalog: syncRes.examCatalog || [],
-          noticesList: syncRes.noticesList || [],
-          usersList: [],
-        };
-        await saveCatalogToCache(updatedCatalog);
-        await setLastSyncTimestamp(syncRes.syncedAt);
+        let updatedCatalog;
+        if (syncRes.isFullSync || !existing) {
+          updatedCatalog = {
+            examCatalog: syncRes.examCatalog || [],
+            noticesList: syncRes.noticesList || [],
+            usersList: [],
+          };
+        } else if (syncRes.hasNewData) {
+          updatedCatalog = mergeCatalogDelta(existing, {
+            newCategories: syncRes.newCategories || [],
+            newExams: syncRes.newExams || [],
+            newSeries: syncRes.newSeries || [],
+            newTests: syncRes.newTests || [],
+            newNotices: syncRes.noticesList || syncRes.newNotices || [],
+            updatedTestIds: syncRes.updatedTestIds || [],
+          });
+        } else {
+          updatedCatalog = existing;
+        }
+        if (updatedCatalog) {
+          setNotices(updatedCatalog.noticesList);
+          setExamCatalog(updatedCatalog.examCatalog);
+          await saveCatalogToCache(updatedCatalog);
+          await setLastSyncTimestamp(syncRes.syncedAt);
+        }
       }
     } catch (syncErr) {
       console.warn('[Sync] refreshUserData catalog sync failed:', syncErr);

@@ -53,6 +53,9 @@ import {
   Send,
   Trophy,
   Loader2,
+  LayoutDashboard,
+  LogOut,
+  User
 } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
@@ -97,7 +100,7 @@ const MENU_ITEMS: { id: NavSection; label: string; labelHi: string; icon: any; c
 ];
 
 export default function DocumentLockerPage() {
-  const { currentUser, updateTrackedJobs, theme, toggleTheme, language } = useAuth();
+  const { currentUser, updateTrackedJobs, theme, toggleTheme, language, setLanguage } = useAuth();
   const router = useRouter();
   const t = TRANSLATIONS[language];
   const { isMobile } = useIsMobile();
@@ -980,7 +983,7 @@ export default function DocumentLockerPage() {
   // Auth requirement guard
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-200/90 dark:bg-slate-900 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 max-w-md w-full text-center shadow-xl">
           <FolderLock className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Student Document Locker</h2>
@@ -1001,7 +1004,7 @@ export default function DocumentLockerPage() {
   // Loading guard while fetching initial PIN and document status
   if (loading && !isUnlocked) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-200/90 dark:bg-slate-900 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-xl space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto">
             <RefreshCw className="w-6 h-6 animate-spin" />
@@ -1024,7 +1027,7 @@ export default function DocumentLockerPage() {
   // =========================================================================
   if (!userLockerPin && !isUnlocked) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-200/90 dark:bg-slate-900 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl space-y-6">
           
           {/* MockTest Hub Logo & Branding */}
@@ -1075,7 +1078,7 @@ export default function DocumentLockerPage() {
                   onChange={(e) => setNewPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   required
                   autoFocus
-                  className="w-full text-center text-2xl font-mono tracking-[0.5em] py-3 bg-slate-50 dark:bg-slate-850 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 font-bold"
+                  className="w-full text-center text-2xl font-mono tracking-[0.5em] py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 font-bold"
                 />
               </div>
 
@@ -1111,7 +1114,7 @@ export default function DocumentLockerPage() {
                   onChange={(e) => setConfirmPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   required
                   autoFocus
-                  className="w-full text-center text-2xl font-mono tracking-[0.5em] py-3 bg-slate-50 dark:bg-slate-850 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 font-bold"
+                  className="w-full text-center text-2xl font-mono tracking-[0.5em] py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 font-bold"
                 />
               </div>
 
@@ -1147,7 +1150,7 @@ export default function DocumentLockerPage() {
   // =========================================================================
   if (!isUnlocked) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-200/90 dark:bg-slate-900 flex items-center justify-center p-4">
         <div
           className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl space-y-6 transition-transform duration-200 ${
             isPinShake ? 'animate-shake translate-x-1 ring-2 ring-rose-500' : ''
@@ -1214,7 +1217,7 @@ export default function DocumentLockerPage() {
                 }}
                 required
                 autoFocus
-                className="w-full text-center text-2xl font-mono tracking-[0.5em] py-3 bg-slate-50 dark:bg-slate-850 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 font-bold"
+                className="w-full text-center text-2xl font-mono tracking-[0.5em] py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 font-bold"
               />
             </div>
 
@@ -1373,7 +1376,7 @@ export default function DocumentLockerPage() {
                       onChange={(e) => setForgotOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       required
                       autoFocus
-                      className="w-full text-center font-mono text-xl tracking-[0.4em] py-2.5 bg-slate-50 dark:bg-slate-850 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-black focus:ring-2 focus:ring-purple-500"
+                      className="w-full text-center font-mono text-xl tracking-[0.4em] py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-black focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
 
@@ -1390,7 +1393,7 @@ export default function DocumentLockerPage() {
                         value={forgotNewPinInput}
                         onChange={(e) => setForgotNewPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
                         required
-                        className="w-full text-center font-mono text-lg tracking-[0.3em] py-2 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
+                        className="w-full text-center font-mono text-lg tracking-[0.3em] py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
                       />
                     </div>
                     <div>
@@ -1405,7 +1408,7 @@ export default function DocumentLockerPage() {
                         value={forgotConfirmPinInput}
                         onChange={(e) => setForgotConfirmPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
                         required
-                        className="w-full text-center font-mono text-lg tracking-[0.3em] py-2 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
+                        className="w-full text-center font-mono text-lg tracking-[0.3em] py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
                       />
                     </div>
                   </div>
@@ -1450,76 +1453,101 @@ export default function DocumentLockerPage() {
   // VIEW 3: UNLOCKED DOCUMENT LOCKER DASHBOARD
   // =========================================================================
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-slate-200/90 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
       
-      {/* TOP NAVBAR */}
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <Link
-              href="/"
-              className="p-1.5 sm:p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition shrink-0"
-              title={language === 'hi' ? 'मुख्य पृष्ठ पर वापस जाएं' : 'Back to Home'}
-            >
-              <ArrowLeft className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
-            </Link>
-            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md shadow-purple-600/20 shrink-0">
-                <FolderLock className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="font-extrabold text-sm sm:text-lg text-slate-900 dark:text-white leading-tight truncate">
-                  {language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}
-                </h1>
-                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate hidden sm:block">
-                  {language === 'hi'
-                    ? 'प्रवेश पत्र, आवेदन फॉर्म और क्रेडेंशियल्स के लिए आपका निजी वॉल्ट'
-                    : 'Your private exam vault for Admit Cards, Application Forms & Credentials'}
-                </p>
-              </div>
+      {/* Header matching Profile / Test Series Page */}
+      <header className="h-18 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-40 shadow-xs">
+        <div className="flex items-center gap-2.5 sm:gap-4 lg:gap-6 min-w-0">
+          {/* Back button on top left corner */}
+          <Link 
+            href="/" 
+            className="btn-3d btn-3d-slate flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide shadow-sm shrink-0 cursor-pointer"
+            title={t.backToHome}
+          >
+            <ArrowLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <span className="hidden sm:inline">{t.backToHome}</span>
+            <span className="sm:hidden">{t.navHome}</span>
+          </Link>
+
+          <span className="h-6 w-[1px] bg-slate-200 dark:border-slate-800 shrink-0"></span>
+
+          <Link href="/" className="flex items-center gap-2.5 lg:gap-3 min-w-0">
+            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 lg:p-2 rounded-full shadow-sm flex items-center justify-center h-8.5 w-8.5 lg:h-10 lg:w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
+              <Trophy className="h-4.5 w-4.5 lg:h-5.5 lg:w-5.5 text-blue-600 dark:text-blue-400" />
             </div>
-          </div>
+            <div className="min-w-0">
+              <h1 className="font-extrabold text-xs lg:text-sm leading-tight text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
+              <p className="text-[8px] lg:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase truncate">{t.logoSub}</p>
+            </div>
+          </Link>
 
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-            {/* Lock Vault Button */}
-            <button
-              onClick={handleLockVault}
-              className="p-1.5 sm:px-3 sm:py-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0"
-              title="Lock Document Locker"
-            >
-              <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Lock Vault</span>
-            </button>
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-3 lg:gap-6 text-xs font-bold text-slate-600 dark:text-slate-400 shrink-0 ml-1 lg:ml-3">
+            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
+              <span>{t.navTestSeries}</span>
+            </Link>
+            <Link href="/typing-test" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
+              <span>{language === 'hi' ? 'टाइपिंग टेस्ट' : 'Typing Test'}</span>
+            </Link>
+            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
+              <span>{language === 'hi' ? 'सूचनाएं एवं अपडेट्स' : 'Notices & Announcements'}</span>
+            </Link>
+          </nav>
+        </div>
 
-            <button
-              onClick={toggleTheme}
-              className="p-1.5 sm:p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shrink-0"
-              aria-label="Toggle Theme"
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
+            <Link
+              href="/admin"
+              className="hidden md:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 transition px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-white"
             >
-              {theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />}
-            </button>
+              <LayoutDashboard className="h-3.5 w-3.5 text-blue-500" />
+              <span>{t.navAdmin}</span>
+            </Link>
+          )}
 
-            <button
-              onClick={() => {
-                setUploadExamName('');
-                setIsUploadModalOpen(true);
-              }}
-              className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl transition shadow-md shadow-blue-600/20 cursor-pointer active:scale-95 shrink-0"
-            >
-              <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>{language === 'hi' ? 'अपलोड' : 'Upload'}</span>
-            </button>
-          </div>
+          {/* Lock Vault Button */}
+          <button
+            onClick={handleLockVault}
+            className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0"
+            title="Lock Document Locker"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Lock Vault</span>
+          </button>
+
+          {/* Upload Button */}
+          <button
+            onClick={() => {
+              setUploadExamName('');
+              setIsUploadModalOpen(true);
+            }}
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-md shadow-blue-600/20 cursor-pointer active:scale-95 shrink-0"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{language === 'hi' ? 'अपलोड' : 'Upload'}</span>
+          </button>
+
+          {/* Language Selector */}
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+            className="px-2 py-1.5 lg:px-2.5 lg:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+          >
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+          </select>
+
+          {/* Theme Switcher */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
+            title={theme === 'light' ? t.themeDark : t.themeLight}
+          >
+            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4 text-amber-400" />}
+          </button>
         </div>
       </header>
-
-      {/* PIN SUCCESS TOAST */}
-      {pinSuccessMsg && (
-        <div className="fixed top-20 right-4 z-50 bg-emerald-600 text-white px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-3">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{pinSuccessMsg}</span>
-        </div>
-      )}
 
       {/* MAIN TWO-COLUMN SPLIT LAYOUT (LEFT SIDEBAR MENU + RIGHT DETAILS) */}
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col md:flex-row gap-6 items-start">
@@ -1527,7 +1555,7 @@ export default function DocumentLockerPage() {
         {/* ======================================================== */}
         {/* LEFT SIDEBAR MENU SECTION (280px - 320px)                */}
         {/* ======================================================== */}
-        <aside className="w-full md:w-80 shrink-0 space-y-4 md:sticky md:top-20">
+        <aside className="w-full md:w-80 shrink-0 space-y-4 md:sticky md:top-18">
           
           {/* 1. GOOGLE DRIVE SYNC CARD */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
@@ -1558,7 +1586,7 @@ export default function DocumentLockerPage() {
             {isDriveConnected ? (
               <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800 text-xs">
                 {driveEmail && (
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 truncate font-mono bg-slate-50 dark:bg-slate-850 px-2 py-1 rounded-lg border border-slate-200/60 dark:border-slate-800">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 truncate font-mono bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-lg border border-slate-200/60 dark:border-slate-800">
                     📧 {driveEmail}
                   </p>
                 )}
@@ -1701,7 +1729,7 @@ export default function DocumentLockerPage() {
                   setChangeConfirmPinInput('');
                   setIsChangePinModalOpen(true);
                 }}
-                className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 <KeyRound className="w-4 h-4" />
                 <span>Change Security PIN</span>
@@ -1717,7 +1745,7 @@ export default function DocumentLockerPage() {
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-bold"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-bold"
                 >
                   <option value="ALL">All Years</option>
                   {availableYears.map((yr) => (
@@ -1839,7 +1867,7 @@ export default function DocumentLockerPage() {
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-9 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                className="w-full pl-10 pr-9 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
               />
               {searchQuery && (
                 <button
@@ -1954,7 +1982,7 @@ export default function DocumentLockerPage() {
                           </div>
 
                           {/* Credentials Matrix Box - Registration No, Password, Roll Number in Same Horizontal Line */}
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-slate-50 dark:bg-slate-850 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-slate-50 dark:bg-slate-800 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
                             {/* Application / Reg No */}
                             <div className="min-w-0">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
@@ -2074,7 +2102,7 @@ export default function DocumentLockerPage() {
                               {examDocs.map((doc) => (
                                 <div
                                   key={doc.id}
-                                  className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-850 text-xs border border-slate-200/60 dark:border-slate-800"
+                                  className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200/60 dark:border-slate-800"
                                 >
                                   <div className="flex items-center gap-2 truncate">
                                     <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
@@ -2158,7 +2186,7 @@ export default function DocumentLockerPage() {
                         {/* Thumbnail / Header */}
                         <div
                           onClick={() => setPreviewDoc(doc)}
-                          className="h-32 w-full rounded-xl bg-slate-100 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-800 flex items-center justify-center overflow-hidden cursor-pointer relative group/thumb"
+                          className="h-32 w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-800 flex items-center justify-center overflow-hidden cursor-pointer relative group/thumb"
                         >
                           {doc.mimeType?.startsWith('image/') || doc.thumbnailUrl ? (
                             <img
@@ -2249,7 +2277,7 @@ export default function DocumentLockerPage() {
                   {filteredDocuments.map((doc) => (
                     <div
                       key={doc.id}
-                      className="p-3.5 sm:p-4 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-850 transition"
+                      className="p-3.5 sm:p-4 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
@@ -2346,7 +2374,7 @@ export default function DocumentLockerPage() {
                 <select
                   value={uploadDocType}
                   onChange={(e) => setUploadDocType(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-semibold"
+                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-semibold"
                 >
                   <option value="ADMIT_CARD">Admit Card / Hall Ticket</option>
                   <option value="APPLICATION_FORM">Application Form / Confirmation</option>
@@ -2367,7 +2395,7 @@ export default function DocumentLockerPage() {
                   placeholder="e.g. SSC CGL 2025 Tier-1 Admit Card"
                   value={uploadTitle}
                   onChange={(e) => setUploadTitle(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -2380,7 +2408,7 @@ export default function DocumentLockerPage() {
                   placeholder="e.g. SSC CGL 2025 or CTET July 2025"
                   value={uploadExamName}
                   onChange={(e) => setUploadExamName(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
                   A dedicated folder with this exam name will be auto-created in your Google Drive.
@@ -2396,7 +2424,7 @@ export default function DocumentLockerPage() {
                     type="number"
                     value={uploadYear}
                     onChange={(e) => setUploadYear(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-mono"
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-mono"
                   />
                 </div>
               </div>
@@ -2469,7 +2497,7 @@ export default function DocumentLockerPage() {
                   type="text"
                   value={examFormTitle}
                   onChange={(e) => setExamFormTitle(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -2482,7 +2510,7 @@ export default function DocumentLockerPage() {
                     type="text"
                     value={examFormAppNo}
                     onChange={(e) => setExamFormAppNo(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -2493,7 +2521,7 @@ export default function DocumentLockerPage() {
                     type="text"
                     value={examFormPassword}
                     onChange={(e) => setExamFormPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -2504,7 +2532,7 @@ export default function DocumentLockerPage() {
                     type="text"
                     value={examFormRollNo}
                     onChange={(e) => setExamFormRollNo(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
@@ -2517,7 +2545,7 @@ export default function DocumentLockerPage() {
                   value={examFormNotes}
                   onChange={(e) => setExamFormNotes(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -2569,7 +2597,7 @@ export default function DocumentLockerPage() {
                   value={examFormTitle}
                   onChange={(e) => setExamFormTitle(e.target.value)}
                   required
-                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -2582,7 +2610,7 @@ export default function DocumentLockerPage() {
                   placeholder="e.g. SSC, Banking, Railways"
                   value={examFormCategory}
                   onChange={(e) => setExamFormCategory(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -2595,7 +2623,7 @@ export default function DocumentLockerPage() {
                     placeholder="e.g. 2501009845"
                     value={examFormAppNo}
                     onChange={(e) => setExamFormAppNo(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -2607,7 +2635,7 @@ export default function DocumentLockerPage() {
                     placeholder="e.g. Pass@1234"
                     value={examFormPassword}
                     onChange={(e) => setExamFormPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
@@ -2619,7 +2647,7 @@ export default function DocumentLockerPage() {
                     placeholder="e.g. 2201019940"
                     value={examFormRollNo}
                     onChange={(e) => setExamFormRollNo(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
@@ -2666,7 +2694,7 @@ export default function DocumentLockerPage() {
               </button>
             </div>
 
-            <div className="flex-1 my-4 overflow-auto rounded-xl bg-slate-100 dark:bg-slate-850 flex items-center justify-center min-h-[300px]">
+            <div className="flex-1 my-4 overflow-auto rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center min-h-[300px]">
               {previewDoc.mimeType?.startsWith('image/') || previewDoc.thumbnailUrl ? (
                 <img
                   src={`https://drive.google.com/thumbnail?id=${previewDoc.driveFileId}&sz=w1000`}
@@ -2779,7 +2807,7 @@ export default function DocumentLockerPage() {
                     setDeleteExamError(null);
                   }}
                   required
-                  className="w-full text-center text-xl font-mono tracking-[0.4em] py-2.5 bg-slate-50 dark:bg-slate-850 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 font-bold"
+                  className="w-full text-center text-xl font-mono tracking-[0.4em] py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 font-bold"
                 />
               </div>
 
@@ -2864,7 +2892,7 @@ export default function DocumentLockerPage() {
                   value={changeOldPinInput}
                   onChange={(e) => setChangeOldPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   required
-                  className="w-full text-center font-mono text-base py-2.5 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
+                  className="w-full text-center font-mono text-base py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
                 />
               </div>
 
@@ -2881,7 +2909,7 @@ export default function DocumentLockerPage() {
                     value={changeNewPinInput}
                     onChange={(e) => setChangeNewPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
                     required
-                    className="w-full text-center font-mono text-base py-2 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
+                    className="w-full text-center font-mono text-base py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
                   />
                 </div>
                 <div>
@@ -2896,7 +2924,7 @@ export default function DocumentLockerPage() {
                     value={changeConfirmPinInput}
                     onChange={(e) => setChangeConfirmPinInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
                     required
-                    className="w-full text-center font-mono text-base py-2 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
+                    className="w-full text-center font-mono text-base py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
                   />
                 </div>
               </div>

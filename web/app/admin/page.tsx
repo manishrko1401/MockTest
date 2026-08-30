@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, CheckCheck, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles, Inbox, Share2, FolderLock, Cloud } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, CheckCheck, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles, Inbox, Share2, FolderLock, Cloud, Keyboard } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
@@ -28,6 +28,7 @@ import NoticeInnerDetailsManager from './components/NoticeInnerDetailsManager';
 import { InquiryManager } from './components/InquiryManager';
 import { ContactLinksManager } from './components/ContactLinksManager';
 import { DocumentLockerManager } from './components/DocumentLockerManager';
+import { TypingTestManager } from './components/TypingTestManager';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -115,9 +116,9 @@ export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const tabInitializedRef = React.useRef(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'locker' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'locker' | 'typing' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'locker' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'locker' | 'typing' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -713,7 +714,7 @@ export default function AdminAnalytics() {
     const role = currentUser.role;
     if (role === 'ADMIN') return true;
     if (role === 'TEST_CREATOR') {
-      return ['upload', 'categories', 'subcategories', 'subsubcategories', 'mocks'].includes(tab);
+      return ['upload', 'categories', 'subcategories', 'subsubcategories', 'mocks', 'typing'].includes(tab);
     }
     if (role === 'SUPPORT_TEAM') {
       return ['support', 'suggestions', 'inquiries', 'feedback', 'contact_links', 'locker'].includes(tab);
@@ -1446,7 +1447,7 @@ export default function AdminAnalytics() {
           </form>
 
           <div className="mt-6 border-t border-slate-800/80 pt-4 text-center">
-            <Link href="/" className="text-slate-500 hover:text-slate-350 text-xs font-bold inline-flex items-center gap-1.5 transition-colors">
+            <Link href="/" className="text-slate-500 hover:text-slate-300 text-xs font-bold inline-flex items-center gap-1.5 transition-colors">
               <ArrowLeft className="h-3.5 w-3.5" /> Return to Homepage
             </Link>
           </div>
@@ -1456,7 +1457,7 @@ export default function AdminAnalytics() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 overflow-hidden transition-colors duration-200">
+    <div className="flex h-screen bg-slate-200/90 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 overflow-hidden transition-colors duration-200">
       
       {/* SIDEBAR NAVIGATION BACKDROP ON MOBILE */}
       {isMounted && isMobile && mobileSidebarOpen && (
@@ -1675,7 +1676,20 @@ export default function AdminAnalytics() {
                 }`}
               >
                 <PlusCircle className="h-4 w-4" />
-                {language === 'hi' ? 'αñ«αÑëαñò αñƒαÑçαñ╕αÑìαñƒ αñ¬αÑìαñ░αñ¼αñéαñºαñ┐αññ αñòαñ░αÑçαñé' : 'Manage Mock Tests'}
+                {language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests'}
+              </button>
+            )}
+            {hasTabAccess('typing') && (
+              <button
+                onClick={() => selectTab('typing')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'typing'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Keyboard className="h-4 w-4" />
+                {language === 'hi' ? 'टाइपिंग टेस्ट एवं सिम्युलेटर' : 'Typing Exams & Simulator'}
               </button>
             )}
             {hasTabAccess('reports') && (
@@ -1830,12 +1844,12 @@ export default function AdminAnalytics() {
       <main className="flex-1 flex flex-col overflow-hidden">
         
         {/* TOP BAR */}
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 sm:px-8 flex items-center justify-between transition-colors duration-200">
+        <header className="h-18 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 sm:px-8 flex items-center justify-between transition-colors duration-200">
           <div className="flex items-center gap-3">
             {isMounted && isMobile && (
               <button
                 onClick={() => setMobileSidebarOpen(true)}
-                className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 cursor-pointer"
+                className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
               >
                 <Menu className="h-4.5 w-4.5" />
               </button>
@@ -1849,6 +1863,8 @@ export default function AdminAnalytics() {
                 ? (language === 'hi' ? 'αñëαñ¬αñ»αÑïαñùαñòαñ░αÑìαññαñ╛ αñ¬αÑìαñ░αñ¼αñéαñºαñ¿ αñöαñ░ αñ¬αñ╣αÑüαñüαñÜ αñ¿αñ┐αñ»αñéαññαÑìαñ░αñú' : 'User Management & Access Control')
                 : activeTab === 'locker'
                 ? (language === 'hi' ? 'दस्तावेज़ लॉकर और गूगल ड्राइव विश्लेषिकी' : 'Document Locker & Google Drive Intelligence')
+                : activeTab === 'typing'
+                ? (language === 'hi' ? 'टाइपिंग परीक्षा एवं सिम्युलेटर प्रबंधक' : 'Typing Exams & Simulator Manager')
                 : activeTab === 'notices'
                 ? (language === 'hi' ? 'लाइव अपडेट और नोटिस प्रबंधक' : 'Live Updates & Notices Manager')
                 : activeTab === 'notice_details'
@@ -1884,7 +1900,7 @@ export default function AdminAnalytics() {
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-              className="px-2 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+              className="px-2 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
             >
               <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
               <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">αñ╣αñ┐αñ¿αÑìαñªαÑÇ</option>
@@ -2136,12 +2152,12 @@ export default function AdminAnalytics() {
                       await refreshUsersList();
                       showToast('Users directory refreshed from database!');
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-755 text-white text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-800 text-white text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                     Refresh List
                   </button>
-                  <span className="text-xs font-bold text-slate-550 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
                     {usersList.length} user{usersList.length !== 1 ? 's' : ''} registered
                   </span>
                 </div>
@@ -2182,7 +2198,7 @@ export default function AdminAnalytics() {
 
               {/* Collapsible Edit Profile Form */}
               {!selectedUserId && (
-                <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setIsEditUserOpen(!isEditUserOpen)}
@@ -2201,7 +2217,7 @@ export default function AdminAnalytics() {
                               <p className="font-extrabold text-sm text-slate-900 dark:text-white">
                                 Edit Profile: {activeUser?.name || 'Loading...'}
                               </p>
-                              <p className="text-[11px] text-blue-650 dark:text-blue-400 font-bold">Roll Code: {activeUser?.candidateCode || 'None'}</p>
+                              <p className="text-[11px] text-blue-600 dark:text-blue-400 font-bold">Roll Code: {activeUser?.candidateCode || 'None'}</p>
                             </>
                           );
                         })()
@@ -2219,7 +2235,7 @@ export default function AdminAnalytics() {
                 </button>
 
                 {isEditUserOpen && (
-                  <div className="border-t border-slate-200 dark:border-slate-808 p-6 bg-white dark:bg-slate-955">
+                  <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-950">
                     {selectedUserId ? (
                       (() => {
                         const activeUser = usersList.find(u => u.id === selectedUserId);
@@ -2229,78 +2245,78 @@ export default function AdminAnalytics() {
                           <form onSubmit={handleSaveProfile} className="space-y-5">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
                                 <input
                                   type="text"
                                   required
                                   value={editName}
                                   onChange={(e) => setEditName(e.target.value)}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
                                 <input
                                   type="email"
                                   required
                                   value={editEmail}
                                   onChange={(e) => setEditEmail(e.target.value)}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Mobile Number</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Mobile Number</label>
                                 <input
                                   type="text"
                                   required
                                   maxLength={10}
                                   value={editMobile}
                                   onChange={(e) => setEditMobile(e.target.value.replace(/\D/g, ''))}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Referral Code</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referral Code</label>
                                 <input
                                   type="text"
                                   required
                                   value={editReferralCode}
                                   onChange={(e) => setEditReferralCode(e.target.value.toUpperCase())}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Referred By (Code)</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referred By (Code)</label>
                                 <input
                                   type="text"
                                   value={editReferredBy}
                                   onChange={(e) => setEditReferredBy(e.target.value.toUpperCase())}
                                   placeholder="None"
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Referrals Count</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referrals Count</label>
                                 <input
                                   type="number"
                                   required
                                   value={editReferralsCount}
                                   onChange={(e) => setEditReferralsCount(Number(e.target.value))}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">System Role</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">System Role</label>
                                 <select
                                   value={editRole}
                                   onChange={(e) => setEditRole(e.target.value as any)}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                                 >
                                   <option value="STUDENT">Student (Candidate)</option>
                                   <option value="TEST_CREATOR">Test Creator</option>
@@ -2311,11 +2327,11 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Subscription Pass Tier</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Subscription Pass Tier</label>
                                 <select
                                   value={editTier}
                                   onChange={(e) => setEditTier(e.target.value as any)}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                                 >
                                   <option value="None">None (No Pass)</option>
                                   <option value="Testbook Pass">Mock Test Pass (Basic)</option>
@@ -2324,48 +2340,48 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Account Password</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Account Password</label>
                                 <input
                                   type="text"
                                   required
                                   value={editPassword}
                                   onChange={(e) => setEditPassword(e.target.value)}
                                   placeholder="User password"
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               {editTier !== 'None' && (
                                 <>
                                   <div>
-                                    <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Purchased Date</label>
+                                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Purchased Date</label>
                                     <input
                                       type="date"
                                       required
                                       value={editPurchasedAt}
                                       onChange={(e) => setEditPurchasedAt(e.target.value)}
-                                      className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                                     />
                                   </div>
                                   <div>
-                                    <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Expiry Date</label>
+                                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Expiry Date</label>
                                     <input
                                       type="date"
                                       required
                                       value={editExpiry}
                                       onChange={(e) => setEditExpiry(e.target.value)}
-                                      className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                                     />
                                   </div>
                                 </>
                               )}
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Account Status</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Account Status</label>
                                 <select
                                   value={editIsBlocked ? 'true' : 'false'}
                                   onChange={(e) => setEditIsBlocked(e.target.value === 'true')}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                                 >
                                   <option value="false">Active (Unblocked)</option>
                                   <option value="true">Suspended (Blocked)</option>
@@ -2373,7 +2389,7 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Coins Balance</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Coins Balance</label>
                                 <div className="relative flex items-center">
                                   <span className="absolute left-3 text-amber-400">
                                     <Coins className="h-3.5 w-3.5 text-amber-400" />
@@ -2383,17 +2399,17 @@ export default function AdminAnalytics() {
                                     required
                                     value={editCoins}
                                     onChange={(e) => setEditCoins(Number(e.target.value))}
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                   />
                                 </div>
                               </div>
                             </div>
 
-                            <div className="flex justify-end gap-3 border-t border-slate-200 dark:border-slate-808 pt-4">
+                            <div className="flex justify-end gap-3 border-t border-slate-200 dark:border-slate-800 pt-4">
                               <button
                                 type="button"
                                 onClick={() => setSelectedUserId(null)}
-                                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-808 text-slate-650 dark:text-slate-400 font-bold py-2 px-5 rounded-lg text-xs transition cursor-pointer"
+                                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold py-2 px-5 rounded-lg text-xs transition cursor-pointer"
                               >
                                 Deselect
                               </button>
@@ -2418,7 +2434,7 @@ export default function AdminAnalytics() {
 
               {/* Users List & Search Card ΓÇö Full Width */}
               {!selectedUserId && (
-                <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                   <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Registered Users Directory</h3>
                   
@@ -2433,14 +2449,14 @@ export default function AdminAnalytics() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Search name, email, roll code..."
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-blue-500"
                       />
                     </div>
                     
                     <select
                       value={roleFilter}
                       onChange={(e) => setRoleFilter(e.target.value)}
-                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto"
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto"
                     >
                       <option value="ALL">All Roles</option>
                       <option value="STUDENT">Student</option>
@@ -2453,7 +2469,7 @@ export default function AdminAnalytics() {
                     <select
                       value={tierFilter}
                       onChange={(e) => setTierFilter(e.target.value)}
-                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto"
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto"
                     >
                       <option value="ALL">All Passes</option>
                       <option value="None">No Pass</option>
@@ -2464,7 +2480,7 @@ export default function AdminAnalytics() {
                     <select
                       value={presenceFilter}
                       onChange={(e: any) => setPresenceFilter(e.target.value)}
-                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto font-bold"
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto font-bold"
                     >
                       <option value="ALL">All Online & Offline</option>
                       <option value="ONLINE">🟢 Online Now</option>
@@ -2524,7 +2540,7 @@ export default function AdminAnalytics() {
                             >
                               <td className="py-3.5 px-4">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="font-bold text-slate-905 dark:text-white text-xs">{user.name}</p>
+                                  <p className="font-bold text-slate-900 dark:text-white text-xs">{user.name}</p>
                                   {isUserOnline(user.lastSeen) ? (
                                     <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider">
                                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -2536,7 +2552,7 @@ export default function AdminAnalytics() {
                                     </span>
                                   )}
                                   {user.isBlocked && (
-                                    <span className="bg-red-50 dark:bg-red-955/45 border border-red-200 dark:border-red-808 text-red-650 dark:text-red-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                    <span className="bg-red-50 dark:bg-red-950/45 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
                                       Blocked
                                     </span>
                                   )}
@@ -2544,7 +2560,7 @@ export default function AdminAnalytics() {
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400">{user.email}</p>
                                 {user.candidateCode && (
                                   <p className="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold mt-0.5">
-                                    Hub ID: <span className="font-mono bg-slate-100 dark:bg-slate-900 px-1 py-0.5 rounded text-[9px] border border-slate-200 dark:border-slate-808 text-slate-800 dark:text-white">{user.candidateCode}</span>
+                                    Hub ID: <span className="font-mono bg-slate-100 dark:bg-slate-900 px-1 py-0.5 rounded text-[9px] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white">{user.candidateCode}</span>
                                   </p>
                                 )}
                                 <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">Joined: {user.registeredDate}</p>
@@ -2556,14 +2572,14 @@ export default function AdminAnalytics() {
                               <td className="py-3.5 px-4">
                                 <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
                                   user.role === 'ADMIN' 
-                                    ? 'bg-red-50 dark:bg-red-955/40 border border-red-200 dark:border-red-808 text-red-700 dark:text-red-400' 
+                                    ? 'bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400' 
                                     : user.role === 'TEST_CREATOR' 
-                                    ? 'bg-purple-50 dark:bg-purple-955/40 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400' 
+                                    ? 'bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400' 
                                     : user.role === 'SUPPORT_TEAM' 
-                                    ? 'bg-green-50 dark:bg-green-955/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400' 
+                                    ? 'bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400' 
                                     : user.role === 'NOTICES_MANAGER' 
-                                    ? 'bg-amber-50 dark:bg-amber-955/40 border border-amber-200/50 text-amber-700 dark:text-amber-450' 
-                                    : 'bg-blue-50 dark:bg-blue-955/40 border border-blue-200 dark:border-blue-800 text-blue-750 dark:text-blue-450'
+                                    ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50 text-amber-700 dark:text-amber-400' 
+                                    : 'bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
                                 }`}>
                                   {user.role}
                                 </span>
@@ -2571,9 +2587,9 @@ export default function AdminAnalytics() {
                               <td className="py-3.5 px-4">
                                 <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
                                   user.subscriptionTier === 'Testbook Pass Pro'
-                                    ? 'bg-yellow-50 dark:bg-yellow-955/40 border border-yellow-200 dark:border-yellow-700 text-yellow-750 dark:text-yellow-405 font-extrabold'
+                                    ? 'bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-700 text-yellow-700 dark:text-yellow-400 font-extrabold'
                                     : user.subscriptionTier === 'Testbook Pass'
-                                    ? 'bg-green-50 dark:bg-green-955/40 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-400'
+                                    ? 'bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-400'
                                     : 'bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
                                 }`}>
                                   {user.subscriptionTier === 'None' ? 'No Pass' : user.subscriptionTier.replace('Testbook', 'Mock Test')}
@@ -2613,7 +2629,7 @@ export default function AdminAnalytics() {
                                     e.stopPropagation();
                                     handleSelectUser(user);
                                   }}
-                                  className="text-blue-650 hover:text-blue-750 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                 >
                                   View Dossier
                                 </button>
@@ -2658,7 +2674,7 @@ export default function AdminAnalytics() {
                       <button 
                         type="button"
                         onClick={() => setSelectedUserId(null)}
-                        className="flex items-center gap-2 text-slate-550 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-extrabold text-xs transition cursor-pointer"
+                        className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-extrabold text-xs transition cursor-pointer"
                       >
                         <ArrowLeft className="h-4 w-4" />
                         Back to Registered Users Directory
@@ -2670,7 +2686,7 @@ export default function AdminAnalytics() {
                           <div className="flex items-center gap-3 flex-wrap">
                             <h2 className="text-lg font-extrabold">{activeUser.name}</h2>
                             {activeUser.isBlocked && (
-                              <span className="bg-red-500/20 border border-red-400/30 text-red-205 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              <span className="bg-red-500/20 border border-red-400/30 text-red-200 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                                 Blocked
                               </span>
                             )}
@@ -2696,7 +2712,7 @@ export default function AdminAnalytics() {
 
                       {/* Main Details and Edit Form */}
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
-                        <div className="lg:col-span-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
+                        <div className="lg:col-span-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
                           <div className="flex items-center gap-3 mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">
                             <UserCheck className="h-5 w-5 text-blue-500" />
                             <h2 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Modify Profile Dossier</h2>
@@ -2705,74 +2721,74 @@ export default function AdminAnalytics() {
                           <form onSubmit={handleSaveProfile} className="space-y-5">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name (Read-Only)</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name (Read-Only)</label>
                                 <input
                                   type="text"
                                   readOnly
                                   value={editName}
-                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
+                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Email Address (Read-Only)</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Email Address (Read-Only)</label>
                                 <input
                                   type="email"
                                   readOnly
                                   value={editEmail}
-                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
+                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Mobile Number (Read-Only)</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Mobile Number (Read-Only)</label>
                                 <input
                                   type="text"
                                   readOnly
                                   value={editMobile}
-                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
+                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Referral Code</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referral Code</label>
                                 <input
                                   type="text"
                                   required
                                   value={editReferralCode}
                                   onChange={(e) => setEditReferralCode(e.target.value.toUpperCase())}
-                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Referred By (Code)</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referred By (Code)</label>
                                 <input
                                   type="text"
                                   value={editReferredBy}
                                   onChange={(e) => setEditReferredBy(e.target.value.toUpperCase())}
                                   placeholder="None"
-                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Referrals Count</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referrals Count</label>
                                 <input
                                   type="number"
                                   required
                                   value={editReferralsCount}
                                   onChange={(e) => setEditReferralsCount(Number(e.target.value))}
-                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">System Role</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">System Role</label>
                                 <select
                                   value={editRole}
                                   onChange={(e) => setEditRole(e.target.value as any)}
-                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                                 >
                                   <option value="STUDENT">Student (Candidate)</option>
                                   <option value="TEST_CREATOR">Test Creator</option>
@@ -2783,11 +2799,11 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Subscription Pass Tier</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Subscription Pass Tier</label>
                                 <select
                                   value={editTier}
                                   onChange={(e) => setEditTier(e.target.value as any)}
-                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                                 >
                                   <option value="None">None (No Pass)</option>
                                   <option value="Testbook Pass">Mock Test Pass (Basic)</option>
@@ -2796,65 +2812,65 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Coins Balance</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Coins Balance</label>
                                 <input
                                   type="number"
                                   required
                                   value={editCoins}
                                   onChange={(e) => setEditCoins(Number(e.target.value))}
-                                  className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Account Password (Read-Only)</label>
+                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Account Password (Read-Only)</label>
                                 <input
                                   type="text"
                                   readOnly
                                   value={editPassword}
-                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
+                                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
                                 />
                               </div>
                             </div>
 
                             {editTier !== 'None' && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/30 dark:bg-blue-955/5 p-4 rounded-xl border border-blue-100 dark:border-blue-950/20">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/30 dark:bg-blue-950/5 p-4 rounded-xl border border-blue-100 dark:border-blue-950/20">
                                 <div>
-                                  <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Purchased Date</label>
+                                  <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Purchased Date</label>
                                   <input
                                     type="date"
                                     required
                                     value={editPurchasedAt}
                                     onChange={(e) => setEditPurchasedAt(e.target.value)}
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Expiry Date</label>
+                                  <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Expiry Date</label>
                                   <input
                                     type="date"
                                     required
                                     value={editExpiry}
                                     onChange={(e) => setEditExpiry(e.target.value)}
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-550 cursor-pointer"
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                                   />
                                 </div>
                               </div>
                             )}
 
                             <div>
-                              <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Account Status</label>
+                              <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Account Status</label>
                               <select
                                 value={editIsBlocked ? 'true' : 'false'}
                                 onChange={(e) => setEditIsBlocked(e.target.value === 'true')}
-                                className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                               >
                                 <option value="false">Active (Unblocked)</option>
                                 <option value="true">Suspended (Blocked)</option>
                               </select>
                             </div>
 
-                            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-808">
+                            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                               <button
                                 type="submit"
                                 className="flex items-center gap-2 bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md cursor-pointer"
@@ -2868,32 +2884,32 @@ export default function AdminAnalytics() {
 
                         {/* Sidebar info */}
                         <div className="space-y-6">
-                          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
-                            <h3 className="font-extrabold text-sm text-slate-905 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-105 dark:border-slate-808">Access Rights</h3>
+                          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+                            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">Access Rights</h3>
                             <div className="space-y-4 text-xs">
-                              <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-905">
-                                <span className="font-medium text-slate-550">System Permission:</span>
+                              <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-900">
+                                <span className="font-medium text-slate-500">System Permission:</span>
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
                                   activeUser.role === 'ADMIN' 
-                                    ? 'bg-red-50 dark:bg-red-955/40 text-red-700 dark:text-red-400' 
+                                    ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400' 
                                     : activeUser.role === 'TEST_CREATOR' 
-                                    ? 'bg-purple-50 dark:bg-purple-955/40 text-purple-700 dark:text-purple-400' 
+                                    ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400' 
                                     : activeUser.role === 'SUPPORT_TEAM' 
-                                    ? 'bg-green-50 dark:bg-green-955/40 text-green-700 dark:text-green-400' 
+                                    ? 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400' 
                                     : activeUser.role === 'NOTICES_MANAGER' 
-                                    ? 'bg-amber-50 dark:bg-amber-955/40 text-amber-700 dark:text-amber-450' 
-                                    : 'bg-blue-50 dark:bg-blue-955/40 text-blue-755'
+                                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400' 
+                                    : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700'
                                 }`}>
                                   {activeUser.role}
                                 </span>
                               </div>
-                              <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-905">
-                                <span className="font-medium text-slate-550">Subscription Pass:</span>
+                              <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-900">
+                                <span className="font-medium text-slate-500">Subscription Pass:</span>
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
                                   activeUser.subscriptionTier === 'Testbook Pass Pro'
-                                    ? 'bg-yellow-50 dark:bg-yellow-955/40 text-yellow-755 font-black'
+                                    ? 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 font-black'
                                     : activeUser.subscriptionTier === 'Testbook Pass'
-                                    ? 'bg-green-50 dark:bg-green-955/40 text-green-700'
+                                    ? 'bg-green-50 dark:bg-green-950/40 text-green-700'
                                     : 'bg-slate-100 dark:bg-slate-900 text-slate-500'
                                 }`}>
                                   {activeUser.subscriptionTier === 'None' ? 'No Pass' : activeUser.subscriptionTier.replace('Testbook', 'Mock Test')}
@@ -2901,43 +2917,43 @@ export default function AdminAnalytics() {
                               </div>
                               {activeUser.subscriptionTier !== 'None' && (
                                 <>
-                                  <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-905">
-                                    <span className="font-medium text-slate-550">Purchased Date:</span>
+                                  <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-900">
+                                    <span className="font-medium text-slate-500">Purchased Date:</span>
                                     <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{activeUser.subscriptionPurchasedAt?.split('T')[0] || 'N/A'}</span>
                                   </div>
-                                  <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-905">
-                                    <span className="font-medium text-slate-550">Expires Date:</span>
+                                  <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-900">
+                                    <span className="font-medium text-slate-500">Expires Date:</span>
                                     <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{activeUser.subscriptionExpiresAt?.split('T')[0] || 'N/A'}</span>
                                   </div>
                                 </>
                               )}
                               <div className="flex justify-between items-center py-2">
-                                <span className="font-medium text-slate-555">Total Referrals:</span>
+                                <span className="font-medium text-slate-500">Total Referrals:</span>
                                 <span className="font-extrabold text-slate-900 dark:text-white">{activeUser.referralsCount || 0} user(s)</span>
                               </div>
                             </div>
                           </div>
 
                           {/* Referral Details Card */}
-                          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
-                            <h3 className="font-extrabold text-sm text-slate-905 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-105 dark:border-slate-808 flex items-center gap-2">
+                          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+                            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
                               <Gift className="h-4 w-4 text-amber-500" />
                               Referral Stats
                             </h3>
                             <div className="space-y-3.5 text-xs text-left">
-                              <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-905">
-                                <span className="font-medium text-slate-550">Total Invited:</span>
+                              <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-900">
+                                <span className="font-medium text-slate-500">Total Invited:</span>
                                 <span className="font-black text-slate-900 dark:text-white">{activeRefTotal} user(s)</span>
                               </div>
-                              <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-905">
-                                <span className="font-medium text-slate-550 flex items-center gap-1.5">
+                              <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-900">
+                                <span className="font-medium text-slate-500 flex items-center gap-1.5">
                                   <span className="h-2 w-2 rounded-full bg-green-500"></span>
                                   Successful Referrals:
                                 </span>
                                 <span className="font-black text-green-600 dark:text-green-400">{activeRefSuccessful} user(s)</span>
                               </div>
-                              <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-905">
-                                <span className="font-medium text-slate-550 flex items-center gap-1.5">
+                              <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-900">
+                                <span className="font-medium text-slate-500 flex items-center gap-1.5">
                                   <span className="h-2 w-2 rounded-full bg-amber-500"></span>
                                   Pending First Test:
                                 </span>
@@ -2947,20 +2963,20 @@ export default function AdminAnalytics() {
                               {/* Short list of referred users names */}
                               {activeRefTotal > 0 && (
                                 <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                                  <p className="text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider">Referred Friends List</p>
+                                  <p className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Referred Friends List</p>
                                   <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
                                     {activeReferredList.map(refUser => {
                                       const isSuccessful = activeRefSuccessfulList.some(u => u.id === refUser.id);
                                       return (
-                                        <div key={refUser.id} className="flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40 p-2 rounded-lg border border-slate-100 dark:border-slate-808/30 text-[10px]">
+                                        <div key={refUser.id} className="flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40 p-2 rounded-lg border border-slate-100 dark:border-slate-800/30 text-[10px]">
                                           <div>
-                                            <p className="font-bold text-slate-800 dark:text-slate-202">{refUser.name}</p>
+                                            <p className="font-bold text-slate-800 dark:text-slate-200">{refUser.name}</p>
                                             <p className="text-[9px] text-slate-400 dark:text-slate-500">{refUser.email.replace(/(.{2})(.*)(@.*)/, "$1***$3")}</p>
                                           </div>
                                           <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
                                             isSuccessful 
-                                              ? 'bg-green-50 dark:bg-green-955/20 text-green-700 dark:text-green-400 border border-green-200/50' 
-                                              : 'bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-450 border border-amber-200/50'
+                                              ? 'bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border border-green-200/50' 
+                                              : 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200/50'
                                           }`}>
                                             {isSuccessful ? 'SUCCESS' : 'PENDING'}
                                           </span>
@@ -2976,10 +2992,10 @@ export default function AdminAnalytics() {
                       </div>
 
                       {/* Full Width Exam Sitting History */}
-                      <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm text-left">
-                        <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-200 dark:border-slate-808 font-bold">
-                          <h3 className="font-extrabold text-sm text-slate-905 dark:text-white uppercase tracking-wider">Exam Sitting History</h3>
-                          <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-808 font-bold">
+                      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm text-left">
+                        <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-200 dark:border-slate-800 font-bold">
+                          <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Exam Sitting History</h3>
+                          <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 font-bold">
                             {activeUser.testSessions?.length || 0} sessions logged
                           </span>
                         </div>
@@ -2988,7 +3004,7 @@ export default function AdminAnalytics() {
                           <div className="space-y-4">
                             {activeUser.testSessions.map(session => (
                               <div key={session.id} className="border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-4 text-xs">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-808 pb-3 mb-3">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 mb-3">
                                   <div>
                                     <div className="flex items-center gap-2 flex-wrap">
                                       {(() => {
@@ -3008,10 +3024,10 @@ export default function AdminAnalytics() {
                                   <div className="flex items-center gap-2">
                                     <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
                                       session.status === 'COMPLETED'
-                                        ? 'bg-green-50 dark:bg-green-955/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
+                                        ? 'bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
                                         : session.status === 'AUTO_SUBMITTED'
-                                        ? 'bg-yellow-50 dark:bg-yellow-955/40 border border-yellow-200 dark:border-yellow-805 text-yellow-750 dark:text-yellow-405'
-                                        : 'bg-blue-50 dark:bg-blue-955/40 border border-blue-200 dark:border-blue-800 text-blue-750 dark:text-blue-400'
+                                        ? 'bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400'
+                                        : 'bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
                                     }`}>
                                       {session.status}
                                     </span>
@@ -3027,7 +3043,7 @@ export default function AdminAnalytics() {
                                         });
                                         setResetConfirmOpen(true);
                                       }}
-                                      className="text-red-650 hover:text-red-750 dark:text-red-400 dark:hover:text-red-300 font-bold flex items-center gap-1 bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-bold flex items-center gap-1 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       <RefreshCw className="h-3.5 w-3.5" /> Reset Attempt
                                     </button>
@@ -3036,21 +3052,21 @@ export default function AdminAnalytics() {
 
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
                                   <div>
-                                    <p className="text-slate-550 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Score Obtained</p>
+                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Score Obtained</p>
                                     <p className="text-sm font-black text-blue-600 dark:text-blue-400 mt-0.5">{session.score.toFixed(1)} / {session.maxScore}</p>
                                   </div>
                                   <div>
-                                    <p className="text-slate-550 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Accuracy Percentage</p>
+                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Accuracy Percentage</p>
                                     <p className="text-sm font-black text-green-600 dark:text-green-400 mt-0.5">{session.accuracy.toFixed(1)}%</p>
                                   </div>
                                   <div>
-                                    <p className="text-slate-550 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Time Spent</p>
-                                    <p className="text-sm font-black text-yellow-600 dark:text-yellow-405 mt-0.5">
+                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Time Spent</p>
+                                    <p className="text-sm font-black text-yellow-600 dark:text-yellow-400 mt-0.5">
                                       {formatExactTime(computeExactTimeSpent(session))}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-slate-555 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Cheat Violations</p>
+                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Cheat Violations</p>
                                     <p className={`text-sm font-black mt-0.5 ${session.violations > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-slate-300'}`}>
                                       {session.violations} Focus Alert{session.violations === 1 ? '' : 's'}
                                     </p>
@@ -3060,7 +3076,7 @@ export default function AdminAnalytics() {
                             ))}
                           </div>
                         ) : (
-                          <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-808 rounded-xl text-slate-500 text-xs">
+                          <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 text-xs">
                             <FileText className="h-8 w-8 mx-auto text-slate-400 dark:text-slate-600 mb-2" />
                             This user has not sat for any exam sittings yet.
                           </div>
@@ -3104,14 +3120,14 @@ export default function AdminAnalytics() {
                 <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                 <div className="text-xs">
                   <p className="font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-1">Live Updates Engine</p>
-                  <p className="text-slate-655 dark:text-slate-400 font-semibold leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
                     Publish exam alerts, admit card download releases, and result sheets directly to the homepage updates grid. All additions will update client dashboards instantly via context state.
                   </p>
                 </div>
               </div>
 
               {/* Collapsible Publish Card */}
-              <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setIsCreateNoticeOpen(!isCreateNoticeOpen)}
@@ -3132,7 +3148,7 @@ export default function AdminAnalytics() {
                 </button>
 
                 {isCreateNoticeOpen && (
-                  <div className="border-t border-slate-200 dark:border-slate-808 p-6 bg-white dark:bg-slate-950">
+                  <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-950">
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (!noticeTitle.trim()) return;
@@ -3147,11 +3163,11 @@ export default function AdminAnalytics() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Update Category</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Update Category</label>
                           <select
                             value={noticeCategory}
                             onChange={(e) => setNoticeCategory(e.target.value as any)}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                           >
                             <option value="notice">Live Notices & Announcements</option>
                             <option value="result">Live Result Section</option>
@@ -3160,25 +3176,25 @@ export default function AdminAnalytics() {
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Label Tag (e.g. EXAM DATE, MERIT LIST)</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Label Tag (e.g. EXAM DATE, MERIT LIST)</label>
                           <input
                             type="text"
                             required
                             value={noticeType}
                             onChange={(e) => setNoticeType(e.target.value)}
                             placeholder="EXAM DATE, RESULT, ADMISSION, etc."
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
                           <input
                             type="date"
                             required
                             value={noticeDate}
                             onChange={(e) => setNoticeDate(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                           />
                         </div>
                       </div>
@@ -3186,25 +3202,25 @@ export default function AdminAnalytics() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {noticeCategory === 'notice' && (
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Application Last Date (Optional)</label>
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Application Last Date (Optional)</label>
                             <input
                               type="date"
                               value={noticeLastDate}
                               onChange={(e) => setNoticeLastDate(e.target.value)}
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                             />
                           </div>
                         )}
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Attachment URL / File (Optional)</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Attachment URL / File (Optional)</label>
                           <div className="flex gap-2">
                             <input
                               type="text"
                               value={noticeUrl}
                               onChange={(e) => setNoticeUrl(e.target.value)}
                               placeholder="https://example.com/advisory or upload file"
-                              className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                              className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                             />
                             <input
                               type="file"
@@ -3225,7 +3241,7 @@ export default function AdminAnalytics() {
                             />
                             <label
                               htmlFor={isUploadingNotice ? undefined : "notice-attachment-upload"}
-                              className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
+                              className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
                                 isUploadingNotice ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
                               }`}
                             >
@@ -3238,24 +3254,24 @@ export default function AdminAnalytics() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Update Heading Title (English)</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Update Heading Title (English)</label>
                           <textarea
                             required
                             value={noticeTitle}
                             onChange={(e) => setNoticeTitle(e.target.value)}
                             placeholder="Type notice title description in English..."
                             rows={3}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Update Heading Title (Hindi)</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Update Heading Title (Hindi)</label>
                           <textarea
                             value={noticeTitleHi}
                             onChange={(e) => setNoticeTitleHi(e.target.value)}
                             placeholder="टाइटल हिन्दी में दर्ज करें (वैकल्पिक)..."
                             rows={3}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
                           />
                         </div>
                       </div>
@@ -3274,7 +3290,7 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Active Board List ΓÇö Full Width */}
-              <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                     <Bell className="h-4.5 w-4.5 text-blue-500" /> Active Updates Board
@@ -3288,7 +3304,7 @@ export default function AdminAnalytics() {
                       value={noticeSearch}
                       onChange={(e) => setNoticeSearch(e.target.value)}
                       placeholder="Search updates..."
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -3296,7 +3312,7 @@ export default function AdminAnalytics() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-808 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
                         <th className="py-3 px-4">Heading Title</th>
                         <th className="py-3 px-4">Category</th>
                         <th className="py-3 px-4">Label Tag</th>
@@ -3315,10 +3331,10 @@ export default function AdminAnalytics() {
                           n.type.toLowerCase().includes(noticeSearch.toLowerCase()) ||
                           n.category.toLowerCase().includes(noticeSearch.toLowerCase())
                         ).map((notice) => (
-                          <tr key={notice.id} className="border-b border-slate-200 dark:border-slate-808 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-300">
+                          <tr key={notice.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-300">
                             <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 max-w-md">
                               {notice.url ? (
-                                <a href={notice.url} target="_blank" rel="noopener noreferrer" className="text-blue-650 hover:text-blue-750 dark:text-blue-400 dark:hover:text-blue-350 hover:underline flex items-center gap-1 mb-1">
+                                <a href={notice.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline flex items-center gap-1 mb-1">
                                   {notice.title}
                                   <ChevronRight className="h-3 w-3 inline animate-pulse" />
                                 </a>
@@ -3326,7 +3342,7 @@ export default function AdminAnalytics() {
                                 <span className="block mb-1">{notice.title}</span>
                               )}
                               {notice.lastDate && (
-                                <span className="block text-[10px] text-red-650 dark:text-red-500 font-extrabold mt-1 uppercase tracking-wider">
+                                <span className="block text-[10px] text-red-600 dark:text-red-500 font-extrabold mt-1 uppercase tracking-wider">
                                   Last Date: {notice.lastDate}
                                 </span>
                               )}
@@ -3334,28 +3350,28 @@ export default function AdminAnalytics() {
                             <td className="py-3 px-4 capitalize">
                               <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
                                 notice.category === 'notice'
-                                  ? 'bg-blue-50 dark:bg-blue-955/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
+                                  ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
                                   : notice.category === 'result'
-                                  ? 'bg-yellow-50 dark:bg-yellow-955/40 text-yellow-750 dark:text-yellow-405 border border-yellow-200 dark:border-yellow-900'
-                                  : 'bg-green-50 dark:bg-green-955/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900'
+                                  ? 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-900'
+                                  : 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900'
                               }`}>
                                 {notice.category === 'notice' ? 'Announcement' : notice.category === 'result' ? 'Result' : 'Admit Card'}
                               </span>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="bg-slate-105 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-[10px]">{notice.type}</span>
+                              <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-[10px]">{notice.type}</span>
                             </td>
                             <td className="py-3 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400">{notice.date}</td>
                             <td className="py-3 px-4 text-right flex items-center justify-end gap-2">
                               <button
                                 onClick={() => selectTab('notice_details')}
-                                className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-955/40 transition px-2.5 py-1.5 rounded cursor-pointer flex items-center gap-1"
+                                className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-950/40 transition px-2.5 py-1.5 rounded cursor-pointer flex items-center gap-1"
                               >
                                 <Layers className="h-3 w-3" /> Breakdown
                               </button>
                               <button
                                 onClick={() => handleOpenEditAnnouncement(notice)}
-                                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                               >
                                 Edit
                               </button>
@@ -3364,7 +3380,7 @@ export default function AdminAnalytics() {
                                   deleteNotice(notice.id);
                                   showToast('Notice deleted successfully.');
                                 }}
-                                className="text-red-600 hover:text-red-700 dark:text-red-405 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                               >
                                 Delete
                               </button>
@@ -3465,7 +3481,7 @@ export default function AdminAnalytics() {
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                               Category Name (English)
                             </label>
                             <input
@@ -3474,11 +3490,11 @@ export default function AdminAnalytics() {
                               value={newCategoryName}
                               onChange={(e) => setNewCategoryName(e.target.value)}
                               placeholder="e.g. UPSC Exams, SSC Exams"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                               Category Name (Hindi)
                             </label>
                             <input
@@ -3486,12 +3502,12 @@ export default function AdminAnalytics() {
                               value={newCategoryNameHi}
                               onChange={(e) => setNewCategoryNameHi(e.target.value)}
                               placeholder="e.g. यूपीएससी परीक्षा, एसएससी परीक्षा"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                             Category Logo Image URL
                           </label>
                           <div className="flex gap-2">
@@ -3500,7 +3516,7 @@ export default function AdminAnalytics() {
                               value={newCategoryLogoUrl}
                               onChange={(e) => setNewCategoryLogoUrl(e.target.value)}
                               placeholder="e.g. https://example.com/logo.png or upload image"
-                              className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-805 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                             />
                             <input
                               type="file"
@@ -3521,7 +3537,7 @@ export default function AdminAnalytics() {
                             />
                             <label
                               htmlFor={isUploadingCategoryLogo ? undefined : "new-category-logo-upload"}
-                              className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
+                              className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
                                 isUploadingCategoryLogo ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
                               }`}
                             >
@@ -3531,7 +3547,7 @@ export default function AdminAnalytics() {
                           </div>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                             Description (e.g. SSC CGL, CHSL, MTS, GD Constable)
                           </label>
                           <input
@@ -3539,11 +3555,11 @@ export default function AdminAnalytics() {
                             value={newCategoryDescription}
                             onChange={(e) => setNewCategoryDescription(e.target.value)}
                             placeholder="List sub-exams or a brief description"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                             Test Count / Badge Text (e.g. 45+ Tests)
                           </label>
                           <input
@@ -3551,7 +3567,7 @@ export default function AdminAnalytics() {
                             value={newCategoryCountText}
                             onChange={(e) => setNewCategoryCountText(e.target.value)}
                             placeholder="e.g. 45+ Tests"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                           />
                         </div>
                         <div className="flex items-center gap-2 pt-1.5">
@@ -3562,7 +3578,7 @@ export default function AdminAnalytics() {
                             onChange={(e) => setNewCategoryIsPopular(e.target.checked)}
                             className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                           />
-                          <label htmlFor="newCategoryIsPopular" className="text-xs font-bold text-slate-700 dark:text-slate-350 cursor-pointer">
+                          <label htmlFor="newCategoryIsPopular" className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
                             Show in Popular Exam Mock Series section on homepage
                           </label>
                         </div>
@@ -3620,7 +3636,7 @@ export default function AdminAnalytics() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-808 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
+                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
                           <th className="py-3 px-4">Logo</th>
                           <th className="py-3 px-4">Name</th>
                           <th className="py-3 px-4">Description</th>
@@ -3671,7 +3687,7 @@ export default function AdminAnalytics() {
                                     />
                                     <label
                                       htmlFor={isUploadingCategoryLogo ? undefined : `edit-category-logo-${cat.id}`}
-                                      className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 p-1.5 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center justify-center cursor-pointer shrink-0 ${
+                                      className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 p-1.5 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center justify-center cursor-pointer shrink-0 ${
                                         isUploadingCategoryLogo ? "opacity-50 pointer-events-none" : ""
                                       }`}
                                       title="Upload Logo to Tigris"
@@ -3769,13 +3785,13 @@ export default function AdminAnalytics() {
                                           showToast('Category updated successfully.');
                                         }
                                       }}
-                                      className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-955/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Save
                                     </button>
                                     <button
                                       onClick={() => setEditingCategoryId(null)}
-                                      className="text-slate-550 dark:text-slate-405 font-bold bg-slate-50 dark:bg-slate-955/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-slate-500 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Cancel
                                     </button>
@@ -3809,7 +3825,7 @@ export default function AdminAnalytics() {
                                           showToast('Category moved down successfully.');
                                         }
                                       }}
-                                      className="text-slate-500 hover:text-slate-705 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
                                       title="Move Down"
                                     >
                                       <ArrowDown className="w-3.5 h-3.5" />
@@ -3823,7 +3839,7 @@ export default function AdminAnalytics() {
                                         setEditingCategoryDescription(cat.description || '');
                                         setEditingCategoryCountText(cat.countText || '');
                                       }}
-                                      className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-blue-500 hover:text-blue-600 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Edit
                                     </button>
@@ -3832,7 +3848,7 @@ export default function AdminAnalytics() {
                                         deleteCategory(cat.id);
                                         showToast('Category deleted successfully.');
                                       }}
-                                      className="text-red-500 hover:text-red-655 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-105 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-red-500 hover:text-red-700 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Delete
                                     </button>
@@ -3869,9 +3885,9 @@ export default function AdminAnalytics() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Sub-Categories</h2>
-                    <p className="text-xs text-slate-505 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete exam sub-categories under main categories</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete exam sub-categories under main categories</p>
                   </div>
-                  <span className="text-xs font-bold text-slate-505 dark:text-slate-400 bg-slate-105 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 px-3 py-1.5 rounded-lg">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
                     {filteredSubCategories.length} sub-categor{filteredSubCategories.length !== 1 ? 'ies' : 'y'} shown
                   </span>
                 </div>
@@ -3893,12 +3909,12 @@ export default function AdminAnalytics() {
                       </div>
                     </div>
                     <div className={`transition-transform duration-200 ${isCreateSubCategoryOpen ? 'rotate-180' : ''}`}>
-                      <ArrowDown className="h-4 w-4 text-slate-505" />
+                      <ArrowDown className="h-4 w-4 text-slate-500" />
                     </div>
                   </button>
 
                   {isCreateSubCategoryOpen && (
-                    <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-955">
+                    <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-950">
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
@@ -3923,7 +3939,7 @@ export default function AdminAnalytics() {
                               required
                               value={newSubCategoryParent}
                               onChange={(e) => setNewSubCategoryParent(e.target.value)}
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                             >
                               <option value="">-- Select Parent Category --</option>
                               {examCatalog.map(cat => (
@@ -3942,7 +3958,7 @@ export default function AdminAnalytics() {
                               value={newSubCategoryName}
                               onChange={(e) => setNewSubCategoryName(e.target.value)}
                               placeholder="e.g. SSC CGL, IBPS RRB PO"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                             />
                           </div>
 
@@ -3955,7 +3971,7 @@ export default function AdminAnalytics() {
                               value={newSubCategoryNameHi}
                               onChange={(e) => setNewSubCategoryNameHi(e.target.value)}
                               placeholder="e.g. एसएससी सीजीएल, आईबीपीएस आरआरबी पीओ"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                             />
                           </div>
                         </div>
@@ -4015,7 +4031,7 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Subcategories Table Card — Full Width */}
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-sm p-6">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
                   <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
                     Active Sub Categories
                   </h3>
@@ -4023,7 +4039,7 @@ export default function AdminAnalytics() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-808 text-slate-404 uppercase text-[9px] tracking-wider font-extrabold">
+                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
                           <th className="py-3 px-4">Parent Category</th>
                           <th className="py-3 px-4">Sub Category Name</th>
                           <th className="py-3 px-4">Mock Tests Count</th>
@@ -4041,19 +4057,19 @@ export default function AdminAnalytics() {
                           filteredSubCategories.map(({ cat, sub }) => (
                             <tr key={sub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                               <td className="py-3.5 px-4 font-bold text-slate-500">{cat.name}</td>
-                              <td className="py-3.5 px-4 font-bold text-slate-909 dark:text-slate-202">
+                              <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
                                 {editingSubCategoryId === sub.id ? (
                                   <input
                                     type="text"
                                     value={editingSubCategoryName}
                                     onChange={(e) => setEditingSubCategoryName(e.target.value)}
-                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-505 font-bold w-full max-w-xs"
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
                                   />
                                 ) : (
                                   <span>{sub.name}</span>
                                 )}
                               </td>
-                              <td className="py-3.5 px-4 font-semibold text-slate-505">{sub.tests.length} mock test(s)</td>
+                              <td className="py-3.5 px-4 font-semibold text-slate-500">{sub.tests.length} mock test(s)</td>
                               <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
                                 {editingSubCategoryId === sub.id ? (
                                   <>
@@ -4065,13 +4081,13 @@ export default function AdminAnalytics() {
                                           showToast('Subcategory renamed successfully.');
                                         }
                                       }}
-                                      className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-909/30 hover:bg-green-105 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Save
                                     </button>
                                     <button
                                       onClick={() => setEditingSubCategoryId(null)}
-                                      className="text-slate-550 dark:text-slate-405 font-bold bg-slate-50 dark:bg-slate-955/20 border border-slate-202 dark:border-slate-808/30 hover:bg-slate-105 dark:hover:bg-slate-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-slate-500 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Cancel
                                     </button>
@@ -4089,7 +4105,7 @@ export default function AdminAnalytics() {
                                           showToast('Subcategory moved up successfully.');
                                         }
                                       }}
-                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-202 dark:border-slate-800 cursor-pointer"
+                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
                                       title="Move Up"
                                     >
                                       <ArrowUp className="w-3.5 h-3.5" />
@@ -4105,7 +4121,7 @@ export default function AdminAnalytics() {
                                           showToast('Subcategory moved down successfully.');
                                         }
                                       }}
-                                      className="text-slate-500 hover:text-slate-705 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-55 dark:bg-slate-909 border border-slate-202 dark:border-slate-800 cursor-pointer"
+                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
                                       title="Move Down"
                                     >
                                       <ArrowDown className="w-3.5 h-3.5" />
@@ -4115,7 +4131,7 @@ export default function AdminAnalytics() {
                                         setEditingSubCategoryId(sub.id);
                                         setEditingSubCategoryName(sub.name);
                                       }}
-                                      className="text-blue-500 hover:text-blue-650 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-blue-500 hover:text-blue-600 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Edit
                                     </button>
@@ -4124,7 +4140,7 @@ export default function AdminAnalytics() {
                                         deleteSubCategory(cat.id, sub.id);
                                         showToast('Subcategory deleted successfully.');
                                       }}
-                                      className="text-red-500 hover:text-red-655 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-105 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-red-500 hover:text-red-700 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Delete
                                     </button>
@@ -4191,7 +4207,7 @@ export default function AdminAnalytics() {
                       </div>
                     </div>
                     <div className={`transition-transform duration-200 ${isCreateSubSubCategoryOpen ? 'rotate-180' : ''}`}>
-                      <ArrowDown className="h-4 w-4 text-slate-505" />
+                      <ArrowDown className="h-4 w-4 text-slate-500" />
                     </div>
                   </button>
 
@@ -4214,7 +4230,7 @@ export default function AdminAnalytics() {
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                               Parent Category
                             </label>
                             <select
@@ -4224,7 +4240,7 @@ export default function AdminAnalytics() {
                                 setNewSubSubCategoryParentCategory(e.target.value);
                                 setNewSubSubCategoryParentSubCategory('');
                               }}
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                             >
                               <option value="">-- Select Parent Category --</option>
                               {examCatalog.map(cat => (
@@ -4234,7 +4250,7 @@ export default function AdminAnalytics() {
                           </div>
                           
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                               Parent Sub Category
                             </label>
                             <select
@@ -4242,7 +4258,7 @@ export default function AdminAnalytics() {
                               value={newSubSubCategoryParentSubCategory}
                               onChange={(e) => setNewSubSubCategoryParentSubCategory(e.target.value)}
                               disabled={!newSubSubCategoryParentCategory}
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
                             >
                               <option value="">-- Select Parent Sub Category --</option>
                               {examCatalog.find(c => c.id === newSubSubCategoryParentCategory)?.subCategories.map(sub => (
@@ -4252,7 +4268,7 @@ export default function AdminAnalytics() {
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                               Sub-Sub Category Name (English)
                             </label>
                             <input
@@ -4261,12 +4277,12 @@ export default function AdminAnalytics() {
                               value={newSubSubCategoryName}
                               onChange={(e) => setNewSubSubCategoryName(e.target.value)}
                               placeholder="e.g. Full Test, PYP"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2">
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                               Sub-Sub Category Name (Hindi)
                             </label>
                             <input
@@ -4274,7 +4290,7 @@ export default function AdminAnalytics() {
                               value={newSubSubCategoryNameHi}
                               onChange={(e) => setNewSubSubCategoryNameHi(e.target.value)}
                               placeholder="e.g. फुल मॉक टेस्ट, अध्याय-वार टेस्ट"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                             />
                           </div>
                         </div>
@@ -4351,7 +4367,7 @@ export default function AdminAnalytics() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-808 text-slate-404 uppercase text-[9px] tracking-wider font-extrabold">
+                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
                           <th className="py-3 px-4">Parent Category</th>
                           <th className="py-3 px-4">Sub Category</th>
                           <th className="py-3 px-4">Sub-Sub Category Name</th>
@@ -4371,19 +4387,19 @@ export default function AdminAnalytics() {
                             <tr key={subsub.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                               <td className="py-3.5 px-4 font-bold text-slate-500">{cat.name}</td>
                               <td className="py-3.5 px-4 font-bold text-slate-500">{sub.name}</td>
-                              <td className="py-3.5 px-4 font-bold text-slate-909 dark:text-slate-202">
+                              <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-200">
                                 {editingSubSubCategoryId === subsub.id ? (
                                   <input
                                     type="text"
                                     value={editingSubSubCategoryName}
                                     onChange={(e) => setEditingSubSubCategoryName(e.target.value)}
-                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-205 dark:border-slate-808 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
                                   />
                                 ) : (
                                   <span>{subsub.name}</span>
                                 )}
                               </td>
-                              <td className="py-3.5 px-4 font-semibold text-slate-505">{subsub.tests.length} mock test(s)</td>
+                              <td className="py-3.5 px-4 font-semibold text-slate-500">{subsub.tests.length} mock test(s)</td>
                               <td className="py-3.5 px-4 text-right flex items-center justify-end gap-2">
                                 {editingSubSubCategoryId === subsub.id ? (
                                   <>
@@ -4395,13 +4411,13 @@ export default function AdminAnalytics() {
                                           showToast('Sub-subcategory renamed successfully.');
                                         }
                                       }}
-                                      className="text-green-555 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-909/30 hover:bg-green-105 dark:hover:bg-green-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 hover:bg-green-100 dark:hover:bg-green-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Save
                                     </button>
                                     <button
                                       onClick={() => setEditingSubSubCategoryId(null)}
-                                      className="text-slate-550 dark:text-slate-405 font-bold bg-slate-50 dark:bg-slate-955/20 border border-slate-202 dark:border-slate-808/30 hover:bg-slate-105 dark:hover:bg-slate-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-slate-500 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Cancel
                                     </button>
@@ -4419,7 +4435,7 @@ export default function AdminAnalytics() {
                                           showToast('Sub-subcategory moved up successfully.');
                                         }
                                       }}
-                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-202 dark:border-slate-800 cursor-pointer"
+                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
                                       title="Move Up"
                                     >
                                       <ArrowUp className="w-3.5 h-3.5" />
@@ -4435,7 +4451,7 @@ export default function AdminAnalytics() {
                                           showToast('Sub-subcategory moved down successfully.');
                                         }
                                       }}
-                                      className="text-slate-500 hover:text-slate-705 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-55 dark:bg-slate-909 border border-slate-202 dark:border-slate-800 cursor-pointer"
+                                      className="text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:pointer-events-none p-1.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer"
                                       title="Move Down"
                                     >
                                       <ArrowDown className="w-3.5 h-3.5" />
@@ -4445,7 +4461,7 @@ export default function AdminAnalytics() {
                                         setEditingSubSubCategoryId(subsub.id);
                                         setEditingSubSubCategoryName(subsub.name);
                                       }}
-                                      className="text-blue-500 hover:text-blue-655 font-bold bg-blue-50 dark:bg-blue-955/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-105 dark:hover:bg-blue-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-blue-500 hover:text-blue-700 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Edit
                                     </button>
@@ -4454,7 +4470,7 @@ export default function AdminAnalytics() {
                                         deleteSubSubCategory(cat.id, sub.id, subsub.id);
                                         showToast('Sub-subcategory deleted successfully.');
                                       }}
-                                      className="text-red-500 hover:text-red-655 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-105 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-red-500 hover:text-red-700 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Delete
                                     </button>
@@ -4546,14 +4562,14 @@ export default function AdminAnalytics() {
                     placeholder={language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñåαñêαñíαÑÇ, αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ αñ»αñ╛ αñ╕αñéαñªαÑçαñ╢ αñ╕αÑç αñûαÑïαñ£αÑçαñé...' : 'Search by Question ID, Test, or message...'}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-xl text-xs text-slate-850 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors font-semibold"
+                    className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors font-semibold"
                   />
                 </div>
                 
                 <div className="flex gap-4 shrink-0 text-xs font-bold text-slate-500 dark:text-slate-400">
                   <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-red-500 animate-pulse" />
-                    <span>{language === 'hi' ? 'αñòαÑüαñ▓ αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ:' : 'Total Reports:'} <strong className="text-slate-850 dark:text-white font-extrabold">{reportedQuestionsList.length}</strong></span>
+                    <span>{language === 'hi' ? 'αñòαÑüαñ▓ αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ:' : 'Total Reports:'} <strong className="text-slate-800 dark:text-white font-extrabold">{reportedQuestionsList.length}</strong></span>
                   </div>
                 </div>
               </div>
@@ -4610,8 +4626,8 @@ export default function AdminAnalytics() {
                               <td className="py-4 px-4 text-slate-500 max-w-[200px] truncate font-medium" title={rq.questionText}>
                                 {rq.questionText || <span className="italic text-slate-400 font-normal">No question sample</span>}
                               </td>
-                              <td className="py-4 px-4 text-slate-700 dark:text-slate-350 max-w-[250px] whitespace-normal font-semibold">
-                                <div className="bg-red-50/40 dark:bg-red-950/10 border border-red-100 dark:border-red-950 p-2.5 rounded-lg text-slate-855 dark:text-slate-300">
+                              <td className="py-4 px-4 text-slate-700 dark:text-slate-300 max-w-[250px] whitespace-normal font-semibold">
+                                <div className="bg-red-50/40 dark:bg-red-950/10 border border-red-100 dark:border-red-950 p-2.5 rounded-lg text-slate-900 dark:text-slate-300">
                                   {rq.message}
                                 </div>
                               </td>
@@ -4624,7 +4640,7 @@ export default function AdminAnalytics() {
                                   <span className="italic text-slate-400 font-normal">Guest / N/A</span>
                                 )}
                               </td>
-                              <td className="py-4 px-4 text-slate-450 dark:text-slate-500 whitespace-nowrap font-semibold">
+                              <td className="py-4 px-4 text-slate-400 dark:text-slate-500 whitespace-nowrap font-semibold">
                                 {rq.createdAt}
                               </td>
                               <td className="py-4 px-4 text-right whitespace-nowrap">
@@ -4642,7 +4658,7 @@ export default function AdminAnalytics() {
                                       }
                                     }
                                   }}
-                                  className="text-red-650 dark:text-red-405 hover:text-red-700 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2.5 py-1 rounded-lg cursor-pointer text-[10px]"
+                                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2.5 py-1 rounded-lg cursor-pointer text-[10px]"
                                 >
                                   Delete Log
                                 </button>
@@ -4934,9 +4950,9 @@ export default function AdminAnalytics() {
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400 dark:text-slate-500">
                     <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-full mb-4">
-                      <MessageCircle className="h-10 w-10 text-slate-350 dark:text-slate-700" />
+                      <MessageCircle className="h-10 w-10 text-slate-300 dark:text-slate-700" />
                     </div>
-                    <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-750 dark:text-white mb-1">Select a Student</h4>
+                    <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-700 dark:text-white mb-1">Select a Student</h4>
                     <p className="text-xs max-w-sm leading-relaxed font-semibold">
                       Click a student conversation from the list to start responding to tickets and chatting in real-time.
                     </p>
@@ -4957,7 +4973,7 @@ export default function AdminAnalytics() {
                   <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Official Announcements Publisher</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Publish special alerts and visual news banner cards that slide horizontally on the mobile app home screen</p>
                 </div>
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-105 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
                   {noticesList.filter(n => n.category === 'announcement').length} announcement{noticesList.filter(n => n.category === 'announcement').length !== 1 ? 's' : ''} active
                 </span>
               </div>
@@ -4967,7 +4983,7 @@ export default function AdminAnalytics() {
                 <Megaphone className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                 <div className="text-xs">
                   <p className="font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-1">Mobile Banner Engine</p>
-                  <p className="text-slate-650 dark:text-slate-400 font-semibold leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
                     Create and publish official announcements that will appear as a swipable horizontal carousel on the mobile app home screen. Announcements are saved as a special category of notices.
                   </p>
                 </div>
@@ -4995,7 +5011,7 @@ export default function AdminAnalytics() {
                 </button>
 
                 {isCreateAnnouncementOpen && (
-                  <div className="border-t border-slate-200 dark:border-slate-808 p-6 bg-white dark:bg-slate-955">
+                  <div className="border-t border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-950">
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (!announcementTitle.trim()) return;
@@ -5010,49 +5026,49 @@ export default function AdminAnalytics() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Type / Tag</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Type / Tag</label>
                           <input
                             type="text"
                             required
                             value={announcementType}
                             onChange={(e) => setAnnouncementType(e.target.value)}
                             placeholder="e.g., PROMOTION, ALERT, NEWS, SOCIAL"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
                           <input
                             type="date"
                             required
                             value={announcementDate}
                             onChange={(e) => setAnnouncementDate(e.target.value)}
-                            className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-850 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Details Link / URL (Optional)</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Details Link / URL (Optional)</label>
                           <input
                             type="url"
                             value={announcementUrl}
                             onChange={(e) => setAnnouncementUrl(e.target.value)}
                             placeholder="https://example.com/details"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Image URL / Banner (Optional)</label>
+                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Image URL / Banner (Optional)</label>
                         <div className="flex gap-2">
                           <input
                             type="text"
                             value={announcementImageUrl}
                             onChange={(e) => setAnnouncementImageUrl(e.target.value)}
                             placeholder="https://example.com/image.png or upload banner"
-                            className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                            className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                           />
                           <input
                             type="file"
@@ -5073,7 +5089,7 @@ export default function AdminAnalytics() {
                           />
                           <label
                             htmlFor={isUploadingAnnouncement ? undefined : "announcement-banner-upload"}
-                            className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
+                            className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1.5 shrink-0 ${
                               isUploadingAnnouncement ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
                             }`}
                           >
@@ -5088,24 +5104,24 @@ export default function AdminAnalytics() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Content (English)</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Content (English)</label>
                           <textarea
                             required
                             value={announcementTitle}
                             onChange={(e) => setAnnouncementTitle(e.target.value)}
                             placeholder="Type announcement description content in English..."
                             rows={4}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Content (Hindi)</label>
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Content (Hindi)</label>
                           <textarea
                             value={announcementTitleHi}
                             onChange={(e) => setAnnouncementTitleHi(e.target.value)}
                             placeholder="घोषणा हिन्दी में दर्ज करें (वैकल्पिक)..."
                             rows={4}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 resize-none"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
                           />
                         </div>
                       </div>
@@ -5124,10 +5140,10 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Active Announcements List Card ΓÇö Full Width */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Megaphone className="h-4.5 w-4.5 text-blue-505" /> Active Announcements Banners
+                    <Megaphone className="h-4.5 w-4.5 text-blue-500" /> Active Announcements Banners
                   </h3>
                   
                   {/* Search bar */}
@@ -5138,7 +5154,7 @@ export default function AdminAnalytics() {
                       value={announcementSearch}
                       onChange={(e) => setAnnouncementSearch(e.target.value)}
                       placeholder="Search announcements..."
-                      className="w-full bg-slate-55 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -5146,7 +5162,7 @@ export default function AdminAnalytics() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-808 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
                         <th className="py-3 px-4">Content</th>
                         <th className="py-3 px-4">Tag</th>
                         <th className="py-3 px-4">Date</th>
@@ -5162,10 +5178,10 @@ export default function AdminAnalytics() {
                           n.title.toLowerCase().includes(announcementSearch.toLowerCase()) ||
                           n.type.toLowerCase().includes(announcementSearch.toLowerCase())
                         ).map((ann) => (
-                          <tr key={ann.id} className="border-b border-slate-200 dark:border-slate-808 hover:bg-slate-55 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-300">
+                          <tr key={ann.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-300">
                             <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 max-w-sm">
                               {ann.url ? (
-                                <a href={ann.url} target="_blank" rel="noopener noreferrer" className="text-blue-650 hover:text-blue-750 dark:text-blue-400 dark:hover:text-blue-350 hover:underline flex items-center gap-1">
+                                <a href={ann.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline flex items-center gap-1">
                                   {ann.title}
                                   <ChevronRight className="h-3 w-3 inline animate-pulse" />
                                 </a>
@@ -5182,7 +5198,7 @@ export default function AdminAnalytics() {
                               )}
                             </td>
                             <td className="py-3 px-4">
-                              <span className="bg-slate-105 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-[10px]">{ann.type}</span>
+                              <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-[10px]">{ann.type}</span>
                             </td>
                             <td className="py-3 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400">{ann.date}</td>
                             <td className="py-3 px-4 text-right flex items-center justify-end gap-2">
@@ -5197,7 +5213,7 @@ export default function AdminAnalytics() {
                                   deleteNotice(ann.id);
                                   showToast('Announcement deleted successfully.');
                                 }}
-                                className="text-red-600 hover:text-red-700 dark:text-red-405 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-955/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                               >
                                 Delete
                               </button>
@@ -5463,7 +5479,7 @@ export default function AdminAnalytics() {
                         />
                         <label
                           htmlFor={isUploadingPhoto ? undefined : "topper-photo-upload"}
-                          className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-2 ${
+                          className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-2 ${
                             isUploadingPhoto ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
                           }`}
                         >
@@ -5474,7 +5490,7 @@ export default function AdminAnalytics() {
                           <span className="text-[10px] text-blue-500 font-semibold animate-pulse">Uploading to Tigris...</span>
                         ) : testiPhotoUrl ? (
                           <div className="flex items-center gap-2">
-                            <img src={testiPhotoUrl} alt="Topper preview" className="h-10 w-10 rounded-full object-cover border border-slate-205 dark:border-slate-800 shadow" />
+                            <img src={testiPhotoUrl} alt="Topper preview" className="h-10 w-10 rounded-full object-cover border border-slate-200 dark:border-slate-800 shadow" />
                             <button
                               type="button"
                               onClick={() => setTestiPhotoUrl('')}
@@ -5540,7 +5556,7 @@ export default function AdminAnalytics() {
                       value={testiSearch}
                       onChange={(e) => setTestiSearch(e.target.value)}
                       placeholder="Search testimonials..."
-                      className="w-full bg-slate-55 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-700"
+                      className="w-full bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-700"
                     />
                   </div>
                 </div>
@@ -5564,11 +5580,11 @@ export default function AdminAnalytics() {
                           n.title.toLowerCase().includes(testiSearch.toLowerCase()) ||
                           n.type.toLowerCase().includes(testiSearch.toLowerCase())
                         ).map((testi) => (
-                          <tr key={testi.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-350">
+                          <tr key={testi.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-300">
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-3">
                                 {testi.imageUrl ? (
-                                  <img src={testi.imageUrl} alt={testi.title} className="h-10 w-10 rounded-full object-cover border border-slate-205 dark:border-slate-800 shadow" />
+                                  <img src={testi.imageUrl} alt={testi.title} className="h-10 w-10 rounded-full object-cover border border-slate-200 dark:border-slate-800 shadow" />
                                 ) : (
                                   <div className={`h-10 w-10 rounded-full bg-gradient-to-r ${testi.url || 'from-blue-600 to-cyan-500'} text-white flex items-center justify-center font-bold text-xs shadow-sm`}>
                                     {testi.lastDate || testi.title.slice(0, 2).toUpperCase()}
@@ -5580,7 +5596,7 @@ export default function AdminAnalytics() {
                                 </div>
                               </div>
                             </td>
-                            <td className="py-3 px-4 max-w-xs font-semibold text-slate-650 dark:text-slate-300 leading-normal truncate" title={testi.type}>
+                            <td className="py-3 px-4 max-w-xs font-semibold text-slate-600 dark:text-slate-300 leading-normal truncate" title={testi.type}>
                               "{testi.type}"
                             </td>
                             <td className="py-3 px-4 font-bold text-slate-700 dark:text-slate-300">{testi.date}</td>
@@ -5590,7 +5606,7 @@ export default function AdminAnalytics() {
                                   deleteNotice(testi.id);
                                   showToast('Testimonial deleted successfully.');
                                 }}
-                                className="text-red-650 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
+                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2 py-1 rounded cursor-pointer"
                               >
                                 Delete
                               </button>
@@ -5742,7 +5758,7 @@ export default function AdminAnalytics() {
                             </td>
                             <td className="py-4 px-4">
                               {f.feedbackText ? (
-                                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-750 p-2.5 rounded-lg max-w-sm">
+                                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-2.5 rounded-lg max-w-sm">
                                   <p className="text-xs text-slate-700 dark:text-slate-300 font-medium whitespace-pre-line leading-relaxed">
                                     {f.feedbackText}
                                   </p>
@@ -5856,7 +5872,7 @@ export default function AdminAnalytics() {
                     placeholder="Search candidate name, email, code or test..."
                     value={attemptsSearch}
                     onChange={(e) => setAttemptsSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-xs bg-slate-50 dark:bg-slate-955 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium"
+                    className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-xs bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium"
                   />
                 </div>
 
@@ -5899,7 +5915,7 @@ export default function AdminAnalytics() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-slate-55 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                      <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Candidate details</th>
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mock Test Details</th>
                         <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Platform</th>
@@ -5954,7 +5970,7 @@ export default function AdminAnalytics() {
                               <p className="font-extrabold text-xs text-slate-800 dark:text-slate-200">{a.user?.fullName || 'Unknown'}</p>
                               <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{a.user?.email || 'N/A'}</p>
                               <div className="flex gap-2 mt-1">
-                                <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-850 px-1 py-0.5 rounded">
+                                <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">
                                   {a.user?.candidateCode || 'No Code'}
                                 </span>
                                 {a.user?.mobile && (
@@ -6031,7 +6047,7 @@ export default function AdminAnalytics() {
                                   <p className="text-xs font-black text-slate-800 dark:text-slate-200">
                                     Score: <span className="text-blue-600 dark:text-blue-400">{a.finalScore ?? 0}</span> / {a.mockTest?.maxMarks || 200}
                                   </p>
-                                  <p className="text-[9px] text-slate-500 dark:text-slate-450 font-semibold">
+                                  <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">
                                     Accuracy: {a.accuracyPercentage ?? 0}% | Time: {formatExactTime(computeExactTimeSpent(a))}
                                   </p>
                                   {a.violationsCount > 0 && (
@@ -6371,6 +6387,11 @@ export default function AdminAnalytics() {
             <DocumentLockerManager showToast={showToast} />
           )}
 
+          {/* TAB: TYPING EXAMS & SIMULATOR */}
+          {activeTab === 'typing' && hasTabAccess('typing') && (
+            <TypingTestManager showToast={showToast} />
+          )}
+
         </div>
 
       </main>
@@ -6411,7 +6432,7 @@ export default function AdminAnalytics() {
 
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -6433,20 +6454,20 @@ export default function AdminAnalytics() {
               </p>
 
               <div className="text-left">
-                <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Administrator Password</label>
+                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Administrator Password</label>
                 <input 
                   type="password"
                   required
                   placeholder="Enter admin password"
                   value={adminPasswordInput}
                   onChange={(e) => setAdminPasswordInput(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 font-mono"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
                   autoFocus
                 />
               </div>
 
               {passwordError && (
-                <div className="p-3 bg-red-50 dark:bg-red-955/20 border border-red-200 dark:border-red-808/40 text-red-650 dark:text-red-400 rounded-lg text-xs font-bold flex items-center gap-2 text-left">
+                <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold flex items-center gap-2 text-left">
                   <ShieldAlert className="h-4 w-4 shrink-0 animate-bounce" />
                   <span>{passwordError}</span>
                 </div>
@@ -6454,11 +6475,11 @@ export default function AdminAnalytics() {
             </div>
 
             {/* Modal Footer */}
-            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 border-t border-slate-100 dark:border-slate-808 flex justify-end gap-3">
+            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setIsPasswordModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-808 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850 transition cursor-pointer"
+                className="px-4 py-2 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
                 Cancel
               </button>

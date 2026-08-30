@@ -52,7 +52,7 @@ export default function ReferralsTrackerPage() {
 
   if (!currentUser) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-955 text-slate-800 dark:text-slate-100 font-sans">
+      <div className="flex h-screen items-center justify-center bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans">
         <div className="text-center p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl max-w-sm shadow-xl">
           <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
           <h3 className="font-extrabold text-sm uppercase tracking-wider mb-2">Authentication Required</h3>
@@ -66,10 +66,10 @@ export default function ReferralsTrackerPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 pb-16 transition-colors duration-200">
+    <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 pb-16 transition-colors duration-200">
       
       {/* Header bar */}
-      <header className="h-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors duration-200">
+      <header className="h-18 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors duration-200">
         <Link href="/profile" className="flex items-center gap-2 text-slate-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs sm:text-sm tracking-wide transition-colors">
           <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? "प्रोफ़ाइल पर वापस जाएं" : "Back to Profile"}
         </Link>
@@ -79,10 +79,10 @@ export default function ReferralsTrackerPage() {
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-655 dark:text-slate-350 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+            className="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
           >
-            <option value="en" className="bg-white dark:bg-slate-955 text-slate-800 dark:text-slate-200">English</option>
-            <option value="hi" className="bg-white dark:bg-slate-955 text-slate-800 dark:text-slate-200">हिन्दी</option>
+            <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
+            <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
           </select>
 
           {/* Theme switcher */}
@@ -108,7 +108,7 @@ export default function ReferralsTrackerPage() {
               <Gift className="h-6 w-6 text-amber-500" />
               {t.referralsPageTitle}
             </h2>
-            <p className="text-xs text-slate-650 dark:text-slate-400 max-w-xl leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
               {t.referralsPageDesc}
             </p>
           </div>
@@ -136,7 +136,7 @@ export default function ReferralsTrackerPage() {
             >
               {copied ? (
                 <>
-                  <CheckCircle2 className="h-4 w-4 text-green-505 animate-in zoom-in-50" />
+                  <CheckCircle2 className="h-4 w-4 text-green-500 animate-in zoom-in-50" />
                   <span className="text-green-500">{language === 'hi' ? "कॉपी किया" : "Copied"}</span>
                 </>
               ) : (
@@ -180,7 +180,7 @@ export default function ReferralsTrackerPage() {
 
             {/* Step 3 */}
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-xs space-y-2 relative overflow-hidden group hover:border-amber-500/20 transition-all duration-200">
-              <div className="h-9 w-9 bg-amber-100/50 dark:bg-amber-955/20 text-amber-600 dark:text-amber-400 rounded-lg flex items-center justify-center font-black text-sm">
+              <div className="h-9 w-9 bg-amber-100/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 rounded-lg flex items-center justify-center font-black text-sm">
                 3
               </div>
               <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200">{t.referralRule3Title}</h4>
@@ -203,14 +203,14 @@ export default function ReferralsTrackerPage() {
         <section className="space-y-4">
           <h3 className="font-black text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2.5 flex items-center justify-between">
             <span>{t.myReferredFriends}</span>
-            <span className="bg-blue-100 dark:bg-blue-955/40 text-blue-700 dark:text-blue-400 font-extrabold text-[10px] px-2 py-0.5 rounded border border-blue-200 dark:border-blue-900 font-mono">
+            <span className="bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 font-extrabold text-[10px] px-2 py-0.5 rounded border border-blue-200 dark:border-blue-900 font-mono">
               {referredUsers.length}
             </span>
           </h3>
 
           {referredUsers.length === 0 ? (
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-12 rounded-2xl text-center text-slate-500 shadow-sm">
-              <Gift className="h-10 w-10 text-slate-350 dark:text-slate-700 mx-auto mb-3" />
+              <Gift className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
               <p className="text-xs font-bold">{t.noReferredFriends}</p>
             </div>
           ) : (
@@ -231,7 +231,7 @@ export default function ReferralsTrackerPage() {
                 return (
                   <div 
                     key={user.id}
-                    className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5 hover:shadow transition-shadow"
+                    className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5 hover:shadow transition-shadow"
                   >
                     {/* User profile info */}
                     <div className="flex items-center gap-3">
@@ -275,7 +275,7 @@ export default function ReferralsTrackerPage() {
                           <Check className="h-3 w-3 font-extrabold" />
                           <span>{t.referralStep1}</span>
                         </div>
-                        <div className={`flex items-center gap-1 ${hasCompletedTest ? 'text-green-600 dark:text-green-400' : 'text-slate-405'}`}>
+                        <div className={`flex items-center gap-1 ${hasCompletedTest ? 'text-green-600 dark:text-green-400' : 'text-slate-400'}`}>
                           {hasCompletedTest ? (
                             <Check className="h-3 w-3 font-extrabold" />
                           ) : (

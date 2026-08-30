@@ -42,15 +42,16 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* MathJax config MUST load before the MathJax library. */}
+        <Script src="/mathjax-config.js" strategy="afterInteractive" />
+        {/* MathJax CDN */}
+        <Script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" strategy="afterInteractive" />
+      </head>
       <body
         suppressHydrationWarning
-        className="h-full min-h-full overflow-x-hidden flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200"
+        className="h-full min-h-full overflow-x-hidden flex flex-col bg-slate-200/90 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200"
       >
-        {/* MathJax config MUST load before the MathJax library. */}
-        <Script src="/mathjax-config.js" strategy="beforeInteractive" />
-        {/* MathJax CDN */}
-        <Script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" strategy="beforeInteractive" />
-
         <AuthProvider initialUserProfile={userProfile}>
           <DeploymentRecovery />
           {children}

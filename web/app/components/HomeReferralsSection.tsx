@@ -167,7 +167,7 @@ export default function HomeReferralsSection({ onBack }: HomeReferralsSectionPro
         </div>
 
         {/* SHARE CODE & LINK BOX */}
-        <div className="bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 p-5 sm:p-6 rounded-2xl sm:rounded-3xl text-center space-y-4">
+        <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 p-5 sm:p-6 rounded-2xl sm:rounded-3xl text-center space-y-4">
           <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
             {t.referralCode}
           </p>
@@ -226,7 +226,7 @@ export default function HomeReferralsSection({ onBack }: HomeReferralsSectionPro
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-1.5">
+            <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-1.5">
               <div className="h-8 w-8 bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center font-black text-xs">
                 1
               </div>
@@ -234,7 +234,7 @@ export default function HomeReferralsSection({ onBack }: HomeReferralsSectionPro
               <p className="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400 font-medium">{t.referralRule1Desc}</p>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-1.5">
+            <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-1.5">
               <div className="h-8 w-8 bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 rounded-lg flex items-center justify-center font-black text-xs">
                 2
               </div>
@@ -242,7 +242,7 @@ export default function HomeReferralsSection({ onBack }: HomeReferralsSectionPro
               <p className="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400 font-medium">{t.referralRule2Desc}</p>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-1.5">
+            <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-1.5">
               <div className="h-8 w-8 bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-lg flex items-center justify-center font-black text-xs">
                 3
               </div>
@@ -250,7 +250,7 @@ export default function HomeReferralsSection({ onBack }: HomeReferralsSectionPro
               <p className="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400 font-medium">{t.referralRule3Desc}</p>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-1.5">
+            <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-1.5">
               <div className="h-8 w-8 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center font-black text-xs">
                 4
               </div>
@@ -272,7 +272,7 @@ export default function HomeReferralsSection({ onBack }: HomeReferralsSectionPro
           </div>
 
           {referredUsers.length === 0 ? (
-            <div className="bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 p-8 rounded-2xl text-center text-slate-500 dark:text-slate-400">
+            <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 p-8 rounded-2xl text-center text-slate-500 dark:text-slate-400">
               <Gift className="h-9 w-9 text-slate-400 dark:text-slate-600 mx-auto mb-2 opacity-50" />
               <p className="text-xs font-bold">{t.noReferredFriends}</p>
               <p className="text-[10px] text-slate-400 mt-1">Share your code with study buddies to start earning!</p>
@@ -282,7 +282,7 @@ export default function HomeReferralsSection({ onBack }: HomeReferralsSectionPro
               {referredUsers.map((user) => (
                 <div 
                   key={user.id}
-                  className="bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between gap-3 hover:border-slate-300 dark:hover:border-slate-700 transition"
+                  className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between gap-3 hover:border-slate-300 dark:hover:border-slate-700 transition"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">

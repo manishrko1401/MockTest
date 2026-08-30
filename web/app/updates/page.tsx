@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../AuthContext';
-import { ShieldCheck, ChevronRight, Bell, Trophy, FileText, ArrowLeft, Sun, Moon, Menu, LogOut, X, ArrowRight, Search, Filter } from 'lucide-react';
+import { ShieldCheck, ChevronRight, Bell, Trophy, FileText, ArrowLeft, Sun, Moon, Menu, LogOut, X, ArrowRight, Search, Filter, User } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 
@@ -136,10 +136,10 @@ export default function UpdatesCenterPage() {
   // Helper render for single tile item (Normal font weight, no bolding, no numberings, no arrow buttons)
   const renderTileCard = (notice: any, idx: number, themeColor: 'blue' | 'amber' | 'emerald' | 'purple') => {
     const typeTagColors = {
-      blue: 'bg-blue-50 text-blue-700 dark:bg-blue-955 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-      amber: 'bg-amber-50 text-amber-800 dark:bg-amber-955 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-      emerald: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-955 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-      purple: 'bg-purple-50 text-purple-800 dark:bg-purple-955 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+      blue: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+      amber: 'bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+      emerald: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+      purple: 'bg-purple-50 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800',
     };
 
     const hoverBorderColors = {
@@ -182,8 +182,8 @@ export default function UpdatesCenterPage() {
           {notice.title}
         </h5>
 
-        {/* Last Date Deadline */}
-        {notice.lastDate && (
+        {/* Last Date Deadline - Only in Live Notices section */}
+        {notice.category === 'notice' && notice.lastDate && (
           <p className="text-[9.5px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1 mt-0.5">
             <span>{t.lastDate}</span>
             <span>{notice.lastDate}</span>
@@ -231,10 +231,10 @@ export default function UpdatesCenterPage() {
 
   if (isMounted && isMobile) {
     return (
-      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
+      <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
         
         {/* Mobile Header - Increased Height */}
-        <header className="h-16 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
+        <header className="h-18 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2">
             {/* Back Button BEFORE Logo */}
             <button
@@ -275,7 +275,7 @@ export default function UpdatesCenterPage() {
 
         {/* MOBILE SLIDE-DOWN DRAWER MENU */}
         {mobileMenuOpen && (
-          <div className="fixed inset-x-0 top-14 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-900 z-30 shadow-lg p-6 flex flex-col gap-6 animate-in slide-in-from-top-4 duration-200">
+          <div className="fixed inset-x-0 top-18 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-900 z-30 shadow-lg p-6 flex flex-col gap-6 animate-in slide-in-from-top-4 duration-200">
             <nav className="flex flex-col gap-4 text-sm font-bold text-slate-600 dark:text-slate-300">
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navHome}</Link>
               <Link href="/mock-tests" onClick={() => setMobileMenuOpen(false)} className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2">{t.navTestSeries}</Link>
@@ -438,60 +438,70 @@ export default function UpdatesCenterPage() {
   ).length;
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200">
+    <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200">
       
-      {/* Decorative Orbs */}
-      <div className="absolute top-10 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      {/* HEADER SECTION - Restored Original Layout with Increased Height */}
-      <header className="h-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors duration-200">
-        <div className="flex items-center gap-4 md:gap-6">
-          {/* Back Button BEFORE Logo */}
-          <button
-            onClick={() => {
-              if (typeof window !== 'undefined' && window.history.length > 1) {
-                router.back();
-              } else {
-                router.push('/');
-              }
-            }}
-            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-700 dark:text-slate-200 shrink-0 cursor-pointer active:scale-95"
-            title={language === 'hi' ? 'वापस' : 'Back'}
+      {/* Header matching Test Series Page */}
+      <header className="h-18 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+        <div className="flex items-center gap-2.5 sm:gap-4 lg:gap-6 min-w-0">
+          {/* Back button on top left corner */}
+          <Link 
+            href="/" 
+            className="btn-3d btn-3d-slate flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide shadow-sm shrink-0 cursor-pointer"
+            title={t.backToHome}
           >
-            <ArrowLeft className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-            <span>{language === 'hi' ? 'वापस' : 'Back'}</span>
-          </button>
+            <ArrowLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <span className="hidden sm:inline">{t.backToHome}</span>
+            <span className="sm:hidden">{t.navHome}</span>
+          </Link>
 
-          <Link href="/" className="flex items-center gap-3">
-            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full shadow-sm flex items-center justify-center h-10 w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
-              <Trophy className="h-5.5 w-5.5 text-blue-600 dark:text-blue-400" />
+          <span className="h-6 w-[1px] bg-slate-200 dark:border-slate-800 shrink-0"></span>
+
+          <Link href="/" className="flex items-center gap-2.5 lg:gap-3 min-w-0">
+            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 lg:p-2 rounded-full shadow-sm flex items-center justify-center h-8.5 w-8.5 lg:h-10 lg:w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
+              <Trophy className="h-4.5 w-4.5 lg:h-5.5 lg:w-5.5 text-blue-600 dark:text-blue-400" />
             </div>
-            <div>
-              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
-              <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
+            <div className="min-w-0">
+              <h1 className="font-extrabold text-xs lg:text-sm leading-tight text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
+              <p className="text-[8px] lg:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase truncate">{t.logoSub}</p>
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600 dark:text-slate-400">
-            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
-            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors font-black text-blue-600">{t.navUpdates}</Link>
-            {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
-              <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navAdmin}</Link>
-            )}
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-3 lg:gap-6 text-xs font-bold text-slate-600 dark:text-slate-400 shrink-0 ml-1 lg:ml-3">
+            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
+              <span>{t.navTestSeries}</span>
+            </Link>
+            <Link href="/typing-test" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
+              <span>{language === 'hi' ? 'टाइपिंग टेस्ट' : 'Typing Test'}</span>
+            </Link>
+            <Link href="/locker" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
+              <span>{language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}</span>
+            </Link>
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Profile Button */}
+          <Link
+            href={currentUser ? "/profile" : "/auth"}
+            className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer active:scale-95 shadow-2xs"
+            title={currentUser ? (language === 'hi' ? 'मेरी प्रोफाइल' : 'Profile') : (language === 'hi' ? 'लॉग इन' : 'Login')}
+          >
+            <User className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{currentUser ? (language === 'hi' ? 'प्रोफाइल' : 'Profile') : (language === 'hi' ? 'लॉग इन' : 'Login')}</span>
+          </Link>
+
+          {/* Language selector */}
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
+            className="px-2 py-1.5 lg:px-2.5 lg:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold focus:outline-none cursor-pointer"
           >
-            <option value="en">English</option>
-            <option value="hi">हिन्दी</option>
+            <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
+            <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
           </select>
 
+          {/* Theme switcher */}
           <button 
             onClick={toggleTheme}
             className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
@@ -499,34 +509,11 @@ export default function UpdatesCenterPage() {
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
-
-          {currentUser ? (
-            <div className="flex items-center gap-3">
-              <Link href="/profile" className="flex items-center gap-2 bg-slate-100 border border-slate-200 hover:border-slate-300 dark:bg-slate-900 dark:border-slate-800 transition px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs text-slate-800 dark:text-slate-200">
-                <div className="h-5 w-5 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[10px]">
-                  {currentUser.name[0]}
-                </div>
-                <span>{t.dashboard} ({currentUser.name.split(' ')[0]})</span>
-              </Link>
-              <button onClick={logout} className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold cursor-pointer">
-                {t.signOut}
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <Link href="/auth" className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold">
-                {t.logIn}
-              </Link>
-              <Link href="/auth" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl text-xs shadow-md shadow-blue-600/20 transition active:scale-95">
-                {t.signUp}
-              </Link>
-            </div>
-          )}
         </div>
       </header>
 
       {/* BODY CONTENT */}
-      <main className="py-8 px-4 sm:px-6 md:px-10 max-w-7xl w-full mx-auto flex-1 flex flex-col relative z-10 space-y-6">
+      <main className="py-6 sm:py-8 px-3 sm:px-6 lg:px-8 xl:px-10 max-w-[1800px] w-full mx-auto flex-1 flex flex-col relative z-10 space-y-6">
 
         {/* IF CATEGORY FILTER IS ACTIVE -> DEDICATED SECTION PAGE FOR THAT PARTICULAR SECTION */}
         {categoryFilter && categoryMeta[categoryFilter] ? (
@@ -644,7 +631,7 @@ export default function UpdatesCenterPage() {
               </div>
             </div>
             {/* TOP QUICK FEATURE CARDS (RESULTNOTIFY TOP QUICK BAR) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-4.5 w-full">
               
               {/* Quick Card 1: Latest Notices */}
               <div 
@@ -687,7 +674,7 @@ export default function UpdatesCenterPage() {
               {/* Quick Card 3: Admit Cards */}
               <div 
                 onClick={() => openCategorySection('admit_card')}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-[0_10px_20px_-4px_rgba(16,185,129,0.15)] dark:hover:shadow-[0_10px_20px_-4px_rgba(16,185,129,0.3)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-[0_10px_20px_-4px_rgba(168,85,247,0.15)] dark:hover:shadow-[0_10px_20px_-4px_rgba(16,185,129,0.3)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/50 dark:border-emerald-800/50 shrink-0 transition-transform duration-300 group-hover:scale-110">
@@ -724,18 +711,18 @@ export default function UpdatesCenterPage() {
 
             </div>
 
-            {/* 4-COLUMN UPDATES GRID (RESULTNOTIFY COLUMN CONTAINER STYLE) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* 4-COLUMN UPDATES GRID (MAXIMUM WIDTH TILE CONTAINERS) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-4.5 w-full">
               
               {/* Column 1: Latest Notices (Blue Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative">
-                <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-3.5 shadow-xs flex flex-col min-h-[600px] relative w-full">
+                <div className="px-1 pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                     <Bell className="h-4 w-4" /> {t.liveNotices}
                   </span>
                 </div>
                 {/* List Starts Directly */}
-                <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
+                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
                   {displayNotices.filter(n => n.category === 'notice').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'notice')
@@ -750,7 +737,7 @@ export default function UpdatesCenterPage() {
                 </div>
 
                 {/* Bottom View All Button */}
-                <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
+                <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800/80">
                   <button 
                     onClick={() => openCategorySection('notice')}
                     className="w-full py-2.5 px-4 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
@@ -762,14 +749,14 @@ export default function UpdatesCenterPage() {
               </div>
 
               {/* Column 2: Results & Merits (Amber Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative">
-                <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-3.5 shadow-xs flex flex-col min-h-[600px] relative w-full">
+                <div className="px-1 pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                     <Trophy className="h-4 w-4" /> {t.resultsMerits}
                   </span>
                 </div>
                 {/* List Starts Directly */}
-                <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
+                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
                   {displayNotices.filter(n => n.category === 'result').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'result')
@@ -784,7 +771,7 @@ export default function UpdatesCenterPage() {
                 </div>
 
                 {/* Bottom View All Button */}
-                <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
+                <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800/80">
                   <button 
                     onClick={() => openCategorySection('result')}
                     className="w-full py-2.5 px-4 rounded-2xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/70 dark:hover:bg-amber-900/80 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
@@ -796,14 +783,14 @@ export default function UpdatesCenterPage() {
               </div>
 
               {/* Column 3: Admit Cards (Emerald Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative">
-                <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-3.5 shadow-xs flex flex-col min-h-[600px] relative w-full">
+                <div className="px-1 pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                     <FileText className="h-4 w-4" /> {t.admitCards}
                   </span>
                 </div>
                 {/* List Starts Directly */}
-                <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
+                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
                   {displayNotices.filter(n => n.category === 'admit_card').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'admit_card')
@@ -818,7 +805,7 @@ export default function UpdatesCenterPage() {
                 </div>
 
                 {/* Bottom View All Button */}
-                <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
+                <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800/80">
                   <button 
                     onClick={() => openCategorySection('admit_card')}
                     className="w-full py-2.5 px-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
@@ -830,14 +817,14 @@ export default function UpdatesCenterPage() {
               </div>
 
               {/* Column 4: Answer Keys (Purple Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[600px] relative">
-                <div className="pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-3.5 shadow-xs flex flex-col min-h-[600px] relative w-full">
+                <div className="px-1 pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4" /> Answer Keys
                   </span>
                 </div>
                 {/* List Starts Directly */}
-                <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
+                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
                   {displayNotices.filter(n => n.category === 'answer_key').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'answer_key')
@@ -852,7 +839,7 @@ export default function UpdatesCenterPage() {
                 </div>
 
                 {/* Bottom View All Button */}
-                <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
+                <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800/80">
                   <button 
                     onClick={() => openCategorySection('answer_key')}
                     className="w-full py-2.5 px-4 rounded-2xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/70 dark:hover:bg-purple-900/80 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"

@@ -86,9 +86,9 @@ const getCategoryTheme = (catId: string | null) => {
     return {
       color: 'orange',
       bg: 'bg-orange-50/50 dark:bg-orange-950/15',
-      border: 'border-orange-150 dark:border-orange-900/30',
+      border: 'border-orange-100 dark:border-orange-900/30',
       hoverBorder: 'hover:border-orange-400 dark:hover:border-orange-600',
-      iconBg: 'bg-orange-500/10 text-orange-650 dark:text-orange-400',
+      iconBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
       badgeBg: 'bg-orange-50 dark:bg-orange-950/45 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-900/30',
       gradient: 'from-orange-500 to-amber-500',
       glow: 'shadow-orange-500/10 dark:shadow-orange-500/5',
@@ -99,9 +99,9 @@ const getCategoryTheme = (catId: string | null) => {
     return {
       color: 'indigo',
       bg: 'bg-indigo-50/50 dark:bg-indigo-950/15',
-      border: 'border-indigo-150 dark:border-indigo-900/30',
+      border: 'border-indigo-100 dark:border-indigo-900/30',
       hoverBorder: 'hover:border-indigo-400 dark:hover:border-indigo-600',
-      iconBg: 'bg-indigo-500/10 text-indigo-650 dark:text-indigo-400',
+      iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
       badgeBg: 'bg-indigo-50 dark:bg-indigo-950/45 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/30',
       gradient: 'from-indigo-500 to-blue-550',
       glow: 'shadow-indigo-500/10 dark:shadow-indigo-500/5',
@@ -112,9 +112,9 @@ const getCategoryTheme = (catId: string | null) => {
     return {
       color: 'emerald',
       bg: 'bg-emerald-50/50 dark:bg-emerald-950/15',
-      border: 'border-emerald-150 dark:border-emerald-900/30',
+      border: 'border-emerald-100 dark:border-emerald-900/30',
       hoverBorder: 'hover:border-emerald-400 dark:hover:border-emerald-600',
-      iconBg: 'bg-emerald-500/10 text-emerald-650 dark:text-emerald-400',
+      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
       badgeBg: 'bg-emerald-50 dark:bg-emerald-950/45 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30',
       gradient: 'from-emerald-500 to-teal-500',
       glow: 'shadow-emerald-500/10 dark:shadow-emerald-500/5',
@@ -125,9 +125,9 @@ const getCategoryTheme = (catId: string | null) => {
     return {
       color: 'amber',
       bg: 'bg-amber-50/50 dark:bg-amber-950/15',
-      border: 'border-amber-150 dark:border-amber-900/30',
+      border: 'border-amber-100 dark:border-amber-900/30',
       hoverBorder: 'hover:border-amber-400 dark:hover:border-amber-600',
-      iconBg: 'bg-amber-500/10 text-amber-650 dark:text-amber-400',
+      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
       badgeBg: 'bg-amber-50 dark:bg-amber-950/45 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/30',
       gradient: 'from-amber-500 to-orange-500',
       glow: 'shadow-amber-500/10 dark:shadow-amber-500/5',
@@ -138,9 +138,9 @@ const getCategoryTheme = (catId: string | null) => {
     return {
       color: 'sky',
       bg: 'bg-sky-50/50 dark:bg-sky-950/15',
-      border: 'border-sky-150 dark:border-sky-900/30',
+      border: 'border-sky-100 dark:border-sky-900/30',
       hoverBorder: 'hover:border-sky-400 dark:hover:border-sky-600',
-      iconBg: 'bg-sky-500/10 text-sky-650 dark:text-sky-400',
+      iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
       badgeBg: 'bg-sky-50 dark:bg-sky-950/45 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/30',
       gradient: 'from-sky-500 to-indigo-500',
       glow: 'shadow-sky-500/10 dark:shadow-sky-500/5',
@@ -150,9 +150,9 @@ const getCategoryTheme = (catId: string | null) => {
   return {
     color: 'pink',
     bg: 'bg-pink-50/50 dark:bg-pink-950/15',
-    border: 'border-pink-155 dark:border-pink-900/30',
-    hoverBorder: 'hover:border-pink-400 dark:hover:border-pink-650',
-    iconBg: 'bg-pink-500/10 text-pink-650 dark:text-pink-400',
+    border: 'border-pink-200 dark:border-pink-900/30',
+    hoverBorder: 'hover:border-pink-400 dark:hover:border-pink-600',
+    iconBg: 'bg-pink-500/10 text-pink-600 dark:text-pink-400',
     badgeBg: 'bg-pink-50 dark:bg-pink-950/45 text-pink-700 dark:text-pink-400 border-pink-100 dark:border-pink-900/30',
     gradient: 'from-pink-500 to-purple-550',
     glow: 'shadow-pink-500/10 dark:shadow-pink-500/5',
@@ -171,11 +171,11 @@ const getSubCatIcon = (name: string, logoUrl?: string | null) => {
     );
   }
   const n = name.toLowerCase();
-  if (n.includes('cgl') || n.includes('cpo')) return <Award className="h-5.5 w-5.5" />;
-  if (n.includes('ntpc') || n.includes('group d') || n.includes('alp') || n.includes('si')) return <Trophy className="h-5.5 w-5.5" />;
-  if (n.includes('net') || n.includes('science')) return <GraduationCap className="h-5.5 w-5.5" />;
-  if (n.includes('chsl') || n.includes('mts') || n.includes('phase')) return <BookOpen className="h-5.5 w-5.5" />;
-  return <GraduationCap className="h-5.5 w-5.5" />;
+  if (n.includes('cgl') || n.includes('cpo')) return <Award className="h-5.5 w-5.5 text-orange-500" />;
+  if (n.includes('ntpc') || n.includes('group d') || n.includes('alp') || n.includes('si')) return <Trophy className="h-5.5 w-5.5 text-indigo-500" />;
+  if (n.includes('net') || n.includes('science')) return <GraduationCap className="h-5.5 w-5.5 text-sky-500" />;
+  if (n.includes('chsl') || n.includes('mts') || n.includes('phase')) return <BookOpen className="h-5.5 w-5.5 text-amber-500" />;
+  return <GraduationCap className="h-5.5 w-5.5 text-blue-600" />;
 };
 
 export default function MockTestsCatalog() {
@@ -753,10 +753,10 @@ export default function MockTestsCatalog() {
     const activeCategoryObj = filteredCatalog.find(c => c.id === selectedCategory);
 
     return (
-      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 mobile-fade-in">
+      <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 mobile-fade-in">
         
         {/* MOBILE HEADER */}
-        <header className="h-14 border-b border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
+        <header className="h-18 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
           <div className="flex items-center gap-2.5 min-w-0">
             <Link href="/" className="btn-3d btn-3d-slate flex items-center gap-1.5 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 shadow-sm shrink-0 cursor-pointer">
               <ArrowLeft className="h-4 w-4" /> {t.navHome}
@@ -778,7 +778,7 @@ export default function MockTestsCatalog() {
               className={`p-1.5 rounded-lg flex items-center justify-center gap-1 border text-[10px] font-bold transition h-8 ${
                 showBookmarks 
                   ? 'bg-yellow-500 border-yellow-500 text-white shadow-sm'
-                  : 'bg-slate-105 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                  : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
               }`}
               title={t.bookmarks}
             >
@@ -829,7 +829,7 @@ export default function MockTestsCatalog() {
 
           {/* RENDER BOOKMARKS OVERLAY VIEW */}
           {showBookmarks ? (
-            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-4 rounded-2xl shadow-sm space-y-4">
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                 <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase flex items-center gap-1">
                   <Bookmark className="h-4 w-4 text-yellow-500 fill-yellow-500" /> Bookmarked Questions ({currentUser?.bookmarkedQuestions?.length || 0})
@@ -1011,7 +1011,7 @@ export default function MockTestsCatalog() {
                                   )}
                                 </div>
 
-                                <h4 className="font-extrabold text-[11px] text-slate-850 dark:text-slate-100 line-clamp-1 leading-snug" title={getLocalizedName(test, language)}>
+                                <h4 className="font-extrabold text-[11px] text-slate-800 dark:text-slate-100 line-clamp-1 leading-snug" title={getLocalizedName(test, language)}>
                                   {getLocalizedName(test, language)}
                                 </h4>
                               </div>
@@ -1095,7 +1095,7 @@ export default function MockTestsCatalog() {
                               </div>
                             )}
                           </div>
-                          <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-850 dark:text-slate-100 mb-2 leading-snug line-clamp-2">
+                          <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-800 dark:text-slate-100 mb-2 leading-snug line-clamp-2">
                             {getLocalizedName(cat, language)}
                           </h4>
                           <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border border-slate-100 dark:border-slate-800">
@@ -1156,7 +1156,7 @@ export default function MockTestsCatalog() {
                           <button
                             key={subCat.id}
                             onClick={() => handleSubCategorySelect(subCat.id)}
-                            className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.6)] hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer group active:scale-95"
+                            className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.6)] hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer group active:scale-95"
                           >
                             {/* Radial Glow on Hover */}
                             <div 
@@ -1170,7 +1170,7 @@ export default function MockTestsCatalog() {
                             </div>
 
                             {/* Exam Title */}
-                            <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-855 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2.5 leading-snug line-clamp-2">
+                            <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2.5 leading-snug line-clamp-2">
                               {getLocalizedName(subCat, language)}
                             </h4>
 
@@ -1369,7 +1369,7 @@ export default function MockTestsCatalog() {
                                         ? 'bg-emerald-50/60 dark:bg-emerald-950/20 '
                                         : 'bg-rose-50/60 dark:bg-rose-950/20 '
                                       : ongoing
-                                      ? 'bg-sky-50/30 dark:bg-sky-955/10 '
+                                      ? 'bg-sky-50/30 dark:bg-sky-950/10 '
                                       : 'bg-white dark:bg-slate-900/45 ';
 
                                     return (
@@ -1381,7 +1381,7 @@ export default function MockTestsCatalog() {
                                            <div className="flex items-center justify-between gap-1.5 w-full">
                                              <div className="flex flex-wrap items-center gap-1.5 min-w-0">
                                                {isTestPremium ? (
-                                                 <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-250 dark:border-amber-900/60 uppercase tracking-wider">
+                                                 <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/60 uppercase tracking-wider">
                                                    PRO
                                                  </span>
                                                ) : (
@@ -1391,7 +1391,7 @@ export default function MockTestsCatalog() {
                                                )}
 
                                                {ongoing && (
-                                                 <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-250 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                                 <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-200 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-black uppercase">
                                                    PAUSED
                                                  </span>
                                                )}
@@ -1418,7 +1418,7 @@ export default function MockTestsCatalog() {
                                              )}
                                            </div>
 
-                                          <h4 className="font-extrabold text-xs text-slate-850 dark:text-white leading-snug">
+                                          <h4 className="font-extrabold text-xs text-slate-800 dark:text-white leading-snug">
                                             {getLocalizedName(test, language)}
                                           </h4>
                                           
@@ -1446,7 +1446,7 @@ export default function MockTestsCatalog() {
                                               </button>
                                               <button
                                                 onClick={() => handleReattemptExam(test)}
-                                                className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] cursor-pointer shrink-0"
+                                                className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] cursor-pointer shrink-0"
                                               >
                                                 Reset
                                               </button>
@@ -1461,7 +1461,7 @@ export default function MockTestsCatalog() {
                                               </Link>
                                               <button
                                                 onClick={() => handleReattemptExam(test)}
-                                                className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] cursor-pointer shrink-0"
+                                                className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] cursor-pointer shrink-0"
                                               >
                                                 Reattempt
                                               </button>
@@ -1520,7 +1520,7 @@ export default function MockTestsCatalog() {
                                   <div className="space-y-1.5 flex-1 w-full text-left">
                                     <div className="flex flex-wrap items-center gap-1.5">
                                       {isTestPremium ? (
-                                        <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-250 dark:border-amber-900/60 uppercase tracking-wider">
+                                        <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/60 uppercase tracking-wider">
                                           PRO
                                         </span>
                                       ) : (
@@ -1530,7 +1530,7 @@ export default function MockTestsCatalog() {
                                       )}
 
                                       {ongoing && (
-                                        <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-250 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                        <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-200 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-black uppercase">
                                           PAUSED
                                         </span>
                                       )}
@@ -1544,7 +1544,7 @@ export default function MockTestsCatalog() {
                                       {renderTestMarkingSchemePill(test)}
                                     </div>
 
-                                    <h4 className="font-extrabold text-xs text-slate-850 dark:text-white leading-snug">
+                                    <h4 className="font-extrabold text-xs text-slate-800 dark:text-white leading-snug">
                                       {test.title}
                                     </h4>
 
@@ -1574,7 +1574,7 @@ export default function MockTestsCatalog() {
                                         </button>
                                         <button
                                           onClick={() => handleReattemptExam(test)}
-                                          className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px]  cursor-pointer"
+                                          className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px]  cursor-pointer"
                                         >
                                           Reset
                                         </button>
@@ -1589,7 +1589,7 @@ export default function MockTestsCatalog() {
                                         </Link>
                                         <button
                                           onClick={() => handleReattemptExam(test)}
-                                          className="bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px]  cursor-pointer"
+                                          className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px]  cursor-pointer"
                                         >
                                           Reattempt
                                         </button>
@@ -1625,20 +1625,20 @@ export default function MockTestsCatalog() {
         {/* Upgrade subscription modal (mobile adapted) */}
         {upgradePopupOpen && (
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm p-0">
-            <div className="bg-white dark:bg-slate-905 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-6 w-full max-w-md shadow-2xl animate-in slide-in-from-bottom duration-200">
+            <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-6 w-full max-w-md shadow-2xl animate-in slide-in-from-bottom duration-200">
               <div className="flex items-center gap-2.5 text-yellow-600 mb-4">
                 <ShieldAlert className="h-5.5 w-5.5" />
                 <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-900 dark:text-white">Unlock Gated Mock Test</h4>
               </div>
               
-              <p className="text-slate-605 dark:text-slate-300 text-[11px] leading-relaxed mb-6 font-semibold">
+              <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed mb-6 font-semibold">
                 This is a premium assessment test. To start sitting, you need to upgrade your subscription pass to <strong className="text-yellow-600 dark:text-yellow-400">{requiredTierInfo.replace('Testbook', 'Mock Test')}</strong> or higher.
               </p>
               
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handlePurchasePass}
-                  className="w-full bg-yellow-650 hover:bg-yellow-750 text-white py-3 rounded-xl text-xs font-bold shadow transition"
+                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded-xl text-xs font-bold shadow transition"
                 >
                   Simulate Unlock Now
                 </button>
@@ -1658,10 +1658,10 @@ export default function MockTestsCatalog() {
   }
 
   return (
-    <div className="h-screen max-h-screen w-full flex flex-col bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden">
+    <div className="h-screen max-h-screen w-full flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden">
       
       {/* Navbar header */}
-      <header className="h-20 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 sm:px-6 lg:px-8 flex items-center justify-between relative shadow-xs z-30">
+      <header className="h-18 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 sm:px-6 lg:px-8 flex items-center justify-between relative shadow-xs z-30">
         <div className="flex items-center gap-2.5 sm:gap-4 lg:gap-6 min-w-0">
           {/* Back button on top left corner */}
           <Link 
@@ -1685,6 +1685,16 @@ export default function MockTestsCatalog() {
               <p className="text-[8px] lg:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase truncate">{t.logoSub}</p>
             </div>
           </Link>
+
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-3 lg:gap-6 text-xs font-bold text-slate-600 dark:text-slate-400 shrink-0 ml-1 lg:ml-3">
+            <Link href="/typing-test" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
+              <span>{language === 'hi' ? 'टाइपिंग टेस्ट' : 'Typing Test'}</span>
+            </Link>
+            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
+              <span>{language === 'hi' ? 'सूचनाएं एवं अपडेट्स' : 'Notices & Announcements'}</span>
+            </Link>
+          </nav>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -1692,7 +1702,7 @@ export default function MockTestsCatalog() {
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2 py-1.5 lg:px-2.5 lg:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-350 text-xs font-bold focus:outline-none cursor-pointer"
+            className="px-2 py-1.5 lg:px-2.5 lg:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold focus:outline-none cursor-pointer"
           >
             <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
             <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
@@ -1756,7 +1766,7 @@ export default function MockTestsCatalog() {
                 value={sidebarSearch}
                 onChange={(e) => setSidebarSearch(e.target.value)}
                 placeholder={language === 'hi' ? 'श्रेणी खोजें...' : 'Search categories...'}
-                className="w-full bg-white dark:bg-slate-900  rounded-xl pl-8.5 pr-8 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold shadow-2xs placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                className="w-full bg-white dark:bg-slate-900  rounded-xl pl-8.5 pr-8 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold shadow-2xs placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
               {sidebarSearch && (
                 <button
@@ -1799,11 +1809,11 @@ export default function MockTestsCatalog() {
                     }`}
                   >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-900  overflow-hidden shrink-0 shadow-2xs transition-transform duration-200 group-hover:scale-105">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white border border-slate-100 overflow-hidden shrink-0 shadow-2xs transition-transform duration-200 group-hover:scale-105">
                       {cat.logoUrl ? (
                         <img src={cat.logoUrl} alt={cat.name} className="w-full h-full object-contain p-1" />
                       ) : (
-                        <div className="text-blue-600 dark:text-blue-400">
+                        <div className="text-blue-600">
                           {isSsc && <Award className="h-4 w-4 text-orange-500" />}
                           {isRailways && <TrendingUp className="h-4 w-4 text-indigo-500" />}
                           {isBanking && <Coins className="h-4 w-4 text-emerald-500" />}
@@ -2073,7 +2083,7 @@ export default function MockTestsCatalog() {
                               )}
                             </div>
 
-                            <h4 className="font-extrabold text-[11px] text-slate-850 dark:text-slate-100 line-clamp-1 leading-snug" title={getLocalizedName(test, language)}>
+                            <h4 className="font-extrabold text-[11px] text-slate-800 dark:text-slate-100 line-clamp-1 leading-snug" title={getLocalizedName(test, language)}>
                               {getLocalizedName(test, language)}
                             </h4>
                           </div>
@@ -2136,7 +2146,7 @@ export default function MockTestsCatalog() {
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                           {/* Logo/Icon Container */}
-                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-2 bg-white dark:bg-slate-900 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
                             {cat.logoUrl ? (
                               <img
                                 src={cat.logoUrl}
@@ -2162,7 +2172,7 @@ export default function MockTestsCatalog() {
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[8.5px] uppercase tracking-wider mt-3 pt-1.5 border-t border-slate-155 dark:border-slate-800/60 w-full">
+                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[8.5px] uppercase tracking-wider mt-3 pt-1.5 border-t border-slate-200 dark:border-slate-800/60 w-full">
                           {language === 'hi' ? "कैटेगरी देखें" : "View Category"} <ChevronRight className="h-2.5 w-2.5 transition group-hover:translate-x-0.5" />
                         </div>
                       </div>
@@ -2174,7 +2184,7 @@ export default function MockTestsCatalog() {
                           <div className="flex flex-col gap-1">
                             {cat.subCategories.slice(0, 5).map((sub: any) => (
                               <div key={sub.id} className="flex items-center gap-1">
-                                <div className="h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-450 shrink-0"></div>
+                                <div className="h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-400 shrink-0"></div>
                                 <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={getLocalizedName(sub, language)}>
                                   {getLocalizedName(formatSubCategoryName(sub.name), language)}
                                 </span>
@@ -2209,7 +2219,7 @@ export default function MockTestsCatalog() {
                       value={examSearchQuery}
                       onChange={(e) => setExamSearchQuery(e.target.value)}
                       placeholder={language === 'hi' ? 'इस श्रेणी में खोजें...' : 'Search in this category...'}
-                      className="w-full bg-white dark:bg-slate-950  rounded-xl pl-10 pr-10 py-2 text-xs text-slate-855 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold shadow-sm"
+                      className="w-full bg-white dark:bg-slate-950  rounded-xl pl-10 pr-10 py-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold shadow-sm"
                     />
                     {examSearchQuery && (
                       <button
@@ -2281,7 +2291,7 @@ export default function MockTestsCatalog() {
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                           {/* Icon Container */}
-                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-2 bg-white dark:bg-slate-900 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
                             {getSubCatIcon(subCat.name, subCat.logoUrl || currentCategoryObj?.logoUrl)}
                           </div>
 
@@ -2309,7 +2319,7 @@ export default function MockTestsCatalog() {
                           <div className="flex flex-col gap-1">
                             {subSubList.slice(0, 5).map((itemTitle: string, idx: number) => (
                               <div key={idx} className="flex items-center gap-1">
-                                <div className="h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-450 shrink-0"></div>
+                                <div className="h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-400 shrink-0"></div>
                                 <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={getLocalizedName(itemTitle, language)}>
                                   {getLocalizedName(formatSubCategoryName(itemTitle), language)}
                                 </span>
@@ -2439,7 +2449,7 @@ export default function MockTestsCatalog() {
                                 <div className="flex-1 flex flex-col justify-between min-w-0">
                                   <div>
                                     {/* Icon Container */}
-                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-2 bg-white dark:bg-slate-900 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
+                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
                                       {getSubCatIcon(group.name, currentCategoryObj?.logoUrl)}
                                     </div>
 
@@ -2570,7 +2580,7 @@ export default function MockTestsCatalog() {
                                     <div className="space-y-1.5 flex-1 w-full text-left">
                                       <div className="flex flex-wrap items-center gap-2">
                                         {isTestPremium ? (
-                                          <span className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/5 dark:text-amber-405 text-[8px] font-black px-2 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-wider">
+                                          <span className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/5 dark:text-amber-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-wider">
                                             {language === 'hi' ? 'प्रो' : 'PRO'}
                                           </span>
                                         ) : (
@@ -2621,7 +2631,7 @@ export default function MockTestsCatalog() {
                                           </button>
                                           <button
                                             onClick={() => handleReattemptExam(test)}
-                                            className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
+                                            className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
                                           >
                                             Reset
                                           </button>
@@ -2636,7 +2646,7 @@ export default function MockTestsCatalog() {
                                           </Link>
                                           <button
                                             onClick={() => handleReattemptExam(test)}
-                                            className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
+                                            className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
                                           >
                                             {t.reattempt}
                                           </button>
@@ -2705,7 +2715,7 @@ export default function MockTestsCatalog() {
                               <div className="space-y-1.5 flex-1 w-full text-left">
                                 <div className="flex flex-wrap items-center gap-2">
                                   {isTestPremium ? (
-                                    <span className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/5 dark:text-amber-405 text-[8px] font-black px-2 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-wider">
+                                    <span className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/5 dark:text-amber-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-wider">
                                       {language === 'hi' ? 'प्रो' : 'PRO'}
                                     </span>
                                   ) : (
@@ -2756,7 +2766,7 @@ export default function MockTestsCatalog() {
                                     </button>
                                     <button
                                       onClick={() => handleReattemptExam(test)}
-                                      className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
+                                      className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
                                     >
                                       Reset
                                     </button>
@@ -2771,7 +2781,7 @@ export default function MockTestsCatalog() {
                                     </Link>
                                     <button
                                       onClick={() => handleReattemptExam(test)}
-                                      className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
+                                      className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
                                     >
                                       {t.reattempt}
                                     </button>

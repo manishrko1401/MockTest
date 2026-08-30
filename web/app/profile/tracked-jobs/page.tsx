@@ -166,23 +166,29 @@ export default function TrackedJobsPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200 relative pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-200/90 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200 relative pb-20 overflow-x-hidden">
       
       {/* Background Decorative Blur Orbs */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-1/2 right-10 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[140px] pointer-events-none" />
 
       {/* HEADER NAVBAR */}
-      <header className="h-16 sm:h-20 sticky top-0 z-40 px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
+      <header className="h-18 sticky top-0 z-40 px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           {/* Back Button */}
           <button
-            onClick={() => router.push('/profile')}
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.history.length > 1) {
+                router.back();
+              } else {
+                router.push('/profile');
+              }
+            }}
             className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold transition text-slate-700 dark:text-slate-200 shrink-0 cursor-pointer active:scale-95"
-            title={language === 'hi' ? 'प्रोफाइल पर वापस' : 'Back to Profile'}
+            title={language === 'hi' ? 'वापस' : 'Back'}
           >
             <ArrowLeft className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-            <span className="hidden sm:inline">{language === 'hi' ? 'प्रोफाइल' : 'Profile'}</span>
+            <span className="hidden sm:inline">{language === 'hi' ? 'वापस' : 'Back'}</span>
           </button>
 
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">

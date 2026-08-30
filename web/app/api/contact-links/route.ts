@@ -78,6 +78,21 @@ const DEFAULT_CONTACT_LINKS = [
     isEnabled: true
   },
   {
+    id: 'linkedin',
+    name: 'LinkedIn',
+    badgeText: 'in',
+    badgeBg: 'bg-[#0A66C2]',
+    badgeTextColor: 'text-white',
+    iconType: 'linkedin',
+    handle: 'MockTest Hub',
+    url: 'https://linkedin.com/company/mocktesthub',
+    descriptionEn: 'Official career opportunities, hiring announcements & platform updates',
+    descriptionHi: 'कैरियर के अवसर, भर्ती घोषणाएं और मंच अपडेट',
+    category: 'social',
+    orderIndex: 5,
+    isEnabled: true
+  },
+  {
     id: 'reddit',
     name: 'Reddit',
     badgeText: 'R',
@@ -89,7 +104,7 @@ const DEFAULT_CONTACT_LINKS = [
     descriptionEn: 'Aspirant discussions, AMA sessions & competitive prep tips',
     descriptionHi: 'उम्मीदवार चर्चा, प्रश्नोत्तर सत्र और परीक्षा तैयारी युक्तियाँ',
     category: 'community',
-    orderIndex: 5,
+    orderIndex: 6,
     isEnabled: true
   },
   {
@@ -104,7 +119,7 @@ const DEFAULT_CONTACT_LINKS = [
     descriptionEn: 'Direct broadcast channel for urgent admit card & result notifications',
     descriptionHi: 'प्रवेश पत्र और परिणाम अधिसूचनाओं के लिए सीधा प्रसारण चैनल',
     category: 'community',
-    orderIndex: 6,
+    orderIndex: 7,
     isEnabled: true
   }
 ];

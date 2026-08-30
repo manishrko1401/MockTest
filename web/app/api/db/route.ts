@@ -11,6 +11,21 @@ import {
   getClientIp, 
   verifyTurnstileToken 
 } from '../../lib/botProtection';
+import {
+  getTypingCategories,
+  saveTypingCategory,
+  deleteTypingCategory,
+  getTypingPassages,
+  saveTypingPassage,
+  deleteTypingPassage,
+  getTypingTests,
+  getTypingTestById,
+  saveTypingTest,
+  deleteTypingTest,
+  saveTypingAttempt,
+  getUserTypingAttempts,
+  evaluateTyping
+} from '../../lib/typingStore';
 
 // Persistent OTP Cache in global to survive Next.js dev server hot-reloads
 const otpCache = (global as any).otpCache || new Map<string, { code: string; expiresAt: number }>();
@@ -149,7 +164,10 @@ export async function POST(request: Request) {
       'add-subsubcategory', 'edit-subsubcategory', 'delete-subsubcategory',
       'add-mocktest', 'edit-mocktest-title', 'delete-mocktest', 'save-section-rules',
       'save-custom-questions', 'bulk-import-questions', 'save-profile-admin', 'db-stats',
-      'admin-get-locker-stats', 'admin-delete-locker-doc', 'admin-disconnect-user-locker'
+      'admin-get-locker-stats', 'admin-delete-locker-doc', 'admin-disconnect-user-locker',
+      'create-typing-category', 'edit-typing-category', 'delete-typing-category',
+      'create-typing-passage', 'edit-typing-passage', 'delete-typing-passage',
+      'create-typing-test', 'edit-typing-test', 'delete-typing-test'
     ];
 
     const userOwnedActions = [
@@ -391,6 +409,55 @@ export async function POST(request: Request) {
         return await handleAdminDisconnectUserLocker(data);
       case 'db-stats':
         return await handleDbStats();
+
+      // ==========================================
+      // Typing Test Module Handlers
+      // ==========================================
+      case 'get-typing-categories':
+        return NextResponse.json({ success: true, categories: getTypingCategories() });
+      case 'create-typing-category':
+      case 'edit-typing-category':
+        return NextResponse.json({ success: true, category: saveTypingCategory(data || body?.category || body) });
+      case 'delete-typing-category':
+        return NextResponse.json({ success: true, deleted: deleteTypingCategory(data?.id || body?.id) });
+
+      case 'get-typing-passages':
+        return NextResponse.json({ success: true, passages: getTypingPassages() });
+      case 'create-typing-passage':
+      case 'edit-typing-passage':
+        return NextResponse.json({ success: true, passage: saveTypingPassage(data || body?.passage || body) });
+      case 'delete-typing-passage':
+        return NextResponse.json({ success: true, deleted: deleteTypingPassage(data?.id || body?.id) });
+
+      case 'get-typing-tests':
+        return NextResponse.json({ success: true, tests: getTypingTests(), categories: getTypingCategories() });
+      case 'get-typing-test-by-id':
+        return NextResponse.json({ success: true, test: getTypingTestById(data?.id || body?.id) });
+      case 'create-typing-test':
+      case 'edit-typing-test':
+        return NextResponse.json({ success: true, test: saveTypingTest(data || body?.test || body) });
+      case 'delete-typing-test':
+        return NextResponse.json({ success: true, deleted: deleteTypingTest(data?.id || body?.id) });
+
+      case 'save-typing-attempt':
+        return NextResponse.json({ success: true, attempt: saveTypingAttempt(data || body?.attempt || body) });
+      case 'get-user-typing-attempts':
+        return NextResponse.json({ success: true, attempts: getUserTypingAttempts(data?.userId || body?.userId || requesterUserId || undefined, data?.testId || body?.testId || undefined) });
+      case 'evaluate-typing':
+        return NextResponse.json({ 
+          success: true, 
+          evaluation: evaluateTyping(
+            data?.targetText || body?.targetText || '',
+            data?.typedText || body?.typedText || '',
+            data?.timeSpentSeconds || body?.timeSpentSeconds || 60,
+            data?.backspaceCount || body?.backspaceCount || 0,
+            data?.qualifyingWpm || body?.qualifyingWpm || 35,
+            data?.maxErrorPercentage || body?.maxErrorPercentage || 5.0,
+            Boolean(data?.allowRetype || body?.allowRetype),
+            Boolean(data?.isSsc || body?.isSsc)
+          )
+        });
+
       default:
         return NextResponse.json({ success: false, error: `Invalid action: ${action}` }, { status: 400 });
     }
@@ -602,27 +669,45 @@ async function handleBootstrap() {
   // Admins will fetch this data separately using the 'admin-data' action.
   const usersList: any[] = [];
 
-  // Fetch Notices (select only list metadata; exclude 2.2MB contentHtml from DB wire egress)
-  const notices = await prisma.notice.findMany({
-    orderBy: {
-      createdAt: 'desc',
-    },
-    select: {
-      id: true,
-      title: true,
-      titleHi: true,
-      date: true,
-      publishDate: true,
-      type: true,
-      category: true,
-      url: true,
-      rawUrl: true,
-      lastDate: true,
-      imageUrl: true,
-    },
+  // EGRESS-OPT: Fetch Notices in two passes:
+  //   Pass 1 — ALL announcements (no limit). Announcements are permanent home-page banner items
+  //             created months ago; they must ALWAYS be returned regardless of the 100-item cap.
+  //             Without this, newer daily notices push announcements past position 100, making
+  //             the HomeHeroBannerCarousel show nothing (falls back to fallback slides).
+  //   Pass 2 — 100 most recent NON-announcement notices (exam dates, results, admit cards).
+  //             These are high-volume and time-sensitive; older ones are rarely accessed.
+  // Both lists are merged and de-duplicated by id before being returned.
+  const [announcementNotices, regularNotices] = await Promise.all([
+    // Pass 1: always fetch ALL announcements (they are permanent banners, not time-bounded)
+    prisma.notice.findMany({
+      where: { category: 'announcement' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true, title: true, titleHi: true, date: true, publishDate: true,
+        type: true, category: true, url: true, rawUrl: true, lastDate: true, imageUrl: true,
+      },
+    }),
+    // Pass 2: cap regular notices at 100 most recent
+    prisma.notice.findMany({
+      where: { category: { not: 'announcement' } },
+      orderBy: { createdAt: 'desc' },
+      take: 100, // EGRESS-OPT: 100 most recent non-announcement notices
+      select: {
+        id: true, title: true, titleHi: true, date: true, publishDate: true,
+        type: true, category: true, url: true, rawUrl: true, lastDate: true, imageUrl: true,
+      },
+    }),
+  ]);
+
+  // Merge: announcements first, then regular notices (de-dup by id just in case)
+  const seenIds = new Set<string>();
+  const mergedNotices = [...announcementNotices, ...regularNotices].filter((n: any) => {
+    if (seenIds.has(n.id)) return false;
+    seenIds.add(n.id);
+    return true;
   });
 
-  const noticesList = notices.map((n: any) => ({
+  const noticesList = mergedNotices.map((n: any) => ({
     id: n.id,
     title: n.title,
     titleHi: n.titleHi || undefined,
@@ -650,9 +735,13 @@ async function handleBootstrap() {
   // Admins will fetch this data separately using the 'admin-data' action.
   const reportedQuestionsList: any[] = [];
 
+  // EGRESS-OPT: Changed from 'no-store' to 's-maxage=60' so Vercel's CDN can serve this response
+  // to multiple concurrent users without each one hitting Supabase directly.
+  // The server-side catalogCache (5-min TTL) is the primary deduplication layer;
+  // the CDN cache (60s) is a secondary layer that absorbs traffic spikes.
   return NextResponse.json(
     { success: true, usersList, noticesList, examCatalog, reportedQuestionsList },
-    { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
+    { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
   );
 }
 
@@ -747,8 +836,13 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
         // NOTE: customQuestions is intentionally excluded — fetched per-test separately
       },
     }),
+    // EGRESS-OPT: Filter notices by createdAt > since for delta syncs — only transfer new/updated entries.
+    // For first-time syncs (since=null), cap at 100 most recent. This was previously an unbounded query
+    // returning ALL notices on every delta poll, costing ~30-100KB per user every 5 minutes.
     prisma.notice.findMany({
+      where: since ? { createdAt: { gt: since } } : undefined,
       orderBy: { createdAt: 'desc' },
+      take: 100, // EGRESS-OPT: cap at 100 even for full syncs
       select: {
         id: true,
         title: true,
@@ -990,11 +1084,16 @@ async function handleLogin(data: any, request?: Request) {
     }, { status: 429 });
   }
 
-  // Fetch user WITH sessions for single-user login (fast, and required for profile history / analysis)
+  // EGRESS-OPT: Fetch user WITHOUT question responses on login.
+  // Responses (per-question answer state) can be thousands of rows per user.
+  // They are loaded on-demand only when the user opens a specific test analysis.
+  // This reduces login egress by 80-95% for active users.
   const user = await prisma.user.findUnique({
     where: { email: trimmedEmail },
     include: {
       testSessions: {
+        // EGRESS-OPT: Only fetch most recent 30 sessions (not all history)
+        take: 30,
         include: {
           mockTest: {
             select: {
@@ -1005,7 +1104,8 @@ async function handleLogin(data: any, request?: Request) {
               negativeMarks: true,
             }
           },
-          responses: true,
+          // EGRESS-OPT: responses: true REMOVED — no longer fetched at login.
+          // Full responses are loaded lazily via get-session-responses when opening analysis.
         },
         orderBy: { startedAt: 'desc' },
       },
@@ -1086,15 +1186,8 @@ async function handleLogin(data: any, request?: Request) {
     isLockerConnected: !!user.isLockerConnected,
     googleDriveEmail: user.googleDriveEmail,
     googleDriveFolderId: user.googleDriveFolderId,
+    // EGRESS-OPT: sessions mapped WITHOUT responses object (responses = {} always empty at login)
     testSessions: user.testSessions.map((session: any) => {
-      const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
-      session.responses.forEach((r: any) => {
-        responsesRecord[r.questionId] = {
-          selectedOptionIndex: r.selectedOptionIndex,
-          elapsedSeconds: r.elapsedSeconds,
-          state: r.state,
-        };
-      });
       return {
         id: session.id,
         testId: session.mockTestId,
@@ -1111,7 +1204,7 @@ async function handleLogin(data: any, request?: Request) {
         completedAt: session.completedAt ? session.completedAt.toISOString() : null,
         createdAt: session.createdAt ? session.createdAt.toISOString() : session.startedAt.toISOString(),
         updatedAt: (session.completedAt || session.startedAt || session.createdAt).toISOString(),
-        responses: responsesRecord,
+        responses: {}, // Loaded on-demand via get-session-responses when opening analysis
         timeRemaining: session.remainingSeconds,
         currentSectionIndex: session.currentSectionIndex,
         currentQuestionIndex: session.currentQuestionIndex,
@@ -3990,12 +4083,15 @@ async function handleGetUserDetails(data: any) {
     return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
   }
 
-  // Fetch recent sessions WITH responses so Solution/Analysis dashboard gets correct time taken and statuses
+  // EGRESS-OPT: Fetch recent sessions WITHOUT question responses.
+  // This action is called on every tab focus switch — loading all responses (thousands of rows)
+  // on each tab switch was a massive recurring egress cost. Responses are loaded on-demand
+  // when the user opens a specific test analysis screen (via get-session-responses).
   const u = await prisma.user.findUnique({
     where: { id: userId },
     include: {
       testSessions: {
-        take: 30,
+        take: 30, // EGRESS-OPT: Only most recent 30 sessions for list/history view
         include: {
           mockTest: {
             select: {
@@ -4006,7 +4102,7 @@ async function handleGetUserDetails(data: any) {
               negativeMarks: true,
             }
           },
-          responses: true,
+          // EGRESS-OPT: responses: true REMOVED — was fetching 100s of rows per session on every tab switch
         },
         orderBy: { startedAt: 'desc' },
       },
@@ -4037,15 +4133,8 @@ async function handleGetUserDetails(data: any) {
     password: u.passwordHash,
     bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
     trackedJobs: u.trackedJobs ? (u.trackedJobs as any) : [],
+    // EGRESS-OPT: sessions mapped WITHOUT responses (responses = {} always empty here)
     testSessions: u.testSessions.map((session: any) => {
-      const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
-      session.responses.forEach((r: any) => {
-        responsesRecord[r.questionId] = {
-          selectedOptionIndex: r.selectedOptionIndex,
-          elapsedSeconds: r.elapsedSeconds,
-          state: r.state,
-        };
-      });
       return {
         id: session.id,
         testId: session.mockTestId,
@@ -4062,7 +4151,7 @@ async function handleGetUserDetails(data: any) {
         completedAt: session.completedAt ? session.completedAt.toISOString() : null,
         createdAt: session.createdAt ? session.createdAt.toISOString() : session.startedAt.toISOString(),
         updatedAt: (session.completedAt || session.startedAt || session.createdAt).toISOString(),
-        responses: responsesRecord,
+        responses: {}, // Loaded on-demand via get-session-responses when opening analysis
         timeRemaining: session.remainingSeconds,
         currentSectionIndex: session.currentSectionIndex,
         currentQuestionIndex: session.currentQuestionIndex,

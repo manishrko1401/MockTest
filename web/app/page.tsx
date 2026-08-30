@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 import Link from 'next/link';
 import HomeSupportWidget from './components/HomeSupportWidget';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, GraduationCap, ChevronRight, ChevronLeft, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target, ArrowRight, BookmarkCheck, Lock } from 'lucide-react';
+import { ShieldCheck, GraduationCap, ChevronRight, ChevronLeft, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target, ArrowRight, BookmarkCheck, Lock, Mail, Copy, Check, ExternalLink } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
 import { getLocalizedName } from './lib/examUtils';
 import { useIsMobile } from './useIsMobile';
@@ -272,6 +272,104 @@ const formatSubCategoryName = (name: string) => {
   const [calculatorPosMark, setCalculatorPosMark] = useState<number>(2);
   const [calculatorNegMark, setCalculatorNegMark] = useState<number>(0.5);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [copiedContactEmail, setCopiedContactEmail] = useState(false);
+  const [contactLinks, setContactLinks] = useState<any[]>([
+    {
+      id: 'email',
+      name: 'Gmail / Support',
+      badgeText: 'M',
+      badgeBg: 'bg-[#EA4335]',
+      badgeTextColor: 'text-white',
+      iconType: 'mail',
+      handle: 'mocktesthubsupport@gmail.com',
+      url: 'mailto:mocktesthubsupport@gmail.com?subject=MockTest%20Hub%20Support%20Inquiry',
+      descriptionEn: 'Official support for password resets, pass activation & grievances',
+      descriptionHi: 'पासवर्ड रीसेट, पास सक्रियण और शिकायतों के लिए आधिकारिक समर्थन',
+      category: 'primary',
+      isEnabled: true
+    },
+    {
+      id: 'telegram',
+      name: 'Telegram',
+      badgeText: 'TG',
+      badgeBg: 'bg-[#229ED9]',
+      badgeTextColor: 'text-white',
+      iconType: 'send',
+      handle: '@MockTest_Hub',
+      url: 'https://t.me/MockTest_Hub',
+      descriptionEn: 'Instant exam alerts, free PDF notes, daily quizzes & student community',
+      descriptionHi: 'त्वरित परीक्षा अलर्ट, मुफ्त पीडीएफ नोट्स और दैनिक क्विज़',
+      category: 'primary',
+      isEnabled: true
+    },
+    {
+      id: 'youtube',
+      name: 'YouTube',
+      badgeText: 'YT',
+      badgeBg: 'bg-[#FF0000]',
+      badgeTextColor: 'text-white',
+      iconType: 'youtube',
+      handle: '@MockTestHub',
+      url: 'https://youtube.com/@MockTestHub',
+      descriptionEn: 'Exam strategy sessions, syllabus deep-dives & question walkthroughs',
+      descriptionHi: 'परीक्षा रणनीति सत्र, पाठ्यक्रम विश्लेषण और हल किए गए पेपर',
+      category: 'primary',
+      isEnabled: true
+    },
+    {
+      id: 'instagram',
+      name: 'Instagram',
+      badgeText: 'IG',
+      badgeBg: 'bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF]',
+      badgeTextColor: 'text-white',
+      iconType: 'instagram',
+      handle: '@mocktesthub',
+      url: 'https://instagram.com/mocktesthub',
+      descriptionEn: 'Daily GK snippets, motivational quotes & upcoming notification reels',
+      descriptionHi: 'दैनिक सामान्य ज्ञान, प्रेरक विचार और आगामी भर्ती रील्स',
+      category: 'social',
+      isEnabled: true
+    },
+    {
+      id: 'linkedin',
+      name: 'LinkedIn',
+      badgeText: 'in',
+      badgeBg: 'bg-[#0A66C2]',
+      badgeTextColor: 'text-white',
+      iconType: 'linkedin',
+      handle: 'MockTest Hub',
+      url: 'https://linkedin.com/company/mocktesthub',
+      descriptionEn: 'Official career opportunities, hiring announcements & platform updates',
+      descriptionHi: 'कैरियर के अवसर, भर्ती घोषणाएं और मंच अपडेट',
+      category: 'social',
+      isEnabled: true
+    },
+    {
+      id: 'reddit',
+      name: 'Reddit',
+      badgeText: 'R',
+      badgeBg: 'bg-[#FF4500]',
+      badgeTextColor: 'text-white',
+      iconType: 'reddit',
+      handle: 'r/MockTestHub',
+      url: 'https://reddit.com/r/MockTestHub',
+      descriptionEn: 'Aspirant discussions, AMA sessions & competitive prep tips',
+      descriptionHi: 'उम्मीदवार चर्चा, प्रश्नोत्तर सत्र और परीक्षा तैयारी युक्तियाँ',
+      category: 'community',
+      isEnabled: true
+    }
+  ]);
+
+  useEffect(() => {
+    fetch('/api/contact-links')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && Array.isArray(data.links) && data.links.length > 0) {
+          setContactLinks(data.links.filter((l: any) => l.isEnabled !== false));
+        }
+      })
+      .catch(err => console.error('Error loading dynamic contact links:', err));
+  }, []);
 
   const dbTestimonials = (noticesList || [])
     .filter(n => n.category === 'testimonial')
@@ -290,18 +388,12 @@ const formatSubCategoryName = (name: string) => {
 
   const [announcementIndex, setAnnouncementIndex] = useState(0);
   const activeAnnouncements = (noticesList || []).filter(n => n.category === 'announcement');
+  const hasAdminBanners = (noticesList || []).some(n => Boolean(n.imageUrl && n.imageUrl.trim() !== ''));
 
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
   const renderNotificationTile = (notice: any, themeColor: 'blue' | 'amber' | 'emerald' | 'purple') => {
-    const typeTagColors = {
-      blue: 'bg-blue-50 text-blue-700 dark:bg-blue-955 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-      amber: 'bg-amber-50 text-amber-800 dark:bg-amber-955 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-      emerald: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-955 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-      purple: 'bg-purple-50 text-purple-800 dark:bg-purple-955 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-    };
-
     const hoverBorderColors = {
       blue: 'hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/50',
       amber: 'hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/50',
@@ -324,16 +416,11 @@ const formatSubCategoryName = (name: string) => {
       >
         {/* Top Badges & Date */}
         <div className="flex items-center justify-between gap-2 w-full">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`text-[9px] font-extrabold px-2.5 py-0.5 rounded-md uppercase tracking-wider border ${typeTagColors[themeColor]}`}>
-              {notice.type}
+          {isNewlyPublished(notice.publishDate) ? (
+            <span className="bg-rose-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow-2xs">
+              {t.newBadge}
             </span>
-            {isNewlyPublished(notice.publishDate) && (
-              <span className="bg-rose-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow-2xs">
-                {t.newBadge}
-              </span>
-            )}
-          </div>
+          ) : <span />}
           <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold whitespace-nowrap">{notice.date}</span>
         </div>
 
@@ -342,8 +429,8 @@ const formatSubCategoryName = (name: string) => {
           {notice.title}
         </h5>
 
-        {/* Last Date Deadline */}
-        {notice.lastDate && (
+        {/* Last Date Deadline - Only in Live Notices */}
+        {notice.category === 'notice' && notice.lastDate && (
           <p className="text-[9.5px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1 mt-0.5">
             <span>{t.lastDate}</span>
             <span>{notice.lastDate}</span>
@@ -456,7 +543,7 @@ const formatSubCategoryName = (name: string) => {
 
   if (!isMounted) {
     return (
-      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 items-center justify-center">
+      <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 items-center justify-center">
         <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -465,13 +552,13 @@ const formatSubCategoryName = (name: string) => {
   if (isMobile) {
     return (
       <>
-        <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
+        <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
         {/* Mobile Background Arts & Orbs */}
         <BackgroundArts isMobile={true} />
         <div className="absolute top-10 -left-20 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute top-[50%] -right-20 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <header className="h-14 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
+        <header className="h-18 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 rounded-full shadow-sm flex items-center justify-center h-8 w-8 border border-blue-200/50 dark:border-slate-700 shrink-0">
               <Trophy className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -515,6 +602,17 @@ const formatSubCategoryName = (name: string) => {
                 className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
               >
                 <span>{t.navTestSeries}</span>
+                <ChevronRight className="h-4 w-4 text-slate-400" />
+              </Link>
+              <Link
+                href="/typing-test"
+                onClick={() => handleToggleMenu(false)}
+                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <span>{language === 'hi' ? 'टाइपिंग टेस्ट (DEST)' : 'Typing Test & Terminal'}</span>
+                  <span className="bg-blue-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full">NEW</span>
+                </div>
                 <ChevronRight className="h-4 w-4 text-slate-400" />
               </Link>
               <Link
@@ -632,10 +730,12 @@ const formatSubCategoryName = (name: string) => {
             </svg>
           </div>
 
-          {/* 1. FULL WIDTH HERO BANNER CAROUSEL (Expanded Horizontal Width on Mobile) */}
-          <div className="-mx-3 sm:mx-0 w-[calc(100%+1.5rem)] sm:w-full pt-0.5 pb-1 px-0 sm:px-0">
-            <HomeHeroBannerCarousel onOpenPassClaim={() => setShowCongratsPopup(true)} />
-          </div>
+          {/* 1. FULL WIDTH HERO BANNER CAROUSEL (Only shown if admin uploaded banners) */}
+          {hasAdminBanners && (
+            <div className="-mx-3 sm:mx-0 w-[calc(100%+1.5rem)] sm:w-full pt-0.5 pb-1 px-0 sm:px-0">
+              <HomeHeroBannerCarousel onOpenPassClaim={() => setShowCongratsPopup(true)} />
+            </div>
+          )}
 
           {/* 2. 4 PRIMARY ACTION BUTTONS (Same design as desktop) */}
           <div className="w-full grid grid-cols-2 gap-2.5 my-1">
@@ -852,29 +952,22 @@ const formatSubCategoryName = (name: string) => {
                           className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm transition-all duration-200 hover:scale-[1.015] active:scale-98 cursor-pointer block ${noticeStyle}`}
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1">
-                              <span className={`text-[7px] font-black px-1.5 py-0.5 rounded tracking-wide ${
-                                mobileUpdateTab === 'notice' ? 'bg-blue-105 text-blue-700 dark:bg-blue-950 dark:text-blue-400' :
-                                mobileUpdateTab === 'result' ? 'bg-yellow-100 text-yellow-750 dark:bg-yellow-950/50 dark:text-yellow-400' :
-                                'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
-                              }`}>
-                                {notice.type}
+                            {isNewlyPublished(notice.publishDate) ? (
+                              <span className="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
+                                {t.newBadge}
                               </span>
-                              {isNewlyPublished(notice.publishDate) && (
-                                <span className="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
-                                  {t.newBadge}
-                                </span>
-                              )}
-                            </div>
+                            ) : <span />}
                             <span className="text-[7px] text-slate-400 font-semibold">{notice.date}</span>
                           </div>
                           <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1">
                             <span>{(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title}</span>
                             <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
                           </h5>
-                          <p className="text-[8px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
-                            {t.lastDate} {notice.lastDate || (language === 'hi' ? 'उपलब्ध नहीं' : 'N/A')}
-                          </p>
+                          {notice.category === 'notice' && notice.lastDate && (
+                            <p className="text-[8px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
+                              {t.lastDate} {notice.lastDate}
+                            </p>
+                          )}
                         </Link>
                       );
                     })
@@ -1016,7 +1109,7 @@ const formatSubCategoryName = (name: string) => {
 }
 
   return (
-    <div className="h-screen max-h-screen h-[100dvh] w-full flex flex-col bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden relative">
+    <div className="h-screen max-h-screen h-[100dvh] w-full flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden relative">
       
       {/* Background Decorative Arts & Designs (Strictly bounded within viewport) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -1027,7 +1120,7 @@ const formatSubCategoryName = (name: string) => {
       </div>
 
       {/* HEADER SECTION */}
-      <header className="hidden md:flex h-20 shrink-0 sticky top-0 z-40 px-4 sm:px-6 lg:px-8 items-center justify-between shadow-sm glass-header transition-all duration-350 bg-white/95 dark:bg-slate-950/95 border-b border-slate-200 dark:border-slate-800">
+      <header className="hidden md:flex h-18 shrink-0 sticky top-0 z-40 px-4 sm:px-6 lg:px-8 items-center justify-between shadow-sm glass-header transition-all duration-350 bg-white/95 dark:bg-slate-950/95 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3 lg:gap-6 min-w-0">
           {/* Original MockTest Hub Header Logo */}
           <Link href="/" className="flex items-center gap-2.5 lg:gap-3 shrink-0">
@@ -1043,6 +1136,9 @@ const formatSubCategoryName = (name: string) => {
           {/* Navigation Links */}
           <nav className="flex items-center gap-3 lg:gap-6 text-xs font-bold text-slate-505 dark:text-slate-400 shrink-0">
             <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">{t.navTestSeries}</Link>
+            <Link href="/typing-test" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
+              <span>{language === 'hi' ? 'टाइपिंग टेस्ट' : 'Typing Test'}</span>
+            </Link>
             <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">{t.navUpdates}</Link>
             <Link href="/locker" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
               <span>{language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}</span>
@@ -1150,10 +1246,12 @@ const formatSubCategoryName = (name: string) => {
                 <LiveUpdatesBar notices={noticesList} language={language} isMobile={false} />
               </div>
 
-              {/* FULL WIDTH 3D HERO BANNER CAROUSEL (Covers entire right content area) */}
-              <div className="w-full pt-1 sm:pt-2 pb-1.5 sm:pb-2">
-                <HomeHeroBannerCarousel onOpenPassClaim={() => setShowCongratsPopup(true)} />
-              </div>
+              {/* FULL WIDTH 3D HERO BANNER CAROUSEL (Only shown if admin uploaded banners) */}
+              {hasAdminBanners && (
+                <div className="w-full pt-1 sm:pt-2 pb-1.5 sm:pb-2">
+                  <HomeHeroBannerCarousel onOpenPassClaim={() => setShowCongratsPopup(true)} />
+                </div>
+              )}
 
           {/* 4 PRIMARY ACTION BUTTONS (Just below Banner Section - Full Text Display) */}
           <div className="w-full grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-2.5 lg:gap-3.5 my-1.5">
@@ -1234,28 +1332,30 @@ const formatSubCategoryName = (name: string) => {
             </Link>
           </div>
 
-      {/* POPULAR EXAM CATEGORIES MARQUEE SECTION */}
-      <PopularExamsMarquee
-        categories={displayCategories}
-        language={language}
-        title={t.popularTitle}
-        exploreText={t.exploreTests}
-      />
+      {/* POPULAR EXAM CATEGORIES MARQUEE SECTION (Full width, 0 padding from left & right edges) */}
+      <div className="-mx-3 md:-mx-6 w-[calc(100%+1.5rem)] md:w-[calc(100%+3rem)]">
+        <PopularExamsMarquee
+          categories={displayCategories}
+          language={language}
+          title={t.popularTitle}
+          exploreText={t.exploreTests}
+        />
+      </div>
 
       {/* DESKTOP VOCABULARY BOOSTER SECTION - HIDDEN AS REQUESTED */}
       {/* <section className="py-12 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900">
         <VocabSection language={language} />
       </section> */}
 
-      {/* PORTAL UPDATES BOARD (RESULTNOTIFY STYLE 4-COLUMN CONTAINER GRID) */}
-      <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900 space-y-12">
-        <div className="text-center max-w-xl mx-auto">
-          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.liveUpdatesTitle}</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">{t.liveUpdatesDesc}</p>
+      {/* PORTAL UPDATES BOARD (RESULTNOTIFY STYLE 3-COLUMN CONTAINER GRID) */}
+      <section className="py-10 md:py-14 px-2 sm:px-4 md:px-6 w-full max-w-[1550px] mx-auto relative z-10 border-t border-slate-300 dark:border-slate-800 space-y-8">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.liveUpdatesTitle}</h2>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 font-semibold">{t.liveUpdatesDesc}</p>
         </div>
 
         {/* MOBILE & TABLET TABBED UPDATES VIEW (< 1080px) */}
-        <div className="block min-[1080px]:hidden max-w-2xl mx-auto space-y-4">
+        <div className="block min-[1080px]:hidden max-w-4xl mx-auto space-y-4">
           {/* TAB SELECTION BAR */}
           <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
             <button
@@ -1322,29 +1422,22 @@ const formatSubCategoryName = (name: string) => {
                         className={`p-3 sm:p-3.5 rounded-xl border flex flex-col gap-1 shadow-xs transition-all duration-200 hover:scale-[1.01] active:scale-98 cursor-pointer block ${noticeStyle}`}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`text-[8px] sm:text-[9px] font-black px-2 py-0.5 rounded tracking-wide ${
-                              mobileUpdateTab === 'notice' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400' :
-                              mobileUpdateTab === 'result' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-400' :
-                              'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
-                            }`}>
-                              {notice.type}
+                          {isNewlyPublished(notice.publishDate) ? (
+                            <span className="bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase">
+                              {t.newBadge}
                             </span>
-                            {isNewlyPublished(notice.publishDate) && (
-                              <span className="bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase">
-                                {t.newBadge}
-                              </span>
-                            )}
-                          </div>
+                          ) : <span />}
                           <span className="text-[8px] sm:text-[9px] text-slate-400 font-semibold">{notice.date}</span>
                         </div>
                         <h5 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1">
                           <span>{(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title}</span>
                           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                         </h5>
-                        <p className="text-[9px] sm:text-[10px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
-                          {t.lastDate} {notice.lastDate || (language === 'hi' ? 'उपलब्ध नहीं' : 'N/A')}
-                        </p>
+                        {notice.category === 'notice' && notice.lastDate && (
+                          <p className="text-[9px] sm:text-[10px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
+                            {t.lastDate} {notice.lastDate}
+                          </p>
+                        )}
                       </Link>
                     );
                   })
@@ -1364,17 +1457,17 @@ const formatSubCategoryName = (name: string) => {
           </div>
         </div>
 
-        {/* DESKTOP 3-COLUMN UPDATES VIEW (>= 1080px) */}
-        <div className="hidden min-[1080px]:grid min-[1080px]:grid-cols-3 gap-8">
+        {/* DESKTOP 3-COLUMN UPDATES VIEW (>= 1080px) - WIDER FULL-WIDTH GRID */}
+        <div className="hidden min-[1080px]:grid min-[1080px]:grid-cols-3 gap-5 lg:gap-6 w-full">
           
           {/* Column 1: Live Notices & Announcements (Blue Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 lg:p-6 shadow-sm flex flex-col min-h-[580px] relative w-full">
+            <h3 className="font-extrabold text-xs lg:text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
               <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce shrink-0" />
               <span>{t.liveNotices}</span>
             </h3>
 
-            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
+            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2 -m-2">
               {noticesList.filter(n => n.category === 'notice').length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === 'notice')
@@ -1400,13 +1493,13 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           {/* Column 2: Results & Merit Lists (Amber Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 lg:p-6 shadow-sm flex flex-col min-h-[580px] relative w-full">
+            <h3 className="font-extrabold text-xs lg:text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
               <Trophy className="h-4.5 w-4.5 text-amber-500 animate-pulse shrink-0" />
               <span>{t.resultsMerits}</span>
             </h3>
 
-            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
+            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2 -m-2">
               {noticesList.filter(n => n.category === 'result').length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === 'result')
@@ -1432,13 +1525,13 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           {/* Column 3: Admit Cards & City Info (Emerald Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col min-h-[580px] relative">
-            <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 lg:p-6 shadow-sm flex flex-col min-h-[580px] relative w-full">
+            <h3 className="font-extrabold text-xs lg:text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
               <FileText className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
               <span>{t.admitCards}</span>
             </h3>
 
-            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2.5 -m-2.5">
+            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2 -m-2">
               {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === 'admit_card')
@@ -1477,111 +1570,204 @@ const formatSubCategoryName = (name: string) => {
           </p>
         </div>
 
-        {/* 2-Column FAQ Layout (5 Questions in Each Column) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-          
-          {/* COLUMN 1 (Questions 1 - 5) */}
-          <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-6 sm:p-7 rounded-3xl shadow-xs space-y-3.5 h-fit">
-            {[
-              {
-                id: 0,
-                q: language === 'hi' ? "1. मॉक टेस्ट सीबीटी परीक्षा में शामिल होने के लिए मैं पास कैसे प्राप्त करूं?" : "1. How do I unlock full access to all mock tests?",
-                a: language === 'hi' ? "आप अपने प्रोफाइल डैशबोर्ड में जाकर 'पास प्रो' सिम्युलेट करके या पास एक्टिवेट करके सभी एसएससी, रेलवे, बैंकिंग और राज्य स्तरीय असीमित परीक्षाओं को तुरंत अनलॉक कर सकते हैं।" : "You can unlock all full-length mock tests and sectional exams by upgrading to 'Pass Pro' inside the My Profile dashboard."
-              },
-              {
-                id: 1,
-                q: language === 'hi' ? "2. डॉक्यूमेंट लॉकर क्या है और क्या मेरी गूगल ड्राइव सुरक्षित है?" : "2. What is Document Locker and is my Google Drive private?",
-                a: language === 'hi' ? "डॉक्यूमेंट लॉकर में आपके एडमिट कार्ड, फोटो और प्रमाणपत्र सीधे आपके व्यक्तिगत गूगल ड्राइव में सुरक्षित स्टोर होते हैं। हमारे सर्वर पर आपकी फाइलों का कोई स्टोरेज या अनधिकृत एक्सेस नहीं होता है।" : "Document Locker connects directly with your personal Google Drive to safely organize admit cards and documents. We do not store or access your private files on external servers."
-              },
-              {
-                id: 2,
-                q: language === 'hi' ? "3. प्रैक्टिस सीरीज क्या है और यह तैयारी में कैसे मदद करती है?" : "3. What is the Practice Series module and how does it work?",
-                a: language === 'hi' ? "प्रैक्टिस सीरीज सेक्शन-वार और टॉपिक-वार अभ्यास के लिए विशेष मॉड्यूल है, जहाँ आप रीजनिंग, गणित, जीके और अंग्रेजी के प्रश्नों का समयबद्ध अभ्यास करके अपनी गति और सटीकता बढ़ा सकते हैं।" : "Practice Series offers targeted, section-wise drills for Quantitative Aptitude, Reasoning, English, and General Awareness to sharpen your speed and accuracy."
-              },
-              {
-                id: 3,
-                q: language === 'hi' ? "4. क्या मॉक टेस्ट में हिंदी और अंग्रेजी दोनों भाषाओं में प्रश्न उपलब्ध हैं?" : "4. Are mock test sittings available in both English and Hindi?",
-                a: language === 'hi' ? "हाँ, हमारा परीक्षा पोर्टल पूर्णतः द्विभाषी है। आप सीबीटी टेस्ट देते समय किसी भी प्रश्न की भाषा (हिंदी या अंग्रेजी) तुरंत स्क्रीन पर 1-क्लिक में बदल सकते हैं।" : "Yes, the test terminal is fully bilingual. You can switch between English and Hindi for any question seamlessly during your live test session."
-              },
-              {
-                id: 4,
-                q: language === 'hi' ? "5. क्या मैं दिए गए टेस्ट को दोबारा हल (Reattempt) कर सकता हूँ?" : "5. Can I reattempt tests and review previous solutions?",
-                a: language === 'hi' ? "हाँ! प्रत्येक मॉक टेस्ट में 5 रीअटेम्प्ट की सुविधा मिलती है। आपके सभी पिछले प्रयासों का इतिहास और विस्तृत हल आपके विश्लेषण पृष्ठ पर सुरक्षित रहता है।" : "Yes! Every test supports up to 5 attempts. Your complete attempt history, scores, and detailed step-by-step solutions remain saved on your analysis dashboard."
-              }
-            ].map((faq) => {
-              const isOpen = activeFaq === faq.id;
-              return (
-                <div key={faq.id} className="border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 pb-3">
-                  <button
-                    onClick={() => setActiveFaq(isOpen ? null : faq.id)}
-                    className="w-full flex items-center justify-between text-left py-1.5 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer gap-2"
-                  >
-                    <span>{faq.q}</span>
-                    <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs shrink-0 font-mono">
-                      {isOpen ? "−" : "+"}
-                    </span>
-                  </button>
-                  {isOpen && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed pt-2 pb-1 font-medium animate-in fade-in duration-200">
-                      {faq.a}
+        {/* Single Unified FAQ Section (All 10 Questions) */}
+        <div className="max-w-4xl w-full mx-auto bg-white/90 dark:bg-slate-900/60 backdrop-blur-md border border-slate-300 dark:border-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm space-y-3.5">
+          {[
+            {
+              id: 0,
+              q: language === 'hi' ? "1. मॉक टेस्ट सीबीटी परीक्षा में शामिल होने के लिए मैं पास कैसे प्राप्त करूं?" : "1. How do I unlock full access to all mock tests?",
+              a: language === 'hi' ? "आप अपने प्रोफाइल डैशबोर्ड में जाकर 'पास प्रो' सिम्युलेट करके या पास एक्टिवेट करके सभी एसएससी, रेलवे, बैंकिंग और राज्य स्तरीय असीमित परीक्षाओं को तुरंत अनलॉक कर सकते हैं।" : "You can unlock all full-length mock tests and sectional exams by upgrading to 'Pass Pro' inside the My Profile dashboard."
+            },
+            {
+              id: 1,
+              q: language === 'hi' ? "2. डॉक्यूमेंट लॉकर क्या है और क्या मेरी गूगल ड्राइव सुरक्षित है?" : "2. What is Document Locker and is my Google Drive private?",
+              a: language === 'hi' ? "डॉक्यूमेंट लॉकर में आपके एडमिट कार्ड, फोटो और प्रमाणपत्र सीधे आपके व्यक्तिगत गूगल ड्राइव में सुरक्षित स्टोर होते हैं। हमारे सर्वर पर आपकी फाइलों का कोई स्टोरेज या अनधिकृत एक्सेस नहीं होता है।" : "Document Locker connects directly with your personal Google Drive to safely organize admit cards and documents. We do not store or access your private files on external servers."
+            },
+            {
+              id: 2,
+              q: language === 'hi' ? "3. प्रैक्टिस सीरीज क्या है और यह तैयारी में कैसे मदद करती है?" : "3. What is the Practice Series module and how does it work?",
+              a: language === 'hi' ? "प्रैक्टिस सीरीज सेक्शन-वार और टॉपिक-वार अभ्यास के लिए विशेष मॉड्यूल है, जहाँ आप रीजनिंग, गणित, जीके और अंग्रेजी के प्रश्नों का समयबद्ध अभ्यास करके अपनी गति और सटीकता बढ़ा सकते हैं।" : "Practice Series offers targeted, section-wise drills for Quantitative Aptitude, Reasoning, English, and General Awareness to sharpen your speed and accuracy."
+            },
+            {
+              id: 3,
+              q: language === 'hi' ? "4. क्या मॉक टेस्ट में हिंदी और अंग्रेजी दोनों भाषाओं में प्रश्न उपलब्ध हैं?" : "4. Are mock test sittings available in both English and Hindi?",
+              a: language === 'hi' ? "हाँ, हमारा परीक्षा पोर्टल पूर्णतः द्विभाषी है। आप सीबीटी टेस्ट देते समय किसी भी प्रश्न की भाषा (हिंदी या अंग्रेजी) तुरंत स्क्रीन पर 1-क्लिक में बदल सकते हैं।" : "Yes, the test terminal is fully bilingual. You can switch between English and Hindi for any question seamlessly during your live test session."
+            },
+            {
+              id: 4,
+              q: language === 'hi' ? "5. क्या मैं दिए गए टेस्ट को दोबारा हल (Reattempt) कर सकता हूँ?" : "5. Can I reattempt tests and review previous solutions?",
+              a: language === 'hi' ? "हाँ! प्रत्येक मॉक टेस्ट में 5 रीअटेम्प्ट की सुविधा मिलती है। आपके सभी पिछले प्रयासों का इतिहास और विस्तृत हल आपके विश्लेषण पृष्ठ पर सुरक्षित रहता है।" : "Yes! Every test supports up to 5 attempts. Your complete attempt history, scores, and detailed step-by-step solutions remain saved on your analysis dashboard."
+            },
+            {
+              id: 5,
+              q: language === 'hi' ? "6. टेस्ट सबमिट करने के बाद क्या ऑल इंडिया रैंक और विश्लेषण मिलता है?" : "6. Do I get All India Rank (AIR) and detailed performance analytics?",
+              a: language === 'hi' ? "बिल्कुल! टेस्ट सबमिट होते ही आपको ऑल इंडिया रैंक, परसेंटाइल, विषय-वार सटीकता, समय प्रबंधन ग्राफ और टॉपर तुलना रिपोर्ट तुरंत मिलती है।" : "Instantly upon test submission, you receive comprehensive analytics including All India Rank, Percentile, Subject-wise Accuracy, Time Spent Graphs, and Topper comparisons."
+            },
+            {
+              id: 6,
+              q: language === 'hi' ? "7. नवीनतम परीक्षा नोटिफिकेशन, एडमिट कार्ड और आंसर-की कहाँ देखें?" : "7. Where can I find latest vacancy notifications, admit cards & results?",
+              a: language === 'hi' ? "हमारी वेबसाइट के 'Updates & Notices' सेक्शन में सभी सरकारी भर्तियों, एडमिट कार्ड रिलीज, परीक्षा तिथियों और आंसर-की के आधिकारिक पीडीएफ और सीधे लिंक्स उपलब्ध रहते हैं।" : "Visit the 'Updates & Notices' section to access real-time notifications for upcoming exam dates, admit card releases, syllabi, and official answer keys."
+            },
+            {
+              id: 7,
+              q: language === 'hi' ? "8. दैनिक शब्दावली (Daily Vocab) और अध्ययन सामग्री कैसे प्राप्त करें?" : "8. How do I access Daily Vocabulary and study resources?",
+              a: language === 'hi' ? "प्लेटफ़ॉर्म पर दैनिक अंग्रेजी वोकैब, हिंदी अर्थ, विलोम-पर्यायवाची और वाक्य प्रयोग उपलब्ध हैं, जो प्रतियोगी परीक्षाओं के अंग्रेजी सेक्शन की तैयारी को मजबूत बनाते हैं।" : "You can browse curated Daily Vocabulary cards complete with parts of speech, Hindi meanings, synonyms, antonyms, and practical usage examples."
+            },
+            {
+              id: 8,
+              q: language === 'hi' ? "9. सपोर्ट टीम से संपर्क कैसे करें या कम्युनिटी ग्रुप्स कैसे जॉइन करें?" : "9. How do I reach customer support or join community groups?",
+              a: language === 'hi' ? "'Contact Us' पेज पर जाकर आप सीधे एडमिन को संदेश भेज सकते हैं अथवा हमारे आधिकारिक टेलीग्राम, यूट्यूब, इंस्टाग्राम, व्हाट्सएप और रेडिट चैनलों से जुड़ सकते हैं।" : "Head over to the 'Contact Us' page to submit a direct inquiry to our desk or join our verified Telegram, WhatsApp, YouTube, Instagram, and Reddit channels."
+            },
+            {
+              id: 9,
+              q: language === 'hi' ? "10. क्या मैं मोबाइल फोन, टैबलेट और लैपटॉप/पीसी सभी पर टेस्ट दे सकता हूँ?" : "10. Can I take tests across mobile, tablet, and desktop devices?",
+              a: language === 'hi' ? "हाँ, हमारा वेब और मोबाइल ऐप दोनों पूर्णतः अनुकूलित हैं। आप किसी भी डिवाइस पर अपनी सुविधानुसार टेस्ट दे सकते हैं और आपका डेटा सभी डिवाइस पर सिंक रहता है।" : "Yes, our web portal and Android app are fully responsive and cross-synced. You can seamlessly practice on any smartphone, tablet, or desktop computer."
+            }
+          ].map((faq) => {
+            const isOpen = activeFaq === faq.id;
+            return (
+              <div key={faq.id} className="border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 pb-3.5 pt-1">
+                <button
+                  onClick={() => setActiveFaq(isOpen ? null : faq.id)}
+                  className="w-full flex items-center justify-between text-left py-1.5 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer gap-3"
+                >
+                  <span>{faq.q}</span>
+                  <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs shrink-0 font-mono">
+                    {isOpen ? "−" : "+"}
+                  </span>
+                </button>
+                {isOpen && (
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-2 pb-1 font-medium animate-in fade-in duration-200">
+                    {faq.a}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* CONTACT US & OFFICIAL CHANNELS SECTION (MANAGED BY ADMIN VIA MANAGE CONTACT LINKS) */}
+      <section className="py-10 md:py-14 px-4 sm:px-6 md:px-10 max-w-7xl w-full mx-auto relative z-10 border-t border-slate-300 dark:border-slate-800 space-y-6">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+            {language === 'hi' ? 'संपर्क करें एवं आधिकारिक चैनल' : 'Contact Us & Official Channels'}
+          </h2>
+        </div>
+
+        {/* Dynamic Contact & Social Links Grid (4 Buttons In A Single Row) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 w-full">
+          {contactLinks.map((channel) => {
+            const isEmail = channel.id === 'email';
+
+            // Channel button style mapping
+            const btnBgStyles: Record<string, string> = {
+              email: 'bg-[#EA4335] hover:bg-[#d9382a] text-white',
+              telegram: 'bg-[#229ED9] hover:bg-[#1c8ec4] text-white',
+              youtube: 'bg-[#FF0000] hover:bg-[#e00000] text-white',
+              instagram: 'bg-gradient-to-r from-[#F58529] via-[#DD2A7B] to-[#8134AF] hover:opacity-95 text-white',
+              linkedin: 'bg-[#0A66C2] hover:bg-[#084e96] text-white',
+              reddit: 'bg-[#FF4500] hover:bg-[#e03d00] text-white',
+              whatsapp: 'bg-[#25D366] hover:bg-[#20bd5a] text-white',
+              x: 'bg-black hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-200 dark:text-black',
+            };
+
+            const btnBg = btnBgStyles[channel.id] || 'bg-blue-600 hover:bg-blue-700 text-white';
+
+            return (
+              <div
+                key={channel.id}
+                className="bg-white/90 dark:bg-slate-900/60 backdrop-blur-md border border-slate-300 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 rounded-2xl p-3 shadow-2xs hover:shadow-xs transition-all duration-200 flex flex-col justify-between group gap-2"
+              >
+                {/* Top Bar: Icon Badge & Channel Name */}
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-[11px] text-white shrink-0 shadow-2xs ${channel.badgeBg || 'bg-blue-600'}`}>
+                    {channel.badgeText || (channel.name ? channel.name.slice(0, 2).toUpperCase() : 'MT')}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {channel.name}
+                    </h4>
+                    <p className="text-[9.5px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                      {channel.handle}
                     </p>
+                  </div>
+                </div>
+
+                {/* Bottom Action Buttons (Very Small Compact Sizing) */}
+                <div className="mt-auto pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
+                  <a
+                    href={channel.url}
+                    target={isEmail ? undefined : "_blank"}
+                    rel={isEmail ? undefined : "noopener noreferrer"}
+                    className={`flex-1 py-1 px-2 rounded-md font-bold text-[10px] flex items-center justify-center gap-1 transition cursor-pointer ${btnBg}`}
+                  >
+                    {isEmail ? <Mail className="w-2.5 h-2.5 shrink-0" /> : <ExternalLink className="w-2.5 h-2.5 shrink-0" />}
+                    <span className="truncate">
+                      {isEmail 
+                        ? (language === 'hi' ? 'ईमेल भेजें' : 'Send Email')
+                        : (language === 'hi' ? 'खोलें' : `Open ${channel.name}`)}
+                    </span>
+                  </a>
+
+                  {isEmail && (
+                    <button
+                      onClick={() => {
+                        if (channel.handle) {
+                          navigator.clipboard.writeText(channel.handle);
+                          setCopiedContactEmail(true);
+                          setTimeout(() => setCopiedContactEmail(false), 2000);
+                        }
+                      }}
+                      className="py-1 px-1.5 rounded-md border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[9px] flex items-center justify-center gap-0.5 transition cursor-pointer shrink-0"
+                      title={language === 'hi' ? 'ईमेल कॉपी करें' : 'Copy Email Address'}
+                    >
+                      {copiedContactEmail ? (
+                        <>
+                          <Check className="w-2.5 h-2.5 text-green-600 dark:text-green-400" />
+                          <span className="text-[8.5px] text-green-600 dark:text-green-400">{language === 'hi' ? 'कॉपी!' : 'Copied!'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-2.5 h-2.5 text-slate-500" />
+                          <span className="text-[8.5px]">{language === 'hi' ? 'कॉपी' : 'Copy'}</span>
+                        </>
+                      )}
+                    </button>
                   )}
                 </div>
-              );
-            })}
+
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Quick Contact & Direct Inquiry Banner (White Color Tile) */}
+        <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border border-slate-300 dark:border-slate-800 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="space-y-1 text-center md:text-left">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 text-[9px] font-black uppercase tracking-wider mb-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+              <span>{language === 'hi' ? 'सक्रिय सपोर्ट डेस्क' : 'Active Support Desk'}</span>
+            </div>
+            <h3 className="text-sm sm:text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
+              {language === 'hi' ? 'क्या आपके पास कोई प्रश्न या समस्या है?' : 'Have a question, feedback, or grievance?'}
+            </h3>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium max-w-xl">
+              {language === 'hi'
+                ? 'हमारे सपोर्ट डेस्क को संदेश भेजें। हमारी टीम 2 घंटे के भीतर आपके प्रश्नों का समाधान करती है।'
+                : 'Send a direct ticket to our administrative team. We typically respond within 2 hours.'}
+            </p>
           </div>
 
-          {/* COLUMN 2 (Questions 6 - 10) */}
-          <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-6 sm:p-7 rounded-3xl shadow-xs space-y-3.5 h-fit">
-            {[
-              {
-                id: 5,
-                q: language === 'hi' ? "6. टेस्ट सबमिट करने के बाद क्या ऑल इंडिया रैंक और विश्लेषण मिलता है?" : "6. Do I get All India Rank (AIR) and detailed performance analytics?",
-                a: language === 'hi' ? "बिल्कुल! टेस्ट सबमिट होते ही आपको ऑल इंडिया रैंक, परसेंटाइल, विषय-वार सटीकता, समय प्रबंधन ग्राफ और टॉपर तुलना रिपोर्ट तुरंत मिलती है।" : "Instantly upon test submission, you receive comprehensive analytics including All India Rank, Percentile, Subject-wise Accuracy, Time Spent Graphs, and Topper comparisons."
-              },
-              {
-                id: 6,
-                q: language === 'hi' ? "7. नवीनतम परीक्षा नोटिफिकेशन, एडमिट कार्ड और आंसर-की कहाँ देखें?" : "7. Where can I find latest vacancy notifications, admit cards & results?",
-                a: language === 'hi' ? "हमारी वेबसाइट के 'Updates & Notices' सेक्शन में सभी सरकारी भर्तियों, एडमिट कार्ड रिलीज, परीक्षा तिथियों और आंसर-की के आधिकारिक पीडीएफ और सीधे लिंक्स उपलब्ध रहते हैं।" : "Visit the 'Updates & Notices' section to access real-time notifications for upcoming exam dates, admit card releases, syllabi, and official answer keys."
-              },
-              {
-                id: 7,
-                q: language === 'hi' ? "8. दैनिक शब्दावली (Daily Vocab) और अध्ययन सामग्री कैसे प्राप्त करें?" : "8. How do I access Daily Vocabulary and study resources?",
-                a: language === 'hi' ? "प्लेटफ़ॉर्म पर दैनिक अंग्रेजी वोकैब, हिंदी अर्थ, विलोम-पर्यायवाची और वाक्य प्रयोग उपलब्ध हैं, जो प्रतियोगी परीक्षाओं के अंग्रेजी सेक्शन की तैयारी को मजबूत बनाते हैं।" : "You can browse curated Daily Vocabulary cards complete with parts of speech, Hindi meanings, synonyms, antonyms, and practical usage examples."
-              },
-              {
-                id: 8,
-                q: language === 'hi' ? "9. सपोर्ट टीम से संपर्क कैसे करें या कम्युनिटी ग्रुप्स कैसे जॉइन करें?" : "9. How do I reach customer support or join community groups?",
-                a: language === 'hi' ? "'Contact Us' पेज पर जाकर आप सीधे एडमिन को संदेश भेज सकते हैं अथवा हमारे आधिकारिक टेलीग्राम, यूट्यूब, इंस्टाग्राम, व्हाट्सएप और रेडिट चैनलों से जुड़ सकते हैं।" : "Head over to the 'Contact Us' page to submit a direct inquiry to our desk or join our verified Telegram, WhatsApp, YouTube, Instagram, and Reddit channels."
-              },
-              {
-                id: 9,
-                q: language === 'hi' ? "10. क्या मैं मोबाइल फोन, टैबलेट और लैपटॉप/पीसी सभी पर टेस्ट दे सकता हूँ?" : "10. Can I take tests across mobile, tablet, and desktop devices?",
-                a: language === 'hi' ? "हाँ, हमारा वेब और मोबाइल ऐप दोनों पूर्णतः अनुकूलित हैं। आप किसी भी डिवाइस पर अपनी सुविधानुसार टेस्ट दे सकते हैं और आपका डेटा सभी डिवाइस पर सिंक रहता है।" : "Yes, our web portal and Android app are fully responsive and cross-synced. You can seamlessly practice on any smartphone, tablet, or desktop computer."
-              }
-            ].map((faq) => {
-              const isOpen = activeFaq === faq.id;
-              return (
-                <div key={faq.id} className="border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 pb-3">
-                  <button
-                    onClick={() => setActiveFaq(isOpen ? null : faq.id)}
-                    className="w-full flex items-center justify-between text-left py-1.5 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer gap-2"
-                  >
-                    <span>{faq.q}</span>
-                    <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs shrink-0 font-mono">
-                      {isOpen ? "−" : "+"}
-                    </span>
-                  </button>
-                  {isOpen && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed pt-2 pb-1 font-medium animate-in fade-in duration-200">
-                      {faq.a}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-center">
+            <button
+              onClick={() => setRightView('contact')}
+              className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{language === 'hi' ? 'सपोर्ट पोर्टल खोलें' : 'Open Support Desk'}</span>
+            </button>
           </div>
-
         </div>
       </section>
 

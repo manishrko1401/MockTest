@@ -174,7 +174,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative overflow-hidden text-left">
             <button
               onClick={() => setSuggestionModalOpen(false)}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-350 transition cursor-pointer"
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -184,7 +184,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                 <div className="h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-md">
                   <CheckCircle className="h-8 w-8" />
                 </div>
-                <h3 className="text-lg font-black text-slate-850 dark:text-white">
+                <h3 className="text-lg font-black text-slate-800 dark:text-white">
                   {language === 'hi' ? 'धन्यवाद! सुझाव भेजा गया' : 'Thank You! Suggestion Sent'}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
@@ -200,7 +200,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                     <Lightbulb className="h-6 w-6 animate-pulse" />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-850 dark:text-white">
+                    <h3 className="text-base font-extrabold text-slate-800 dark:text-white">
                       {language === 'hi' ? 'सुझाव पेटिका' : 'Suggestion Box'}
                     </h3>
                     <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
@@ -216,7 +216,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                   <select
                     value={suggCategory}
                     onChange={(e) => setSuggCategory(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-850 dark:text-white rounded-xl px-4.5 py-3 text-xs font-bold border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white rounded-xl px-4.5 py-3 text-xs font-bold border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-amber-500"
                   >
                     <option value="General">General Suggestion / सामान्य सुझाव</option>
                     <option value="New Exam Request">New Exam Request / नई परीक्षा का अनुरोध</option>
@@ -235,7 +235,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                     value={suggMessage}
                     onChange={(e) => setSuggMessage(e.target.value)}
                     placeholder={language === 'hi' ? 'यहाँ अपना सुझाव या अनुरोध विस्तार से लिखें...' : 'Write your suggestion or feedback in detail...'}
-                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-850 dark:text-white rounded-2xl px-4.5 py-3 text-xs font-medium border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-amber-500 resize-none placeholder:text-slate-400"
+                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white rounded-2xl px-4.5 py-3 text-xs font-medium border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-amber-500 resize-none placeholder:text-slate-400"
                   />
                 </div>
 
@@ -243,7 +243,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                   <button
                     type="button"
                     onClick={() => setSuggestionModalOpen(false)}
-                    className="px-4.5 py-2.5 rounded-xl border border-slate-250 dark:border-slate-700 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 font-extrabold text-xs transition cursor-pointer"
+                    className="px-4.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-extrabold text-xs transition cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -315,7 +315,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                       className={`max-w-[80%] p-3.5 rounded-2xl text-xs font-medium shadow-xs leading-relaxed ${
                         isUser
                           ? 'bg-blue-600 text-white rounded-br-xs'
-                          : 'bg-white dark:bg-slate-800 text-slate-880 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-xs'
+                          : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-xs'
                       }`}
                     >
                       {!isUser && (

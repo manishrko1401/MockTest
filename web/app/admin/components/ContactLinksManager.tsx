@@ -390,7 +390,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                   </a>
 
                   {/* Delete (if custom) */}
-                  {!['email', 'telegram', 'youtube', 'instagram', 'x', 'reddit', 'whatsapp'].includes(channel.id) && (
+                  {!['email', 'telegram', 'youtube', 'instagram', 'x', 'reddit', 'whatsapp', 'linkedin'].includes(channel.id) && (
                     <button
                       onClick={() => handleDelete(channel.id)}
                       className="p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-600 transition cursor-pointer"

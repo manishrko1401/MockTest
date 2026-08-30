@@ -15,7 +15,9 @@ import {
   ChevronRight,
   Sparkles,
   ShieldCheck,
-  BookOpen
+  BookOpen,
+  Keyboard,
+  BookmarkCheck
 } from 'lucide-react';
 
 interface HomeShortcutsSectionProps {
@@ -59,6 +61,17 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
       iconBg: 'bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400',
     },
     {
+      id: 'typing_test',
+      title: isHindi ? 'टाइपिंग टेस्ट' : 'Typing Test',
+      subtitle: isHindi ? 'एसएससी व रेलवे DEST' : 'SSC & RRB Skill Simulator',
+      href: '/typing-test',
+      icon: Keyboard,
+      badge: 'DEST NEW',
+      bgClass: 'bg-blue-50/80 hover:bg-blue-100/90 dark:bg-blue-950/30 dark:hover:bg-blue-900/40',
+      borderClass: 'border-blue-200/80 dark:border-blue-900/50 hover:border-blue-400',
+      iconBg: 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400',
+    },
+    {
       id: 'notices',
       title: t.navUpdates,
       subtitle: isHindi ? 'एडमिट कार्ड व परिणाम' : 'Admit Cards & Results',
@@ -81,6 +94,17 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
       iconBg: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400',
     },
     {
+      id: 'applied_saved',
+      title: isHindi ? 'आवेदन व सेव परीक्षाएं' : 'Applied & Saved Exams',
+      subtitle: isHindi ? 'ट्रैक की गई परीक्षाएं' : 'Tracked & Saved Exams',
+      href: '/profile/tracked-jobs',
+      icon: BookmarkCheck,
+      badge: 'TRACKED',
+      bgClass: 'bg-purple-50/80 hover:bg-purple-100/90 dark:bg-purple-950/30 dark:hover:bg-purple-900/40',
+      borderClass: 'border-purple-200/80 dark:border-purple-900/50 hover:border-purple-400',
+      iconBg: 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400',
+    },
+    {
       id: 'profile',
       title: isHindi ? 'प्रोफाइल एवं डैशबोर्ड' : 'Profile & Dashboard',
       subtitle: currentUser ? currentUser.name : (isHindi ? 'लॉग इन / साइन अप' : 'Login / Register'),
@@ -90,17 +114,6 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
       bgClass: 'bg-purple-50/80 hover:bg-purple-100/90 dark:bg-purple-950/30 dark:hover:bg-purple-900/40',
       borderClass: 'border-purple-200/80 dark:border-purple-900/50 hover:border-purple-400',
       iconBg: 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400',
-    },
-    {
-      id: 'practice',
-      title: isHindi ? 'प्रैक्टिस सीरीज़' : 'Practice Series',
-      subtitle: isHindi ? 'विषयवार व कस्टम टेस्ट' : 'Topic-wise & Drills',
-      href: '/practice-series',
-      icon: Zap,
-      badge: 'TOPICS',
-      bgClass: 'bg-sky-50/80 hover:bg-sky-100/90 dark:bg-sky-950/30 dark:hover:bg-sky-900/40',
-      borderClass: 'border-sky-200/80 dark:border-sky-900/50 hover:border-sky-400',
-      iconBg: 'bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400',
     },
     {
       id: 'referrals',
@@ -117,19 +130,19 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
 
   return (
     <section className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 min-[1080px]:px-8 py-2 relative z-10">
-      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm">
+      <div className="bg-slate-900 dark:bg-slate-950 backdrop-blur-md border border-slate-700/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xl">
         
         {/* Section Header */}
         <div className="flex items-center justify-between mb-3 px-1">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-blue-600/10 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+            <div className="h-6 w-6 rounded-lg bg-slate-800 text-white border border-slate-700 flex items-center justify-center font-bold shadow-xs">
               <Menu className="h-3.5 w-3.5" />
             </div>
             <div>
-              <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
                 {isHindi ? 'होम स्क्रीन मेन्यू एवं डायरेक्ट शॉर्टकट' : 'Quick Hub Menu & Direct Shortcuts'}
               </h3>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium">
                 {isHindi ? 'टेस्ट सीरीज, सूचनाएं, लॉकर, प्रोफाइल एवं पास तक तुरंत पहुंचें' : 'Instant 1-click access to Test Series, Notices, Document Locker, Profile & Pass'}
               </p>
             </div>
@@ -137,36 +150,32 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
 
           <button
             onClick={onOpenMenu}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60 font-black text-[11px] transition active:scale-95 cursor-pointer shadow-2xs"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-black text-[11px] transition active:scale-95 cursor-pointer shadow-xs"
           >
             <span>{isHindi ? 'पूरा मेन्यू खोलें' : 'Open Left Menu'}</span>
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
           </button>
         </div>
 
         {/* Shortcuts Horizontal Scroll / Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 divide-x divide-y sm:divide-y-0 divide-slate-700/60 dark:divide-slate-800 bg-slate-800/60 dark:bg-slate-900/60 rounded-xl overflow-hidden">
           {shortcuts.map((item) => {
             const Icon = item.icon;
             const content = (
               <div
-                className={`p-2.5 sm:p-3 rounded-xl border flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 active:scale-95 cursor-pointer h-full relative overflow-hidden group ${
+                className={`p-2.5 sm:p-3 flex flex-col justify-between transition-all duration-150 hover:bg-slate-700/40 dark:hover:bg-slate-800/50 active:scale-95 cursor-pointer h-full relative overflow-hidden group ${
                   item.isSpecial
-                    ? 'bg-gradient-to-r ' + item.bgClass + ' ' + item.borderClass
-                    : item.bgClass + ' ' + item.borderClass + ' shadow-2xs'
+                    ? 'bg-slate-700/60 text-white'
+                    : 'text-slate-200'
                 }`}
               >
                 {/* Top Row: Icon + Badge */}
                 <div className="flex items-center justify-between mb-2">
-                  <div className={`p-1.5 sm:p-2 rounded-lg ${item.iconBg} transition-transform group-hover:scale-110 shrink-0`}>
-                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-slate-700/60 dark:bg-slate-800 border border-slate-600/40 text-slate-200 transition-transform group-hover:scale-110 shrink-0">
+                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-300 group-hover:text-white" />
                   </div>
                   {item.badge && (
-                    <span className={`text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
-                      item.isSpecial
-                        ? 'bg-white/20 text-white'
-                        : 'bg-white/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60'
-                    }`}>
+                    <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider bg-slate-700/60 text-slate-300 border border-slate-600/40">
                       {item.badge}
                     </span>
                   )}
@@ -174,14 +183,10 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
 
                 {/* Bottom Row: Title + Subtitle */}
                 <div>
-                  <h4 className={`font-extrabold text-[11px] sm:text-xs leading-tight line-clamp-1 ${
-                    item.isSpecial ? 'text-white' : 'text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400'
-                  }`}>
+                  <h4 className="font-extrabold text-[11px] sm:text-xs leading-tight line-clamp-1 text-slate-100 group-hover:text-white">
                     {item.title}
                   </h4>
-                  <p className={`text-[9px] font-semibold mt-0.5 line-clamp-1 ${
-                    item.isSpecial ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'
-                  }`}>
+                  <p className="text-[9px] font-semibold mt-0.5 line-clamp-1 text-slate-400">
                     {item.subtitle}
                   </p>
                 </div>

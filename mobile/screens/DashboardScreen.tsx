@@ -1132,28 +1132,6 @@ export default function DashboardScreen({
                     </View>
                   ))}
                 </ScrollView>
-                
-                {/* Hiding the indicators to adjust spacing, but functionality remains active */}
-                {/* 
-                <View style={styles.storyDotRow}>
-                  <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                    {announcements.map((_, i) => (
-                      <View 
-                        key={i} 
-                        style={[
-                          styles.storyIndicatorDot, 
-                          announcementIndex === i 
-                            ? { backgroundColor: '#3B82F6', width: 12 } 
-                            : { backgroundColor: isDark ? '#475569' : '#D1D5DB', width: 6 }
-                        ]} 
-                      />
-                    ))}
-                  </View>
-                  <Text style={[styles.swipeIndicatorText, isDark && { color: ThemeColors.dark.textMuted }]}>
-                    Swipe card to read other announcements ({announcementIndex + 1}/{announcements.length})
-                  </Text>
-                </View>
-                */}
               </View>
             );
           })()}

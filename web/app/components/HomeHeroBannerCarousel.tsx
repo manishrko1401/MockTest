@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../AuthContext';
 import { TRANSLATIONS } from '../translations';
@@ -36,72 +36,37 @@ interface BannerSlide {
 }
 
 export default function HomeHeroBannerCarousel({ onOpenPassClaim }: HomeHeroBannerCarouselProps) {
-  const { language, noticesList, currentUser } = useAuth();
-  const t = TRANSLATIONS[language];
+  const { language, noticesList } = useAuth();
   const isHindi = language === 'hi';
 
-  // Extract banners uploaded by admin (announcements or notices with an imageUrl)
-  const adminBanners = (noticesList || []).filter(
-    (n) => (n.imageUrl && n.imageUrl.trim() !== '') || n.category === 'announcement'
-  );
+  // Extract ONLY banners uploaded by admin (notices or announcements with a valid imageUrl)
+  const adminBanners = useMemo(() => {
+    return (noticesList || []).filter(
+      (n) => Boolean(n.imageUrl && n.imageUrl.trim() !== '')
+    );
+  }, [noticesList]);
 
-  // Curated Fallback Slide (only shown if admin hasn't uploaded any banner yet)
-  const fallbackBanners: BannerSlide[] = [
-    {
-      id: 'pass_pro_trial',
-      type: 'pass_promo',
-      bgGradient: 'from-[#030b20] via-[#051642] to-[#040e29]',
+  // Map admin banners to slides
+  const allSlides: BannerSlide[] = useMemo(() => {
+    return adminBanners.map((ann, idx) => ({
+      id: `custom_${ann.id || idx}`,
+      type: 'custom',
+      bgGradient: 'from-[#070b19] via-[#0e172e] to-[#070b19]',
       glowColor: 'rgba(59, 130, 246, 0.35)',
-      badgeTop: isHindi ? 'असीमित अध्ययन' : 'Unlimited Learning',
-      badgeTopSub: isHindi ? 'हेतु' : 'For',
-      headlineMain: isHindi ? '375+ परीक्षाएं केवल ₹1 में' : '375+ EXAMS AT ₹1',
-      headlinePrefix: '',
-      features: isHindi
-        ? [
-            '375+ परीक्षाओं के कोर्सेज',
-            'लाइव और रिकॉर्डेड क्लासेस',
-            'अभ्यास प्रश्न एवं क्विज़',
-            'स्टडी नोट्स एवं पीडीएफ',
-            'पिछले वर्षों के प्रश्न-पत्र (PYPs)'
-          ]
-        : [
-            'Courses for 375+ Exams',
-            'Live & Rec. Classes',
-            'Practice Ques.',
-            'Study Notes',
-            'PYPs'
-          ],
-      actionText: isHindi ? 'ट्रायल शुरू करें @ ₹1 🎁' : 'Start Trial @ ₹1 🎁',
-      actionSub: isHindi ? '*1 वर्ष का मुफ़्त पास प्रो उपलब्ध' : '*1-Year Free Gift Available',
-      badgeLogo: 'Super PASS',
-      badgeBrand: 'MOCK TEST',
-      tagline: isHindi ? 'ऑटोरेन्यू 2 दिन बाद' : 'AUTORENEWS AFTER 2 DAYS',
-      href: currentUser ? '/profile' : '#',
-      onClick: onOpenPassClaim,
-    }
-  ];
-
-  // ONLY show admin-uploaded banners. Never mix with unwanted hardcoded banners.
-  const allSlides: BannerSlide[] = adminBanners.length > 0
-    ? adminBanners.map((ann, idx) => ({
-        id: `custom_${ann.id || idx}`,
-        type: 'custom',
-        bgGradient: 'from-[#070b19] via-[#0e172e] to-[#070b19]',
-        glowColor: 'rgba(59, 130, 246, 0.35)',
-        badgeTop: ann.category || 'NOTICE',
-        badgeTopSub: '',
-        headlineMain: (isHindi && ann.titleHi) ? ann.titleHi : ann.title,
-        features: ['Official Exam Announcement & Mock Test Pack'],
-        actionText: isHindi ? 'टेस्ट शुरू करें 🔗' : 'Start Test 🔗',
-        actionSub: ann.date || '',
-        badgeLogo: 'UPDATE',
-        badgeBrand: 'PORTAL',
-        tagline: 'OFFICIAL NOTIFICATION',
-        imageUrl: ann.imageUrl,
-        href: ann.url || `/updates/${ann.id}`,
-        onClick: undefined,
-      }))
-    : fallbackBanners;
+      badgeTop: ann.category || 'NOTICE',
+      badgeTopSub: '',
+      headlineMain: (isHindi && ann.titleHi) ? ann.titleHi : ann.title,
+      features: ['Official Exam Announcement & Mock Test Pack'],
+      actionText: isHindi ? 'टेस्ट शुरू करें 🔗' : 'Start Test 🔗',
+      actionSub: ann.date || '',
+      badgeLogo: 'UPDATE',
+      badgeBrand: 'PORTAL',
+      tagline: 'OFFICIAL NOTIFICATION',
+      imageUrl: ann.imageUrl,
+      href: ann.url || `/updates/${ann.id}`,
+      onClick: undefined,
+    }));
+  }, [adminBanners, isHindi]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -111,10 +76,12 @@ export default function HomeHeroBannerCarousel({ onOpenPassClaim }: HomeHeroBann
   const totalSlides = allSlides.length;
 
   const nextSlide = useCallback(() => {
+    if (totalSlides === 0) return;
     setCurrentIndex((prev) => (prev + 1) % totalSlides);
   }, [totalSlides]);
 
   const prevSlide = useCallback(() => {
+    if (totalSlides === 0) return;
     setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
   }, [totalSlides]);
 
@@ -126,6 +93,11 @@ export default function HomeHeroBannerCarousel({ onOpenPassClaim }: HomeHeroBann
     }, 4500);
     return () => clearInterval(interval);
   }, [nextSlide, isPaused, totalSlides]);
+
+  // When no admin banner has been uploaded or during loading, do NOT show any banner
+  if (totalSlides === 0) {
+    return null;
+  }
 
   // Touch swipe handling
   const handleTouchStart = (e: React.TouchEvent) => {

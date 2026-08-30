@@ -195,12 +195,7 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
     }
   }
 
-  // 3. Fallback Raw Notification Source link from notice.rawUrl if present
-  if (notice && notice.rawUrl && typeof notice.rawUrl === 'string' && notice.rawUrl.startsWith('http')) {
-    addLink('Official Notification Source & Full Circular', notice.rawUrl, 'download');
-  }
-
-  // 4. Sort links in exact RojgarResult standard priority order (Apply Online -> Notification PDF -> Syllabus -> Channels -> Official Website)
+  // 3. Sort links in exact RojgarResult standard priority order (Apply Online -> Notification PDF -> Syllabus -> Channels -> Official Website)
   return links.sort((a, b) => (a.priority ?? 90) - (b.priority ?? 90));
 }
 
@@ -549,7 +544,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
   if (!noticeId || noticesList.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-200/90 dark:bg-slate-950 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="text-sm font-bold text-slate-500">Loading recruitment details...</p>
@@ -560,7 +555,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
   if (!notice) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-200/90 dark:bg-slate-950 flex items-center justify-center p-4">
         <div className="text-center space-y-4 max-w-md bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
           <AlertCircle className="h-12 w-12 text-amber-500 mx-auto animate-bounce" />
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">Notice Not Found</h2>
@@ -574,86 +569,11 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-sky-50/30 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-955 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200 relative pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-200/90 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200 relative pb-20 overflow-x-hidden">
 
       {/* Background Decorative Blur Orbs */}
       <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-[45%] right-0 w-[500px] h-[500px] bg-purple-500/10 dark:bg-purple-500/5 rounded-full blur-[140px] pointer-events-none" />
-
-      {/* HEADER SECTION (EXACT MATCH WITH NOTIFICATION PAGE) */}
-      <header className="h-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors duration-200">
-        <div className="flex items-center gap-2 sm:gap-4 md:gap-6 min-w-0">
-          {/* Back Button BEFORE Logo */}
-          <button
-            onClick={() => {
-              if (typeof window !== 'undefined' && window.history.length > 1) {
-                router.back();
-              } else {
-                router.push('/');
-              }
-            }}
-            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-700 dark:text-slate-200 shrink-0 cursor-pointer active:scale-95"
-            title={language === 'hi' ? 'वापस' : 'Back'}
-          >
-            <ArrowLeft className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-            <span className="hidden xs:inline">{language === 'hi' ? 'वापस' : 'Back'}</span>
-          </button>
-
-          {/* Logo - Full Mock Test Hub Logo on All Views */}
-          <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 sm:p-2 rounded-full shadow-sm flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
-              <Trophy className="h-4 w-4 sm:h-5.5 sm:w-5.5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="flex flex-col">
-              <h1 className="font-extrabold text-xs sm:text-sm leading-tight text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
-              <p className="text-[7.5px] sm:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase truncate">{t.logoSub}</p>
-            </div>
-          </Link>
-
-          {/* Navigation Links (Desktop) */}
-          {!isMobile && (
-            <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600 dark:text-slate-400">
-              <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navTestSeries}</Link>
-              <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors font-black text-blue-600">{t.navUpdates}</Link>
-              {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
-                <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors">{t.navAdmin}</Link>
-              )}
-            </nav>
-          )}
-        </div>
-
-        {/* Right Header Controls */}
-        <div className="flex items-center gap-2.5">
-          {/* My Profile Button */}
-          <Link
-            href="/profile"
-            className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer active:scale-95 shadow-2xs"
-            title={language === 'hi' ? 'मेरी प्रोफ़ाइल' : 'My Profile'}
-          >
-            <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span className={isMobile ? 'hidden' : ''}>{language === 'hi' ? 'प्रोफ़ाइल' : 'My Profile'}</span>
-          </Link>
-
-          {/* Language selector */}
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
-          >
-            <option value="en">English</option>
-            <option value="hi">हिन्दी</option>
-          </select>
-
-          {/* Theme switcher */}
-          <button 
-            onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
-            title={theme === 'light' ? t.themeDark : t.themeLight}
-          >
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </button>
-        </div>
-      </header>
 
       {/* MAIN CONTAINER */}
       <main className="max-w-7xl mx-auto px-2.5 sm:px-6 md:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 relative z-10 overflow-x-hidden w-full">
@@ -692,8 +612,8 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     Published: {notice.date}
                   </span>
 
-                  {notice.lastDate && (
-                    <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-wider animate-pulse">
+                  {notice.category === 'notice' && notice.lastDate && (
+                    <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-wider">
                       <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-rose-500" />
                       Last Date: {notice.lastDate}
                     </span>
@@ -713,7 +633,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                       rel="noopener noreferrer"
                       className="inline-flex bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs tracking-wide px-5 py-2.5 rounded-xl shadow-md shadow-blue-600/20 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:shadow-blue-600/30 items-center gap-2 active:translate-y-0 active:scale-95 cursor-pointer"
                     >
-                      <Sparkles className="h-4 w-4 text-yellow-300" /> Direct Apply / Download <ArrowUpRight className="h-4 w-4" />
+                      Direct Apply / Download <ArrowUpRight className="h-4 w-4" />
                     </a>
                   </div>
                 )}
@@ -777,7 +697,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     rel="noopener noreferrer"
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs tracking-wide px-4 py-3 rounded-2xl shadow-md shadow-blue-600/20 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:shadow-blue-600/30 flex items-center justify-center gap-2 active:translate-y-0 active:scale-95 cursor-pointer"
                   >
-                    <Sparkles className="h-4 w-4 text-yellow-300" /> Direct Apply / Download <ArrowUpRight className="h-4 w-4" />
+                    Direct Apply / Download <ArrowUpRight className="h-4 w-4" />
                   </a>
                 </div>
               )}
@@ -788,7 +708,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
           {/* APPLIED EXAM CREDENTIALS & DOCUMENT LOCKER VAULT CARD */}
           {isTrackedApplied && (
-            <div className="mt-5 pt-4 border-t border-slate-200/80 dark:border-slate-800 space-y-3 bg-purple-50/50 dark:bg-purple-950/20 p-4 sm:p-5 rounded-2xl border border-purple-200/80 dark:border-purple-900/40">
+            <div className="mt-5 space-y-3 bg-purple-50/50 dark:bg-purple-950/25 p-4 sm:p-5 rounded-2xl border border-purple-200/80 dark:border-purple-800/60">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <KeyRound className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
@@ -993,8 +913,8 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                 </span>
               </div>
 
-              {/* 4 Metrics Cards Grid with 3D Hover */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5 w-full">
+              {/* Metrics Cards Grid with 3D Hover */}
+              <div className={`grid gap-2.5 sm:gap-3.5 w-full ${notice.category === 'notice' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3'}`}>
                 <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
                   <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Notice Category</span>
                   <p className="text-[10.5px] sm:text-xs font-semibold text-slate-800 dark:text-slate-100 uppercase truncate">{notice.category?.replace('_', ' ')}</p>
@@ -1005,10 +925,12 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                   <p className="text-[10.5px] sm:text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{notice.date}</p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
-                  <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Application Deadline</span>
-                  <p className="text-[10.5px] sm:text-xs font-semibold text-rose-600 dark:text-rose-400 truncate">{notice.lastDate || 'See Notification'}</p>
-                </div>
+                {notice.category === 'notice' && (
+                  <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
+                    <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Application Deadline</span>
+                    <p className="text-[10.5px] sm:text-xs font-semibold text-rose-600 dark:text-rose-400 truncate">{notice.lastDate || 'See Notification'}</p>
+                  </div>
+                )}
 
                 <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
                   <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Portal Status</span>
@@ -1043,18 +965,18 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group bg-slate-50 dark:bg-slate-955 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.012] hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.16),0_4px_12px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.3),0_0_16px_rgba(59,130,246,0.15)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs active:translate-y-0 active:scale-[0.99] cursor-pointer w-full min-w-0 relative z-0 hover:z-10"
+                      className="group bg-slate-50 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.012] hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.16),0_4px_12px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.3),0_0_16px_rgba(59,130,246,0.15)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs active:translate-y-0 active:scale-[0.99] cursor-pointer w-full min-w-0 relative z-0 hover:z-10"
                     >
                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                        <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition shrink-0 ${
+                        <div className={`p-2.5 sm:p-3 rounded-xl shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                           link.iconType === 'apply' ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 group-hover:bg-emerald-600 group-hover:text-white' :
                           link.iconType === 'download' ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 group-hover:bg-blue-600 group-hover:text-white' :
-                          link.iconType === 'official' ? 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white' :
+                          link.iconType === 'official' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-slate-800 group-hover:text-white' :
                           link.iconType === 'video' ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 group-hover:bg-rose-600 group-hover:text-white' :
                           link.iconType === 'channel' ? 'bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 group-hover:bg-teal-600 group-hover:text-white' :
                           'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-blue-600 group-hover:text-white'
                         }`}>
-                          {link.iconType === 'apply' && <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />}
+                          {link.iconType === 'apply' && <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />}
                           {link.iconType === 'download' && <Download className="h-4 w-4 sm:h-5 sm:w-5" />}
                           {link.iconType === 'official' && <Building2 className="h-4 w-4 sm:h-5 sm:w-5" />}
                           {link.iconType === 'video' && <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />}
@@ -1108,7 +1030,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     >
                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
                         <div className="p-2.5 sm:p-3 rounded-xl bg-white/20 text-white shrink-0">
-                          <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
+                          <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <h4 className="text-xs sm:text-sm font-black leading-snug">Apply Online / Official Portal</h4>
@@ -1118,30 +1040,6 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                       <div className="flex items-center justify-end shrink-0">
                         <span className="bg-white text-blue-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-medium tracking-wide uppercase shrink-0 flex items-center gap-1.5 shadow-xs">
                           Apply Now <ArrowUpRight className="h-3.5 w-3.5" />
-                        </span>
-                      </div>
-                    </a>
-                  )}
-
-                  {notice.rawUrl && (
-                    <a
-                      href={notice.rawUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer w-full"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                        <div className="p-2.5 sm:p-3 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 shrink-0">
-                          <Download className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white leading-snug">Official Notification Source & Circular</h4>
-                          <p className="text-[9px] sm:text-[10.5px] text-slate-400 font-medium tracking-wide uppercase block mt-0.5">View Source Circular PDF</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end shrink-0">
-                        <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-medium tracking-wide uppercase shrink-0 flex items-center gap-1.5">
-                          View <ChevronRight className="h-3.5 w-3.5" />
                         </span>
                       </div>
                     </a>
@@ -1201,7 +1099,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
             <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-5 sticky top-24">
               
               <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <Compass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Quick Actions</h3>
               </div>
 
@@ -1213,13 +1111,13 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     rel="noopener noreferrer"
                     className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium text-xs tracking-wide py-3.5 px-4 rounded-2xl shadow-lg shadow-blue-600/25 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-600/35 flex items-center justify-center gap-2 active:translate-y-0 active:scale-98 cursor-pointer"
                   >
-                    <Sparkles className="h-4 w-4 text-yellow-300 animate-pulse" /> Apply / Download Now <ArrowUpRight className="h-4 w-4" />
+                    Apply / Download Now <ArrowUpRight className="h-4 w-4" />
                   </a>
                 )}
               </div>
 
               {/* APPLICATION CHECKLIST */}
-              <div className="bg-slate-50 dark:bg-slate-955 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-3">
+              <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 space-y-3">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                   <ListChecks className="h-4 w-4 text-blue-500" /> Candidate Checklist:
                 </span>
@@ -1237,10 +1135,12 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     <Check className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
                     <span>Keep scanned photo & signature ready</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Submit form before deadline: <strong>{notice.lastDate || 'As per notice'}</strong></span>
-                  </li>
+                  {notice.category === 'notice' && (
+                    <li className="flex items-start gap-2">
+                      <Check className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
+                      <span>Submit form before deadline: <strong>{notice.lastDate || 'As per notice'}</strong></span>
+                    </li>
+                  )}
                 </ul>
               </div>
 
@@ -1293,7 +1193,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                   className={`w-full py-3 px-4 rounded-2xl border text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.015] hover:shadow-md cursor-pointer active:translate-y-0 active:scale-98 ${
                     isTrackedSaved
                       ? 'bg-blue-50 dark:bg-blue-950/80 border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 shadow-2xs'
-                      : 'bg-slate-50 hover:bg-white dark:bg-slate-955 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'
+                      : 'bg-slate-50 hover:bg-white dark:bg-slate-800/70 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -1309,7 +1209,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                   className={`w-full py-3 px-4 rounded-2xl border text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.015] hover:shadow-md cursor-pointer active:translate-y-0 active:scale-98 ${
                     isTrackedApplied
                       ? 'bg-emerald-50 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 shadow-2xs'
-                      : 'bg-slate-50 hover:bg-white dark:bg-slate-955 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'
+                      : 'bg-slate-50 hover:bg-white dark:bg-slate-800/70 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -1350,7 +1250,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
                     setSaveToast('Reminders synced to your profile!');
                     setTimeout(() => setSaveToast(null), 3000);
                   }}
-                  className="w-full py-3 px-4 rounded-2xl bg-slate-50 hover:bg-white dark:bg-slate-955 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.015] hover:shadow-md cursor-pointer active:translate-y-0 active:scale-98"
+                  className="w-full py-3 px-4 rounded-2xl bg-slate-50 hover:bg-white dark:bg-slate-800/70 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.015] hover:shadow-md cursor-pointer active:translate-y-0 active:scale-98"
                 >
                   <div className="flex items-center gap-2.5">
                     <Bell className="h-4 w-4 text-slate-400" />

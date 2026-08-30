@@ -14,6 +14,7 @@ import {
   Platform,
   Image,
   Dimensions,
+  StatusBar,
 } from 'react-native';
 import {
   FolderLock,
@@ -50,6 +51,8 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { ApiClient } from '../api';
 import { ThemeColors } from '../theme';
@@ -110,6 +113,9 @@ export default function LockerScreen({
   isDark = false,
   language = 'en',
 }: LockerScreenProps) {
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 0);
+
   const [documents, setDocuments] = useState<LockerDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -138,18 +144,20 @@ export default function LockerScreen({
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Google Auth Request Hook
-  const googleAndroidClientId =
-    (Constants as any).expoConfig?.extra?.googleAndroidClientId ||
-    process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ||
-    '';
   const googleWebClientId =
     (Constants as any).expoConfig?.extra?.googleWebClientId ||
     process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
     '570110856860-a2h946nit7obiguglnjedffflto1oq95.apps.googleusercontent.com';
 
+  const googleAndroidClientId =
+    (Constants as any).expoConfig?.extra?.googleAndroidClientId ||
+    process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ||
+    '570110856860-vmpk8qihkb834ihj1grthuf3kumc65q6.apps.googleusercontent.com';
+
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: googleAndroidClientId || undefined,
-    webClientId: googleWebClientId || undefined,
+    clientId: googleWebClientId,
+    androidClientId: googleAndroidClientId,
+    webClientId: googleWebClientId,
     scopes: [GOOGLE_DRIVE_SCOPE],
   });
 
@@ -739,7 +747,8 @@ export default function LockerScreen({
   // =========================================================================
   if (loading && !isUnlocked) {
     return (
-      <View style={[styles.container, { backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }]}>
+      <View style={[styles.container, { backgroundColor: bg, alignItems: 'center', justifyContent: 'center', paddingTop: topInset }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={bg} />
         <ActivityIndicator size="large" color="#2563EB" />
         <Text style={{ marginTop: 12, color: textMuted }}>
           {language === 'hi' ? 'दस्तावेज़ लॉकर लोड हो रहा है...' : 'Accessing Document Locker...'}
@@ -754,7 +763,8 @@ export default function LockerScreen({
   if (!userLockerPin && !isUnlocked) {
     return (
       <View style={[styles.container, { backgroundColor: bg }]}>
-        <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: borderColor }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={cardBg} />
+        <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: borderColor, paddingTop: topInset + 8 }]}>
           <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <ArrowLeft size={22} color={textColor} />
           </TouchableOpacity>
@@ -866,7 +876,8 @@ export default function LockerScreen({
   if (!isUnlocked) {
     return (
       <View style={[styles.container, { backgroundColor: bg }]}>
-        <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: borderColor }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={cardBg} />
+        <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: borderColor, paddingTop: topInset + 8 }]}>
           <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <ArrowLeft size={22} color={textColor} />
           </TouchableOpacity>
@@ -1099,20 +1110,16 @@ export default function LockerScreen({
   // =========================================================================
   return (
     <View style={[styles.container, { backgroundColor: bg }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={cardBg} />
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: borderColor }]}>
+      <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: borderColor, paddingTop: topInset + 8 }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <ArrowLeft size={22} color={textColor} />
         </TouchableOpacity>
         <View style={{ flex: 1, marginLeft: 8 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={[styles.headerTitle, { color: textColor }]}>
-              {language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}
-            </Text>
-            <View style={styles.driveBadge}>
-              <Text style={styles.driveBadgeText}>Google Drive</Text>
-            </View>
-          </View>
+          <Text style={[styles.headerTitle, { color: textColor }]}>
+            {language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}
+          </Text>
           <Text style={[styles.headerSub, { color: textMuted }]}>
             {language === 'hi' ? 'निजी एवं 100% सुरक्षित' : 'Private & Secure Exam Storage'}
           </Text>
@@ -1669,7 +1676,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
