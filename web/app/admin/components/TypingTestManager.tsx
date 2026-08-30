@@ -105,32 +105,50 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
     tags: ''
   });
 
+  // Admin headers helper
+  const adminHeaders = {
+    'Content-Type': 'application/json',
+    'x-admin-key': 'super_secret_admin_key_2026'
+  };
+
   // Fetch all data
   const loadAllData = async () => {
     try {
       setLoading(true);
-      const [testsRes, passagesRes, attemptsRes] = await Promise.all([
+      const [testsRes, catsRes, passagesRes, attemptsRes] = await Promise.all([
         fetch('/api/db', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: adminHeaders,
           body: JSON.stringify({ action: 'get-typing-tests' })
         }),
         fetch('/api/db', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: adminHeaders,
+          body: JSON.stringify({ action: 'get-typing-categories' })
+        }),
+        fetch('/api/db', {
+          method: 'POST',
+          headers: adminHeaders,
           body: JSON.stringify({ action: 'get-typing-passages' })
         }),
         fetch('/api/db', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: adminHeaders,
           body: JSON.stringify({ action: 'get-user-typing-attempts' })
         })
       ]);
 
+      const catsData = await catsRes.json();
+      if (catsData.success && Array.isArray(catsData.categories)) {
+        setCategories(catsData.categories);
+      }
+
       const testsData = await testsRes.json();
       if (testsData.success) {
         setTests(testsData.tests || []);
-        setCategories(testsData.categories || []);
+        if (!catsData.success && Array.isArray(testsData.categories)) {
+          setCategories(testsData.categories);
+        }
       }
 
       const passagesData = await passagesRes.json();
@@ -187,21 +205,21 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
     setTestForm({
       title: test.title,
       titleHi: test.titleHi || '',
-      categoryId: test.categoryId,
+      categoryId: test.categoryId || (categories[0]?.id || ''),
       passageId: test.passageId || '',
-      passageText: test.passageText,
+      passageText: test.passageText || '',
       demoPassageText: test.demoPassageText || '',
-      demoDurationMinutes: test.demoDurationMinutes,
-      breakDurationMinutes: test.breakDurationMinutes,
-      mainDurationMinutes: test.mainDurationMinutes,
-      qualifyingWpm: test.qualifyingWpm,
-      maxErrorPercentage: test.maxErrorPercentage,
-      backspaceRule: test.backspaceRule,
+      demoDurationMinutes: test.demoDurationMinutes || 1,
+      breakDurationMinutes: test.breakDurationMinutes || 1,
+      mainDurationMinutes: test.mainDurationMinutes || 10,
+      qualifyingWpm: test.qualifyingWpm || 35,
+      maxErrorPercentage: test.maxErrorPercentage !== undefined ? test.maxErrorPercentage : 5.0,
+      backspaceRule: test.backspaceRule || 'ALLOWED',
       enableBackspace: test.enableBackspace !== undefined ? test.enableBackspace : (test.backspaceRule !== 'DISABLED'),
       allowRetype: test.allowRetype !== undefined ? test.allowRetype : false,
-      highlightAllowed: test.highlightAllowed,
-      language: test.language,
-      difficulty: test.difficulty,
+      highlightAllowed: test.highlightAllowed !== undefined ? test.highlightAllowed : false,
+      language: test.language || 'en',
+      difficulty: test.difficulty || 'Medium',
       instructions: test.instructions || ''
     });
     setShowTestModal(true);
@@ -212,27 +230,36 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       showToast('Please enter a test title');
       return;
     }
+    if (!testForm.categoryId) {
+      showToast('Please select an exam category');
+      return;
+    }
+    if (!testForm.passageText.trim()) {
+      showToast('Please enter or select main passage text');
+      return;
+    }
     try {
       setLoading(true);
       const payload: any = {
         ...testForm,
+        title: testForm.title.trim(),
         id: editingTest ? editingTest.id : undefined
       };
       const res = await fetch('/api/db', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: adminHeaders,
         body: JSON.stringify({ action: editingTest ? 'edit-typing-test' : 'create-typing-test', data: payload })
       });
       const data = await res.json();
-      if (data.success) {
-        showToast(editingTest ? 'Typing test updated!' : 'Typing test created!');
+      if (data.success && data.test) {
+        showToast(editingTest ? 'Typing test updated successfully!' : 'Typing test created successfully!');
         setShowTestModal(false);
         loadAllData();
       } else {
-        showToast(data.error || 'Failed to save test');
+        showToast(data.error || 'Failed to save typing test');
       }
     } catch (e: any) {
-      showToast(e.message || 'Server error');
+      showToast(e.message || 'Server error saving typing test');
     } finally {
       setLoading(false);
     }
@@ -244,16 +271,18 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       setLoading(true);
       const res = await fetch('/api/db', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: adminHeaders,
         body: JSON.stringify({ action: 'delete-typing-test', data: { id } })
       });
       const data = await res.json();
-      if (data.success) {
-        showToast('Test deleted');
+      if (data.success && data.deleted) {
+        showToast('Typing test deleted successfully');
         loadAllData();
+      } else {
+        showToast(data.error || 'Failed to delete typing test');
       }
     } catch (e: any) {
-      showToast('Error deleting test');
+      showToast(e.message || 'Error deleting typing test');
     } finally {
       setLoading(false);
     }
@@ -284,8 +313,8 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       description: cat.description || '',
       icon: cat.icon || 'Keyboard',
       logoUrl: cat.logoUrl || '',
-      orderIndex: cat.orderIndex,
-      isActive: cat.isActive
+      orderIndex: cat.orderIndex !== undefined ? cat.orderIndex : 1,
+      isActive: cat.isActive !== undefined ? cat.isActive : true
     });
     setShowCategoryModal(true);
   };
@@ -334,42 +363,47 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       setLoading(true);
       const payload: any = {
         ...categoryForm,
+        name: categoryForm.name.trim(),
         id: editingCategory ? editingCategory.id : undefined
       };
       const res = await fetch('/api/db', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: adminHeaders,
         body: JSON.stringify({ action: editingCategory ? 'edit-typing-category' : 'create-typing-category', data: payload })
       });
       const data = await res.json();
-      if (data.success) {
-        showToast(editingCategory ? 'Category updated!' : 'Category created!');
+      if (data.success && data.category) {
+        showToast(editingCategory ? 'Exam category updated successfully!' : 'Exam category created successfully!');
         setShowCategoryModal(false);
         loadAllData();
+      } else {
+        showToast(data.error || 'Failed to save exam category');
       }
     } catch (e: any) {
-      showToast('Error saving category');
+      showToast(e.message || 'Error saving category');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteCategory = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
+    if (!confirm('Are you sure you want to delete this category? All tests linked to this category will also be deleted.')) return;
     try {
       setLoading(true);
       const res = await fetch('/api/db', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: adminHeaders,
         body: JSON.stringify({ action: 'delete-typing-category', data: { id } })
       });
       const data = await res.json();
-      if (data.success) {
-        showToast('Category deleted');
+      if (data.success && data.deleted) {
+        showToast('Category deleted successfully');
         loadAllData();
+      } else {
+        showToast(data.error || 'Failed to delete category');
       }
     } catch (e: any) {
-      showToast('Error deleting category');
+      showToast(e.message || 'Error deleting category');
     } finally {
       setLoading(false);
     }
@@ -420,17 +454,19 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       };
       const res = await fetch('/api/db', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: adminHeaders,
         body: JSON.stringify({ action: editingPassage ? 'edit-typing-passage' : 'create-typing-passage', data: payload })
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.passage) {
         showToast(editingPassage ? 'Passage updated!' : 'Passage saved to bank!');
         setShowPassageModal(false);
         loadAllData();
+      } else {
+        showToast(data.error || 'Failed to save passage');
       }
     } catch (e: any) {
-      showToast('Error saving passage');
+      showToast(e.message || 'Error saving passage');
     } finally {
       setLoading(false);
     }
@@ -442,16 +478,18 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       setLoading(true);
       const res = await fetch('/api/db', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: adminHeaders,
         body: JSON.stringify({ action: 'delete-typing-passage', data: { id } })
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.deleted) {
         showToast('Passage deleted');
         loadAllData();
+      } else {
+        showToast(data.error || 'Failed to delete passage');
       }
     } catch (e: any) {
-      showToast('Error deleting passage');
+      showToast(e.message || 'Error deleting passage');
     } finally {
       setLoading(false);
     }
@@ -938,6 +976,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   onChange={e => setTestForm({ ...testForm, categoryId: e.target.value })}
                   className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
                 >
+                  <option value="">-- Select Exam Category --</option>
                   {categories.map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}

@@ -206,16 +206,31 @@ export async function POST(request: Request) {
         isRequesterAdmin = true;
       }
     } else {
-      const reqSessionId = data?.sessionId || body?.sessionId;
-      if (reqSessionId) {
-        const sessionUser = await prisma.user.findFirst({
-          where: { currentSessionId: reqSessionId },
+      const explicitUserId = request.headers.get('x-user-id') || data?.userId || body?.userId;
+      if (explicitUserId) {
+        const explicitUser = await prisma.user.findUnique({
+          where: { id: explicitUserId },
           select: { id: true, role: true }
         });
-        if (sessionUser) {
-          requesterUserId = sessionUser.id;
-          if (sessionUser.role !== 'STUDENT') {
+        if (explicitUser) {
+          requesterUserId = explicitUser.id;
+          if (explicitUser.role !== 'STUDENT') {
             isRequesterAdmin = true;
+          }
+        }
+      }
+      if (!isRequesterAdmin) {
+        const reqSessionId = data?.sessionId || body?.sessionId;
+        if (reqSessionId) {
+          const sessionUser = await prisma.user.findFirst({
+            where: { currentSessionId: reqSessionId },
+            select: { id: true, role: true }
+          });
+          if (sessionUser) {
+            requesterUserId = sessionUser.id;
+            if (sessionUser.role !== 'STUDENT') {
+              isRequesterAdmin = true;
+            }
           }
         }
       }

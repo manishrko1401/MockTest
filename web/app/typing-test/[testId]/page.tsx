@@ -1471,7 +1471,7 @@ export default function TCSiONTypingTerminalPage() {
             ) : (
               typedWordCount >= passageWordCount && passageWordCount > 0 ? (
                 <div className="px-3 py-1.5 rounded-md bg-amber-50 border border-amber-300 text-amber-800 text-xs font-semibold flex items-center justify-between">
-                  <span>⚠️ <strong>Passage Completed!</strong> Retyping is disabled for this test. Please review your text or click Submit.</span>
+                  <span>⚠️ <strong>Passage Completed!</strong> Retyping is disabled for this test. Please review your typed text until time expires.</span>
                 </div>
               ) : null
             )
@@ -1512,7 +1512,7 @@ export default function TCSiONTypingTerminalPage() {
           </div>
         </div>
 
-        {/* Right Column: Instructions Box & Submit Button */}
+        {/* Right Column: Instructions Box */}
         <div className="w-full lg:w-72 flex flex-col gap-4">
           {/* Instructions Box with Magenta/Purple Border (exact to screenshot) */}
           <div className="p-3.5 bg-white border border-[#ab47bc] rounded text-[11px] text-slate-700 leading-relaxed space-y-2 shadow-xs">
@@ -1544,25 +1544,6 @@ export default function TCSiONTypingTerminalPage() {
                   </div>
                 )}
               </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-end pt-1">
-            {phase === 'DEMO' ? (
-              <button
-                onClick={handleFinishDemo}
-                className="px-6 py-2 bg-[#31a0e5] hover:bg-[#286090] text-white font-bold text-sm rounded shadow transition active:scale-95 cursor-pointer"
-              >
-                Submit Demo
-              </button>
-            ) : (
-              <button
-                onClick={handleFinishMainTest}
-                className="px-8 py-2 bg-[#31a0e5] hover:bg-[#286090] text-white font-bold text-sm rounded shadow transition active:scale-95 cursor-pointer"
-              >
-                Submit
-              </button>
-            )}
           </div>
         </div>
       </main>

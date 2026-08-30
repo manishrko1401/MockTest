@@ -316,22 +316,37 @@ interface TypingDatabase {
   attempts: TypingAttempt[];
 }
 
+function getDataFilePath(): string {
+  const candidates = [
+    path.join(process.cwd(), 'web', 'typing_data.json'),
+    path.join(process.cwd(), 'typing_data.json')
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  if (path.basename(process.cwd()) === 'web') {
+    return path.join(process.cwd(), 'typing_data.json');
+  }
+  return path.join(process.cwd(), 'web', 'typing_data.json');
+}
+
 function loadData(): TypingDatabase {
   try {
-    if (fs.existsSync(DATA_FILE)) {
-      const raw = fs.readFileSync(DATA_FILE, 'utf-8');
+    const filePath = getDataFilePath();
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, 'utf-8');
       const data = JSON.parse(raw);
       return {
-        categories: Array.isArray(data.categories) && data.categories.length > 0 ? data.categories : DEFAULT_CATEGORIES,
-        passages: Array.isArray(data.passages) && data.passages.length > 0 ? data.passages : DEFAULT_PASSAGES,
-        tests: Array.isArray(data.tests) && data.tests.length > 0 ? data.tests : DEFAULT_TESTS,
+        categories: Array.isArray(data.categories) ? data.categories : DEFAULT_CATEGORIES,
+        passages: Array.isArray(data.passages) ? data.passages : DEFAULT_PASSAGES,
+        tests: Array.isArray(data.tests) ? data.tests : DEFAULT_TESTS,
         attempts: Array.isArray(data.attempts) ? data.attempts : []
       };
     }
   } catch (err) {
     console.error('Error loading typing data file:', err);
   }
-  const initial = {
+  const initial: TypingDatabase = {
     categories: DEFAULT_CATEGORIES,
     passages: DEFAULT_PASSAGES,
     tests: DEFAULT_TESTS,
@@ -343,7 +358,19 @@ function loadData(): TypingDatabase {
 
 function saveData(data: TypingDatabase): void {
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    const filePath = getDataFilePath();
+    const jsonStr = JSON.stringify(data, null, 2);
+    fs.writeFileSync(filePath, jsonStr, 'utf-8');
+
+    // Sync to alternative location if both folders exist
+    const webPath = path.join(process.cwd(), 'web', 'typing_data.json');
+    const rootPath = path.join(process.cwd(), 'typing_data.json');
+    if (filePath !== webPath && fs.existsSync(path.dirname(webPath))) {
+      try { fs.writeFileSync(webPath, jsonStr, 'utf-8'); } catch {}
+    }
+    if (filePath !== rootPath && fs.existsSync(rootPath)) {
+      try { fs.writeFileSync(rootPath, jsonStr, 'utf-8'); } catch {}
+    }
   } catch (err) {
     console.error('Error saving typing data file:', err);
   }
@@ -363,12 +390,12 @@ export function saveTypingCategory(category: Partial<TypingCategory>): TypingCat
 
   const newCat: TypingCategory = {
     id,
-    name: category.name || 'New Typing Exam',
-    nameHi: category.nameHi || '',
-    description: category.description || '',
+    name: (category.name || 'New Typing Exam').trim(),
+    nameHi: (category.nameHi || '').trim(),
+    description: (category.description || '').trim(),
     icon: category.icon || 'Keyboard',
     logoUrl: category.logoUrl || '',
-    orderIndex: category.orderIndex !== undefined ? category.orderIndex : db.categories.length + 1,
+    orderIndex: category.orderIndex !== undefined ? Number(category.orderIndex) : (existingIdx >= 0 ? (db.categories[existingIdx].orderIndex || 1) : db.categories.length + 1),
     isActive: category.isActive !== undefined ? category.isActive : true,
     createdAt: existingIdx >= 0 ? db.categories[existingIdx].createdAt : new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -389,6 +416,8 @@ export function deleteTypingCategory(id: string): boolean {
   const initialLen = db.categories.length;
   db.categories = db.categories.filter(c => c.id !== id);
   if (db.categories.length !== initialLen) {
+    // Also remove any tests linked to this deleted category
+    db.tests = db.tests.filter(t => t.categoryId !== id);
     saveData(db);
     return true;
   }
@@ -411,8 +440,8 @@ export function saveTypingPassage(passage: Partial<TypingPassage>): TypingPassag
 
   const newPassage: TypingPassage = {
     id,
-    title: passage.title || 'Untitled Passage',
-    titleHi: passage.titleHi || '',
+    title: (passage.title || 'Untitled Passage').trim(),
+    titleHi: (passage.titleHi || '').trim(),
     text,
     categoryId: passage.categoryId || '',
     language: passage.language || 'en',
@@ -472,8 +501,8 @@ export function saveTypingTest(test: Partial<TypingTest>): TypingTest {
 
   const newTest: TypingTest = {
     id,
-    title: test.title || 'New Typing Test',
-    titleHi: test.titleHi || '',
+    title: (test.title || 'New Typing Test').trim(),
+    titleHi: (test.titleHi || '').trim(),
     categoryId: test.categoryId || db.categories[0]?.id || 'cat-ssc-cgl',
     passageId: test.passageId || '',
     passageText,
@@ -489,8 +518,8 @@ export function saveTypingTest(test: Partial<TypingTest>): TypingTest {
     highlightAllowed: test.highlightAllowed !== undefined ? test.highlightAllowed : false,
     language: test.language || 'en',
     difficulty: test.difficulty || 'Medium',
-    instructions: test.instructions || 'Standard typing exam simulation. Complete Demo, Break, and Main test.',
-    orderIndex: test.orderIndex !== undefined ? test.orderIndex : db.tests.length + 1,
+    instructions: (test.instructions || 'Standard typing exam simulation. Complete Demo, Break, and Main test.').trim(),
+    orderIndex: test.orderIndex !== undefined ? Number(test.orderIndex) : (existingIdx >= 0 ? (db.tests[existingIdx].orderIndex || 1) : db.tests.length + 1),
     isActive: test.isActive !== undefined ? test.isActive : true,
     totalAttempts: existingIdx >= 0 ? (db.tests[existingIdx].totalAttempts || 0) : 0,
     createdAt: existingIdx >= 0 ? db.tests[existingIdx].createdAt : new Date().toISOString(),
