@@ -89,7 +89,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
     title: '',
     titleHi: '',
     categoryId: defaultCatId,
-    passageText: SAMPLE_PASSAGES[0].text,
+    passageText: '',
     demoPassageText: DEFAULT_DEMO_TEXT,
     demoDurationMinutes: 1,
     breakDurationMinutes: 1,
@@ -108,6 +108,13 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
   // Edit Test Modal
   const [editingTest, setEditingTest] = useState<TypingTest | null>(null);
   const [showEditTestModal, setShowEditTestModal] = useState(false);
+
+  // Dedicated Upload / Edit Passage Modal State
+  const [uploadPassageModal, setUploadPassageModal] = useState<{
+    isOpen: boolean;
+    test: TypingTest | null;
+    passageText: string;
+  } | null>(null);
 
   // Category Modal State
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -196,14 +203,10 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       showToast('Please select an exam category');
       return;
     }
-    if (!testForm.passageText.trim()) {
-      showToast('Please enter main exam passage text');
-      return;
-    }
 
     try {
       setLoading(true);
-      const count = Math.max(1, Number(testCount) || 1);
+      const count = Math.min(200, Math.max(1, Number(testCount) || 1));
 
       for (let i = 1; i <= count; i++) {
         const titleToUse = count === 1 ? testForm.title.trim() : `${testForm.title.trim()} ${i}`;
@@ -215,6 +218,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
           ...testForm,
           title: titleToUse,
           titleHi: titleHiToUse,
+          passageText: testForm.passageText ? testForm.passageText.trim() : '',
           backspaceRule: testForm.enableBackspace ? 'ALLOWED' : 'DISABLED'
         };
 
@@ -232,6 +236,44 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       loadAllData();
     } catch (err: any) {
       showToast(err.message || 'Error creating test');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenUploadPassage = (test: TypingTest) => {
+    setUploadPassageModal({
+      isOpen: true,
+      test,
+      passageText: test.passageText || ''
+    });
+  };
+
+  const handleSaveUploadedPassage = async () => {
+    if (!uploadPassageModal?.test) return;
+    try {
+      setLoading(true);
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: adminHeaders,
+        body: JSON.stringify({
+          action: 'edit-typing-test',
+          data: {
+            id: uploadPassageModal.test.id,
+            passageText: uploadPassageModal.passageText.trim()
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.test) {
+        showToast(`Passage saved successfully for "${uploadPassageModal.test.title}"!`);
+        setUploadPassageModal(null);
+        loadAllData();
+      } else {
+        showToast(data.error || 'Failed to save passage');
+      }
+    } catch (e: any) {
+      showToast(e.message || 'Error saving passage');
     } finally {
       setLoading(false);
     }
@@ -610,15 +652,15 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     </div>
                     <div>
                       <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                        No. of Tests to Create
+                        No. of Tests to Create <span className="text-slate-400 font-normal lowercase">(max 200)</span>
                       </label>
                       <input
                         type="number"
                         required
                         min={1}
-                        max={50}
+                        max={200}
                         value={testCount}
-                        onChange={e => setTestCount(Math.max(1, parseInt(e.target.value) || 1))}
+                        onChange={e => setTestCount(Math.min(200, Math.max(1, parseInt(e.target.value) || 1)))}
                         className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold font-sans"
                       />
                     </div>
@@ -789,31 +831,16 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     </label>
                   </div>
 
-                  {/* Passage Text Areas */}
+                  {/* Passages Section */}
                   <div className="space-y-4 pt-1 border-t border-slate-200 dark:border-slate-800">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                        Passage Texts
-                      </h4>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] text-slate-500 font-semibold">Quick sample text:</span>
-                        {SAMPLE_PASSAGES.map((sample, sIdx) => (
-                          <button
-                            key={sIdx}
-                            type="button"
-                            onClick={() => setTestForm({ ...testForm, passageText: sample.text })}
-                            className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-blue-600 dark:text-blue-400 text-[10px] font-bold border border-slate-200 dark:border-slate-700 cursor-pointer"
-                          >
-                            Sample {sIdx + 1}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    <h4 className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Passage Configuration
+                    </h4>
 
                     {/* Warm-Up Demo Passage */}
                     <div>
                       <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1.5">
-                        Demo Passage (Warm-Up Test)
+                        Demo Passage (Warm-Up Keyboard Check)
                       </label>
                       <textarea
                         rows={2}
@@ -823,24 +850,19 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                       />
                     </div>
 
-                    {/* Main Exam Passage */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase">
-                          Main Exam Passage Text *
-                        </label>
-                        <span className="text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                          {mainPassageWords} words · {testForm.passageText.length} characters
-                        </span>
+                    {/* Main Exam Passage Notice Card */}
+                    <div className="p-4 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-xl flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5">
+                        <Upload className="w-4 h-4" />
                       </div>
-                      <textarea
-                        rows={5}
-                        required
-                        value={testForm.passageText}
-                        onChange={e => setTestForm({ ...testForm, passageText: e.target.value })}
-                        placeholder="Paste or write the main examination typing passage here..."
-                        className="w-full p-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-mono leading-relaxed"
-                      />
+                      <div className="space-y-1">
+                        <h5 className="text-xs font-extrabold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                          Main Exam Passage Uploaded After Test Creation
+                        </h5>
+                        <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                          Main exam passage texts are not set during test creation. After creating your test(s) below, simply click the <span className="font-bold text-amber-900 dark:text-amber-100 bg-amber-100 dark:bg-amber-900/60 px-1.5 py-0.5 rounded border border-amber-300 dark:border-amber-800">"Upload Passage"</span> button on each test in the list to upload or paste your passage text.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -1005,25 +1027,49 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                             {test.allowRetype ? '✓ Retype ON' : '✕ Single Pass'}
                           </span>
 
-                          {/* Passage word count */}
-                          <span className="text-[11px] text-slate-400">
-                            📝 {passageWordCount} words ({test.passageText.length} chars)
-                          </span>
+                          {/* Passage Status */}
+                          {!test.passageText || !test.passageText.trim() ? (
+                            <span className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-900 px-2 py-0.5 rounded-md font-extrabold text-amber-700 dark:text-amber-300 text-[10px]">
+                              <AlertCircle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                              ⚠️ Passage Pending
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-900 px-2 py-0.5 rounded-md font-bold text-emerald-700 dark:text-emerald-300 text-[10px]">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                              Passage Uploaded ({passageWordCount} words)
+                            </span>
+                          )}
                         </div>
                       </div>
 
                       {/* Right: Actions */}
                       <div className="flex items-center gap-2 lg:flex-col lg:items-end shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-slate-800">
-                        <a
-                          href={`/typing-test/${test.id}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-3.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                        >
-                          <Play className="w-3.5 h-3.5 fill-blue-500" />
-                          Test Terminal
-                          <ExternalLink className="w-3 h-3 text-slate-400" />
-                        </a>
+                        <div className="flex items-center gap-2">
+                          {/* Dedicated Upload / Edit Passage Button */}
+                          <button
+                            onClick={() => handleOpenUploadPassage(test)}
+                            className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition active:scale-95 ${
+                              !test.passageText || !test.passageText.trim()
+                                ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                            }`}
+                            title={!test.passageText || !test.passageText.trim() ? 'Upload Main Exam Passage' : 'Edit Main Exam Passage'}
+                          >
+                            <Upload className="w-3.5 h-3.5" />
+                            {!test.passageText || !test.passageText.trim() ? 'Upload Passage' : 'Edit Passage'}
+                          </button>
+
+                          <a
+                            href={`/typing-test/${test.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-3.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                          >
+                            <Play className="w-3.5 h-3.5 fill-blue-500" />
+                            Terminal
+                            <ExternalLink className="w-3 h-3 text-slate-400" />
+                          </a>
+                        </div>
 
                         <div className="flex items-center gap-1.5">
                           <button
@@ -1426,14 +1472,19 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
               {/* Main Passage Text */}
               <div>
-                <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1.5">
-                  Main Exam Passage Text *
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase">
+                    Main Exam Passage Text
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {testForm.passageText?.trim() ? testForm.passageText.trim().split(/\s+/).length : 0} words
+                  </span>
+                </div>
                 <textarea
                   rows={5}
-                  required
                   value={testForm.passageText}
                   onChange={e => setTestForm({ ...testForm, passageText: e.target.value })}
+                  placeholder="Paste or write the main examination typing passage text (optional during draft)..."
                   className="w-full p-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -1593,6 +1644,126 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                 className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow cursor-pointer transition active:scale-95"
               >
                 {editingCategory ? 'Save Changes' : 'Create Category'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dedicated Upload / Edit Main Passage Modal */}
+      {uploadPassageModal && uploadPassageModal.isOpen && uploadPassageModal.test && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500 text-white shadow-xs">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                    Upload / Edit Main Exam Passage
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    For test: <strong className="text-blue-600 dark:text-blue-400 font-semibold">{uploadPassageModal.test.title}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setUploadPassageModal(null)}
+                className="p-1.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-4">
+              {/* Test Meta Info Chips */}
+              <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs">
+                <span className="font-bold text-slate-500 dark:text-slate-400">Test Info:</span>
+                <span className="px-2 py-0.5 rounded-md font-bold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                  {categories.find(c => c.id === uploadPassageModal.test?.categoryId)?.name || 'Category'}
+                </span>
+                <span className="px-2 py-0.5 rounded-md font-bold bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                  {uploadPassageModal.test.language === 'hi' ? 'Hindi Keyboard' : 'English Keyboard'}
+                </span>
+                <span className="px-2 py-0.5 rounded-md font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                  Main Time: {uploadPassageModal.test.mainDurationMinutes} min
+                </span>
+              </div>
+
+              {/* Passage Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Passage Content *
+                </label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] text-slate-400 font-semibold">Quick sample text:</span>
+                  {SAMPLE_PASSAGES.map((sample, sIdx) => (
+                    <button
+                      key={sIdx}
+                      type="button"
+                      onClick={() => setUploadPassageModal({
+                        ...uploadPassageModal,
+                        passageText: sample.text
+                      })}
+                      className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-blue-600 dark:text-blue-400 text-[10px] font-bold border border-slate-200 dark:border-slate-700 cursor-pointer"
+                    >
+                      Sample {sIdx + 1}
+                    </button>
+                  ))}
+                  {uploadPassageModal.passageText && (
+                    <button
+                      type="button"
+                      onClick={() => setUploadPassageModal({ ...uploadPassageModal, passageText: '' })}
+                      className="px-2 py-0.5 rounded bg-red-50 dark:bg-red-950/60 hover:bg-red-100 text-red-600 dark:text-red-400 text-[10px] font-bold border border-red-200 dark:border-red-800 cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Textarea */}
+              <textarea
+                rows={10}
+                required
+                value={uploadPassageModal.passageText}
+                onChange={e => setUploadPassageModal({ ...uploadPassageModal, passageText: e.target.value })}
+                placeholder="Paste or write the main examination typing passage text here..."
+                className="w-full p-3.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono leading-relaxed focus:outline-none focus:border-blue-500"
+              />
+
+              {/* Passage Stats Bar */}
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
+                <span className="flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-blue-500" />
+                  Words: <strong className="text-slate-800 dark:text-slate-200">{uploadPassageModal.passageText.trim() ? uploadPassageModal.passageText.trim().split(/\s+/).length : 0}</strong>
+                </span>
+                <span>
+                  Characters: <strong className="text-slate-800 dark:text-slate-200">{uploadPassageModal.passageText.length}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+              <button
+                type="button"
+                onClick={() => setUploadPassageModal(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveUploadedPassage}
+                disabled={loading || !uploadPassageModal.passageText.trim()}
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:opacity-50 text-white font-bold text-xs shadow-md cursor-pointer transition flex items-center gap-1.5"
+              >
+                <Save className="w-3.5 h-3.5" />
+                Save & Upload Passage
               </button>
             </div>
           </div>

@@ -490,13 +490,14 @@ export function saveTypingTest(test: Partial<TypingTest>): TypingTest {
   const id = test.id || `test-${Date.now()}`;
   const existingIdx = db.tests.findIndex(t => t.id === id);
 
-  let passageText = test.passageText || '';
-  if (!passageText && test.passageId) {
+  let passageText = '';
+  if (test.passageText !== undefined) {
+    passageText = test.passageText;
+  } else if (existingIdx >= 0 && db.tests[existingIdx].passageText) {
+    passageText = db.tests[existingIdx].passageText;
+  } else if (test.passageId) {
     const linked = db.passages.find(p => p.id === test.passageId);
     if (linked) passageText = linked.text;
-  }
-  if (!passageText) {
-    passageText = DEFAULT_PASSAGES[0].text;
   }
 
   const newTest: TypingTest = {
