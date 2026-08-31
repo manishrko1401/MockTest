@@ -1,5 +1,12 @@
-import fs from 'fs';
-import path from 'path';
+/**
+ * typingStore.ts  — Prisma-backed async store for all Typing Test data.
+ *
+ * Previously this file used a local JSON file (typing_data.json) which
+ * does NOT persist on Vercel (read-only filesystem). All operations are
+ * now async and read/write directly to the PostgreSQL database via Prisma.
+ */
+
+import { prisma } from './prisma';
 import {
   TypingCategory,
   TypingPassage,
@@ -11,517 +18,272 @@ import {
 
 export * from './typingTypes';
 
-const DATA_FILE = path.join(process.cwd(), 'typing_data.json');
-
 const DEFAULT_DEMO_TEXT = `This is a demo typing test passage designed to check your keyboard responsiveness and warm up your fingers. Please ensure all letter keys, space bar, backspace, and punctuation marks like comma, period, and hyphens are functioning smoothly before you start the main examination.`;
 
-const DEFAULT_CATEGORIES: TypingCategory[] = [
-  {
-    id: 'cat-ssc-cgl',
-    name: 'SSC CGL (Tier-2 DEST)',
-    nameHi: 'एसएससी सीजीएल (टियर-2 डेस्ट)',
-    description: 'Data Entry Speed Test (DEST) for SSC CGL Posts. 2000 key depressions / 15 minutes (approx 27-30 WPM).',
-    icon: 'Keyboard',
-    orderIndex: 1,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'cat-ssc-chsl',
-    name: 'SSC CHSL (DEO / LDC)',
-    nameHi: 'एसएससी सीएचएसएल (डीईओ / एलडीसी)',
-    description: 'Skill Test for Lower Division Clerk (LDC) & Data Entry Operator (DEO). Standard 35 WPM English / 30 WPM Hindi.',
-    icon: 'Award',
-    orderIndex: 2,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'cat-rrb-ntpc',
-    name: 'RRB NTPC Typing Skill Test',
-    nameHi: 'आरआरबी एनटीपीसी टाइपिंग टेस्ट',
-    description: 'Typing Skill Test for Senior Clerk cum Typist, Accounts Clerk. 30 WPM English / 25 WPM Hindi in 10 minutes.',
-    icon: 'Train',
-    orderIndex: 3,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'cat-court-clerk',
-    name: 'High Court & Judicial Clerk',
-    nameHi: 'हाई कोर्ट एवं न्यायालय लिपिक',
-    description: 'Typing test for District & High Court Junior Assistants, Clerks and Stenographers with legal terminology.',
-    icon: 'Scale',
-    orderIndex: 4,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'cat-general-speed',
-    name: 'General Speed & Accuracy Practice',
-    nameHi: 'सामान्य गति एवं शुद्धता अभ्यास',
-    description: 'Editorial passages, current affairs, and comprehensive typing exercises to build top speed.',
-    icon: 'Zap',
-    orderIndex: 5,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'cat-hindi-typing',
-    name: 'हिंदी टाइपिंग परीक्षा (Hindi Typing)',
-    nameHi: 'हिंदी टाइपिंग परीक्षा',
-    description: 'विशेष हिंदी टाइपिंग अभ्यास (मंगल फॉन्ट / इनस्क्रिप्ट / रेमिंगटन गेल कीबोर्ड लेआउट).',
-    icon: 'Languages',
-    orderIndex: 6,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
+// ---------------------- CATEGORIES ----------------------
 
-const DEFAULT_PASSAGES: TypingPassage[] = [
-  {
-    id: 'pas-1',
-    title: 'Digital Governance and Public Service Delivery in Modern India',
-    titleHi: 'डिजिटल गवर्नेंस और लोक सेवा वितरण',
-    text: `Digital technology has revolutionized public service delivery across India over the past decade. Through unified portals and mobile applications, citizens can now access essential government documents, certificates, and welfare schemes without waiting in long queues. The integration of direct benefit transfers with bank accounts has minimized leakages, ensuring that financial assistance reaches intended beneficiaries swiftly and securely. Moreover, automated systems reduce bureaucratic delays and promote transparency in public administration. As broadband connectivity expands to remote rural communities, digital literacy becomes a cornerstone for inclusive socio-economic progress and nationwide empowerment.`,
-    categoryId: 'cat-ssc-cgl',
-    language: 'en',
-    difficulty: 'Medium',
-    wordCount: 97,
-    charCount: 686,
-    keystrokesCount: 686,
-    tags: ['Governance', 'Technology', 'SSC CGL'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'pas-2',
-    title: 'Renewable Energy Transition and Sustainable Development',
-    titleHi: 'नवीकरणीय ऊर्जा परिवर्तन और सतत विकास',
-    text: `The transition toward sustainable energy sources represents one of the most critical endeavors of the twenty-first century. Solar and wind power installations have grown exponentially, providing affordable and clean electricity to millions of households and industrial units. By reducing dependency on imported fossil fuels, nations can enhance energy security while simultaneously curbing greenhouse gas emissions. Research in battery storage and smart grid infrastructure further stabilizes energy distribution during peak consumption hours. Continued collaboration between public policymakers, engineering innovators, and private investors will accelerate the adoption of environmentally conscious technologies worldwide.`,
-    categoryId: 'cat-ssc-chsl',
-    language: 'en',
-    difficulty: 'Medium',
-    wordCount: 96,
-    charCount: 718,
-    keystrokesCount: 718,
-    tags: ['Environment', 'Energy', 'CHSL'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'pas-3',
-    title: 'Constitutional Principles and the Rule of Law in Judicial Systems',
-    titleHi: 'संवैधानिक सिद्धांत एवं विधि का शासन',
-    text: `The Constitution of India establishes a democratic republic grounded in the fundamental tenets of justice, liberty, equality, and fraternity. The independent judiciary functions as the custodian of the Constitution, ensuring that executive actions and legislative enactments remain consistent with constitutional mandates. Through judicial review and writ jurisdiction, superior courts protect the fundamental rights of citizens against arbitrary state action. A robust and accessible legal system is indispensable for upholding public confidence and guaranteeing equal protection of the laws to all individuals regardless of their social or economic background.`,
-    categoryId: 'cat-court-clerk',
-    language: 'en',
-    difficulty: 'Hard',
-    wordCount: 98,
-    charCount: 712,
-    keystrokesCount: 712,
-    tags: ['Law', 'Constitution', 'High Court'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'pas-4',
-    title: 'Indian Railways Infrastructure and Modernization Programs',
-    titleHi: 'भारतीय रेल अवसंरचना एवं आधुनिकीकरण कार्यक्रम',
-    text: `Indian Railways constitutes the lifeline of the country's transport network, facilitating the daily transit of millions of passengers and crucial freight cargo. Recent modernization initiatives focus on high-speed train sets, automated signaling networks, track electrification, and redevelopment of major railway stations with world-class passenger amenities. Dedicated freight corridors have substantially reduced transportation turnaround times for essential commodities, bolstering manufacturing competitiveness. Technological upgrades such as automatic train protection systems demonstrate a sustained commitment to passenger safety, operational efficiency, and sustainable economic growth.`,
-    categoryId: 'cat-rrb-ntpc',
-    language: 'en',
-    difficulty: 'Medium',
-    wordCount: 93,
-    charCount: 711,
-    keystrokesCount: 711,
-    tags: ['Railways', 'Infrastructure', 'RRB NTPC'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'pas-5',
-    title: 'हिंदी गद्यांश: राष्ट्र निर्माण में शिक्षा और युवा शक्ति की भूमिका',
-    titleHi: 'राष्ट्र निर्माण में शिक्षा और युवा शक्ति की भूमिका',
-    text: `किसी भी राष्ट्र के सर्वांगीण विकास और समृद्धि में शिक्षा की भूमिका सर्वोपरि होती है। युवा शक्ति देश की अमूल्य पूंजी है जो नई सोच और ऊर्जा के साथ सकारात्मक परिवर्तन ला सकती है। गुणवत्तापूर्ण शिक्षा से विद्यार्थियों में तार्किक क्षमता, नैतिक मूल्य और राष्ट्र सेवा की भावना विकसित होती है। डिजिटल युग में ज्ञान और कौशल का समन्वय युवाओं को आत्मनिर्भर बनाकर देश को नई ऊंचाइयों पर ले जाने में सक्षम बनाता है।`,
-    categoryId: 'cat-hindi-typing',
-    language: 'hi',
-    difficulty: 'Medium',
-    wordCount: 74,
-    charCount: 405,
-    keystrokesCount: 405,
-    tags: ['Hindi', 'Education', 'Mangal'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
-const DEFAULT_TESTS: TypingTest[] = [
-  {
-    id: 'test-ssc-cgl-1',
-    title: 'SSC CGL DEST Mock Test 01 - Governance & Administration',
-    titleHi: 'एसएससी सीजीएल डेस्ट मॉक टेस्ट 01',
-    categoryId: 'cat-ssc-cgl',
-    passageId: 'pas-1',
-    passageText: DEFAULT_PASSAGES[0].text,
-    demoPassageText: DEFAULT_DEMO_TEXT,
-    demoDurationMinutes: 1,
-    breakDurationMinutes: 1,
-    mainDurationMinutes: 15,
-    qualifyingWpm: 27,
-    maxErrorPercentage: 5.0,
-    backspaceRule: 'ALLOWED',
-    highlightAllowed: false,
-    language: 'en',
-    difficulty: 'Medium',
-    instructions: 'This test strictly simulates the SSC CGL Tier-2 DEST exam. You will have a 1-minute demo test to check your keyboard, followed by a 1-minute break, and finally the 15-minute main examination. Backspace is allowed.',
-    orderIndex: 1,
-    isActive: true,
-    totalAttempts: 1420,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'test-ssc-chsl-1',
-    title: 'SSC CHSL Typing Speed Test 01 - Energy & Environment',
-    titleHi: 'एसएससी सीएचएसएल टाइपिंग टेस्ट 01',
-    categoryId: 'cat-ssc-chsl',
-    passageId: 'pas-2',
-    passageText: DEFAULT_PASSAGES[1].text,
-    demoPassageText: DEFAULT_DEMO_TEXT,
-    demoDurationMinutes: 1,
-    breakDurationMinutes: 1,
-    mainDurationMinutes: 10,
-    qualifyingWpm: 35,
-    maxErrorPercentage: 7.0,
-    backspaceRule: 'ALLOWED',
-    highlightAllowed: false,
-    language: 'en',
-    difficulty: 'Medium',
-    instructions: 'Standard SSC CHSL Typing test simulation. 35 WPM required with accuracy above 93%. Includes 1-minute demo, 1-minute break, and 10-minute main test.',
-    orderIndex: 2,
-    isActive: true,
-    totalAttempts: 2150,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'test-rrb-ntpc-1',
-    title: 'RRB NTPC Typing Skill Test 01 - Railways Modernization',
-    titleHi: 'आरआरबी एनटीपीसी टाइपिंग टेस्ट 01',
-    categoryId: 'cat-rrb-ntpc',
-    passageId: 'pas-4',
-    passageText: DEFAULT_PASSAGES[3].text,
-    demoPassageText: DEFAULT_DEMO_TEXT,
-    demoDurationMinutes: 1,
-    breakDurationMinutes: 1,
-    mainDurationMinutes: 10,
-    qualifyingWpm: 30,
-    maxErrorPercentage: 5.0,
-    backspaceRule: 'ALLOWED',
-    highlightAllowed: false,
-    language: 'en',
-    difficulty: 'Medium',
-    instructions: 'RRB NTPC official style typing skill test. Target 30 WPM with under 5% mistake limit. Complete Demo, Break and 10-minute Main test.',
-    orderIndex: 3,
-    isActive: true,
-    totalAttempts: 980,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'test-court-1',
-    title: 'High Court Legal Typing Test 01 - Judicial Reforms',
-    titleHi: 'हाई कोर्ट लीगल टाइपिंग टेस्ट 01',
-    categoryId: 'cat-court-clerk',
-    passageId: 'pas-3',
-    passageText: DEFAULT_PASSAGES[2].text,
-    demoPassageText: DEFAULT_DEMO_TEXT,
-    demoDurationMinutes: 1,
-    breakDurationMinutes: 1,
-    mainDurationMinutes: 10,
-    qualifyingWpm: 35,
-    maxErrorPercentage: 5.0,
-    backspaceRule: 'ALLOWED',
-    highlightAllowed: false,
-    language: 'en',
-    difficulty: 'Hard',
-    instructions: 'Legal document typing test designed for Court Clerk and Assistant examinations with legal terminology.',
-    orderIndex: 4,
-    isActive: true,
-    totalAttempts: 640,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'test-quick-5min',
-    title: 'Quick 5-Minute Speed Booster Test',
-    titleHi: 'त्वरित 5-मिनट स्पीड बूस्टर टेस्ट',
-    categoryId: 'cat-general-speed',
-    passageId: 'pas-1',
-    passageText: DEFAULT_PASSAGES[0].text,
-    demoPassageText: DEFAULT_DEMO_TEXT,
-    demoDurationMinutes: 0.5,
-    breakDurationMinutes: 0.5,
-    mainDurationMinutes: 5,
-    qualifyingWpm: 40,
-    maxErrorPercentage: 5.0,
-    backspaceRule: 'ALLOWED',
-    highlightAllowed: true,
-    language: 'en',
-    difficulty: 'Easy',
-    instructions: 'Fast-paced 5-minute typing drill with live highlighting and speed gauge enabled.',
-    orderIndex: 5,
-    isActive: true,
-    totalAttempts: 3420,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'test-hindi-1',
-    title: 'हिंदी टाइपिंग टेस्ट 01 - मंगल फॉन्ट (Hindi Typing Test 01)',
-    titleHi: 'हिंदी टाइपिंग टेस्ट 01',
-    categoryId: 'cat-hindi-typing',
-    passageId: 'pas-5',
-    passageText: DEFAULT_PASSAGES[4].text,
-    demoPassageText: 'यह हिंदी टाइपिंग के लिए डेमो गद्यांश है। कृपया अपने कीबोर्ड की सभी कुंजियों की जांच कर लें।',
-    demoDurationMinutes: 1,
-    breakDurationMinutes: 1,
-    mainDurationMinutes: 10,
-    qualifyingWpm: 30,
-    maxErrorPercentage: 5.0,
-    backspaceRule: 'ALLOWED',
-    highlightAllowed: false,
-    language: 'hi',
-    difficulty: 'Medium',
-    instructions: 'हिंदी टाइपिंग परीक्षा (मंगल फॉन्ट / इनस्क्रिप्ट लेआउट). 30 शब्द प्रति मिनट की गति आवश्यक है।',
-    orderIndex: 6,
-    isActive: true,
-    totalAttempts: 810,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
-interface TypingDatabase {
-  categories: TypingCategory[];
-  passages: TypingPassage[];
-  tests: TypingTest[];
-  attempts: TypingAttempt[];
+export async function getTypingCategories(): Promise<TypingCategory[]> {
+  const rows = await prisma.typingCategory.findMany({
+    orderBy: { orderIndex: 'asc' }
+  });
+  return rows.map(r => ({
+    id: r.id,
+    name: r.name,
+    nameHi: r.nameHi,
+    description: r.description,
+    icon: r.icon,
+    logoUrl: r.logoUrl,
+    orderIndex: r.orderIndex,
+    isActive: r.isActive,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString()
+  }));
 }
 
-function getDataFilePath(): string {
-  const candidates = [
-    path.join(process.cwd(), 'web', 'typing_data.json'),
-    path.join(process.cwd(), 'typing_data.json')
-  ];
-  for (const c of candidates) {
-    if (fs.existsSync(c)) return c;
-  }
-  if (path.basename(process.cwd()) === 'web') {
-    return path.join(process.cwd(), 'typing_data.json');
-  }
-  return path.join(process.cwd(), 'web', 'typing_data.json');
-}
-
-function loadData(): TypingDatabase {
-  try {
-    const filePath = getDataFilePath();
-    if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, 'utf-8').trim();
-      if (raw.length > 0) {
-        const data = JSON.parse(raw);
-        return {
-          categories: Array.isArray(data.categories) ? data.categories : DEFAULT_CATEGORIES,
-          passages: Array.isArray(data.passages) ? data.passages : DEFAULT_PASSAGES,
-          tests: Array.isArray(data.tests) ? data.tests : DEFAULT_TESTS,
-          attempts: Array.isArray(data.attempts) ? data.attempts : []
-        };
-      }
-      console.warn('typing_data.json is empty — recovering from defaults');
-    }
-  } catch (err) {
-    console.error('Error loading typing data file (recovering):', err);
-  }
-  const initial: TypingDatabase = {
-    categories: DEFAULT_CATEGORIES,
-    passages: DEFAULT_PASSAGES,
-    tests: DEFAULT_TESTS,
-    attempts: []
-  };
-  saveData(initial);
-  return initial;
-}
-
-function saveData(data: TypingDatabase): void {
-  try {
-    const filePath = getDataFilePath();
-    const jsonStr = JSON.stringify(data, null, 2);
-
-    // Atomic write: write to a temp file then rename to avoid partial/empty file corruption
-    const tmpPath = filePath + '.tmp';
-    fs.writeFileSync(tmpPath, jsonStr, 'utf-8');
-    fs.renameSync(tmpPath, filePath);
-
-    // Sync to alternative location if both folders exist
-    const webPath = path.join(process.cwd(), 'web', 'typing_data.json');
-    const rootPath = path.join(process.cwd(), 'typing_data.json');
-    if (filePath !== webPath && fs.existsSync(path.dirname(webPath))) {
-      try {
-        const tmpWeb = webPath + '.tmp';
-        fs.writeFileSync(tmpWeb, jsonStr, 'utf-8');
-        fs.renameSync(tmpWeb, webPath);
-      } catch {}
-    }
-    if (filePath !== rootPath && fs.existsSync(rootPath)) {
-      try {
-        const tmpRoot = rootPath + '.tmp';
-        fs.writeFileSync(tmpRoot, jsonStr, 'utf-8');
-        fs.renameSync(tmpRoot, rootPath);
-      } catch {}
-    }
-  } catch (err) {
-    console.error('Error saving typing data file:', err);
-  }
-}
-
-// ---------------------- DATABASE ACCESSORS ----------------------
-
-export function getTypingCategories(): TypingCategory[] {
-  const db = loadData();
-  return db.categories.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-}
-
-export function saveTypingCategory(category: Partial<TypingCategory>): TypingCategory {
-  const db = loadData();
-  const id = category.id || `cat-${Date.now()}`;
-  const existingIdx = db.categories.findIndex(c => c.id === id);
-
-  const newCat: TypingCategory = {
-    id,
+export async function saveTypingCategory(category: Partial<TypingCategory>): Promise<TypingCategory> {
+  const id = category.id;
+  const data = {
     name: (category.name || 'New Typing Exam').trim(),
     nameHi: (category.nameHi || '').trim(),
     description: (category.description || '').trim(),
     icon: category.icon || 'Keyboard',
     logoUrl: category.logoUrl || '',
-    orderIndex: category.orderIndex !== undefined ? Number(category.orderIndex) : (existingIdx >= 0 ? (db.categories[existingIdx].orderIndex || 1) : db.categories.length + 1),
-    isActive: category.isActive !== undefined ? category.isActive : true,
-    createdAt: existingIdx >= 0 ? db.categories[existingIdx].createdAt : new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    orderIndex: category.orderIndex !== undefined ? Number(category.orderIndex) : 1,
+    isActive: category.isActive !== undefined ? Boolean(category.isActive) : true,
   };
 
-  if (existingIdx >= 0) {
-    db.categories[existingIdx] = newCat;
+  let row;
+  if (id) {
+    // Upsert — create if not found, update if found
+    row = await prisma.typingCategory.upsert({
+      where: { id },
+      update: data,
+      create: { id, ...data }
+    });
   } else {
-    db.categories.push(newCat);
+    row = await prisma.typingCategory.create({ data });
   }
 
-  saveData(db);
-  return newCat;
+  return {
+    id: row.id,
+    name: row.name,
+    nameHi: row.nameHi,
+    description: row.description,
+    icon: row.icon,
+    logoUrl: row.logoUrl,
+    orderIndex: row.orderIndex,
+    isActive: row.isActive,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString()
+  };
 }
 
-export function deleteTypingCategory(id: string): boolean {
-  const db = loadData();
-  const initialLen = db.categories.length;
-  db.categories = db.categories.filter(c => c.id !== id);
-  if (db.categories.length !== initialLen) {
-    // Also remove any tests linked to this deleted category
-    db.tests = db.tests.filter(t => t.categoryId !== id);
-    saveData(db);
+export async function deleteTypingCategory(id: string): Promise<boolean> {
+  try {
+    await prisma.typingCategory.delete({ where: { id } });
     return true;
+  } catch {
+    return false;
   }
-  return false;
 }
 
-export function getTypingPassages(): TypingPassage[] {
-  const db = loadData();
-  return db.passages.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+// ---------------------- PASSAGES (kept as legacy compat, stored inside tests) ----------------------
+
+export async function getTypingPassages(): Promise<TypingPassage[]> {
+  // Passages are embedded inside typing tests — return aggregated list from tests
+  const tests = await prisma.typingTest.findMany({
+    where: { passageText: { not: '' } },
+    select: {
+      id: true, passageId: true, passageText: true, title: true, titleHi: true,
+      categoryId: true, language: true, difficulty: true, createdAt: true, updatedAt: true
+    }
+  });
+  return tests.map(t => ({
+    id: t.passageId || t.id,
+    title: t.title,
+    titleHi: t.titleHi,
+    text: t.passageText,
+    categoryId: t.categoryId,
+    language: t.language as 'en' | 'hi',
+    difficulty: t.difficulty as 'Easy' | 'Medium' | 'Hard',
+    wordCount: t.passageText.split(/\s+/).length,
+    charCount: t.passageText.length,
+    keystrokesCount: t.passageText.length,
+    tags: [],
+    createdAt: t.createdAt.toISOString(),
+    updatedAt: t.updatedAt.toISOString()
+  }));
 }
 
-export function saveTypingPassage(passage: Partial<TypingPassage>): TypingPassage {
-  const db = loadData();
-  const id = passage.id || `pas-${Date.now()}`;
-  const existingIdx = db.passages.findIndex(p => p.id === id);
-
-  const text = (passage.text || '').trim();
-  const words = text.length > 0 ? text.split(/\s+/).length : 0;
-  const chars = text.length;
-
-  const newPassage: TypingPassage = {
-    id,
-    title: (passage.title || 'Untitled Passage').trim(),
-    titleHi: (passage.titleHi || '').trim(),
-    text,
+export async function saveTypingPassage(passage: Partial<TypingPassage>): Promise<TypingPassage> {
+  // No-op: passages are stored inline inside TypingTest records
+  return {
+    id: passage.id || `pas-${Date.now()}`,
+    title: passage.title || 'Passage',
+    titleHi: passage.titleHi || '',
+    text: passage.text || '',
     categoryId: passage.categoryId || '',
     language: passage.language || 'en',
     difficulty: passage.difficulty || 'Medium',
-    wordCount: words,
-    charCount: chars,
-    keystrokesCount: chars,
-    tags: Array.isArray(passage.tags) ? passage.tags : [],
-    createdAt: existingIdx >= 0 ? db.passages[existingIdx].createdAt : new Date().toISOString(),
+    wordCount: (passage.text || '').split(/\s+/).length,
+    charCount: (passage.text || '').length,
+    keystrokesCount: (passage.text || '').length,
+    tags: passage.tags || [],
+    createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-
-  if (existingIdx >= 0) {
-    db.passages[existingIdx] = newPassage;
-  } else {
-    db.passages.push(newPassage);
-  }
-
-  saveData(db);
-  return newPassage;
 }
 
-export function deleteTypingPassage(id: string): boolean {
-  const db = loadData();
-  const initialLen = db.passages.length;
-  db.passages = db.passages.filter(p => p.id !== id);
-  if (db.passages.length !== initialLen) {
-    saveData(db);
-    return true;
-  }
+export async function deleteTypingPassage(id: string): Promise<boolean> {
+  // No-op: passages are part of tests
   return false;
 }
 
-export function getTypingTests(): TypingTest[] {
-  const db = loadData();
-  return db.tests.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+// ---------------------- TYPING TESTS ----------------------
+
+export async function getTypingTests(): Promise<TypingTest[]> {
+  const rows = await prisma.typingTest.findMany({
+    orderBy: { orderIndex: 'asc' }
+  });
+  return rows.map(r => dbRowToTypingTest(r));
 }
 
-export function getTypingTestById(id: string): TypingTest | null {
-  const db = loadData();
-  return db.tests.find(t => t.id === id) || null;
+export async function getTypingTestById(id: string): Promise<TypingTest | null> {
+  const row = await prisma.typingTest.findUnique({ where: { id } });
+  if (!row) return null;
+  return dbRowToTypingTest(row);
 }
 
-export function saveTypingTest(test: Partial<TypingTest>): TypingTest {
-  const db = loadData();
-  const id = test.id || `test-${Date.now()}`;
-  const existingIdx = db.tests.findIndex(t => t.id === id);
+export async function saveTypingTest(test: Partial<TypingTest>): Promise<TypingTest> {
+  const id = test.id;
+  const data = buildTestData(test);
 
-  let passageText = '';
-  if (test.passageText !== undefined) {
-    passageText = test.passageText;
-  } else if (existingIdx >= 0 && db.tests[existingIdx].passageText) {
-    passageText = db.tests[existingIdx].passageText;
-  } else if (test.passageId) {
-    const linked = db.passages.find(p => p.id === test.passageId);
-    if (linked) passageText = linked.text;
+  let row;
+  if (id) {
+    row = await prisma.typingTest.upsert({
+      where: { id },
+      update: data,
+      create: { id, ...data }
+    });
+  } else {
+    row = await prisma.typingTest.create({ data });
   }
 
-  const newTest: TypingTest = {
-    id,
+  return dbRowToTypingTest(row);
+}
+
+export async function saveBulkTypingTests(
+  template: Partial<TypingTest>,
+  count: number
+): Promise<TypingTest[]> {
+  const safeCount = Math.min(200, Math.max(1, count));
+  const baseTitle = (template.title || 'New Typing Test').trim();
+  const baseTitleHi = (template.titleHi || '').trim();
+
+  // Find current max orderIndex
+  const maxOrderResult = await prisma.typingTest.aggregate({ _max: { orderIndex: true } });
+  let maxOrder = maxOrderResult._max.orderIndex || 0;
+
+  const created: TypingTest[] = [];
+
+  for (let i = 1; i <= safeCount; i++) {
+    const titleToUse = safeCount === 1 ? baseTitle : `${baseTitle} ${i}`;
+    const titleHiToUse = baseTitleHi ? (safeCount === 1 ? baseTitleHi : `${baseTitleHi} ${i}`) : '';
+    maxOrder++;
+
+    const data = buildTestData({
+      ...template,
+      title: titleToUse,
+      titleHi: titleHiToUse,
+      orderIndex: maxOrder
+    });
+
+    const row = await prisma.typingTest.create({ data });
+    created.push(dbRowToTypingTest(row));
+  }
+
+  return created;
+}
+
+export async function deleteTypingTest(id: string): Promise<boolean> {
+  try {
+    await prisma.typingTest.delete({ where: { id } });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ---------------------- ATTEMPTS ----------------------
+
+export async function saveTypingAttempt(attempt: Partial<TypingAttempt>): Promise<TypingAttempt> {
+  if (!attempt.testId) throw new Error('testId is required to save a typing attempt');
+
+  const row = await prisma.typingAttempt.create({
+    data: {
+      userId: attempt.userId || 'guest',
+      userName: attempt.userName || 'Student',
+      testId: attempt.testId,
+      testTitle: attempt.testTitle || 'Typing Practice',
+      categoryName: attempt.categoryName || '',
+      grossWpm: attempt.grossWpm || 0,
+      netWpm: attempt.netWpm || 0,
+      accuracyPercentage: attempt.accuracyPercentage || 0,
+      totalKeystrokes: attempt.totalKeystrokes || 0,
+      correctKeystrokes: attempt.correctKeystrokes || 0,
+      errorKeystrokes: attempt.errorKeystrokes || 0,
+      fullMistakes: attempt.fullMistakes || 0,
+      halfMistakes: attempt.halfMistakes || 0,
+      totalMistakes: attempt.totalMistakes || 0,
+      errorPercentage: attempt.errorPercentage || 0,
+      backspaceCount: attempt.backspaceCount || 0,
+      timeSpentSeconds: attempt.timeSpentSeconds || 0,
+      allocatedTimeSeconds: attempt.allocatedTimeSeconds || 0,
+      isQualified: !!attempt.isQualified,
+      language: attempt.language || 'en',
+      typedText: attempt.typedText || '',
+      targetText: attempt.targetText || '',
+      allowRetype: attempt.allowRetype,
+      retypeCycles: attempt.retypeCycles,
+      detailedMistakes: attempt.detailedMistakes as any || []
+    }
+  });
+
+  // Increment total attempts counter on the test
+  await prisma.typingTest.update({
+    where: { id: attempt.testId },
+    data: { totalAttempts: { increment: 1 } }
+  }).catch(() => {}); // Ignore if test not found
+
+  return dbRowToAttempt(row);
+}
+
+export async function getUserTypingAttempts(
+  userId?: string,
+  testId?: string
+): Promise<TypingAttempt[]> {
+  const where: any = {};
+  if (userId && userId !== 'guest') where.userId = userId;
+  if (testId) where.testId = testId;
+
+  const rows = await prisma.typingAttempt.findMany({
+    where,
+    orderBy: { completedAt: 'desc' },
+    take: 100
+  });
+
+  return rows.map(r => dbRowToAttempt(r));
+}
+
+// ---------------------- HELPERS ----------------------
+
+function buildTestData(test: Partial<TypingTest>) {
+  return {
     title: (test.title || 'New Typing Test').trim(),
     titleHi: (test.titleHi || '').trim(),
-    categoryId: test.categoryId || db.categories[0]?.id || 'cat-ssc-cgl',
+    categoryId: test.categoryId || '',
     passageId: test.passageId || '',
-    passageText,
+    passageText: test.passageText !== undefined ? test.passageText : '',
     demoPassageText: test.demoPassageText || DEFAULT_DEMO_TEXT,
     demoDurationMinutes: test.demoDurationMinutes !== undefined ? Number(test.demoDurationMinutes) : 1,
     breakDurationMinutes: test.breakDurationMinutes !== undefined ? Number(test.breakDurationMinutes) : 1,
@@ -529,152 +291,75 @@ export function saveTypingTest(test: Partial<TypingTest>): TypingTest {
     qualifyingWpm: test.qualifyingWpm !== undefined ? Number(test.qualifyingWpm) : 35,
     maxErrorPercentage: test.maxErrorPercentage !== undefined ? Number(test.maxErrorPercentage) : 5.0,
     backspaceRule: test.enableBackspace === false ? 'DISABLED' : (test.backspaceRule || 'ALLOWED'),
-    enableBackspace: test.enableBackspace !== undefined ? test.enableBackspace : (test.backspaceRule !== 'DISABLED'),
+    enableBackspace: test.enableBackspace !== undefined ? Boolean(test.enableBackspace) : (test.backspaceRule !== 'DISABLED'),
     allowRetype: test.allowRetype !== undefined ? Boolean(test.allowRetype) : false,
-    highlightAllowed: test.highlightAllowed !== undefined ? test.highlightAllowed : false,
+    highlightAllowed: test.highlightAllowed !== undefined ? Boolean(test.highlightAllowed) : false,
     language: test.language || 'en',
     difficulty: test.difficulty || 'Medium',
     instructions: (test.instructions || 'Standard typing exam simulation. Complete Demo, Break, and Main test.').trim(),
-    orderIndex: test.orderIndex !== undefined ? Number(test.orderIndex) : (existingIdx >= 0 ? (db.tests[existingIdx].orderIndex || 1) : db.tests.length + 1),
-    isActive: test.isActive !== undefined ? test.isActive : true,
-    totalAttempts: existingIdx >= 0 ? (db.tests[existingIdx].totalAttempts || 0) : 0,
-    createdAt: existingIdx >= 0 ? db.tests[existingIdx].createdAt : new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    orderIndex: test.orderIndex !== undefined ? Number(test.orderIndex) : 0,
+    isActive: test.isActive !== undefined ? Boolean(test.isActive) : true,
   };
-
-  if (existingIdx >= 0) {
-    db.tests[existingIdx] = newTest;
-  } else {
-    db.tests.push(newTest);
-  }
-
-  saveData(db);
-  return newTest;
 }
 
-export function saveBulkTypingTests(
-  template: Partial<TypingTest>,
-  count: number
-): TypingTest[] {
-  const db = loadData();
-  const createdTests: TypingTest[] = [];
-  const safeCount = Math.min(200, Math.max(1, count));
-  const baseTitle = (template.title || 'New Typing Test').trim();
-  const baseTitleHi = (template.titleHi || '').trim();
-  const now = Date.now();
-
-  let maxOrder = db.tests.reduce((max, t) => Math.max(max, t.orderIndex || 0), 0);
-
-  for (let i = 1; i <= safeCount; i++) {
-    const titleToUse = safeCount === 1 ? baseTitle : `${baseTitle} ${i}`;
-    const titleHiToUse = baseTitleHi ? (safeCount === 1 ? baseTitleHi : `${baseTitleHi} ${i}`) : '';
-    const id = `test-${now}-${i}-${Math.random().toString(36).substring(2, 7)}`;
-    maxOrder++;
-
-    const newTest: TypingTest = {
-      id,
-      title: titleToUse,
-      titleHi: titleHiToUse,
-      categoryId: template.categoryId || db.categories[0]?.id || 'cat-ssc-cgl',
-      passageId: template.passageId || '',
-      passageText: template.passageText || '',
-      demoPassageText: template.demoPassageText || DEFAULT_DEMO_TEXT,
-      demoDurationMinutes: template.demoDurationMinutes !== undefined ? Number(template.demoDurationMinutes) : 1,
-      breakDurationMinutes: template.breakDurationMinutes !== undefined ? Number(template.breakDurationMinutes) : 1,
-      mainDurationMinutes: template.mainDurationMinutes !== undefined ? Number(template.mainDurationMinutes) : 10,
-      qualifyingWpm: template.qualifyingWpm !== undefined ? Number(template.qualifyingWpm) : 35,
-      maxErrorPercentage: template.maxErrorPercentage !== undefined ? Number(template.maxErrorPercentage) : 5.0,
-      backspaceRule: template.enableBackspace === false ? 'DISABLED' : (template.backspaceRule || 'ALLOWED'),
-      enableBackspace: template.enableBackspace !== undefined ? template.enableBackspace : (template.backspaceRule !== 'DISABLED'),
-      allowRetype: template.allowRetype !== undefined ? Boolean(template.allowRetype) : false,
-      highlightAllowed: template.highlightAllowed !== undefined ? template.highlightAllowed : false,
-      language: template.language || 'en',
-      difficulty: template.difficulty || 'Medium',
-      instructions: (template.instructions || 'Standard typing exam simulation. Complete Demo, Break, and Main test.').trim(),
-      orderIndex: maxOrder,
-      isActive: template.isActive !== undefined ? template.isActive : true,
-      totalAttempts: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    db.tests.push(newTest);
-    createdTests.push(newTest);
-  }
-
-  saveData(db);
-  return createdTests;
-}
-
-export function deleteTypingTest(id: string): boolean {
-  const db = loadData();
-  const initialLen = db.tests.length;
-  db.tests = db.tests.filter(t => t.id !== id);
-  if (db.tests.length !== initialLen) {
-    saveData(db);
-    return true;
-  }
-  return false;
-}
-
-export function saveTypingAttempt(attempt: Partial<TypingAttempt>): TypingAttempt {
-  const db = loadData();
-  const id = `att-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-
-  const newAttempt: TypingAttempt = {
-    id,
-    userId: attempt.userId || 'guest',
-    userName: attempt.userName || 'Student',
-    testId: attempt.testId || '',
-    testTitle: attempt.testTitle || 'Typing Practice',
-    categoryName: attempt.categoryName || '',
-    grossWpm: attempt.grossWpm || 0,
-    netWpm: attempt.netWpm || 0,
-    accuracyPercentage: attempt.accuracyPercentage || 0,
-    totalKeystrokes: attempt.totalKeystrokes || 0,
-    correctKeystrokes: attempt.correctKeystrokes || 0,
-    errorKeystrokes: attempt.errorKeystrokes || 0,
-    fullMistakes: attempt.fullMistakes || 0,
-    halfMistakes: attempt.halfMistakes || 0,
-    totalMistakes: attempt.totalMistakes || 0,
-    errorPercentage: attempt.errorPercentage || 0,
-    backspaceCount: attempt.backspaceCount || 0,
-    timeSpentSeconds: attempt.timeSpentSeconds || 0,
-    allocatedTimeSeconds: attempt.allocatedTimeSeconds || 0,
-    isQualified: !!attempt.isQualified,
-    language: attempt.language || 'en',
-    typedText: attempt.typedText || '',
-    targetText: attempt.targetText || '',
-    allowRetype: attempt.allowRetype,
-    retypeCycles: attempt.retypeCycles,
-    detailedMistakes: attempt.detailedMistakes || [],
-    completedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString()
+function dbRowToTypingTest(r: any): TypingTest {
+  return {
+    id: r.id,
+    title: r.title,
+    titleHi: r.titleHi,
+    categoryId: r.categoryId,
+    passageId: r.passageId,
+    passageText: r.passageText,
+    demoPassageText: r.demoPassageText,
+    demoDurationMinutes: r.demoDurationMinutes,
+    breakDurationMinutes: r.breakDurationMinutes,
+    mainDurationMinutes: r.mainDurationMinutes,
+    qualifyingWpm: r.qualifyingWpm,
+    maxErrorPercentage: r.maxErrorPercentage,
+    backspaceRule: r.backspaceRule as any,
+    enableBackspace: r.enableBackspace,
+    allowRetype: r.allowRetype,
+    highlightAllowed: r.highlightAllowed,
+    language: r.language as 'en' | 'hi',
+    difficulty: r.difficulty as any,
+    instructions: r.instructions,
+    orderIndex: r.orderIndex,
+    isActive: r.isActive,
+    totalAttempts: r.totalAttempts,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
+    updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : r.updatedAt,
   };
-
-  db.attempts.unshift(newAttempt);
-  if (db.attempts.length > 500) {
-    db.attempts = db.attempts.slice(0, 500); // keep recent 500
-  }
-
-  // increment test attempt counter
-  const testIdx = db.tests.findIndex(t => t.id === newAttempt.testId);
-  if (testIdx >= 0) {
-    db.tests[testIdx].totalAttempts = (db.tests[testIdx].totalAttempts || 0) + 1;
-  }
-
-  saveData(db);
-  return newAttempt;
 }
 
-export function getUserTypingAttempts(userId?: string, testId?: string): TypingAttempt[] {
-  const db = loadData();
-  let attempts = db.attempts;
-  if (userId && userId !== 'guest') {
-    attempts = attempts.filter(a => a.userId === userId);
-  }
-  if (testId) {
-    attempts = attempts.filter(a => a.testId === testId);
-  }
-  return attempts.slice(0, 50);
+function dbRowToAttempt(r: any): TypingAttempt {
+  return {
+    id: r.id,
+    userId: r.userId,
+    userName: r.userName,
+    testId: r.testId,
+    testTitle: r.testTitle,
+    categoryName: r.categoryName,
+    grossWpm: r.grossWpm,
+    netWpm: r.netWpm,
+    accuracyPercentage: r.accuracyPercentage,
+    totalKeystrokes: r.totalKeystrokes,
+    correctKeystrokes: r.correctKeystrokes,
+    errorKeystrokes: r.errorKeystrokes,
+    fullMistakes: r.fullMistakes,
+    halfMistakes: r.halfMistakes,
+    totalMistakes: r.totalMistakes,
+    errorPercentage: r.errorPercentage,
+    backspaceCount: r.backspaceCount,
+    timeSpentSeconds: r.timeSpentSeconds,
+    allocatedTimeSeconds: r.allocatedTimeSeconds,
+    isQualified: r.isQualified,
+    language: r.language,
+    typedText: r.typedText,
+    targetText: r.targetText,
+    allowRetype: r.allowRetype,
+    retypeCycles: r.retypeCycles,
+    detailedMistakes: r.detailedMistakes as DetailedMistake[] || [],
+    completedAt: r.completedAt instanceof Date ? r.completedAt.toISOString() : r.completedAt,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
+  };
 }

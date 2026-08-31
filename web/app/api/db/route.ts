@@ -427,46 +427,46 @@ export async function POST(request: Request) {
         return await handleDbStats();
 
       // ==========================================
-      // Typing Test Module Handlers
+      // Typing Test Module Handlers (async Prisma)
       // ==========================================
       case 'get-typing-categories':
-        return NextResponse.json({ success: true, categories: getTypingCategories() });
+        return NextResponse.json({ success: true, categories: await getTypingCategories() });
       case 'create-typing-category':
       case 'edit-typing-category':
-        return NextResponse.json({ success: true, category: saveTypingCategory(data || body?.category || body) });
+        return NextResponse.json({ success: true, category: await saveTypingCategory(data || body?.category || body) });
       case 'delete-typing-category':
-        return NextResponse.json({ success: true, deleted: deleteTypingCategory(data?.id || body?.id) });
+        return NextResponse.json({ success: true, deleted: await deleteTypingCategory(data?.id || body?.id) });
 
       case 'get-typing-passages':
-        return NextResponse.json({ success: true, passages: getTypingPassages() });
+        return NextResponse.json({ success: true, passages: await getTypingPassages() });
       case 'create-typing-passage':
       case 'edit-typing-passage':
-        return NextResponse.json({ success: true, passage: saveTypingPassage(data || body?.passage || body) });
+        return NextResponse.json({ success: true, passage: await saveTypingPassage(data || body?.passage || body) });
       case 'delete-typing-passage':
-        return NextResponse.json({ success: true, deleted: deleteTypingPassage(data?.id || body?.id) });
+        return NextResponse.json({ success: true, deleted: await deleteTypingPassage(data?.id || body?.id) });
 
       case 'get-typing-tests':
-        return NextResponse.json({ success: true, tests: getTypingTests(), categories: getTypingCategories() });
+        return NextResponse.json({ success: true, tests: await getTypingTests(), categories: await getTypingCategories() });
       case 'get-typing-test-by-id':
-        return NextResponse.json({ success: true, test: getTypingTestById(data?.id || body?.id) });
+        return NextResponse.json({ success: true, test: await getTypingTestById(data?.id || body?.id) });
       case 'create-typing-test':
       case 'edit-typing-test':
-        return NextResponse.json({ success: true, test: saveTypingTest(data || body?.test || body) });
+        return NextResponse.json({ success: true, test: await saveTypingTest(data || body?.test || body) });
       case 'create-bulk-typing-tests':
         return NextResponse.json({
           success: true,
-          tests: saveBulkTypingTests(data?.template || data, data?.count || body?.count || 1)
+          tests: await saveBulkTypingTests(data?.template || data, data?.count || body?.count || 1)
         });
       case 'delete-typing-test':
-        return NextResponse.json({ success: true, deleted: deleteTypingTest(data?.id || body?.id) });
+        return NextResponse.json({ success: true, deleted: await deleteTypingTest(data?.id || body?.id) });
 
       case 'save-typing-attempt':
-        return NextResponse.json({ success: true, attempt: saveTypingAttempt(data || body?.attempt || body) });
+        return NextResponse.json({ success: true, attempt: await saveTypingAttempt(data || body?.attempt || body) });
       case 'get-user-typing-attempts':
-        return NextResponse.json({ success: true, attempts: getUserTypingAttempts(data?.userId || body?.userId || requesterUserId || undefined, data?.testId || body?.testId || undefined) });
+        return NextResponse.json({ success: true, attempts: await getUserTypingAttempts(data?.userId || body?.userId || requesterUserId || undefined, data?.testId || body?.testId || undefined) });
       case 'evaluate-typing':
-        return NextResponse.json({ 
-          success: true, 
+        return NextResponse.json({
+          success: true,
           evaluation: evaluateTyping(
             data?.targetText || body?.targetText || '',
             data?.typedText || body?.typedText || '',

@@ -461,3 +461,94 @@ model ContactLink {
 
   @@map("contact_links")
 }
+
+// 23. Typing Exam Categories (e.g. SSC CGL DEST, CHSL, RRB NTPC)
+model TypingCategory {
+  id          String       @id @default(uuid())
+  name        String
+  nameHi      String       @default("")
+  description String       @default("")
+  icon        String       @default("Keyboard")
+  logoUrl     String       @default("")
+  orderIndex  Int          @default(0)
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  tests       TypingTest[]
+
+  @@map("typing_categories")
+}
+
+// 24. Typing Tests (each test has a passage + settings)
+model TypingTest {
+  id                   String          @id @default(uuid())
+  title                String
+  titleHi              String          @default("")
+  categoryId           String
+  category             TypingCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  passageId            String          @default("")
+  passageText          String          @default("")
+  demoPassageText      String          @default("")
+  demoDurationMinutes  Float           @default(1)
+  breakDurationMinutes Float           @default(1)
+  mainDurationMinutes  Float           @default(10)
+  qualifyingWpm        Float           @default(35)
+  maxErrorPercentage   Float           @default(5)
+  backspaceRule        String          @default("ALLOWED")
+  enableBackspace      Boolean         @default(true)
+  allowRetype          Boolean         @default(false)
+  highlightAllowed     Boolean         @default(false)
+  language             String          @default("en")
+  difficulty           String          @default("Medium")
+  instructions         String          @default("")
+  orderIndex           Int             @default(0)
+  isActive             Boolean         @default(true)
+  totalAttempts        Int             @default(0)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  attempts             TypingAttempt[]
+
+  @@index([categoryId])
+  @@index([language])
+  @@map("typing_tests")
+}
+
+// 25. User Typing Attempt Results
+model TypingAttempt {
+  id                  String     @id @default(uuid())
+  userId              String     @default("guest")
+  userName            String     @default("Student")
+  testId              String
+  test                TypingTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  testTitle           String     @default("")
+  categoryName        String     @default("")
+  grossWpm            Float      @default(0)
+  netWpm              Float      @default(0)
+  accuracyPercentage  Float      @default(0)
+  totalKeystrokes     Int        @default(0)
+  correctKeystrokes   Int        @default(0)
+  errorKeystrokes     Int        @default(0)
+  fullMistakes        Int        @default(0)
+  halfMistakes        Int        @default(0)
+  totalMistakes       Int        @default(0)
+  errorPercentage     Float      @default(0)
+  backspaceCount      Int        @default(0)
+  timeSpentSeconds    Int        @default(0)
+  allocatedTimeSeconds Int       @default(0)
+  isQualified         Boolean    @default(false)
+  language            String     @default("en")
+  typedText           String     @default("")
+  targetText          String     @default("")
+  allowRetype         Boolean?
+  retypeCycles        Int?
+  detailedMistakes    Json?
+  completedAt         DateTime   @default(now())
+  createdAt           DateTime   @default(now())
+
+  @@index([userId])
+  @@index([testId])
+  @@index([completedAt])
+  @@map("typing_attempts")
+}
