@@ -779,23 +779,37 @@ const DEFAULT_NOTICES: Notice[] = [
   { id: 'a3', title: 'IBPS Clerk 2026 Prelims Call Letter Available', date: '19 June 2026', publishDate: '2026-06-19', type: 'CALL LETTER', category: 'admit_card', url: 'https://ibps.in' }
 ];
 
-const CACHE_KEY_CATALOG = 'mth_catalog_v1';
-const CACHE_KEY_NOTICES = 'mth_notices_v1';
+const CACHE_KEY_CATALOG = 'mth_catalog_v2';
+const CACHE_KEY_NOTICES = 'mth_notices_v2';
 const CACHE_KEY_USER = 'mth_user_v1';
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes — re-fetch if stale
+const CACHE_KEY_ETAG = 'mth_catalog_etag';
 
-function readCache<T>(key: string): T | null {
+// PERF: Per-type TTLs — catalog rarely changes (admin-driven), notices change daily,
+// user session data must always be fresh.
+const CATALOG_CACHE_TTL_MS = 60 * 60 * 1000;  // 1 hour
+const NOTICES_CACHE_TTL_MS = 15 * 60 * 1000;  // 15 minutes
+const USER_CACHE_TTL_MS    =  5 * 60 * 1000;  // 5 minutes
+
+function readCache<T>(key: string, ttlMs?: number): T | null {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
     const { data, ts } = JSON.parse(raw);
-    if (Date.now() - ts > CACHE_TTL_MS) return null; // expired
+    const effectiveTtl = ttlMs ?? CATALOG_CACHE_TTL_MS;
+    if (Date.now() - ts > effectiveTtl) return null; // expired
     return data as T;
   } catch { return null; }
 }
 
 function writeCache(key: string, data: unknown) {
   try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch { /* quota exceeded — ignore */ }
+}
+
+function readETag(): string | null {
+  try { return localStorage.getItem(CACHE_KEY_ETAG); } catch { return null; }
+}
+function writeETag(etag: string) {
+  try { localStorage.setItem(CACHE_KEY_ETAG, etag); } catch {}
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProfile?: string | null }> = ({ children, initialUserProfile }) => {
@@ -849,12 +863,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
   // Pre-populate from localStorage so the UI renders immediately from cache
   const [noticesList, setNoticesList] = useState<Notice[]>(() => {
     if (typeof window === 'undefined') return [];
-    return readCache<Notice[]>(CACHE_KEY_NOTICES) || [];
+    return readCache<Notice[]>(CACHE_KEY_NOTICES, NOTICES_CACHE_TTL_MS) || [];
   });
   const [language, setLanguageState] = useState<'en' | 'hi'>('en');
   const [examCatalog, setExamCatalog] = useState<TestCategory[]>(() => {
     if (typeof window === 'undefined') return [];
-    return readCache<TestCategory[]>(CACHE_KEY_CATALOG) || [];
+    return readCache<TestCategory[]>(CACHE_KEY_CATALOG, CATALOG_CACHE_TTL_MS) || [];
   });
   const [reportedQuestionsList, setReportedQuestionsList] = useState<ReportedQuestion[]>([]);
 
@@ -891,16 +905,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         savedUserId = currentUser.id;
       }
 
+      // PERF: Send stored ETag so server can return 304 Not Modified if catalog unchanged.
+      // 304 has zero body — this completely eliminates egress on repeat visits.
+      const storedETag = readETag();
+      const bootstrapHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (storedETag) bootstrapHeaders['If-None-Match'] = storedETag;
+
       // 🚀 Fire bootstrap + user fetch IN PARALLEL — eliminates the serial waterfall
-      // Include userId in bootstrap so presence tracking works on every page load
-      const bootstrapPromise = fetch('/api/db', {
+      const bootstrapRes = fetch('/api/db', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: bootstrapHeaders,
         body: JSON.stringify({
           action: 'bootstrap',
           ...(savedUserId ? { userId: savedUserId } : {})
         })
-      }).then(r => r.json());
+      });
 
       const userPromise = savedUserId
         ? fetch('/api/db', {
@@ -910,16 +929,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           }).then(r => r.json())
         : Promise.resolve(null);
 
-      const [data, userData] = await Promise.all([bootstrapPromise, userPromise]);
+      const [bootstrapRaw, userData] = await Promise.all([bootstrapRes, userPromise]);
 
-      if (data.success) {
-        const freshNotices = sortNotices(data.noticesList || []);
-        const freshCatalog = data.examCatalog || [];
-        setNoticesList(freshNotices);
-        setExamCatalog(freshCatalog);
-        // 💾 Persist to localStorage so the NEXT page load is instant
-        writeCache(CACHE_KEY_NOTICES, freshNotices);
-        writeCache(CACHE_KEY_CATALOG, freshCatalog);
+      // PERF: 304 = catalog/notices haven't changed — use cached data, save 100% egress
+      if (bootstrapRaw.status === 304) {
+        // Nothing to update for catalog/notices — cached data is still valid
+        console.debug('[Bootstrap] 304 Not Modified — using cached catalog');
+      } else {
+        const data = await bootstrapRaw.json();
+        // Store new ETag for next request
+        const newETag = bootstrapRaw.headers.get('ETag');
+        if (newETag) writeETag(newETag);
+
+        if (data.success) {
+          const freshNotices = sortNotices(data.noticesList || []);
+          const freshCatalog = data.examCatalog || [];
+          setNoticesList(freshNotices);
+          setExamCatalog(freshCatalog);
+          // 💾 Persist to localStorage so the NEXT page load is instant
+          writeCache(CACHE_KEY_NOTICES, freshNotices);
+          writeCache(CACHE_KEY_CATALOG, freshCatalog);
+        }
       }
 
       if (userData && userData.success && userData.user) {

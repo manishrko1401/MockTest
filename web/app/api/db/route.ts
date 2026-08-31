@@ -280,7 +280,9 @@ export async function POST(request: Request) {
       case 'confirm-password-reset':
         return await handleConfirmPasswordReset(data);
       case 'bootstrap':
-        return await handleBootstrap();
+        return await handleBootstrap(request);
+      case 'get-tests-by-series':
+        return await handleGetTestsBySeries(data || body);
       case 'refresh-catalog':
         return await handleRefreshCatalog();
       case 'signup':
@@ -624,7 +626,113 @@ async function handleGetPracticeAttempts(data: any) {
   }
 }
 
-async function handleBootstrap() {
+// PERF: Paginated test loader — used by the frontend's lazy "expand series" click.
+// Returns only the tests for one test series (or category), paginated.
+// This allows the bootstrap to send just test counts, not full test objects.
+async function handleGetTestsBySeries(data: {
+  seriesId?: string;
+  categoryId?: string;
+  page?: number;
+  limit?: number;
+}) {
+  const { seriesId, categoryId, page = 1, limit = 50 } = data || {};
+  const safePage = Math.max(1, Number(page) || 1);
+  const safeLimit = Math.min(100, Math.max(1, Number(limit) || 50));
+  const skip = (safePage - 1) * safeLimit;
+
+  try {
+    let seriesIds: string[] | null = null;
+
+    if (seriesId) {
+      seriesIds = [seriesId];
+    } else if (categoryId) {
+      // Resolve category → exams → series ids
+      const seriesList = await prisma.testSeries.findMany({
+        where: { exam: { categoryId } },
+        select: { id: true }
+      });
+      seriesIds = seriesList.map((s: any) => s.id);
+    }
+
+    if (!seriesIds || seriesIds.length === 0) {
+      return NextResponse.json({
+        success: true, tests: [],
+        pagination: { page: safePage, limit: safeLimit, total: 0, hasMore: false, totalPages: 0 }
+      });
+    }
+
+    const where = { testSeriesId: { in: seriesIds } };
+
+    const [rawTests, total] = await Promise.all([
+      // Use the same query as getCompiledExamCatalog but scoped + paginated
+      prisma.$queryRaw<any[]>`
+        SELECT
+          "id", "testSeriesId", "title",
+          COALESCE("titleHi", '') as "titleHi",
+          "durationMinutes", "passingCutoff",
+          "questionsCount", "maxMarks",
+          "requiredTierName", "hasSectionalTiming",
+          "sectionalTimings",
+          COALESCE("lockSectionOnSubmit", false) as "lockSectionOnSubmit",
+          "orderIndex", "positiveMarks", "negativeMarks",
+          "testbookTotalUsers", "testbookTopperScore",
+          "testbookAverageScore", "testbookCutoffScore",
+          CASE
+            WHEN "customQuestions" IS NULL THEN 0
+            WHEN json_typeof("customQuestions"::json) = 'array' THEN json_array_length("customQuestions"::json)
+            WHEN json_typeof("customQuestions"::json) = 'object' AND ("customQuestions"::json)->>'url' IS NOT NULL THEN "questionsCount"
+            ELSE 0
+          END as "customQuestionsCount"
+        FROM "mock_tests"
+        WHERE "testSeriesId" = ANY(${seriesIds})
+        ORDER BY "orderIndex" ASC
+        LIMIT ${safeLimit} OFFSET ${skip}
+      `,
+      prisma.mockTest.count({ where })
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      tests: rawTests.map((t: any) => ({
+        id: t.id,
+        title: t.title,
+        titleHi: t.titleHi || undefined,
+        questionsCount: t.questionsCount,
+        durationMinutes: t.durationMinutes,
+        maxMarks: t.maxMarks,
+        isPremium: t.requiredTierName !== 'None',
+        requiredTier: t.requiredTierName || 'None',
+        hasSectionalTiming: t.hasSectionalTiming,
+        sectionalTimings: t.sectionalTimings,
+        lockSectionOnSubmit: t.lockSectionOnSubmit,
+        positiveMarks: t.positiveMarks,
+        negativeMarks: t.negativeMarks,
+        testbookTotalUsers: t.testbookTotalUsers,
+        testbookTopperScore: t.testbookTopperScore,
+        testbookAverageScore: t.testbookAverageScore,
+        testbookCutoffScore: t.testbookCutoffScore,
+        customQuestionsCount: Number(t.customQuestionsCount),
+        testSeriesId: t.testSeriesId,
+        orderIndex: t.orderIndex,
+      })),
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        hasMore: skip + safeLimit < total,
+        totalPages: Math.ceil(total / safeLimit)
+      }
+    }, {
+      headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' }
+    });
+  } catch (err: any) {
+    console.error('get-tests-by-series error:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+
+async function handleBootstrap(req?: Request) {
   // Check if categories are empty, if so, run seed
   const categoryCount = await prisma.category.count();
   if (categoryCount === 0) {
@@ -677,12 +785,22 @@ async function handleBootstrap() {
     });
   }
 
-  // Use memory cache if populated with actual items and notices cache is fresh (< 5 minutes)
-  const isNoticesCacheFresh = catalogCache.noticesLastFetched && (Date.now() - catalogCache.noticesLastFetched < CATALOG_CACHE_TTL_MS);
+  // PERF: Use memory cache if populated and fresh (30 min TTL — catalog changes only via admin)
+  // Generate a deterministic ETag from the cache timestamp so clients can skip re-fetching.
+  const isNoticesCacheFresh = catalogCache.noticesLastFetched && (Date.now() - catalogCache.noticesLastFetched < 30 * 60 * 1000);
   if (catalogCache.examCatalog && catalogCache.examCatalog.length > 0 && catalogCache.noticesList && isNoticesCacheFresh) {
+    const etag = `"cat-${catalogCache.noticesLastFetched}"`;
+    // PERF: If client sends matching ETag, return 304 — zero egress for catalog data
+    const clientETag = req?.headers?.get('If-None-Match');
+    if (clientETag && clientETag === etag) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: { 'ETag': etag, 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=1800' }
+      });
+    }
     return NextResponse.json(
       { success: true, usersList: [], noticesList: catalogCache.noticesList, examCatalog: catalogCache.examCatalog, reportedQuestionsList: [] },
-      { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
+      { headers: { 'ETag': etag, 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=1800' } }
     );
   }
 
@@ -756,13 +874,16 @@ async function handleBootstrap() {
   // Admins will fetch this data separately using the 'admin-data' action.
   const reportedQuestionsList: any[] = [];
 
-  // EGRESS-OPT: Changed from 'no-store' to 's-maxage=60' so Vercel's CDN can serve this response
-  // to multiple concurrent users without each one hitting Supabase directly.
-  // The server-side catalogCache (5-min TTL) is the primary deduplication layer;
-  // the CDN cache (60s) is a secondary layer that absorbs traffic spikes.
+  // PERF: Generate ETag from cache timestamp for conditional GET support.
+  // Clients that send a matching If-None-Match receive 304 (zero body = zero egress).
+  const freshETag = `"cat-${catalogCache.noticesLastFetched ?? Date.now()}"`;
+
   return NextResponse.json(
     { success: true, usersList, noticesList, examCatalog, reportedQuestionsList },
-    { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
+    { headers: {
+        'ETag': freshETag,
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=1800'
+    }}
   );
 }
 
@@ -1871,6 +1992,8 @@ async function handleAddAttempt(data: any, request?: Request) {
   }
 
   // Keep only the last 3 completed/auto-submitted attempts in the database
+  // PERF (Phase 8): Also delete their response states to prevent the
+  // question_response_states table from growing unboundedly (currently 16MB).
   try {
     const completedSessions = await prisma.userTestSession.findMany({
       where: {
@@ -1888,6 +2011,10 @@ async function handleAddAttempt(data: any, request?: Request) {
 
     if (completedSessions.length > 3) {
       const toDeleteIds = completedSessions.slice(3).map(s => s.id);
+      // PERF: Delete response states first (FK constraint), then the sessions
+      await prisma.questionResponseState.deleteMany({
+        where: { sessionId: { in: toDeleteIds } }
+      }).catch(() => {}); // best-effort
       await prisma.userTestSession.deleteMany({
         where: {
           id: { in: toDeleteIds },
