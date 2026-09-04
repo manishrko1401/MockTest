@@ -58,24 +58,28 @@ export default function HomeLeftSidebar({
       return;
     }
 
+    if (activeView === 'chat') {
+      // The chat view itself marks messages read and shows the full thread —
+      // no need for this badge poller to run while it's open.
+      setUnreadChatCount(0);
+      return;
+    }
+
+    // EGRESS-OPT: Ask for just the unread count instead of the full message
+    // history — this poller only drives a badge, it never needs message bodies.
     const checkUnread = async () => {
       try {
         const res = await fetch('/api/db', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            action: 'get-support-messages',
-            data: { userId: currentUser.id, markAsRead: activeView === 'chat' }
+            action: 'get-unread-support-count',
+            data: { userId: currentUser.id }
           })
         });
         const data = await res.json();
-        if (data.success && Array.isArray(data.messages)) {
-          if (activeView === 'chat') {
-            setUnreadChatCount(0);
-          } else {
-            const count = data.messages.filter((m: any) => m.sender === 'ADMIN' && !m.isRead).length;
-            setUnreadChatCount(count);
-          }
+        if (data.success && typeof data.count === 'number') {
+          setUnreadChatCount(data.count);
         }
       } catch (err) {
         console.error('Error fetching unread support chat count:', err);
@@ -83,7 +87,7 @@ export default function HomeLeftSidebar({
     };
 
     checkUnread();
-    const interval = setInterval(checkUnread, 5000);
+    const interval = setInterval(checkUnread, 30000);
     return () => clearInterval(interval);
   }, [currentUser?.id, activeView]);
 

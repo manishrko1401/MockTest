@@ -90,12 +90,29 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
       const data = await res.json();
       if (data.success && Array.isArray(data.messages)) {
         setMessages(data.messages);
-        if (!chatOpen) {
-          const unread = data.messages.filter((m: any) => m.sender === 'ADMIN' && !m.isRead).length;
-          setUnreadCount(unread);
-        } else {
-          setUnreadCount(0);
-        }
+        setUnreadCount(0);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // EGRESS-OPT: While the chat panel is closed, we only need a badge count —
+  // poll a lightweight COUNT instead of re-fetching the full conversation.
+  const fetchUnreadCount = async () => {
+    if (!currentUser?.id) return;
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'get-unread-support-count',
+          data: { userId: currentUser.id }
+        })
+      });
+      const data = await res.json();
+      if (data.success && typeof data.count === 'number') {
+        setUnreadCount(data.count);
       }
     } catch (err) {
       console.error(err);
@@ -103,22 +120,26 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
   };
 
   useEffect(() => {
-    if (currentUser?.id) {
-      fetchMessages();
-      const interval = setInterval(() => fetchMessages(false), 8000);
-      return () => clearInterval(interval);
-    }
-  }, [currentUser?.id]);
+    if (!currentUser?.id) return;
+    if (chatOpen) return; // the chatOpen effect below handles fetching while open
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [currentUser?.id, chatOpen]);
 
   useEffect(() => {
     if (chatOpen) {
       scrollToBottom();
       setUnreadCount(0);
-      if (currentUser?.id) {
-        fetchMessages(true);
-      }
     }
-  }, [chatOpen, messages.length]);
+  }, [messages.length]);
+
+  useEffect(() => {
+    if (!chatOpen || !currentUser?.id) return;
+    fetchMessages(true);
+    const interval = setInterval(() => fetchMessages(true), 8000);
+    return () => clearInterval(interval);
+  }, [chatOpen, currentUser?.id]);
 
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();

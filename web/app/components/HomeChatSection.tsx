@@ -61,7 +61,8 @@ export default function HomeChatSection({ onBack }: HomeChatSectionProps) {
   useEffect(() => {
     if (currentUser?.id) {
       fetchMessages(true);
-      const interval = setInterval(() => fetchMessages(true), 3500);
+      // EGRESS-OPT: 8s is still responsive for a support chat and cuts request volume ~55% vs the previous 3.5s poll.
+      const interval = setInterval(() => fetchMessages(true), 8000);
       return () => clearInterval(interval);
     } else {
       setLoading(false);

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
+import { prismaTyping } from '../../lib/prismaTyping';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
@@ -23,6 +24,8 @@ import {
   saveTypingTest,
   saveBulkTypingTests,
   deleteTypingTest,
+  deleteAllTypingTests,
+  invalidateTypingCache,
   saveTypingAttempt,
   getUserTypingAttempts,
   evaluateTyping
@@ -155,7 +158,7 @@ export async function POST(request: Request) {
     // SECURITY HARDENING: Role & Session Validations
     // =========================================================================
     const adminActions = [
-      'admin-data', 'get-attempts', 'get-suggestions', 
+      'admin-data', 'get-attempts', 'get-session-analysis', 'get-suggestions', 
       'update-suggestion-status', 'delete-suggestion', 
       'delete-reported-question', 'get-support-users', 
       'delete-support-conversation', 'edit-support-message',
@@ -174,7 +177,7 @@ export async function POST(request: Request) {
     const userOwnedActions = [
       'update-profile', 'update-password', 'toggle-bookmark', 
       'add-attempt', 'save-ongoing-session', 'clear-ongoing-session',
-      'get-support-messages', 'send-support-message', 'get-user-details',
+      'get-support-messages', 'get-unread-support-count', 'send-support-message', 'get-user-details',
       'claim-pass-pro', 'update-tracked-jobs',
       'locker-get-docs', 'locker-save-meta', 'locker-delete-doc',
       'locker-update-drive-status', 'locker-disconnect-drive',
@@ -365,6 +368,8 @@ export async function POST(request: Request) {
         return await handleDeleteReportedQuestion(data);
       case 'get-support-messages':
         return await handleGetSupportMessages(data);
+      case 'get-unread-support-count':
+        return await handleGetUnreadSupportCount(data);
       case 'send-support-message':
         return await handleSendSupportMessage(data);
       case 'get-support-users':
@@ -385,6 +390,8 @@ export async function POST(request: Request) {
         return await handleAdminData(data);
       case 'get-attempts':
         return await handleGetAttempts();
+      case 'get-session-analysis':
+        return await handleGetAdminSessionAnalysis(data || body);
       case 'submit-suggestion':
         return await handleSubmitSuggestion(data);
       case 'get-suggestions':
@@ -447,8 +454,13 @@ export async function POST(request: Request) {
       case 'delete-typing-passage':
         return NextResponse.json({ success: true, deleted: await deleteTypingPassage(data?.id || body?.id) });
 
-      case 'get-typing-tests':
-        return NextResponse.json({ success: true, tests: await getTypingTests(), categories: await getTypingCategories() });
+      case 'get-typing-tests': {
+        const catId = data?.categoryId || body?.categoryId;
+        const isLight = data?.light !== undefined ? Boolean(data.light) : true;
+        const tests = await getTypingTests({ categoryId: catId, light: isLight });
+        const categories = await getTypingCategories();
+        return NextResponse.json({ success: true, tests, categories });
+      }
       case 'get-typing-test-by-id':
         return NextResponse.json({ success: true, test: await getTypingTestById(data?.id || body?.id) });
       case 'create-typing-test':
@@ -461,11 +473,20 @@ export async function POST(request: Request) {
         });
       case 'delete-typing-test':
         return NextResponse.json({ success: true, deleted: await deleteTypingTest(data?.id || body?.id) });
+      case 'delete-all-typing-tests':
+        return NextResponse.json({ success: true, result: await deleteAllTypingTests() });
+      case 'clear-typing-cache':
+        invalidateTypingCache();
+        return NextResponse.json({ success: true, message: 'Typing cache cleared' });
 
       case 'save-typing-attempt':
         return NextResponse.json({ success: true, attempt: await saveTypingAttempt(data || body?.attempt || body) });
       case 'get-user-typing-attempts':
         return NextResponse.json({ success: true, attempts: await getUserTypingAttempts(data?.userId || body?.userId || requesterUserId || undefined, data?.testId || body?.testId || undefined) });
+      case 'get-admin-typing-attempts':
+        return await handleGetAdminTypingAttempts(data || body);
+      case 'delete-typing-attempt':
+        return await handleDeleteTypingAttempt(data?.id || body?.id);
       case 'evaluate-typing':
         return NextResponse.json({
           success: true,
@@ -477,7 +498,10 @@ export async function POST(request: Request) {
             data?.qualifyingWpm || body?.qualifyingWpm || 35,
             data?.maxErrorPercentage || body?.maxErrorPercentage || 5.0,
             Boolean(data?.allowRetype || body?.allowRetype),
-            Boolean(data?.isSsc || body?.isSsc)
+            Boolean(data?.isSsc || body?.isSsc),
+            Boolean(data?.isSscCgl || body?.isSscCgl),
+            Boolean(data?.isSscChsl || body?.isSscChsl),
+            Boolean(data?.isAiims || body?.isAiims)
           )
         });
 
@@ -898,8 +922,12 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
   // If no previous sync timestamp, return full catalog (first-time sync)
   if (!since) {
     const examCatalog = await getCompiledExamCatalog();
+    // EGRESS-OPT: Cap first-time sync at 100 most recent notices — same limit used
+    // by the web bootstrap and the delta-sync path below. This table grows daily
+    // via the rojgar cron sync, so an unbounded query here grows unbounded too.
     const notices = await prisma.notice.findMany({
       orderBy: { createdAt: 'desc' },
+      take: 100,
       select: {
         id: true,
         title: true,
@@ -4094,6 +4122,22 @@ async function handleGetSupportMessages(data: any) {
   });
 }
 
+// EGRESS-OPT: Lightweight badge-count check. Widgets that only need to know
+// "is there something unread" poll this instead of the full conversation
+// history — a COUNT returns a single integer instead of the whole thread.
+async function handleGetUnreadSupportCount(data: any) {
+  const { userId } = data;
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+  }
+
+  const count = await prisma.supportMessage.count({
+    where: { userId, sender: 'ADMIN', isRead: false }
+  });
+
+  return NextResponse.json({ success: true, count });
+}
+
 async function handleSendSupportMessage(data: any) {
   const { userId, sender, message } = data;
   if (!userId || !message) {
@@ -4495,7 +4539,6 @@ async function handleGetAttempts() {
   try {
     if ((prisma as any).userTestSession) {
       const attempts = await (prisma as any).userTestSession.findMany({
-        take: 200,
         orderBy: { startedAt: 'desc' },
         include: {
           user: {
@@ -4575,6 +4618,457 @@ async function handleGetAttempts() {
   } catch (error: any) {
     console.error('Error fetching test attempts:', error);
     return NextResponse.json({ success: false, error: error.message || 'Failed to fetch test attempts' }, { status: 500 });
+  }
+}
+
+async function handleGetAdminSessionAnalysis(rawPayload: any) {
+  try {
+    const payload = rawPayload?.data || rawPayload || {};
+    const sessionId = payload.sessionId || payload.id;
+    if (!sessionId) {
+      return NextResponse.json({ success: false, error: 'Session ID is required' }, { status: 400 });
+    }
+
+    // 1. Query UserTestSession with User and MockTest details
+    const session = await prisma.userTestSession.findUnique({
+      where: { id: sessionId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            candidateCode: true,
+            mobile: true,
+          }
+        },
+        mockTest: {
+          select: {
+            id: true,
+            title: true,
+            titleHi: true,
+            durationMinutes: true,
+            maxMarks: true,
+            positiveMarks: true,
+            negativeMarks: true,
+            questionsCount: true,
+            customQuestions: true,
+            hasSectionalTiming: true,
+            sectionalTimings: true,
+            testSeries: {
+              select: {
+                id: true,
+                title: true,
+                exam: {
+                  select: {
+                    id: true,
+                    name: true,
+                    category: {
+                      select: {
+                        id: true,
+                        name: true
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            sections: {
+              select: {
+                id: true,
+                name: true,
+                orderIndex: true,
+                positiveMarks: true,
+                negativeMarks: true,
+                questions: {
+                  select: {
+                    id: true,
+                    textEn: true,
+                    textHi: true,
+                    optionsEn: true,
+                    optionsHi: true,
+                    correctIndex: true,
+                    explanationEn: true,
+                    explanationHi: true,
+                    imageUrl: true,
+                    mathLatex: true,
+                    orderIndex: true,
+                    positiveMarks: true,
+                    negativeMarks: true,
+                  },
+                  orderBy: { orderIndex: 'asc' }
+                }
+              },
+              orderBy: { orderIndex: 'asc' }
+            }
+          }
+        },
+        responses: {
+          select: {
+            id: true,
+            questionId: true,
+            selectedOptionIndex: true,
+            state: true,
+            elapsedSeconds: true,
+          }
+        }
+      }
+    });
+
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Test session not found' }, { status: 404 });
+    }
+
+    // 2. Fetch Questions list
+    let questionsList: any[] = [];
+    const mockTest = session.mockTest;
+
+    // A) Check customQuestions (direct array or Tigris S3 URL)
+    let questionsData = mockTest?.customQuestions;
+    if (questionsData) {
+      if (typeof questionsData === 'object' && !Array.isArray(questionsData) && 'url' in (questionsData as any)) {
+        const url = (questionsData as any).url;
+        try {
+          const bucketName = process.env.TIGRIS_BUCKET_NAME || "mocktest-assets";
+          const urlObj = new URL(url);
+          const pathname = decodeURIComponent(urlObj.pathname);
+          const key = pathname.startsWith(`/${bucketName}/`)
+            ? pathname.substring(bucketName.length + 2)
+            : pathname.startsWith('/') ? pathname.substring(1) : pathname;
+
+          const response = await s3Client.send(
+            new GetObjectCommand({
+              Bucket: bucketName,
+              Key: key,
+            })
+          );
+          if (response.Body) {
+            const bodyContents = await response.Body.transformToString();
+            questionsData = JSON.parse(bodyContents);
+          }
+        } catch (s3Err) {
+          console.warn("Failed to fetch questions from Tigris S3 via SDK, trying fetch:", s3Err);
+          try {
+            const fetchRes = await fetch(url);
+            if (fetchRes.ok) questionsData = await fetchRes.json();
+          } catch {}
+        }
+      }
+
+      if (Array.isArray(questionsData)) {
+        questionsList = questionsData;
+      } else if (questionsData && typeof questionsData === 'object') {
+        if (Array.isArray((questionsData as any).data)) questionsList = (questionsData as any).data;
+        else if (Array.isArray((questionsData as any).questions)) questionsList = (questionsData as any).questions;
+      }
+    }
+
+    // B) If no customQuestions, check section.questions from relational DB
+    if (questionsList.length === 0 && mockTest?.sections && mockTest.sections.length > 0) {
+      mockTest.sections.forEach(sec => {
+        (sec.questions || []).forEach(q => {
+          questionsList.push({
+            id: q.id,
+            sectionName: sec.name,
+            textEn: q.textEn,
+            textHi: q.textHi,
+            optionsEn: q.optionsEn,
+            optionsHi: q.optionsHi,
+            correctOptionIndex: q.correctIndex,
+            explanationEn: q.explanationEn,
+            explanationHi: q.explanationHi,
+            imageUrl: q.imageUrl,
+            mathLatex: q.mathLatex,
+            positiveMarks: q.positiveMarks ?? sec.positiveMarks ?? mockTest.positiveMarks ?? 2.0,
+            negativeMarks: q.negativeMarks ?? sec.negativeMarks ?? mockTest.negativeMarks ?? 0.5,
+          });
+        });
+      });
+    }
+
+    // 3. Map candidate responses
+    const responseMap = new Map<string, any>();
+    (session.responses || []).forEach(r => {
+      responseMap.set(r.questionId, r);
+    });
+
+    const defaultPositive = mockTest?.positiveMarks ?? 2.0;
+    const defaultNegative = mockTest?.negativeMarks ?? 0.5;
+
+    let computedCorrect = 0;
+    let computedIncorrect = 0;
+    let computedSkipped = 0;
+    let computedScore = 0;
+
+    // If questionsList is still empty, build question items directly from responses
+    if (questionsList.length === 0 && (session.responses || []).length > 0) {
+      questionsList = (session.responses || []).map((r, i) => ({
+        id: r.questionId,
+        sectionName: 'General',
+        textEn: `Question #${i + 1}`,
+        textHi: `प्रश्न #${i + 1}`,
+        optionsEn: ['Option A', 'Option B', 'Option C', 'Option D'],
+        optionsHi: ['विकल्प A', 'विकल्प B', 'विकल्प C', 'विकल्प D'],
+        correctOptionIndex: 0,
+        explanationEn: 'Question text was archived or not stored in the question bank.',
+        explanationHi: 'प्रश्न विवरण उपलब्ध नहीं है।',
+        positiveMarks: defaultPositive,
+        negativeMarks: defaultNegative,
+      }));
+    }
+
+    const enrichedQuestions = questionsList.map((q, idx) => {
+      const qId = q.id || `q_${idx}`;
+      const resp = responseMap.get(qId) || responseMap.get(String(idx + 1)) || responseMap.get(String(idx));
+      const userSelected = resp?.selectedOptionIndex !== undefined ? resp.selectedOptionIndex : null;
+      const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : (q.correctIndex !== undefined ? q.correctIndex : 0);
+
+      const posMark = Number(q.positiveMarks ?? defaultPositive);
+      const negMark = Number(q.negativeMarks ?? defaultNegative);
+
+      let status: 'correct' | 'incorrect' | 'skipped' = 'skipped';
+      let marksAwarded = 0;
+
+      if (userSelected === null || userSelected === undefined || userSelected === -1) {
+        status = 'skipped';
+        marksAwarded = 0;
+        computedSkipped++;
+      } else if (userSelected === correctIdx) {
+        status = 'correct';
+        marksAwarded = posMark;
+        computedCorrect++;
+        computedScore += posMark;
+      } else {
+        status = 'incorrect';
+        marksAwarded = -negMark;
+        computedIncorrect++;
+        computedScore -= negMark;
+      }
+
+      return {
+        id: qId,
+        questionNumber: idx + 1,
+        sectionName: q.sectionName || q.section || 'General',
+        textEn: q.textEn || q.text || '',
+        textHi: q.textHi || '',
+        optionsEn: Array.isArray(q.optionsEn) ? q.optionsEn : (Array.isArray(q.options) ? q.options : []),
+        optionsHi: Array.isArray(q.optionsHi) ? q.optionsHi : [],
+        correctOptionIndex: correctIdx,
+        userSelectedOptionIndex: userSelected,
+        status,
+        marksAwarded: Math.round(marksAwarded * 100) / 100,
+        positiveMarks: posMark,
+        negativeMarks: negMark,
+        timeSpentSeconds: resp?.elapsedSeconds || 0,
+        explanationEn: q.explanationEn || q.explanation || '',
+        explanationHi: q.explanationHi || '',
+        imageUrl: q.imageUrl || null,
+        mathLatex: q.mathLatex || null,
+      };
+    });
+
+    // 4. Section-wise Breakdown
+    const sectionsMap = new Map<string, {
+      sectionName: string;
+      totalQuestions: number;
+      attempted: number;
+      correct: number;
+      incorrect: number;
+      skipped: number;
+      score: number;
+      timeSpentSeconds: number;
+    }>();
+
+    enrichedQuestions.forEach(q => {
+      const secName = q.sectionName || 'General';
+      if (!sectionsMap.has(secName)) {
+        sectionsMap.set(secName, {
+          sectionName: secName,
+          totalQuestions: 0,
+          attempted: 0,
+          correct: 0,
+          incorrect: 0,
+          skipped: 0,
+          score: 0,
+          timeSpentSeconds: 0,
+        });
+      }
+      const s = sectionsMap.get(secName)!;
+      s.totalQuestions++;
+      s.timeSpentSeconds += q.timeSpentSeconds;
+      if (q.status === 'correct') {
+        s.attempted++;
+        s.correct++;
+        s.score += q.marksAwarded;
+      } else if (q.status === 'incorrect') {
+        s.attempted++;
+        s.incorrect++;
+        s.score += q.marksAwarded;
+      } else {
+        s.skipped++;
+      }
+    });
+
+    const sectionsSummary = Array.from(sectionsMap.values()).map(s => ({
+      ...s,
+      score: Math.round(s.score * 100) / 100,
+      accuracy: s.attempted > 0 ? Math.round((s.correct / s.attempted) * 1000) / 10 : 0
+    }));
+
+    // 5. Final Summary
+    const finalScore = session.finalScore !== null ? session.finalScore : Math.round(computedScore * 100) / 100;
+    const accuracy = session.accuracyPercentage !== null ? session.accuracyPercentage : (
+      (computedCorrect + computedIncorrect) > 0
+        ? Math.round((computedCorrect / (computedCorrect + computedIncorrect)) * 1000) / 10
+        : 0
+    );
+
+    return NextResponse.json({
+      success: true,
+      session: {
+        id: session.id,
+        status: session.status,
+        startedAt: session.startedAt,
+        completedAt: session.completedAt,
+        finalScore,
+        maxMarks: mockTest?.maxMarks || (questionsList.length * defaultPositive),
+        accuracyPercentage: accuracy,
+        timeSpentSeconds: session.timeSpentSeconds,
+        durationMinutes: mockTest?.durationMinutes || 60,
+        violationsCount: session.violationsCount,
+        source: session.source,
+        testbookRank: session.testbookRank,
+        testbookPercentile: session.testbookPercentile,
+      },
+      user: session.user,
+      mockTest: {
+        id: mockTest?.id,
+        title: mockTest?.title,
+        examName: mockTest?.testSeries?.exam?.name || 'Government Exam',
+        categoryName: mockTest?.testSeries?.exam?.category?.name || '',
+      },
+      summary: {
+        totalQuestions: enrichedQuestions.length,
+        attempted: computedCorrect + computedIncorrect,
+        correctCount: computedCorrect,
+        incorrectCount: computedIncorrect,
+        skippedCount: computedSkipped,
+        finalScore,
+        maxMarks: mockTest?.maxMarks || (questionsList.length * defaultPositive),
+        accuracyPercentage: accuracy,
+        timeSpentSeconds: session.timeSpentSeconds,
+        violationsCount: session.violationsCount,
+        rank: session.testbookRank,
+        percentile: session.testbookPercentile,
+      },
+      sections: sectionsSummary,
+      questions: enrichedQuestions,
+    });
+  } catch (err: any) {
+    console.error('Error fetching session analysis:', err);
+    return NextResponse.json({ success: false, error: err.message || 'Failed to fetch session analysis' }, { status: 500 });
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Admin Typing Attempt Logs Handlers
+// -----------------------------------------------------------------------------
+
+async function handleGetAdminTypingAttempts(params?: any) {
+  try {
+    const limit = Math.min(Number(params?.limit) || 500, 2000);
+    const attempts = await prismaTyping.typingAttempt.findMany({
+      take: limit,
+      orderBy: { completedAt: 'desc' },
+    });
+
+    // Enrich with Test details safely from prismaTyping
+    const testIds = Array.from(new Set(attempts.map(a => a.testId).filter(Boolean)));
+    let testMap = new Map<string, any>();
+    if (testIds.length > 0) {
+      try {
+        const tests = await prismaTyping.typingTest.findMany({
+          where: { id: { in: testIds } },
+          select: {
+            id: true,
+            title: true,
+            titleHi: true,
+            categoryId: true,
+            language: true,
+            qualifyingWpm: true,
+            maxErrorPercentage: true,
+            mainDurationMinutes: true,
+          }
+        });
+        tests.forEach(t => testMap.set(t.id, t));
+      } catch (testErr) {
+        console.warn('Could not fetch test details for typing attempts:', testErr);
+      }
+    }
+
+    // Enrich with User details (email, candidateCode, mobile) from primary DB
+    const userIds = Array.from(new Set(attempts.map(a => a.userId).filter(uid => uid && uid !== 'guest')));
+    let userMap = new Map<string, any>();
+    if (userIds.length > 0) {
+      try {
+        const users = await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, fullName: true, email: true, candidateCode: true, mobile: true }
+        });
+        users.forEach(u => userMap.set(u.id, u));
+      } catch (userErr) {
+        console.warn('Could not fetch user details for typing attempts:', userErr);
+      }
+    }
+
+    const enriched = attempts.map(a => {
+      const u = userMap.get(a.userId);
+      const t = testMap.get(a.testId);
+
+      // Derive category if empty
+      let cat = a.categoryName || t?.categoryId || '';
+      if (!cat) {
+        const lowerTitle = (a.testTitle || '').toLowerCase();
+        const lowerId = (a.testId || '').toLowerCase();
+        if (lowerTitle.includes('chsl') || lowerId.includes('chsl')) cat = 'SSC CHSL Typing';
+        else if (lowerTitle.includes('cgl') || lowerId.includes('cgl')) cat = 'SSC CGL Typing';
+        else if (lowerTitle.includes('punjab') || lowerId.includes('punjab')) cat = 'Punjab & Haryana High Court';
+        else if (lowerTitle.includes('bombay') || lowerId.includes('bombay')) cat = 'Bombay High Court';
+        else if (lowerTitle.includes('spmcil') || lowerId.includes('spmcil')) cat = 'SPMCIL Typing';
+        else if (lowerTitle.includes('rrb') || lowerId.includes('rrb')) cat = 'RRB NTPC Typing';
+        else if (lowerTitle.includes('court') || lowerId.includes('court')) cat = 'High Court Typing';
+        else cat = 'General Typing';
+      }
+
+      return {
+        ...a,
+        categoryName: cat,
+        test: t || null,
+        user: u || {
+          id: a.userId,
+          fullName: a.userName || 'Guest Candidate',
+          email: a.userId === 'guest' ? 'guest@typing.test' : 'N/A',
+          candidateCode: a.userId === 'guest' ? 'GUEST' : (a.userId?.substring(0, 8).toUpperCase() || 'NO-CODE'),
+          mobile: null
+        }
+      };
+    });
+
+    return NextResponse.json({ success: true, attempts: enriched });
+  } catch (error: any) {
+    console.error('Failed to get admin typing attempts:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to get typing attempts' }, { status: 500 });
+  }
+}
+
+async function handleDeleteTypingAttempt(id?: string) {
+  try {
+    if (!id) return NextResponse.json({ success: false, error: 'Missing attempt ID' }, { status: 400 });
+    await prismaTyping.typingAttempt.delete({ where: { id } });
+    return NextResponse.json({ success: true, message: 'Typing attempt deleted successfully' });
+  } catch (error: any) {
+    console.error('Failed to delete typing attempt:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to delete typing attempt' }, { status: 500 });
   }
 }
 
