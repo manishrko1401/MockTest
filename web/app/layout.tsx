@@ -23,9 +23,30 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+const SITE_URL = "https://mocktesthub.vercel.app";
+const SITE_TITLE = "Mock Test Hub - India's #1 Govt Exam Prep Site";
+const SITE_DESCRIPTION = "Get mock tests, live result/admit card/answer key updates, and access passes for SSC, Railways, UGC NET, Teaching, and State Exams.";
+
 export const metadata: Metadata = {
-  title: "Mock Test Hub - India's #1 Govt Exam Prep Site",
-  description: "Get mock tests, notice updates, and access passes for SSC, Railways, UGC NET, Teaching, and State Exams.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: `%s | Mock Test Hub`,
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: "Mock Test Hub",
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default async function RootLayout({
