@@ -71,6 +71,11 @@ export default function TypingCategoryDetailPage({
   const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'hi'>('en');
   const [passageSearch, setPassageSearch] = useState<string>('');
 
+  // Pagination — render 50 tests at a time instead of the whole list at once
+  const TESTS_PER_PAGE = 50;
+  const [currentPage, setCurrentPage] = useState(1);
+  const passagesSectionRef = React.useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     let active = true;
     setIsMounted(true);
@@ -272,6 +277,28 @@ export default function TypingCategoryDetailPage({
       return true;
     });
   }, [tests, selectedLanguage, passageSearch]);
+
+  // Reset to page 1 whenever the underlying list changes shape (language/search/category)
+  // so the user never lands on a now-out-of-range page.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedLanguage, passageSearch, categoryId]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTests.length / TESTS_PER_PAGE));
+
+  // Clamp in case filteredTests shrank (e.g. new data arrived) after the reset effect above ran.
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedTests = useMemo(() => {
+    const start = (safeCurrentPage - 1) * TESTS_PER_PAGE;
+    return filteredTests.slice(start, start + TESTS_PER_PAGE);
+  }, [filteredTests, safeCurrentPage]);
+
+  const goToPage = (page: number) => {
+    const clamped = Math.min(Math.max(1, page), totalPages);
+    setCurrentPage(clamped);
+    passagesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   // Count available passages by language
   const englishCount = useMemo(() => tests.filter(t => t.language === 'en').length, [tests]);
@@ -1088,7 +1115,7 @@ export default function TypingCategoryDetailPage({
         </div>
 
         {/* 4. PASSAGES SECTION & FILTERS */}
-        <div className="space-y-4">
+        <div className="space-y-4" ref={passagesSectionRef}>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
             {/* Total Available Indicator */}
             <div className="flex items-center gap-2">
@@ -1155,7 +1182,7 @@ export default function TypingCategoryDetailPage({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70 text-xs sm:text-sm">
-                    {filteredTests.map((test, index) => {
+                    {paginatedTests.map((test, index) => {
                       const testAttempts = userAttempts.filter(a => a.testId === test.id);
                       const hasLocalAttempt = typeof window !== 'undefined' && !!localStorage.getItem(`typing_attempt_${test.id}`);
                       const hasAttempted = testAttempts.length > 0 || hasLocalAttempt;
@@ -1167,7 +1194,7 @@ export default function TypingCategoryDetailPage({
                           className="hover:bg-blue-50/50 dark:hover:bg-slate-800/50 transition-colors group"
                         >
                           <td className="py-3.5 px-4 text-center font-bold text-slate-500 dark:text-slate-400">
-                            {index + 1}
+                            {(safeCurrentPage - 1) * TESTS_PER_PAGE + index + 1}
                           </td>
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-2">
@@ -1223,6 +1250,37 @@ export default function TypingCategoryDetailPage({
                   </tbody>
                 </table>
               </div>
+
+              {/* PAGINATION BAR */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200 dark:border-slate-800 px-4 py-3.5 bg-slate-50/60 dark:bg-slate-800/30">
+                  <p className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">
+                    {isHindi
+                      ? `पृष्ठ ${safeCurrentPage} / ${totalPages} · ${filteredTests.length} में से ${(safeCurrentPage - 1) * TESTS_PER_PAGE + 1}-${Math.min(safeCurrentPage * TESTS_PER_PAGE, filteredTests.length)} दिखाया जा रहा है`
+                      : `Showing ${(safeCurrentPage - 1) * TESTS_PER_PAGE + 1}-${Math.min(safeCurrentPage * TESTS_PER_PAGE, filteredTests.length)} of ${filteredTests.length} · Page ${safeCurrentPage} of ${totalPages}`}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => goToPage(safeCurrentPage - 1)}
+                      disabled={safeCurrentPage <= 1}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-slate-900 cursor-pointer"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>{isHindi ? 'पिछला' : 'Previous'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => goToPage(safeCurrentPage + 1)}
+                      disabled={safeCurrentPage >= totalPages}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs bg-blue-600 hover:bg-blue-700 text-white transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-600 cursor-pointer"
+                    >
+                      <span>{isHindi ? 'अगला' : 'Next'}</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
