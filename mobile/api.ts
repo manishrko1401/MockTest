@@ -3,7 +3,7 @@
  */
 
 export const LOCAL_API_URL = 'http://192.168.1.14:3000/api/db';
-export const PROD_API_URL = 'https://mock-test-three-indol.vercel.app/api/db';
+export const PROD_API_URL = 'https://mocktesthub.vercel.app/api/db';
 
 export const API_URL = LOCAL_API_URL;
 export const BASE_URL = API_URL.replace('/api/db', '');

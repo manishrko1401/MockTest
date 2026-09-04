@@ -30,7 +30,7 @@ export default function UpdatesCenterPage() {
   const { isMobile, isMounted } = useIsMobile();
   const displayNotices = isMounted ? noticesList : [];
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [activeMobileTab, setActiveMobileTab] = React.useState<'notice' | 'result' | 'admit_card' | 'answer_key'>('notice');
+  const [activeMobileTab, setActiveMobileTab] = React.useState<'answer_key' | 'result' | 'admit_card' | 'notice'>('answer_key');
   const [categoryFilter, setCategoryFilter] = React.useState<'notice' | 'result' | 'admit_card' | 'answer_key' | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
   const router = useRouter();
@@ -88,10 +88,10 @@ export default function UpdatesCenterPage() {
     }
   };
 
-  const handleTabClick = (tab: 'notice' | 'result' | 'admit_card' | 'answer_key') => {
+  const handleTabClick = (tab: 'answer_key' | 'result' | 'admit_card' | 'notice') => {
     setActiveMobileTab(tab);
     if (typeof window !== 'undefined') {
-      if (tab === 'notice') {
+      if (tab === 'answer_key') {
         if (window.location.hash.startsWith('#tab-')) {
           window.history.back();
         } else {
@@ -112,7 +112,7 @@ export default function UpdatesCenterPage() {
         const tabName = hash.replace('#tab-', '') as any;
         setActiveMobileTab(tabName);
       } else {
-        setActiveMobileTab('notice');
+        setActiveMobileTab('answer_key');
       }
 
       if (hash === '#menu') {
@@ -133,58 +133,44 @@ export default function UpdatesCenterPage() {
     };
   }, []);
 
-  // Helper render for single tile item (Normal font weight, no bolding, no numberings, no arrow buttons)
+  // Helper render for single notification item (Clean list item without inner tile)
   const renderTileCard = (notice: any, idx: number, themeColor: 'blue' | 'amber' | 'emerald' | 'purple') => {
     const typeTagColors = {
-      blue: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-      amber: 'bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-      emerald: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-      purple: 'bg-purple-50 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-    };
-
-    const hoverBorderColors = {
-      blue: 'hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/50',
-      amber: 'hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/50',
-      emerald: 'hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/50',
-      purple: 'hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-950/50',
-    };
-
-    const hoverShadowColors = {
-      blue: 'hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.35),0_0_16px_rgba(59,130,246,0.18)]',
-      amber: 'hover:shadow-[0_12px_24px_-6px_rgba(245,158,11,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(245,158,11,0.35),0_0_16px_rgba(245,158,11,0.18)]',
-      emerald: 'hover:shadow-[0_12px_24px_-6px_rgba(16,185,129,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(16,185,129,0.35),0_0_16px_rgba(16,185,129,0.18)]',
-      purple: 'hover:shadow-[0_12px_24px_-6px_rgba(168,85,247,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(168,85,247,0.35),0_0_16px_rgba(168,85,247,0.18)]',
+      blue: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/80',
+      amber: 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/80',
+      emerald: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/80',
+      purple: 'bg-purple-50 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200/80 dark:border-purple-800/80',
     };
 
     return (
       <div
         key={notice.id}
         onClick={() => router.push(`/updates/${notice.id}`)}
-        className={`group w-full bg-slate-50/90 dark:bg-slate-950/70 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/90 dark:border-slate-800 ${hoverBorderColors[themeColor]} ${hoverShadowColors[themeColor]} rounded-2xl p-4 shadow-2xs transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer flex flex-col gap-2 relative`}
+        className="group w-full py-3.5 px-3 transition-colors duration-150 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 cursor-pointer flex flex-col gap-1.5 relative border-b border-slate-200 dark:border-slate-800 last:border-b-0"
       >
         {/* Top Badges & Date */}
         <div className="flex items-center justify-between gap-2 w-full">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`text-[9px] font-extrabold px-2.5 py-0.5 rounded-md uppercase tracking-wider border ${typeTagColors[themeColor]}`}>
+            <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border ${typeTagColors[themeColor]}`}>
               {notice.type}
             </span>
             {isNewlyPublished(notice.publishDate) && (
-              <span className="bg-rose-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow-2xs">
+              <span className="bg-rose-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
                 {t.newBadge}
               </span>
             )}
           </div>
-          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold whitespace-nowrap">{notice.date}</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium whitespace-nowrap">{notice.date}</span>
         </div>
 
-        {/* Regular Normal Weight Title (Clean font, not bolded) */}
-        <h5 className="font-semibold text-xs sm:text-[13px] text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug transition-colors">
+        {/* Regular Normal Weight Title */}
+        <h5 className="font-medium text-xs sm:text-[13px] text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug transition-colors">
           {notice.title}
         </h5>
 
         {/* Last Date Deadline - Only in Live Notices section */}
         {notice.category === 'notice' && notice.lastDate && (
-          <p className="text-[9.5px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1 mt-0.5">
+          <p className="text-[9.5px] text-rose-600 dark:text-rose-400 font-semibold uppercase tracking-wider flex items-center gap-1 mt-0.5">
             <span>{t.lastDate}</span>
             <span>{notice.lastDate}</span>
           </p>
@@ -231,10 +217,10 @@ export default function UpdatesCenterPage() {
 
   if (isMounted && isMobile) {
     return (
-      <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
+      <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in" suppressHydrationWarning>
         
         {/* Mobile Header - Increased Height */}
-        <header className="h-18 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
+        <header className="h-18 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm" suppressHydrationWarning>
           <div className="flex items-center gap-2">
             {/* Back Button BEFORE Logo */}
             <button
@@ -247,6 +233,7 @@ export default function UpdatesCenterPage() {
               }}
               className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-center gap-1 text-xs font-bold shrink-0 cursor-pointer active:scale-95 transition"
               title={language === 'hi' ? 'वापस' : 'Back'}
+              suppressHydrationWarning
             >
               <ArrowLeft className="h-4 w-4" />
               <span className="text-[11px] font-bold">{language === 'hi' ? 'वापस' : 'Back'}</span>
@@ -267,6 +254,7 @@ export default function UpdatesCenterPage() {
             <button
               onClick={() => handleToggleMenu(!mobileMenuOpen)}
               className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 active:scale-95"
+              suppressHydrationWarning
             >
               {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
             </button>
@@ -292,6 +280,7 @@ export default function UpdatesCenterPage() {
                   value={language}
                   onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
                   className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold"
+                  suppressHydrationWarning
                 >
                   <option value="en">English</option>
                   <option value="hi">हिन्दी</option>
@@ -303,6 +292,7 @@ export default function UpdatesCenterPage() {
                 <button
                   onClick={toggleTheme}
                   className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold flex items-center gap-1.5"
+                  suppressHydrationWarning
                 >
                   {theme === 'light' ? <><Moon className="h-3.5 w-3.5" /> Dark</> : <><Sun className="h-3.5 w-3.5" /> Light</>}
                 </button>
@@ -311,7 +301,7 @@ export default function UpdatesCenterPage() {
           </div>
         )}
 
-        <main className="flex-1 p-4 space-y-4">
+        <main className="flex-1 p-4 space-y-4" suppressHydrationWarning>
 
           {/* TOP FULL-WIDTH STRETCH SEARCH BAR (MOBILE) */}
           <div className="w-full">
@@ -329,11 +319,13 @@ export default function UpdatesCenterPage() {
                     : 'Search in all Jobs, Results, Admit Cards & Answer Keys...'
                 }
                 className="w-full bg-transparent text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none px-1"
+                suppressHydrationWarning
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
                   className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                  suppressHydrationWarning
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -344,14 +336,15 @@ export default function UpdatesCenterPage() {
           {/* MOBILE TABS FILTER */}
           <div className="flex bg-slate-200/70 dark:bg-slate-900 p-1 rounded-2xl shrink-0 gap-1 border border-slate-300/50 dark:border-slate-800">
             <button
-              onClick={() => handleTabClick('notice')}
+              onClick={() => handleTabClick('answer_key')}
               className={`flex-1 py-2 text-center rounded-xl font-extrabold text-[10px] uppercase tracking-wider transition ${
-                activeMobileTab === 'notice' 
-                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm'
+                activeMobileTab === 'answer_key' 
+                  ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
+              suppressHydrationWarning
             >
-              Notices
+              Answer Keys
             </button>
             <button
               onClick={() => handleTabClick('result')}
@@ -360,6 +353,7 @@ export default function UpdatesCenterPage() {
                   ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
+              suppressHydrationWarning
             >
               Results
             </button>
@@ -370,18 +364,20 @@ export default function UpdatesCenterPage() {
                   ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
+              suppressHydrationWarning
             >
               Admit Cards
             </button>
             <button
-              onClick={() => handleTabClick('answer_key')}
+              onClick={() => handleTabClick('notice')}
               className={`flex-1 py-2 text-center rounded-lg font-extrabold text-[10px] uppercase tracking-wider transition ${
-                activeMobileTab === 'answer_key' 
-                  ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
+                activeMobileTab === 'notice' 
+                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
+              suppressHydrationWarning
             >
-              Answer Keys
+              Notices
             </button>
           </div>
 
@@ -389,14 +385,14 @@ export default function UpdatesCenterPage() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-3xl shadow-sm space-y-4">
             <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center justify-between">
               <span className="flex items-center gap-2">
-                {activeMobileTab === 'notice' && <><Bell className="h-4.5 w-4.5 text-blue-600" /> {t.liveNotices}</>}
+                {activeMobileTab === 'answer_key' && <><ShieldCheck className="h-4.5 w-4.5 text-purple-600" /> Answer Keys</>}
                 {activeMobileTab === 'result' && <><Trophy className="h-4.5 w-4.5 text-amber-500" /> {t.resultsMerits}</>}
                 {activeMobileTab === 'admit_card' && <><FileText className="h-4.5 w-4.5 text-emerald-600" /> {t.admitCards}</>}
-                {activeMobileTab === 'answer_key' && <><ShieldCheck className="h-4.5 w-4.5 text-purple-600" /> Answer Keys</>}
+                {activeMobileTab === 'notice' && <><Bell className="h-4.5 w-4.5 text-blue-600" /> {t.liveNotices}</>}
               </span>
             </h3>
 
-            <div className="space-y-3 max-h-[550px] overflow-y-auto no-scrollbar">
+            <div className="max-h-[550px] overflow-y-auto no-scrollbar">
               {displayNotices
                 .filter(n => n.category === activeMobileTab)
                 .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
@@ -422,8 +418,34 @@ export default function UpdatesCenterPage() {
           </div>
         </main>
 
-        <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-6 px-4 text-center text-[10px] text-slate-500 font-bold">
-          <p>© 2026 MockTest Hub. All rights reserved.</p>
+        {/* FOOTER */}
+        <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 py-8 px-6 md:px-12 mt-8 text-center text-xs text-slate-500 dark:text-slate-400 shrink-0" suppressHydrationWarning>
+          <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
+          <p className="mt-1 text-[11px] text-slate-400">
+            {language === 'hi' ? 'वास्तविक सरकारी चयन कंप्यूटर आधारित परीक्षाओं का अनुकरण करने के लिए विकसित।' : 'Developed to simulate real-world government selection computer based assessments.'}
+          </p>
+          <div className="mt-3 flex items-center justify-center gap-4">
+            <Link
+              href="/contact"
+              className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+            >
+              {language === 'hi' ? 'हमसे संपर्क करें' : 'Contact Us'}
+            </Link>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <Link
+              href="/terms"
+              className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+            >
+              {language === 'hi' ? 'नियम और शर्तें' : 'Terms & Conditions'}
+            </Link>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <Link
+              href="/privacy"
+              className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+            >
+              {language === 'hi' ? 'गोपनीयता नीति' : 'Privacy Policy'}
+            </Link>
+          </div>
         </footer>
       </div>
     );
@@ -438,10 +460,10 @@ export default function UpdatesCenterPage() {
   ).length;
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200">
+    <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200" suppressHydrationWarning>
       
       {/* Header matching Test Series Page */}
-      <header className="h-18 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+      <header className="h-18 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs" suppressHydrationWarning>
         <div className="flex items-center gap-2.5 sm:gap-4 lg:gap-6 min-w-0">
           {/* Back button on top left corner */}
           <Link 
@@ -480,7 +502,7 @@ export default function UpdatesCenterPage() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0" suppressHydrationWarning>
           {/* Profile Button */}
           <Link
             href={currentUser ? "/profile" : "/auth"}
@@ -496,6 +518,7 @@ export default function UpdatesCenterPage() {
             value={language}
             onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
             className="px-2 py-1.5 lg:px-2.5 lg:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold focus:outline-none cursor-pointer"
+            suppressHydrationWarning
           >
             <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
             <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
@@ -506,6 +529,7 @@ export default function UpdatesCenterPage() {
             onClick={toggleTheme}
             className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
             title={theme === 'light' ? t.themeDark : t.themeLight}
+            suppressHydrationWarning
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
@@ -513,7 +537,7 @@ export default function UpdatesCenterPage() {
       </header>
 
       {/* BODY CONTENT */}
-      <main className="py-6 sm:py-8 px-3 sm:px-6 lg:px-8 xl:px-10 max-w-[1800px] w-full mx-auto flex-1 flex flex-col relative z-10 space-y-6">
+      <main className="py-6 sm:py-8 px-3 sm:px-6 lg:px-8 xl:px-10 max-w-[1800px] w-full mx-auto flex-1 flex flex-col relative z-10 space-y-6" suppressHydrationWarning>
 
         {/* IF CATEGORY FILTER IS ACTIVE -> DEDICATED SECTION PAGE FOR THAT PARTICULAR SECTION */}
         {categoryFilter && categoryMeta[categoryFilter] ? (
@@ -544,6 +568,7 @@ export default function UpdatesCenterPage() {
                 onClick={clearCategorySection}
                 className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer border border-slate-200 dark:border-slate-700 shrink-0 active:scale-95"
                 title={language === 'hi' ? 'सभी अनुभागों पर वापस जाएं' : 'Back to All Sections'}
+                suppressHydrationWarning
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{language === 'hi' ? 'सभी अनुभाग' : 'All Sections'}</span>
@@ -567,6 +592,7 @@ export default function UpdatesCenterPage() {
                       : `Search in ${categoryMeta[categoryFilter].title}...`
                   }
                   className="w-full bg-transparent text-xs sm:text-sm font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none px-2"
+                  suppressHydrationWarning
                 />
                 {searchQuery && (
                   <div className="flex items-center gap-2 pr-1 shrink-0">
@@ -574,6 +600,7 @@ export default function UpdatesCenterPage() {
                       onClick={() => setSearchQuery('')}
                       className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition cursor-pointer active:scale-95"
                       title="Clear Search"
+                      suppressHydrationWarning
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -583,7 +610,7 @@ export default function UpdatesCenterPage() {
             </div>
 
             {/* Category Items List Format (Single Column Vertical List) */}
-            <div className="flex flex-col gap-3.5 w-full p-2.5 -m-2.5">
+            <div className="flex flex-col w-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-2 sm:p-4 shadow-2xs">
               {displayNotices
                 .filter(n => n.category === categoryFilter)
                 .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
@@ -616,6 +643,7 @@ export default function UpdatesCenterPage() {
                       : 'Search across all Jobs, Results, Admit Cards & Answer Keys...'
                   }
                   className="w-full bg-transparent text-sm sm:text-base font-extrabold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none px-2 tracking-wide"
+                  suppressHydrationWarning
                 />
                 {searchQuery && (
                   <div className="flex items-center gap-2 pr-1 shrink-0">
@@ -623,6 +651,7 @@ export default function UpdatesCenterPage() {
                       onClick={() => setSearchQuery('')}
                       className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition cursor-pointer active:scale-95"
                       title="Clear Search"
+                      suppressHydrationWarning
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -633,21 +662,21 @@ export default function UpdatesCenterPage() {
             {/* TOP QUICK FEATURE CARDS (RESULTNOTIFY TOP QUICK BAR) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-4.5 w-full">
               
-              {/* Quick Card 1: Latest Notices */}
+              {/* Quick Card 1: Answer Keys */}
               <div 
-                onClick={() => openCategorySection('notice')}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-[0_10px_20px_-4px_rgba(59,130,246,0.15)] dark:hover:shadow-[0_10px_20px_-4px_rgba(59,130,246,0.3)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer"
+                onClick={() => openCategorySection('answer_key')}
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-purple-400 dark:hover:border-purple-600 hover:shadow-[0_10px_20px_-4px_rgba(168,85,247,0.15)] dark:hover:shadow-[0_10px_20px_-4px_rgba(168,85,247,0.3)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/50 dark:border-blue-800/50 shrink-0 transition-transform duration-300 group-hover:scale-110">
-                    <Bell className="h-5 w-5" />
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/50 dark:border-purple-800/50 shrink-0 transition-transform duration-300 group-hover:scale-110">
+                    <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">{t.liveNotices}</h4>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">Job notices & forms</p>
+                    <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Answer Keys</h4>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">Provisional & final</p>
                   </div>
                 </div>
-                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-purple-600 group-hover:text-white transition flex items-center justify-center shrink-0">
                   <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </div>
@@ -690,21 +719,21 @@ export default function UpdatesCenterPage() {
                 </div>
               </div>
 
-              {/* Quick Card 4: Answer Keys */}
+              {/* Quick Card 4: Latest Notices */}
               <div 
-                onClick={() => openCategorySection('answer_key')}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-purple-400 dark:hover:border-purple-600 hover:shadow-[0_10px_20px_-4px_rgba(168,85,247,0.15)] dark:hover:shadow-[0_10px_20px_-4px_rgba(168,85,247,0.3)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer"
+                onClick={() => openCategorySection('notice')}
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs flex items-center justify-between gap-3 group hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-[0_10px_20px_-4px_rgba(59,130,246,0.15)] dark:hover:shadow-[0_10px_20px_-4px_rgba(59,130,246,0.3)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/50 dark:border-purple-800/50 shrink-0 transition-transform duration-300 group-hover:scale-110">
-                    <ShieldCheck className="h-5 w-5" />
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/50 dark:border-blue-800/50 shrink-0 transition-transform duration-300 group-hover:scale-110">
+                    <Bell className="h-5 w-5" />
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Answer Keys</h4>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">Provisional & final</p>
+                    <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">{t.liveNotices}</h4>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">Job notices & forms</p>
                   </div>
                 </div>
-                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-purple-600 group-hover:text-white transition flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition flex items-center justify-center shrink-0">
                   <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </div>
@@ -714,109 +743,7 @@ export default function UpdatesCenterPage() {
             {/* 4-COLUMN UPDATES GRID (MAXIMUM WIDTH TILE CONTAINERS) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-4.5 w-full">
               
-              {/* Column 1: Latest Notices (Blue Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-3.5 shadow-xs flex flex-col min-h-[600px] relative w-full">
-                <div className="px-1 pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
-                  <span className="font-black text-xs uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                    <Bell className="h-4 w-4" /> {t.liveNotices}
-                  </span>
-                </div>
-                {/* List Starts Directly */}
-                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
-                  {displayNotices.filter(n => n.category === 'notice').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
-                    [...displayNotices]
-                      .filter(n => n.category === 'notice')
-                      .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
-                      .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
-                      .map((notice, idx) => renderTileCard(notice, idx, 'blue'))
-                  ) : (
-                    <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                      {language === 'hi' ? 'कोई परिणाम नहीं।' : 'No matching notices.'}
-                    </div>
-                  )}
-                </div>
-
-                {/* Bottom View All Button */}
-                <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800/80">
-                  <button 
-                    onClick={() => openCategorySection('notice')}
-                    className="w-full py-2.5 px-4 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
-                  >
-                    <span>View All {t.liveNotices}</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Column 2: Results & Merits (Amber Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-3.5 shadow-xs flex flex-col min-h-[600px] relative w-full">
-                <div className="px-1 pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
-                  <span className="font-black text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-                    <Trophy className="h-4 w-4" /> {t.resultsMerits}
-                  </span>
-                </div>
-                {/* List Starts Directly */}
-                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
-                  {displayNotices.filter(n => n.category === 'result').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
-                    [...displayNotices]
-                      .filter(n => n.category === 'result')
-                      .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
-                      .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
-                      .map((notice, idx) => renderTileCard(notice, idx, 'amber'))
-                  ) : (
-                    <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                      {language === 'hi' ? 'कोई परिणाम नहीं।' : 'No matching results.'}
-                    </div>
-                  )}
-                </div>
-
-                {/* Bottom View All Button */}
-                <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800/80">
-                  <button 
-                    onClick={() => openCategorySection('result')}
-                    className="w-full py-2.5 px-4 rounded-2xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/70 dark:hover:bg-amber-900/80 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
-                  >
-                    <span>View All {t.resultsMerits}</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Column 3: Admit Cards (Emerald Theme) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-3.5 shadow-xs flex flex-col min-h-[600px] relative w-full">
-                <div className="px-1 pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
-                  <span className="font-black text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                    <FileText className="h-4 w-4" /> {t.admitCards}
-                  </span>
-                </div>
-                {/* List Starts Directly */}
-                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
-                  {displayNotices.filter(n => n.category === 'admit_card').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
-                    [...displayNotices]
-                      .filter(n => n.category === 'admit_card')
-                      .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
-                      .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
-                      .map((notice, idx) => renderTileCard(notice, idx, 'emerald'))
-                  ) : (
-                    <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                      {language === 'hi' ? 'कोई परिणाम नहीं।' : 'No matching admit cards.'}
-                    </div>
-                  )}
-                </div>
-
-                {/* Bottom View All Button */}
-                <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800/80">
-                  <button 
-                    onClick={() => openCategorySection('admit_card')}
-                    className="w-full py-2.5 px-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
-                  >
-                    <span>View All {t.admitCards}</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Column 4: Answer Keys (Purple Theme) */}
+              {/* Column 1: Answer Keys (Purple Theme) */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-3.5 shadow-xs flex flex-col min-h-[600px] relative w-full">
                 <div className="px-1 pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="font-black text-xs uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
@@ -824,7 +751,7 @@ export default function UpdatesCenterPage() {
                   </span>
                 </div>
                 {/* List Starts Directly */}
-                <div className="space-y-3 overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
+                <div className="overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
                   {displayNotices.filter(n => n.category === 'answer_key').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
                     [...displayNotices]
                       .filter(n => n.category === 'answer_key')
@@ -843,8 +770,114 @@ export default function UpdatesCenterPage() {
                   <button 
                     onClick={() => openCategorySection('answer_key')}
                     className="w-full py-2.5 px-4 rounded-2xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/70 dark:hover:bg-purple-900/80 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+                    suppressHydrationWarning
                   >
                     <span>View All Answer Keys</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Column 2: Results & Merits (Amber Theme) */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-3.5 shadow-xs flex flex-col min-h-[600px] relative w-full">
+                <div className="px-1 pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="font-black text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                    <Trophy className="h-4 w-4" /> {t.resultsMerits}
+                  </span>
+                </div>
+                {/* List Starts Directly */}
+                <div className="overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
+                  {displayNotices.filter(n => n.category === 'result').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
+                    [...displayNotices]
+                      .filter(n => n.category === 'result')
+                      .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
+                      .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                      .map((notice, idx) => renderTileCard(notice, idx, 'amber'))
+                  ) : (
+                    <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
+                      {language === 'hi' ? 'कोई परिणाम नहीं।' : 'No matching results.'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom View All Button */}
+                <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800/80">
+                  <button 
+                    onClick={() => openCategorySection('result')}
+                    className="w-full py-2.5 px-4 rounded-2xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/70 dark:hover:bg-amber-900/80 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+                    suppressHydrationWarning
+                  >
+                    <span>View All {t.resultsMerits}</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Column 3: Admit Cards (Emerald Theme) */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-3.5 shadow-xs flex flex-col min-h-[600px] relative w-full">
+                <div className="px-1 pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="font-black text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                    <FileText className="h-4 w-4" /> {t.admitCards}
+                  </span>
+                </div>
+                {/* List Starts Directly */}
+                <div className="overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
+                  {displayNotices.filter(n => n.category === 'admit_card').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
+                    [...displayNotices]
+                      .filter(n => n.category === 'admit_card')
+                      .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
+                      .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                      .map((notice, idx) => renderTileCard(notice, idx, 'emerald'))
+                  ) : (
+                    <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
+                      {language === 'hi' ? 'कोई परिणाम नहीं।' : 'No matching admit cards.'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom View All Button */}
+                <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800/80">
+                  <button 
+                    onClick={() => openCategorySection('admit_card')}
+                    className="w-full py-2.5 px-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+                    suppressHydrationWarning
+                  >
+                    <span>View All {t.admitCards}</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Column 4: Latest Notices (Blue Theme) */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-3.5 shadow-xs flex flex-col min-h-[600px] relative w-full">
+                <div className="px-1 pb-2.5 mb-2 border-b border-slate-100 dark:border-slate-800">
+                  <span className="font-black text-xs uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                    <Bell className="h-4 w-4" /> {t.liveNotices}
+                  </span>
+                </div>
+                {/* List Starts Directly */}
+                <div className="overflow-y-auto flex-1 max-h-[850px] no-scrollbar w-full">
+                  {displayNotices.filter(n => n.category === 'notice').filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length > 0 ? (
+                    [...displayNotices]
+                      .filter(n => n.category === 'notice')
+                      .filter(n => !searchQuery.trim() || n.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (n.type && n.type.toLowerCase().includes(searchQuery.toLowerCase().trim())))
+                      .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
+                      .map((notice, idx) => renderTileCard(notice, idx, 'blue'))
+                  ) : (
+                    <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
+                      {language === 'hi' ? 'कोई परिणाम नहीं।' : 'No matching notices.'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom View All Button */}
+                <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800/80">
+                  <button 
+                    onClick={() => openCategorySection('notice')}
+                    className="w-full py-2.5 px-4 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+                    suppressHydrationWarning
+                  >
+                    <span>View All {t.liveNotices}</span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -857,9 +890,33 @@ export default function UpdatesCenterPage() {
       </main>
 
       {/* FOOTER */}
-      <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-10 px-6 md:px-12 mt-auto text-center text-xs text-slate-500 dark:text-slate-500 transition-colors duration-200 font-bold">
-        <p>© 2026 MockTest Hub. {language === 'hi' ? 'सर्वाधिकार सुरक्षित।' : 'All rights reserved.'}</p>
-        <p className="mt-1 font-semibold text-slate-400">{language === 'hi' ? 'वास्तविक सरकारी चयन कंप्यूटर आधारित परीक्षाओं का अनुकरण करने के लिए विकसित।' : 'Developed to simulate real-world government selection computer based assessments.'}</p>
+      <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 py-8 px-6 md:px-12 mt-auto text-center text-xs text-slate-500 dark:text-slate-400 shrink-0" suppressHydrationWarning>
+        <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
+        <p className="mt-1 text-[11px] text-slate-400">
+          {language === 'hi' ? 'वास्तविक सरकारी चयन कंप्यूटर आधारित परीक्षाओं का अनुकरण करने के लिए विकसित।' : 'Developed to simulate real-world government selection computer based assessments.'}
+        </p>
+        <div className="mt-3 flex items-center justify-center gap-4">
+          <Link
+            href="/contact"
+            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+          >
+            {language === 'hi' ? 'हमसे संपर्क करें' : 'Contact Us'}
+          </Link>
+          <span className="text-slate-300 dark:text-slate-700">•</span>
+          <Link
+            href="/terms"
+            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+          >
+            {language === 'hi' ? 'नियम और शर्तें' : 'Terms & Conditions'}
+          </Link>
+          <span className="text-slate-300 dark:text-slate-700">•</span>
+          <Link
+            href="/privacy"
+            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+          >
+            {language === 'hi' ? 'गोपनीयता नीति' : 'Privacy Policy'}
+          </Link>
+        </div>
       </footer>
 
     </div>

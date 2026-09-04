@@ -24,6 +24,27 @@ const nextConfig: NextConfig = {
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 86400,
   },
+
+  async rewrites() {
+    return [
+      {
+        source: '/exams.php',
+        destination: '/typing-test',
+      },
+      {
+        source: '/exams',
+        destination: '/typing-test',
+      },
+      {
+        source: '/exam/:slug([a-zA-Z0-9_-]*typing[a-zA-Z0-9_-]*)',
+        destination: '/typing-test/category/:slug',
+      },
+      {
+        source: '/exam/quick-brown-fox',
+        destination: '/typing-test/category/quick-brown-fox',
+      }
+    ];
+  },
 };
 
 export default nextConfig;

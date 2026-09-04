@@ -31,7 +31,11 @@ import {
   Sparkles,
   Lock,
   Layers,
-  Check
+  Check,
+  ArrowLeft,
+  ChevronRight,
+  Folder,
+  Filter
 } from 'lucide-react';
 import {
   TypingCategory,
@@ -45,7 +49,9 @@ interface TypingTestManagerProps {
   showToast: (msg: string) => void;
 }
 
-const DEFAULT_DEMO_TEXT = 'This is a demo typing test passage to check your keyboard responsiveness and warm up your fingers before starting the main exam.';
+const DEFAULT_DEMO_TEXT_EN = 'This is a demo typing test passage designed to check your keyboard responsiveness and warm up your fingers. Please ensure all letter keys, space bar, backspace, and punctuation marks like comma, period, and hyphens are functioning smoothly before you start the main examination.';
+const DEFAULT_DEMO_TEXT_HI = 'यह एक डेमो टाइपिंग टेस्ट पैसेज है जिसे आपके कीबोर्ड की प्रतिक्रियाशीलता की जांच करने और आपकी उंगलियों को अभ्यास कराने के लिए बनाया गया है। मुख्य परीक्षा शुरू करने से पहले कृपया सुनिश्चित करें कि सभी अक्षर कुंजी, स्पेस बार, बैकस्पेस और अल्पविराम, पूर्णविराम और हाइफ़न जैसे विराम चिह्न सुचारू रूप से काम कर रहे हैं।';
+const DEFAULT_DEMO_TEXT = DEFAULT_DEMO_TEXT_EN;
 
 const SAMPLE_PASSAGES = [
   {
@@ -77,7 +83,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
   // Search & Filters for Tests
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [languageFilter, setLanguageFilter] = useState<'ALL' | 'en' | 'hi'>('ALL');
 
   // Collapsible Create Test State
@@ -85,20 +91,20 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
   const [testCount, setTestCount] = useState<number>(1);
 
   // Test Form (Used for both Creation & Editing)
-  const getEmptyTestForm = (defaultCatId = '') => ({
+  const getEmptyTestForm = (defaultCatId = '', lang: 'en' | 'hi' = 'en') => ({
     title: '',
     titleHi: '',
     categoryId: defaultCatId,
     passageText: '',
-    demoPassageText: DEFAULT_DEMO_TEXT,
+    demoPassageText: lang === 'hi' ? DEFAULT_DEMO_TEXT_HI : DEFAULT_DEMO_TEXT_EN,
     demoDurationMinutes: 1,
     breakDurationMinutes: 1,
     mainDurationMinutes: 10,
-    qualifyingWpm: 35,
+    qualifyingWpm: lang === 'hi' ? 30 : 35,
     maxErrorPercentage: 5.0,
     enableBackspace: true,
     allowRetype: false,
-    language: 'en' as 'en' | 'hi',
+    language: lang,
     difficulty: 'Medium' as 'Easy' | 'Medium' | 'Hard',
     instructions: 'Standard typing exam simulation. Complete Demo, Break, and Main test.'
   });
@@ -243,12 +249,28 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
     }
   };
 
-  const handleOpenUploadPassage = (test: TypingTest) => {
+  const handleOpenUploadPassage = async (test: TypingTest) => {
+    const isDirectText = test.passageText && !test.passageText.startsWith('tigris') && !test.passageText.startsWith('http');
     setUploadPassageModal({
       isOpen: true,
       test,
-      passageText: test.passageText || ''
+      passageText: isDirectText ? test.passageText : ''
     });
+
+    // If passage is stored in Tigris or omitted in light list, load full content
+    if (!isDirectText && (test.passageText || test.id)) {
+      try {
+        const res = await fetch('/api/db', {
+          method: 'POST',
+          headers: adminHeaders,
+          body: JSON.stringify({ action: 'get-typing-test-by-id', data: { id: test.id } })
+        });
+        const data = await res.json();
+        if (data.success && data.test?.passageText) {
+          setUploadPassageModal(prev => prev && prev.test?.id === test.id ? { ...prev, passageText: data.test.passageText } : prev);
+        }
+      } catch (e) {}
+    }
   };
 
   const handleSaveUploadedPassage = async () => {
@@ -262,6 +284,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
           action: 'edit-typing-test',
           data: {
             id: uploadPassageModal.test.id,
+            categoryId: uploadPassageModal.test.categoryId,
             passageText: uploadPassageModal.passageText.trim()
           }
         })
@@ -281,13 +304,14 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
     }
   };
 
-  const handleOpenEditTest = (test: TypingTest) => {
+  const handleOpenEditTest = async (test: TypingTest) => {
     setEditingTest(test);
+    const isDirectText = test.passageText && !test.passageText.startsWith('tigris') && !test.passageText.startsWith('http');
     setTestForm({
       title: test.title,
       titleHi: test.titleHi || '',
       categoryId: test.categoryId,
-      passageText: test.passageText,
+      passageText: isDirectText ? test.passageText : '',
       demoPassageText: test.demoPassageText || DEFAULT_DEMO_TEXT,
       demoDurationMinutes: test.demoDurationMinutes || 1,
       breakDurationMinutes: test.breakDurationMinutes || 1,
@@ -301,6 +325,20 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       instructions: test.instructions || ''
     });
     setShowEditTestModal(true);
+
+    if (!isDirectText && (test.passageText || test.id)) {
+      try {
+        const res = await fetch('/api/db', {
+          method: 'POST',
+          headers: adminHeaders,
+          body: JSON.stringify({ action: 'get-typing-test-by-id', data: { id: test.id } })
+        });
+        const data = await res.json();
+        if (data.success && data.test?.passageText) {
+          setTestForm(prev => ({ ...prev, passageText: data.test.passageText }));
+        }
+      } catch (e) {}
+    }
   };
 
   const handleSaveEditedTest = async (e: React.FormEvent) => {
@@ -367,6 +405,30 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       }
     } catch (e: any) {
       showToast(e.message || 'Error deleting typing test');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAllTests = async () => {
+    if (!confirm('⚠️ Are you sure you want to delete ALL typing tests? This action cannot be undone.')) return;
+    try {
+      setLoading(true);
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: adminHeaders,
+        body: JSON.stringify({ action: 'delete-all-typing-tests' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`All typing tests deleted successfully (${data.result?.deletedCount ?? 0} tests removed)`);
+        setTests([]);
+        loadAllData();
+      } else {
+        showToast(data.error || 'Failed to delete all typing tests');
+      }
+    } catch (e: any) {
+      showToast(e.message || 'Error deleting all typing tests');
     } finally {
       setLoading(false);
     }
@@ -492,15 +554,31 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
     }
   };
 
-  // Filtered Tests
+  // Filtered Tests - ONLY active when a category is selected
   const filteredTests = useMemo(() => {
+    if (!categoryFilter) return [];
     return tests.filter(test => {
       const matchesSearch = !searchQuery.trim() || test.title.toLowerCase().includes(searchQuery.toLowerCase()) || (test.titleHi && test.titleHi.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesCategory = categoryFilter === 'ALL' || test.categoryId === categoryFilter;
+      const matchesCategory = test.categoryId === categoryFilter;
       const matchesLanguage = languageFilter === 'ALL' || test.language === languageFilter;
       return matchesSearch && matchesCategory && matchesLanguage;
     });
   }, [tests, searchQuery, categoryFilter, languageFilter]);
+
+  // Test count by category map
+  const categoryTestCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    tests.forEach(t => {
+      if (t.categoryId) {
+        map[t.categoryId] = (map[t.categoryId] || 0) + 1;
+      }
+    });
+    return map;
+  }, [tests]);
+
+  const selectedCategoryObj = useMemo(() => {
+    return categories.find(c => c.id === categoryFilter) || null;
+  }, [categories, categoryFilter]);
 
   // Passage word count calculations
   const mainPassageWords = useMemo(() => {
@@ -597,7 +675,12 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
             <button
               type="button"
-              onClick={() => setIsCreateTestOpen(!isCreateTestOpen)}
+              onClick={() => {
+                if (!isCreateTestOpen && categoryFilter && !testForm.categoryId) {
+                  setTestForm(prev => ({ ...prev, categoryId: categoryFilter }));
+                }
+                setIsCreateTestOpen(!isCreateTestOpen);
+              }}
               className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
             >
               <div className="flex items-center gap-3">
@@ -617,38 +700,105 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
             {isCreateTestOpen && (
               <div className="border-t border-slate-200 dark:border-slate-800 p-6">
                 <form onSubmit={handleCreateBatchTests} className="space-y-5">
-                  {/* Category Selector */}
-                  <div>
-                    <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                      Exam Category *
-                    </label>
-                    <select
-                      required
-                      value={testForm.categoryId}
-                      onChange={e => setTestForm({ ...testForm, categoryId: e.target.value })}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
-                    >
-                      <option value="">-- Select Exam Category --</option>
-                      {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name} {cat.nameHi ? `(${cat.nameHi})` : ''}
-                        </option>
-                      ))}
-                    </select>
+                  {/* Category & Section Language Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Category Selector */}
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                        Exam Category *
+                      </label>
+                      <select
+                        required
+                        value={testForm.categoryId}
+                        onChange={e => setTestForm({ ...testForm, categoryId: e.target.value })}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                      >
+                        <option value="">-- Select Exam Category --</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name} {cat.nameHi ? `(${cat.nameHi})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Test Language / Category Section Selector */}
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                        Test Typing Language / Category Section *
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setTestForm(prev => ({
+                            ...prev,
+                            language: 'en',
+                            demoPassageText: DEFAULT_DEMO_TEXT_EN,
+                            qualifyingWpm: prev.qualifyingWpm === 30 ? 35 : prev.qualifyingWpm
+                          }))}
+                          className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition cursor-pointer text-left ${
+                            testForm.language === 'en'
+                              ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
+                              : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'en' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
+                            <Keyboard className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-black flex items-center gap-1">
+                              English Typing
+                              {testForm.language === 'en' && <span className="text-[9px] bg-blue-600 text-white px-1 py-0.2 rounded font-bold">ACTIVE</span>}
+                            </div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                              Shows in English Section
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setTestForm(prev => ({
+                            ...prev,
+                            language: 'hi',
+                            demoPassageText: DEFAULT_DEMO_TEXT_HI,
+                            qualifyingWpm: prev.qualifyingWpm === 35 ? 30 : prev.qualifyingWpm
+                          }))}
+                          className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition cursor-pointer text-left ${
+                            testForm.language === 'hi'
+                              ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
+                              : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'hi' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
+                            <Sparkles className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-black flex items-center gap-1">
+                              हिंदी Typing
+                              {testForm.language === 'hi' && <span className="text-[9px] bg-blue-600 text-white px-1 py-0.2 rounded font-bold">ACTIVE</span>}
+                            </div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                              Shows in Hindi Section
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Test Title & Quantity (Batch Creation matching MockTestManager) */}
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                     <div className="sm:col-span-3">
                       <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                        Test Title (English) * {testCount > 1 && <span className="text-blue-600 dark:text-blue-400 font-normal lowercase">(base title for batch)</span>}
+                        Test Title ({testForm.language === 'hi' ? 'Hindi' : 'English'}) * {testCount > 1 && <span className="text-blue-600 dark:text-blue-400 font-normal lowercase">(base title for batch)</span>}
                       </label>
                       <input
                         type="text"
                         required
                         value={testForm.title}
                         onChange={e => setTestForm({ ...testForm, title: e.target.value })}
-                        placeholder="e.g. SSC CGL Tier-2 DEST Mock Test"
+                        placeholder={testForm.language === 'hi' ? "e.g. SSC CGL Tier-2 Hindi Typing Test" : "e.g. SSC CGL Tier-2 English Typing Test"}
                         className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold font-sans"
                       />
                     </div>
@@ -686,7 +836,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   {testCount > 1 && testForm.title.trim() && (
                     <div className="p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl text-xs text-blue-900 dark:text-blue-200 space-y-1">
                       <div className="font-extrabold flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
-                        <span>⚡ Bulk Creation Preview ({testCount} Typing Tests):</span>
+                        <span>⚡ Bulk Creation Preview ({testCount} Typing Tests in {testForm.language === 'hi' ? 'Hindi' : 'English'} Section):</span>
                       </div>
                       <p className="text-[11px] text-blue-800 dark:text-blue-300 font-medium">
                         Will create tests with titles suffixing 1 to {testCount}:
@@ -706,10 +856,10 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     </div>
                   )}
 
-                  {/* Durations & Settings Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Durations & Criteria Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Demo Time (min)</label>
+                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Demo (min)</label>
                       <input
                         type="number"
                         step="0.5"
@@ -721,7 +871,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Break Time (min)</label>
+                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Break (min)</label>
                       <input
                         type="number"
                         step="0.5"
@@ -744,23 +894,33 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
                       />
                     </div>
-                  </div>
-
-                  {/* Language & Difficulty */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Keyboard Language</label>
-                      <select
-                        value={testForm.language}
-                        onChange={e => setTestForm({ ...testForm, language: e.target.value as any })}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
-                      >
-                        <option value="en">English (QWERTY)</option>
-                        <option value="hi">Hindi (Mangal / Inscript / Remington)</option>
-                      </select>
+                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Target Speed (WPM)</label>
+                      <input
+                        type="number"
+                        min={10}
+                        max={120}
+                        required
+                        value={testForm.qualifyingWpm}
+                        onChange={e => setTestForm({ ...testForm, qualifyingWpm: Number(e.target.value) })}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                      />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Passage Difficulty</label>
+                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Max Error %</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min={0}
+                        max={100}
+                        required
+                        value={testForm.maxErrorPercentage}
+                        onChange={e => setTestForm({ ...testForm, maxErrorPercentage: Number(e.target.value) })}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Difficulty</label>
                       <select
                         value={testForm.difficulty}
                         onChange={e => setTestForm({ ...testForm, difficulty: e.target.value as any })}
@@ -833,26 +993,8 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     </label>
                   </div>
 
-                  {/* Passages Section */}
-                  <div className="space-y-4 pt-1 border-t border-slate-200 dark:border-slate-800">
-                    <h4 className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Passage Configuration
-                    </h4>
-
-                    {/* Warm-Up Demo Passage */}
-                    <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1.5">
-                        Demo Passage (Warm-Up Keyboard Check)
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={testForm.demoPassageText}
-                        onChange={e => setTestForm({ ...testForm, demoPassageText: e.target.value })}
-                        className="w-full p-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-mono font-medium"
-                      />
-                    </div>
-
-                    {/* Main Exam Passage Notice Card */}
+                  {/* Main Exam Passage Notice Card */}
+                  <div className="pt-1 border-t border-slate-200 dark:border-slate-800">
                     <div className="p-4 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-xl flex items-start gap-3">
                       <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5">
                         <Upload className="w-4 h-4" />
@@ -902,7 +1044,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search typing tests by title..."
+                placeholder={categoryFilter ? `Search tests in ${selectedCategoryObj?.name || 'category'}...` : "Search exam categories..."}
                 className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
               />
             </div>
@@ -913,51 +1055,230 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                 onChange={e => setCategoryFilter(e.target.value)}
                 className="px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer focus:outline-none"
               >
-                <option value="ALL">All Categories ({tests.length})</option>
+                <option value="">-- Select Exam Category ({categories.length}) --</option>
                 {categories.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({categoryTestCounts[c.id] || 0} tests)
+                  </option>
                 ))}
               </select>
 
-              <select
-                value={languageFilter}
-                onChange={e => setLanguageFilter(e.target.value as any)}
-                className="px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer focus:outline-none"
-              >
-                <option value="ALL">All Languages</option>
-                <option value="en">English (QWERTY)</option>
-                <option value="hi">Hindi</option>
-              </select>
+              {categoryFilter && (
+                <select
+                  value={languageFilter}
+                  onChange={e => setLanguageFilter(e.target.value as any)}
+                  className="px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer focus:outline-none"
+                >
+                  <option value="ALL">All Languages</option>
+                  <option value="en">English (QWERTY)</option>
+                  <option value="hi">Hindi</option>
+                </select>
+              )}
 
-              {(searchQuery || categoryFilter !== 'ALL' || languageFilter !== 'ALL') && (
+              {(searchQuery || categoryFilter || languageFilter !== 'ALL') && (
                 <button
                   onClick={() => {
                     setSearchQuery('');
-                    setCategoryFilter('ALL');
+                    setCategoryFilter('');
                     setLanguageFilter('ALL');
                   }}
                   className="px-2.5 py-1.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg font-bold flex items-center gap-1 cursor-pointer"
+                  title="Reset category and search"
                 >
                   <X className="w-3.5 h-3.5" /> Clear
                 </button>
               )}
 
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
-                {filteredTests.length} test{filteredTests.length !== 1 ? 's' : ''} shown
-              </span>
+              {categoryFilter ? (
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                  {filteredTests.length} test{filteredTests.length !== 1 ? 's' : ''} in category
+                </span>
+              ) : (
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-900/60">
+                  {categories.length} Categories Available
+                </span>
+              )}
             </div>
           </div>
 
-          {/* TYPING TESTS LIST FORMAT (Styled Like MockTestManager Card-Row List) */}
-          <div className="space-y-3">
-            {filteredTests.length === 0 ? (
-              <div className="bg-white dark:bg-slate-950 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
-                <FileText className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
-                <p className="font-bold text-slate-600 dark:text-slate-400">No typing tests found</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Use the search filters above or expand "Create New Typing Test" to add one</p>
+          {/* CATEGORY SELECTION VIEW (Shown when no category is selected yet) */}
+          {!categoryFilter && (
+            <div className="space-y-4">
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50/50 to-slate-50 dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-950 border border-blue-200/80 dark:border-blue-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+                    <Folder className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                      Select an Exam Category to View Typing Tests
+                    </h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                      Choose an exam category below or from the dropdown above to view, edit passages, and manage its typing tests.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs font-black bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+                    Total: <strong>{tests.length}</strong> Tests · <strong>{categories.length}</strong> Categories
+                  </span>
+                </div>
               </div>
-            ) : (
-              filteredTests.map((test, index) => {
+
+              {/* Category Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {categories
+                  .filter(c => !searchQuery.trim() || c.name.toLowerCase().includes(searchQuery.toLowerCase()) || (c.nameHi && c.nameHi.toLowerCase().includes(searchQuery.toLowerCase())))
+                  .map(cat => {
+                    const count = categoryTestCounts[cat.id] || 0;
+                    return (
+                      <div
+                        key={cat.id}
+                        onClick={() => {
+                          setCategoryFilter(cat.id);
+                          setSearchQuery('');
+                        }}
+                        className="group bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {cat.logoUrl ? (
+                              <img
+                                src={cat.logoUrl}
+                                alt={cat.name}
+                                className="w-11 h-11 rounded-xl object-contain p-1 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shrink-0"
+                              />
+                            ) : (
+                              <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-black text-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <Keyboard className="w-5 h-5" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                                {cat.name}
+                              </h4>
+                              {cat.nameHi && (
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                                  {cat.nameHi}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shrink-0">
+                            {count} {count === 1 ? 'Test' : 'Tests'}
+                          </span>
+                        </div>
+
+                        {cat.description && (
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            {cat.description}
+                          </p>
+                        )}
+
+                        <div className="pt-2 border-t border-slate-100 dark:border-slate-900 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
+                          <span>View {count} Tests</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
+          {/* ACTIVE CATEGORY BANNER (Shown when a category is selected) */}
+          {categoryFilter && selectedCategoryObj && (
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCategoryFilter('');
+                    setSearchQuery('');
+                  }}
+                  className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shrink-0 transition"
+                  title="Back to All Categories"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>All Categories</span>
+                </button>
+
+                <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0 hidden sm:inline-block" />
+
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {selectedCategoryObj.logoUrl ? (
+                    <img
+                      src={selectedCategoryObj.logoUrl}
+                      alt={selectedCategoryObj.name}
+                      className="w-9 h-9 rounded-xl object-contain p-1 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                      <Keyboard className="w-5 h-5" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                        {selectedCategoryObj.name}
+                      </h3>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                        {filteredTests.length} {filteredTests.length === 1 ? 'Test' : 'Tests'}
+                      </span>
+                    </div>
+                    {selectedCategoryObj.nameHi && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        {selectedCategoryObj.nameHi}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTestForm(getEmptyTestForm(selectedCategoryObj.id));
+                    setIsCreateTestOpen(true);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Test to {selectedCategoryObj.name}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TYPING TESTS LIST FORMAT (Only shown when a category is selected) */}
+          {categoryFilter && (
+            <div className="space-y-3">
+              {filteredTests.length === 0 ? (
+                <div className="bg-white dark:bg-slate-950 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
+                  <FileText className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
+                  <p className="font-bold text-slate-600 dark:text-slate-400">
+                    No typing tests found in {selectedCategoryObj?.name || 'this category'}
+                  </p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                    Click "Create New Typing Test" above to add tests to this category.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTestForm(getEmptyTestForm(selectedCategoryObj?.id || ''));
+                      setIsCreateTestOpen(true);
+                    }}
+                    className="mt-4 px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs inline-flex items-center gap-2 cursor-pointer hover:bg-blue-700 transition"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create First Test for {selectedCategoryObj?.name}
+                  </button>
+                </div>
+              ) : (
+                filteredTests.map((test, index) => {
                 const cat = categories.find(c => c.id === test.categoryId);
                 const passageWordCount = test.passageText ? test.passageText.trim().split(/\s+/).length : 0;
                 const isBackspaceAllowed = test.enableBackspace !== false && test.backspaceRule !== 'DISABLED';
@@ -1035,6 +1356,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                               <AlertCircle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                               ⚠️ Passage Pending
                             </span>
+                          ) : test.passageText.startsWith('tigris') || test.passageText.startsWith('http') ? (
+                            <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-900 px-2 py-0.5 rounded-md font-bold text-emerald-700 dark:text-emerald-300 text-[10px]">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                              Passage in Tigris Cloud
+                            </span>
                           ) : (
                             <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-900 px-2 py-0.5 rounded-md font-bold text-emerald-700 dark:text-emerald-300 text-[10px]">
                               <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
@@ -1096,6 +1422,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
               })
             )}
           </div>
+          )}
         </div>
       )}
 
@@ -1329,31 +1656,94 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
             </div>
 
             <form onSubmit={handleSaveEditedTest} className="space-y-5">
-              {/* Category Selector */}
-              <div>
-                <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                  Exam Category *
-                </label>
-                <select
-                  required
-                  value={testForm.categoryId}
-                  onChange={e => setTestForm({ ...testForm, categoryId: e.target.value })}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
-                >
-                  <option value="">-- Select Exam Category --</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} {c.nameHi ? `(${c.nameHi})` : ''}
-                    </option>
-                  ))}
-                </select>
+              {/* Category & Section Language Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Category Selector */}
+                <div>
+                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Exam Category *
+                  </label>
+                  <select
+                    required
+                    value={testForm.categoryId}
+                    onChange={e => setTestForm({ ...testForm, categoryId: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                  >
+                    <option value="">-- Select Exam Category --</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} {c.nameHi ? `(${c.nameHi})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Section / Language Switcher */}
+                <div>
+                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Test Language / Category Section *
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTestForm(prev => ({
+                        ...prev,
+                        language: 'en',
+                        demoPassageText: DEFAULT_DEMO_TEXT_EN
+                      }))}
+                      className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition cursor-pointer text-left ${
+                        testForm.language === 'en'
+                          ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
+                          : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'en' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
+                        <Keyboard className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-black flex items-center gap-1">
+                          English Typing
+                        </div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                          English Section
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setTestForm(prev => ({
+                        ...prev,
+                        language: 'hi',
+                        demoPassageText: DEFAULT_DEMO_TEXT_HI
+                      }))}
+                      className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition cursor-pointer text-left ${
+                        testForm.language === 'hi'
+                          ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
+                          : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'hi' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-black flex items-center gap-1">
+                          हिंदी Typing
+                        </div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                          Hindi Section
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Title Inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                    Test Title (English) *
+                    Test Title ({testForm.language === 'hi' ? 'Hindi' : 'English'}) *
                   </label>
                   <input
                     type="text"
@@ -1377,7 +1767,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
               </div>
 
               {/* Durations & Criteria Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div>
                   <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Demo (min)</label>
                   <input
@@ -1414,20 +1804,30 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
                   />
                 </div>
-              </div>
-
-              {/* Language & Difficulty */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Language</label>
-                  <select
-                    value={testForm.language}
-                    onChange={e => setTestForm({ ...testForm, language: e.target.value as any })}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer font-semibold"
-                  >
-                    <option value="en">English (QWERTY)</option>
-                    <option value="hi">Hindi</option>
-                  </select>
+                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Target Speed (WPM)</label>
+                  <input
+                    type="number"
+                    min={10}
+                    max={120}
+                    required
+                    value={testForm.qualifyingWpm}
+                    onChange={e => setTestForm({ ...testForm, qualifyingWpm: Number(e.target.value) })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Max Error %</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min={0}
+                    max={100}
+                    required
+                    value={testForm.maxErrorPercentage}
+                    onChange={e => setTestForm({ ...testForm, maxErrorPercentage: Number(e.target.value) })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                  />
                 </div>
                 <div>
                   <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Difficulty</label>

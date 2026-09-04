@@ -1,3 +1,6 @@
+import { evaluateTypingTest } from './typing';
+import type { AlignedWord as EngineAlignedWord, MistakeDetail as EngineMistake } from './typing';
+
 export interface TypingCategory {
   id: string;
   name: string;
@@ -103,214 +106,721 @@ export interface TypingAttempt {
 }
 
 // ===================================================================================
-// OFFICIAL RRB NTPC / SSC / TCS-iON TYPING EVALUATION ENGINE
-//
-// Formulas (verified against rrbntpctypingtest.unlimitededucation.in — all numbers
-// cross-checked to 2 decimal places against a live result screenshot):
-//
-//   Total Words Typed  = Keystrokes / 5            (unrounded, e.g. 380.6)
-//   Gross WPM          = (Keystrokes / 5) / Time
-//   Mistakes           = Full Errors + (Half Errors / 2)
-//   Permissible (5%)   = 5% × (Keystrokes / 5)     (uses UNROUNDED words, e.g. 19.03)
-//   Remaining          = max(0, Mistakes - Permissible)
-//   Penalty (words)    = Remaining × 10
-//   Net Words          = (Keystrokes / 5) - Penalty
-//   Net WPM            = Net Words / Time
-//   Error %            = (Mistakes / TotalWordsTyped) × 100
-//   Accuracy           = 100 - Error %              ← NOT Net/Gross × 100
-//
-// Verified example (from reference screenshot):
-//   Keystrokes=1903, Time=10min, Full Errors=43, Half Errors=0
-//   Total Words = 380.60 | Gross WPM = 38.06
-//   Permissible = 19.03  | Total Mistakes = 43
-//   Remaining = 23.97    | Penalty = 239.70 words
-//   Net Words = 140.90   | Net WPM = 14.09
-//   Error % = 11.30%     | Accuracy = 88.70%
-//
-// Error Categories:
-//   Full Errors (1.0 each):
-//     - Spelling/Substitution (wrong word / misspelling)
-//     - Omission (word not typed)
-//     - Extra Word (typed beyond passage)
-//   Half Errors (0.5 each):
-//     - Capitalization (same word, different case)
-//     - Punctuation (only punctuation mark differs)
-//     - Transposition (two adjacent words swapped)
-//     - Spacing (words joined together or split)
+// ALL 39 EXAM CATEGORIES REGISTRY & EVALUATION CONFIGURATIONS
 // ===================================================================================
 
+export type ExamCategoryKey =
+  | 'ssc-cgl'
+  | 'ssc-cgl-previous'
+  | 'ssc-chsl'
+  | 'rrb-ntpc'
+  | 'dsssb-jsa'
+  | 'dsssb-it-assistant'
+  | 'dsssb-steno'
+  | 'kvs-jsa'
+  | 'emrs-jsa'
+  | 'nvs-jsa'
+  | 'csir-jsa'
+  | 'csir-formula'
+  | 'cbse-jsa'
+  | 'cbse-superintendent'
+  | 'bsf-hcm'
+  | 'aiims-cre'
+  | 'upsssc-ja'
+  | 'upsssc-ja-hindi'
+  | 'delhi-police-hcm'
+  | 'delhi-police-awo-tpo'
+  | 'dda-jsa'
+  | 'dda-steno'
+  | 'ccras-ldc-udc'
+  | 'rssb-ldc'
+  | 'up-police-co'
+  | 'supreme-court-jca'
+  | 'mp-cpct'
+  | 'allahabad-hc'
+  | 'delhi-hc-jja'
+  | 'bombay-hc-clerk'
+  | 'bombay-hc-clerk-400'
+  | 'chandigarh-admin-clerk'
+  | 'rajasthan-rvunl'
+  | 'punjab-haryana-hc'
+  | 'spmcil'
+  | 'ssb-hcm'
+  | 'uttrakhand-hc'
+  | 'jharkhand-hc'
+  | 'quick-brown-fox'
+  | 'standard';
+
+export interface ExamCategoryConfig {
+  key: ExamCategoryKey;
+  name: string;
+  slug: string;
+  description: string;
+  standardDurationMinutes: number;
+  qualifyingSpeed: { en: number; hi: number };
+  kdphTarget?: { en: number; hi: number };
+  evaluationMode:
+    | 'SSC_CGL_DEST'
+    | 'SSC_CHSL_NET'
+    | 'RRB_NTPC_PENALTY'
+    | 'AIIMS_CRE_STROKES'
+    | 'DELHI_POLICE_HCM_MARKS'
+    | 'ALLAHABAD_HC_MARKS'
+    | 'RSSB_LDC_MARKS'
+    | 'MP_CPCT_SCALED'
+    | 'DELHI_HC_ROUNDING'
+    | 'SUPREME_COURT_JCA'
+    | 'SPMCIL_PERMISSIBLE'
+    | 'BSF_HCM_TOLERANCE'
+    | 'UP_POLICE_ACCURACY'
+    | 'UPSSSC_JA_STRICT'
+    | 'BOMBAY_HC_MARKS'
+    | 'CHANDIGARH_ADMIN_FULL_ERRORS'
+    | 'DP_AWO_TPO'
+    | 'STANDARD_NET_SPEED';
+  retypeAllowed?: boolean;
+}
+
+export const EXAM_CATEGORIES: Record<ExamCategoryKey, ExamCategoryConfig> = {
+  'ssc-chsl': {
+    key: 'ssc-chsl',
+    name: 'SSC CHSL TYPING',
+    slug: 'ssc-chsl-typing',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi), Net Speed & Error % evaluation. UR/EWS <= 7%, Reserved <= 10%.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    kdphTarget: { en: 10500, hi: 9000 },
+    evaluationMode: 'SSC_CHSL_NET'
+  },
+  'ssc-cgl': {
+    key: 'ssc-cgl',
+    name: 'SSC CGL Typing',
+    slug: 'ssc-cgl-typing',
+    description: '15 min DEST test, ~2000 keystrokes (~400 words), qualifying on Error %. UR <= 20%, OBC/EWS <= 25%, SC/ST <= 30%.',
+    standardDurationMinutes: 15,
+    qualifyingSpeed: { en: 27, hi: 25 },
+    evaluationMode: 'SSC_CGL_DEST'
+  },
+  'ssc-cgl-previous': {
+    key: 'ssc-cgl-previous',
+    name: 'SSC CGL Previous Year Typing',
+    slug: 'ssc-cgl-previous-year-typing',
+    description: '15 min DEST test, ~2000 keystrokes (~400 words), qualifying on Error %. UR <= 20%, OBC/EWS <= 25%, SC/ST <= 30%.',
+    standardDurationMinutes: 15,
+    qualifyingSpeed: { en: 27, hi: 25 },
+    evaluationMode: 'SSC_CGL_DEST'
+  },
+  'rrb-ntpc': {
+    key: 'rrb-ntpc',
+    name: 'RRB NTPC TYPING',
+    slug: 'rrb-ntpc-typing',
+    description: '10 min test, 30 WPM (En) / 25 WPM (Hi). 5% Permissible margin, excess mistakes penalized by 10 words. Retype allowed.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 30, hi: 25 },
+    evaluationMode: 'RRB_NTPC_PENALTY',
+    retypeAllowed: true
+  },
+  'dsssb-jsa': {
+    key: 'dsssb-jsa',
+    name: 'DSSSB JSA TYPING',
+    slug: 'dsssb-jsa-typing',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi), 10,500 KDPH / 9,000 KDPH. Net speed evaluated.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    kdphTarget: { en: 10500, hi: 9000 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'kvs-jsa': {
+    key: 'kvs-jsa',
+    name: 'KVS JSA TYPING',
+    slug: 'kvs-jsa-typing',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Net WPM evaluation.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'emrs-jsa': {
+    key: 'emrs-jsa',
+    name: 'EMRS JSA TYPING',
+    slug: 'emrs-jsa-typing',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Net speed & accuracy evaluated.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'nvs-jsa': {
+    key: 'nvs-jsa',
+    name: 'NVS JSA TYPING',
+    slug: 'nvs-jsa-typing',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Net speed & accuracy evaluated.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    kdphTarget: { en: 10500, hi: 9000 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'csir-jsa': {
+    key: 'csir-jsa',
+    name: 'CSIR JSA TYPING',
+    slug: 'csir-jsa-typing',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Kruti Dev for Hindi.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'csir-formula': {
+    key: 'csir-formula',
+    name: 'CSIR EXAM New Rules(FORMULA)',
+    slug: 'csir-exam-new-rules(formula)',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Strict punctuation and spacing rules.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'cbse-jsa': {
+    key: 'cbse-jsa',
+    name: 'CBSE JSA Typing',
+    slug: 'cbse-jsa-typing',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). 10,500 KDPH / 9,000 KDPH.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    kdphTarget: { en: 10500, hi: 9000 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'cbse-superintendent': {
+    key: 'cbse-superintendent',
+    name: 'CBSE Superintendent Typing',
+    slug: 'cbse-superintendent-typing',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). 10,500 KDPH / 9,000 KDPH.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    kdphTarget: { en: 10500, hi: 9000 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'bsf-hcm': {
+    key: 'bsf-hcm',
+    name: 'BSF HCM Typing',
+    slug: 'bsf-hcm-typing',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). 5% error tolerance, 10-word penalty for each mistake beyond 5%.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    kdphTarget: { en: 10500, hi: 9000 },
+    evaluationMode: 'BSF_HCM_TOLERANCE'
+  },
+  'aiims-cre': {
+    key: 'aiims-cre',
+    name: 'AIIMS CRE LDC UDC DEO Typing',
+    slug: 'aiims-cre-ldc-udc-deo-typing',
+    description: '15 min test, 35 WPM (En) / 30 WPM (Hi). Official CRE-5 Penalty: 50 strokes per mistake, Divisor 75 (5x15), Accuracy = (Net/Gross)*100.',
+    standardDurationMinutes: 15,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    kdphTarget: { en: 10500, hi: 9000 },
+    evaluationMode: 'AIIMS_CRE_STROKES'
+  },
+  'upsssc-ja': {
+    key: 'upsssc-ja',
+    name: 'UPSSSC Junior Assistant Typing',
+    slug: 'upsssc-junior-assistant-typing',
+    description: '5 min English (30 WPM) + 5 min Hindi (25 WPM). Strict 5% error penalty system, 85% min accuracy.',
+    standardDurationMinutes: 5,
+    qualifyingSpeed: { en: 30, hi: 25 },
+    evaluationMode: 'UPSSSC_JA_STRICT'
+  },
+  'upsssc-ja-hindi': {
+    key: 'upsssc-ja-hindi',
+    name: 'UPSSSC JA Hindi Typing',
+    slug: 'upsssc-ja-hindi-typing',
+    description: '5 min Hindi (25 WPM). Mangal Inscript / Kruti Dev 010. Strict 5% error penalty system.',
+    standardDurationMinutes: 5,
+    qualifyingSpeed: { en: 30, hi: 25 },
+    evaluationMode: 'UPSSSC_JA_STRICT'
+  },
+  'delhi-police-hcm': {
+    key: 'delhi-police-hcm',
+    name: 'Delhi Police HCM Typing',
+    slug: 'delhi-police-hcm-typing',
+    description: '10 min test (400 words En / 350 words Hi). 1 WPM deducted per mistake. Max 25 Marks scored from speed scale (30 WPM = 10 marks, >50 WPM = 25 marks).',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 30, hi: 25 },
+    evaluationMode: 'DELHI_POLICE_HCM_MARKS'
+  },
+  'delhi-police-awo-tpo': {
+    key: 'delhi-police-awo-tpo',
+    name: 'Delhi Police AWO TPO Typing',
+    slug: 'delhi-police-awo-tpo-typing',
+    description: '15 min test, 1,000 key depressions target (4,000 KDPH / ~13-15 WPM), min 85% accuracy.',
+    standardDurationMinutes: 15,
+    qualifyingSpeed: { en: 15, hi: 15 },
+    kdphTarget: { en: 4000, hi: 4000 },
+    evaluationMode: 'DP_AWO_TPO'
+  },
+  'dda-jsa': {
+    key: 'dda-jsa',
+    name: 'DDA JSA Typing',
+    slug: 'dda-jsa-typing',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Net WPM qualifying evaluation.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'dda-steno': {
+    key: 'dda-steno',
+    name: 'DDA Stenographer Typing',
+    slug: 'dda-stenographer-typing',
+    description: '10 min test, 40 WPM (En) / 35 WPM (Hi). Net WPM qualifying evaluation.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 40, hi: 35 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'ccras-ldc-udc': {
+    key: 'ccras-ldc-udc',
+    name: 'CCRAS LDC UDC Typing',
+    slug: 'ccras-ldc-udc-typing',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Net WPM qualifying evaluation.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'rssb-ldc': {
+    key: 'rssb-ldc',
+    name: 'RSSB LDC Typing',
+    slug: 'rssb-ldc-typing',
+    description: '10 min test, 25 Marks per section. English: 500 words @ 0.05 marks/correct word. Hindi: 400 words @ 0.0625 marks/correct word. Min 9.0 marks (36%) to qualify.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 28, hi: 25 },
+    evaluationMode: 'RSSB_LDC_MARKS'
+  },
+  'up-police-co': {
+    key: 'up-police-co',
+    name: 'UP Police Computer Operator Typing',
+    slug: 'up-police-computer-operator-typing',
+    description: '15 min test, 30 WPM (En) / 25 WPM (Hi), minimum 85.00% accuracy strictly mandatory to qualify.',
+    standardDurationMinutes: 15,
+    qualifyingSpeed: { en: 30, hi: 25 },
+    evaluationMode: 'UP_POLICE_ACCURACY'
+  },
+  'dsssb-it-assistant': {
+    key: 'dsssb-it-assistant',
+    name: 'DSSSB Computer Lab ( IT Assistant) Typing',
+    slug: 'dsssb-computer-lab-it-assistant-typing',
+    description: '10 min test, 26.67 WPM required.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 26.67, hi: 26.67 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'dsssb-steno': {
+    key: 'dsssb-steno',
+    name: 'DSSSB Stenographer Typing',
+    slug: 'dsssb-stenographer-typing',
+    description: '10 min test, 40 WPM (En) / 30 WPM (Hi).',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 40, hi: 30 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'quick-brown-fox': {
+    key: 'quick-brown-fox',
+    name: 'Quick Brown Fox',
+    slug: 'quick-brown-fox',
+    description: 'Touch typing practice on pangrams, home-row accuracy and speed.',
+    standardDurationMinutes: 5,
+    qualifyingSpeed: { en: 30, hi: 25 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'supreme-court-jca': {
+    key: 'supreme-court-jca',
+    name: 'Supreme Court Junior Court Assistant (JCA) Typing',
+    slug: 'supreme-court-junior-court-assistant-jca-typing',
+    description: '10 min test, 35 WPM in English. Max 3.0% permissible mistakes allowed.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    evaluationMode: 'SUPREME_COURT_JCA'
+  },
+  'mp-cpct': {
+    key: 'mp-cpct',
+    name: 'MP CPCT Typing',
+    slug: 'mp-cpct-typing',
+    description: '15 min test, 30 NWPM (En) / 20 NWPM (Hi). Scaled Score % from 50% to 100% based on NWPM.',
+    standardDurationMinutes: 15,
+    qualifyingSpeed: { en: 30, hi: 20 },
+    evaluationMode: 'MP_CPCT_SCALED'
+  },
+  'allahabad-hc': {
+    key: 'allahabad-hc',
+    name: 'Allahabad Highcourt RO / ARO Typing',
+    slug: 'allahabad-highcourt-ro-aro-typing',
+    description: '500 words passage, 25 WPM. Max 50 Marks, 0.1 mark deducted per mistake, min 25.0 Marks (50%) to qualify.',
+    standardDurationMinutes: 15,
+    qualifyingSpeed: { en: 25, hi: 25 },
+    evaluationMode: 'ALLAHABAD_HC_MARKS'
+  },
+  'uttrakhand-hc': {
+    key: 'uttrakhand-hc',
+    name: 'Uttrakhand High Court Typing',
+    slug: 'uttrakhand-high-court-typing',
+    description: '10 min test, 30 WPM (En) / 25 WPM (Hi). Net WPM qualifying evaluation.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 30, hi: 25 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'jharkhand-hc': {
+    key: 'jharkhand-hc',
+    name: 'Jharkhand High Court Typing',
+    slug: 'jharkhand-high-court-typing',
+    description: '10 min test, 30 WPM. Net WPM qualifying evaluation.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 30, hi: 25 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'delhi-hc-jja': {
+    key: 'delhi-hc-jja',
+    name: 'Delhi High Court (DHC) JJA Typing',
+    slug: 'delhi-high-court-dhc-jja-typing',
+    description: '10 min test, 35 WPM. 3% permissible mistakes with exact 0.5 (0.01-0.49) / 1.0 (0.51-0.99) rounding rule.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    evaluationMode: 'DELHI_HC_ROUNDING'
+  },
+  'bombay-hc-clerk': {
+    key: 'bombay-hc-clerk',
+    name: 'Bombay High Court Clerk Typing',
+    slug: 'bombay-high-court-clerk-typing',
+    description: '10 min test, 400 words passage, 40 WPM. Max 20 Marks, min 10.0 Marks to qualify.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 40, hi: 30 },
+    evaluationMode: 'BOMBAY_HC_MARKS'
+  },
+  'bombay-hc-clerk-400': {
+    key: 'bombay-hc-clerk-400',
+    name: 'Bombay High Court Clerk Typing 400 Words',
+    slug: 'bombay-high-court-clerk-typing-400-words',
+    description: '10 min test, 400 words passage, 40 WPM. Max 20 Marks, min 10.0 Marks to qualify.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 40, hi: 30 },
+    evaluationMode: 'BOMBAY_HC_MARKS'
+  },
+  'chandigarh-admin-clerk': {
+    key: 'chandigarh-admin-clerk',
+    name: 'Chandigarh Administration Clerk Typing',
+    slug: 'chandigarh-administration-clerk-typing',
+    description: '10 min test, 35 WPM. All errors counted as full errors.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    evaluationMode: 'CHANDIGARH_ADMIN_FULL_ERRORS'
+  },
+  'rajasthan-rvunl': {
+    key: 'rajasthan-rvunl',
+    name: 'Rajasthan RVUNL Junior Assistant Typing',
+    slug: 'rajasthan-rvunl-junior-assistant-typing',
+    description: '10 min test, 20 WPM in Hindi (Devanagari) and English.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 20, hi: 20 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'punjab-haryana-hc': {
+    key: 'punjab-haryana-hc',
+    name: 'Punjab Haryana High Court Typing',
+    slug: 'punjab-haryana-high-court-typing',
+    description: '10 min test, 30 WPM qualifying speed.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 30, hi: 25 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'spmcil': {
+    key: 'spmcil',
+    name: 'SPMCIL Typing',
+    slug: 'spmcil-typing',
+    description: '10 min test, 40 WPM (En) / 30 WPM (Hi). Permissible margin: 5% for UR, 7% for Reserved. 10x penalty for excess.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 40, hi: 30 },
+    evaluationMode: 'SPMCIL_PERMISSIBLE'
+  },
+  'ssb-hcm': {
+    key: 'ssb-hcm',
+    name: 'SSB HCM Typing',
+    slug: 'ssb-hcm-typing',
+    description: '10 min test, 35 WPM (1,750 key depressions) En / 30 WPM (1,500 key depressions) Hi.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    kdphTarget: { en: 10500, hi: 9000 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  },
+  'standard': {
+    key: 'standard',
+    name: 'Standard Typing Test',
+    slug: 'standard-typing',
+    description: 'Standard typing evaluation based on Gross WPM, Net WPM, and Accuracy.',
+    standardDurationMinutes: 10,
+    qualifyingSpeed: { en: 35, hi: 30 },
+    evaluationMode: 'STANDARD_NET_SPEED'
+  }
+};
+
 /**
- * Aligns original and typed word sequences using Levenshtein DP.
- * This correctly handles omissions and insertions without cascading wrong errors.
+ * Detect exam category from any test or category object or identifier string.
  */
-function alignWordSequences(
-  origWords: string[],
-  typedWords: string[]
-): Array<{ orig: string | null; typed: string | null }> {
-  const n = origWords.length;
-  const m = typedWords.length;
+export function detectExamCategory(
+  testOrCat?: { categoryId?: string; title?: string; categoryName?: string; id?: string; name?: string; slug?: string } | string | null
+): ExamCategoryConfig {
+  if (!testOrCat) return EXAM_CATEGORIES['standard'];
 
-  if (n === 0 && m === 0) return [];
-  if (n === 0) return typedWords.map(w => ({ orig: null, typed: w }));
-  if (m === 0) return origWords.map(w => ({ orig: w, typed: null }));
-
-  // Build DP cost table
-  const dp: number[][] = [];
-  for (let i = 0; i <= n; i++) {
-    dp[i] = new Array(m + 1).fill(0);
-    dp[i][0] = i;
-  }
-  for (let j = 0; j <= m; j++) dp[0][j] = j;
-
-  for (let i = 1; i <= n; i++) {
-    for (let j = 1; j <= m; j++) {
-      // Case-insensitive match = 0 cost (we'll classify details later)
-      const matchCost = origWords[i - 1].toLowerCase() === typedWords[j - 1].toLowerCase() ? 0 : 1;
-      // Slight tie-breaker to prefer matching earlier target positions sequentially:
-      const tieBreaker = matchCost === 0 ? (i - 1) * 0.0001 : 0;
-      dp[i][j] = Math.min(
-        dp[i - 1][j - 1] + matchCost + tieBreaker, // substitute / match
-        dp[i - 1][j] + 1,                          // omission (orig not typed)
-        dp[i][j - 1] + 1                           // extra (typed extra word)
-      );
-    }
-  }
-
-  // Traceback to build alignment
-  const result: Array<{ orig: string | null; typed: string | null }> = [];
-  let i = n;
-  let j = m;
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0) {
-      const matchCost = origWords[i - 1].toLowerCase() === typedWords[j - 1].toLowerCase() ? 0 : 1;
-      const tieBreaker = matchCost === 0 ? (i - 1) * 0.0001 : 0;
-      const diag = dp[i - 1][j - 1] + matchCost + tieBreaker;
-      const up = dp[i - 1][j] + 1;
-      if (Math.abs(dp[i][j] - diag) < 0.00001) {
-        result.unshift({ orig: origWords[i - 1], typed: typedWords[j - 1] });
-        i--;
-        j--;
-      } else if (Math.abs(dp[i][j] - up) < 0.00001) {
-        result.unshift({ orig: origWords[i - 1], typed: null }); // omission
-        i--;
-      } else {
-        result.unshift({ orig: null, typed: typedWords[j - 1] }); // extra word
-        j--;
-      }
-    } else if (i > 0) {
-      result.unshift({ orig: origWords[i - 1], typed: null });
-      i--;
-    } else {
-      result.unshift({ orig: null, typed: typedWords[j - 1] });
-      j--;
-    }
-  }
-
-  return result;
-}
-
-/** Removes common punctuation for punctuation-error detection */
-function stripPunct(s: string): string {
-  return s.replace(/[.,!?;:'"()\-–—]/g, '');
-}
-
-type ErrorType =
-  | 'CORRECT'
-  | 'CAPITALIZATION'
-  | 'PUNCTUATION'
-  | 'TRANSPOSITION'
-  | 'SPACING'
-  | 'SUBSTITUTION'
-  | 'OMISSION'
-  | 'EXTRA';
-
-interface ClassifiedPair {
-  orig: string | null;
-  typed: string | null;
-  errorType: ErrorType;
-  status: AlignedWord['status'];
-  reason?: string;
-}
-
-/**
- * Helper to identify if a test or category belongs to SSC CGL (Tier-2 DEST) or SSC CHSL (DEO / LDC).
- */
-export function isSscExam(testOrCat?: { categoryId?: string; title?: string; categoryName?: string } | string | null): boolean {
-  if (!testOrCat) return false;
+  let s = '';
   if (typeof testOrCat === 'string') {
-    const s = testOrCat.toLowerCase();
-    return s.includes('cat-ssc-cgl') || s.includes('cat-ssc-chsl') || s.includes('ssc cgl') || s.includes('ssc chsl') || s.includes('dest') || s.includes('deo') || s.includes('ldc');
+    s = testOrCat.toLowerCase();
+  } else {
+    s = `${testOrCat.categoryId || ''} ${testOrCat.id || ''} ${testOrCat.slug || ''} ${testOrCat.title || ''} ${testOrCat.name || ''} ${testOrCat.categoryName || ''}`.toLowerCase();
   }
-  const id = (testOrCat.categoryId || '').toLowerCase();
-  const title = (testOrCat.title || '').toLowerCase();
-  const catName = (testOrCat.categoryName || '').toLowerCase();
-  return (
-    id === 'cat-ssc-cgl' ||
-    id === 'cat-ssc-chsl' ||
-    id.includes('cgl') ||
-    id.includes('chsl') ||
-    title.includes('ssc cgl') ||
-    title.includes('ssc chsl') ||
-    title.includes('dest') ||
-    title.includes('deo') ||
-    title.includes('ldc') ||
-    catName.includes('ssc cgl') ||
-    catName.includes('ssc chsl')
-  );
+
+  if (s.includes('aiims') || s.includes('cre-5')) return EXAM_CATEGORIES['aiims-cre'];
+  if (s.includes('rrb') || s.includes('ntpc')) return EXAM_CATEGORIES['rrb-ntpc'];
+  if (s.includes('chsl') || s.includes('cat-ssc-chsl')) return EXAM_CATEGORIES['ssc-chsl'];
+  if (s.includes('cgl previous') || s.includes('previous year')) return EXAM_CATEGORIES['ssc-cgl-previous'];
+  if (s.includes('cgl') || s.includes('cat-ssc-cgl') || s.includes('dest')) return EXAM_CATEGORIES['ssc-cgl'];
+  if (s.includes('delhi police hcm') || (s.includes('delhi police') && s.includes('hcm'))) return EXAM_CATEGORIES['delhi-police-hcm'];
+  if (s.includes('awo') || s.includes('tpo')) return EXAM_CATEGORIES['delhi-police-awo-tpo'];
+  if (s.includes('allahabad')) return EXAM_CATEGORIES['allahabad-hc'];
+  if (s.includes('mp cpct') || s.includes('cpct')) return EXAM_CATEGORIES['mp-cpct'];
+  if (s.includes('rssb') || s.includes('rajasthan ldc')) return EXAM_CATEGORIES['rssb-ldc'];
+  if (s.includes('delhi high court') || s.includes('dhc') || s.includes('jja')) return EXAM_CATEGORIES['delhi-hc-jja'];
+  if (s.includes('supreme court') || s.includes('jca')) return EXAM_CATEGORIES['supreme-court-jca'];
+  if (s.includes('spmcil')) return EXAM_CATEGORIES['spmcil'];
+  if (s.includes('bsf') || s.includes('bsf hcm')) return EXAM_CATEGORIES['bsf-hcm'];
+  if (s.includes('up police') || s.includes('computer operator') || s.includes('uppco')) return EXAM_CATEGORIES['up-police-co'];
+  if (s.includes('upsssc') && s.includes('hindi')) return EXAM_CATEGORIES['upsssc-ja-hindi'];
+  if (s.includes('upsssc') || s.includes('junior assistant') && s.includes('up')) return EXAM_CATEGORIES['upsssc-ja'];
+  if (s.includes('bombay') && s.includes('400')) return EXAM_CATEGORIES['bombay-hc-clerk-400'];
+  if (s.includes('bombay')) return EXAM_CATEGORIES['bombay-hc-clerk'];
+  if (s.includes('chandigarh')) return EXAM_CATEGORIES['chandigarh-admin-clerk'];
+  if (s.includes('dsssb') && (s.includes('lab') || s.includes('it assistant'))) return EXAM_CATEGORIES['dsssb-it-assistant'];
+  if (s.includes('dsssb') && s.includes('steno')) return EXAM_CATEGORIES['dsssb-steno'];
+  if (s.includes('dsssb')) return EXAM_CATEGORIES['dsssb-jsa'];
+  if (s.includes('kvs')) return EXAM_CATEGORIES['kvs-jsa'];
+  if (s.includes('emrs')) return EXAM_CATEGORIES['emrs-jsa'];
+  if (s.includes('nvs')) return EXAM_CATEGORIES['nvs-jsa'];
+  if (s.includes('csir') && (s.includes('formula') || s.includes('new rules'))) return EXAM_CATEGORIES['csir-formula'];
+  if (s.includes('csir')) return EXAM_CATEGORIES['csir-jsa'];
+  if (s.includes('cbse') && s.includes('superintendent')) return EXAM_CATEGORIES['cbse-superintendent'];
+  if (s.includes('cbse')) return EXAM_CATEGORIES['cbse-jsa'];
+  if (s.includes('dda') && s.includes('steno')) return EXAM_CATEGORIES['dda-steno'];
+  if (s.includes('dda')) return EXAM_CATEGORIES['dda-jsa'];
+  if (s.includes('ccras')) return EXAM_CATEGORIES['ccras-ldc-udc'];
+  if (s.includes('punjab') || s.includes('haryana')) return EXAM_CATEGORIES['punjab-haryana-hc'];
+  if (s.includes('rvunl') || s.includes('vidyut')) return EXAM_CATEGORIES['rajasthan-rvunl'];
+  if (s.includes('ssb')) return EXAM_CATEGORIES['ssb-hcm'];
+  if (s.includes('uttrakhand')) return EXAM_CATEGORIES['uttrakhand-hc'];
+  if (s.includes('jharkhand')) return EXAM_CATEGORIES['jharkhand-hc'];
+  if (s.includes('fox') || s.includes('quick brown')) return EXAM_CATEGORIES['quick-brown-fox'];
+
+  return EXAM_CATEGORIES['standard'];
 }
 
-/**
- * Helper to detect SSC CGL (Tier-2 DEST) tests specifically.
- */
-export function isSscCglExam(
-  testOrCat: { categoryId?: string; title?: string; categoryName?: string } | string | null | undefined
-): boolean {
+// Backward-compatibility helper functions
+export function isAiimsExam(testOrCat?: any): boolean {
+  return detectExamCategory(testOrCat).key === 'aiims-cre';
+}
+
+export function isSscExam(testOrCat?: any): boolean {
+  const k = detectExamCategory(testOrCat).key;
+  return k === 'ssc-cgl' || k === 'ssc-cgl-previous' || k === 'ssc-chsl';
+}
+
+export function isSscCglExam(testOrCat?: any): boolean {
+  const k = detectExamCategory(testOrCat).key;
+  return k === 'ssc-cgl' || k === 'ssc-cgl-previous';
+}
+
+export function isSscChslExam(testOrCat?: any): boolean {
+  return detectExamCategory(testOrCat).key === 'ssc-chsl';
+}
+
+export function isRrbNtpcExam(testOrCat?: any): boolean {
+  return detectExamCategory(testOrCat).key === 'rrb-ntpc';
+}
+
+export function isDsssbJsaExam(testOrCat?: any): boolean {
+  const k = detectExamCategory(testOrCat).key;
+  return k === 'dsssb-jsa' || k === 'dsssb-it-assistant' || k === 'dsssb-steno';
+}
+
+export function isDsssbStenoExam(testOrCat?: any): boolean {
   if (!testOrCat) return false;
-  if (typeof testOrCat === 'string') {
-    const s = testOrCat.toLowerCase();
-    return s.includes('cat-ssc-cgl') || s.includes('ssc cgl') || s.includes('tier-2 dest') || s.includes('tier 2 dest');
-  }
-  const id = (testOrCat.categoryId || '').toLowerCase();
-  const title = (testOrCat.title || '').toLowerCase();
-  const catName = (testOrCat.categoryName || '').toLowerCase();
-  return (
-    id === 'cat-ssc-cgl' ||
-    id.includes('ssc-cgl') ||
-    title.includes('ssc cgl') ||
-    title.includes('tier-2 dest') ||
-    title.includes('tier 2 dest') ||
-    catName.includes('ssc cgl')
-  );
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'dsssb-steno' || key === 'dsssb-stenographer-typing') return true;
+  const title = (testOrCat.title || testOrCat.name || '').toLowerCase();
+  if (title.includes('dsssb') && (title.includes('steno') || title.includes('stenographer'))) return true;
+  return detectExamCategory(testOrCat).key === 'dsssb-steno';
 }
 
-/**
- * Helper to detect SSC CHSL (DEO / LDC) tests specifically.
- */
-export function isSscChslExam(
-  testOrCat: { categoryId?: string; title?: string; categoryName?: string } | string | null | undefined
-): boolean {
+export function isDsssbItAssistantExam(testOrCat?: any): boolean {
   if (!testOrCat) return false;
-  if (typeof testOrCat === 'string') {
-    const s = testOrCat.toLowerCase();
-    return s.includes('cat-ssc-chsl') || s.includes('ssc chsl') || s.includes('chsl');
-  }
-  const id = (testOrCat.categoryId || '').toLowerCase();
-  const title = (testOrCat.title || '').toLowerCase();
-  const catName = (testOrCat.categoryName || '').toLowerCase();
-  return (
-    id === 'cat-ssc-chsl' ||
-    id.includes('ssc-chsl') ||
-    id.includes('chsl') ||
-    title.includes('ssc chsl') ||
-    title.includes('chsl') ||
-    catName.includes('ssc chsl') ||
-    catName.includes('chsl')
-  );
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'dsssb-it-assistant' || key === 'dsssb-computer-lab-it-assistant-typing') return true;
+  const title = (testOrCat.title || testOrCat.name || '').toLowerCase();
+  if (title.includes('dsssb') && (title.includes('it assistant') || title.includes('computer lab'))) return true;
+  return detectExamCategory(testOrCat).key === 'dsssb-it-assistant';
 }
 
-/**
- * Main evaluation function following official SSC / RRB NTPC formulas.
- */
+export function isKvsJsaExam(testOrCat?: any): boolean {
+  return detectExamCategory(testOrCat).key === 'kvs-jsa';
+}
+
+export function isEmrsJsaExam(testOrCat?: any): boolean {
+  return detectExamCategory(testOrCat).key === 'emrs-jsa';
+}
+
+export function isNvsJsaExam(testOrCat?: any): boolean {
+  return detectExamCategory(testOrCat).key === 'nvs-jsa';
+}
+
+export function isCsirJsaExam(testOrCat?: any): boolean {
+  const k = detectExamCategory(testOrCat).key;
+  return k === 'csir-jsa' || k === 'csir-formula';
+}
+
+export function isCbseJsaExam(testOrCat?: any): boolean {
+  const k = detectExamCategory(testOrCat).key;
+  return k === 'cbse-jsa' || k === 'cbse-superintendent';
+}
+
+export function isCbseSuperintendentExam(testOrCat?: any): boolean {
+  if (!testOrCat) return false;
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'cbse-superintendent' || key === 'cbse-superintendent-typing') return true;
+  const title = (testOrCat.title || '').toLowerCase();
+  if (title.includes('cbse') && title.includes('superintendent')) return true;
+  return detectExamCategory(testOrCat).key === 'cbse-superintendent';
+}
+
+export function isBsfHcmExam(testOrCat?: any): boolean {
+  if (!testOrCat) return false;
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'bsf-hcm' || key === 'bsf-hcm-typing') return true;
+  const title = (testOrCat.title || '').toLowerCase();
+  if (title.includes('bsf') || title.includes('bsf hcm')) return true;
+  return detectExamCategory(testOrCat).key === 'bsf-hcm';
+}
+
+export function isCsirFormulaExam(testOrCat?: any): boolean {
+  if (!testOrCat) return false;
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'csir-formula' || key === 'csir-exam-new-rules(formula)') return true;
+  const title = (testOrCat.title || '').toLowerCase();
+  if (title.includes('csir') && (title.includes('formula') || title.includes('new rules') || title.includes('2 space'))) return true;
+  return detectExamCategory(testOrCat).key === 'csir-formula';
+}
+
+export function isUpssscJaExam(testOrCat?: any): boolean {
+  if (!testOrCat) return false;
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'upsssc-ja' || key === 'upsssc-junior-assistant-typing' || key === 'upsssc-ja-hindi' || key === 'upsssc-ja-hindi-typing') return true;
+  const title = (testOrCat.title || '').toLowerCase();
+  if (title.includes('upsssc') || (title.includes('junior assistant') && title.includes('up'))) return true;
+  const catKey = detectExamCategory(testOrCat).key;
+  return catKey === 'upsssc-ja' || catKey === 'upsssc-ja-hindi';
+}
+
+export function isDdaJsaExam(testOrCat?: any): boolean {
+  if (!testOrCat) return false;
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'dda-jsa' || key === 'dda-jsa-typing') return true;
+  const title = (testOrCat.title || testOrCat.name || '').toLowerCase();
+  if (title.includes('dda') && title.includes('jsa')) return true;
+  return detectExamCategory(testOrCat).key === 'dda-jsa';
+}
+
+export function isDdaStenoExam(testOrCat?: any): boolean {
+  if (!testOrCat) return false;
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'dda-steno' || key === 'dda-stenographer-typing') return true;
+  const title = (testOrCat.title || testOrCat.name || '').toLowerCase();
+  if (title.includes('dda') && (title.includes('steno') || title.includes('stenographer'))) return true;
+  return detectExamCategory(testOrCat).key === 'dda-steno';
+}
+
+export function isMpCpctExam(testOrCat?: any): boolean {
+  if (!testOrCat) return false;
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'mp-cpct' || key === 'mp-cpct-typing') return true;
+  const title = (testOrCat.title || testOrCat.name || '').toLowerCase();
+  if (title.includes('mp') && title.includes('cpct')) return true;
+  if (title.includes('cpct')) return true;
+  return detectExamCategory(testOrCat).key === 'mp-cpct';
+}
+
+export function isAllahabadHcExam(testOrCat?: any): boolean {
+  if (!testOrCat) return false;
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'allahabad-hc' || key === 'allahabad-highcourt-ro-aro-typing') return true;
+  const title = (testOrCat.title || testOrCat.name || '').toLowerCase();
+  if (title.includes('allahabad') || title.includes('ro/aro') || title.includes('ro-aro') || title.includes('ro aro')) return true;
+  return detectExamCategory(testOrCat).key === 'allahabad-hc';
+}
+
+export function isUttrakhandHcExam(testOrCat?: any): boolean {
+  if (!testOrCat) return false;
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'uttrakhand-hc' || key === 'uttrakhand-high-court-typing') return true;
+  const title = (testOrCat.title || testOrCat.name || '').toLowerCase();
+  if (title.includes('uttrakhand') || title.includes('uttarakhand')) return true;
+  return detectExamCategory(testOrCat).key === 'uttrakhand-hc';
+}
+
+export function isDhcJjaExam(testOrCat?: any): boolean {
+  if (!testOrCat) return false;
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'delhi-hc-jja' || key === 'delhi-high-court-dhc-jja-typing') return true;
+  const title = (testOrCat.title || testOrCat.name || '').toLowerCase();
+  if (title.includes('delhi high court') || title.includes('dhc') || (title.includes('delhi') && title.includes('jja'))) return true;
+  return detectExamCategory(testOrCat).key === 'delhi-hc-jja';
+}
+
+
+
+export interface CategoryEvaluationResult {
+  categoryKey: ExamCategoryKey;
+  categoryName: string;
+  evaluationBadge: string;
+  marksObtained?: number;
+  maxMarks?: number;
+  scaledScorePercentage?: number;
+  qualifyingMarks?: number;
+  tentativeSpeed?: number;
+  actualSpeed?: number;
+  permissibleMistakes?: number;
+  excessMistakes?: number;
+  penaltyWords?: number;
+  penaltyStrokes?: number;
+  netStrokes?: number;
+  isSpeedPassed?: boolean;
+  isErrorPassed?: boolean;
+  isMarksPassed?: boolean;
+  qualificationReason?: string;
+  criteriaBreakdown: Array<{ label: string; value: string | number; status?: 'PASS' | 'FAIL' | 'INFO' }>;
+  errorBreakdown?: {
+    omissions: number;
+    substitutions: number;
+    extraWords: number;
+    repetitions: number;
+    incompleteWords: number;
+    spacingErrors: number;
+    capitalizationErrors: number;
+    punctuationErrors: number;
+    transpositionErrors: number;
+    paragraphErrors: number;
+  };
+}
+
+
+
+// ===================================================================================
+// UNIVERSAL TYPING EVALUATION  — thin adapter over ./typing (per-category engines).
+// Keeps the exact return shape the test-runner UI consumes; every number comes
+// from the matching engine in ./typing/engines/<category>.ts
+// ===================================================================================
+
+function _wordsOf(s: string): string[] {
+  const t = (s || '').replace(/\r\n?/g, '\n').replace(/\s+/g, ' ').trim();
+  return t.length ? t.split(' ') : [];
+}
+
 export function evaluateTyping(
   targetText: string,
   typedText: string,
@@ -319,420 +829,159 @@ export function evaluateTyping(
   qualifyingWpm: number = 35,
   maxErrorPercentage: number = 5.0,
   allowRetype: boolean = false,
-  isSsc: boolean = false,
-  isSscCgl: boolean = false,
-  isSscChsl: boolean = false
-): {
-  // Core metrics
-  grossWpm: number;
-  netWpm: number;
-  chslNetWords?: number;
-  chslNetWpm?: number;
-  accuracyPercentage: number;
-  totalKeystrokes: number;
-  correctKeystrokes: number;
-  errorKeystrokes: number;
-  // Error breakdown
-  fullMistakes: number;
-  halfMistakes: number;
-  totalMistakes: number;
-  errorPercentage: number;
-  // SSC evaluation fields
-  isSsc: boolean;
-  isSscCgl?: boolean;
-  isSscChsl?: boolean;
-  totalWordsInMasterPassage: number;
-  totalMasterPassageKeystrokes: number;
-  // Detailed sub-categories
-  substitutions: number;
-  omissions: number;
-  extraWordErrors: number;
-  wrongCapitalizations: number;
-  punctuationErrors: number;
-  transpositionErrors: number;
-  spacingErrors: number;
-  // 5% rule fields
-  totalWordsTyped: number;
-  ignorableMistakes: number;
-  remainingMistakes: number;
-  netWords: number;
-  penalty: number;
-  // Retype info
-  cyclesCompleted: number;
-  retypedWordsCount: number;
-  allowRetype: boolean;
-  // Time
-  timeInMinutes: number;
-  // Pass / Fail
-  isQualified: boolean;
-  // Aligned arrays for side-by-side display
-  detailedMistakes: DetailedMistake[];
-  alignedOriginalWords: AlignedWord[];
-  alignedTypedWords: AlignedWord[];
-} {
-  // ── 1. Normalize whitespace ──────────────────────────────────────────────
-  const normalize = (s: string) => s.replace(/\s+/g, ' ').trim();
-  const cleanTarget = normalize(targetText);
-  const cleanTyped = normalize(typedText);
+  isSscOrCat?: boolean | { categoryId?: string; title?: string; categoryName?: string; id?: string; name?: string; slug?: string },
+  isSscCgl?: boolean,
+  isSscChsl?: boolean,
+  isAiims?: boolean,
+  language: 'en' | 'hi' = 'en',
+  userCategoryChoice?: string,
+  keystrokesTyped?: number
+) {
+  void qualifyingWpm; void maxErrorPercentage;
 
-  const passageWords = cleanTarget.length > 0 ? cleanTarget.split(' ') : [];
-  const typedWords = cleanTyped.length > 0 ? cleanTyped.split(' ') : [];
-  const totalPassageWords = passageWords.length;
+  // legacy ExamCategoryConfig — still consumed directly by the result UI
+  let catConfig: ExamCategoryConfig;
+  if (typeof isSscOrCat === 'object' && isSscOrCat !== null) catConfig = detectExamCategory(isSscOrCat);
+  else if (isAiims) catConfig = EXAM_CATEGORIES['aiims-cre'];
+  else if (isSscCgl) catConfig = EXAM_CATEGORIES['ssc-cgl'];
+  else if (isSscChsl) catConfig = EXAM_CATEGORIES['ssc-chsl'];
+  else if (isSscOrCat === true) catConfig = EXAM_CATEGORIES['ssc-chsl'];
+  else catConfig = EXAM_CATEGORIES['standard'];
 
-  let effectiveTargetWords = passageWords;
-  let cyclesCompleted = 0;
-  let retypedWordsCount = 0;
-  let numCycles = 1;
+  const source: Parameters<typeof evaluateTypingTest>[0] =
+    isAiims ? 'aiims-cre'
+    : isSscCgl ? 'ssc-cgl'
+    : isSscChsl ? 'ssc-chsl'
+    : (typeof isSscOrCat === 'object' && isSscOrCat) ? isSscOrCat
+    : catConfig.slug;
 
-  if (allowRetype && totalPassageWords > 0 && typedWords.length >= totalPassageWords) {
-    numCycles = Math.max(1, Math.ceil(typedWords.length / totalPassageWords));
-    effectiveTargetWords = [];
-    for (let c = 0; c < numCycles; c++) {
-      effectiveTargetWords.push(...passageWords);
-    }
-    cyclesCompleted = Math.floor(typedWords.length / totalPassageWords);
-    retypedWordsCount = Math.max(0, typedWords.length - totalPassageWords);
-  }
-
-  // ── 2. Keystrokes & Time ─────────────────────────────────────────────────
-  // Keystrokes = total characters typed (including spaces)
-  const totalKeystrokes = cleanTyped.length;
-
-  // RRB / SSC Standard: 1 word = 5 keystrokes (NOT space-split word count)
-  // Kept to 2 decimal places without rounding — e.g. 1903 / 5 = 380.60
-  const totalWordsTyped = parseFloat((totalKeystrokes / 5).toFixed(2));
-  const timeInMinutes = Math.max(timeSpentSeconds / 60, 1 / 60);
-  const grossWords = totalWordsTyped; // alias — both are Keystrokes / 5
-
-  // Master Passage Words = Total Keystrokes in Master Passage / 5
-  const masterPassageKeystrokes = cleanTarget.length;
-  const totalWordsInMasterPassage = masterPassageKeystrokes > 0
-    ? parseFloat((masterPassageKeystrokes / 5).toFixed(2))
-    : totalPassageWords;
-
-  // Gross WPM = (Keystrokes / 5) / Time
-  const grossWpm = parseFloat((grossWords / timeInMinutes).toFixed(2));
-
-  // ── 3. Handle empty submission ───────────────────────────────────────────
-  if (totalWordsTyped < 0.01) {
-    return {
-      grossWpm: 0, netWpm: 0, accuracyPercentage: 0,
-      totalKeystrokes: 0, correctKeystrokes: 0, errorKeystrokes: 0,
-      fullMistakes: totalPassageWords, halfMistakes: 0,
-      totalMistakes: totalPassageWords,
-      isSsc,
-      isSscCgl,
-      totalWordsInMasterPassage,
-      totalMasterPassageKeystrokes: masterPassageKeystrokes,
-      errorPercentage: 100,
-      substitutions: 0, omissions: totalPassageWords, extraWordErrors: 0,
-      wrongCapitalizations: 0, punctuationErrors: 0,
-      transpositionErrors: 0, spacingErrors: 0,
-      totalWordsTyped: 0, ignorableMistakes: 0, remainingMistakes: totalPassageWords,
-      netWords: 0, penalty: 0,
-      cyclesCompleted: 0, retypedWordsCount: 0, allowRetype,
-      timeInMinutes, isQualified: false,
-      detailedMistakes: passageWords.map((w, i) => ({
-        index: i, originalWord: w, typedWord: '', type: 'OMISSION' as const, reason: 'Nothing typed',
-      })),
-      alignedOriginalWords: passageWords.map((w, i) => ({
-        word: w, status: 'OMISSION' as const, expectedWord: w, typedWord: '', reason: 'Nothing typed', index: i,
-      })),
-      alignedTypedWords: [],
-    };
-  }
-
-  // ── 4. DP Word Alignment ─────────────────────────────────────────────────
-  const alignment = alignWordSequences(effectiveTargetWords, typedWords);
-
-  let lastTypedIdx = -1;
-  for (let idx = alignment.length - 1; idx >= 0; idx--) {
-    if (alignment[idx].typed !== null) {
-      lastTypedIdx = idx;
-      break;
-    }
-  }
-
-  const userEnteredRetype = allowRetype && (
-    typedWords.length >= totalPassageWords ||
-    numCycles > 1
-  );
-
-  // ── 5. First-pass classification ─────────────────────────────────────────
-  const classified: ClassifiedPair[] = alignment.map(({ orig, typed }, pairIdx) => {
-    if (orig === null) {
-      return { orig, typed, errorType: 'EXTRA' as ErrorType, status: 'EXTRA' as AlignedWord['status'], reason: `Extra word: "${typed}"` };
-    }
-    if (typed === null) {
-      if (userEnteredRetype && pairIdx > lastTypedIdx) {
-        return { orig, typed, errorType: 'CORRECT' as ErrorType, status: 'UNREACHED' as AlignedWord['status'], reason: `Unreached in repetition: "${orig}"` };
-      }
-      return { orig, typed, errorType: 'OMISSION' as ErrorType, status: 'OMISSION' as AlignedWord['status'], reason: `Omitted: "${orig}"` };
-    }
-    if (orig === typed) {
-      return { orig, typed, errorType: 'CORRECT' as ErrorType, status: 'CORRECT' as AlignedWord['status'] };
-    }
-    if (orig.toLowerCase() === typed.toLowerCase()) {
-      return { orig, typed, errorType: 'CAPITALIZATION' as ErrorType, status: 'HALF_MISTAKE' as AlignedWord['status'], reason: `Capitalization: "${orig}" → "${typed}"` };
-    }
-    const origStripped = stripPunct(orig);
-    const typedStripped = stripPunct(typed);
-    if (
-      (origStripped === typedStripped && origStripped.length > 0) ||
-      origStripped.toLowerCase() === typedStripped.toLowerCase()
-    ) {
-      return { orig, typed, errorType: 'PUNCTUATION' as ErrorType, status: 'HALF_MISTAKE' as AlignedWord['status'], reason: `Punctuation: "${orig}" → "${typed}"` };
-    }
-    return { orig, typed, errorType: 'SUBSTITUTION' as ErrorType, status: 'FULL_MISTAKE' as AlignedWord['status'], reason: `Wrong word: "${orig}" → "${typed}"` };
+  const R = evaluateTypingTest(source, {
+    passageText: targetText,
+    typedText,
+    timeSeconds: timeSpentSeconds,
+    keystrokesTyped,
+    backspaceCount,
+    language,
+    userCategoryChoice,
+    allowRetype,
   });
 
-  // ── 6. Transposition detection ───────────────────────────────────────────
-  // If two adjacent substitutions are swapped words, reclassify both as half mistakes.
-  for (let k = 0; k < classified.length - 1; k++) {
-    const cur = classified[k];
-    const nxt = classified[k + 1];
-    if (
-      cur.errorType === 'SUBSTITUTION' && nxt.errorType === 'SUBSTITUTION' &&
-      cur.orig !== null && cur.typed !== null &&
-      nxt.orig !== null && nxt.typed !== null &&
-      cur.orig === nxt.typed && cur.typed === nxt.orig
-    ) {
-      cur.errorType = 'TRANSPOSITION';
-      cur.status = 'HALF_MISTAKE';
-      cur.reason = `Transposition: "${cur.orig}" ↔ "${cur.typed}"`;
-      nxt.errorType = 'TRANSPOSITION';
-      nxt.status = 'HALF_MISTAKE';
-      nxt.reason = `Transposition: "${nxt.orig}" ↔ "${nxt.typed}"`;
-      k++; // skip next (already handled)
-    }
-  }
+  const e = R.errors;
+  const c = R.core;
 
-  // ── 7. Spacing error detection ───────────────────────────────────────────
-  // Check if a typed SUBSTITUTION word equals two consecutive original words joined.
-  // e.g. orig="the quick", typed="thequick" → spacing error (half)
-  for (let k = 0; k < classified.length - 1; k++) {
-    const cur = classified[k];
-    const nxt = classified[k + 1];
-    // typed[k] = orig[k] + orig[k+1] joined (spacing error — joined)
-    if (
-      cur.errorType === 'SUBSTITUTION' && nxt.errorType === 'OMISSION' &&
-      cur.orig !== null && cur.typed !== null && nxt.orig !== null
-    ) {
-      const joined = cur.orig + nxt.orig;
-      if (cur.typed === joined || cur.typed.toLowerCase() === joined.toLowerCase()) {
-        cur.errorType = 'SPACING';
-        cur.status = 'HALF_MISTAKE';
-        cur.reason = `Joined words: "${cur.orig} ${nxt.orig}" → "${cur.typed}"`;
-        nxt.errorType = 'SPACING';
-        nxt.status = 'HALF_MISTAKE';
-        nxt.reason = `Joined (omitted part): "${nxt.orig}"`;
-        k++;
-      }
-    }
-  }
-  // Check if two consecutive typed EXTRA+SUBSTITUTION words together equal one orig word (split)
-  for (let k = 0; k < classified.length - 1; k++) {
-    const cur = classified[k];
-    const nxt = classified[k + 1];
-    if (
-      cur.errorType === 'SUBSTITUTION' && nxt.errorType === 'EXTRA' &&
-      cur.orig !== null && cur.typed !== null && nxt.typed !== null
-    ) {
-      const splitJoined = cur.typed + nxt.typed;
-      if (splitJoined === cur.orig || splitJoined.toLowerCase() === cur.orig.toLowerCase()) {
-        cur.errorType = 'SPACING';
-        cur.status = 'HALF_MISTAKE';
-        cur.reason = `Split word: "${cur.orig}" → "${cur.typed} ${nxt.typed}"`;
-        nxt.errorType = 'SPACING';
-        nxt.status = 'HALF_MISTAKE';
-        nxt.reason = `Split (extra part): "${nxt.typed}"`;
-        k++;
-      }
-    }
-  }
+  const pw = _wordsOf(targetText).length;
+  const tw = _wordsOf(typedText).length;
+  const canRetype = allowRetype || Boolean(R.config.retypeAllowed);
+  const cyclesCompleted = pw > 0 ? Math.max(0, Math.floor(tw / pw)) : 0;
+  const retypedWordsCount = canRetype && pw > 0 ? Math.max(0, tw - pw) : 0;
 
-  // ── 8. Count error categories ────────────────────────────────────────────
-  let substitutions = 0;
-  let omissions = 0;
-  let extraWordErrors = 0;
-  let wrongCapitalizations = 0;
-  let punctuationErrors = 0;
-  let transpositionErrors = 0;
-  let spacingErrors = 0;
+  const correctKeystrokes = Math.round(e.correctWords * 5);
+  const errorKeystrokes = Math.max(0, c.keystrokesTyped - correctKeystrokes);
 
-  for (const pair of classified) {
-    if (pair.status === 'UNREACHED') continue;
-    switch (pair.errorType) {
-      case 'SUBSTITUTION':    substitutions++;         break;
-      case 'OMISSION':        omissions++;             break;
-      case 'EXTRA':           extraWordErrors++;        break;
-      case 'CAPITALIZATION':  wrongCapitalizations++;   break;
-      case 'PUNCTUATION':     punctuationErrors++;      break;
-      case 'TRANSPOSITION':   transpositionErrors++;    break;
-      case 'SPACING':         spacingErrors++;          break;
-    }
-  }
+  const categoryEvaluation: CategoryEvaluationResult = {
+    categoryKey: catConfig.key,
+    categoryName: catConfig.name,
+    evaluationBadge: R.badge,
+    marksObtained: R.marks ?? undefined,
+    maxMarks: R.maxMarks ?? undefined,
+    scaledScorePercentage: R.scaledScorePercent ?? undefined,
+    qualifyingMarks: R.qualifyingMarks ?? undefined,
+    tentativeSpeed: R.tentativeSpeed ?? undefined,
+    actualSpeed: R.actualSpeed ?? undefined,
+    permissibleMistakes: R.permissibleErrors,
+    excessMistakes: R.excessErrors,
+    penaltyWords: R.penaltyWords,
+    penaltyStrokes: R.penaltyStrokes ?? undefined,
+    netStrokes: R.netStrokes ?? undefined,
+    isSpeedPassed: R.speedPassed,
+    isErrorPassed: R.errorPassed,
+    isMarksPassed: R.marksPassed,
+    qualificationReason: R.reason,
+    criteriaBreakdown: R.criteria,
+    errorBreakdown: {
+      omissions: e.omissions || 0,
+      substitutions: e.substitutions || 0,
+      extraWords: e.extraWords || 0,
+      repetitions: e.repetitions || 0,
+      incompleteWords: e.incompleteWords || 0,
+      spacingErrors: e.spacingErrors || 0,
+      capitalizationErrors: e.capitalizationErrors || 0,
+      punctuationErrors: e.punctuationErrors || 0,
+      transpositionErrors: e.transpositionErrors || 0,
+      paragraphErrors: e.paragraphErrors || 0,
+    },
+  };
 
-  // Full errors = substitution + omission + extra
-  // Half errors raw count = capitalization + punctuation + transposition + spacing
-  // (transposition counts each swapped word, so a pair = 2 transpositionErrors)
-  const fullMistakes = substitutions + omissions + extraWordErrors;
-  const halfMistakesRaw = wrongCapitalizations + punctuationErrors + transpositionErrors + spacingErrors;
+  const detailedMistakes: DetailedMistake[] = e.mistakes.map((m: EngineMistake, i: number) => ({
+    index: m.index ?? i,
+    originalWord: m.expected,
+    typedWord: m.typed,
+    type: m.type as DetailedMistake['type'],
+    reason: m.reason,
+  }));
 
-  // Formula from uploaded photo:
-  // Total Mistakes = Full Mistakes + ( Half Mistakes / 2 )
-  const totalWeightedMistakes = parseFloat((fullMistakes + (halfMistakesRaw / 2)).toFixed(2));
-
-  // ── 9. 5% Permissible Rule ────────────────────────────────────────────────
-  // Permissible = 5% of UNROUNDED gross words (Keystrokes/5), NOT floor(Keystrokes/5).
-  // Reference: Keystrokes=1903 → grossWords=380.6 → permissible=19.03 (not 19.00)
-  // (Used for RRB NTPC; hidden/not applicable for SSC tests)
-  const ignorableMistakes = parseFloat((0.05 * grossWords).toFixed(2));
-  const remainingMistakes = parseFloat(Math.max(0, totalWeightedMistakes - ignorableMistakes).toFixed(2));
-
-  // ── 10. Penalty & Net WPM ────────────────────────────────────────────────
-  // Penalty (words) = Remaining × 10
-  // Net Words       = (Keystrokes/5) - Penalty
-  // Net WPM         = Net Words / Time
-  const penalty = parseFloat((remainingMistakes * 10).toFixed(2));
-  const netWords = parseFloat(Math.max(0, grossWords - penalty).toFixed(2));
-  const netWpm = parseFloat((netWords / timeInMinutes).toFixed(2));
-
-  // SSC CHSL Net Words & Net Speed:
-  // Net Word = Gross Word Typed - Total Mistakes
-  // Net Speed = Net Word / Total Time
-  const chslNetWords = parseFloat(Math.max(0, grossWords - totalWeightedMistakes).toFixed(2));
-  const chslNetWpm = timeInMinutes > 0 ? parseFloat((chslNetWords / timeInMinutes).toFixed(2)) : 0;
-
-  // ── 11. Error % ──────────────────────────────────────────────────────────
-  // For SSC tests (SSC CGL Tier-2 DEST & SSC CHSL DEO/LDC):
-  // Master Passage Words = Total Keystrokes in Master Passage / 5
-  // Error Percentage = ( Total Mistakes / Total Words Given in Master Passage ) * 100
-  // (Note: Evaluated precisely up to two decimal places.)
-  //
-  // For RRB NTPC:
-  // Error % = (totalWeightedMistakes / grossWords) * 100
-  let errorPercentage: number;
-  if (isSsc) {
-    errorPercentage = totalWordsInMasterPassage > 0
-      ? parseFloat(((totalWeightedMistakes / totalWordsInMasterPassage) * 100).toFixed(2))
-      : 0;
-  } else {
-    errorPercentage = grossWords > 0
-      ? parseFloat(((totalWeightedMistakes / grossWords) * 100).toFixed(2))
-      : 0;
-  }
-
-  // ── 12. Accuracy ─────────────────────────────────────────────────────────
-  // Accuracy = 100 - Error %  (NOT Net WPM / Gross WPM × 100)
-  // Reference: 100 - 11.2979... = 88.70%
-  const accuracyPercentage = parseFloat(Math.min(100, Math.max(0, 100 - errorPercentage)).toFixed(2));
-
-  // ── 13. Build aligned word arrays for UI display ─────────────────────────
-  const detailedMistakes: DetailedMistake[] = [];
-  const alignedOriginalWords: AlignedWord[] = [];
-  const alignedTypedWords: AlignedWord[] = [];
-
-  let origIdx = 0;
-  let typedIdx = 0;
-
-  for (const pair of classified) {
-    const { orig, typed, status, reason, errorType } = pair;
-
-    if (orig !== null) {
-      alignedOriginalWords.push({
-        word: orig,
-        status,
-        expectedWord: orig,
-        typedWord: typed ?? '',
-        reason,
-        index: origIdx,
-      });
-      origIdx++;
-    }
-
-    if (typed !== null) {
-      alignedTypedWords.push({
-        word: typed,
-        status,
-        expectedWord: orig ?? '',
-        typedWord: typed,
-        reason,
-        index: typedIdx,
-      });
-      typedIdx++;
-    }
-
-    if (errorType !== 'CORRECT' && status !== 'UNREACHED') {
-      const mistakeType: DetailedMistake['type'] =
-        errorType === 'OMISSION' ? 'OMISSION'
-        : errorType === 'EXTRA' ? 'EXTRA'
-        : (errorType === 'CAPITALIZATION' || errorType === 'PUNCTUATION' || errorType === 'TRANSPOSITION' || errorType === 'SPACING') ? 'HALF_MISTAKE'
-        : 'FULL_MISTAKE';
-      detailedMistakes.push({
-        index: orig !== null ? origIdx - 1 : typedIdx - 1,
-        originalWord: orig ?? '',
-        typedWord: typed ?? '',
-        type: mistakeType,
-        reason,
-      });
-    }
-  }
-
-  // ── 14. Keystroke accuracy ────────────────────────────────────────────────
-  const correctWordsCount = classified.filter(p => p.errorType === 'CORRECT' && p.status !== 'UNREACHED').length;
-  const correctKeystrokes = Math.round(correctWordsCount * 5);
-  const errorKeystrokes = Math.max(0, totalKeystrokes - correctKeystrokes);
-
-  // ── 15. Pass/Fail ─────────────────────────────────────────────────────────
-  // In SSC CGL (Tier-2 DEST), candidate qualifies if within maximum allowed for any category (<= 30%)
-  // In SSC CHSL, candidate qualifies ONLY if net speed >= qualifying target (35 English / 30 Hindi) AND errorPercentage <= maxErrorPercentage
-  // In RRB NTPC / standard, net speed target and error limit are both checked
-  const isQualified = isSsc
-    ? (isSscCgl
-        ? errorPercentage <= 30
-        : isSscChsl
-        ? (chslNetWpm >= qualifyingWpm && errorPercentage <= maxErrorPercentage)
-        : errorPercentage <= maxErrorPercentage)
-    : (netWpm >= qualifyingWpm && errorPercentage <= maxErrorPercentage);
+  const mapWord = (w: EngineAlignedWord): AlignedWord => ({
+    word: w.word,
+    status: w.status as AlignedWord['status'],
+    expectedWord: w.expected,
+    typedWord: w.typed,
+    reason: w.reason,
+    index: w.index,
+  });
 
   return {
-    grossWpm,
-    netWpm,
-    netWords,
-    accuracyPercentage,
-    totalKeystrokes,
+    grossWpm: R.grossWpm,
+    netWpm: R.netWpm,
+    accuracyPercentage: R.accuracy,
+    totalKeystrokes: c.keystrokesTyped,
     correctKeystrokes,
     errorKeystrokes,
-    fullMistakes,
-    halfMistakes: halfMistakesRaw,
-    totalMistakes: totalWeightedMistakes,
-    errorPercentage,
-    chslNetWords,
-    chslNetWpm,
-    isSsc,
-    isSscCgl,
-    isSscChsl,
-    totalWordsInMasterPassage,
-    totalMasterPassageKeystrokes: masterPassageKeystrokes,
-    substitutions,
-    omissions,
-    extraWordErrors,
-    wrongCapitalizations,
-    punctuationErrors,
-    transpositionErrors,
-    spacingErrors,
-    totalWordsTyped,
-    ignorableMistakes,
-    remainingMistakes,
-    penalty,
+    kdph: R.kdph,
+
+    fullMistakes: R.fullErrors,
+    halfMistakes: R.halfErrors,
+    totalMistakes: R.totalErrors,
+    errorPercentage: R.errorPercentage,
+    substitutions: e.substitutions + e.incompleteWords,
+    omissions: e.omissions,
+    extraWordErrors: e.extraWords + e.repetitions,
+    wrongCapitalizations: e.capitalizationErrors,
+    punctuationErrors: e.punctuationErrors,
+    transpositionErrors: e.transpositionErrors,
+    spacingErrors: e.spacingErrors,
+
+    isSsc: catConfig.key === 'ssc-cgl' || catConfig.key === 'ssc-cgl-previous' || catConfig.key === 'ssc-chsl',
+    isSscCgl: catConfig.key === 'ssc-cgl' || catConfig.key === 'ssc-cgl-previous',
+    isSscChsl: catConfig.key === 'ssc-chsl',
+    totalWordsInMasterPassage: c.wordsInPassage,
+    totalMasterPassageKeystrokes: c.passageKeystrokes,
+    chslNetWords: R.netWords,
+    chslNetWpm: R.netWpm,
+
+    isAiims: R.key === 'aiims-cre',
+    aiimsPenaltyStrokes: R.penaltyStrokes ?? 0,
+    aiimsNetStrokes: R.netStrokes ?? 0,
+    aiimsGrossWpm: R.aiimsGrossWpm ?? 0,
+    aiimsNetWpm: R.aiimsNetWpm ?? 0,
+    aiimsAccuracy: R.key === 'aiims-cre' ? R.accuracy : 0,
+
+    totalWordsTyped: c.wordsTyped,
+    ignorableMistakes: R.permissibleErrors,
+    remainingMistakes: R.excessErrors,
+    netWords: R.netWords,
+    penalty: R.penaltyWords,
+
     cyclesCompleted,
     retypedWordsCount,
-    allowRetype,
-    timeInMinutes,
-    isQualified,
+    allowRetype: canRetype,
+    timeInMinutes: c.timeMinutes,
+
+    isQualified: R.qualified,
+    categoryConfig: catConfig,
+    categoryEvaluation,
+
     detailedMistakes,
-    alignedOriginalWords,
-    alignedTypedWords,
+    alignedOriginalWords: e.aligned.map(mapWord),
+    alignedTypedWords: e.alignedTyped.map(mapWord),
   };
 }

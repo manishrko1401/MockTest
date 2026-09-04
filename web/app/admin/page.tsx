@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, CheckCheck, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles, Inbox, Share2, FolderLock, Cloud, Keyboard } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, CheckCheck, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles, Inbox, Share2, FolderLock, Cloud, Keyboard, RotateCcw } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
@@ -29,6 +29,8 @@ import { InquiryManager } from './components/InquiryManager';
 import { ContactLinksManager } from './components/ContactLinksManager';
 import { DocumentLockerManager } from './components/DocumentLockerManager';
 import { TypingTestManager } from './components/TypingTestManager';
+import { TypingAttemptManager } from './components/TypingAttemptManager';
+import { AdminTestAnalysisModal } from './components/AdminTestAnalysisModal';
 
 // ============================================================================
 // MOCK ANALYTICS DATA FOR REPORT GENERATION
@@ -116,9 +118,9 @@ export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const tabInitializedRef = React.useRef(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'locker' | 'typing' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'locker' | 'typing' | 'typing_attempts' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'locker' | 'typing' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'locker' | 'typing' | 'typing_attempts' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -159,6 +161,9 @@ export default function AdminAnalytics() {
   const [attemptsSearch, setAttemptsSearch] = useState('');
   const [attemptsPlatformFilter, setAttemptsPlatformFilter] = useState<'all' | 'web' | 'app' | 'mobile_web'>('all');
   const [attemptsStatusFilter, setAttemptsStatusFilter] = useState<'all' | 'ONGOING' | 'COMPLETED' | 'AUTO_SUBMITTED'>('all');
+  const [selectedAnalysisSessionId, setSelectedAnalysisSessionId] = useState<string | null>(null);
+  const [attemptsPage, setAttemptsPage] = useState(1);
+  const [attemptsPageSize, setAttemptsPageSize] = useState(25);
 
   const fetchAttempts = async () => {
     setLoadingAttempts(true);
@@ -714,7 +719,7 @@ export default function AdminAnalytics() {
     const role = currentUser.role;
     if (role === 'ADMIN') return true;
     if (role === 'TEST_CREATOR') {
-      return ['upload', 'categories', 'subcategories', 'subsubcategories', 'mocks', 'typing'].includes(tab);
+      return ['upload', 'categories', 'subcategories', 'subsubcategories', 'mocks', 'typing', 'typing_attempts'].includes(tab);
     }
     if (role === 'SUPPORT_TEAM') {
       return ['support', 'suggestions', 'inquiries', 'feedback', 'contact_links', 'locker'].includes(tab);
@@ -1692,6 +1697,19 @@ export default function AdminAnalytics() {
                 {language === 'hi' ? 'टाइपिंग टेस्ट एवं सिम्युलेटर' : 'Typing Exams & Simulator'}
               </button>
             )}
+            {hasTabAccess('typing_attempts') && (
+              <button
+                onClick={() => selectTab('typing_attempts')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  activeTab === 'typing_attempts'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <BarChart2 className="h-4 w-4 text-emerald-400" />
+                {language === 'hi' ? 'टाइपिंग एटेम्पटेड लॉग्स' : 'Typing Attempt Logs'}
+              </button>
+            )}
             {hasTabAccess('reports') && (
               <button
                 onClick={() => selectTab('reports')}
@@ -1887,6 +1905,8 @@ export default function AdminAnalytics() {
                 ? (language === 'hi' ? 'वोकैब अपलोड और शब्दावली प्रबंधक' : 'Vocab Upload & Catalog Manager')
                 : activeTab === 'attempts'
                 ? (language === 'hi' ? 'टेस्ट एटेम्पटेड लॉग्स' : 'Test Attempt Logs & Active Sittings')
+                : activeTab === 'typing_attempts'
+                ? (language === 'hi' ? 'टाइपिंग एटेम्पटेड लॉग्स एवं विश्लेषण' : 'Typing Attempt Logs & Speed Analytics')
                 : (language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions')}
             </h2>
           </div>
@@ -5871,19 +5891,25 @@ export default function AdminAnalytics() {
                     type="text"
                     placeholder="Search candidate name, email, code or test..."
                     value={attemptsSearch}
-                    onChange={(e) => setAttemptsSearch(e.target.value)}
+                    onChange={(e) => {
+                      setAttemptsSearch(e.target.value);
+                      setAttemptsPage(1);
+                    }}
                     className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-xs bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium"
                   />
                 </div>
 
                 {/* Filters Group */}
-                <div className="flex flex-wrap gap-3 w-full md:w-auto justify-end">
+                <div className="flex flex-wrap gap-3 w-full md:w-auto justify-end items-center">
                   {/* Platform Filter */}
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Platform:</span>
                     <select
                       value={attemptsPlatformFilter}
-                      onChange={(e: any) => setAttemptsPlatformFilter(e.target.value)}
+                      onChange={(e: any) => {
+                        setAttemptsPlatformFilter(e.target.value);
+                        setAttemptsPage(1);
+                      }}
                       className="border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-1.5 px-3 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-bold focus:outline-none cursor-pointer"
                     >
                       <option value="all">All Platforms</option>
@@ -5898,7 +5924,10 @@ export default function AdminAnalytics() {
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status:</span>
                     <select
                       value={attemptsStatusFilter}
-                      onChange={(e: any) => setAttemptsStatusFilter(e.target.value)}
+                      onChange={(e: any) => {
+                        setAttemptsStatusFilter(e.target.value);
+                        setAttemptsPage(1);
+                      }}
                       className="border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-1.5 px-3 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-bold focus:outline-none cursor-pointer"
                     >
                       <option value="all">All Statuses</option>
@@ -5910,174 +5939,255 @@ export default function AdminAnalytics() {
                 </div>
               </div>
 
-              {/* Attempt Logs Table */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Candidate details</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mock Test Details</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Platform</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Start / End Time</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Attempt Stats</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {loadingAttempts ? (
-                        <tr>
-                          <td colSpan={6} className="py-24 text-center">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-3"></div>
-                            <p className="text-xs text-slate-400 font-bold">Loading test attempt logs...</p>
-                          </td>
-                        </tr>
-                      ) : (() => {
-                        const filteredAttempts = attemptsList.filter((a) => {
-                          const userName = a.user?.fullName || '';
-                          const userEmail = a.user?.email || '';
-                          const userCode = a.user?.candidateCode || '';
-                          const testTitle = a.mockTest?.title || '';
-                          const subCategoryName = a.mockTest?.testSeries?.exam?.name || getExamSubCategoryName(a.mockTestId) || '';
+              {/* Attempt Logs Table with Pagination */}
+              {(() => {
+                const filteredAttempts = attemptsList.filter((a) => {
+                  const userName = a.user?.fullName || '';
+                  const userEmail = a.user?.email || '';
+                  const userCode = a.user?.candidateCode || '';
+                  const testTitle = a.mockTest?.title || '';
+                  const subCategoryName = a.mockTest?.testSeries?.exam?.name || getExamSubCategoryName(a.mockTestId) || '';
 
-                          const userMatches = !attemptsSearch || 
-                            userName.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
-                            userEmail.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
-                            userCode.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
-                            testTitle.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
-                            subCategoryName.toLowerCase().includes(attemptsSearch.toLowerCase());
-                          
-                          const platformMatches = attemptsPlatformFilter === 'all' || a.source === attemptsPlatformFilter;
-                          const statusMatches = attemptsStatusFilter === 'all' || a.status === attemptsStatusFilter;
-                          
-                          return userMatches && platformMatches && statusMatches;
-                        });
+                  const userMatches = !attemptsSearch || 
+                    userName.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
+                    userEmail.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
+                    userCode.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
+                    testTitle.toLowerCase().includes(attemptsSearch.toLowerCase()) ||
+                    subCategoryName.toLowerCase().includes(attemptsSearch.toLowerCase());
+                  
+                  const platformMatches = attemptsPlatformFilter === 'all' || a.source === attemptsPlatformFilter;
+                  const statusMatches = attemptsStatusFilter === 'all' || a.status === attemptsStatusFilter;
+                  
+                  return userMatches && platformMatches && statusMatches;
+                });
 
-                        if (filteredAttempts.length === 0) {
-                          return (
+                const totalPages = attemptsPageSize === -1 ? 1 : Math.ceil(filteredAttempts.length / attemptsPageSize) || 1;
+                const paginatedAttempts = attemptsPageSize === -1 
+                  ? filteredAttempts 
+                  : filteredAttempts.slice((attemptsPage - 1) * attemptsPageSize, attemptsPage * attemptsPageSize);
+
+                return (
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Candidate details</th>
+                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mock Test Details</th>
+                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Platform</th>
+                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Start / End Time</th>
+                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Attempt Stats</th>
+                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions / Analysis</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {loadingAttempts ? (
                             <tr>
-                              <td colSpan={6} className="py-16 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
+                              <td colSpan={7} className="py-24 text-center">
+                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-3"></div>
+                                <p className="text-xs text-slate-400 font-bold">Loading test attempt logs...</p>
+                              </td>
+                            </tr>
+                          ) : filteredAttempts.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="py-16 text-center text-slate-400 dark:text-slate-500 font-semibold italic">
                                 No test attempts found matching current search and filters.
                               </td>
                             </tr>
-                          );
-                        }
-
-                        return filteredAttempts.map((a) => (
-                          <tr key={a.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                            {/* Candidate Details */}
-                            <td className="py-4 px-4">
-                              <p className="font-extrabold text-xs text-slate-800 dark:text-slate-200">{a.user?.fullName || 'Unknown'}</p>
-                              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{a.user?.email || 'N/A'}</p>
-                              <div className="flex gap-2 mt-1">
-                                <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">
-                                  {a.user?.candidateCode || 'No Code'}
-                                </span>
-                                {a.user?.mobile && (
-                                  <span className="text-[9px] font-sans text-slate-500 dark:text-slate-400">
-                                    📞 {a.user.mobile}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-
-                            {/* Mock Test Details */}
-                            <td className="py-4 px-4 max-w-[240px]">
-                              {(() => {
-                                const subCategoryName = a.mockTest?.testSeries?.exam?.name || getExamSubCategoryName(a.mockTestId);
-                                return (
-                                  <div className="flex flex-col gap-1">
-                                    {subCategoryName && (
-                                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900/40 w-fit max-w-full truncate" title={subCategoryName}>
-                                        📁 {subCategoryName}
+                          ) : (
+                            paginatedAttempts.map((a) => (
+                              <tr key={a.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                                {/* Candidate Details */}
+                                <td className="py-4 px-4">
+                                  <p className="font-extrabold text-xs text-slate-800 dark:text-slate-200">{a.user?.fullName || 'Unknown'}</p>
+                                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{a.user?.email || 'N/A'}</p>
+                                  <div className="flex gap-2 mt-1">
+                                    <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">
+                                      {a.user?.candidateCode || 'No Code'}
+                                    </span>
+                                    {a.user?.mobile && (
+                                      <span className="text-[9px] font-sans text-slate-500 dark:text-slate-400">
+                                        📞 {a.user.mobile}
                                       </span>
                                     )}
-                                    <p className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate" title={a.mockTest?.title || 'Unknown Test'}>
-                                      {a.mockTest?.title || 'Unknown Test'}
-                                    </p>
-                                    <p className="text-[9px] text-slate-400 font-mono truncate">{a.mockTestId}</p>
                                   </div>
-                                );
-                              })()}
-                            </td>
+                                </td>
 
-                            {/* Platform Source */}
-                            <td className="py-4 px-4">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                                a.source === 'app'
-                                  ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
-                                  : a.source === 'mobile_web'
-                                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                              }`}>
-                                {a.source === 'app' ? '📱 Mobile App' : a.source === 'mobile_web' ? '📱 Web Mobile' : '🌐 Desktop Web'}
-                              </span>
-                            </td>
+                                {/* Mock Test Details */}
+                                <td className="py-4 px-4 max-w-[240px]">
+                                  {(() => {
+                                    const subCategoryName = a.mockTest?.testSeries?.exam?.name || getExamSubCategoryName(a.mockTestId);
+                                    return (
+                                      <div className="flex flex-col gap-1">
+                                        {subCategoryName && (
+                                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900/40 w-fit max-w-full truncate" title={subCategoryName}>
+                                            📁 {subCategoryName}
+                                          </span>
+                                        )}
+                                        <p className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate" title={a.mockTest?.title || 'Unknown Test'}>
+                                          {a.mockTest?.title || 'Unknown Test'}
+                                        </p>
+                                        <p className="text-[9px] text-slate-400 font-mono truncate">{a.mockTestId}</p>
+                                      </div>
+                                    );
+                                  })()}
+                                </td>
 
-                            {/* Start / End Time */}
-                            <td className="py-4 px-4">
-                              <p className="text-[10px] text-slate-700 dark:text-slate-300 font-medium">
-                                📅 {new Date(a.startedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
-                              </p>
-                              {a.completedAt ? (
-                                <p className="text-[9px] text-slate-400 font-medium mt-0.5">
-                                  ✅ Ended: {new Date(a.completedAt).toLocaleString('en-IN', { timeStyle: 'short' })}
-                                </p>
-                              ) : (
-                                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold italic mt-0.5 animate-pulse text-amber-500">
-                                  ⏳ Active session...
-                                </p>
-                              )}
-                            </td>
+                                {/* Platform Source */}
+                                <td className="py-4 px-4">
+                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                    a.source === 'app'
+                                      ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
+                                      : a.source === 'mobile_web'
+                                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                  }`}>
+                                    {a.source === 'app' ? '📱 Mobile App' : a.source === 'mobile_web' ? '📱 Web Mobile' : '🌐 Desktop Web'}
+                                  </span>
+                                </td>
 
-                            {/* Stats */}
-                            <td className="py-4 px-4">
-                              {a.status === 'ONGOING' ? (
-                                <div className="space-y-0.5">
-                                  <p className="text-[10px] text-slate-500 font-bold">Remaining time:</p>
-                                  <p className="text-xs font-black text-slate-800 dark:text-slate-200">{formatExactTime(a.remainingSeconds)}</p>
-                                  {a.violationsCount > 0 && (
-                                    <span className="text-[9px] bg-red-100 text-red-700 dark:bg-red-950/20 dark:text-red-400 font-black px-1 rounded">
-                                      Violations: {a.violationsCount}
-                                    </span>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="space-y-0.5">
-                                  <p className="text-xs font-black text-slate-800 dark:text-slate-200">
-                                    Score: <span className="text-blue-600 dark:text-blue-400">{a.finalScore ?? 0}</span> / {a.mockTest?.maxMarks || 200}
+                                {/* Start / End Time */}
+                                <td className="py-4 px-4">
+                                  <p className="text-[10px] text-slate-700 dark:text-slate-300 font-medium">
+                                    📅 {new Date(a.startedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                                   </p>
-                                  <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">
-                                    Accuracy: {a.accuracyPercentage ?? 0}% | Time: {formatExactTime(computeExactTimeSpent(a))}
-                                  </p>
-                                  {a.violationsCount > 0 && (
-                                    <span className="text-[9px] bg-red-100 text-red-700 dark:bg-red-950/20 dark:text-red-400 font-black px-1 rounded">
-                                      Violations: {a.violationsCount}
-                                    </span>
+                                  {a.completedAt ? (
+                                    <p className="text-[9px] text-slate-400 font-medium mt-0.5">
+                                      ✅ Ended: {new Date(a.completedAt).toLocaleString('en-IN', { timeStyle: 'short' })}
+                                    </p>
+                                  ) : (
+                                    <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold italic mt-0.5 animate-pulse text-amber-500">
+                                      ⏳ Active session...
+                                    </p>
                                   )}
-                                </div>
-                              )}
-                            </td>
+                                </td>
 
-                            {/* Status */}
-                            <td className="py-4 px-4">
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                                a.status === 'COMPLETED'
-                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                                  : a.status === 'AUTO_SUBMITTED'
-                                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 animate-pulse'
-                              }`}>
-                                {a.status}
+                                {/* Stats */}
+                                <td className="py-4 px-4">
+                                  {a.status === 'ONGOING' ? (
+                                    <div className="space-y-0.5">
+                                      <p className="text-[10px] text-slate-500 font-bold">Remaining time:</p>
+                                      <p className="text-xs font-black text-slate-800 dark:text-slate-200">{formatExactTime(a.remainingSeconds)}</p>
+                                      {a.violationsCount > 0 && (
+                                        <span className="text-[9px] bg-red-100 text-red-700 dark:bg-red-950/20 dark:text-red-400 font-black px-1 rounded">
+                                          Violations: {a.violationsCount}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-0.5">
+                                      <p className="text-xs font-black text-slate-800 dark:text-slate-200">
+                                        Score: <span className="text-blue-600 dark:text-blue-400">{a.finalScore ?? 0}</span> / {a.mockTest?.maxMarks || 200}
+                                      </p>
+                                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">
+                                        Accuracy: {a.accuracyPercentage ?? 0}% | Time: {formatExactTime(computeExactTimeSpent(a))}
+                                      </p>
+                                      {a.violationsCount > 0 && (
+                                        <span className="text-[9px] bg-red-100 text-red-700 dark:bg-red-950/20 dark:text-red-400 font-black px-1 rounded">
+                                          Violations: {a.violationsCount}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </td>
+
+                                {/* Status */}
+                                <td className="py-4 px-4">
+                                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                    a.status === 'COMPLETED'
+                                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                                      : a.status === 'AUTO_SUBMITTED'
+                                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 animate-pulse'
+                                  }`}>
+                                    {a.status}
+                                  </span>
+                                </td>
+
+                                {/* Actions / Analysis */}
+                                <td className="py-4 px-4 text-right">
+                                  <div className="flex items-center justify-end">
+                                    <button
+                                      onClick={() => setSelectedAnalysisSessionId(a.id)}
+                                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition active:scale-95 cursor-pointer"
+                                      title="View Candidate Test Analysis & Question Attempts"
+                                    >
+                                      <BarChart2 className="h-3.5 w-3.5" />
+                                      <span>Analysis</span>
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination Footer */}
+                    {!loadingAttempts && filteredAttempts.length > 0 && (
+                      <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                        <div className="text-slate-500 dark:text-slate-400 font-medium">
+                          Showing{' '}
+                          <span className="font-bold text-slate-700 dark:text-slate-200">
+                            {attemptsPageSize === -1 ? 1 : Math.min((attemptsPage - 1) * attemptsPageSize + 1, filteredAttempts.length)}
+                          </span>{' '}
+                          to{' '}
+                          <span className="font-bold text-slate-700 dark:text-slate-200">
+                            {attemptsPageSize === -1 ? filteredAttempts.length : Math.min(attemptsPage * attemptsPageSize, filteredAttempts.length)}
+                          </span>{' '}
+                          of <span className="font-bold text-slate-700 dark:text-slate-200">{filteredAttempts.length}</span> attempts
+                          {filteredAttempts.length < attemptsList.length && (
+                            <span className="text-slate-400 font-normal"> (filtered from {attemptsList.length} total)</span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            <span>Per page:</span>
+                            <select
+                              value={attemptsPageSize}
+                              onChange={(e) => {
+                                setAttemptsPageSize(Number(e.target.value));
+                                setAttemptsPage(1);
+                              }}
+                              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
+                            >
+                              <option value={25}>25</option>
+                              <option value={50}>50</option>
+                              <option value={100}>100</option>
+                              <option value={-1}>All</option>
+                            </select>
+                          </div>
+
+                          {attemptsPageSize !== -1 && totalPages > 1 && (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => setAttemptsPage(p => Math.max(1, p - 1))}
+                                disabled={attemptsPage === 1}
+                                className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition cursor-pointer"
+                              >
+                                Prev
+                              </button>
+                              <span className="px-2 text-xs font-bold text-slate-600 dark:text-slate-400">
+                                {attemptsPage} / {totalPages}
                               </span>
-                            </td>
-                          </tr>
-                        ));
-                      })()}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                              <button
+                                onClick={() => setAttemptsPage(p => Math.min(totalPages, p + 1))}
+                                disabled={attemptsPage === totalPages}
+                                className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition cursor-pointer"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -6392,9 +6502,23 @@ export default function AdminAnalytics() {
             <TypingTestManager showToast={showToast} />
           )}
 
+          {/* TAB: DEDICATED TYPING ATTEMPT LOGS */}
+          {activeTab === 'typing_attempts' && hasTabAccess('typing_attempts') && (
+            <TypingAttemptManager showToast={showToast} language={language} />
+          )}
+
         </div>
 
       </main>
+
+      {/* Mock Test Attempt Analysis & Question Attempts Modal */}
+      {selectedAnalysisSessionId && (
+        <AdminTestAnalysisModal
+          sessionId={selectedAnalysisSessionId}
+          onClose={() => setSelectedAnalysisSessionId(null)}
+          showToast={showToast}
+        />
+      )}
 
       {/* Custom Confirmation Modal */}
       {resetConfirmOpen && resetTarget && (

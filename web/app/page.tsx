@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 import Link from 'next/link';
 import HomeSupportWidget from './components/HomeSupportWidget';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, GraduationCap, ChevronRight, ChevronLeft, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target, ArrowRight, BookmarkCheck, Lock, Mail, Copy, Check, ExternalLink } from 'lucide-react';
+import { ShieldCheck, GraduationCap, ChevronRight, ChevronLeft, Award, Trophy, Users, User, CheckCircle, Search, Info, Calendar, Bell, HelpCircle, UserCheck, Sun, Moon, FileText, X, Menu, LogOut, LayoutDashboard, Gift, Sparkles, TrendingUp, Coins, BookOpen, MapPin, MessageSquare, Send, Lightbulb, Target, ArrowRight, BookmarkCheck, Lock, Mail, Copy, Check, ExternalLink, Keyboard } from 'lucide-react';
 import { TRANSLATIONS } from './translations';
 import { getLocalizedName } from './lib/examUtils';
 import { useIsMobile } from './useIsMobile';
@@ -394,44 +394,44 @@ const formatSubCategoryName = (name: string) => {
   const touchEndX = useRef<number | null>(null);
 
   const renderNotificationTile = (notice: any, themeColor: 'blue' | 'amber' | 'emerald' | 'purple') => {
-    const hoverBorderColors = {
-      blue: 'hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/50',
-      amber: 'hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/50',
-      emerald: 'hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/50',
-      purple: 'hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-950/50',
-    };
-
-    const hoverShadowColors = {
-      blue: 'hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.35),0_0_16px_rgba(59,130,246,0.18)]',
-      amber: 'hover:shadow-[0_12px_24px_-6px_rgba(245,158,11,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(245,158,11,0.35),0_0_16px_rgba(245,158,11,0.18)]',
-      emerald: 'hover:shadow-[0_12px_24px_-6px_rgba(16,185,129,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(16,185,129,0.35),0_0_16px_rgba(16,185,129,0.18)]',
-      purple: 'hover:shadow-[0_12px_24px_-6px_rgba(168,85,247,0.18),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-6px_rgba(168,85,247,0.35),0_0_16px_rgba(168,85,247,0.18)]',
+    const typeTagColors = {
+      blue: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/80',
+      amber: 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/80',
+      emerald: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/80',
+      purple: 'bg-purple-50 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200/80 dark:border-purple-800/80',
     };
 
     return (
       <div
         key={notice.id}
         onClick={() => router.push(`/updates/${notice.id}`)}
-        className={`group w-full bg-slate-50/90 dark:bg-slate-950/70 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/90 dark:border-slate-800 ${hoverBorderColors[themeColor]} ${hoverShadowColors[themeColor]} rounded-2xl p-4 shadow-2xs transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.99] cursor-pointer flex flex-col gap-2 relative`}
+        className="group w-full py-3.5 px-3 transition-colors duration-150 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 cursor-pointer flex flex-col gap-1.5 relative border-b border-slate-200 dark:border-slate-800 last:border-b-0"
       >
         {/* Top Badges & Date */}
         <div className="flex items-center justify-between gap-2 w-full">
-          {isNewlyPublished(notice.publishDate) ? (
-            <span className="bg-rose-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow-2xs">
-              {t.newBadge}
-            </span>
-          ) : <span />}
-          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold whitespace-nowrap">{notice.date}</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {notice.type && (
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border ${typeTagColors[themeColor]}`}>
+                {notice.type}
+              </span>
+            )}
+            {isNewlyPublished(notice.publishDate) && (
+              <span className="bg-rose-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow-2xs">
+                {t.newBadge}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium whitespace-nowrap">{notice.date}</span>
         </div>
 
-        {/* Regular Normal Weight Title (Clean font style) */}
-        <h5 className="font-semibold text-xs sm:text-[13px] text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug transition-colors">
+        {/* Regular Normal Weight Title */}
+        <h5 className="font-medium text-xs sm:text-[13px] text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug transition-colors">
           {notice.title}
         </h5>
 
         {/* Last Date Deadline - Only in Live Notices */}
         {notice.category === 'notice' && notice.lastDate && (
-          <p className="text-[9.5px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1 mt-0.5">
+          <p className="text-[9.5px] text-rose-600 dark:text-rose-400 font-semibold uppercase tracking-wider flex items-center gap-1 mt-0.5">
             <span>{t.lastDate}</span>
             <span>{notice.lastDate}</span>
           </p>
@@ -492,7 +492,7 @@ const formatSubCategoryName = (name: string) => {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
-  const [mobileUpdateTab, setMobileUpdateTab] = useState<'notice' | 'result' | 'admit_card'>('notice');
+  const [mobileUpdateTab, setMobileUpdateTab] = useState<'admit_card' | 'result' | 'notice'>('admit_card');
 
   // Screen back navigation screen-by-screen logic for mobile view
   const handleToggleMenu = (open: boolean) => {
@@ -757,20 +757,20 @@ const formatSubCategoryName = (name: string) => {
               </div>
             </Link>
 
-            {/* 2. NOTICES & ANNOUNCEMENTS */}
+            {/* 2. TYPING TEST */}
             <Link
-              href="/updates"
+              href="/typing-test"
               className="group flex items-start sm:items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-blue-500/50 shadow-xs hover:shadow-md transition-all duration-200"
             >
               <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs">
-                <Bell className="h-4.5 w-4.5" />
+                <Keyboard className="h-4.5 w-4.5" />
               </div>
               <div className="min-w-0 flex-1">
                 <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-tight">
-                  {language === 'hi' ? 'सूचनाएं एवं अलर्ट' : 'Notices & Alerts'}
+                  {language === 'hi' ? 'टाइपिंग टेस्ट' : 'Typing Test'}
                 </h4>
                 <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
-                  {language === 'hi' ? 'एडमिट कार्ड व परिणाम' : 'Admit Cards & Results'}
+                  {language === 'hi' ? 'एसएससी, कोर्ट व राज्य परीक्षा' : 'SSC, Court & State Tests'}
                 </p>
               </div>
             </Link>
@@ -892,14 +892,14 @@ const formatSubCategoryName = (name: string) => {
             {/* TAB SELECTION BAR */}
             <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
               <button
-                onClick={() => setMobileUpdateTab('notice')}
+                onClick={() => setMobileUpdateTab('admit_card')}
                 className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
-                  mobileUpdateTab === 'notice' 
-                    ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm'
+                  mobileUpdateTab === 'admit_card' 
+                    ? 'bg-white dark:bg-slate-800 text-green-600 dark:text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                Notices
+                Admit Cards
               </button>
               <button
                 onClick={() => setMobileUpdateTab('result')}
@@ -912,14 +912,14 @@ const formatSubCategoryName = (name: string) => {
                 Results
               </button>
               <button
-                onClick={() => setMobileUpdateTab('admit_card')}
+                onClick={() => setMobileUpdateTab('notice')}
                 className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
-                  mobileUpdateTab === 'admit_card' 
-                    ? 'bg-white dark:bg-slate-800 text-green-600 dark:text-white shadow-sm'
+                  mobileUpdateTab === 'notice' 
+                    ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                Admit Cards
+                Notices
               </button>
             </div>
 
@@ -927,50 +927,42 @@ const formatSubCategoryName = (name: string) => {
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm min-h-[300px] flex flex-col justify-between">
               <div>
                 <h3 className="font-extrabold text-[10px] text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                  {mobileUpdateTab === 'notice' && <><Bell className="h-4 w-4 text-blue-600 animate-bounce" /> {t.liveNotices}</>}
-                  {mobileUpdateTab === 'result' && <><Trophy className="h-4 w-4 text-yellow-500" /> {t.resultsMerits}</>}
                   {mobileUpdateTab === 'admit_card' && <><FileText className="h-4 w-4 text-green-550" /> {t.admitCards}</>}
+                  {mobileUpdateTab === 'result' && <><Trophy className="h-4 w-4 text-yellow-500" /> {t.resultsMerits}</>}
+                  {mobileUpdateTab === 'notice' && <><Bell className="h-4 w-4 text-blue-600 animate-bounce" /> {t.liveNotices}</>}
                 </h3>
                 
-                <div className="space-y-3">
+                <div className="divide-y divide-slate-200 dark:divide-slate-800">
                   {noticesList.filter(n => n.category === mobileUpdateTab).length > 0 ? (
                     [...noticesList]
                       .filter(n => n.category === mobileUpdateTab)
                       .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                       .slice(0, 6)
-                      .map(notice => {
-                      const noticeStyle = 
-                        notice.category === 'notice' ? 'bg-blue-50/40 dark:bg-blue-950/10 border-blue-100 dark:border-blue-900/30 border-l-4 border-l-blue-500' :
-                        notice.category === 'result' ? 'bg-emerald-50/40 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/30 border-l-4 border-l-emerald-500' :
-                        notice.category === 'admit_card' ? 'bg-amber-50/40 dark:bg-amber-950/10 border-amber-100 dark:border-amber-900/30 border-l-4 border-l-amber-500' :
-                        'bg-purple-50/40 dark:bg-purple-950/10 border-purple-100 dark:border-purple-900/30 border-l-4 border-l-purple-500';
-
-                      return (
+                      .map(notice => (
                         <Link
                           key={notice.id}
                           href={`/updates/${notice.id}`}
-                          className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm transition-all duration-200 hover:scale-[1.015] active:scale-98 cursor-pointer block ${noticeStyle}`}
+                          className="group py-3 px-2 transition-colors duration-150 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer flex flex-col gap-1 block"
                         >
                           <div className="flex items-center justify-between gap-2">
                             {isNewlyPublished(notice.publishDate) ? (
-                              <span className="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
+                              <span className="bg-rose-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
                                 {t.newBadge}
                               </span>
                             ) : <span />}
-                            <span className="text-[7px] text-slate-400 font-semibold">{notice.date}</span>
+                            <span className="text-[7px] text-slate-400 font-medium">{notice.date}</span>
                           </div>
-                          <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1">
+                          <h5 className="font-medium text-xs text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                             <span>{(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title}</span>
                             <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
                           </h5>
                           {notice.category === 'notice' && notice.lastDate && (
-                            <p className="text-[8px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
+                            <p className="text-[8px] text-red-500 font-semibold mt-0.5 uppercase tracking-wider">
                               {t.lastDate} {notice.lastDate}
                             </p>
                           )}
                         </Link>
-                      );
-                    })
+                      ))
                   ) : (
                     <div className="text-center py-12 text-slate-400 text-xs">
                       {t.noAlerts || 'No active alerts in this section.'}
@@ -1274,23 +1266,23 @@ const formatSubCategoryName = (name: string) => {
               <ChevronRight className="h-4 w-4 text-slate-400 opacity-40 group-hover:opacity-100 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all shrink-0 hidden 2xl:block" />
             </Link>
 
-            {/* 2. NOTICE AND ANNOUNCEMENTS */}
+            {/* 2. TYPING TEST */}
             <Link
-              href="/updates"
-              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500/50 shadow-xs hover:shadow-md transition-all duration-200 transform-gpu hover:-translate-y-0.5"
+              href="/typing-test"
+              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-blue-500/50 shadow-xs hover:shadow-md transition-all duration-200 transform-gpu hover:-translate-y-0.5"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-                <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5 xl:h-5.5 xl:w-5.5" />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-xl bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                <Keyboard className="h-4 w-4 sm:h-4.5 sm:w-4.5 xl:h-5.5 xl:w-5.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight line-clamp-1">
-                  {language === 'hi' ? 'सूचनाएं एवं अपडेट्स' : 'Notices & Announcements'}
+                <h4 className="font-extrabold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight line-clamp-1">
+                  {language === 'hi' ? 'टाइपिंग टेस्ट' : 'Typing Test'}
                 </h4>
                 <p className="text-[9px] sm:text-[9.5px] xl:text-[10.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
-                  {language === 'hi' ? 'एडमिट कार्ड व परिणाम' : 'Admit Cards & Results'}
+                  {language === 'hi' ? 'एसएससी, कोर्ट व राज्य परीक्षा' : 'SSC, Court & State Tests'}
                 </p>
               </div>
-              <ChevronRight className="h-4 w-4 text-slate-400 opacity-40 group-hover:opacity-100 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all shrink-0 hidden 2xl:block" />
+              <ChevronRight className="h-4 w-4 text-slate-400 opacity-40 group-hover:opacity-100 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all shrink-0 hidden 2xl:block" />
             </Link>
 
             {/* 3. DOCUMENT LOCKER */}
@@ -1359,15 +1351,15 @@ const formatSubCategoryName = (name: string) => {
           {/* TAB SELECTION BAR */}
           <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
             <button
-              onClick={() => setMobileUpdateTab('notice')}
+              onClick={() => setMobileUpdateTab('admit_card')}
               className={`flex-1 py-2 text-center rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                mobileUpdateTab === 'notice' 
-                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
+                mobileUpdateTab === 'admit_card' 
+                  ? 'bg-white dark:bg-slate-800 text-green-600 dark:text-green-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               }`}
             >
-              <Bell className="h-3.5 w-3.5" />
-              <span>{t.liveNotices}</span>
+              <FileText className="h-3.5 w-3.5" />
+              <span>{t.admitCards}</span>
             </button>
             <button
               onClick={() => setMobileUpdateTab('result')}
@@ -1381,15 +1373,15 @@ const formatSubCategoryName = (name: string) => {
               <span>{t.resultsMerits}</span>
             </button>
             <button
-              onClick={() => setMobileUpdateTab('admit_card')}
+              onClick={() => setMobileUpdateTab('notice')}
               className={`flex-1 py-2 text-center rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                mobileUpdateTab === 'admit_card' 
-                  ? 'bg-white dark:bg-slate-800 text-green-600 dark:text-green-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
+                mobileUpdateTab === 'notice' 
+                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               }`}
             >
-              <FileText className="h-3.5 w-3.5" />
-              <span>{t.admitCards}</span>
+              <Bell className="h-3.5 w-3.5" />
+              <span>{t.liveNotices}</span>
             </button>
           </div>
 
@@ -1397,50 +1389,42 @@ const formatSubCategoryName = (name: string) => {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-3xl shadow-sm min-h-[300px] flex flex-col justify-between">
             <div>
               <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                {mobileUpdateTab === 'notice' && <><Bell className="h-4 w-4 text-blue-600 animate-bounce" /> <span>{t.liveNotices}</span></>}
-                {mobileUpdateTab === 'result' && <><Trophy className="h-4 w-4 text-yellow-500 animate-pulse" /> <span>{t.resultsMerits}</span></>}
                 {mobileUpdateTab === 'admit_card' && <><FileText className="h-4 w-4 text-green-550" /> <span>{t.admitCards}</span></>}
+                {mobileUpdateTab === 'result' && <><Trophy className="h-4 w-4 text-yellow-500 animate-pulse" /> <span>{t.resultsMerits}</span></>}
+                {mobileUpdateTab === 'notice' && <><Bell className="h-4 w-4 text-blue-600 animate-bounce" /> <span>{t.liveNotices}</span></>}
               </h3>
               
-              <div className="space-y-3">
+              <div className="divide-y divide-slate-200 dark:divide-slate-800">
                 {noticesList.filter(n => n.category === mobileUpdateTab).length > 0 ? (
                   [...noticesList]
                     .filter(n => n.category === mobileUpdateTab)
                     .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                     .slice(0, 6)
-                    .map(notice => {
-                    const noticeStyle = 
-                      notice.category === 'notice' ? 'bg-blue-50/40 dark:bg-blue-950/10 border-blue-100 dark:border-blue-900/30 border-l-4 border-l-blue-500' :
-                      notice.category === 'result' ? 'bg-emerald-50/40 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/30 border-l-4 border-l-emerald-500' :
-                      notice.category === 'admit_card' ? 'bg-amber-50/40 dark:bg-amber-950/10 border-amber-100 dark:border-amber-900/30 border-l-4 border-l-amber-500' :
-                      'bg-purple-50/40 dark:bg-purple-950/10 border-purple-100 dark:border-purple-900/30 border-l-4 border-l-purple-500';
-
-                    return (
+                    .map(notice => (
                       <Link
                         key={notice.id}
                         href={`/updates/${notice.id}`}
-                        className={`p-3 sm:p-3.5 rounded-xl border flex flex-col gap-1 shadow-xs transition-all duration-200 hover:scale-[1.01] active:scale-98 cursor-pointer block ${noticeStyle}`}
+                        className="group py-3 px-2 sm:px-3 transition-colors duration-150 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer flex flex-col gap-1 block"
                       >
                         <div className="flex items-center justify-between gap-2">
                           {isNewlyPublished(notice.publishDate) ? (
-                            <span className="bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase">
+                            <span className="bg-rose-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
                               {t.newBadge}
                             </span>
                           ) : <span />}
-                          <span className="text-[8px] sm:text-[9px] text-slate-400 font-semibold">{notice.date}</span>
+                          <span className="text-[8px] sm:text-[9px] text-slate-400 font-medium">{notice.date}</span>
                         </div>
-                        <h5 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1">
+                        <h5 className="font-medium text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                           <span>{(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title}</span>
                           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                         </h5>
                         {notice.category === 'notice' && notice.lastDate && (
-                          <p className="text-[9px] sm:text-[10px] text-red-500 font-extrabold mt-0.5 uppercase tracking-wider">
+                          <p className="text-[9px] sm:text-[10px] text-rose-500 font-semibold mt-0.5 uppercase tracking-wider">
                             {t.lastDate} {notice.lastDate}
                           </p>
                         )}
                       </Link>
-                    );
-                  })
+                    ))
                 ) : (
                   <div className="text-center py-12 text-slate-400 text-xs">
                     {t.noAlerts || 'No active alerts in this section.'}
@@ -1460,33 +1444,33 @@ const formatSubCategoryName = (name: string) => {
         {/* DESKTOP 3-COLUMN UPDATES VIEW (>= 1080px) - WIDER FULL-WIDTH GRID */}
         <div className="hidden min-[1080px]:grid min-[1080px]:grid-cols-3 gap-5 lg:gap-6 w-full">
           
-          {/* Column 1: Live Notices & Announcements (Blue Theme) */}
+          {/* Column 1: Admit Cards & City Info (Emerald Theme) */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 lg:p-6 shadow-sm flex flex-col min-h-[580px] relative w-full">
             <h3 className="font-extrabold text-xs lg:text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
-              <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce shrink-0" />
-              <span>{t.liveNotices}</span>
+              <FileText className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+              <span>{t.admitCards}</span>
             </h3>
 
-            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2 -m-2">
-              {noticesList.filter(n => n.category === 'notice').length > 0 ? (
+            <div className="overflow-y-auto flex-1 max-h-[850px] no-scrollbar">
+              {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
                 [...noticesList]
-                  .filter(n => n.category === 'notice')
+                  .filter(n => n.category === 'admit_card')
                   .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                   .slice(0, 6)
-                  .map((notice) => renderNotificationTile(notice, 'blue'))
+                  .map((notice) => renderNotificationTile(notice, 'emerald'))
               ) : (
                 <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                  {language === 'hi' ? 'कोई सक्रिय सूचना नहीं।' : 'No active notices.'}
+                  {language === 'hi' ? 'कोई सक्रिय प्रवेश पत्र नहीं।' : 'No active admit cards.'}
                 </div>
               )}
             </div>
 
             <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
               <Link 
-                href="/updates?category=notice"
-                className="w-full py-2.5 px-4 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+                href="/updates?category=admit_card"
+                className="w-full py-2.5 px-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
               >
-                <span>View All {t.liveNotices}</span>
+                <span>View All {t.admitCards}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -1499,7 +1483,7 @@ const formatSubCategoryName = (name: string) => {
               <span>{t.resultsMerits}</span>
             </h3>
 
-            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2 -m-2">
+            <div className="overflow-y-auto flex-1 max-h-[850px] no-scrollbar">
               {noticesList.filter(n => n.category === 'result').length > 0 ? (
                 [...noticesList]
                   .filter(n => n.category === 'result')
@@ -1524,33 +1508,33 @@ const formatSubCategoryName = (name: string) => {
             </div>
           </div>
 
-          {/* Column 3: Admit Cards & City Info (Emerald Theme) */}
+          {/* Column 3: Live Notices & Announcements (Blue Theme) */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 lg:p-6 shadow-sm flex flex-col min-h-[580px] relative w-full">
             <h3 className="font-extrabold text-xs lg:text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
-              <FileText className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
-              <span>{t.admitCards}</span>
+              <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce shrink-0" />
+              <span>{t.liveNotices}</span>
             </h3>
 
-            <div className="space-y-3.5 overflow-y-auto flex-1 max-h-[850px] no-scrollbar p-2 -m-2">
-              {noticesList.filter(n => n.category === 'admit_card').length > 0 ? (
+            <div className="overflow-y-auto flex-1 max-h-[850px] no-scrollbar">
+              {noticesList.filter(n => n.category === 'notice').length > 0 ? (
                 [...noticesList]
-                  .filter(n => n.category === 'admit_card')
+                  .filter(n => n.category === 'notice')
                   .sort((a, b) => b.publishDate.localeCompare(a.publishDate))
                   .slice(0, 6)
-                  .map((notice) => renderNotificationTile(notice, 'emerald'))
+                  .map((notice) => renderNotificationTile(notice, 'blue'))
               ) : (
                 <div className="text-center py-20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                  {language === 'hi' ? 'कोई सक्रिय प्रवेश पत्र नहीं।' : 'No active admit cards.'}
+                  {language === 'hi' ? 'कोई सक्रिय सूचना नहीं।' : 'No active notices.'}
                 </div>
               )}
             </div>
 
             <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
               <Link 
-                href="/updates?category=admit_card"
-                className="w-full py-2.5 px-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+                href="/updates?category=notice"
+                className="w-full py-2.5 px-4 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
               >
-                <span>View All {t.admitCards}</span>
+                <span>View All {t.liveNotices}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>

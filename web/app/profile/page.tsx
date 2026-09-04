@@ -227,10 +227,10 @@ function ProfileContent() {
   const isPass = (currentUser.subscriptionTier as string) === 'Testbook Pass' || (currentUser.subscriptionTier as string) === 'MockTest Hub Pass';
 
   const getDisplayTierName = (tier: string) => {
-    if (tier === 'Testbook Pass Pro' || tier === 'MockTest Hub Pass Pro') return 'MockTest Hub Pass Pro';
-    if (tier === 'Testbook Pass' || tier === 'MockTest Hub Pass') return 'MockTest Hub Pass';
-    if (tier === 'None') return language === 'hi' ? 'निःशुल्क स्टार्टर प्लान' : 'Free Starter Plan';
-    return tier.replace(/Testbook/gi, 'MockTest Hub');
+    if (tier === 'Testbook Pass Pro' || tier === 'MockTest Hub Pass Pro') return 'Pass Pro';
+    if (tier === 'Testbook Pass' || tier === 'MockTest Hub Pass') return 'Pass';
+    if (tier === 'None') return language === 'hi' ? 'निःशुल्क स्टार्टर प्लान' : 'Free Tier';
+    return tier.replace(/Testbook/gi, '').replace(/MockTest\s*Hub/gi, '').trim() || 'Pass Pro';
   };
 
   const appliedJobsCount = trackedJobs.filter(j => j.isApplied).length;
@@ -419,58 +419,61 @@ function ProfileContent() {
         <aside className="w-full md:w-72 lg:w-80 shrink-0 space-y-5">
           
           {/* USER MINI PROFILE HERO CARD */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-5 shadow-xs relative overflow-hidden transition-all duration-300">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs relative overflow-hidden transition-all duration-300 flex flex-col justify-between h-auto md:h-[152px]">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
 
-            <div className="flex items-center gap-3.5">
-              <div className="relative h-14 w-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-blue-600/20 shrink-0 border-2 border-white dark:border-slate-800">
+            {/* User Info Row */}
+            <div className="relative z-10 flex items-center gap-3 min-w-0">
+              <div className="relative h-11 w-11 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-sm shrink-0 border border-white dark:border-slate-800">
                 {currentUser.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
                 {isPassPro && (
-                  <div className="absolute -top-1 -right-1 bg-amber-400 text-amber-950 p-1 rounded-full shadow-xs" title="Pass Pro Member">
-                    <Crown className="h-3 w-3" />
+                  <div className="absolute -top-1 -right-1 bg-amber-400 text-amber-950 p-0.5 rounded-full shadow-xs" title="Pass Pro Member">
+                    <Crown className="h-2.5 w-2.5" />
                   </div>
                 )}
               </div>
 
               <div className="min-w-0 flex-1">
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">{currentUser.name}</h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{currentUser.email}</p>
-                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                  <span className="text-[9px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-slate-700/80">
-                    ID: {currentUser.candidateCode}
-                  </span>
-                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${
+                <div className="flex items-center justify-between gap-1.5">
+                  <h3 className="font-semibold text-sm text-slate-900 dark:text-white truncate">{currentUser.name}</h3>
+                  <span className={`text-[9px] font-medium uppercase px-1.5 py-0.5 rounded border shrink-0 ${
                     isPassPro
                       ? 'bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-300'
                       : isPass
                       ? 'bg-emerald-100 border-emerald-300 text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-300'
                       : 'bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
                   }`}>
-                    {isPassPro ? 'MockTest Hub Pass Pro' : isPass ? 'MockTest Hub Pass' : 'Free Tier'}
+                    {isPassPro ? 'Pass Pro' : isPass ? 'Pass' : 'Free'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{currentUser.email}</p>
+                  <span className="text-[9px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/80 dark:border-slate-700/80 shrink-0">
+                    ID: {currentUser.candidateCode}
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Quick Balances Row */}
-            <div className="grid grid-cols-2 gap-2.5 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80">
-              <div className="bg-slate-50 dark:bg-slate-950 p-2.5 rounded-2xl border border-slate-200/60 dark:border-slate-800 flex items-center gap-2">
-                <div className="p-1.5 rounded-xl bg-amber-500/10 text-amber-500">
-                  <Coins className="h-4 w-4" />
+            <div className="relative z-10 grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="bg-slate-50 dark:bg-slate-950/70 px-2.5 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-800/80 flex items-center gap-2 min-w-0">
+                <div className="p-1 rounded-lg bg-amber-500/10 text-amber-500 shrink-0">
+                  <Coins className="h-3.5 w-3.5" />
                 </div>
-                <div>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase">{t.coinsCount}</p>
-                  <p className="text-xs font-black text-slate-900 dark:text-white font-mono">{currentUser.coins || 0}</p>
+                <div className="min-w-0">
+                  <p className="text-[9px] text-slate-400 font-medium uppercase truncate leading-none">{t.coinsCount}</p>
+                  <p className="text-xs font-semibold text-slate-900 dark:text-white font-mono leading-tight mt-0.5">{currentUser.coins || 0}</p>
                 </div>
               </div>
 
-              <div className="bg-slate-50 dark:bg-slate-950 p-2.5 rounded-2xl border border-slate-200/60 dark:border-slate-800 flex items-center gap-2">
-                <div className="p-1.5 rounded-xl bg-purple-500/10 text-purple-500">
-                  <BookmarkCheck className="h-4 w-4" />
+              <div className="bg-slate-50 dark:bg-slate-950/70 px-2.5 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-800/80 flex items-center gap-2 min-w-0">
+                <div className="p-1 rounded-lg bg-purple-500/10 text-purple-500 shrink-0">
+                  <BookmarkCheck className="h-3.5 w-3.5" />
                 </div>
-                <div>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase">{language === 'hi' ? 'ट्रैक्ड' : 'Tracked'}</p>
-                  <p className="text-xs font-black text-slate-900 dark:text-white font-mono">{trackedJobs.length}</p>
+                <div className="min-w-0">
+                  <p className="text-[9px] text-slate-400 font-medium uppercase truncate leading-none">{language === 'hi' ? 'ट्रैक्ड' : 'Tracked'}</p>
+                  <p className="text-xs font-semibold text-slate-900 dark:text-white font-mono leading-tight mt-0.5">{trackedJobs.length}</p>
                 </div>
               </div>
             </div>
@@ -551,15 +554,10 @@ function ProfileContent() {
             <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-200">
               
               {/* WELCOME BANNER WITH EMBEDDED PASS DETAILS (COMPACT) */}
-              <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl sm:rounded-3xl p-4 sm:p-5 text-white shadow-md shadow-blue-600/10 relative overflow-hidden space-y-3">
-                <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-                
-                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                  <div className="flex items-center gap-2.5">
-                    <span className="bg-white/20 backdrop-blur-md text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md inline-flex items-center gap-1 shrink-0">
-                      <Sparkles className="h-2.5 w-2.5" /> Portal
-                    </span>
-                    <h2 className="text-base sm:text-lg font-black tracking-tight truncate">
+              <div className="bg-blue-600 dark:bg-blue-600 rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white shadow-sm border border-blue-500/30 relative overflow-hidden flex flex-col justify-between h-auto md:h-[152px]">
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg sm:text-xl font-medium tracking-tight text-white">
                       {language === 'hi' ? `नमस्ते, ${currentUser.name}` : `Welcome, ${currentUser.name}`}
                     </h2>
                   </div>
@@ -568,7 +566,7 @@ function ProfileContent() {
                     <button
                       onClick={handleClaimPass}
                       disabled={isClaiming}
-                      className="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-amber-950 text-[11px] font-black shadow-sm transition active:scale-95 shrink-0 flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+                      className="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-amber-950 text-xs font-medium shadow-sm transition active:scale-95 shrink-0 flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
                     >
                       <Crown className="h-3.5 w-3.5" />
                       <span>{isClaiming ? 'Activating...' : (language === 'hi' ? '1-Year Pass Pro प्राप्त करें' : 'Claim 1-Year Pass Pro')}</span>
@@ -577,44 +575,44 @@ function ProfileContent() {
                 </div>
 
                 {/* PASS DETAILS COMPACT STRIP */}
-                <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-2.5 sm:p-3 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-white">
+                <div className="relative z-10 bg-white/[0.08] backdrop-blur-md border border-white/15 rounded-xl p-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-white">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                      <Crown className="h-3.5 w-3.5 text-amber-300" />
+                    <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                      <Crown className="h-4 w-4 text-amber-300" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold text-blue-100 uppercase tracking-wider">
+                      <p className="text-[10px] font-normal text-blue-100/80 uppercase tracking-wider">
                         {language === 'hi' ? 'पास योजना' : 'Active Plan'}
                       </p>
-                      <p className="text-xs font-black truncate text-white">
+                      <p className="text-xs sm:text-sm font-medium truncate text-white mt-0.5">
                         {getDisplayTierName(currentUser.subscriptionTier)}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2.5 border-t sm:border-t-0 sm:border-l border-white/15 pt-2 sm:pt-0 sm:pl-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                      <Calendar className="h-3.5 w-3.5 text-blue-200" />
+                  <div className="flex items-center gap-2.5 border-t sm:border-t-0 sm:border-l border-white/15 pt-2 sm:pt-0 sm:pl-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                      <Calendar className="h-4 w-4 text-blue-200" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold text-blue-100 uppercase tracking-wider">
+                      <p className="text-[10px] font-normal text-blue-100/80 uppercase tracking-wider">
                         {t.passPurchased}
                       </p>
-                      <p className="text-xs font-mono font-bold truncate text-white" suppressHydrationWarning>
+                      <p className="text-xs font-normal truncate text-white/95 mt-0.5" suppressHydrationWarning>
                         {mounted ? (currentUser.subscriptionPurchasedAt || currentUser.registeredDate || 'N/A') : 'N/A'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2.5 border-t sm:border-t-0 sm:border-l border-white/15 pt-2 sm:pt-0 sm:pl-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                      <Clock className="h-3.5 w-3.5 text-amber-200" />
+                  <div className="flex items-center gap-2.5 border-t sm:border-t-0 sm:border-l border-white/15 pt-2 sm:pt-0 sm:pl-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                      <Clock className="h-4 w-4 text-amber-200" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold text-blue-100 uppercase tracking-wider">
+                      <p className="text-[10px] font-normal text-blue-100/80 uppercase tracking-wider">
                         {t.passExpires}
                       </p>
-                      <p className="text-xs font-mono font-bold truncate text-white" suppressHydrationWarning>
+                      <p className="text-xs font-normal truncate text-white/95 mt-0.5" suppressHydrationWarning>
                         {mounted ? (currentUser.subscriptionExpiresAt || (isPassPro || isPass ? '1-Year Full Validity' : 'No Expiry')) : 'N/A'}
                       </p>
                     </div>
@@ -629,9 +627,9 @@ function ProfileContent() {
                     <Trophy className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-extrabold uppercase text-slate-400">{language === 'hi' ? 'सदस्यता स्तर' : 'Membership'}</p>
-                    <p className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
-                      {isPassPro ? 'MockTest Hub Pass Pro' : isPass ? 'MockTest Hub Pass' : 'Free Tier'}
+                    <p className="text-[10px] font-medium uppercase text-slate-400">{language === 'hi' ? 'सदस्यता स्तर' : 'Membership'}</p>
+                    <p className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white truncate">
+                      {isPassPro ? 'Pass Pro' : isPass ? 'Pass' : 'Free Tier'}
                     </p>
                   </div>
                 </div>
