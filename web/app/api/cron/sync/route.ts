@@ -3,6 +3,9 @@ import { prisma } from '../../../lib/prisma';
 import { uploadNoticeHtmlToTigris } from '../../../lib/tigrisNoticeStorage';
 import crypto from 'crypto';
 
+// Vercel Hobby plan allows up to 60s per function invocation.
+export const maxDuration = 60;
+
 // Format date to: 30 June 2026
 function formatPublishDate(date: Date) {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -327,6 +330,18 @@ export async function GET(request: Request) {
     const updatedTitles: string[] = [];
     let importedIndex = 0;
 
+    // Give the network/DB work a hard deadline so the function always returns
+    // well inside the platform's execution limit, instead of getting killed
+    // mid-run and silently dropping whatever category was still in progress.
+    const runStartedAt = Date.now();
+    const DEADLINE_MS = 50_000;
+    const timeLeft = () => DEADLINE_MS - (Date.now() - runStartedAt);
+
+    type WorkItem = { id: string; title: string; url: string; isUpdate: boolean; existingLastDate?: string | null };
+    type CategoryQueue = { target: typeof targets[number]; queue: WorkItem[] };
+
+    const categoryQueues: CategoryQueue[] = [];
+
     for (const target of targets) {
       console.log(`Cron: Fetching listing for ${target.name}...`);
       let html = '';
@@ -342,14 +357,14 @@ export async function GET(request: Request) {
       for (let i = 1; i < parts.length; i++) {
         const part = parts[i];
         const h2Match = /<h2[^>]*>([\s\S]+?)<\/h2>/i.exec(part);
-        
+
         if (h2Match) {
           // Extract href from WITHIN the h2 tag (the actual post URL, not thumbnail)
           const h2Content = h2Match[1];
           const hrefInH2 = /href="([^"]+)"/i.exec(h2Content);
           const hrefAnywhere = /href="([^"]+)"/i.exec(part);
           const urlCandidate = hrefInH2 ? hrefInH2[1].trim() : (hrefAnywhere ? hrefAnywhere[1].trim() : null);
-          
+
           if (urlCandidate && urlCandidate.includes('rojgarresult.com')) {
             const title = h2Content
               .replace(/<[^>]*>/g, '')
@@ -364,86 +379,62 @@ export async function GET(request: Request) {
       }
 
       console.log(`Cron: Parsed ${parsedItems.length} items from ${target.name}`);
-      
-      const itemsToCheck = parsedItems.slice(0, 40);
-      itemsToCheck.reverse();
 
-      for (const item of itemsToCheck) {
+      // Check every item on the listing page (not just the newest few) so
+      // nothing that scrolls past the top of the page between runs gets
+      // permanently skipped. A single batched lookup keeps this cheap.
+      const idsByUrl = new Map<string, string>();
+      for (const item of parsedItems) {
         const hash = crypto.createHash('md5').update(item.url).digest('hex').substring(0, 10);
-        const id = `${target.prefix}${hash}`;
+        idsByUrl.set(item.url, `${target.prefix}${hash}`);
+      }
 
-        const existing = await prisma.notice.findUnique({
-          where: { id }
-        });
+      const existingRecords = await prisma.notice.findMany({
+        where: { id: { in: Array.from(idsByUrl.values()) } },
+        select: { id: true, title: true, contentHtml: true, lastDate: true }
+      });
+      const existingById = new Map(existingRecords.map(r => [r.id, r]));
 
+      const queue: WorkItem[] = [];
+      for (const item of parsedItems) {
+        const id = idsByUrl.get(item.url)!;
+        const existing = existingById.get(id);
         if (existing) {
-          if (existing.title !== item.title || !(existing as any).contentHtml) {
-            console.log(`Cron: Found UPDATED/UNFETCHED ${target.name}: "${existing.title}" -> "${item.title}"`);
-            let dateObj = new Date();
-            let directUrl = item.url;
-            let lastDate = existing.lastDate;
-            let contentHtml: string | null = null;
-
-            try {
-              const pageHtml = await fetchUrl(item.url);
-              directUrl = extractDirectLink(pageHtml, item.url, target.category);
-              contentHtml = extractNoticeContent(pageHtml);
-
-              const parsedLastDate = extractLastDate(pageHtml);
-              if (parsedLastDate) lastDate = parsedLastDate;
-
-              const schemaMatch = /"datePublished"\s*:\s*"([^"]*)"/i.exec(pageHtml);
-              if (schemaMatch) {
-                dateObj = new Date(schemaMatch[1]);
-              }
-            } catch (err) {
-              console.error(`Cron: Warning: Failed to fetch detail page for updated notice ${item.url}`);
-            }
-
-            const dateStr = formatPublishDate(dateObj);
-            const publishDateStr = dateObj.toISOString().split('T')[0];
-            const createdAtTimestamp = new Date(Date.now() + (importedIndex * 1000));
-
-            let contentLink: string | null = null;
-            if (contentHtml) {
-              try {
-                contentLink = await uploadNoticeHtmlToTigris(id, contentHtml);
-              } catch (e: any) {
-                console.error(`Failed to upload updated notice ${id} HTML to Tigris:`, e.message);
-                contentLink = contentHtml;
-              }
-            }
-
-            await prisma.notice.update({
-              where: { id },
-              data: {
-                title: item.title,
-                date: dateStr,
-                publishDate: publishDateStr,
-                url: directUrl,
-                rawUrl: item.url,
-                lastDate,
-                contentHtml: contentLink,
-                createdAt: createdAtTimestamp
-              }
-            });
-
-            updatedNoticesCount++;
-            updatedTitles.push(item.title);
-            importedIndex++;
+          if (existing.title !== item.title || !existing.contentHtml) {
+            queue.push({ id, title: item.title, url: item.url, isUpdate: true, existingLastDate: existing.lastDate });
           }
-          continue;
+        } else {
+          queue.push({ id, title: item.title, url: item.url, isUpdate: false });
         }
+      }
+      // Process oldest-first so createdAt timestamps (assigned in processing
+      // order below) come out in the right relative order within a category.
+      queue.reverse();
 
-        console.log(`Cron: Found NEW ${target.name}: "${item.title}"`);
+      console.log(`Cron: ${target.name} needs ${queue.length} new/updated notice(s) out of ${parsedItems.length} parsed`);
+      categoryQueues.push({ target, queue });
+    }
+
+    // Round-robin across categories so a huge backlog in one category (e.g.
+    // "Latest Jobs") can never starve the others out of a run's time budget.
+    let madeProgress = true;
+    while (madeProgress && timeLeft() > 0) {
+      madeProgress = false;
+      for (const cq of categoryQueues) {
+        if (timeLeft() <= 0) break;
+        const work = cq.queue.shift();
+        if (!work) continue;
+        madeProgress = true;
+
+        const target = cq.target;
         let dateObj = new Date();
-        let directUrl = item.url;
-        let lastDate: string | null = null;
+        let directUrl = work.url;
+        let lastDate: string | null = work.existingLastDate ?? null;
         let contentHtml: string | null = null;
 
         try {
-          const pageHtml = await fetchUrl(item.url);
-          directUrl = extractDirectLink(pageHtml, item.url, target.category);
+          const pageHtml = await fetchUrl(work.url);
+          directUrl = extractDirectLink(pageHtml, work.url, target.category);
           contentHtml = extractNoticeContent(pageHtml);
 
           const parsedLastDate = extractLastDate(pageHtml);
@@ -454,7 +445,7 @@ export async function GET(request: Request) {
             dateObj = new Date(schemaMatch[1]);
           }
         } catch (err) {
-          console.error(`Cron: Warning: Failed to fetch detail page for ${item.url}`);
+          console.error(`Cron: Warning: Failed to fetch detail page for ${work.url}`);
         }
 
         const dateStr = formatPublishDate(dateObj);
@@ -464,33 +455,57 @@ export async function GET(request: Request) {
         let contentLink: string | null = null;
         if (contentHtml) {
           try {
-            contentLink = await uploadNoticeHtmlToTigris(id, contentHtml);
+            contentLink = await uploadNoticeHtmlToTigris(work.id, contentHtml);
           } catch (e: any) {
-            console.error(`Failed to upload notice ${id} HTML to Tigris:`, e.message);
+            console.error(`Failed to upload notice ${work.id} HTML to Tigris:`, e.message);
             contentLink = contentHtml;
           }
         }
 
-        await prisma.notice.create({
-          data: {
-            id,
-            title: item.title,
-            date: dateStr,
-            publishDate: publishDateStr,
-            type: target.type,
-            category: target.category,
-            url: directUrl,
-            rawUrl: item.url,
-            lastDate,
-            contentHtml: contentLink,
-            createdAt: createdAtTimestamp
-          }
-        });
-
-        newNoticesCount++;
-        importedTitles.push(item.title);
+        if (work.isUpdate) {
+          console.log(`Cron: Updating ${target.name}: "${work.title}"`);
+          await prisma.notice.update({
+            where: { id: work.id },
+            data: {
+              title: work.title,
+              date: dateStr,
+              publishDate: publishDateStr,
+              url: directUrl,
+              rawUrl: work.url,
+              lastDate,
+              contentHtml: contentLink,
+              createdAt: createdAtTimestamp
+            }
+          });
+          updatedNoticesCount++;
+          updatedTitles.push(work.title);
+        } else {
+          console.log(`Cron: Found NEW ${target.name}: "${work.title}"`);
+          await prisma.notice.create({
+            data: {
+              id: work.id,
+              title: work.title,
+              date: dateStr,
+              publishDate: publishDateStr,
+              type: target.type,
+              category: target.category,
+              url: directUrl,
+              rawUrl: work.url,
+              lastDate,
+              contentHtml: contentLink,
+              createdAt: createdAtTimestamp
+            }
+          });
+          newNoticesCount++;
+          importedTitles.push(work.title);
+        }
         importedIndex++;
       }
+    }
+
+    const remainingBacklog = categoryQueues.reduce((sum, cq) => sum + cq.queue.length, 0);
+    if (remainingBacklog > 0) {
+      console.log(`Cron: Deadline reached with ${remainingBacklog} notice(s) still queued; they'll be picked up on the next run.`);
     }
 
     if (newNoticesCount > 0 || updatedNoticesCount > 0) {
@@ -502,9 +517,12 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Sync complete. Imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices.`,
+      message: remainingBacklog > 0
+        ? `Sync complete. Imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices. ${remainingBacklog} more queued for the next run.`
+        : `Sync complete. Imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices.`,
       imported: importedTitles,
-      updated: updatedTitles
+      updated: updatedTitles,
+      remainingBacklog
     });
   } catch (error: any) {
     console.error("Cron Error:", error);
