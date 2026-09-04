@@ -832,35 +832,40 @@ async function handleBootstrap(req?: Request) {
   // Admins will fetch this data separately using the 'admin-data' action.
   const usersList: any[] = [];
 
-  // EGRESS-OPT: Fetch Notices in two passes:
-  //   Pass 1 — ALL announcements (no limit). Announcements are permanent home-page banner items
-  //             created months ago; they must ALWAYS be returned regardless of the 100-item cap.
-  //             Without this, newer daily notices push announcements past position 100, making
-  //             the HomeHeroBannerCarousel show nothing (falls back to fallback slides).
-  //   Pass 2 — 100 most recent NON-announcement notices (exam dates, results, admit cards).
-  //             These are high-volume and time-sensitive; older ones are rarely accessed.
-  // Both lists are merged and de-duplicated by id before being returned.
-  const [announcementNotices, regularNotices] = await Promise.all([
-    // Pass 1: always fetch ALL announcements (they are permanent banners, not time-bounded)
+  // EGRESS-OPT: Fetch Notices with a PER-CATEGORY cap, not one shared pool.
+  //   - Announcements: ALL of them (no limit) — permanent home-page banner items that must
+  //     always be returned regardless of how much other content has synced since.
+  //   - Result / Admit Card / Answer Key / Notice(Jobs): each capped independently at 40.
+  // Categories sync at very different volumes (Jobs alone can post 10x what Result does in
+  // a day), so a single shared "100 most recent across all categories" pool lets the highest-
+  // volume category crowd every other one out entirely — that's exactly what happened here:
+  // a bulk backfill assigned Jobs rows a later createdAt than everything else, and the shared
+  // top-100 query returned zero Result/Admit Card/Answer Key notices as a result. Capping each
+  // category on its own guarantees every tab always has content, independent of sync timing.
+  const NOTICE_CATEGORIES = ['result', 'admit_card', 'answer_key', 'notice'] as const;
+  const noticeSelect = {
+    id: true, title: true, titleHi: true, date: true, publishDate: true,
+    type: true, category: true, url: true, rawUrl: true, lastDate: true, imageUrl: true,
+  };
+
+  const [announcementNotices, ...categoryNotices] = await Promise.all([
+    // Always fetch ALL announcements (they are permanent banners, not time-bounded)
     prisma.notice.findMany({
       where: { category: 'announcement' },
       orderBy: { createdAt: 'desc' },
-      select: {
-        id: true, title: true, titleHi: true, date: true, publishDate: true,
-        type: true, category: true, url: true, rawUrl: true, lastDate: true, imageUrl: true,
-      },
+      select: noticeSelect,
     }),
-    // Pass 2: cap regular notices at 100 most recent
-    prisma.notice.findMany({
-      where: { category: { not: 'announcement' } },
-      orderBy: { createdAt: 'desc' },
-      take: 100, // EGRESS-OPT: 100 most recent non-announcement notices
-      select: {
-        id: true, title: true, titleHi: true, date: true, publishDate: true,
-        type: true, category: true, url: true, rawUrl: true, lastDate: true, imageUrl: true,
-      },
-    }),
+    // 40 most recent per category, fetched independently so none can starve the others
+    ...NOTICE_CATEGORIES.map(category =>
+      prisma.notice.findMany({
+        where: { category },
+        orderBy: { createdAt: 'desc' },
+        take: 40,
+        select: noticeSelect,
+      })
+    ),
   ]);
+  const regularNotices = categoryNotices.flat();
 
   // Merge: announcements first, then regular notices (de-dup by id just in case)
   const seenIds = new Set<string>();
@@ -922,26 +927,25 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
   // If no previous sync timestamp, return full catalog (first-time sync)
   if (!since) {
     const examCatalog = await getCompiledExamCatalog();
-    // EGRESS-OPT: Cap first-time sync at 100 most recent notices — same limit used
-    // by the web bootstrap and the delta-sync path below. This table grows daily
-    // via the rojgar cron sync, so an unbounded query here grows unbounded too.
-    const notices = await prisma.notice.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-      select: {
-        id: true,
-        title: true,
-        titleHi: true,
-        date: true,
-        publishDate: true,
-        type: true,
-        category: true,
-        url: true,
-        rawUrl: true,
-        lastDate: true,
-        imageUrl: true,
-      },
-    });
+    // EGRESS-OPT: Cap first-time sync per-category (not one shared top-100 pool) — same
+    // reasoning as the web bootstrap: Jobs syncs at a much higher volume than Result/Admit
+    // Card/Answer Key, so a single shared "most recent" pool lets Jobs crowd the others out
+    // of a fresh install's first sync entirely.
+    const noticeSelect = {
+      id: true, title: true, titleHi: true, date: true, publishDate: true,
+      type: true, category: true, url: true, rawUrl: true, lastDate: true, imageUrl: true,
+    };
+    const noticeCategoryLists = await Promise.all(
+      ['announcement', 'result', 'admit_card', 'answer_key', 'notice'].map(category =>
+        prisma.notice.findMany({
+          where: { category },
+          orderBy: { createdAt: 'desc' },
+          take: category === 'announcement' ? undefined : 40,
+          select: noticeSelect,
+        })
+      )
+    );
+    const notices = noticeCategoryLists.flat();
 
     const noticesList = notices.map((n: any) => ({
       id: n.id,
@@ -1006,27 +1010,31 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
         // NOTE: customQuestions is intentionally excluded — fetched per-test separately
       },
     }),
-    // EGRESS-OPT: Filter notices by createdAt > since for delta syncs — only transfer new/updated entries.
-    // For first-time syncs (since=null), cap at 100 most recent. This was previously an unbounded query
-    // returning ALL notices on every delta poll, costing ~30-100KB per user every 5 minutes.
-    prisma.notice.findMany({
-      where: since ? { createdAt: { gt: since } } : undefined,
-      orderBy: { createdAt: 'desc' },
-      take: 100, // EGRESS-OPT: cap at 100 even for full syncs
-      select: {
-        id: true,
-        title: true,
-        titleHi: true,
-        date: true,
-        publishDate: true,
-        type: true,
-        category: true,
-        url: true,
-        rawUrl: true,
-        lastDate: true,
-        imageUrl: true,
-      },
-    }),
+    // EGRESS-OPT: Filter notices by createdAt > since — only transfer new/updated entries.
+    // Capped per-category (not one shared pool) so a busy day for Jobs can't push a stale
+    // client's Result/Admit Card/Answer Key delta out of a shared top-100 window.
+    Promise.all(
+      ['announcement', 'result', 'admit_card', 'answer_key', 'notice'].map(category =>
+        prisma.notice.findMany({
+          where: { category, createdAt: { gt: since } },
+          orderBy: { createdAt: 'desc' },
+          take: category === 'announcement' ? undefined : 40,
+          select: {
+            id: true,
+            title: true,
+            titleHi: true,
+            date: true,
+            publishDate: true,
+            type: true,
+            category: true,
+            url: true,
+            rawUrl: true,
+            lastDate: true,
+            imageUrl: true,
+          },
+        })
+      )
+    ).then(lists => lists.flat()),
   ]);
 
   const hasNewData =
