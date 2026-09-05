@@ -6930,6 +6930,9 @@ export default function TCSiONTypingTerminalPage() {
           </div>
           <div className="flex items-center gap-4 text-xs font-semibold">
             <span>
+              Retyping: <span className={isRetypeAllowed ? 'text-emerald-200 font-bold' : 'text-amber-200'}>{isRetypeAllowed ? 'Allowed' : 'Not Allowed'}</span>
+            </span>
+            <span>
               Backspace: <span className={isBackspaceEnabled ? 'text-emerald-200 font-bold' : 'text-amber-200'}>{isBackspaceEnabled ? 'Unrestricted ✓' : 'Disabled (No Corrections)'}</span>
             </span>
           </div>
@@ -7090,6 +7093,12 @@ export default function TCSiONTypingTerminalPage() {
               </p>
             )}
             <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-500 space-y-0.5">
+                <div className="flex justify-between">
+                  <span>Retyping:</span>
+                  <strong className={isRetypeAllowed ? 'text-emerald-700 font-semibold' : 'text-slate-600'}>
+                    {isRetypeAllowed ? 'Allowed' : 'Not Allowed'}
+                  </strong>
+                </div>
                 <div className="flex justify-between">
                   <span>Keystrokes:</span>
                   <strong>{currentTypedText.length}</strong>
