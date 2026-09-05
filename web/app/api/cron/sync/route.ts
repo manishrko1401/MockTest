@@ -341,6 +341,10 @@ export async function GET(request: Request) {
     type CategoryQueue = { target: typeof targets[number]; queue: WorkItem[] };
 
     const categoryQueues: CategoryQueue[] = [];
+    // DIAGNOSTIC: surface listing-fetch failures in the response itself so this can be
+    // debugged without Vercel function log access — e.g. Cloudflare blocking the
+    // fetch from Vercel's IP ranges looks identical to "0 new notices" otherwise.
+    const listingErrors: Record<string, string> = {};
 
     for (const target of targets) {
       console.log(`Cron: Fetching listing for ${target.name}...`);
@@ -349,6 +353,7 @@ export async function GET(request: Request) {
         html = await fetchUrl(target.url);
       } catch (err: any) {
         console.error(`Cron: Failed to fetch listing for ${target.name}:`, err.message);
+        listingErrors[target.name] = err.message;
         continue;
       }
 
@@ -522,7 +527,8 @@ export async function GET(request: Request) {
         : `Sync complete. Imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices.`,
       imported: importedTitles,
       updated: updatedTitles,
-      remainingBacklog
+      remainingBacklog,
+      ...(Object.keys(listingErrors).length > 0 ? { listingErrors } : {})
     });
   } catch (error: any) {
     console.error("Cron Error:", error);
