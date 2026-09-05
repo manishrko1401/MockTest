@@ -1,5 +1,5 @@
-import { evaluateTypingTest } from './typing';
-import type { AlignedWord as EngineAlignedWord, MistakeDetail as EngineMistake } from './typing';
+import { evaluateTypingTest } from './typing/index';
+import type { AlignedWord as EngineAlignedWord, MistakeDetail as EngineMistake } from './typing/index';
 
 export interface TypingCategory {
   id: string;

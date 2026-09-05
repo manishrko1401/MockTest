@@ -432,7 +432,7 @@ export default function TCSiONTypingTerminalPage() {
         bCount,
         currentTest.qualifyingWpm || 35,
         currentTest.maxErrorPercentage || 5.0,
-        Boolean(currentTest.allowRetype ?? activeAttempt.allowRetype),
+        Boolean(isRrbNtpcExam(currentTest) || (currentTest.allowRetype ?? activeAttempt.allowRetype)),
         currentTest,
         undefined,
         undefined,
@@ -470,7 +470,7 @@ export default function TCSiONTypingTerminalPage() {
       bCount,
       test.qualifyingWpm || 35,
       test.maxErrorPercentage || 5.0,
-      Boolean(test.allowRetype ?? targetAtt.allowRetype),
+      Boolean(isRrbNtpcExam(test) || (test.allowRetype ?? targetAtt.allowRetype)),
       test,
       undefined,
       undefined,
@@ -724,7 +724,7 @@ export default function TCSiONTypingTerminalPage() {
         language: test.language,
         typedText: mainTypedText,
         targetText: test.passageText,
-        allowRetype: test.allowRetype,
+        allowRetype: isRetypeAllowed,
         retypeCycles: evalRes.cyclesCompleted,
         detailedMistakes: evalRes.detailedMistakes
       };
@@ -900,13 +900,13 @@ export default function TCSiONTypingTerminalPage() {
 
   const prevCycleRef = useRef<number>(1);
   useEffect(() => {
-    if (phase === 'MAIN' && test?.allowRetype) {
+    if (phase === 'MAIN' && (test?.allowRetype || isRetypeAllowed)) {
       if (currentCycle > prevCycleRef.current) {
         passageBoxRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       }
       prevCycleRef.current = currentCycle;
     }
-  }, [currentCycle, phase, test?.allowRetype]);
+  }, [currentCycle, phase, test?.allowRetype, isRetypeAllowed]);
 
   // Disable mouse scroll wheel in terminal (candidate can only scroll using scroll bar)
   useEffect(() => {
@@ -7131,7 +7131,7 @@ export default function TCSiONTypingTerminalPage() {
                   <div className="flex justify-between">
                     <span>Cycle:</span>
                     <strong className={currentCycle > 1 ? 'text-emerald-600 font-bold' : 'text-slate-700'}>
-                      Cycle {currentCycle} {test.allowRetype ? '(Retype ON)' : ''}
+                      Cycle {currentCycle} {(test.allowRetype || isRetypeAllowed) ? '(Retype ON)' : ''}
                     </strong>
                   </div>
                 )}

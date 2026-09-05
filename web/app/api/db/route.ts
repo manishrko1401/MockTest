@@ -500,10 +500,12 @@ export async function POST(request: Request) {
             data?.qualifyingWpm || body?.qualifyingWpm || 35,
             data?.maxErrorPercentage || body?.maxErrorPercentage || 5.0,
             Boolean(data?.allowRetype || body?.allowRetype),
-            Boolean(data?.isSsc || body?.isSsc),
+            data?.test || data?.category || data?.isSsc || body?.test || body?.category || body?.isSsc,
             Boolean(data?.isSscCgl || body?.isSscCgl),
             Boolean(data?.isSscChsl || body?.isSscChsl),
-            Boolean(data?.isAiims || body?.isAiims)
+            Boolean(data?.isAiims || body?.isAiims),
+            data?.language || body?.language || 'en',
+            data?.userCategoryChoice || body?.userCategoryChoice
           )
         });
 
