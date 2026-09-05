@@ -6930,9 +6930,6 @@ export default function TCSiONTypingTerminalPage() {
           </div>
           <div className="flex items-center gap-4 text-xs font-semibold">
             <span>
-              Retype: <span className={isRetypeAllowed ? 'text-emerald-200 font-bold' : 'text-amber-200'}>{isRetypeAllowed ? 'Allowed ✓ (Speed Counts)' : 'Disabled ✕ (Single Pass)'}</span>
-            </span>
-            <span>
               Backspace: <span className={isBackspaceEnabled ? 'text-emerald-200 font-bold' : 'text-amber-200'}>{isBackspaceEnabled ? 'Unrestricted ✓' : 'Disabled (No Corrections)'}</span>
             </span>
           </div>
@@ -6987,32 +6984,6 @@ export default function TCSiONTypingTerminalPage() {
             >
               {currentPassageText}
             </div>
-          )}
-
-          {/* Retype status notification bar */}
-          {phase === 'MAIN' && (
-            isRetypeAllowed ? (
-              currentCycle > 1 ? (
-                <div className="px-3 py-1.5 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold flex items-center justify-between">
-                  <span>
-                    ✓ Passage completed! <strong>Retyping active (Cycle {currentCycle})</strong> — continue typing from the start, all words count in speed!
-                  </span>
-                  <span className="text-[10px] bg-emerald-200 px-2 py-0.5 rounded text-emerald-900 font-bold">
-                    +{Math.max(0, typedWordCount - passageWordCount)} retyped words
-                  </span>
-                </div>
-              ) : typedWordCount >= passageWordCount - 5 && passageWordCount > 0 ? (
-                <div className="px-3 py-1 rounded bg-blue-50 border border-blue-200 text-blue-800 text-xs font-medium flex items-center justify-between">
-                  <span>Passage near completion. <strong>Retype is allowed</strong>: once finished, press Space and retype from the beginning!</span>
-                </div>
-              ) : null
-            ) : (
-              typedWordCount >= passageWordCount && passageWordCount > 0 ? (
-                <div className="px-3 py-1.5 rounded-md bg-amber-50 border border-amber-300 text-amber-800 text-xs font-semibold flex items-center justify-between">
-                  <span>⚠️ <strong>Passage Completed!</strong> Retyping is disabled for this test. Please review your typed text until time expires.</span>
-                </div>
-              ) : null
-            )
           )}
 
           {/* Bottom Box: User Typing Area */}
@@ -7127,14 +7098,6 @@ export default function TCSiONTypingTerminalPage() {
                   <span>Words (KS÷5):</span>
                   <strong className="text-[#286090]">{Math.floor(currentTypedText.length / 5)}</strong>
                 </div>
-                {phase === 'MAIN' && (
-                  <div className="flex justify-between">
-                    <span>Cycle:</span>
-                    <strong className={currentCycle > 1 ? 'text-emerald-600 font-bold' : 'text-slate-700'}>
-                      Cycle {currentCycle} {(test.allowRetype || isRetypeAllowed) ? '(Retype ON)' : ''}
-                    </strong>
-                  </div>
-                )}
               </div>
           </div>
 
