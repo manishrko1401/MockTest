@@ -1,0 +1,181 @@
+{
+  "uniqueEndpoints": [
+    "test4.php",
+    "test12.php",
+    "test8.php",
+    "test5.php",
+    "test13.php",
+    "test1.php",
+    "test7.php",
+    "test2.php",
+    "test3.php",
+    "test10.php",
+    "test11.php",
+    "test14.php",
+    "test15.php",
+    "test16.php",
+    "test25.php"
+  ],
+  "categoryMap": {
+    "ssc-chsl-typing": {
+      "testCount": 139,
+      "sampleTestUrl": "test4.php?passage_id=2454",
+      "testEndpoint": "test4.php"
+    },
+    "ssc-cgl-typing": {
+      "testCount": 147,
+      "sampleTestUrl": "test12.php?passage_id=101",
+      "testEndpoint": "test12.php"
+    },
+    "rrb-ntpc-typing": {
+      "testCount": 320,
+      "sampleTestUrl": "test8.php?passage_id=2244",
+      "testEndpoint": "test8.php"
+    },
+    "dsssb-jsa-typing": {
+      "testCount": 431,
+      "sampleTestUrl": "test5.php?passage_id=809",
+      "testEndpoint": "test5.php"
+    },
+    "kvs-jsa-typing": {
+      "testCount": 141,
+      "sampleTestUrl": "test13.php?passage_id=4769",
+      "testEndpoint": "test13.php"
+    },
+    "emrs-jsa-typing": {
+      "testCount": 173,
+      "sampleTestUrl": "test1.php?passage_id=1916",
+      "testEndpoint": "test1.php"
+    },
+    "nvs-jsa-typing": {
+      "testCount": 88,
+      "sampleTestUrl": "test1.php?passage_id=5235",
+      "testEndpoint": "test1.php"
+    },
+    "csir-jsa-typing": {
+      "testCount": 90,
+      "sampleTestUrl": "test1.php?passage_id=15",
+      "testEndpoint": "test1.php"
+    },
+    "cbse-jsa-typing": {
+      "testCount": 125,
+      "sampleTestUrl": "test4.php?passage_id=80",
+      "testEndpoint": "test4.php"
+    },
+    "bsf-hcm-typing": {
+      "testCount": 204,
+      "sampleTestUrl": "test7.php?passage_id=107",
+      "testEndpoint": "test7.php"
+    },
+    "csir-exam-new-rules(formula)": {
+      "testCount": 60,
+      "sampleTestUrl": "test2.php?passage_id=142",
+      "testEndpoint": "test2.php"
+    },
+    "aiims-cre-ldc-udc-deo-typing": {
+      "testCount": 189,
+      "sampleTestUrl": "test4.php?passage_id=282",
+      "testEndpoint": "test4.php"
+    },
+    "upsssc-junior-assistant-typing": {
+      "testCount": 244,
+      "sampleTestUrl": "test3.php?passage_id=4522",
+      "testEndpoint": "test3.php"
+    },
+    "cbse-superintendent-typing": {
+      "testCount": 90,
+      "sampleTestUrl": "test4.php?passage_id=433",
+      "testEndpoint": "test4.php"
+    },
+    "ssc-cgl-previous-year-typing": {
+      "testCount": 36,
+      "sampleTestUrl": "test12.php?passage_id=721",
+      "testEndpoint": "test12.php"
+    },
+    "delhi-police-hcm-typing": {
+      "testCount": 271,
+      "sampleTestUrl": "test10.php?passage_id=3500",
+      "testEndpoint": "test10.php"
+    },
+    "dda-jsa-typing": {
+      "testCount": 146,
+      "sampleTestUrl": "test11.php?passage_id=2709",
+      "testEndpoint": "test11.php"
+    },
+    "ccras-ldc-udc-typing": {
+      "testCount": 86,
+      "sampleTestUrl": "test1.php?passage_id=1742",
+      "testEndpoint": "test1.php"
+    },
+    "rssb-ldc-typing": {
+      "testCount": 186,
+      "sampleTestUrl": "test14.php?passage_id=6093",
+      "testEndpoint": "test14.php"
+    },
+    "up-police-computer-operator-typing": {
+      "testCount": 76,
+      "sampleTestUrl": "test15.php?passage_id=6017",
+      "testEndpoint": "test15.php"
+    },
+    "dda-stenographer-typing": {
+      "testCount": 118,
+      "sampleTestUrl": "test11.php?passage_id=2963",
+      "testEndpoint": "test11.php"
+    },
+    "dsssb-computer-lab-it-assistant-typing": {
+      "testCount": 159,
+      "sampleTestUrl": "test7.php?passage_id=3109",
+      "testEndpoint": "test7.php"
+    },
+    "dsssb-stenographer-typing": {
+      "testCount": 100,
+      "sampleTestUrl": "test7.php?passage_id=3296",
+      "testEndpoint": "test7.php"
+    },
+    "quick-brown-fox": {
+      "testCount": 1,
+      "sampleTestUrl": "test8.php?passage_id=3440",
+      "testEndpoint": "test8.php"
+    },
+    "mp-cpct-typing": {
+      "testCount": 170,
+      "sampleTestUrl": "test11.php?passage_id=3802",
+      "testEndpoint": "test11.php"
+    },
+    "allahabad-highcourt-ro-aro-typing": {
+      "testCount": 22,
+      "sampleTestUrl": "test1.php?passage_id=3928",
+      "testEndpoint": "test1.php"
+    },
+    "delhi-high-court-dhc-jja-typing": {
+      "testCount": 123,
+      "sampleTestUrl": "test7.php?passage_id=3977",
+      "testEndpoint": "test7.php"
+    },
+    "bombay-high-court-clerk-typing": {
+      "testCount": 102,
+      "sampleTestUrl": "test7.php?passage_id=4819",
+      "testEndpoint": "test7.php"
+    },
+    "chandigarh-administration-clerk-typing": {
+      "testCount": 30,
+      "sampleTestUrl": "test1.php?passage_id=5091",
+      "testEndpoint": "test1.php"
+    },
+    "bombay-high-court-clerk-typing-400-words": {
+      "testCount": 79,
+      "sampleTestUrl": "test16.php?passage_id=5189",
+      "testEndpoint": "test16.php"
+    },
+    "punjab-haryana-high-court-typing": {
+      "testCount": 124,
+      "sampleTestUrl": "test7.php?passage_id=6383",
+      "testEndpoint": "test7.php"
+    },
+    "spmcil-typing": {
+      "testCount": 205,
+      "sampleTestUrl": "test25.php?passage_id=6789",
+      "testEndpoint": "test25.php"
+    }
+  }
+}

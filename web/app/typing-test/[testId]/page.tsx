@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Printer,
   ArrowLeft,
+  ExternalLink,
   X,
   Zap,
   ShieldCheck,
@@ -31,7 +32,9 @@ import {
   Volume2,
   VolumeX,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Lock,
+  User
 } from 'lucide-react';
 import {
   TypingTest,
@@ -82,7 +85,11 @@ export default function TCSiONTypingTerminalPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const viewMode = searchParams.get('view') || searchParams.get('mode');
-  const isAnalysisMode = viewMode === 'analysis';
+  const targetAttemptId = searchParams.get('attemptId') || searchParams.get('attempt');
+  const isEmbed = searchParams.get('embed') === '1' || searchParams.get('embed') === 'true';
+  const isAnalysisMode = viewMode === 'analysis' || Boolean(targetAttemptId);
+  const [loadedCandidate, setLoadedCandidate] = useState<any>(null);
+  const [loadedAttemptMeta, setLoadedAttemptMeta] = useState<any>(null);
   const { currentUser, language } = useAuth();
   const isAdmin = Boolean(
     currentUser?.role === 'ADMIN' ||
@@ -331,8 +338,35 @@ export default function TCSiONTypingTerminalPage() {
   // Helper to load user attempts (last 2) directly into Analysis phase
   const loadAttemptForAnalysis = async (currentTest: TypingTest) => {
     let attempts: any[] = [];
-    // 1. Check local storage for last 2 attempts list
-    if (typeof window !== 'undefined') {
+
+    // 1. If targetAttemptId is explicitly given (e.g. from Admin Inspect or direct result link)
+    if (targetAttemptId) {
+      try {
+        const attRes = await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get-typing-attempt-by-id',
+            data: { id: targetAttemptId }
+          })
+        });
+        const attData = await attRes.json();
+        if (attData.success && attData.attempt) {
+          attempts = [attData.attempt];
+          if (attData.attempt.user) {
+            setLoadedCandidate(attData.attempt.user);
+          } else if (attData.attempt.userName) {
+            setLoadedCandidate({ fullName: attData.attempt.userName });
+          }
+          setLoadedAttemptMeta(attData.attempt);
+        }
+      } catch (e) {
+        console.error('Error loading specific attempt by ID:', e);
+      }
+    }
+
+    // 2. If no explicit attempt found, check local storage
+    if (attempts.length === 0 && typeof window !== 'undefined') {
       try {
         const localList = localStorage.getItem(`typing_attempts_${currentTest.id}`);
         if (localList) {
@@ -350,29 +384,31 @@ export default function TCSiONTypingTerminalPage() {
       } catch (e) {}
     }
 
-    // 2. Fetch from server
-    try {
-      const attRes = await fetch('/api/db', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'get-user-typing-attempts',
-          data: { userId: currentUser?.id, testId: currentTest.id }
-        })
-      });
-      const attData = await attRes.json();
-      if (attData.success && Array.isArray(attData.attempts) && attData.attempts.length > 0) {
-        const serverMatches = attData.attempts.filter((a: any) => a.testId === currentTest.id);
-        const combined = [...attempts, ...serverMatches];
-        const uniqueMap = new Map();
-        for (const a of combined) {
-          const key = a.id || a.createdAt || `${a.timeSpentSeconds}_${a.netWpm}`;
-          if (!uniqueMap.has(key)) uniqueMap.set(key, a);
+    // 3. Fallback: Fetch candidate's own attempts from server
+    if (attempts.length === 0) {
+      try {
+        const attRes = await fetch('/api/db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get-user-typing-attempts',
+            data: { userId: currentUser?.id, testId: currentTest.id }
+          })
+        });
+        const attData = await attRes.json();
+        if (attData.success && Array.isArray(attData.attempts) && attData.attempts.length > 0) {
+          const serverMatches = attData.attempts.filter((a: any) => a.testId === currentTest.id);
+          const combined = [...attempts, ...serverMatches];
+          const uniqueMap = new Map();
+          for (const a of combined) {
+            const key = a.id || a.createdAt || `${a.timeSpentSeconds}_${a.netWpm}`;
+            if (!uniqueMap.has(key)) uniqueMap.set(key, a);
+          }
+          attempts = Array.from(uniqueMap.values()).slice(0, 2);
         }
-        attempts = Array.from(uniqueMap.values()).slice(0, 2);
+      } catch (e) {
+        console.error('Error loading attempts from server:', e);
       }
-    } catch (e) {
-      console.error('Error loading attempts from server:', e);
     }
 
     // Keep strictly last 2 attempts
@@ -387,20 +423,21 @@ export default function TCSiONTypingTerminalPage() {
       const timeSpent = Math.max(activeAttempt.timeSpentSeconds || Math.round(currentTest.mainDurationMinutes * 60), 1);
       const bCount = activeAttempt.backspaceCount || 0;
       const catChoice = isSscCglExam(currentTest) ? selectedCategory : isSscChslExam(currentTest) ? selectedChslCategory : selectedSpmcilCategory;
+      const passageToEvaluate = activeAttempt.targetText || currentTest.passageText;
 
       const evalResult = evaluateTyping(
-        currentTest.passageText,
+        passageToEvaluate,
         typed,
         timeSpent,
         bCount,
         currentTest.qualifyingWpm || 35,
         currentTest.maxErrorPercentage || 5.0,
-        Boolean(currentTest.allowRetype),
+        Boolean(currentTest.allowRetype ?? activeAttempt.allowRetype),
         currentTest,
         undefined,
         undefined,
         undefined,
-        currentTest.language,
+        activeAttempt.language || currentTest.language,
         catChoice
       );
 
@@ -424,20 +461,21 @@ export default function TCSiONTypingTerminalPage() {
     const timeSpent = Math.max(targetAtt.timeSpentSeconds || Math.round(test.mainDurationMinutes * 60), 1);
     const bCount = targetAtt.backspaceCount || 0;
     const catChoice = isSscCglExam(test) ? selectedCategory : isSscChslExam(test) ? selectedChslCategory : selectedSpmcilCategory;
+    const passageToEvaluate = targetAtt.targetText || test.passageText;
 
     const evalResult = evaluateTyping(
-      test.passageText,
+      passageToEvaluate,
       typed,
       timeSpent,
       bCount,
       test.qualifyingWpm || 35,
       test.maxErrorPercentage || 5.0,
-      Boolean(test.allowRetype),
+      Boolean(test.allowRetype ?? targetAtt.allowRetype),
       test,
       undefined,
       undefined,
       undefined,
-      test.language,
+      targetAtt.language || test.language,
       catChoice
     );
 
@@ -473,9 +511,44 @@ export default function TCSiONTypingTerminalPage() {
           setTest(currentTest);
           if (isAnalysisMode) {
             await loadAttemptForAnalysis(currentTest);
-          } else {
+          } else if (currentUser) {
             initDemoPhase(currentTest);
+          } else {
+            // User not authenticated: pause timer and keep terminal waiting for login
+            setIsTimerRunning(false);
           }
+        } else if (targetAttemptId) {
+          // If test not found directly by testId, fetch attempt by ID to reconstruct test
+          try {
+            const attRes = await fetch('/api/db', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'get-typing-attempt-by-id', data: { id: targetAttemptId } })
+            });
+            const attData = await attRes.json();
+            if (attData.success && attData.attempt) {
+              const att = attData.attempt;
+              const fallbackTest: TypingTest = att.test || {
+                id: att.testId || (Array.isArray(testId) ? testId[0] : testId),
+                title: att.testTitle || 'Typing Test',
+                passageText: att.targetText || '',
+                categoryId: att.categoryName || '',
+                language: (att.language as any) || 'en',
+                qualifyingWpm: 35,
+                maxErrorPercentage: 5.0,
+                mainDurationMinutes: Math.max(1, Math.round((att.timeSpentSeconds || 600) / 60)),
+              };
+              setTest(fallbackTest);
+              if (att.user) setLoadedCandidate(att.user);
+              else if (att.userName) setLoadedCandidate({ fullName: att.userName });
+              setLoadedAttemptMeta(att);
+              await loadAttemptForAnalysis(fallbackTest);
+              return;
+            }
+          } catch (attErr) {
+            console.error('Error fetching fallback attempt:', attErr);
+          }
+          router.push('/typing-test');
         } else {
           router.push('/typing-test');
         }
@@ -487,7 +560,7 @@ export default function TCSiONTypingTerminalPage() {
     };
 
     loadTest();
-  }, [testId, isAnalysisMode]);
+  }, [testId, isAnalysisMode, targetAttemptId, currentUser]);
 
   // Phase Initializers
   const initDemoPhase = (currentTest: TypingTest) => {
@@ -891,6 +964,132 @@ export default function TCSiONTypingTerminalPage() {
   }
 
   // ----------------------------------------------------
+  // AUTHENTICATION BARRIER SCREEN (LOGIN REQUIRED TO ATTEMPT)
+  // ----------------------------------------------------
+  if (!isAnalysisMode && !currentUser && phase !== 'RESULT') {
+    const loginRedirect = encodeURIComponent(`/typing-test/${test.id}`);
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#eef4fb] via-white to-[#edf2f8] text-slate-800 flex flex-col font-sans">
+        {/* Top Header */}
+        <header className="bg-[#1f4b72] text-white px-4 py-3 shadow-md border-b border-blue-900/40">
+          <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <Link
+              href={test.categoryId ? `/typing-test/category/${test.categoryId}` : '/typing-test'}
+              className="inline-flex items-center gap-2 text-white/90 hover:text-white text-xs font-bold transition"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{isHindi ? 'वापस जाएं' : 'Back to Tests'}</span>
+            </Link>
+            <div className="flex items-center gap-2">
+              <div className="bg-white/15 p-1.5 rounded-full">
+                <Trophy className="w-4 h-4 text-amber-300" />
+              </div>
+              <span className="font-black text-sm uppercase tracking-wider text-white">
+                MockTest <span className="text-amber-300">Hub</span>
+              </span>
+            </div>
+            <Link
+              href={`/auth?redirect=${loginRedirect}&mode=login`}
+              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>{isHindi ? 'लॉग इन' : 'Login'}</span>
+            </Link>
+          </div>
+        </header>
+
+        {/* Content Body */}
+        <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-auto">
+          <div className="w-full max-w-xl bg-white border border-slate-200 rounded-3xl shadow-xl p-6 sm:p-8 text-center space-y-6 relative overflow-hidden">
+            {/* Mock Test Hub Logo */}
+            <div className="flex flex-col items-center justify-center gap-2">
+              <div className="bg-[#E6F4FE] p-3.5 rounded-2xl shadow-xs flex items-center justify-center h-16 w-16 border border-blue-200/80 mx-auto transition-transform hover:scale-105">
+                <Trophy className="h-9 w-9 text-blue-600" />
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="font-black text-sm leading-tight text-slate-900 tracking-wider uppercase">
+                  {t.logoTitle}
+                </span>
+                <span className="text-[9px] text-blue-600 font-extrabold tracking-widest uppercase leading-tight">
+                  {t.logoSub}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[11px] font-extrabold uppercase tracking-wide border border-amber-200">
+                {isHindi ? 'लॉगिन आवश्यक है' : 'Login Required to Attempt Test'}
+              </span>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                {cleanDisplayTitle(test.title)}
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+                {isHindi
+                  ? 'टाइपिंग टेस्ट शुरू करने और अपने विस्तृत अंक, गति एवं गलतियों के विश्लेषण को सहेजने के लिए कृपया अपने खाते में लॉगिन करें।'
+                  : 'Please log in to your account to start this typing test, save your keystroke scorecard, and track your speed & accuracy progress.'}
+              </p>
+            </div>
+
+            {/* Test Metadata Card */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  {isHindi ? 'अवधि' : 'Duration'}
+                </span>
+                <p className="font-extrabold text-slate-800 text-sm">
+                  {test.mainDurationMinutes} Min
+                </p>
+              </div>
+              <div className="space-y-0.5 border-x border-slate-200">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  {isHindi ? 'भाषा' : 'Language'}
+                </span>
+                <p className="font-extrabold text-blue-600 text-sm uppercase">
+                  {test.language === 'hi' ? 'Hindi' : 'English'}
+                </p>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  {isHindi ? 'योग्यता' : 'Qualifying'}
+                </span>
+                <p className="font-extrabold text-slate-800 text-sm">
+                  {test.qualifyingWpm || 35} WPM
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <Link
+                href={`/auth?redirect=${loginRedirect}&mode=login`}
+                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-blue-600/20 transition cursor-pointer"
+              >
+                <User className="w-4 h-4" />
+                <span>{isHindi ? 'लॉग इन करके टेस्ट शुरू करें' : 'Login to Start Test'}</span>
+              </Link>
+              <Link
+                href={`/auth?redirect=${loginRedirect}&tab=signup`}
+                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-extrabold text-xs sm:text-sm border border-slate-300 transition cursor-pointer"
+              >
+                <span>{isHindi ? 'नया खाता बनाएं (Free)' : 'Create Free Account'}</span>
+              </Link>
+            </div>
+
+            <div className="pt-2">
+              <Link
+                href={test.categoryId ? `/typing-test/category/${test.categoryId}` : '/typing-test'}
+                className="text-xs font-bold text-slate-500 hover:text-slate-700 underline"
+              >
+                {isHindi ? '← अन्य टाइपिंग टेस्ट्स देखें' : '← Browse other typing tests'}
+              </Link>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ----------------------------------------------------
   // RESULT SCREEN (PHASE 4) - TYPINGMITRA EXACT REPLICA
   // ----------------------------------------------------
   if (phase === 'RESULT' && result) {
@@ -1217,13 +1416,19 @@ export default function TCSiONTypingTerminalPage() {
 
           {/* Top Header Bar */}
           <div className="flex items-center justify-between gap-3">
-            <Link
-              href={test.categoryId ? `/typing-test/category/${test.categoryId}` : '/typing-test'}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-xs transition shrink-0"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>{isHindi ? 'सभी टाइपिंग टेस्ट्स' : 'Back to Typing Tests'}</span>
-            </Link>
+            {isEmbed ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold shadow-xs">
+                <span>🔍 Candidate Result Inspection</span>
+              </span>
+            ) : (
+              <Link
+                href={test.categoryId ? `/typing-test/category/${test.categoryId}` : '/typing-test'}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-xs transition shrink-0"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>{isHindi ? 'सभी टाइपिंग टेस्ट्स' : 'Back to Typing Tests'}</span>
+              </Link>
+            )}
 
             {/* Center: Mock Test Hub Logo */}
             <div className="flex items-center justify-center shrink-0">
@@ -1247,6 +1452,18 @@ export default function TCSiONTypingTerminalPage() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              {isEmbed && targetAttemptId && (
+                <a
+                  href={`/typing-test/${test.id}?attemptId=${targetAttemptId}&view=analysis`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-xs transition cursor-pointer"
+                  title="Open in new window"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">New Tab</span>
+                </a>
+              )}
               <button
                 onClick={() => window.print()}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-xs transition cursor-pointer"
@@ -1254,13 +1471,15 @@ export default function TCSiONTypingTerminalPage() {
                 <Printer className="w-3.5 h-3.5" />
                 <span>{isHindi ? 'प्रिंट रिपोर्ट' : 'Print / Save PDF'}</span>
               </button>
-              <button
-                onClick={() => initDemoPhase(test)}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold shadow-xs transition cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>{isHindi ? 'पुनः टेस्ट दें' : 'Retake Test'}</span>
-              </button>
+              {!isEmbed && (
+                <button
+                  onClick={() => initDemoPhase(test)}
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold shadow-xs transition cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>{isHindi ? 'पुनः टेस्ट दें' : 'Retake Test'}</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -1292,12 +1511,58 @@ export default function TCSiONTypingTerminalPage() {
                 ? `Total Keystrokes Typed: ${result.totalKeystrokes}`
                 : `Total Keystrokes in Passage: ${totalKeystrokesInPassage}`}
             </p>
-            <div className="pt-1">
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-md text-xs font-semibold shadow-2xs">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                Test result saved successfully!
-              </span>
-            </div>
+
+            {/* Candidate & Sitting Details Banner */}
+            {loadedCandidate ? (
+              <div className="bg-white border border-blue-200 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-black text-sm flex items-center justify-center shrink-0">
+                    👤
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-extrabold text-sm text-slate-900">
+                        {loadedCandidate.fullName || loadedCandidate.userName || 'Candidate Attempt'}
+                      </h3>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                        isQualified
+                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                          : 'bg-rose-100 text-rose-700 border border-rose-200'
+                      }`}>
+                        {isQualified ? 'QUALIFIED' : 'NOT QUALIFIED'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium flex-wrap mt-0.5">
+                      {loadedCandidate.email && <span>{loadedCandidate.email} •</span>}
+                      <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-700">
+                        ID: {loadedCandidate.candidateCode || 'GUEST'}
+                      </span>
+                      {loadedCandidate.mobile && <span>• 📞 {loadedCandidate.mobile}</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-left sm:text-right text-[11px] text-slate-500">
+                  <p className="font-medium">
+                    Attempt Sitting:{' '}
+                    <span className="font-bold text-slate-800">
+                      {loadedAttemptMeta?.completedAt
+                        ? new Date(loadedAttemptMeta.completedAt).toLocaleString('en-IN')
+                        : 'Recent Sitting'}
+                    </span>
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    Duration: {formattedDuration} • Category: {cleanDisplayTitle(test.title)}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-1">
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-md text-xs font-semibold shadow-2xs">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  Test result saved successfully!
+                </span>
+              </div>
+            )}
           </div>
 
           {/* RTI 5% Rule Toggle for DSSSB JSA only (TypingMitra does not show on IT Assistant or Stenographer) */}

@@ -25,7 +25,8 @@ import {
   Languages,
   Check,
   BarChart2,
-  Info
+  Info,
+  ExternalLink
 } from 'lucide-react';
 
 interface UserInfo {
@@ -98,9 +99,15 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
-  // Inspect Modal
+  // Inspect Modal (Exact Result Page)
   const [inspectAttempt, setInspectAttempt] = useState<AdminTypingAttempt | null>(null);
-  const [inspectTab, setInspectTab] = useState<'overview' | 'comparison' | 'mistakes'>('overview');
+  const [iframeLoading, setIframeLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (inspectAttempt) {
+      setIframeLoading(true);
+    }
+  }, [inspectAttempt]);
 
   // Delete Confirmation Modal
   const [deleteAttemptTarget, setDeleteAttemptTarget] = useState<AdminTypingAttempt | null>(null);
@@ -752,15 +759,21 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
-                            onClick={() => {
-                              setInspectAttempt(a);
-                              setInspectTab('overview');
-                            }}
-                            title="Inspect Attempt Details"
+                            onClick={() => setInspectAttempt(a)}
+                            title="Inspect Exact Result Page"
                             className="p-1.5 text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition cursor-pointer"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
+                          <a
+                            href={`/typing-test/${a.testId}?attemptId=${a.id}&view=analysis`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Open Exact Result Page in New Tab"
+                            className="p-1.5 text-slate-400 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition cursor-pointer inline-flex items-center"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
                           <button
                             onClick={() => setDeleteAttemptTarget(a)}
                             title="Delete Attempt Log"
@@ -830,23 +843,25 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
         )}
       </div>
 
-      {/* INSPECT MODAL */}
+      {/* INSPECT MODAL - EXACT RESULT PAGE */}
       {inspectAttempt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-4 overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-6xl h-[92vh] max-h-[92vh] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
-              <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl ${
+            <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-800/60 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`p-2 rounded-xl shrink-0 ${
                   inspectAttempt.isQualified
                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
                     : 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'
                 }`}>
                   <Keyboard className="h-5 w-5" />
                 </div>
-                <div>
-                  <h4 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    {inspectAttempt.user?.fullName || inspectAttempt.userName}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">
+                      {inspectAttempt.user?.fullName || inspectAttempt.userName}
+                    </h4>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
                       inspectAttempt.isQualified
                         ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
@@ -854,295 +869,73 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                     }`}>
                       {inspectAttempt.isQualified ? 'QUALIFIED' : 'NOT QUALIFIED'}
                     </span>
-                  </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                    {inspectAttempt.testTitle || inspectAttempt.test?.title} • {inspectAttempt.categoryName}
+                    <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-bold border border-slate-200 dark:border-slate-700">
+                      ID: {inspectAttempt.user?.candidateCode || 'GUEST'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+                    {inspectAttempt.testTitle || inspectAttempt.test?.title} • <span className="font-semibold text-blue-600 dark:text-blue-400">{inspectAttempt.categoryName}</span>
                   </p>
                 </div>
               </div>
 
-              <button
-                onClick={() => setInspectAttempt(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              {/* Top Controls */}
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="hidden sm:flex items-center gap-2 mr-2">
+                  <span className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-100 dark:border-blue-900/40">
+                    ⚡ {inspectAttempt.netWpm} Net WPM
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700">
+                    🎯 {inspectAttempt.accuracyPercentage}% Acc
+                  </span>
+                </div>
+
+                <a
+                  href={`/typing-test/${inspectAttempt.testId}?attemptId=${inspectAttempt.id}&view=analysis`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg text-xs font-bold transition cursor-pointer"
+                  title="Open exact result page in a full new browser window"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span className="hidden xs:inline">Open in New Tab</span>
+                </a>
+
+                <button
+                  onClick={() => setInspectAttempt(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition cursor-pointer"
+                  title="Close Modal"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
-            {/* Modal Tabs */}
-            <div className="flex border-b border-slate-200 dark:border-slate-800 px-6 bg-slate-50/30 dark:bg-slate-800/20 text-xs font-bold">
-              <button
-                onClick={() => setInspectTab('overview')}
-                className={`py-3 px-4 border-b-2 transition cursor-pointer ${
-                  inspectTab === 'overview'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                📊 Overview & Metrics
-              </button>
-              <button
-                onClick={() => setInspectTab('comparison')}
-                className={`py-3 px-4 border-b-2 transition cursor-pointer ${
-                  inspectTab === 'comparison'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                📝 Text Comparison (Target vs Typed)
-              </button>
-              <button
-                onClick={() => setInspectTab('mistakes')}
-                className={`py-3 px-4 border-b-2 transition cursor-pointer ${
-                  inspectTab === 'mistakes'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                🔍 Mistakes Breakdown ({inspectAttempt.totalMistakes ?? 0})
-              </button>
-            </div>
-
-            {/* Modal Content Body */}
-            <div className="p-6 overflow-y-auto space-y-6 flex-1">
-              {inspectTab === 'overview' && (
-                <div className="space-y-6">
-                  {/* Performance Metrics Cards */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">Net Speed</p>
-                      <h5 className="text-xl font-black text-blue-600 dark:text-blue-400 mt-1">
-                        {inspectAttempt.netWpm} <span className="text-xs text-slate-400 font-normal">WPM</span>
-                      </h5>
-                    </div>
-                    <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">Gross Speed</p>
-                      <h5 className="text-xl font-black text-slate-800 dark:text-slate-200 mt-1">
-                        {inspectAttempt.grossWpm} <span className="text-xs text-slate-400 font-normal">WPM</span>
-                      </h5>
-                    </div>
-                    <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">Accuracy</p>
-                      <h5 className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                        {inspectAttempt.accuracyPercentage}%
-                      </h5>
-                    </div>
-                    <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
-                      <p className="text-[10px] font-black text-slate-400 uppercase">Total Mistakes</p>
-                      <h5 className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">
-                        {inspectAttempt.totalMistakes ?? 0}
-                      </h5>
-                    </div>
-                  </div>
-
-                  {/* Keystrokes and Mistakes Detailed Matrix */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Keystrokes Breakdown */}
-                    <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
-                      <h6 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
-                        ⌨️ Keystroke Analytics
-                      </h6>
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
-                          <span className="text-slate-500 font-medium">Total Keystrokes:</span>
-                          <span className="font-mono font-bold text-slate-900 dark:text-white">{inspectAttempt.totalKeystrokes ?? 0}</span>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
-                          <span className="text-emerald-600 font-medium">Correct Keystrokes:</span>
-                          <span className="font-mono font-bold text-emerald-600">{inspectAttempt.correctKeystrokes ?? 0}</span>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
-                          <span className="text-rose-600 font-medium">Error Keystrokes:</span>
-                          <span className="font-mono font-bold text-rose-600">{inspectAttempt.errorKeystrokes ?? 0}</span>
-                        </div>
-                        <div className="flex justify-between py-1">
-                          <span className="text-slate-500 font-medium">Backspaces Used:</span>
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{inspectAttempt.backspaceCount ?? 0}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Mistakes & Penalty Matrix */}
-                    <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
-                      <h6 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
-                        ⚖️ Mistakes & Penalties
-                      </h6>
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
-                          <span className="text-slate-500 font-medium">Full Mistakes (Omissions/Spelling):</span>
-                          <span className="font-mono font-bold text-slate-900 dark:text-white">{inspectAttempt.fullMistakes ?? 0}</span>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
-                          <span className="text-slate-500 font-medium">Half Mistakes (Spacing/Caps):</span>
-                          <span className="font-mono font-bold text-slate-900 dark:text-white">{inspectAttempt.halfMistakes ?? 0}</span>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
-                          <span className="text-slate-500 font-medium">Error Percentage:</span>
-                          <span className="font-mono font-bold text-slate-900 dark:text-white">{inspectAttempt.errorPercentage ?? 0}%</span>
-                        </div>
-                        <div className="flex justify-between py-1">
-                          <span className="text-slate-500 font-medium">Time Taken:</span>
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            {formatSeconds(inspectAttempt.timeSpentSeconds)} (Allocated: {formatSeconds(inspectAttempt.allocatedTimeSeconds)})
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Candidate Profile Details */}
-                  <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                    <h6 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-2">
-                      👤 Candidate Information
-                    </h6>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                      <div>
-                        <span className="text-slate-400 font-medium block">Full Name:</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {inspectAttempt.user?.fullName || inspectAttempt.userName}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 font-medium block">Email:</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {inspectAttempt.user?.email || (inspectAttempt.userId === 'guest' ? 'guest@typing.test' : 'N/A')}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 font-medium block">Candidate Code / Mobile:</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
-                          {inspectAttempt.user?.candidateCode || 'NO-CODE'} {inspectAttempt.user?.mobile ? `(${inspectAttempt.user.mobile})` : ''}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+            {/* Modal Body: Exact Result Page iframe */}
+            <div className="relative flex-1 w-full h-full bg-[#edf2f8] overflow-hidden">
+              {iframeLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#edf2f8]/90 backdrop-blur-xs z-10">
+                  <RefreshCw className="h-7 w-7 text-blue-600 animate-spin mb-2" />
+                  <p className="text-xs font-bold text-slate-600">Loading exact typing test result page...</p>
                 </div>
               )}
-
-              {inspectTab === 'comparison' && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Target Passage */}
-                    <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50 dark:bg-slate-950/50 flex flex-col">
-                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
-                        <span className="text-xs font-black uppercase text-blue-600 dark:text-blue-400">
-                          📖 Original Exam Target Passage
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
-                          {inspectAttempt.targetText?.length || 0} chars
-                        </span>
-                      </div>
-                      <div className="text-xs leading-relaxed font-mono whitespace-pre-wrap max-h-[360px] overflow-y-auto text-slate-700 dark:text-slate-300 select-all p-2 rounded bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                        {inspectAttempt.targetText || '(No target text recorded for this sitting)'}
-                      </div>
-                    </div>
-
-                    {/* Candidate Typed Text */}
-                    <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50 dark:bg-slate-950/50 flex flex-col">
-                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
-                        <span className="text-xs font-black uppercase text-emerald-600 dark:text-emerald-400">
-                          ✍️ Candidate Typed Text
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
-                          {inspectAttempt.typedText?.length || 0} chars
-                        </span>
-                      </div>
-                      <div className="text-xs leading-relaxed font-mono whitespace-pre-wrap max-h-[360px] overflow-y-auto text-slate-800 dark:text-slate-200 select-all p-2 rounded bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                        {inspectAttempt.typedText || '(No typed text recorded for this sitting)'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {inspectTab === 'mistakes' && (
-                <div className="space-y-4">
-                  {(() => {
-                    let mistakesList: any[] = [];
-                    if (Array.isArray(inspectAttempt.detailedMistakes)) {
-                      mistakesList = inspectAttempt.detailedMistakes;
-                    } else if (typeof inspectAttempt.detailedMistakes === 'string') {
-                      try {
-                        mistakesList = JSON.parse(inspectAttempt.detailedMistakes);
-                      } catch (e) {
-                        mistakesList = [];
-                      }
-                    }
-
-                    if (mistakesList.length === 0) {
-                      return (
-                        <div className="text-center py-12 text-slate-400 font-medium">
-                          <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-500 mb-2" />
-                          <p className="text-xs">
-                            {inspectAttempt.totalMistakes === 0
-                              ? 'Zero mistakes! Flawless typing accuracy on this test.'
-                              : 'Detailed word-level token mistakes were not serialized for this sitting.'}
-                          </p>
-                          <div className="mt-3 text-[11px] text-slate-500">
-                            Summary counts recorded: {inspectAttempt.fullMistakes ?? 0} Full mistakes, {inspectAttempt.halfMistakes ?? 0} Half mistakes, {inspectAttempt.totalMistakes ?? 0} Total.
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div className="space-y-3">
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Found <strong>{mistakesList.length}</strong> logged errors evaluated by the scoring engine:
-                        </p>
-                        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 font-bold text-slate-500">
-                                <th className="p-2.5">#</th>
-                                <th className="p-2.5">Type</th>
-                                <th className="p-2.5">Target Word</th>
-                                <th className="p-2.5">Typed Word</th>
-                                <th className="p-2.5">Penalty</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-                              {mistakesList.map((m, idx) => (
-                                <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                                  <td className="p-2.5 text-slate-400">{idx + 1}</td>
-                                  <td className="p-2.5">
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-sans font-bold uppercase ${
-                                      m.penalty === 1 || m.type === 'omission' || m.type === 'spelling'
-                                        ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300'
-                                        : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
-                                    }`}>
-                                      {m.type || m.errorType || 'Error'}
-                                    </span>
-                                  </td>
-                                  <td className="p-2.5 text-slate-600 dark:text-slate-300">
-                                    {m.originalWord || m.expected || m.target || '-'}
-                                  </td>
-                                  <td className="p-2.5 text-rose-600 font-bold">
-                                    {m.typedWord || m.typed || m.actual || '-'}
-                                  </td>
-                                  <td className="p-2.5 text-slate-500 font-sans">
-                                    {m.penalty ? `${m.penalty} Full` : 'Evaluated'}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
+              <iframe
+                key={inspectAttempt.id}
+                src={`/typing-test/${inspectAttempt.testId}?attemptId=${inspectAttempt.id}&view=analysis&embed=1`}
+                onLoad={() => setIframeLoading(false)}
+                className="w-full h-full border-0 bg-[#edf2f8]"
+                title="Exact Typing Test Result Page"
+              />
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40">
-              <span className="text-[11px] text-slate-400 font-medium">
-                Sitting Date: {new Date(inspectAttempt.completedAt).toLocaleString('en-IN')}
+            <div className="px-5 py-2.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/40 text-xs shrink-0">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                Attempt Sitting: <strong className="text-slate-700 dark:text-slate-200">{new Date(inspectAttempt.completedAt).toLocaleString('en-IN')}</strong>
               </span>
               <button
                 onClick={() => setInspectAttempt(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition cursor-pointer"
+                className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition cursor-pointer"
               >
                 Close
               </button>

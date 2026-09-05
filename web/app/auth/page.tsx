@@ -16,11 +16,17 @@ export default function AuthPage() {
   const t = TRANSLATIONS[language];
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
 
+  const [redirectUrl, setRedirectUrl] = useState<string>('/');
+
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('tab') === 'signup' || params.get('mode') === 'signup') {
         setActiveTab('signup');
+      }
+      const targetRedirect = params.get('redirect') || params.get('returnUrl');
+      if (targetRedirect && targetRedirect.startsWith('/') && !targetRedirect.startsWith('//')) {
+        setRedirectUrl(targetRedirect);
       }
     }
   }, []);
@@ -200,7 +206,7 @@ export default function AuthPage() {
       try {
         const res = await login(email, password);
         if (res.success) {
-          router.push('/');
+          router.push(redirectUrl);
         } else {
           setErrorMsg(res.error || t.authLoginFail || 'Invalid credentials. Please register or sign up.');
         }
@@ -256,7 +262,7 @@ export default function AuthPage() {
         );
         if (res.success) {
           localStorage.setItem('show_signup_congrats_popup', 'true');
-          router.push('/');
+          router.push(redirectUrl);
         } else {
           setErrorMsg(res.error || t.authSignupFail || 'Email address already registered. Please login.');
         }
@@ -291,7 +297,7 @@ export default function AuthPage() {
       );
 
       if (res.success) {
-        router.push('/');
+        router.push(redirectUrl);
       } else {
         setErrorMsg(res.error || 'Failed to authenticate with Google.');
       }

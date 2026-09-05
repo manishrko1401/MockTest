@@ -45,3 +45,14 @@ Thumbs.db
 # Scratch directory
 scratch/
 
+# Database backups
+database_backup/
+database_backup*
+*.zip
+backup_database.js
+restore_database.js
+
+# Temporary scraper dumps
+web/*.html
+web/*.txt
+

@@ -170,6 +170,10 @@ export default function TypingTestPortalPage() {
 
   const handleStartCustomPractice = () => {
     if (!customPassageText.trim()) return;
+    if (!currentUser) {
+      router.push('/auth?redirect=' + encodeURIComponent('/typing-test') + '&mode=login');
+      return;
+    }
     const customTest: TypingTest = {
       id: 'custom-' + Date.now(),
       title: 'Custom Typing Drill',

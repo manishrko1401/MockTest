@@ -415,6 +415,9 @@ export async function deleteAllTypingTests(): Promise<{ deletedCount: number }> 
 
 export async function saveTypingAttempt(attempt: Partial<TypingAttempt>): Promise<TypingAttempt> {
   if (!attempt.testId) throw new Error('testId is required to save a typing attempt');
+  if (!attempt.userId || attempt.userId === 'guest') {
+    throw new Error('User must be logged in to attempt typing tests.');
+  }
 
   const row = await prisma.typingAttempt.create({
     data: {
@@ -496,6 +499,15 @@ export async function getUserTypingAttempts(
   });
 
   return rows.map(r => dbRowToAttempt(r));
+}
+
+export async function getTypingAttemptById(id: string): Promise<TypingAttempt | null> {
+  if (!id) return null;
+  const row = await prisma.typingAttempt.findUnique({
+    where: { id }
+  });
+  if (!row) return null;
+  return dbRowToAttempt(row);
 }
 
 // ---------------------- HELPERS ----------------------

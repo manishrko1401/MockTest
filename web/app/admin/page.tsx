@@ -1366,7 +1366,7 @@ export default function AdminAnalytics() {
 
   const handleSyncRojgarNotices = async () => {
     setIsSyncingRojgar(true);
-    showToast(language === 'hi' ? 'RojgarResult से लाइव सूचनाएं सिंक हो रही हैं...' : 'Syncing live notices from RojgarResult...');
+    showToast(language === 'hi' ? 'लाइव सूचनाएं सिंक हो रही हैं...' : 'Syncing live notices...');
     try {
       const res = await fetch('/api/cron/sync', { method: 'POST' });
       const data = await res.json();
@@ -3124,10 +3124,10 @@ export default function AdminAnalytics() {
                     onClick={handleSyncRojgarNotices}
                     disabled={isSyncingRojgar}
                     className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
-                    title="Fetch and sync newly posted Jobs, Results, and Admit cards from RojgarResult"
+                    title="Fetch and sync newly posted Jobs, Results, Admit cards, and Answer keys"
                   >
                     <RefreshCw className={`h-3.5 w-3.5 ${isSyncingRojgar ? 'animate-spin' : ''}`} />
-                    <span>{isSyncingRojgar ? (language === 'hi' ? 'सिंक हो रहा है...' : 'Syncing...') : (language === 'hi' ? 'RojgarResult सिंक करें' : 'Sync RojgarResult Now')}</span>
+                    <span>{isSyncingRojgar ? (language === 'hi' ? 'सिंक हो रहा है...' : 'Syncing...') : (language === 'hi' ? 'लाइव सूचनाएं सिंक करें' : 'Sync Live Notifications')}</span>
                   </button>
                   <span className="text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
                     {noticesList.length} total alert{noticesList.length !== 1 ? 's' : ''} active

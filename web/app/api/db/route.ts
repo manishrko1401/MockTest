@@ -483,6 +483,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, attempt: await saveTypingAttempt(data || body?.attempt || body) });
       case 'get-user-typing-attempts':
         return NextResponse.json({ success: true, attempts: await getUserTypingAttempts(data?.userId || body?.userId || requesterUserId || undefined, data?.testId || body?.testId || undefined) });
+      case 'get-typing-attempt-by-id':
+        return await handleGetTypingAttemptById(data?.id || body?.id || data?.attemptId || body?.attemptId);
       case 'get-admin-typing-attempts':
         return await handleGetAdminTypingAttempts(data || body);
       case 'delete-typing-attempt':
@@ -5077,6 +5079,90 @@ async function handleDeleteTypingAttempt(id?: string) {
   } catch (error: any) {
     console.error('Failed to delete typing attempt:', error);
     return NextResponse.json({ success: false, error: error.message || 'Failed to delete typing attempt' }, { status: 500 });
+  }
+}
+
+async function handleGetTypingAttemptById(id?: string) {
+  try {
+    if (!id) return NextResponse.json({ success: false, error: 'Missing attempt ID' }, { status: 400 });
+    const attempt = await prismaTyping.typingAttempt.findUnique({
+      where: { id }
+    });
+    if (!attempt) {
+      return NextResponse.json({ success: false, error: 'Typing attempt not found' }, { status: 404 });
+    }
+
+    // Enrich with Test details if possible
+    let testData: any = null;
+    if (attempt.testId) {
+      try {
+        testData = await prismaTyping.typingTest.findUnique({
+          where: { id: attempt.testId },
+          select: {
+            id: true,
+            title: true,
+            titleHi: true,
+            categoryId: true,
+            language: true,
+            qualifyingWpm: true,
+            maxErrorPercentage: true,
+            mainDurationMinutes: true,
+            passageText: true,
+            backspaceRule: true,
+            enableBackspace: true,
+            allowRetype: true,
+          }
+        });
+      } catch (testErr) {
+        console.warn('Could not fetch test details for typing attempt:', testErr);
+      }
+    }
+
+    // Enrich with User details (email, candidateCode, mobile) from primary DB
+    let userData: any = null;
+    if (attempt.userId && attempt.userId !== 'guest') {
+      try {
+        userData = await prisma.user.findUnique({
+          where: { id: attempt.userId },
+          select: { id: true, fullName: true, email: true, candidateCode: true, mobile: true }
+        });
+      } catch (userErr) {
+        console.warn('Could not fetch user details for typing attempt:', userErr);
+      }
+    }
+
+    // Derive category if empty
+    let cat = attempt.categoryName || testData?.categoryId || '';
+    if (!cat) {
+      const lowerTitle = (attempt.testTitle || '').toLowerCase();
+      const lowerId = (attempt.testId || '').toLowerCase();
+      if (lowerTitle.includes('chsl') || lowerId.includes('chsl')) cat = 'SSC CHSL Typing';
+      else if (lowerTitle.includes('cgl') || lowerId.includes('cgl')) cat = 'SSC CGL Typing';
+      else if (lowerTitle.includes('punjab') || lowerId.includes('punjab')) cat = 'Punjab & Haryana High Court';
+      else if (lowerTitle.includes('bombay') || lowerId.includes('bombay')) cat = 'Bombay High Court';
+      else if (lowerTitle.includes('spmcil') || lowerId.includes('spmcil')) cat = 'SPMCIL Typing';
+      else if (lowerTitle.includes('rrb') || lowerId.includes('rrb')) cat = 'RRB NTPC Typing';
+      else if (lowerTitle.includes('court') || lowerId.includes('court')) cat = 'High Court Typing';
+      else cat = 'General Typing';
+    }
+
+    const enriched = {
+      ...attempt,
+      categoryName: cat,
+      test: testData || null,
+      user: userData || {
+        id: attempt.userId,
+        fullName: attempt.userName || 'Guest Candidate',
+        email: attempt.userId === 'guest' ? 'guest@typing.test' : 'N/A',
+        candidateCode: attempt.userId === 'guest' ? 'GUEST' : (attempt.userId?.substring(0, 8).toUpperCase() || 'NO-CODE'),
+        mobile: null
+      }
+    };
+
+    return NextResponse.json({ success: true, attempt: enriched });
+  } catch (error: any) {
+    console.error('Failed to get typing attempt by id:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to get typing attempt' }, { status: 500 });
   }
 }
 

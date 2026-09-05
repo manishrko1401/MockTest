@@ -268,7 +268,7 @@ export default function NoticeInnerDetailsManager({
               title="Sync latest live jobs, results and admit cards from RojgarResult"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isSyncing ? 'Syncing...' : 'Sync RojgarResult'}</span>
+              <span>{isSyncing ? 'Syncing...' : 'Sync Live Alerts'}</span>
             </button>
             <span className="px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-xs font-black">
               {noticesList.length} Total Notifications
