@@ -12,6 +12,14 @@
  *               (letters added/removed/changed) · word repetition · incomplete word
  *   HALF  (0.5): spacing (between words OR letters) · capitalization (English only)
  *               · punctuation · transposition (word order) · paragraphic
+ *
+ * NOTE on "paragraphic": every passage currently seeded (checked both English and
+ * Hindi content) is one continuous single-paragraph block with no line breaks, so
+ * there is nothing to compare a paragraph break against — `ErrorBreakdown.paragraphErrors`
+ * is therefore always 0 rather than actively computed. `collapseWhitespace()` below
+ * also treats a newline exactly like a space, so if multi-paragraph passages are ever
+ * added, that function's whitespace handling needs to preserve paragraph boundaries
+ * before this can be implemented for real.
  */
 
 import type {
@@ -286,13 +294,23 @@ export function classifyErrors(
     return { ...p, status: 'FULL_MISTAKE', subtype: 'SUBSTITUTION', reason: `Wrong word: "${a}" → "${b}"` };
   });
 
-  // repetition: EXTRA equal to preceding typed word
-  for (let k = 1; k < cls.length; k++) {
+  // repetition: EXTRA equal to the adjacent typed word — either the one before it
+  // (the common case) or the one after it. The latter happens when the aligner
+  // pairs the *second* occurrence of a doubled word with the source and leaves
+  // the *first* occurrence as the stray EXTRA, e.g. src "the quick fox" vs typed
+  // "the quick quick fox" can align position 1's "quick" to the real match and
+  // flag position 0's copy as EXTRA — whose *preceding* word is "the", not
+  // "quick", so a backward-only check misses it. Checking both directions
+  // catches the duplicate regardless of which occurrence the aligner kept.
+  for (let k = 0; k < cls.length; k++) {
     const cur = cls[k];
     if (cur.status !== 'EXTRA' || cur.consumed) continue;
-    let prev: Cls | undefined;
-    for (let z = k - 1; z >= 0; z--) if (cls[z].typ !== null && !cls[z].consumed) { prev = cls[z]; break; }
-    if (prev?.typ && cur.typ && prev.typ.toLowerCase() === cur.typ.toLowerCase()) {
+    let neighbor: Cls | undefined;
+    for (let z = k - 1; z >= 0; z--) if (cls[z].typ !== null && !cls[z].consumed) { neighbor = cls[z]; break; }
+    if (!(neighbor?.typ && cur.typ && neighbor.typ.toLowerCase() === cur.typ.toLowerCase())) {
+      for (let z = k + 1; z < cls.length; z++) if (cls[z].typ !== null && !cls[z].consumed) { neighbor = cls[z]; break; }
+    }
+    if (neighbor?.typ && cur.typ && neighbor.typ.toLowerCase() === cur.typ.toLowerCase()) {
       cur.subtype = 'REPETITION';
       cur.reason = `Repeated word: "${cur.typ}"`;
     }
