@@ -907,27 +907,27 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       {/* GATING / SUBMITTED SCREEN OVERLAY */}
       {isExamSubmitted ? (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 sm:p-8 max-w-5xl w-full shadow-2xl animate-in zoom-in-95 duration-200 text-slate-800 dark:text-slate-100 my-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 max-w-5xl w-full shadow-xl animate-in zoom-in-95 duration-200 text-slate-800 dark:text-slate-100 my-auto">
             {/* Header Banner */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-4 text-center sm:text-left">
-                <div className="h-12 w-12 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center shrink-0 shadow-sm">
-                  <Check className="h-6 w-6 stroke-[3]" />
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3.5 text-center sm:text-left">
+                <div className="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+                  <Check className="h-5 w-5 stroke-[2.5]" />
                 </div>
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                    {language === 'hi' ? 'परीक्षा सफलतापूर्वक सबमिट की गई!' : 'Test Submitted Successfully!'}
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                    {language === 'hi' ? 'परीक्षा सफलतापूर्वक सबमिट की गई' : 'Test Submitted Successfully'}
                   </h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold mt-0.5">
+                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
                     {language === 'hi'
-                      ? 'आपकी परीक्षा उत्तर पुस्तिका सफलतापूर्वक दर्ज कर ली गई है। नीचे सभी अनुभागों का विवरण देखें।'
-                      : 'Your answer sheet has been recorded. Review your section-wise question response breakdown below.'}
+                      ? 'आपकी परीक्षा उत्तर पुस्तिका दर्ज कर ली गई है। नीचे अनुभाग-वार विवरण देखें।'
+                      : 'Your answer sheet has been recorded. Review your section-wise response summary below.'}
                   </p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 bg-green-50 dark:bg-green-950/30 px-3.5 py-1.5 rounded-full border border-green-200 dark:border-green-800 text-xs font-extrabold text-green-700 dark:text-green-400 shrink-0 shadow-sm">
-                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+              <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-600 dark:text-slate-300 shrink-0">
+                <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
                 <span>{language === 'hi' ? 'सबमिटेड' : 'SUBMITTED'}</span>
               </div>
             </div>
@@ -978,37 +978,47 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
               return (
                 <div className="py-5 flex flex-col gap-5">
-                  {/* Top Overview Cards (Horizontal Row - 5 Status Categories) */}
+                  {/* Top Overview Cards (Clean, Unified Palette) */}
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                    <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-center">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Questions</p>
-                      <p className="text-xl font-black text-slate-800 dark:text-slate-100 mt-0.5">{totalQuestionsAll}</p>
+                    <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3 text-center">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        {language === 'hi' ? 'कुल प्रश्न' : 'Total Questions'}
+                      </p>
+                      <p className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-0.5 font-mono">{totalQuestionsAll}</p>
                     </div>
-                    <div className="bg-green-50/70 dark:bg-green-950/20 border border-green-200 dark:border-green-900/50 rounded-2xl p-3 text-center">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-green-700">Answered</p>
-                      <p className="text-xl font-black text-green-700 mt-0.5">{totalAnsweredAll}</p>
+                    <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3 text-center">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        {language === 'hi' ? 'उत्तर दिए गए' : 'Answered'}
+                      </p>
+                      <p className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-0.5 font-mono">{totalAnsweredAll}</p>
                     </div>
-                    <div className="bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/50 rounded-2xl p-3 text-center">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700">Answered &amp; Marked</p>
-                      <p className="text-xl font-black text-indigo-700 mt-0.5">{totalAnsweredAndMarkedAll}</p>
+                    <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3 text-center">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        {language === 'hi' ? 'उत्तरित व समीक्षा' : 'Ans & Marked'}
+                      </p>
+                      <p className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-0.5 font-mono">{totalAnsweredAndMarkedAll}</p>
                     </div>
-                    <div className="bg-purple-50/70 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/50 rounded-2xl p-3 text-center">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700">Marked For Review</p>
-                      <p className="text-xl font-black text-purple-700 mt-0.5">{totalMarkedAll}</p>
+                    <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3 text-center">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        {language === 'hi' ? 'समीक्षा हेतु' : 'Marked Review'}
+                      </p>
+                      <p className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-0.5 font-mono">{totalMarkedAll}</p>
                     </div>
-                    <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-3 text-center">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Not Attempted</p>
-                      <p className="text-xl font-black text-amber-700 mt-0.5">{totalNotAttemptedAll}</p>
+                    <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3 text-center">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        {language === 'hi' ? 'अनुत्तरित' : 'Not Attempted'}
+                      </p>
+                      <p className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-0.5 font-mono">{totalNotAttemptedAll}</p>
                     </div>
                   </div>
 
                   {/* Section Wise Breakdown Table */}
-                  <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm bg-white dark:bg-slate-900">
-                    <div className="bg-slate-100/80 dark:bg-slate-800/80 px-4 py-2.5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                      <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                  <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+                    <div className="bg-slate-50 dark:bg-slate-800/60 px-4 py-2.5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                         {language === 'hi' ? 'अनुभाग-वार उत्तर विवरण' : 'Section-Wise Response Summary'}
                       </h4>
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                      <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
                         {sectionStats.length} {language === 'hi' ? 'अनुभाग' : 'Sections'}
                       </span>
                     </div>
@@ -1016,7 +1026,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead>
-                          <tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-extrabold border-b border-slate-200 dark:border-slate-700 uppercase text-[10px] tracking-wider">
+                          <tr className="bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-700 uppercase text-[10px] tracking-wider">
                             <th className="py-2.5 px-4">Section Name</th>
                             <th className="py-2.5 px-3 text-center">Total Qs</th>
                             <th className="py-2.5 px-3 text-center">Answered</th>
@@ -1025,29 +1035,33 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                             <th className="py-2.5 px-3 text-center">Not Attempted</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-700 dark:text-slate-300">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                           {sectionStats.map((sec) => (
-                            <tr key={sec.sectionId} className="hover:bg-slate-50/80 dark:hover:bg-slate-800 transition-colors">
-                              <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                                <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-[10px] px-2 py-0.5 rounded font-black shrink-0">{sec.partLabel}</span>
+                            <tr key={sec.sectionId} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/50 transition-colors">
+                              <td className="py-2.5 px-4 font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0">
+                                  {sec.partLabel}
+                                </span>
                                 <span className="truncate">{sec.sectionName}</span>
                               </td>
-                              <td className="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-100">{sec.total}</td>
-                              <td className="py-2.5 px-3 text-center font-extrabold text-green-600 dark:text-green-400 bg-green-50/30 dark:bg-green-900/10">{sec.answered}</td>
-                              <td className="py-2.5 px-3 text-center font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-50/30 dark:bg-indigo-900/10">{sec.answeredAndMarked}</td>
-                              <td className="py-2.5 px-3 text-center font-extrabold text-purple-600 dark:text-purple-400 bg-purple-50/30 dark:bg-purple-900/10">{sec.markedForReview}</td>
-                              <td className="py-2.5 px-3 text-center font-extrabold text-amber-600 dark:text-amber-400 bg-amber-50/30 dark:bg-amber-900/10">{sec.notAttempted}</td>
+                              <td className="py-2.5 px-3 text-center font-mono font-medium text-slate-800 dark:text-slate-200">{sec.total}</td>
+                              <td className="py-2.5 px-3 text-center font-mono font-medium text-slate-800 dark:text-slate-200">{sec.answered}</td>
+                              <td className="py-2.5 px-3 text-center font-mono font-medium text-slate-800 dark:text-slate-200">{sec.answeredAndMarked}</td>
+                              <td className="py-2.5 px-3 text-center font-mono font-medium text-slate-800 dark:text-slate-200">{sec.markedForReview}</td>
+                              <td className="py-2.5 px-3 text-center font-mono font-medium text-slate-800 dark:text-slate-200">{sec.notAttempted}</td>
                             </tr>
                           ))}
                         </tbody>
                         <tfoot>
-                          <tr className="bg-slate-100/90 dark:bg-slate-800/90 font-black text-slate-900 dark:text-white border-t-2 border-slate-300 dark:border-slate-600 text-xs">
-                            <td className="py-2.5 px-4 uppercase tracking-wider">Total Summary</td>
-                            <td className="py-2.5 px-3 text-center">{totalQuestionsAll}</td>
-                            <td className="py-2.5 px-3 text-center text-green-700 dark:text-green-400">{totalAnsweredAll}</td>
-                            <td className="py-2.5 px-3 text-center text-indigo-700 dark:text-indigo-400">{totalAnsweredAndMarkedAll}</td>
-                            <td className="py-2.5 px-3 text-center text-purple-700 dark:text-purple-400">{totalMarkedAll}</td>
-                            <td className="py-2.5 px-3 text-center text-amber-700 dark:text-amber-400">{totalNotAttemptedAll}</td>
+                          <tr className="bg-slate-50 dark:bg-slate-800/70 font-bold text-slate-900 dark:text-white border-t border-slate-200 dark:border-slate-700 text-xs">
+                            <td className="py-2.5 px-4 uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                              {language === 'hi' ? 'कुल योग' : 'Total Summary'}
+                            </td>
+                            <td className="py-2.5 px-3 text-center font-mono">{totalQuestionsAll}</td>
+                            <td className="py-2.5 px-3 text-center font-mono">{totalAnsweredAll}</td>
+                            <td className="py-2.5 px-3 text-center font-mono">{totalAnsweredAndMarkedAll}</td>
+                            <td className="py-2.5 px-3 text-center font-mono">{totalMarkedAll}</td>
+                            <td className="py-2.5 px-3 text-center font-mono">{totalNotAttemptedAll}</td>
                           </tr>
                         </tfoot>
                       </table>
@@ -1057,19 +1071,17 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               );
             })()}
 
-            {/* Bottom Row: Ratings + Action Button (Horizontal Split on >= 1080px, Stacked on < 1080px) */}
+            {/* Bottom Row: Ratings + Action Button */}
             <div className="pt-4 border-t border-slate-200 dark:border-slate-700 flex flex-col min-[1080px]:flex-row items-center justify-between gap-4 min-[1080px]:gap-5">
-              {/* Feedback Rating Block - Stacked on < 1080px, Side-by-side on >= 1080px */}
+              {/* Feedback Rating Block */}
               <div className="flex flex-col min-[1080px]:flex-row items-stretch min-[1080px]:items-center gap-3 min-[1080px]:gap-4 text-left w-full min-[1080px]:w-auto">
                 {/* Rate Website */}
-                <div className={`flex items-center justify-between min-[1080px]:justify-start gap-3 px-3 py-2 min-[1080px]:py-1.5 rounded-xl border transition-all w-full min-[1080px]:w-auto ${
+                <div className={`flex items-center justify-between min-[1080px]:justify-start gap-3 px-3.5 py-2 rounded-xl border transition-all w-full min-[1080px]:w-auto ${
                   isBlinkingStars && websiteRating === 0 
-                    ? 'border-amber-500 bg-amber-50/80 dark:bg-amber-950/40 ring-2 ring-amber-400 animate-pulse' 
-                    : websiteRating > 0
-                      ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-950/20 text-slate-700 dark:text-slate-300'
-                      : 'border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    ? 'border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-950/20' 
+                    : 'border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300'
                 }`}>
-                  <span className="text-xs sm:text-sm font-black whitespace-nowrap">
+                  <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">
                     {language === 'hi' ? 'वेबसाइट अनुभव:' : 'Rate Website:'} <span className="text-red-500">*</span>
                   </span>
                   <div className="flex gap-1.5">
@@ -1081,12 +1093,12 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                         className="focus:outline-none transition active:scale-110 p-0.5 cursor-pointer"
                       >
                         <Star
-                          className={`h-6 w-6 sm:h-7 sm:w-7 transition-colors ${
+                          className={`h-5 w-5 sm:h-6 sm:w-6 transition-colors ${
                             star <= websiteRating 
-                              ? 'fill-amber-400 text-amber-400 drop-shadow-sm' 
+                              ? 'fill-amber-400 text-amber-400' 
                               : isBlinkingStars && websiteRating === 0
                                 ? 'fill-amber-300 text-amber-400 animate-bounce'
-                                : 'text-slate-300 dark:text-slate-600 hover:text-amber-300'
+                                : 'text-slate-300 dark:text-slate-600 hover:text-amber-400'
                           }`}
                         />
                       </button>
@@ -1094,15 +1106,13 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   </div>
                 </div>
 
-                {/* Rate Exam - Shows just below Rate Website on < 1080px */}
-                <div className={`flex items-center justify-between min-[1080px]:justify-start gap-3 px-3 py-2 min-[1080px]:py-1.5 rounded-xl border transition-all w-full min-[1080px]:w-auto ${
+                {/* Rate Exam */}
+                <div className={`flex items-center justify-between min-[1080px]:justify-start gap-3 px-3.5 py-2 rounded-xl border transition-all w-full min-[1080px]:w-auto ${
                   isBlinkingStars && examRating === 0 
-                    ? 'border-amber-500 bg-amber-50/80 dark:bg-amber-950/40 ring-2 ring-amber-400 animate-pulse' 
-                    : examRating > 0
-                      ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-950/20 text-slate-700 dark:text-slate-300'
-                      : 'border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    ? 'border-amber-400 dark:border-amber-500 bg-amber-50/40 dark:bg-amber-950/20' 
+                    : 'border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300'
                 }`}>
-                  <span className="text-xs sm:text-sm font-black whitespace-nowrap">
+                  <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">
                     {language === 'hi' ? 'परीक्षा अनुभव:' : 'Exam Experience:'} <span className="text-red-500">*</span>
                   </span>
                   <div className="flex gap-1.5">
@@ -1114,12 +1124,12 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                         className="focus:outline-none transition active:scale-110 p-0.5 cursor-pointer"
                       >
                         <Star
-                          className={`h-6 w-6 sm:h-7 sm:w-7 transition-colors ${
+                          className={`h-5 w-5 sm:h-6 sm:w-6 transition-colors ${
                             star <= examRating 
-                              ? 'fill-amber-400 text-amber-400 drop-shadow-sm' 
+                              ? 'fill-amber-400 text-amber-400' 
                               : isBlinkingStars && examRating === 0
                                 ? 'fill-amber-300 text-amber-400 animate-bounce'
-                                : 'text-slate-300 dark:text-slate-600 hover:text-amber-300'
+                                : 'text-slate-300 dark:text-slate-600 hover:text-amber-400'
                           }`}
                         />
                       </button>
@@ -1174,7 +1184,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                   } catch (e) {}
                   router.push(`/exam/${testId}/analysis`);
                 }}
-                className="w-full min-[1080px]:w-auto bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm px-8 py-3.5 rounded-2xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer active:scale-95 whitespace-nowrap uppercase tracking-wider"
+                className="w-full min-[1080px]:w-auto bg-slate-900 hover:bg-slate-800 text-white dark:bg-blue-600 dark:hover:bg-blue-500 font-bold text-xs sm:text-sm px-7 py-3 rounded-xl shadow-sm transition-all cursor-pointer active:scale-95 whitespace-nowrap uppercase tracking-wider"
               >
                 {language === 'hi' ? 'स्कोर और विश्लेषण देखें' : 'View Score & Analysis'}
               </button>
@@ -2776,7 +2786,53 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
 
   const lowerId = (testId || '').toLowerCase();
   const titleLower = (examSession.testTitle || '').toLowerCase();
+  const subCatLower = (examSession.testSubcategory || '').toLowerCase();
   const isRpscRas = lowerId.includes('rpsc') || titleLower.includes('rpsc') || titleLower.includes('ras');
+
+  // Station Master CBAT (Psycho Test) detection
+  const isCbat = (() => {
+    if (lowerId.includes('cbat') || titleLower.includes('cbat') || subCatLower.includes('cbat')) return true;
+    if (lowerId.includes('psycho') || titleLower.includes('psycho') || subCatLower.includes('psycho')) return true;
+    if (customQs?.subCategoryId === 'rrb_ntpc_cbat__psycho_test__iayf' || customQs?.examId === 'rrb_ntpc_cbat__psycho_test__iayf') return true;
+    if (examCatalog && Array.isArray(examCatalog)) {
+      for (const cat of examCatalog) {
+        for (const sub of cat.subCategories || []) {
+          if (sub.id === 'rrb_ntpc_cbat__psycho_test__iayf' || (sub.name && (sub.name.toLowerCase().includes('cbat') || sub.name.toLowerCase().includes('psycho')))) {
+            if (sub.tests?.some((t: any) => t.id === testId)) return true;
+            if (sub.subSubCategories?.some((ss: any) => ss.tests?.some((t: any) => t.id === testId))) return true;
+          }
+        }
+      }
+    }
+    return false;
+  })();
+
+  const getCbatSectionTimingDisplay = (sec: any, idx: number) => {
+    let mins: number | null = null;
+    if (sec.durationSeconds && sec.durationSeconds > 0) {
+      mins = Math.round(sec.durationSeconds / 60);
+    } else if (Array.isArray(customQs?.sectionalTimings) && customQs.sectionalTimings[idx]) {
+      mins = Number(customQs.sectionalTimings[idx]);
+    } else if (typeof customQs?.sectionalTimings === 'string' && customQs.sectionalTimings.trim()) {
+      const parts = customQs.sectionalTimings.split(',').map((s: string) => Number(s.trim()));
+      if (parts[idx]) mins = parts[idx];
+    } else {
+      const name = (sec.name || '').toLowerCase();
+      if (name.includes('classif') || name.includes('intelligence')) mins = 10;
+      else if (name.includes('odd') || name.includes('attention')) mins = 8;
+      else if (name.includes('route') || name.includes('spatial')) mins = 6;
+      else if (name.includes('order') || name.includes('information')) mins = 6;
+      else if (name.includes('personality')) mins = 12;
+      else {
+        const defaults = [10, 8, 6, 6, 12];
+        if (defaults[idx]) mins = defaults[idx];
+      }
+    }
+    if (mins) {
+      return lang === 'hi' ? `${mins} मिनट` : `${mins} Mins`;
+    }
+    return lang === 'hi' ? 'समयबद्ध' : 'Timed';
+  };
 
   const text = {
     en: {
@@ -2867,10 +2923,21 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
                 <span className="text-[10px] uppercase font-bold text-slate-400">Total Questions</span>
                 <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{totalQs} Qs</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Maximum Marks</span>
-                <span className="text-sm font-extrabold text-blue-600 dark:text-blue-400">{totalMarks} Marks</span>
-              </div>
+              {isCbat ? (
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">
+                    {lang === 'hi' ? 'अनुभागीय समय' : 'Sectional Timing'}
+                  </span>
+                  <span className="text-sm font-extrabold text-blue-600 dark:text-blue-400">
+                    {lang === 'hi' ? 'प्रत्येक टेस्ट हेतु लागू' : 'Timed per Battery'}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Maximum Marks</span>
+                  <span className="text-sm font-extrabold text-blue-600 dark:text-blue-400">{totalMarks} Marks</span>
+                </div>
+              )}
               <div className="flex flex-col">
                 <span className="text-[10px] uppercase font-bold text-slate-400">Total Sections</span>
                 <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">{examSession.sections.length} Sections</span>
@@ -2889,22 +2956,38 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
                   <tr>
                     <th className="p-3">Section Name</th>
                     <th className="p-3 text-center">Questions</th>
-                    <th className="p-3 text-center">Positive Mark</th>
-                    <th className="p-3 text-center">Negative Mark</th>
-                    <th className="p-3 text-right">Total Section Marks</th>
+                    {isCbat ? (
+                      <th className="p-3 text-right">
+                        {lang === 'hi' ? 'अनुभागीय समय (Section Timing)' : 'Section Timing'}
+                      </th>
+                    ) : (
+                      <>
+                        <th className="p-3 text-center">Positive Mark</th>
+                        <th className="p-3 text-center">Negative Mark</th>
+                        <th className="p-3 text-right">Total Section Marks</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
-                  {examSession.sections.map((sec) => {
+                  {examSession.sections.map((sec, idx) => {
                     const secQs = examSession.questions.filter(q => q.sectionId === sec.id).length;
                     const secMarks = secQs * (sec.positiveMark || 2);
                     return (
                       <tr key={sec.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/50 font-medium">
                         <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{sec.name}</td>
                         <td className="p-3 text-center font-mono">{secQs}</td>
-                        <td className="p-3 text-center font-bold text-emerald-600">+{sec.positiveMark ?? 2}</td>
-                        <td className="p-3 text-center font-bold text-red-500">−{sec.negativeMark ?? 0.5}</td>
-                        <td className="p-3 text-right font-extrabold text-blue-600">{secMarks}</td>
+                        {isCbat ? (
+                          <td className="p-3 text-right font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                            {getCbatSectionTimingDisplay(sec, idx)}
+                          </td>
+                        ) : (
+                          <>
+                            <td className="p-3 text-center font-bold text-emerald-600">+{sec.positiveMark ?? 2}</td>
+                            <td className="p-3 text-center font-bold text-red-500">−{sec.negativeMark ?? 0.5}</td>
+                            <td className="p-3 text-right font-extrabold text-blue-600">{secMarks}</td>
+                          </>
+                        )}
                       </tr>
                     );
                   })}
@@ -2965,6 +3048,31 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
                 <p className="pl-2 text-red-700 dark:text-red-300 font-semibold">{t.rpsc1}</p>
                 <p className="pl-2 text-red-700 dark:text-red-300 font-semibold">{t.rpsc2}</p>
               </>
+            )}
+
+            {isCbat && (
+              <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                <p className="font-extrabold text-blue-600 dark:text-blue-400">
+                  {lang === 'hi' ? 'विशेष निर्देश (Station Master CBAT / Psycho Test):' : 'Special Instructions (Station Master CBAT / Psycho Test):'}
+                </p>
+                <ul className="list-disc list-inside space-y-1 pl-1 text-slate-700 dark:text-slate-300 font-medium">
+                  <li>
+                    {lang === 'hi' 
+                      ? 'इस परीक्षा में प्रत्येक टेस्ट बैटरी हेतु अलग-अलग अनुभागीय समय (Sectional Timing) निर्धारित है।' 
+                      : 'Each test battery in this exam has its own individual sectional timing.'}
+                  </li>
+                  <li>
+                    {lang === 'hi' 
+                      ? 'निर्धारित अनुभागीय समय समाप्त होते ही वह सेक्शन अपने आप सबमिट हो जाएगा और अगला टेस्ट शुरू हो जाएगा।' 
+                      : 'As soon as the allotted sectional timing expires, that section auto-submits and the next battery begins.'}
+                  </li>
+                  <li>
+                    {lang === 'hi' 
+                      ? 'CBAT में पारंपरिक अंकन के स्थान पर टी-स्कोर (T-Score) मूल्यांकन प्रणाली लागू होती है।' 
+                      : 'CBAT evaluates performance using the T-Score system rather than traditional marks.'}
+                  </li>
+                </ul>
+              </div>
             )}
           </div>
 
