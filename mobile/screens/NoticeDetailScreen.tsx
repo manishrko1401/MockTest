@@ -122,9 +122,9 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
     const lowerLabel = cleanLabel.toLowerCase();
     const lowerUrl = cleanUrl.toLowerCase();
 
-    // 1. REJECT INSTRUCTIONAL PARAGRAPH BLOCKS (>75 CHARS or LONG HOW-TO PARAGRAPHS)
+    // 1. REJECT INSTRUCTIONAL PARAGRAPH BLOCKS (LONG HOW-TO INSTRUCTION PARAGRAPHS)
     if (
-      cleanLabel.length > 75 ||
+      cleanLabel.length > 160 ||
       lowerLabel.includes('candidate read') ||
       lowerLabel.includes('while applying') ||
       lowerLabel.includes('before submitting') ||
@@ -195,7 +195,7 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
         const anchorText = aMatch[2].replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
         
         let label = '';
-        const isGenericAnchor = /^(?:click\s*here|link|download|open|server\s*[i|1|2|3|4]*|watch\s*video)$/i.test(anchorText);
+        const isGenericAnchor = /^(?:click\s*here|link|download|open|server\s*[-–—]?[i|1|2|3|4]*|watch\s*video)$/i.test(anchorText);
 
         if (firstColText && !isGenericAnchor && anchorText && firstColText.toLowerCase() !== anchorText.toLowerCase()) {
           label = `${firstColText} (${anchorText})`;
@@ -206,7 +206,7 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
         }
 
         if (/notification|pdf|advt|circular|advertisement/i.test(label) || /notification|pdf/i.test(url)) {
-          if (!/official notification/i.test(label) && label.length < 40) {
+          if (!/official notification/i.test(label) && label.length < 50) {
             label = `Official Notification Link: ${label}`;
           }
         }
@@ -600,6 +600,14 @@ export default function NoticeDetailScreen({
                   linkColor = '#3B82F6';
                   linkBg = isDark ? '#172554' : '#EFF6FF';
                   LinkIcon = Download;
+                } else if (link.iconType === 'video') {
+                  linkColor = '#EF4444';
+                  linkBg = isDark ? '#3B1212' : '#FEF2F2';
+                  LinkIcon = Video;
+                } else if (link.iconType === 'channel') {
+                  linkColor = '#0D9488';
+                  linkBg = isDark ? '#042F2E' : '#F0FDFA';
+                  LinkIcon = MessageCircle;
                 }
 
                 return (

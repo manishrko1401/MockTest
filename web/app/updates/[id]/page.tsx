@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '../../AuthContext';
 import { 
   ArrowLeft, ExternalLink, ChevronRight, Trophy, Bell, FileText, 
@@ -95,9 +95,9 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
     const lowerLabel = cleanLabel.toLowerCase();
     const lowerUrl = cleanUrl.toLowerCase();
 
-    // 1. REJECT INSTRUCTIONAL PARAGRAPH BLOCKS (>75 CHARS or LONG HOW-TO PARAGRAPHS)
+    // 1. REJECT INSTRUCTIONAL PARAGRAPH BLOCKS (LONG HOW-TO INSTRUCTION PARAGRAPHS)
     if (
-      cleanLabel.length > 75 ||
+      cleanLabel.length > 160 ||
       lowerLabel.includes('candidate read') ||
       lowerLabel.includes('while applying') ||
       lowerLabel.includes('before submitting') ||
@@ -168,7 +168,7 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
         const anchorText = aMatch[2].replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
         
         let label = '';
-        const isGenericAnchor = /^(?:click\s*here|link|download|open|server\s*[i|1|2|3|4]*|watch\s*video)$/i.test(anchorText);
+        const isGenericAnchor = /^(?:click\s*here|link|download|open|server\s*[-–—]?[i|1|2|3|4]*|watch\s*video)$/i.test(anchorText);
 
         if (firstColText && !isGenericAnchor && anchorText && firstColText.toLowerCase() !== anchorText.toLowerCase()) {
           label = `${firstColText} (${anchorText})`;
@@ -179,7 +179,7 @@ function extractParsedLinks(notice: any, html: string): ParsedActionLink[] {
         }
 
         if (/notification|pdf|advt|circular|advertisement/i.test(label) || /notification|pdf/i.test(url)) {
-          if (!/official notification/i.test(label) && label.length < 40) {
+          if (!/official notification/i.test(label) && label.length < 50) {
             label = `Official Notification Link: ${label}`;
           }
         }
@@ -228,11 +228,18 @@ function sanitizeNoticeHtml(html: string): string {
   clean = clean.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, '');
   clean = clean.replace(/(?:<b>|<strong>)?(?:Short\s*(?:Description|Details|Info|Information)|संक्षिप्त\s*विवरण)\s*:?\s*(?:<\/b>|<\/strong>)?(?:[^<\n\r]{0,250})/gi, '');
 
-  // 6. Remove video and social media promotion rows in ANY table (Watch Video, Hindi Video, Telegram/Whatsapp)
-  clean = clean.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:Watch\s*Video|Hindi\s*Video|Short\s*Notification\s*\(?[\w\s]*Video|Join\s*Free\s*Information|Information\s*Channel|Official\s*Whatsapp|Official\s*Telegram)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, '');
+  // 6. KEEP video, PDF, and community channel links inside the table!
+  // Only remove purely empty promotion rows with no anchor link
+  clean = clean.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:Join\s*Free\s*Information)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, (m) => {
+    if (/<a\s+[^>]*href=/i.test(m)) return m;
+    return '';
+  });
 
-  // 6b. REMOVE BRANDING TEXT, STANDALONE URLS & UNWANTED "www..com" / ".Com" / "Rojgar Result" ROWS AND TAGS
+  // 6b. REMOVE BRANDING TEXT, STANDALONE URLS & UNWANTED "www..com" / ".Com" / "Rojgar Result" ROWS (preserving rows with actionable links)
   clean = clean.replace(/<tr[^>]*>(?:(?!<\/tr>)[\s\S])*?(?:www\s*\.\s*\.\s*com|\.Com|rojgarresult\.com|Rojgar\s*Result®?)(?:(?!<\/tr>)[\s\S])*?<\/tr>/gi, (match) => {
+    if (/<a\s+[^>]*href=["'](?!https?:\/\/(?:www\.)?rojgarresult\.com\/?(?:$|[?#]))[^"']+["']/i.test(match)) {
+      return match;
+    }
     const text = match.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
     if (/^(?:www\s*\.\s*\.\s*com|\.Com|Website|\.Com\s*Website|Website\s*\.Com|Rojgar\s*Result®?|rojgarresult\.com)$/i.test(text) || text.length < 15) {
       return '';
@@ -283,7 +290,9 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   const { currentUser, updateTrackedJobs, noticesList, theme, toggleTheme, language, setLanguage } = useAuth();
   const router = useRouter();
   const { isMobile, isMounted } = useIsMobile();
-  const [noticeId, setNoticeId] = React.useState<string | null>(null);
+  const routeParams = useParams();
+  const routeId = typeof routeParams?.id === 'string' ? routeParams.id : (Array.isArray(routeParams?.id) ? routeParams.id[0] : null);
+  const [noticeId, setNoticeId] = React.useState<string | null>(routeId);
   const [copied, setCopied] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState('overview');
 
@@ -303,8 +312,14 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   const [noticeLoading, setNoticeLoading] = React.useState(false);
 
   React.useEffect(() => {
-    params.then(p => setNoticeId(p.id));
-  }, [params]);
+    if (routeId) {
+      setNoticeId(routeId);
+    } else if (params) {
+      Promise.resolve(params).then(p => {
+        if (p?.id) setNoticeId(p.id);
+      }).catch(() => {});
+    }
+  }, [routeId, params]);
 
   React.useEffect(() => {
     if (!noticeId) return;
@@ -542,7 +557,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
   if (!isMounted) return null;
 
-  if (!noticeId || noticesList.length === 0) {
+  if (!noticeId || (!notice && (noticeLoading || noticesList.length === 0))) {
     return (
       <div className="min-h-screen bg-slate-200/90 dark:bg-slate-950 flex items-center justify-center">
         <div className="text-center space-y-4">

@@ -49,7 +49,15 @@ export async function fetchNoticeHtmlFromTigris(referenceUriOrKey: string): Prom
     key = key.replace('tigris://', '');
   } else if (key.includes('fly.storage.tigris.dev/')) {
     const parts = key.split('fly.storage.tigris.dev/');
-    key = parts[1].replace(`${bucketName}/`, '');
+    key = parts[1];
+  }
+
+  // Strip bucket name prefix if present (e.g. mocktest-assets/notices/...)
+  if (key.startsWith(`${bucketName}/`)) {
+    key = key.substring(bucketName.length + 1);
+  }
+  if (key.startsWith('mocktest-assets/')) {
+    key = key.replace(/^mocktest-assets\//, '');
   }
 
   try {
@@ -61,6 +69,23 @@ export async function fetchNoticeHtmlFromTigris(referenceUriOrKey: string): Prom
     if (!getObj.Body) return null;
     return await getObj.Body.transformToString();
   } catch (err: any) {
+    // Try alternate key path fallback (e.g. notices/ vs notices/html/)
+    try {
+      let altKey = key;
+      if (key.startsWith('notices/html/')) {
+        altKey = key.replace('notices/html/', 'notices/');
+      } else if (key.startsWith('notices/')) {
+        altKey = key.replace('notices/', 'notices/html/');
+      }
+      if (altKey !== key) {
+        const altObj = await s3Client.send(new GetObjectCommand({
+          Bucket: bucketName,
+          Key: altKey,
+        }));
+        if (altObj.Body) return await altObj.Body.transformToString();
+      }
+    } catch (_) {}
+
     console.error(`Failed to fetch notice HTML from Tigris for key "${key}":`, err.message);
     return null;
   }

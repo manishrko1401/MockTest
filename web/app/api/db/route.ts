@@ -2353,6 +2353,60 @@ async function handleGetSingleNoticeContent(data: any) {
     }
   }
 
+  // On-demand Auto-heal: If contentHtml lacks Useful Important Links, live fetch & heal from rawUrl
+  const rawUrl = notice.rawUrl || notice.url;
+  const hasLinks = notice.contentHtml && (
+    notice.contentHtml.toLowerCase().includes('important link') ||
+    notice.contentHtml.toLowerCase().includes('useful link')
+  );
+
+  if (!hasLinks && rawUrl && (rawUrl.includes('rojgarresult.com') || rawUrl.includes('sarkariresult.com'))) {
+    try {
+      const liveRes = await fetch(rawUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        },
+        next: { revalidate: 0 }
+      });
+      if (liveRes.ok) {
+        const pageHtml = await liveRes.text();
+        const { extractNoticeContent, extractDirectLink, extractLastDate } = await import('../../lib/noticeExtractor');
+        const extracted = extractNoticeContent(pageHtml);
+        if (extracted && (extracted.toLowerCase().includes('important link') || extracted.toLowerCase().includes('useful link'))) {
+          notice.contentHtml = extracted;
+          const directUrl = extractDirectLink(pageHtml, rawUrl, notice.category || 'notice');
+          const lastDate = extractLastDate(pageHtml);
+          if (directUrl && directUrl !== rawUrl) notice.url = directUrl;
+          if (lastDate && !notice.lastDate) notice.lastDate = lastDate;
+
+          // Save healed content to Tigris and DB asynchronously
+          (async () => {
+            try {
+              const { uploadNoticeHtmlToTigris } = await import('../../lib/tigrisNoticeStorage');
+              let contentRef = extracted;
+              const tigrisUrl = await uploadNoticeHtmlToTigris(notice.id, extracted);
+              if (tigrisUrl) contentRef = tigrisUrl;
+
+              await prisma.notice.update({
+                where: { id: notice.id },
+                data: {
+                  contentHtml: contentRef,
+                  ...(directUrl ? { url: directUrl } : {}),
+                  ...(lastDate ? { lastDate } : {})
+                }
+              });
+            } catch (err: any) {
+              console.error(`Auto-heal save failed for notice ${notice.id}:`, err?.message);
+            }
+          })();
+        }
+      }
+    } catch (e: any) {
+      console.warn(`On-demand live-heal failed for notice ${notice.id}:`, e?.message);
+    }
+  }
+
   return NextResponse.json({ success: true, notice });
 }
 
