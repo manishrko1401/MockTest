@@ -32,6 +32,7 @@ import { TRANSLATIONS } from '../../../translations';
 
 import { processQuestionHtml, decodeHtml } from '../../../lib/mathUtils';
 import MathJaxText from '../../../lib/MathJaxText';
+import MathJaxLoader from '../../../components/MathJaxLoader';
 
 // -----------------------------------------------------------------------------
 // RRB NTPC CBAT (Psycho Test) — T-Score result display
@@ -690,7 +691,8 @@ export default function ExamSolutionAnalysisPage() {
       ? "flex h-screen w-screen flex-col overflow-hidden bg-slate-200/90 dark:bg-slate-950 font-sans select-none text-xs leading-normal text-slate-800 dark:text-slate-200"
       : "flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200 select-none pb-12"
     }>
-      
+      <MathJaxLoader />
+
       {/* 1. NAVIGATION BAR */}
       {isSolutionView ? (
         <header className="flex h-[72px] items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-300 px-4 text-slate-800 shrink-0 select-none">

@@ -43,6 +43,7 @@ import { EXPLANATIONS } from '../lib/examUtils';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 import HomeSupportWidget from '../components/HomeSupportWidget';
+import MathJaxLoader from '../components/MathJaxLoader';
 
 import { processQuestionHtml, decodeHtml } from '../lib/mathUtils';
 import MathJaxText from '../lib/MathJaxText';
@@ -1068,7 +1069,8 @@ export default function PracticeSeriesPage() {
 
   return (
     <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200">
-      
+      <MathJaxLoader />
+
       {/* HEADER NAVBAR */}
       <header className="h-18 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 md:px-12 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-8 min-w-0">

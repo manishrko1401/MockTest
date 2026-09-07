@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '../AuthContext';
 import { TRANSLATIONS } from '../translations';
 import {
@@ -127,7 +128,14 @@ export default function HomeHeroBannerCarousel({ onOpenPassClaim }: HomeHeroBann
   const nextIndex = (currentIndex + 1) % totalSlides;
 
   // Render a Single Slide Banner (Borderless & No Black Sidebars)
-  const renderSlideContent = (slide: BannerSlide, isCenter: boolean) => {
+  // PERF: The carousel keeps every slide mounted in the DOM at once (for the
+  // 3D peeking transition), so a plain <img loading="eager"> on every slide
+  // downloaded every admin banner up front — 7 images, ~13MB, on first paint,
+  // regardless of whether a slide was ever visible. Only the slide(s) actually
+  // in play (center, plus the peeking neighbors shown on desktop) get a real
+  // <img src>; everything else renders a same-sized placeholder with no
+  // network request until it's swiped/advanced into view.
+  const renderSlideContent = (slide: BannerSlide, isCenter: boolean, shouldLoadImage: boolean) => {
     // If it has a full custom image banner (e.g. RRB NTPC Station Master CBAT)
     if (slide.imageUrl && slide.imageUrl.trim() !== '') {
       return (
@@ -141,12 +149,21 @@ export default function HomeHeroBannerCarousel({ onOpenPassClaim }: HomeHeroBann
           }}
           className="w-full h-full relative block overflow-hidden rounded-xl sm:rounded-2xl md:rounded-3xl border-0 shadow-lg select-none group bg-slate-100/60 dark:bg-slate-900/60 flex items-center justify-center"
         >
-          <img
-            src={slide.imageUrl.trim().replace(/^http:\/\//i, 'https://')}
-            alt={slide.headlineMain}
-            className="w-full h-full object-contain object-center rounded-xl sm:rounded-2xl md:rounded-3xl select-none pointer-events-none block border-0 transition-transform duration-300 group-hover:scale-[1.01]"
-            loading="eager"
-          />
+          {shouldLoadImage ? (
+            <Image
+              src={slide.imageUrl.trim().replace(/^http:\/\//i, 'https://')}
+              alt={slide.headlineMain}
+              fill
+              sizes="(max-width: 640px) 100vw, 90vw"
+              // PERF: next/image resizes + re-encodes (WebP/AVIF) admin-uploaded
+              // banners on the fly — raw uploads here have run 1.3-2.3MB each;
+              // optimized for this slot they're typically a few hundred KB.
+              className="object-contain object-center rounded-xl sm:rounded-2xl md:rounded-3xl select-none pointer-events-none border-0 transition-transform duration-300 group-hover:scale-[1.01]"
+              priority={isCenter}
+            />
+          ) : (
+            <div className="w-full h-full rounded-xl sm:rounded-2xl md:rounded-3xl bg-slate-200/70 dark:bg-slate-800/60 animate-pulse" />
+          )}
         </Link>
       );
     }
@@ -297,7 +314,7 @@ export default function HomeHeroBannerCarousel({ onOpenPassClaim }: HomeHeroBann
                 key={slide.id || idx}
                 className="absolute inset-0 w-full h-full z-20 transition-all duration-700 ease-out rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl"
               >
-                {renderSlideContent(slide, true)}
+                {renderSlideContent(slide, true, true)}
               </div>
             );
           }
@@ -329,7 +346,7 @@ export default function HomeHeroBannerCarousel({ onOpenPassClaim }: HomeHeroBann
               }}
               className={`absolute top-1/2 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] transform-gpu rounded-2xl md:rounded-3xl overflow-hidden will-change-transform ${posStyle}`}
             >
-              {renderSlideContent(slide, isCenter)}
+              {renderSlideContent(slide, isCenter, isCenter || isLeft || isRight)}
             </div>
           );
         })}

@@ -20,9 +20,15 @@ const nextConfig: NextConfig = {
   },
 
   // PERF: Cache optimized images for 24 hours and serve WebP/AVIF formats.
+  // remotePatterns is a wildcard because admin-uploaded banner/notice images can
+  // point at whatever external host an admin pastes a URL from (ibb.co today,
+  // but nothing stops a different host next time) — this lets next/image
+  // resize and re-encode them regardless of source, which is what actually
+  // cuts multi-MB banner uploads down to what the page displays.
   images: {
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 86400,
+    remotePatterns: [{ protocol: 'https', hostname: '**' }],
   },
 
   async rewrites() {

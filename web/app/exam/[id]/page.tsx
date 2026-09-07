@@ -16,6 +16,7 @@ import { useIsMobile } from '../../useIsMobile';
 
 import { processQuestionHtml, decodeHtml } from '../../lib/mathUtils';
 import MathJaxText from '../../lib/MathJaxText';
+import MathJaxLoader from '../../components/MathJaxLoader';
 
 
 
@@ -610,7 +611,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
   return (
     <div className="flex h-screen flex-col bg-gray-100 dark:bg-slate-950 font-sans select-none text-xs leading-normal text-slate-800 dark:text-slate-200">
-      
+      <MathJaxLoader />
+
       {/* 1. TOP HEADER BANNER */}
       {(() => {
         const isSsc = (testId.includes('ssc') || testId.toLowerCase().includes('ssc')) && !isMobile;
