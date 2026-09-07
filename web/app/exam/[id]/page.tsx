@@ -496,20 +496,28 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       try { localStorage.removeItem(`ongoing_web_${testId}`); } catch {}
 
       const savedResponses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number }> = {};
+      let totalElapsedSeconds = 0;
       Object.keys(state.responses).forEach(qId => {
         savedResponses[qId] = {
           selectedOptionIndex: state.responses[qId].selectedOptionIndex,
           elapsedSeconds: state.responses[qId].elapsedSeconds
         };
+        totalElapsedSeconds += state.responses[qId].elapsedSeconds || 0;
       });
 
+      // Sum of per-question elapsedSeconds, not totalDurationSeconds - timeRemaining:
+      // that formula only works for a plain single-timer exam. For sectional-timing exams
+      // timeRemaining reflects just the last section's leftover seconds (not the whole
+      // exam's), and for RPSC RAS extra-time mode timeRemaining is pinned at 0 the moment
+      // extra time starts, so time spent in extra time would be silently dropped. The
+      // elapsed-seconds sum tracks correctly across both cases.
       addAttempt(
         testId,
         state.session?.testTitle || "Mock Test Attempt",
         state.score.obtainedMarks,
         state.score.totalMarks,
         state.score.accuracyPercentage,
-        state.session ? state.session.totalDurationSeconds - state.timeRemaining : 0,
+        totalElapsedSeconds,
         state.violationsCount,
         savedResponses
       );

@@ -237,6 +237,13 @@ model UserTestSession {
   remainingSeconds           Int
   violationsCount            Int                     @default(0)
   finalScore                 Float?
+  // The actual total marks for THIS attempt, as computed by the scoring engine at submit
+  // time (sum of each question's real positive mark). Deliberately separate from
+  // MockTest.maxMarks, which is a cached, admin-set value on the test record that can
+  // silently drift out of sync with the real per-question marks (e.g. after a bulk marks
+  // edit) — falling back to it produces a wrong denominator like "60 / 200" when the real
+  // total is 100. Nullable because older sessions predate this column.
+  maxScore                   Float?
   accuracyPercentage         Float?
   timeSpentSeconds           Int                     @default(0)
   responses                  QuestionResponseState[]

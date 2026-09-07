@@ -386,6 +386,8 @@ export async function POST(request: Request) {
         return await handleResetReferrals();
       case 'get-user-details':
         return await handleGetUserDetails(data);
+      case 'get-session-responses':
+        return await handleGetSessionResponses(data);
       case 'admin-data':
         return await handleAdminData(data);
       case 'get-attempts':
@@ -1375,7 +1377,10 @@ async function handleLogin(data: any, request?: Request) {
         testId: session.mockTestId,
         title: session.mockTest?.title || 'Mock Test',
         score: session.finalScore ?? 0,
-        maxScore: session.mockTest?.maxMarks ?? 200,
+        // Prefer the attempt-time-accurate maxScore stored on the session itself over
+        // mockTest.maxMarks, which is a cached value that can drift out of sync with the
+        // real per-question marks (see the maxScore field comment in schema.prisma).
+        maxScore: session.maxScore ?? session.mockTest?.maxMarks ?? 200,
         accuracy: session.accuracyPercentage ?? 0,
         durationMinutes: session.mockTest?.durationMinutes || 60,
         durationSeconds: session.timeSpentSeconds,
@@ -1504,7 +1509,10 @@ async function handleGoogleAuth(data: any, request?: Request) {
           testId: session.mockTestId,
           title: session.mockTest?.title || 'Mock Test',
           score: session.finalScore ?? 0,
-          maxScore: session.mockTest?.maxMarks ?? 200,
+          // Prefer the attempt-time-accurate maxScore stored on the session itself over
+        // mockTest.maxMarks, which is a cached value that can drift out of sync with the
+        // real per-question marks (see the maxScore field comment in schema.prisma).
+        maxScore: session.maxScore ?? session.mockTest?.maxMarks ?? 200,
           accuracy: session.accuracyPercentage ?? 0,
           durationMinutes: session.mockTest?.durationMinutes || 60,
           durationSeconds: session.timeSpentSeconds,
@@ -1862,6 +1870,26 @@ async function ensureMockTestExists(testId: string, title?: string, maxMarks?: n
 async function handleAddAttempt(data: any, request?: Request) {
   const { userId, testId, title, score, maxScore, accuracy, durationSeconds, violations, responses } = data;
 
+  // Sanity-clamp the client-reported score/accuracy before it's written as permanent
+  // result data. The client (useTestEngine.tsx SUBMIT_EXAM) is the only place that computes
+  // marks — the server has historically trusted whatever it's sent with zero validation, so
+  // any client-side bug or a corrupted/tampered payload (NaN, Infinity, an absurd float from a
+  // bad browser state) would be stored verbatim as the user's official result. This does not
+  // re-derive the "correct" score — only clamps it to the physically possible range for this
+  // attempt, guarding the boundary between untrusted client input and permanent result data.
+  // storedMaxScore is what actually gets persisted (null when the client didn't send a
+  // sane value, so downstream reads fall back to mockTest.maxMarks instead of a fake number).
+  // clampCeiling is only the bound used below to sanity-clamp the score — it needs *some*
+  // ceiling even when maxScore itself is missing/invalid, hence the 1000 fallback there only.
+  const storedMaxScore = typeof maxScore === 'number' && isFinite(maxScore) && maxScore > 0 ? maxScore : null;
+  const clampCeiling = storedMaxScore ?? 1000;
+  const safeScore = typeof score === 'number' && isFinite(score)
+    ? Math.max(-clampCeiling, Math.min(clampCeiling, score))
+    : 0;
+  const safeAccuracy = typeof accuracy === 'number' && isFinite(accuracy)
+    ? Math.max(0, Math.min(100, accuracy))
+    : 0;
+
   let source = data.source;
   if (!source && request) {
     const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
@@ -1910,7 +1938,7 @@ async function handleAddAttempt(data: any, request?: Request) {
 
       // Estimate standard deviation (minimum width 5.0)
       const sigma = Math.max(5.0, (topper - avg) / 2.0);
-      const z = ((score ?? 0) - avg) / sigma;
+      const z = (safeScore - avg) / sigma;
 
       // Abramowitz and Stegun Normal CDF approximation formula
       const t = 1 / (1 + 0.2316419 * Math.abs(z));
@@ -1940,8 +1968,9 @@ async function handleAddAttempt(data: any, request?: Request) {
       userId,
       mockTestId: testId,
       status: 'COMPLETED',
-      finalScore: typeof score === 'number' && !isNaN(score) ? score : 0,
-      accuracyPercentage: typeof accuracy === 'number' && !isNaN(accuracy) ? accuracy : 0,
+      finalScore: safeScore,
+      maxScore: storedMaxScore,
+      accuracyPercentage: safeAccuracy,
       timeSpentSeconds: actualTimeSpent,
       violationsCount: typeof violations === 'number' && !isNaN(violations) ? Math.round(violations) : 0,
       remainingSeconds: 0,
@@ -4344,7 +4373,10 @@ async function handleGetUserDetails(data: any) {
         testId: session.mockTestId,
         title: session.mockTest?.title || 'Mock Test',
         score: session.finalScore ?? 0,
-        maxScore: session.mockTest?.maxMarks ?? 200,
+        // Prefer the attempt-time-accurate maxScore stored on the session itself over
+        // mockTest.maxMarks, which is a cached value that can drift out of sync with the
+        // real per-question marks (see the maxScore field comment in schema.prisma).
+        maxScore: session.maxScore ?? session.mockTest?.maxMarks ?? 200,
         accuracy: session.accuracyPercentage ?? 0,
         durationMinutes: session.mockTest?.durationMinutes || 60,
         durationSeconds: session.timeSpentSeconds,
@@ -4368,6 +4400,50 @@ async function handleGetUserDetails(data: any) {
   };
 
   return NextResponse.json({ success: true, user: mappedUser });
+}
+
+// Lazily loads the full per-question response state for one session. Login/refresh always
+// return responses: {} for egress reasons (a user can have thousands of response rows across
+// their history) — this is the on-demand fetch that's supposed to backfill it the moment a
+// student actually opens that one attempt's analysis page. Without it, the analysis page's
+// hasActualResponses check sees an empty object and falls back to reconstructing fake, seeded
+// correct/incorrect/skipped statuses instead of showing the student's real answers — which
+// then also feeds the wrong numbers into the section-wise score breakdown.
+async function handleGetSessionResponses(data: any) {
+  const { userId, sessionId } = data || {};
+  if (!userId || !sessionId) {
+    return NextResponse.json({ success: false, error: 'userId and sessionId are required' }, { status: 400 });
+  }
+
+  const session = await prisma.userTestSession.findUnique({
+    where: { id: sessionId },
+    select: {
+      userId: true,
+      responses: {
+        select: {
+          questionId: true,
+          selectedOptionIndex: true,
+          state: true,
+          elapsedSeconds: true,
+        },
+      },
+    },
+  });
+
+  if (!session || session.userId !== userId) {
+    return NextResponse.json({ success: false, error: 'Session not found' }, { status: 404 });
+  }
+
+  const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
+  session.responses.forEach((r) => {
+    responsesRecord[r.questionId] = {
+      selectedOptionIndex: r.selectedOptionIndex,
+      elapsedSeconds: r.elapsedSeconds,
+      state: r.state,
+    };
+  });
+
+  return NextResponse.json({ success: true, sessionId, responses: responsesRecord });
 }
 
 async function handleAdminData(data: any) {
@@ -4927,6 +5003,11 @@ async function handleGetAdminSessionAnalysis(rawPayload: any) {
       accuracy: s.attempted > 0 ? Math.round((s.correct / s.attempted) * 1000) / 10 : 0
     }));
 
+    // Live sum of each question's actual positive mark — mirrors the per-question resolution
+    // used inside enrichedQuestions above. Preferred over mockTest.maxMarks, which is a cached
+    // value that can silently drift out of sync with the real per-question marks.
+    const computedMaxMarks = questionsList.reduce((sum, q) => sum + Number(q.positiveMarks ?? defaultPositive), 0);
+
     // 5. Final Summary
     const finalScore = session.finalScore !== null ? session.finalScore : Math.round(computedScore * 100) / 100;
     const accuracy = session.accuracyPercentage !== null ? session.accuracyPercentage : (
@@ -4943,7 +5024,7 @@ async function handleGetAdminSessionAnalysis(rawPayload: any) {
         startedAt: session.startedAt,
         completedAt: session.completedAt,
         finalScore,
-        maxMarks: mockTest?.maxMarks || (questionsList.length * defaultPositive),
+        maxMarks: session.maxScore ?? (computedMaxMarks || mockTest?.maxMarks || (questionsList.length * defaultPositive)),
         accuracyPercentage: accuracy,
         timeSpentSeconds: session.timeSpentSeconds,
         durationMinutes: mockTest?.durationMinutes || 60,
@@ -4966,7 +5047,7 @@ async function handleGetAdminSessionAnalysis(rawPayload: any) {
         incorrectCount: computedIncorrect,
         skippedCount: computedSkipped,
         finalScore,
-        maxMarks: mockTest?.maxMarks || (questionsList.length * defaultPositive),
+        maxMarks: session.maxScore ?? (computedMaxMarks || mockTest?.maxMarks || (questionsList.length * defaultPositive)),
         accuracyPercentage: accuracy,
         timeSpentSeconds: session.timeSpentSeconds,
         violationsCount: session.violationsCount,

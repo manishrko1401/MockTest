@@ -52,11 +52,11 @@ const CBAT_QUALIFYING_TSCORE = 42;
 
 interface CbatSectionConfig { maxMarks: number; mean: number; sd: number; }
 const CBAT_TSCORE_CONFIG: Record<string, CbatSectionConfig> = {
-  'Classification Test': { maxMarks: 35, mean: 25, sd: 35 * 0.20 },
-  'Add of Odd Numbers Test': { maxMarks: 30, mean: 13, sd: 30 * 0.20 },
-  'Short Route Test': { maxMarks: 40, mean: 20, sd: 40 * 0.20 },
-  'Information Ordering Type -I': { maxMarks: 25, mean: 18, sd: 25 * 0.20 },
-  'Personality Test': { maxMarks: 35, mean: 25, sd: 35 * 0.20 },
+  'Classification Test': { maxMarks: 35, mean: 28, sd: 35 * 0.25 },
+  'Add of Odd Numbers Test': { maxMarks: 30, mean: 15, sd: 30 * 0.25 },
+  'Short Route Test': { maxMarks: 40, mean: 22, sd: 40 * 0.25 },
+  'Information Ordering Type -I': { maxMarks: 25, mean: 20, sd: 25 * 0.25 },
+  'Personality Test': { maxMarks: 35, mean: 30, sd: 35 * 0.25 },
 };
 const CBAT_MAX_TSCORE_PER_BATTERY = 80; // conventional ceiling used for the composite/merit scale
 const CBAT_MAX_COMPOSITE = CBAT_MAX_TSCORE_PER_BATTERY * Object.keys(CBAT_TSCORE_CONFIG).length;
@@ -88,6 +88,12 @@ export default function ExamSolutionAnalysisPage() {
   const [activeMobileTab, setActiveMobileTab] = useState<'analysis' | 'solutions'>('analysis');
   const [viewMode, setViewMode] = useState<'analysis' | 'solution'>('analysis');
   const [questionFontSize, setQuestionFontSize] = useState(14); // default 14px
+  // Login/refresh always return responses: {} to keep egress low (a user's full history can be
+  // thousands of response rows). This lazily backfills the real answers for whichever one
+  // attempt is currently open, via the get-session-responses endpoint. Without it, this page's
+  // hasActualResponses check sees {} and falls back to reconstructing FAKE, seeded
+  // correct/incorrect/skipped statuses — which then also feeds a wrong section-wise score.
+  const [fetchedResponses, setFetchedResponses] = useState<Record<string, Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }>>>({});
 
   const getAttemptLabel = (idx: number, total: number, attemptLang: 'en' | 'hi' = 'en') => {
     if (idx === 0) {
@@ -231,6 +237,30 @@ export default function ExamSolutionAnalysisPage() {
       )
     : [];
 
+  const selectedRecId = attempts[selectedAttemptIdx]?.id;
+  const selectedRecHasResponses = !!(
+    attempts[selectedAttemptIdx]?.responses &&
+    Object.keys(attempts[selectedAttemptIdx].responses).length > 0
+  );
+
+  useEffect(() => {
+    if (!currentUser?.id || !selectedRecId || selectedRecHasResponses || fetchedResponses[selectedRecId]) return;
+    let cancelled = false;
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get-session-responses', data: { userId: currentUser.id, sessionId: selectedRecId } })
+    })
+      .then(res => res.json())
+      .then(resData => {
+        if (!cancelled && resData.success && resData.responses) {
+          setFetchedResponses(prev => ({ ...prev, [selectedRecId]: resData.responses }));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [currentUser?.id, selectedRecId, selectedRecHasResponses, fetchedResponses]);
+
   useEffect(() => {
     setMounted(true);
 
@@ -307,6 +337,11 @@ export default function ExamSolutionAnalysisPage() {
   }
 
   const sessionRecord = attempts[selectedAttemptIdx];
+  // The real per-question responses, once the lazy-load effect above has backfilled them —
+  // sessionRecord.responses itself stays {} (it's a snapshot from login/refresh) until then.
+  const effectiveResponses = selectedRecHasResponses
+    ? sessionRecord.responses
+    : (fetchedResponses[sessionRecord?.id ?? ''] ?? {});
   const cutoffScore = sessionRecord?.mockTest?.testbookCutoffScore || 120;
   const isCutoffCleared = sessionRecord ? sessionRecord.score >= cutoffScore : false;
 
@@ -335,6 +370,24 @@ export default function ExamSolutionAnalysisPage() {
   // Generate the exam session questions list
   const examSession = generateExamSession(testId, examCatalog, customQs);
   const questions = examSession.questions;
+
+  // RPSC RAS detection — mirrors the exact logic used at attempt time in exam/[id]/page.tsx.
+  // Needed here because RPSC RAS scores unattempted questions differently (see below), and
+  // without this the section-wise breakdown disagrees with the authoritative sessionRecord.score.
+  const isRpscRasMode = (() => {
+    const idLower = (testId || '').toLowerCase();
+    const titleLower = (examSession.testTitle || '').toLowerCase();
+    const catLower = (examSession.testCategory || '').toLowerCase();
+    const subLower = (examSession.testSubcategory || '').toLowerCase();
+    return (
+      (catLower.includes('rpsc') && (subLower.includes('ras') || titleLower.includes('ras'))) ||
+      idLower.includes('rpsc_ras') ||
+      idLower.includes('rpsc-ras') ||
+      idLower.includes('rpsc__ras') ||
+      (titleLower.includes('rpsc') && (titleLower.includes('ras') || titleLower.includes('prelim'))) ||
+      (titleLower.includes('ras') && (titleLower.includes('prelim') || titleLower.includes('full') || titleLower.includes('pyq') || titleLower.includes('paper')))
+    );
+  })();
 
   // Reconstruct deterministic student responses based on accuracy & score using user+session ID seed
   let seed = 0;
@@ -373,14 +426,18 @@ export default function ExamSolutionAnalysisPage() {
     }
   });
 
-  const hasActualResponses = sessionRecord.responses && Object.keys(sessionRecord.responses).length > 0;
+  const hasActualResponses = effectiveResponses && Object.keys(effectiveResponses).length > 0;
 
   const questionStatuses = questions.map((q, idx) => {
-    if (hasActualResponses && sessionRecord.responses?.[q.id]) {
-      const resp = sessionRecord.responses[q.id];
+    if (hasActualResponses && effectiveResponses[q.id]) {
+      const resp = effectiveResponses[q.id];
       const userSelectedOptionIndex = resp.selectedOptionIndex ?? -1;
       let status: 'correct' | 'incorrect' | 'skipped' = 'skipped';
       if (userSelectedOptionIndex === -1 || userSelectedOptionIndex === null) {
+        status = 'skipped';
+      } else if (isRpscRasMode && userSelectedOptionIndex === 4) {
+        // RPSC RAS option index 4 = "Leave Question Unattempted" — not a wrong answer,
+        // must not be scored as incorrect (matches the SUBMIT_EXAM rule at attempt time).
         status = 'skipped';
       } else if (userSelectedOptionIndex === q.correctOptionIndex) {
         status = 'correct';
@@ -520,9 +577,19 @@ export default function ExamSolutionAnalysisPage() {
       const qPos = (q.positiveMark !== undefined && q.positiveMark !== null) ? Number(q.positiveMark) : info.positiveMark;
       const qNeg = (q.negativeMark !== undefined && q.negativeMark !== null) ? Number(q.negativeMark) : info.negativeMark;
 
-      if (selectedIdx === -1 || selectedIdx === null || selectedIdx === undefined) {
+      if (userStatus && userStatus.status === 'skipped') {
         stats.unattempted++;
-      } else {
+        // RPSC RAS applies a penalty to questions left genuinely blank (but NOT to ones
+        // where the candidate explicitly chose option index 4, "Leave Question Unattempted")
+        // — this must mirror SUBMIT_EXAM's rule exactly or this section total silently
+        // disagrees with the overall score shown at the top of this same page.
+        if (isRpscRasMode && selectedIdx !== 4) {
+          const rpscPenalty = qNeg > 0 ? qNeg : 0.44;
+          stats.incorrect++;
+          stats.score -= rpscPenalty;
+          stats.score = Math.round(stats.score * 100) / 100;
+        }
+      } else if (userStatus) {
         stats.attempted++;
         if (userStatus.status === 'correct') {
           stats.correct++;
@@ -566,7 +633,7 @@ export default function ExamSolutionAnalysisPage() {
 
   // Calculate question time statistics and bookmark state
   // Only show actual elapsed seconds — never fall back to fake random values
-  const userTime = sessionRecord.responses?.[activeQuestion.id]?.elapsedSeconds ?? 0;
+  const userTime = effectiveResponses?.[activeQuestion.id]?.elapsedSeconds ?? 0;
   const isBookmarked = currentUser.bookmarkedQuestions?.some(b => b.testId === testId && b.questionId === activeQuestion.id) || false;
 
   const activeExplanation = EXPLANATIONS[activeQuestion.id] || activeQuestion.explanation || {
@@ -635,8 +702,8 @@ export default function ExamSolutionAnalysisPage() {
   // measure of actual time the user spent actively on questions in this sitting.
   // Fall back to durationSeconds (totalDuration - timeRemaining) if responses aren't available.
   const computedTimeTakenSeconds = (() => {
-    if (sessionRecord.responses && Object.keys(sessionRecord.responses).length > 0) {
-      const total = Object.values(sessionRecord.responses).reduce(
+    if (effectiveResponses && Object.keys(effectiveResponses).length > 0) {
+      const total = Object.values(effectiveResponses).reduce(
         (sum, r) => sum + ((r as any).elapsedSeconds ?? 0), 0
       );
       if (total > 0) return total;

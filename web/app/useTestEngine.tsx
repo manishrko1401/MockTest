@@ -84,6 +84,11 @@ export interface EngineState {
   submittedSectionIndices?: number[];
   timeRemaining: number;
   isTimerRunning: boolean;
+  // Wall-clock anchor for the currently-running countdown (Date.now() at the last tick/resume).
+  // TICK_TIMER/TICK_EXTRA_TIMER measure the real elapsed time against this instead of
+  // blindly subtracting 1, so setInterval jitter/drift over a long exam can't desync the
+  // countdown (or the derived "time taken") from actual wall-clock time.
+  lastTickEpochMs: number;
   language: 'en' | 'hi';
   violationsCount: number;
   maxViolationsAllowed: number;
@@ -222,6 +227,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         extraTimeRemaining: 0,
         isExtraTimeRulesShown: false,
         score: null,
+        lastTickEpochMs: Date.now(),
       };
     }
 
@@ -235,7 +241,18 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
     case 'TICK_TIMER': {
       if (state.isExamSubmitted || !state.isTimerRunning) return state;
 
-      const nextTimeRemaining = Math.max(0, state.timeRemaining - 1);
+      // Measure real elapsed wall-clock time since the last tick instead of assuming
+      // exactly 1s passed — setInterval firing can lag under main-thread load (heavy
+      // question rendering, MathJax, re-renders), and naive -1-per-tick silently loses
+      // that lag, desyncing the countdown (and time-taken) from actual elapsed time.
+      // Clamped to [1, 30]s per tick: floors at 1 so a tick always counts as *something*,
+      // caps at 30 so a single pathological stall (e.g. laptop sleep without a blur event)
+      // can't blow a huge, unverified gap onto the clock in one step.
+      const now = Date.now();
+      const rawDeltaSec = Math.round((now - state.lastTickEpochMs) / 1000);
+      const deltaSec = Math.min(30, Math.max(1, rawDeltaSec));
+
+      const nextTimeRemaining = Math.max(0, state.timeRemaining - deltaSec);
       const activeSectionQuestions = getSectionQuestions(session, state.currentSectionIndex);
       const activeQuestion = activeSectionQuestions[state.currentQuestionIndex];
 
@@ -244,7 +261,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       if (activeQuestion && updatedResponses[activeQuestion.id]) {
         updatedResponses[activeQuestion.id] = {
           ...updatedResponses[activeQuestion.id],
-          elapsedSeconds: updatedResponses[activeQuestion.id].elapsedSeconds + 1,
+          elapsedSeconds: updatedResponses[activeQuestion.id].elapsedSeconds + deltaSec,
         };
       }
 
@@ -271,11 +288,12 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
               currentQuestionIndex: 0,
               timeRemaining: nextSectionDuration,
               responses: updatedResponses,
+              lastTickEpochMs: now,
             };
           } else {
             // Last section done, submit
             return engineReducer(
-              { ...state, timeRemaining: 0, responses: updatedResponses },
+              { ...state, timeRemaining: 0, responses: updatedResponses, lastTickEpochMs: now },
               { type: 'SUBMIT_EXAM' }
             );
           }
@@ -284,14 +302,14 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         // RPSC RAS: Enter extra time mode instead of auto-submitting
         if (state.isRpscRasMode && !state.isExtraTimeMode) {
           return engineReducer(
-            { ...state, timeRemaining: 0, responses: updatedResponses },
+            { ...state, timeRemaining: 0, responses: updatedResponses, lastTickEpochMs: now },
             { type: 'ENTER_EXTRA_TIME_MODE' }
           );
         }
 
         // Non-sectional: submit on global timer expiry
         return engineReducer(
-          { ...state, timeRemaining: 0, responses: updatedResponses },
+          { ...state, timeRemaining: 0, responses: updatedResponses, lastTickEpochMs: now },
           { type: 'SUBMIT_EXAM' }
         );
       }
@@ -300,6 +318,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         ...state,
         timeRemaining: nextTimeRemaining,
         responses: updatedResponses,
+        lastTickEpochMs: now,
       };
     }
 
@@ -687,9 +706,12 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
     }
 
     case 'RESUME_EXAM': {
+      // Reset the tick anchor to now — otherwise the entire paused duration
+      // (tab was hidden/blurred) would be counted as elapsed on the first tick back.
       return {
         ...state,
         isTimerRunning: true,
+        lastTickEpochMs: Date.now(),
       };
     }
 
@@ -747,13 +769,19 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         ...state,
         isExtraTimeRulesShown: false,
         isTimerRunning: true, // Start extra time countdown
+        lastTickEpochMs: Date.now(),
       };
     }
 
     case 'TICK_EXTRA_TIMER': {
       if (state.isExamSubmitted || !state.isExtraTimeMode || !state.isTimerRunning) return state;
 
-      const nextExtraTime = Math.max(0, state.extraTimeRemaining - 1);
+      // Same wall-clock drift correction as TICK_TIMER — see its comment.
+      const now = Date.now();
+      const rawDeltaSec = Math.round((now - state.lastTickEpochMs) / 1000);
+      const deltaSec = Math.min(30, Math.max(1, rawDeltaSec));
+
+      const nextExtraTime = Math.max(0, state.extraTimeRemaining - deltaSec);
 
       // Track elapsed time for current question
       const activeSectionQuestions = getSectionQuestions(session, state.currentSectionIndex);
@@ -762,14 +790,14 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       if (activeQuestion && updatedResponses[activeQuestion.id]) {
         updatedResponses[activeQuestion.id] = {
           ...updatedResponses[activeQuestion.id],
-          elapsedSeconds: updatedResponses[activeQuestion.id].elapsedSeconds + 1,
+          elapsedSeconds: updatedResponses[activeQuestion.id].elapsedSeconds + deltaSec,
         };
       }
 
       if (nextExtraTime === 0) {
         // Extra time expired — auto-submit with penalties
         return engineReducer(
-          { ...state, extraTimeRemaining: 0, responses: updatedResponses },
+          { ...state, extraTimeRemaining: 0, responses: updatedResponses, lastTickEpochMs: now },
           { type: 'SUBMIT_EXAM' }
         );
       }
@@ -778,6 +806,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         ...state,
         extraTimeRemaining: nextExtraTime,
         responses: updatedResponses,
+        lastTickEpochMs: now,
       };
     }
 
@@ -837,6 +866,7 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
     responses: {},
     timeRemaining: 0,
     isTimerRunning: false,
+    lastTickEpochMs: Date.now(),
     language: 'en',
     violationsCount: 0,
     maxViolationsAllowed: 3,
