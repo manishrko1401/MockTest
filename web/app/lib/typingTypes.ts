@@ -179,6 +179,7 @@ export interface ExamCategoryConfig {
     | 'DP_AWO_TPO'
     | 'STANDARD_NET_SPEED';
   retypeAllowed?: boolean;
+  backspaceAllowed?: boolean;
 }
 
 export const EXAM_CATEGORIES: Record<ExamCategoryKey, ExamCategoryConfig> = {
@@ -234,10 +235,11 @@ export const EXAM_CATEGORIES: Record<ExamCategoryKey, ExamCategoryConfig> = {
     key: 'kvs-jsa',
     name: 'KVS JSA TYPING',
     slug: 'kvs-jsa-typing',
-    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Net WPM evaluation.',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Net WPM evaluation. Backspace & Delete keys disabled (no corrections allowed).',
     standardDurationMinutes: 10,
     qualifyingSpeed: { en: 35, hi: 30 },
-    evaluationMode: 'STANDARD_NET_SPEED'
+    evaluationMode: 'STANDARD_NET_SPEED',
+    backspaceAllowed: false
   },
   'emrs-jsa': {
     key: 'emrs-jsa',
@@ -659,6 +661,12 @@ export function isDsssbItAssistantExam(testOrCat?: any): boolean {
 }
 
 export function isKvsJsaExam(testOrCat?: any): boolean {
+  if (!testOrCat) return false;
+  const key = typeof testOrCat === 'string' ? testOrCat : testOrCat.key || testOrCat.categoryId || testOrCat.categoryKey || '';
+  if (key === 'kvs-jsa' || key === 'kvs-jsa-typing') return true;
+  const title = (testOrCat.title || testOrCat.name || '').toLowerCase();
+  if (title.includes('kvs') && (title.includes('jsa') || title.includes('junior secretar') || title.includes('typing'))) return true;
+  if (title.includes('kvs')) return true;
   return detectExamCategory(testOrCat).key === 'kvs-jsa';
 }
 

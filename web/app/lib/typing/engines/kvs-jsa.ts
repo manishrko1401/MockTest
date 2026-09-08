@@ -2,7 +2,7 @@
  * KVS JSA TYPING
  * --------------------------------------------------------------------------
  * 10 minutes · English 35 WPM / Hindi 30 WPM.
- * Backspace: ENABLED.
+ * Backspace: DISABLED.
  *
  * Matching TypingMitra KVS JSA rules:
  * - All errors (additions, omissions, substitutions, capitalization, spacing, punctuation)
@@ -26,10 +26,10 @@ export const config: CategoryConfig = {
   durationMinutes: 10,
   qualifyingSpeed: { en: 35, hi: 30 },
   kdphTarget: { en: 10500, hi: 9000 },
-  backspaceAllowed: true,
+  backspaceAllowed: false,
   retypeAllowed: true,
   language: 'both',
-  notes: 'All errors count as full error (1 error). 1x error deduction: ((Keystrokes/5) - Total Errors) / Time.',
+  notes: 'All errors count as full error (1 error). Backspace and Delete keys are disabled; no corrections allowed in passage. 1x error deduction: ((Keystrokes/5) - Total Errors) / Time.',
 };
 
 export function evaluate(input: EngineInput): EngineResult {

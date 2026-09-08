@@ -773,11 +773,12 @@ export default function TCSiONTypingTerminalPage() {
   };
 
   const isRrbNtpcTest = test ? isRrbNtpcExam(test) : false;
-  const isBackspaceEnabled = !isRrbNtpcTest && test?.enableBackspace !== false && test?.backspaceRule !== 'DISABLED';
+  const isKvsJsaTest = test ? isKvsJsaExam(test) : false;
+  const isBackspaceEnabled = !isRrbNtpcTest && !isKvsJsaTest && test?.enableBackspace !== false && test?.backspaceRule !== 'DISABLED';
   const isRetypeAllowed = isRrbNtpcTest || Boolean(test?.allowRetype);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // If Backspace/Delete and corrections are disabled (RRB NTPC or admin disabled), block any correction
+    // If Backspace/Delete and corrections are disabled (RRB NTPC, KVS JSA, or admin disabled), block any correction
     if (!isBackspaceEnabled) {
       // 1. Block Backspace and Delete
       if (e.key === 'Backspace' || e.key === 'Delete') {
@@ -6999,12 +7000,24 @@ export default function TCSiONTypingTerminalPage() {
               style={{ fontSize: `${textSize}px`, lineHeight: `${Math.round(textSize * 1.6)}px` }}
               onChange={e => {
                 if (phase === 'DEMO') {
-                  setDemoTypedText(e.target.value);
+                  const val = e.target.value;
+                  if (!isBackspaceEnabled) {
+                    if (val.length < demoTypedText.length || !val.startsWith(demoTypedText)) {
+                      if (typingInputRef.current) {
+                        typingInputRef.current.value = demoTypedText;
+                      }
+                      return;
+                    }
+                  }
+                  setDemoTypedText(val);
                 } else {
                   const val = e.target.value;
                   // If corrections are disabled, ensure text can only append (strictly monotonic forward progress)
                   if (!isBackspaceEnabled) {
                     if (val.length < mainTypedText.length || !val.startsWith(mainTypedText)) {
+                      if (typingInputRef.current) {
+                        typingInputRef.current.value = mainTypedText;
+                      }
                       return;
                     }
                   }
@@ -7043,6 +7056,12 @@ export default function TCSiONTypingTerminalPage() {
               }}
               onPaste={e => {
                 e.preventDefault(); // Exam integrity: strictly prevent pasting
+              }}
+              onDrop={e => {
+                e.preventDefault();
+              }}
+              onDragOver={e => {
+                e.preventDefault();
               }}
               className="tcs-scrollbar w-full h-full p-2 bg-transparent resize-none border-none focus:outline-none text-slate-900 font-sans tracking-normal overflow-y-auto"
               spellCheck={false}
