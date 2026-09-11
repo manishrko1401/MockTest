@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiClient } from './api';
 import { triggerLocalNotification } from './notifications';
+import { getLastSyncTimestamp, getCachedUser } from './cache';
 
 const BACKGROUND_FETCH_TASK = 'background-fetch-notices-support';
 
@@ -13,16 +14,20 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     console.log('[Background Fetch] Running background checks...');
     let newData = false;
 
-    // 1. Fetch notices (bootstrap)
-    const bootRes = await ApiClient.bootstrap();
-    if (bootRes.success && bootRes.noticesList) {
+    // 1. Check for new notices via the lightweight delta sync (not bootstrap(), which
+    //    re-downloads the entire catalog + user list every 15 min). We do NOT advance
+    //    lastSyncedAt here — the foreground app owns that and will merge properly.
+    const lastSyncedAt = await getLastSyncTimestamp();
+    const syncRes = await ApiClient.catalogSync(lastSyncedAt);
+    const bgNotices: any[] = syncRes?.success ? (syncRes.noticesList || syncRes.newNotices || []) : [];
+    if (bgNotices.length > 0) {
       const stored = await AsyncStorage.getItem('seen_notices');
       let seenIds: string[] = stored ? JSON.parse(stored) : [];
-      
+
       const newAlerts: any[] = [];
       const updatedSeenIds = [...seenIds];
 
-      for (const notice of bootRes.noticesList) {
+      for (const notice of bgNotices) {
         if (!seenIds.includes(notice.id)) {
           newAlerts.push(notice);
           updatedSeenIds.push(notice.id);
@@ -38,6 +43,8 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
             notificationTitle = 'New Admit Card Notice!';
           } else if (notice.category === 'result') {
             notificationTitle = 'New Exam Result Notice!';
+          } else if (notice.category === 'answer_key') {
+            notificationTitle = 'New Answer Key Notice!';
           } else if (notice.category === 'notice') {
             notificationTitle = 'New Notice & Alert!';
           }
@@ -51,13 +58,14 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
       }
     }
 
-    // 2. Fetch support messages if user is logged in
+    // 2. Check support messages for a logged-in user. Use the cached user id — calling
+    //    ApiClient.login() here would mint a fresh session every 15 min and silently sign
+    //    the user out of their other devices (single-active-session enforcement).
     const savedEmail = await SecureStore.getItemAsync('tb_user_email');
     const savedPassword = await SecureStore.getItemAsync('tb_user_password');
     if (savedEmail && savedPassword) {
-      const authRes = await ApiClient.login(savedEmail, savedPassword);
-      if (authRes.success && authRes.user) {
-        const currentUser = authRes.user;
+      const currentUser = await getCachedUser();
+      if (currentUser?.id) {
         const res = await ApiClient.getSupportMessages(currentUser.id, false);
         if (res.success && res.messages) {
           const messagesList = res.messages;

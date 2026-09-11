@@ -5,8 +5,20 @@
 export const LOCAL_API_URL = 'http://192.168.1.14:3000/api/db';
 export const PROD_API_URL = 'https://mocktesthub.vercel.app/api/db';
 
-export const API_URL = LOCAL_API_URL;
+// Release builds must ONLY ever talk to the deployed backend.
+// Previously API_URL was hard-wired to LOCAL_API_URL, so every release build:
+//   - wasted a request + logged an error on EVERY API call (the LAN IP is
+//     unreachable and cleartext HTTP is blocked in release), then fell back to prod
+//   - resolved BASE_URL to http://192.168.1.14:3000, which silently broke the
+//     direct feature fetches built on it (feedback submit, relative image URLs)
+export const API_URL = __DEV__ ? LOCAL_API_URL : PROD_API_URL;
 export const BASE_URL = API_URL.replace('/api/db', '');
+
+// Endpoint fallback order: in dev, try the local server first then production;
+// in release, production only.
+const API_ENDPOINTS: string[] = __DEV__
+  ? Array.from(new Set([LOCAL_API_URL, PROD_API_URL]))
+  : [PROD_API_URL];
 
 let activeUserId: string | null = null;
 let activeSessionId: string | null = null;
@@ -35,7 +47,7 @@ async function fetchWithTimeout(url: string, options: any = {}, timeoutMs = 3500
 }
 
 async function postRequest(action: string, data: any = {}) {
-  const endpoints = [LOCAL_API_URL, PROD_API_URL].filter((v, i, a) => a.indexOf(v) === i);
+  const endpoints = API_ENDPOINTS;
 
   if (activeUserId && activeSessionId && action !== 'login' && action !== 'signup') {
     data = {
@@ -180,8 +192,16 @@ export const ApiClient = {
   /**
    * Resets a completed/saved attempt to let the user re-attempt
    */
-  resetAttempt: (userId: string, sessionId: string) => 
+  resetAttempt: (userId: string, sessionId: string) =>
     postRequest('reset-attempt', { userId, sessionId }),
+
+  /**
+   * Lazily loads the full per-question response state for one completed session.
+   * login/get-user-details deliberately return responses: {} to keep egress low, so
+   * the analysis screen must backfill the real answers on demand with this.
+   */
+  getSessionResponses: (userId: string, sessionId: string) =>
+    postRequest('get-session-responses', { userId, sessionId }),
 
   /**
    * Updates user bookmarked questions JSON
@@ -270,7 +290,7 @@ export const ApiClient = {
    * Triggers a manual notice sync crawl on the server
    */
   triggerSyncNotices: async () => {
-    const endpoints = [LOCAL_API_URL, PROD_API_URL].filter((v, i, a) => a.indexOf(v) === i);
+    const endpoints = API_ENDPOINTS;
     let success = false;
     let errorMsg = '';
     let details: any = null;
@@ -313,7 +333,7 @@ export const ApiClient = {
    * Fetch user feedbacks & ratings
    */
   fetchFeedbacks: async () => {
-    const endpoints = [LOCAL_API_URL, PROD_API_URL].filter((v, i, a) => a.indexOf(v) === i);
+    const endpoints = API_ENDPOINTS;
     let errorMsg = '';
     for (const endpoint of endpoints) {
       try {
@@ -341,7 +361,7 @@ export const ApiClient = {
    * Delete a user feedback log
    */
   deleteFeedback: async (id: string) => {
-    const endpoints = [LOCAL_API_URL, PROD_API_URL].filter((v, i, a) => a.indexOf(v) === i);
+    const endpoints = API_ENDPOINTS;
     let errorMsg = '';
     for (const endpoint of endpoints) {
       try {

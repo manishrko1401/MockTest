@@ -836,27 +836,55 @@ function htmlToBlocks(rawHtml: string): Block[] {
 // ─────────────────────────────────────────────────────────────────────────────
 function renderInlines(nodes: InlineNode[], baseFontSize:number, baseColor:string, textStyle:any, isDark?:boolean, blockIdx:number = 0): React.ReactNode[] {
   const headingScale=[1.6,1.45,1.3,1.15,1.05,1.0];
-  return nodes.map((node, i)=>{
-    const key = `in_${blockIdx}_${i}`;
-    if(node.k==='frac'){
-      return <FracView key={key} num={node.num} den={node.den} fontSize={baseFontSize} color={baseColor}/>;
-    }
-    if(node.k==='img'){
-      return <HtmlImg key={key} src={node.src} isDark={isDark} w={node.w} h={node.h}/>;
-    }
-    // text node
-    const n = node as Extract<InlineNode,{k:'text'}>;
-    const hFs = n.hLevel ? Math.round(baseFontSize*(headingScale[(n.hLevel??1)-1]??1)) : baseFontSize;
-    const fs = (n.sup||n.sub) ? Math.round(hFs*0.75) : hFs;
+
+  // Coalesce runs of consecutive text nodes that share the same formatting into ONE
+  // <Text>. In the flex-wrap row used for math/image blocks each child is an atomic
+  // wrap unit, so without this a whole sentence between two fractions is forced onto
+  // a single line and overflows the screen. A single <Text> with flexShrink wraps
+  // its own words naturally.
+  const out: React.ReactNode[] = [];
+  let run: Array<Extract<InlineNode,{k:'text'}>> = [];
+  let runStart = 0;
+
+  const flushRun = () => {
+    if (!run.length) return;
+    const first = run[0];
+    const hFs = first.hLevel ? Math.round(baseFontSize*(headingScale[(first.hLevel??1)-1]??1)) : baseFontSize;
+    const fs = (first.sup||first.sub) ? Math.round(hFs*0.75) : hFs;
     const style:any[] = [
       textStyle,
-      { color:baseColor, fontSize:fs },
-      n.bold  && { fontWeight:'bold' as const },
-      n.italic && { fontStyle:'italic' as const },
-      n.under && { textDecorationLine:'underline' as const },
+      { color:baseColor, fontSize:fs, lineHeight: Math.round(fs*1.5), flexShrink:1 },
+      first.bold  && { fontWeight:'bold' as const },
+      first.italic && { fontStyle:'italic' as const },
+      first.under && { textDecorationLine:'underline' as const },
     ].filter(Boolean);
-    return <Text key={key} style={style}>{n.v}</Text>;
+    out.push(<Text key={`in_${blockIdx}_${runStart}t`} style={style}>{run.map(r=>r.v).join('')}</Text>);
+    run = [];
+  };
+
+  nodes.forEach((node, i) => {
+    if (node.k === 'text') {
+      const n = node as Extract<InlineNode,{k:'text'}>;
+      const prev = run[0];
+      const sameFmt = prev &&
+        !!prev.bold === !!n.bold && !!prev.italic === !!n.italic &&
+        !!prev.under === !!n.under && !!prev.sup === !!n.sup &&
+        !!prev.sub === !!n.sub && (prev.hLevel||0) === (n.hLevel||0);
+      if (prev && !sameFmt) flushRun();
+      if (!run.length) runStart = i;
+      run.push(n);
+      return;
+    }
+    flushRun();
+    const key = `in_${blockIdx}_${i}`;
+    if (node.k === 'frac') {
+      out.push(<FracView key={key} num={node.num} den={node.den} fontSize={baseFontSize} color={baseColor}/>);
+    } else if (node.k === 'img') {
+      out.push(<HtmlImg key={key} src={node.src} isDark={isDark} w={node.w} h={node.h}/>);
+    }
   });
+  flushRun();
+  return out;
 }
 
 function renderTextInlines(nodes: InlineNode[], baseFontSize:number, baseColor:string, textStyle:any, blockIdx:number = 0): React.ReactNode[] {
@@ -924,16 +952,16 @@ function renderBlocks(blocks: Block[], textStyle:any, isDark?:boolean): React.Re
       const textChildren = renderTextInlines(nodes, baseFs, baseColor, textStyle, blockIdx);
       if(b.k==='li'){
         out.push(
-          <View key={key} style={{flexDirection:'row',alignItems:'flex-start',marginBottom:2,width:'100%'}}>
-            <Text style={[textStyle,{color:baseColor,fontSize:baseFs,lineHeight:baseFs*1.5,fontWeight:'bold',flexShrink:0,marginRight:6}]}>{b.bullet}</Text>
-            <Text style={[textStyle, { color: baseColor, fontSize: baseFs, lineHeight: baseFs * 1.4, flex: 1 }]}>
+          <View key={key} style={{flexDirection:'row',alignItems:'flex-start',marginBottom:3,width:'100%'}}>
+            <Text style={[textStyle,{color:baseColor,fontSize:baseFs,lineHeight:baseFs*1.55,fontWeight:'bold',flexShrink:0,marginRight:6}]}>{b.bullet}</Text>
+            <Text style={[textStyle, { color: baseColor, fontSize: baseFs, lineHeight: baseFs * 1.55, flex: 1 }]}>
               {textChildren}
             </Text>
           </View>
         );
       } else {
         out.push(
-          <Text key={key} style={[textStyle, { color: baseColor, fontSize: baseFs, lineHeight: baseFs * 1.4, marginVertical: 1 }]}>
+          <Text key={key} style={[textStyle, { color: baseColor, fontSize: baseFs, lineHeight: baseFs * 1.55, marginVertical: 1.5 }]}>
             {textChildren}
           </Text>
         );

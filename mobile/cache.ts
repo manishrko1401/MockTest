@@ -18,7 +18,10 @@ const SYNC_TS_KEY  = 'catalog_last_synced_at';
 
 // ── TTL settings ───────────────────────────────────────────────────────────
 const QUESTIONS_TTL_MS = 30 * 24 * 60 * 60 * 1000;  // 30 days
-const CATALOG_TTL_MS   = 2 * 60 * 60 * 1000;        // 2 hours (reduced from 24h to pick up admin changes faster)
+// Age past which the cached catalog is considered stale. It is still served instantly
+// (so a returning user never sees a blank screen) — the caller always kicks off a
+// background delta sync that refreshes it. It's only hard-dropped if corrupt/empty.
+const CATALOG_STALE_MS = 7 * 24 * 60 * 60 * 1000;   // 7 days
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  QUESTIONS  (raw API response — the exact array from getCustomQuestions)
@@ -145,7 +148,10 @@ export async function getCachedCatalog(): Promise<{
       return null;
     }
 
-    if (Date.now() - savedAt > CATALOG_TTL_MS) {
+    // Serve even a stale cache instantly — the caller always follows up with a
+    // background delta sync. Only drop it if it's ancient enough to likely be from a
+    // retired data shape.
+    if (Date.now() - savedAt > CATALOG_STALE_MS) {
       await AsyncStorage.removeItem(CAT_KEY);
       return null;
     }

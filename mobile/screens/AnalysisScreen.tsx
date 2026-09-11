@@ -64,6 +64,9 @@ export default function AnalysisScreen({
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [testPositiveMarks, setTestPositiveMarks] = useState<number | null>(null);
   const [testNegativeMarks, setTestNegativeMarks] = useState<number | null>(null);
+  // login / get-user-details return responses:{} for egress reasons — the real
+  // per-question answers for the open attempt are lazily backfilled into here.
+  const [fetchedResponses, setFetchedResponses] = useState<Record<string, Record<string, any>>>({});
   
   // Re-attempt Mode states (Solutions Tab)
   const [reattemptMode, setReattemptMode] = useState(false);
@@ -123,6 +126,29 @@ export default function AnalysisScreen({
   };
 
   const activeAttempt = testAttempts[activeAttemptIndex] || attempt;
+
+  // The open attempt's real answers — either already inline, or backfilled below.
+  // Without this every stat/section/question falls back to "unattempted".
+  const attemptHasResponses = !!(
+    activeAttempt?.responses && Object.keys(activeAttempt.responses).length > 0
+  );
+  const effectiveResponses: Record<string, any> = attemptHasResponses
+    ? activeAttempt.responses
+    : (fetchedResponses[activeAttempt?.id] || {});
+
+  useEffect(() => {
+    const sid = activeAttempt?.id;
+    if (!currentUser?.id || !sid || attemptHasResponses || fetchedResponses[sid]) return;
+    let cancelled = false;
+    ApiClient.getSessionResponses(currentUser.id, sid)
+      .then((res: any) => {
+        if (!cancelled && res?.success && res.responses && Object.keys(res.responses).length > 0) {
+          setFetchedResponses((prev) => ({ ...prev, [sid]: res.responses }));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [currentUser?.id, activeAttempt?.id, attemptHasResponses, fetchedResponses]);
 
   // Stats calculation
   const totalQs = activeAttempt.questionsCount || activeAttempt.maxQuestions || 200;
@@ -208,7 +234,7 @@ export default function AnalysisScreen({
       const stats = sectionsMap[secName];
       stats.total++;
 
-      const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
+      const userResponse = effectiveResponses[q.id] || null;
       const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
       const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
 
@@ -227,7 +253,7 @@ export default function AnalysisScreen({
     });
 
     return Object.values(sectionsMap);
-  }, [questions, activeAttempt, testPositiveMarks, testNegativeMarks]);
+  }, [questions, activeAttempt, effectiveResponses, testPositiveMarks, testNegativeMarks]);
 
   // Reconstruct deterministic student responses seed to align with website timers
   let seed = 0;
@@ -315,7 +341,7 @@ export default function AnalysisScreen({
     let unattempted = 0;
 
     questions.forEach(q => {
-      const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
+      const userResponse = effectiveResponses[q.id] || null;
       const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
       const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
       
@@ -329,7 +355,7 @@ export default function AnalysisScreen({
     });
 
     return { correct, incorrect, unattempted };
-  }, [questions, activeAttempt, testPositiveMarks, testNegativeMarks]);
+  }, [questions, activeAttempt, effectiveResponses, testPositiveMarks, testNegativeMarks]);
 
   // Filtered questions based on selected Section and category filter
   const filteredQuestions = useMemo(() => {
@@ -341,7 +367,7 @@ export default function AnalysisScreen({
       }
 
       // 2. Category Type Filter
-      const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
+      const userResponse = effectiveResponses[q.id] || null;
       const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
       const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
       const isCorrect = selectedIdx === correctIdx;
@@ -353,7 +379,7 @@ export default function AnalysisScreen({
       
       return true;
     });
-  }, [questions, selectedSection, filterType, activeAttempt]);
+  }, [questions, selectedSection, filterType, activeAttempt, effectiveResponses]);
 
   const activeQuestion = filteredQuestions[activeQuestionIdx];
 
@@ -564,8 +590,8 @@ export default function AnalysisScreen({
               {(() => {
                 // Primary: Sum of elapsedSeconds across all question responses for exact timing
                 let spentSec = 0;
-                if (activeAttempt.responses && Object.keys(activeAttempt.responses).length > 0) {
-                  spentSec = Object.values(activeAttempt.responses).reduce(
+                if (Object.keys(effectiveResponses).length > 0) {
+                  spentSec = Object.values(effectiveResponses).reduce(
                     (sum: number, r: any) => sum + (r.elapsedSeconds || 0),
                     0
                   );
@@ -716,7 +742,7 @@ export default function AnalysisScreen({
                 >
                   {filteredQuestions.map((q, idx) => {
                     const isSelected = activeQuestionIdx === idx;
-                    const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
+                    const userResponse = effectiveResponses[q.id] || null;
                     const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
                     const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
                     const isCorrect = selectedIdx === correctIdx;
@@ -788,7 +814,7 @@ export default function AnalysisScreen({
                     );
                   }
 
-                  const userResp = activeAttempt.responses ? activeAttempt.responses[question.id] : null;
+                  const userResp = effectiveResponses[question.id] || null;
                   const submittedIdx = userResp ? userResp.selectedOptionIndex : null;
                   const elapsed = userResp ? Number(userResp.elapsedSeconds) || 0 : 0;
                   const correctIdx = question.correctOptionIndex !== undefined ? question.correctOptionIndex : question.correctIndex;
@@ -1096,7 +1122,7 @@ export default function AnalysisScreen({
                 let unattemptedCount = 0;
 
                 filteredQuestions.forEach((q) => {
-                  const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
+                  const userResponse = effectiveResponses[q.id] || null;
                   const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
                   const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
 
@@ -1213,7 +1239,7 @@ export default function AnalysisScreen({
                 <View style={styles.paletteGridContainer}>
                   {filteredQuestions.map((q, idx) => {
                     const isSelected = activeQuestionIdx === idx;
-                    const userResponse = activeAttempt.responses ? activeAttempt.responses[q.id] : null;
+                    const userResponse = effectiveResponses[q.id] || null;
                     const selectedIdx = userResponse ? userResponse.selectedOptionIndex : null;
                     const correctIdx = q.correctOptionIndex !== undefined ? q.correctOptionIndex : q.correctIndex;
                     const isCorrect = selectedIdx === correctIdx;

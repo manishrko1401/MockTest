@@ -338,16 +338,17 @@ export default function TCSiONTypingTerminalPage() {
   // Helper to load user attempts (last 2) directly into Analysis phase
   const loadAttemptForAnalysis = async (currentTest: TypingTest) => {
     let attempts: any[] = [];
+    const activeAttemptId = targetAttemptId || (typeof window !== 'undefined' ? (new URL(window.location.href).searchParams.get('attemptId') || new URL(window.location.href).searchParams.get('attempt')) : null);
 
-    // 1. If targetAttemptId is explicitly given (e.g. from Admin Inspect or direct result link)
-    if (targetAttemptId) {
+    // 1. If activeAttemptId is explicitly given (e.g. from Admin Inspect, direct result link, or post-submit refresh)
+    if (activeAttemptId) {
       try {
         const attRes = await fetch('/api/db', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'get-typing-attempt-by-id',
-            data: { id: targetAttemptId }
+            data: { id: activeAttemptId }
           })
         });
         const attData = await attRes.json();
@@ -365,14 +366,18 @@ export default function TCSiONTypingTerminalPage() {
       }
     }
 
-    // 2. If no explicit attempt found, check local storage
-    if (attempts.length === 0 && typeof window !== 'undefined') {
+    // 2. If no explicit attempt found or need secondary attempt, check local storage
+    if (attempts.length < 2 && typeof window !== 'undefined') {
       try {
         const localList = localStorage.getItem(`typing_attempts_${currentTest.id}`);
         if (localList) {
           const parsed = JSON.parse(localList);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            attempts = parsed;
+            for (const a of parsed) {
+              if (!attempts.some(ex => (ex.id && ex.id === a.id) || (ex.createdAt && ex.createdAt === a.createdAt))) {
+                attempts.push(a);
+              }
+            }
           }
         }
         if (attempts.length === 0) {
@@ -447,6 +452,16 @@ export default function TCSiONTypingTerminalPage() {
       setMainTimeSpentSeconds(timeSpent);
       setIsTimerRunning(false);
       setPhase('RESULT');
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem(`typing_phase_${currentTest.id}`, 'RESULT');
+          const currentUrl = new URL(window.location.href);
+          if (!currentUrl.searchParams.has('view')) {
+            currentUrl.searchParams.set('view', 'analysis');
+            window.history.replaceState(null, '', currentUrl.pathname + '?' + currentUrl.searchParams.toString());
+          }
+        } catch (e) {}
+      }
     } else {
       initDemoPhase(currentTest);
     }
@@ -495,7 +510,12 @@ export default function TCSiONTypingTerminalPage() {
           if (stored) {
             const parsed = JSON.parse(stored);
             setTest(parsed);
-            initDemoPhase(parsed);
+            const hasResultSession = typeof window !== 'undefined' && (sessionStorage.getItem('typing_phase_custom') === 'RESULT' || sessionStorage.getItem('typing_phase_custom_test') === 'RESULT');
+            if (isAnalysisMode || hasResultSession) {
+              await loadAttemptForAnalysis(parsed);
+            } else {
+              initDemoPhase(parsed);
+            }
             return;
           }
         }
@@ -509,7 +529,8 @@ export default function TCSiONTypingTerminalPage() {
         if (data.success && data.test) {
           const currentTest = data.test;
           setTest(currentTest);
-          if (isAnalysisMode) {
+          const hasResultSession = typeof window !== 'undefined' && sessionStorage.getItem(`typing_phase_${currentTest.id}`) === 'RESULT';
+          if (isAnalysisMode || hasResultSession) {
             await loadAttemptForAnalysis(currentTest);
           } else if (currentUser) {
             initDemoPhase(currentTest);
@@ -564,8 +585,19 @@ export default function TCSiONTypingTerminalPage() {
 
   // Phase Initializers
   const initDemoPhase = (currentTest: TypingTest) => {
-    if (typeof window !== 'undefined' && window.location.search.includes('analysis')) {
-      router.replace(`/typing-test/${currentTest.id}`);
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.removeItem(`typing_phase_${currentTest.id}`);
+        sessionStorage.removeItem('typing_phase_custom');
+        sessionStorage.removeItem('typing_phase_custom_test');
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete('view');
+        currentUrl.searchParams.delete('mode');
+        currentUrl.searchParams.delete('attemptId');
+        currentUrl.searchParams.delete('attempt');
+        const newSearch = currentUrl.searchParams.toString();
+        window.history.replaceState(null, '', currentUrl.pathname + (newSearch ? '?' + newSearch : ''));
+      } catch (e) {}
     }
     setPhase('DEMO');
     const demoSec = Math.max(Math.round((currentTest.demoDurationMinutes || 1) * 60), 10);
@@ -667,6 +699,16 @@ export default function TCSiONTypingTerminalPage() {
       setResult(evalResult);
       setPhase('RESULT');
 
+      // Update URL search parameters and session storage so page refresh stays on Result screen
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem(`typing_phase_${test.id}`, 'RESULT');
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set('view', 'analysis');
+          window.history.replaceState(null, '', currentUrl.pathname + '?' + currentUrl.searchParams.toString());
+        } catch (e) {}
+      }
+
       // Save attempt
       saveUserAttempt(evalResult, timeSpent);
     }
@@ -729,6 +771,29 @@ export default function TCSiONTypingTerminalPage() {
         detailedMistakes: evalRes.detailedMistakes
       };
 
+      // Synchronously write to localStorage so an instant page refresh already has the attempt
+      if (typeof window !== 'undefined') {
+        try {
+          const syncAtt = {
+            ...attemptData,
+            id: `local_${Date.now()}`,
+            createdAt: new Date().toISOString()
+          };
+          const attemptsKey = `typing_attempts_${test.id}`;
+          let existingLast2: any[] = [];
+          try {
+            const raw = localStorage.getItem(attemptsKey);
+            if (raw) existingLast2 = JSON.parse(raw);
+            if (!Array.isArray(existingLast2)) existingLast2 = [];
+          } catch (e) {}
+          const updatedLast2 = [syncAtt, ...existingLast2.filter((a: any) => a.id !== syncAtt.id && a.createdAt !== syncAtt.createdAt)].slice(0, 2);
+          localStorage.setItem(attemptsKey, JSON.stringify(updatedLast2));
+          localStorage.setItem(`typing_attempt_${test.id}`, JSON.stringify(syncAtt));
+          setAttemptsList(updatedLast2);
+          setSelectedAttemptIndex(0);
+        } catch (e) {}
+      }
+
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -737,6 +802,14 @@ export default function TCSiONTypingTerminalPage() {
       const data = await res.json();
       if (data.success && data.attempt) {
         setSavedAttemptId(data.attempt.id);
+        if (typeof window !== 'undefined') {
+          try {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('view', 'analysis');
+            currentUrl.searchParams.set('attemptId', data.attempt.id);
+            window.history.replaceState(null, '', currentUrl.pathname + '?' + currentUrl.searchParams.toString());
+          } catch (e) {}
+        }
       }
       if (typeof window !== 'undefined') {
         try {
@@ -899,15 +972,7 @@ export default function TCSiONTypingTerminalPage() {
     return Math.floor(typedWordCount / passageWordCount) + 1;
   }, [passageWordCount, typedWordCount, phase]);
 
-  const prevCycleRef = useRef<number>(1);
-  useEffect(() => {
-    if (phase === 'MAIN' && (test?.allowRetype || isRetypeAllowed)) {
-      if (currentCycle > prevCycleRef.current) {
-        passageBoxRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      prevCycleRef.current = currentCycle;
-    }
-  }, [currentCycle, phase, test?.allowRetype, isRetypeAllowed]);
+  // Auto-scroll of the passage is explicitly disabled. Candidates scroll through the passage manually using the scrollbar.
 
   // Disable mouse scroll wheel in terminal (candidate can only scroll using scroll bar)
   useEffect(() => {

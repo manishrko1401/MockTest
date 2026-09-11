@@ -159,7 +159,9 @@ export async function scheduleJobDeadlineReminders(
           data: { noticeId, type: 'job_deadline_reminder' },
           sound: true,
         },
-        trigger: { date: twoDaysBefore },
+        // SDK 56 requires a typed trigger object; the bare `{ date }` form throws
+        // "trigger object is invalid" and the reminder is silently never scheduled.
+        trigger: { type: 'date', date: twoDaysBefore },
       });
     }
 
@@ -175,7 +177,7 @@ export async function scheduleJobDeadlineReminders(
           data: { noticeId, type: 'job_deadline_urgent' },
           sound: true,
         },
-        trigger: { date: lastDayMorning },
+        trigger: { type: 'date', date: lastDayMorning },
       });
     }
   } catch (err) {
