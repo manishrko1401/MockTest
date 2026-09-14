@@ -28,10 +28,13 @@ export default function DeploymentRecovery() {
     const handleChunkError = (error: any) => {
       if (!isChunkError(error)) return;
 
-      // 🛡️ CRITICAL SAFETY: Never interrupt an ongoing exam session
+      // 🛡️ CRITICAL SAFETY: Never interrupt an ongoing exam or typing test session
       const currentPath = window.location.pathname;
-      if (currentPath.startsWith('/exam/') && !currentPath.includes('/analysis')) {
-        console.warn('[DeploymentRecovery] Chunk error detected during active exam. Reload suppressed for user safety.');
+      if (
+        currentPath.includes('/typing-test') ||
+        (currentPath.startsWith('/exam/') && !currentPath.includes('/analysis'))
+      ) {
+        console.warn('[DeploymentRecovery] Chunk error detected during active exam or typing test. Reload suppressed for user safety.');
         return;
       }
 

@@ -986,7 +986,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       });
       const data = await res.json();
       if (data.success && data.user && !data.user.isBlocked) {
-        setCurrentUser(data.user);
+        setCurrentUser(prev => {
+          if (prev && JSON.stringify(prev) === JSON.stringify(data.user)) {
+            return prev;
+          }
+          return data.user;
+        });
         syncUserCookieAndCache(data.user);
       }
     } catch {
@@ -1044,8 +1049,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     // appear on the website without requiring a full page reload.
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        // 🛡️ Do NOT trigger background session reload while student is taking an active exam
-        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/exam/') && !window.location.pathname.includes('/analysis')) {
+        // 🛡️ Do NOT trigger background session reload while student is taking an active exam or on any typing test page
+        if (
+          typeof window !== 'undefined' && (
+            window.location.pathname.includes('/typing-test') ||
+            (window.location.pathname.startsWith('/exam/') && !window.location.pathname.includes('/analysis'))
+          )
+        ) {
           return;
         }
         const getCookieInner = (name: string) => {

@@ -334,6 +334,10 @@ export default function TCSiONTypingTerminalPage() {
   const phaseRef = useRef<ExamPhase>('DEMO');
   const timeRemainingRef = useRef<number>(60);
   const totalPhaseSecondsRef = useRef<number>(60);
+  const loadedTestIdRef = useRef<string | null>(null);
+  const currentLoadedIdRef = useRef<string | null>(null);
+  const loadedAttemptIdRef = useRef<string | null>(null);
+  const hasResultRef = useRef<boolean>(false);
 
   // Helper to load user attempts (last 2) directly into Analysis phase
   const loadAttemptForAnalysis = async (currentTest: TypingTest) => {
@@ -342,6 +346,7 @@ export default function TCSiONTypingTerminalPage() {
 
     // 1. If activeAttemptId is explicitly given (e.g. from Admin Inspect, direct result link, or post-submit refresh)
     if (activeAttemptId) {
+      loadedAttemptIdRef.current = activeAttemptId;
       try {
         const attRes = await fetch('/api/db', {
           method: 'POST',
@@ -452,6 +457,8 @@ export default function TCSiONTypingTerminalPage() {
       setMainTimeSpentSeconds(timeSpent);
       setIsTimerRunning(false);
       setPhase('RESULT');
+      phaseRef.current = 'RESULT';
+      hasResultRef.current = true;
       if (typeof window !== 'undefined') {
         try {
           sessionStorage.setItem(`typing_phase_${currentTest.id}`, 'RESULT');
@@ -502,14 +509,51 @@ export default function TCSiONTypingTerminalPage() {
 
   // 1. Fetch Test data
   useEffect(() => {
+    const currentTestId = (Array.isArray(testId) ? testId[0] : testId) || '';
+    if (!currentTestId) return;
+
+    // 🛡️ GUARD 1: If this test is already loaded and we are on RESULT/analysis page,
+    // switching browser tabs must NEVER trigger a reload, re-fetch, or loading spinner!
+    if (
+      test &&
+      (currentLoadedIdRef.current === currentTestId || test.id === currentTestId || currentTestId === 'custom') &&
+      (phase === 'RESULT' || phaseRef.current === 'RESULT') &&
+      (result || hasResultRef.current)
+    ) {
+      return;
+    }
+
+    // 🛡️ GUARD 2: Never interrupt an ongoing typing exam on tab switch (MAIN or BREAK phase)
+    if (
+      test &&
+      (currentLoadedIdRef.current === currentTestId || test.id === currentTestId || currentTestId === 'custom') &&
+      (phase === 'MAIN' || phase === 'BREAK' || phaseRef.current === 'MAIN' || phaseRef.current === 'BREAK')
+    ) {
+      return;
+    }
+
+    // 🛡️ GUARD 3: If DEMO phase has already been initialized with this test, don't re-init on focus
+    if (
+      test &&
+      (currentLoadedIdRef.current === currentTestId || test.id === currentTestId || currentTestId === 'custom') &&
+      (phase === 'DEMO' || phaseRef.current === 'DEMO')
+    ) {
+      return;
+    }
+
     const loadTest = async () => {
       try {
-        setIsLoading(true);
-        if (testId === 'custom') {
+        // 🛡️ Only show loading spinner on initial mount when test is not yet loaded into state!
+        if (!test) {
+          setIsLoading(true);
+        }
+        if (currentTestId === 'custom') {
           const stored = sessionStorage.getItem('custom_typing_test');
           if (stored) {
             const parsed = JSON.parse(stored);
             setTest(parsed);
+            currentLoadedIdRef.current = 'custom';
+            loadedTestIdRef.current = 'custom';
             const hasResultSession = typeof window !== 'undefined' && (sessionStorage.getItem('typing_phase_custom') === 'RESULT' || sessionStorage.getItem('typing_phase_custom_test') === 'RESULT');
             if (isAnalysisMode || hasResultSession) {
               await loadAttemptForAnalysis(parsed);
@@ -523,12 +567,14 @@ export default function TCSiONTypingTerminalPage() {
         const res = await fetch('/api/db', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'get-typing-test-by-id', data: { id: testId } })
+          body: JSON.stringify({ action: 'get-typing-test-by-id', data: { id: currentTestId } })
         });
         const data = await res.json();
         if (data.success && data.test) {
           const currentTest = data.test;
           setTest(currentTest);
+          currentLoadedIdRef.current = currentTestId;
+          loadedTestIdRef.current = currentTest.id;
           const hasResultSession = typeof window !== 'undefined' && sessionStorage.getItem(`typing_phase_${currentTest.id}`) === 'RESULT';
           if (isAnalysisMode || hasResultSession) {
             await loadAttemptForAnalysis(currentTest);
@@ -550,7 +596,7 @@ export default function TCSiONTypingTerminalPage() {
             if (attData.success && attData.attempt) {
               const att = attData.attempt;
               const fallbackTest: TypingTest = att.test || {
-                id: att.testId || (Array.isArray(testId) ? testId[0] : testId),
+                id: att.testId || currentTestId,
                 title: att.testTitle || 'Typing Test',
                 passageText: att.targetText || '',
                 categoryId: att.categoryName || '',
@@ -560,6 +606,8 @@ export default function TCSiONTypingTerminalPage() {
                 mainDurationMinutes: Math.max(1, Math.round((att.timeSpentSeconds || 600) / 60)),
               };
               setTest(fallbackTest);
+              currentLoadedIdRef.current = currentTestId;
+              loadedTestIdRef.current = fallbackTest.id;
               if (att.user) setLoadedCandidate(att.user);
               else if (att.userName) setLoadedCandidate({ fullName: att.userName });
               setLoadedAttemptMeta(att);
@@ -581,7 +629,14 @@ export default function TCSiONTypingTerminalPage() {
     };
 
     loadTest();
-  }, [testId, isAnalysisMode, targetAttemptId, currentUser]);
+  }, [testId, isAnalysisMode, targetAttemptId, currentUser?.id]);
+
+  // If user login completes after test loads in DEMO phase, start timer if paused
+  useEffect(() => {
+    if (currentUser && test && phase === 'DEMO' && !isTimerRunning && demoTypedText === '') {
+      setIsTimerRunning(true);
+    }
+  }, [currentUser?.id, test, phase, isTimerRunning, demoTypedText]);
 
   // Phase Initializers
   const initDemoPhase = (currentTest: TypingTest) => {
@@ -600,6 +655,9 @@ export default function TCSiONTypingTerminalPage() {
       } catch (e) {}
     }
     setPhase('DEMO');
+    phaseRef.current = 'DEMO';
+    hasResultRef.current = false;
+    loadedAttemptIdRef.current = null;
     const demoSec = Math.max(Math.round((currentTest.demoDurationMinutes || 1) * 60), 10);
     setTimeRemaining(demoSec);
     setTotalPhaseSeconds(demoSec);
@@ -698,6 +756,8 @@ export default function TCSiONTypingTerminalPage() {
 
       setResult(evalResult);
       setPhase('RESULT');
+      phaseRef.current = 'RESULT';
+      hasResultRef.current = true;
 
       // Update URL search parameters and session storage so page refresh stays on Result screen
       if (typeof window !== 'undefined') {

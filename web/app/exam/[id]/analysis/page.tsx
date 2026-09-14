@@ -66,6 +66,26 @@ function computeTScore(raw: number, mean: number, sd: number): number {
   return 50 + 10 * ((raw - mean) / sd);
 }
 
+function matchCbatBattery(name: string): string | null {
+  const lower = (name || '').toLowerCase();
+  if (lower.includes('classif') || lower.includes('intelligence') || lower.includes('वर्गीकरण') || lower.includes('बुद्धि')) {
+    return 'Classification Test';
+  }
+  if (lower.includes('odd') || lower.includes('attention') || lower.includes('विषम') || lower.includes('ध्यान')) {
+    return 'Add of Odd Numbers Test';
+  }
+  if (lower.includes('route') || lower.includes('spatial') || lower.includes('मार्ग') || lower.includes('स्थानिक') || lower.includes('नक्शा')) {
+    return 'Short Route Test';
+  }
+  if (lower.includes('order') || lower.includes('information') || lower.includes('सूचना') || lower.includes('क्रम')) {
+    return 'Information Ordering Type -I';
+  }
+  if (lower.includes('personality') || lower.includes('व्यक्तित्व')) {
+    return 'Personality Test';
+  }
+  return null;
+}
+
 export default function ExamSolutionAnalysisPage() {
   const params = useParams();
   const testId = (params?.id as string) || "ssc_cgl_tier1";
@@ -605,27 +625,108 @@ export default function ExamSolutionAnalysisPage() {
     return Object.values(sectionsMap);
   })();
 
-  // CBAT T-Score result — scoped to exactly Station Master CBAT (Psycho Test).
-  // See CBAT_TSCORE_CONFIG's comment above for why these are estimated, not official, values.
-  const isCbatExam = getCatalogContext()?.subCategoryId === CBAT_EXAM_ID;
+  // Station Master CBAT (Psycho Test) detection
+  const isCbatExam = (() => {
+    const idLower = (testId || '').toLowerCase();
+    const titleLower = (examSession.testTitle || '').toLowerCase();
+    const catLower = (examSession.testCategory || '').toLowerCase();
+    const subLower = (examSession.testSubcategory || '').toLowerCase();
+    const context = getCatalogContext();
+    if (context?.subCategoryId === CBAT_EXAM_ID) return true;
+    if (idLower.includes('cbat') || titleLower.includes('cbat') || subLower.includes('cbat') || catLower.includes('cbat')) return true;
+    if (idLower.includes('psycho') || titleLower.includes('psycho') || subLower.includes('psycho') || catLower.includes('psycho')) return true;
+    if (customQs?.subCategoryId === CBAT_EXAM_ID || customQs?.examId === CBAT_EXAM_ID) return true;
+    return false;
+  })();
+
   const cbatTScoreResult = isCbatExam ? (() => {
-    const sections = Object.keys(CBAT_TSCORE_CONFIG).map(sectionName => {
-      const cfg = CBAT_TSCORE_CONFIG[sectionName];
-      const sec = sectionalAnalysis.find(s => s.name === sectionName);
+    const titleLower = (examSession.testTitle || '').toLowerCase();
+    const idLower = (testId || '').toLowerCase();
+
+    // Determine if this is a Full CBAT Mock Test (all batteries)
+    // or an individual sectional battery test (Classification, Short Route, etc.)
+    const matchedBatteries = new Set<string>();
+    for (const s of sectionalAnalysis) {
+      const bat = matchCbatBattery(s.name);
+      if (bat) matchedBatteries.add(bat);
+    }
+
+    const isFullCbat = (
+      titleLower.includes('full') ||
+      idLower.includes('full') ||
+      titleLower.includes('complete') ||
+      idLower.includes('complete') ||
+      matchedBatteries.size >= 3 ||
+      sectionalAnalysis.length >= 4
+    );
+
+    if (isFullCbat) {
+      // FULL CBAT TEST: Show all 5 sections, Composite T-Score, Merit Scale, and Overall Result
+      const sections = Object.keys(CBAT_TSCORE_CONFIG).map(sectionName => {
+        const cfg = CBAT_TSCORE_CONFIG[sectionName];
+        const sec = sectionalAnalysis.find(s => s.name === sectionName || matchCbatBattery(s.name) === sectionName);
+        const rawScore = sec?.correct ?? 0;
+        const maxMarks = sec?.total || cfg.maxMarks;
+        const tScore = Math.round(computeTScore(rawScore, cfg.mean, cfg.sd) * 10) / 10;
+        return {
+          name: sectionName,
+          rawScore,
+          maxMarks,
+          tScore,
+          qualified: tScore >= CBAT_QUALIFYING_TSCORE,
+        };
+      });
+      const compositeTScore = Math.round(sections.reduce((sum, s) => sum + s.tScore, 0) * 10) / 10;
+      const meritScoreOutOf30 = Math.round((compositeTScore / CBAT_MAX_COMPOSITE) * 30 * 100) / 100;
+      const overallQualified = sections.every(s => s.qualified);
+      return { isFullCbat: true, sections, compositeTScore, meritScoreOutOf30, overallQualified };
+    } else {
+      // INDIVIDUAL SECTIONAL BATTERY TEST: Only show that specific section's T-Score!
+      let targetBatteryKey: string | null = null;
+      let matchedSection = sectionalAnalysis.find(s => {
+        const bat = matchCbatBattery(s.name);
+        if (bat) {
+          targetBatteryKey = bat;
+          return true;
+        }
+        return false;
+      });
+
+      // If section name didn't match directly, infer from test title or testId
+      if (!targetBatteryKey) {
+        targetBatteryKey = matchCbatBattery(examSession.testTitle) || matchCbatBattery(testId);
+      }
+
+      // If still not matched, fall back to first battery key
+      if (!targetBatteryKey && Object.keys(CBAT_TSCORE_CONFIG).length > 0) {
+        targetBatteryKey = Object.keys(CBAT_TSCORE_CONFIG)[0];
+      }
+
+      const cfg = targetBatteryKey ? CBAT_TSCORE_CONFIG[targetBatteryKey] : null;
+      if (!cfg || !targetBatteryKey) return null;
+
+      const sec = matchedSection || sectionalAnalysis[0];
       const rawScore = sec?.correct ?? 0;
+      const maxMarks = sec?.total || cfg.maxMarks;
       const tScore = Math.round(computeTScore(rawScore, cfg.mean, cfg.sd) * 10) / 10;
-      return {
-        name: sectionName,
+      const qualified = tScore >= CBAT_QUALIFYING_TSCORE;
+
+      const sectionResult = {
+        name: targetBatteryKey,
         rawScore,
-        maxMarks: cfg.maxMarks,
+        maxMarks,
         tScore,
-        qualified: tScore >= CBAT_QUALIFYING_TSCORE,
+        qualified,
       };
-    });
-    const compositeTScore = Math.round(sections.reduce((sum, s) => sum + s.tScore, 0) * 10) / 10;
-    const meritScoreOutOf30 = Math.round((compositeTScore / CBAT_MAX_COMPOSITE) * 30 * 100) / 100;
-    const overallQualified = sections.every(s => s.qualified);
-    return { sections, compositeTScore, meritScoreOutOf30, overallQualified };
+
+      return {
+        isFullCbat: false,
+        sections: [sectionResult],
+        compositeTScore: tScore,
+        meritScoreOutOf30: 0,
+        overallQualified: qualified,
+      };
+    }
   })() : null;
 
   const activeQuestion = questions[activeQuestionIdx];
@@ -1151,11 +1252,21 @@ export default function ExamSolutionAnalysisPage() {
               </div>
             )}
 
-            {/* CBAT T-Score Result — Station Master CBAT (Psycho Test) only */}
+            {/* CBAT T-Score Result — Station Master CBAT (Psycho Test) */}
             {cbatTScoreResult && (
               <div className="bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
-                <h4 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center gap-2">
-                  <Award className="h-4.5 w-4.5 text-blue-500" /> {lang === 'hi' ? 'CBAT टी-स्कोर परिणाम' : 'CBAT T-Score Result'}
+                <h4 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    <Award className="h-4.5 w-4.5 text-blue-500" />
+                    {cbatTScoreResult.isFullCbat
+                      ? (lang === 'hi' ? 'CBAT समग्र टी-स्कोर परिणाम (पूर्ण मॉक)' : 'CBAT Full Mock T-Score Result')
+                      : (lang === 'hi' ? 'CBAT अनुभागीय टी-स्कोर परिणाम' : 'CBAT Sectional T-Score Result')}
+                  </span>
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    {cbatTScoreResult.isFullCbat
+                      ? (lang === 'hi' ? 'सभी 5 बैटरियां' : 'All 5 Batteries')
+                      : (lang === 'hi' ? 'एकल बैटरी' : 'Single Battery')}
+                  </span>
                 </h4>
 
                 <div className="mt-3 mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 flex items-start gap-2">
@@ -1167,9 +1278,9 @@ export default function ExamSolutionAnalysisPage() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className={`grid gap-4 ${cbatTScoreResult.sections.length === 1 ? 'grid-cols-1 max-w-md' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
                   {cbatTScoreResult.sections.map(sec => (
-                    <div key={sec.name} className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4.5 rounded-2xl flex flex-col justify-between">
+                    <div key={sec.name} className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4.5 rounded-2xl flex flex-col justify-between shadow-xs">
                       <div>
                         <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-200 truncate">{sec.name}</h5>
                         <div className="flex justify-between items-center mt-3">
@@ -1182,34 +1293,59 @@ export default function ExamSolutionAnalysisPage() {
                           <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">T-Score</span>
                           <span className={`text-lg font-black ${sec.qualified ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{sec.tScore}</span>
                         </div>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-1 rounded-full ${sec.qualified ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400 border border-green-200 dark:border-green-800' : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400 border border-red-200 dark:border-red-800'}`}>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-1 rounded-full ${sec.qualified ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400 border border-green-200 dark:border-green-800' : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400 border border-red-200 dark:border-red-800'}`}>
                           {sec.qualified ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                          {sec.qualified ? (lang === 'hi' ? 'उत्तीर्ण' : 'Qualified') : (lang === 'hi' ? 'अनुत्तीर्ण' : `Below ${CBAT_QUALIFYING_TSCORE}`)}
+                          {sec.qualified ? (lang === 'hi' ? 'उत्तीर्ण (≥42)' : 'Qualified (≥42)') : (lang === 'hi' ? 'अनुत्तीर्ण (<42)' : `Below ${CBAT_QUALIFYING_TSCORE}`)}
                         </span>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
-                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{lang === 'hi' ? 'समग्र टी-स्कोर' : 'Composite T-Score'}</span>
-                    <span className="text-xl font-black text-slate-800 dark:text-slate-200">{cbatTScoreResult.compositeTScore} <span className="text-xs font-bold text-slate-400">/ {CBAT_MAX_COMPOSITE}</span></span>
+                {cbatTScoreResult.isFullCbat ? (
+                  <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{lang === 'hi' ? 'समग्र टी-स्कोर' : 'Composite T-Score'}</span>
+                      <span className="text-xl font-black text-slate-800 dark:text-slate-200">{cbatTScoreResult.compositeTScore} <span className="text-xs font-bold text-slate-400">/ {CBAT_MAX_COMPOSITE}</span></span>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{lang === 'hi' ? 'मेरिट स्केल (30 में से)' : 'Merit Scale (out of 30)'}</span>
+                      <span className="text-xl font-black text-slate-800 dark:text-slate-200">{cbatTScoreResult.meritScoreOutOf30}</span>
+                    </div>
+                    <div className={`p-4 rounded-2xl border ${cbatTScoreResult.overallQualified ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900'}`}>
+                      <span className="text-[9px] font-bold uppercase tracking-wider block text-slate-500 dark:text-slate-400">{lang === 'hi' ? 'समग्र परिणाम' : 'Overall Result'}</span>
+                      <span className={`text-xl font-black ${cbatTScoreResult.overallQualified ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                        {cbatTScoreResult.overallQualified ? (lang === 'hi' ? 'उत्तीर्ण' : 'Qualified') : (lang === 'hi' ? 'अनुत्तीर्ण' : 'Not Qualified')}
+                      </span>
+                      {!cbatTScoreResult.overallQualified && (
+                        <p className="text-[9px] text-red-600 dark:text-red-400 mt-1">{lang === 'hi' ? 'किसी भी एक बैटरी में 42 से कम स्कोर पूरे CBAT को अनुत्तीर्ण कर देता है।' : 'Any single battery below 42 fails the entire CBAT — no compensation across batteries.'}</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
-                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{lang === 'hi' ? 'मेरिट स्केल (30 में से)' : 'Merit Scale (out of 30)'}</span>
-                    <span className="text-xl font-black text-slate-800 dark:text-slate-200">{cbatTScoreResult.meritScoreOutOf30}</span>
+                ) : (
+                  <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between">
+                      <div>
+                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{lang === 'hi' ? 'न्यूनतम अर्हक टी-स्कोर' : 'Qualifying Cutoff'}</span>
+                        <span className="text-xl font-black text-slate-800 dark:text-slate-200">{CBAT_QUALIFYING_TSCORE} <span className="text-xs font-bold text-slate-400">/ 80</span></span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                        {lang === 'hi' ? 'इस व्यक्तिगत बैटरी में उत्तीर्ण होने के लिए न्यूनतम 42 टी-स्कोर अनिवार्य है।' : 'A minimum T-Score of 42 is required to qualify in this individual battery.'}
+                      </p>
+                    </div>
+                    <div className={`p-4 rounded-2xl border ${cbatTScoreResult.overallQualified ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900'}`}>
+                      <span className="text-[9px] font-bold uppercase tracking-wider block text-slate-500 dark:text-slate-400">{lang === 'hi' ? 'बैटरी परिणाम' : 'Battery Result'}</span>
+                      <span className={`text-xl font-black ${cbatTScoreResult.overallQualified ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                        {cbatTScoreResult.overallQualified ? (lang === 'hi' ? 'उत्तीर्ण (≥42)' : 'Qualified (≥42)') : (lang === 'hi' ? 'अनुत्तीर्ण (<42)' : `Below ${CBAT_QUALIFYING_TSCORE} (Not Qualified)`)}
+                      </span>
+                      <p className={`text-[10px] mt-1 ${cbatTScoreResult.overallQualified ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {cbatTScoreResult.overallQualified
+                          ? (lang === 'hi' ? 'आपने इस बैटरी में अर्हक टी-स्कोर (≥42) सफलतापूर्वक प्राप्त कर लिया है।' : 'You have qualified in this battery with a T-Score of 42 or higher.')
+                          : (lang === 'hi' ? 'इस बैटरी में आपका टी-स्कोर 42 से कम है। कृपया अधिक अभ्यास करें।' : 'Your T-Score in this battery is below 42. More practice is recommended.')}
+                      </p>
+                    </div>
                   </div>
-                  <div className={`p-4 rounded-2xl border ${cbatTScoreResult.overallQualified ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900'}`}>
-                    <span className="text-[9px] font-bold uppercase tracking-wider block text-slate-500 dark:text-slate-400">{lang === 'hi' ? 'समग्र परिणाम' : 'Overall Result'}</span>
-                    <span className={`text-xl font-black ${cbatTScoreResult.overallQualified ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
-                      {cbatTScoreResult.overallQualified ? (lang === 'hi' ? 'उत्तीर्ण' : 'Qualified') : (lang === 'hi' ? 'अनुत्तीर्ण' : 'Not Qualified')}
-                    </span>
-                    {!cbatTScoreResult.overallQualified && (
-                      <p className="text-[9px] text-red-600 dark:text-red-400 mt-1">{lang === 'hi' ? 'किसी भी एक बैटरी में 42 से कम स्कोर पूरे CBAT को अनुत्तीर्ण कर देता है।' : 'Any single battery below 42 fails the entire CBAT — no compensation across batteries.'}</p>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
