@@ -15,6 +15,7 @@ import {
   InfoOrderingTables,
   renderFigureShape
 } from './CbatVisualComponents';
+import { Trophy } from 'lucide-react';
 import './CbatExamEngine.css';
 
 interface CbatExamEngineProps {
@@ -26,6 +27,7 @@ interface CbatExamEngineProps {
 export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: CbatExamEngineProps) {
   const router = useRouter();
   const { addAttempt, currentUser } = useAuth();
+  const [examLang, setExamLang] = useState<'en' | 'hi'>(initialExamLanguage);
 
   // Batteries State
   const [batteries, setBatteries] = useState<CbatBattery[]>(ALL_CBAT_BATTERIES);
@@ -279,10 +281,12 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
           -------------------------------------------------------------------- */}
       <header className="cbat-top-header">
         <div className="cbat-brand-box">
-          <div className="cbat-logo-icon">🚆</div>
+          <div className="cbat-logo-icon">
+            <Trophy className="cbat-trophy-icon" />
+          </div>
           <div className="cbat-brand-text">
-            <h1>Railway Psycho Classes</h1>
-            <p>Trusted name for psycho test....</p>
+            <h1>{examLang === 'hi' ? 'मॉक टेस्ट हब' : 'MOCK TEST HUB'}</h1>
+            <p>{examLang === 'hi' ? "भारत का #1 परीक्षा तैयारी मंच" : "India's #1 Govt Exam Prep Terminal"}</p>
           </div>
           <span className="cbat-paper-badge">Paper Id : {paperTitle.toUpperCase().replace(/\s+/g, '_')}</span>
         </div>
