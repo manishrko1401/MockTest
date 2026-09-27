@@ -54,6 +54,7 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
   const [pendingLayout, setPendingLayout] = useState<string>('');
   const [showSkipTestModal, setShowSkipTestModal] = useState<boolean>(false);
   const [showSkipRestModal, setShowSkipRestModal] = useState<boolean>(false);
+  const [lockedNotice, setLockedNotice] = useState<string | null>(null);
 
   // Fetch actual uploaded questions from DB for this testId
   useEffect(() => {
@@ -137,11 +138,33 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
     window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('keydown', handleKeyDown);
 
+    // Prevent browser back button from leaving the exam or going back
+    const handlePopState = (e: PopStateEvent) => {
+      window.history.pushState(null, '', window.location.href);
+      setLockedNotice(
+        examLang === 'hi'
+          ? 'आरडीएसओ परीक्षा नियमों के अनुसार वापस नहीं जाया जा सकता।'
+          : 'Back navigation is restricted under RDSO CBAT examination rules.'
+      );
+      setTimeout(() => setLockedNotice(null), 3500);
+    };
+
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', handlePopState);
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, []);
+  }, [examLang]);
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -345,20 +368,42 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
           {batteries.map((b, idx) => {
             const isActive = idx === batteryIdx;
             const isDone = idx < batteryIdx;
+            const isUpcoming = idx > batteryIdx;
             return (
               <div 
                 key={b.id} 
-                className={`cbat-tab-item ${isActive ? 'active' : ''}`}
+                className={`cbat-tab-item ${isActive ? 'active' : ''} ${isDone ? 'completed-locked' : ''} ${isUpcoming ? 'upcoming-locked' : ''}`}
                 onClick={() => {
                   if (isDone) {
-                    setBatteryIdx(idx);
-                    setStage('question');
-                    setChunkIdx(0);
+                    setLockedNotice(
+                      examLang === 'hi'
+                        ? `"${b.name}" सबमिट हो चुका है। आरडीएसओ नियमों के अनुसार पिछले सेक्शन में वापस नहीं जाया जा सकता।`
+                        : `"${b.name}" has already been submitted. You cannot return to previous sections.`
+                    );
+                    setTimeout(() => setLockedNotice(null), 3500);
+                  } else if (isUpcoming) {
+                    setLockedNotice(
+                      examLang === 'hi'
+                        ? `"${b.name}" अभी लॉक है। वर्तमान सेक्शन पूरा करने के बाद यह स्वतः शुरू होगा।`
+                        : `"${b.name}" is locked. It will start automatically after completing the current section.`
+                    );
+                    setTimeout(() => setLockedNotice(null), 3500);
                   }
                 }}
+                title={
+                  isDone 
+                    ? `${b.name} (Submitted & Locked)` 
+                    : isUpcoming 
+                    ? `${b.name} (Locked)` 
+                    : `${b.name} (Active)`
+                }
               >
                 <span>{b.name} {stage === 'instruction' && isActive ? '(Instruction)' : ''}</span>
-                <span className="tab-info-icon">ℹ️</span>
+                {isDone ? (
+                  <span className="tab-status-icon tab-locked-icon" title="Submitted & Locked">🔒</span>
+                ) : (
+                  <span className="tab-info-icon">ℹ️</span>
+                )}
               </div>
             );
           })}
@@ -980,6 +1025,15 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* E. Floating Warning Toast for Restricted Action */}
+      {lockedNotice && (
+        <div className="cbat-locked-toast">
+          <span className="cbat-toast-icon">⚠️</span>
+          <span>{lockedNotice}</span>
+          <button className="cbat-toast-close" onClick={() => setLockedNotice(null)}>✕</button>
         </div>
       )}
     </div>
