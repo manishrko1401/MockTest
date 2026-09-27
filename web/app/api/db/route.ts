@@ -3341,6 +3341,7 @@ async function handleGetCustomQuestions(rawPayload: any) {
         maxMarks: true,
         hasSectionalTiming: true,
         sectionalTimings: true,
+        title: true,
         sections: {
           select: {
             id: true,
@@ -3407,6 +3408,7 @@ async function handleGetCustomQuestions(rawPayload: any) {
 
   return NextResponse.json({
     success: true,
+    title: mockTest?.title ?? null,
     url: s3Url,
     questions,
     customQuestions: questions,

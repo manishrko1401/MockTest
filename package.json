@@ -19,6 +19,9 @@
     "typescript": "^7.0.2"
   },
   "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "start": "npm --prefix web run start",
     "postinstall": "prisma generate"
   }
 }

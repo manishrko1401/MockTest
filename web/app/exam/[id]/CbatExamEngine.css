@@ -1,0 +1,1171 @@
+/* ==========================================================================
+   RAILWAYS STATION MASTER CBAT (PSYCHO TEST) EXAM PANEL STYLESHEET
+   1:1 Match to NK Psycho Classes Exam Terminal
+   ========================================================================== */
+
+.cbat-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: #f7f9fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  user-select: none;
+  color: #1a1a1a;
+}
+
+/* --------------------------------------------------------------------------
+   1. TOP HEADER BAR
+   -------------------------------------------------------------------------- */
+.cbat-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 16px;
+  background-color: #ffffff;
+  border-bottom: 2px solid #e2e8f0;
+  height: 52px;
+  box-sizing: border-box;
+}
+
+.cbat-brand-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cbat-logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.cbat-brand-text h1 {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+  color: #0f172a;
+  letter-spacing: -0.2px;
+}
+
+.cbat-brand-text p {
+  font-size: 11px;
+  margin: 0;
+  color: #64748b;
+}
+
+.cbat-paper-badge {
+  background-color: #17a2b8;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  margin-left: 10px;
+}
+
+/* Header Center Option Modes */
+.cbat-header-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cbat-pill-btn {
+  border: none;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #ffffff;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.cbat-jumble-btn {
+  background-color: #dc3545;
+}
+.cbat-jumble-btn.active {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #dc3545;
+}
+
+.cbat-normal-btn {
+  background-color: #28a745;
+}
+.cbat-normal-btn.active {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #28a745;
+}
+
+.cbat-pill-btn.inactive {
+  opacity: 0.65;
+}
+
+/* Header Right - Timer & Fullscreen */
+.cbat-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cbat-view-instr-btn {
+  background: #212529;
+  color: #ffffff;
+  border: none;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cbat-timer-badge {
+  background-color: #ffeb3b;
+  color: #000000;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 4px;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.cbat-fullscreen-btn {
+  background-color: #28a745;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.cbat-fullscreen-btn:hover {
+  background-color: #218838;
+}
+
+/* --------------------------------------------------------------------------
+   2. SUB-TEST TAB STRIP
+   -------------------------------------------------------------------------- */
+.cbat-tabs-strip {
+  display: flex;
+  align-items: center;
+  background-color: #f1f3f4;
+  border-bottom: 1px solid #d1d5db;
+  padding: 0 4px;
+  height: 38px;
+  overflow-x: auto;
+}
+
+.tab-scroll-arrow {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+.cbat-tabs-list {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+}
+
+.cbat-tab-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #374151;
+  background-color: #e5e7eb;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 500;
+  transition: background-color 0.15s;
+}
+
+.cbat-tab-item:hover {
+  background-color: #d1d5db;
+}
+
+.cbat-tab-item.active {
+  background-color: #0b3b60;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.cbat-tab-item .tab-info-icon {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* --------------------------------------------------------------------------
+   3. MAIN WORKSPACE AREA
+   -------------------------------------------------------------------------- */
+.cbat-workspace {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  background-color: #ffffff;
+}
+
+/* --- A. INSTRUCTION VIEW --- */
+.cbat-instruction-stage {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.instruction-left-pane {
+  flex: 1;
+  padding: 24px 32px;
+  overflow-y: auto;
+  border-right: 1px solid #e5e7eb;
+}
+
+.instruction-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+
+.instruction-meta-grid {
+  display: flex;
+  gap: 32px;
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #0f172a;
+}
+
+.instruction-heading {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 24px 0 16px 0;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.instruction-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.instruction-bullet-item {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #334155;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.bullet-chevron {
+  color: #0b3b60;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.instruction-right-pane {
+  width: 340px;
+  background-color: #f8fafc;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+}
+
+.instruction-note-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #0284c7;
+  padding: 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.note-prefix {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.cbat-btn-blue {
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background-color 0.15s;
+}
+.cbat-btn-blue:hover {
+  background-color: #0069d9;
+}
+
+.layout-picker-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 14px;
+  border-radius: 4px;
+}
+
+.layout-btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.layout-select-btn {
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.layout-select-btn.active {
+  background-color: #198754;
+}
+
+/* --- B. REST / EXAM SUMMARY VIEW (MATCHING PREVIOUS ATTEMPTED GROUP TABLES) --- */
+.cbat-rest-stage {
+  flex: 1;
+  padding: 30px 40px;
+  overflow-y: auto;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.cbat-rest-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.attempted-group-card {
+  width: 100%;
+}
+
+.attempted-group-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 10px 0;
+  font-family: inherit;
+  letter-spacing: -0.2px;
+}
+
+.cbat-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.cbat-summary-table th {
+  border: 1px solid #e2e8f0;
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  background-color: #ffffff;
+}
+
+.cbat-summary-table td {
+  border: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14px;
+  color: #475569;
+  background-color: #ffffff;
+}
+
+.cbat-summary-table td.sec-name-cell {
+  color: #334155;
+  font-weight: 500;
+}
+
+/* --- C. LIVE QUESTION VIEW --- */
+.cbat-question-stage {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+/* Split-Screen Panes for Test 3 & 4 */
+.cbat-split-left-pane {
+  width: 48%;
+  height: 100%;
+  border-right: 2px solid #cbd5e1;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background-color: #f8fafc;
+  scrollbar-width: thin;
+  scrollbar-color: #0b3b60 #e2e8f0;
+}
+
+.cbat-questions-pane {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  padding: 14px 24px;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: #0b3b60 #e2e8f0;
+}
+
+/* Custom, clear scrollbars for candidate scrollbar dragging */
+.cbat-questions-pane::-webkit-scrollbar,
+.cbat-split-left-pane::-webkit-scrollbar,
+.instruction-left-pane::-webkit-scrollbar,
+.cbat-rest-stage::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.cbat-questions-pane::-webkit-scrollbar-track,
+.cbat-split-left-pane::-webkit-scrollbar-track,
+.instruction-left-pane::-webkit-scrollbar-track,
+.cbat-rest-stage::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.cbat-questions-pane::-webkit-scrollbar-thumb,
+.cbat-split-left-pane::-webkit-scrollbar-thumb,
+.instruction-left-pane::-webkit-scrollbar-thumb,
+.cbat-rest-stage::-webkit-scrollbar-thumb {
+  background-color: #0b3b60;
+  border-radius: 4px;
+}
+
+.cbat-questions-pane::-webkit-scrollbar-thumb:hover,
+.cbat-split-left-pane::-webkit-scrollbar-thumb:hover,
+.instruction-left-pane::-webkit-scrollbar-thumb:hover,
+.cbat-rest-stage::-webkit-scrollbar-thumb:hover {
+  background-color: #0284c7;
+}
+
+.questions-section-header {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.questions-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.questions-sub-instruction {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* Continuous Question Rows */
+.cbat-questions-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.cbat-question-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.15s;
+  gap: 20px;
+}
+
+.cbat-question-row:hover {
+  background-color: #f8fafc;
+}
+
+.cbat-question-row.focused {
+  background-color: #eff6ff;
+  border-left: 3px solid #007bff;
+}
+
+.q-index-col {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  min-width: 45px;
+}
+
+.q-content-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Monospace Digit String for Test 2 */
+.odd-digit-sequence {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: #111;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.sum-options-row {
+  display: flex;
+  gap: 24px;
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.sum-option-item strong {
+  margin-right: 4px;
+}
+
+/* Route Prompt for Test 3 */
+.route-equation-prompt {
+  font-size: 18px;
+  font-weight: 800;
+  color: #dc2626; /* Red bold as observed */
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* Flowchart Process for Test 4 */
+.flowchart-process-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.flowchart-box-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #cbd5e1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #f8fafc;
+}
+
+.process-cell {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 13px;
+  border: 1px solid #94a3b8;
+  background: #ffffff;
+}
+
+/* Personality Questions for Test 5 */
+.personality-prompt-hi {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.personality-prompt-en {
+  font-size: 15px;
+  color: #475569;
+}
+
+.personality-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 14px;
+  color: #334155;
+}
+
+/* --------------------------------------------------------------------------
+   CUSTOM TOGGLEABLE RADIO BUTTONS (A-E or 1-10 or 1-12)
+   -------------------------------------------------------------------------- */
+.cbat-radio-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* --------------------------------------------------------------------------
+   SHORT ROUTE TEST: SINGLE HORIZONTAL SCROLLBAR AT PANE BOTTOM
+   -------------------------------------------------------------------------- */
+.cbat-questions-pane.short-route-pane-scroll {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: #0b3b60 #cbd5e1;
+}
+
+.cbat-questions-pane.short-route-pane-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.cbat-questions-pane.short-route-pane-scroll::-webkit-scrollbar-track {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.cbat-questions-pane.short-route-pane-scroll::-webkit-scrollbar-thumb {
+  background-color: #0b3b60;
+  border-radius: 4px;
+}
+
+.cbat-questions-pane.short-route-pane-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #0284c7;
+}
+
+.cbat-questions-list.short-route-questions-table {
+  min-width: max-content;
+  width: 100%;
+}
+
+.cbat-question-row.short-route-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 28px;
+  padding: 10px 14px;
+  white-space: nowrap;
+  min-width: max-content;
+}
+
+.cbat-question-row.short-route-row .q-index-col {
+  flex-shrink: 0;
+  min-width: 95px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cbat-question-row.short-route-row .q-content-col {
+  flex-shrink: 0;
+  min-width: 95px;
+}
+
+.cbat-question-row.short-route-row .route-equation-prompt {
+  font-size: 16px;
+  font-weight: 700;
+  color: #dc2626;
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+
+.cbat-radio-group.short-route-radio-group {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  overflow: visible !important;
+  align-items: center;
+  gap: 18px;
+}
+
+.cbat-radio-group.short-route-radio-group .cbat-radio-btn-label {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.cbat-radio-group.short-route-radio-group .cbat-radio-btn-label:hover {
+  background-color: #e2e8f0;
+}
+
+.cbat-radio-group.short-route-radio-group .cbat-radio-label-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.cbat-radio-btn-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.cbat-radio-btn-label:hover {
+  background-color: #e2e8f0;
+}
+
+.cbat-radio-circle {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #64748b;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  transition: border-color 0.15s;
+}
+
+.cbat-radio-circle.selected {
+  border-color: #0b3b60;
+}
+
+.cbat-radio-inner-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #0b3b60;
+}
+
+.cbat-radio-label-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* --------------------------------------------------------------------------
+   4. STICKY BOTTOM ACTION BAR
+   -------------------------------------------------------------------------- */
+.cbat-bottom-footer {
+  height: 52px;
+  background-color: #0b3b60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+.cbat-action-yellow {
+  background-color: #ffc107;
+  color: #000000;
+  font-weight: 700;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  transition: background-color 0.15s;
+}
+.cbat-action-yellow:hover {
+  background-color: #e0a800;
+}
+
+.footer-nav-center {
+  display: flex;
+  gap: 12px;
+}
+
+.cbat-action-gray {
+  background-color: #6c757d;
+  color: #ffffff;
+  border: none;
+  padding: 7px 20px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cbat-action-gray:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cbat-action-navy {
+  background-color: #082842;
+  color: #ffffff;
+  border: 1px solid #ffc107;
+  padding: 7px 20px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.cbat-action-navy:hover {
+  background-color: #0f3d61;
+}
+
+.cbat-action-green {
+  background-color: #28a745;
+  color: #ffffff;
+  font-weight: 700;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 4px;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.cbat-action-green:hover {
+  background-color: #218838;
+}
+
+.push-right {
+  margin-left: auto;
+}
+
+/* --------------------------------------------------------------------------
+   5. MODALS & POPUPS
+   -------------------------------------------------------------------------- */
+.cbat-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.cbat-modal-content {
+  background: #ffffff;
+  border-radius: 6px;
+  width: 90%;
+  max-width: 540px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.cbat-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cbat-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.cbat-modal-close-btn {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 3px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.cbat-modal-body {
+  padding: 20px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.cbat-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 12px 18px;
+  border-top: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+}
+
+/* --------------------------------------------------------------------------
+   6. SHORT ROUTE & INFO ORDERING SPECIFIC STYLES
+   -------------------------------------------------------------------------- */
+.short-route-map-wrapper {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.grid-header-label {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #0f172a;
+}
+
+.short-route-svg {
+  width: 100%;
+  max-height: 520px;
+  display: block;
+}
+
+.info-ordering-tables-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.info-tables-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #0b3b60;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+.info-ordering-reference-img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* --------------------------------------------------------------------------
+   INFORMATION ORDERING TEST: FULL-WIDTH RESPONSIVE QUESTION CARDS
+   -------------------------------------------------------------------------- */
+.cbat-questions-list.info-ordering-questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.cbat-question-row.info-ordering-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 16px 18px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  gap: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.cbat-question-row.info-ordering-card:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.cbat-question-row.info-ordering-card.focused {
+  border-color: #0284c7;
+  background-color: #f0f9ff;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.info-ordering-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.q-index-badge {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0b3b60;
+  background: #e0f2fe;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid #bae6fd;
+}
+
+.info-ordering-img-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 4px 0;
+  overflow: hidden;
+}
+
+/* FLOWCHART IMAGE: Beautiful, Crisp, Responsive & Full Width */
+.info-ordering-flowchart-img {
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+  max-height: 380px;
+  object-fit: contain;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ANSWER OPTIONS ROW: Modern, high-visibility option pills */
+.info-ordering-answer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.info-ordering-answer-prompt {
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.cbat-radio-group.info-ordering-radio-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cbat-radio-btn-label.info-ordering-option-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.cbat-radio-btn-label.info-ordering-option-btn:hover {
+  border-color: #0284c7;
+  background-color: #e0f2fe;
+}
+
+.cbat-radio-btn-label.info-ordering-option-btn.selected {
+  border-color: #0b3b60;
+  background-color: #0b3b60;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(11, 59, 96, 0.25);
+}
+
+.cbat-radio-btn-label.info-ordering-option-btn.selected .cbat-radio-circle {
+  border-color: #ffffff;
+}
+
+.cbat-radio-btn-label.info-ordering-option-btn.selected .cbat-radio-inner-dot {
+  background-color: #ffffff;
+}
+
+.cbat-radio-btn-label.info-ordering-option-btn.selected .cbat-radio-label-text {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.info-table-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.table-title {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.info-process-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 13px;
+}
+
+.info-process-table th, .info-process-table td {
+  border: 1px solid #334155;
+  padding: 4px 6px;
+}
+
+.sub-header-row th {
+  background-color: #f1f5f9;
+}
+
+.figures-strip {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.fig-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  padding: 4px;
+  border-radius: 3px;
+}
+
+.fig-icon-box {
+  width: 32px;
+  height: 32px;
+}
+
+.fig-id-label {
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 2px;
+}
+

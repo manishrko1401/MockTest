@@ -17,6 +17,8 @@ import { useIsMobile } from '../../useIsMobile';
 import { processQuestionHtml, decodeHtml } from '../../lib/mathUtils';
 import MathJaxText from '../../lib/MathJaxText';
 import MathJaxLoader from '../../components/MathJaxLoader';
+import CbatExamEngine from './CbatExamEngine';
+import { matchCbatBatteryKey } from './cbatData';
 
 
 
@@ -3149,7 +3151,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
 export default function DynamicExamPage() {
   const params = useParams();
   const testId = (params?.id as string) || "ssc_cgl_tier1";
-  const { saveOngoingSession, language: authLanguage } = useAuth();
+  const { saveOngoingSession, language: authLanguage, examCatalog } = useAuth();
   
   const [mounted, setMounted] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -3224,6 +3226,45 @@ export default function DynamicExamPage() {
   };
 
   const isCtetFullTest = (testId || '').toLowerCase().includes('ctet');
+
+  const isCbat = (() => {
+    const lowerId = (testId || '').toLowerCase();
+
+    // 1. Direct ID match for Full Mock & All 5 Sectional Tests
+    if (
+      lowerId.includes('cbat') || 
+      lowerId.includes('psycho') || 
+      lowerId === 'rrb_ntpc_cbat__psycho_test__iayf' || 
+      lowerId.includes('station_master') ||
+      lowerId.includes('classification') ||
+      lowerId.includes('personality') ||
+      lowerId.includes('short_route') ||
+      lowerId.includes('information_ordering') ||
+      lowerId.includes('add_of_odd') ||
+      lowerId.includes('odd_numbers') ||
+      lowerId.includes('selective_attention') ||
+      lowerId.includes('spatial_scanning') ||
+      lowerId.includes('intelligence')
+    ) return true;
+
+    // 2. Catalog hierarchy match
+    if (examCatalog && Array.isArray(examCatalog)) {
+      for (const cat of examCatalog) {
+        for (const sub of cat.subCategories || []) {
+          if (sub.id === 'rrb_ntpc_cbat__psycho_test__iayf' || (sub.name && (sub.name.toLowerCase().includes('cbat') || sub.name.toLowerCase().includes('psycho')))) {
+            if (sub.tests?.some((t: any) => t.id === testId)) return true;
+            if (sub.subSubCategories?.some((ss: any) => ss.tests?.some((t: any) => t.id === testId))) return true;
+            if (sub.subSubCategories?.some((ss: any) => ss.mockTests?.some((t: any) => t.id === testId))) return true;
+          }
+        }
+      }
+    }
+    return false;
+  })();
+
+  if (isCbat) {
+    return <CbatExamEngine testId={testId} initialExamLanguage={selectedExamLang} onStateSync={handleSaveSync} />;
+  }
 
   if (!isConfirmed) {
     if (isCtetFullTest) {
